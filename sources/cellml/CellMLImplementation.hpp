@@ -255,7 +255,9 @@ class CDA_UnitsBase
 {
 public:
   CDA_UnitsBase(iface::XPCOM::IObject* parent,
-                iface::dom::Element* unitsElement);
+                iface::dom::Element* unitsElement)
+    : CDA_CellMLElement(parent, unitsElement),
+      CDA_NamedCellMLElement(parent, unitsElement) {}
   virtual ~CDA_UnitsBase() {};
 
   bool isBaseUnits() throw(std::exception&);
@@ -283,7 +285,8 @@ class CDA_Unit
     public virtual CDA_CellMLElement
 {
 public:
-  CDA_Unit(iface::XPCOM::IObject* parent, iface::dom::Element* unitElement);
+  CDA_Unit(iface::XPCOM::IObject* parent, iface::dom::Element* unitElement)
+    : CDA_CellMLElement(parent, unitElement) {}
   virtual ~CDA_Unit();
 
   CDA_IMPL_QI2(iface::cellml_api::Unit, iface::cellml_api::CellMLElement)
@@ -306,7 +309,9 @@ class CDA_CellMLImport
 {
 public:
   CDA_CellMLImport(iface::XPCOM::IObject* parent,
-                   iface::dom::Element* importElement);
+                   iface::dom::Element* importElement)
+    : CDA_CellMLElement(parent, importElement) {}
+
   CDA_IMPL_QI2(cellml_api::CellMLImport, cellml_api::CellMLElement)
 
   iface::cellml_api::URI* xlinkHref() throw(std::exception&);
@@ -325,7 +330,11 @@ class CDA_ImportComponent
 {
 public:
   CDA_ImportComponent(iface::XPCOM::IObject* parent,
-                      iface::dom::Element* importComponent);
+                      iface::dom::Element* importComponent)
+    : CDA_CellMLElement(parent, importComponent),
+      CDA_NamedCellMLElement(parent, importComponent),
+      CDA_MathContainer(parent, importComponent),
+      CDA_CellMLComponent(parent, importComponent) {}
   virtual ~CDA_ImportComponent() {}
 
   iface::cellml_api::CellMLAttributeString componentRef() throw(std::exception&);
@@ -336,11 +345,13 @@ public:
 
 class CDA_ImportUnits
   : public iface::cellml_api::ImportUnits,
-  CDA_UnitsBase
+    public CDA_UnitsBase
 {
 public:
   CDA_ImportUnits(iface::XPCOM::IObject* parent,
-                  iface::dom::Element* importUnits);
+                  iface::dom::Element* importUnits)
+    : CDA_CellMLElement(parent, importUnits),
+      CDA_UnitsBase(parent, importUnits) {}
   virtual ~CDA_ImportUnits() {}
 
   CDA_IMPL_QI3(cellml_api::ImportUnits, cellml_api::Units, cellml_api::CellMLElement)
@@ -364,7 +375,8 @@ class CDA_CellMLVariable
 {
 public:
   CDA_CellMLVariable(iface::XPCOM::IObject* parent,
-                     iface::dom::Element* cellmlVar);
+                     iface::dom::Element* cellmlVar)
+    : CDA_CellMLElement(parent, cellmlVar) {}
   virtual ~CDA_CellMLVariable() {}
   CDA_IMPL_QI2(cellml_api::CellMLVariable, cellml_api::CellMLElement)
 
@@ -384,7 +396,8 @@ class CDA_ComponentRef
 {
 public:
   CDA_ComponentRef(iface::XPCOM::IObject* parent,
-                   iface::dom::Element* componentRef);
+                   iface::dom::Element* componentRef)
+    : CDA_CellMLElement(parent, componentRef) {}
   virtual ~CDA_ComponentRef() {}
 
   CDA_IMPL_QI2(cellml_api::ComponentRef, cellml_api::CellMLElement)
@@ -402,7 +415,8 @@ class CDA_RelationshipRef
 {
 public:
   CDA_RelationshipRef(iface::XPCOM::IObject* parent,
-                   iface::dom::Element* relationshipRef);
+                   iface::dom::Element* relationshipRef)
+    : CDA_CellMLElement(parent, relationshipRef) {}
   virtual ~CDA_RelationshipRef() {}
 
   CDA_IMPL_QI2(cellml_api::ComponentRef, cellml_api::CellMLElement)
@@ -420,7 +434,8 @@ class CDA_Group
 {
 public:
   CDA_Group(iface::XPCOM::IObject* parent,
-            iface::dom::Element* group);
+            iface::dom::Element* group)
+    : CDA_CellMLElement(parent, group) {}
   virtual ~CDA_Group() {}
   CDA_IMPL_QI2(cellml_api::Group, cellml_api::CellMLElement)
 
@@ -438,7 +453,8 @@ class CDA_Connection
 {
 public:
   CDA_Connection(iface::XPCOM::IObject* parent,
-                 iface::dom::Element* connection);
+                 iface::dom::Element* connection)
+    : CDA_CellMLElement(parent, connection) {};
   virtual ~CDA_Connection() {}
   CDA_IMPL_QI2(cellml_api::Connection, cellml_api::CellMLElement)
 
@@ -452,7 +468,8 @@ class CDA_MapComponents
 {
 public:
   CDA_MapComponents(iface::XPCOM::IObject* parent,
-                 iface::dom::Element* mapComponents);
+                 iface::dom::Element* mapComponents)
+    : CDA_CellMLElement(parent, mapComponents) {};
   virtual ~CDA_MapComponents() {}
   CDA_IMPL_QI2(cellml_api::MapComponents, cellml_api::CellMLElement)
 
@@ -471,7 +488,8 @@ class CDA_MapVariables
 {
 public:
   CDA_MapVariables(iface::XPCOM::IObject* parent,
-                   iface::dom::Element* mapVariables);
+                   iface::dom::Element* mapVariables)
+    : CDA_CellMLElement(parent, mapVariables) {}
   virtual ~CDA_MapVariables() {}
   CDA_IMPL_QI2(cellml_api::MapVariables, cellml_api::CellMLElement)
 
@@ -491,7 +509,8 @@ class CDA_Reaction
 {
 public:
   CDA_Reaction(iface::XPCOM::IObject* parent,
-                   iface::dom::Element* reaction);
+                   iface::dom::Element* reaction)
+    : CDA_CellMLElement(parent, reaction) {}
   virtual ~CDA_Reaction() {}
   CDA_IMPL_QI2(cellml_api::Reaction, cellml_api::CellMLElement)
 
@@ -506,7 +525,8 @@ class CDA_VariableRef
 {
 public:
   CDA_VariableRef(iface::XPCOM::IObject* parent,
-                   iface::dom::Element* variableRef);
+                   iface::dom::Element* variableRef)
+    : CDA_CellMLElement(parent, variableRef) {}
   virtual ~CDA_VariableRef() {}
 
   iface::cellml_api::CellMLVariable* variable() throw(std::exception&);
@@ -515,11 +535,12 @@ public:
 
 class CDA_ReactantVariableRef
   : public virtual iface::cellml_api::ReactantVariableRef,
-    public virtual CDA_VariableRef
+    public CDA_VariableRef
 {
 public:
   CDA_ReactantVariableRef(iface::XPCOM::IObject* parent,
-                   iface::dom::Element* reactantVariableRef);
+                   iface::dom::Element* reactantVariableRef)
+    : CDA_VariableRef(parent, reactantVariableRef) {}
   virtual ~CDA_ReactantVariableRef() {}
   CDA_IMPL_QI3(cellml_api::ReactantVariableRef,
                cellml_api::VariableRef, cellml_api::CellMLElement)
@@ -530,7 +551,7 @@ public:
 
 class CDA_ProductVariableRef
   : public virtual iface::cellml_api::ProductVariableRef,
-    public virtual CDA_VariableRef
+    public CDA_VariableRef
 {
 public:
   CDA_ProductVariableRef(iface::XPCOM::IObject* parent,
@@ -545,7 +566,7 @@ public:
 
 class CDA_RateVariableRef
   : public virtual iface::cellml_api::RateVariableRef,
-    public virtual CDA_VariableRef
+    public CDA_VariableRef
 {
 public:
   CDA_RateVariableRef(iface::XPCOM::IObject* parent,
