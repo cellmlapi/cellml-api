@@ -783,10 +783,11 @@ module cellml_api
      */
     readonly attribute CellMLVariable sourceVariable;
 
+
     /**
      * The name of the component containing this CellMLVariable.
      */
-    
+    readonly attribute CellMLAttributeString componentName;
   };
 
   /**
@@ -903,10 +904,10 @@ module cellml_api
     : CellMLElement
   {
     /**
-     * The name of the first component. This component 
+     * The name of the first component. This component
      */
     attribute CellMLAttributeString firstComponentName;
-    
+
     /**
      * The name of the second component.
      */
@@ -920,7 +921,7 @@ module cellml_api
     /**
      * The second component.
      */
-    readonly attribute CellMLComponent secondComponent;   
+    readonly attribute CellMLComponent secondComponent;
   };
 
   /**
