@@ -5,6 +5,7 @@
 #define CMETA_NS L"http://www.cellml.org/metadata/1.0#"
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
 #define RDF_NS L"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+#define XLINK_NS L"http://www.w3.org/1999/xlink"
 
 CDA_RDFXMLDOMRepresentation::CDA_RDFXMLDOMRepresentation(iface::dom::Element* idata)
   : _cda_refcount(1), datastore(idata)
@@ -62,7 +63,7 @@ CDA_RDFXMLStringRepresentation::serialisedData()
 }
 
 void
-CDA_RDFXMLStringRepresentation::serialisedData(wchar_t* attr)
+CDA_RDFXMLStringRepresentation::serialisedData(const wchar_t* attr)
   throw(std::exception&)
 {
   // We need to parse attr, and update the element accordingly.
@@ -88,7 +89,7 @@ CDA_URI::asText()
 }
 
 void
-CDA_URI::asText(wchar_t* attr)
+CDA_URI::asText(const wchar_t* attr)
   throw(std::exception&)
 {
   datastore->value(attr);
@@ -110,13 +111,13 @@ CDA_CellMLElement::~CDA_CellMLElement()
   datastore->release_ref();
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_CellMLElement::cellmlVersion()
   throw(std::exception&)
 {
   // We default to the latest known version, so that we will be backwards
   // compatible when a newer version comes out.
-  wchar_t* version = L"1.1";
+  const wchar_t* version = L"1.1";
   wchar_t* ns = datastore->namespaceURI();
   if (!wcscmp(version, CELLML_1_0_NS))
     version = L"1.0";
@@ -124,7 +125,7 @@ CDA_CellMLElement::cellmlVersion()
   return wcsdup(version);
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_CellMLElement::cmetaId()
   throw(std::exception&)
 {
@@ -132,7 +133,7 @@ CDA_CellMLElement::cmetaId()
 }
 
 void
-CDA_CellMLElement::cmetaId(iface::cellml_api::CellMLAttributeString attr)
+CDA_CellMLElement::cmetaId(const wchar_t* attr)
   throw(std::exception&)
 {
   return datastore->setAttributeNS(CMETA_NS, L"id", attr);
@@ -260,20 +261,26 @@ void
 CDA_CellMLElement::clearExtensionElements()
   throw(std::exception&)
 {
-  // Any child element which we don't recognise gets removed...
-  ObjRef<iface::dom::NodeList> nl =
-    already_AddRefd<iface::dom::NodeList>(datastore->childNodes());
-  u_int32_t i, l = nl->length();
-  for (i = 0; i < l; i++)
+  try
   {
-    iface::dom::Node* n = nl->item(i);
-    if (n->query_interface("cellml_api::CellMLElement"))
+    // Any child element which we don't recognise gets removed...
+    RETURN_INTO_OBJREF(nl, iface::dom::NodeList, datastore->childNodes());
+    u_int32_t i, l = nl->length();
+    for (i = 0; i < l; i++)
     {
+      iface::dom::Node* n = nl->item(i);
+      if (n->query_interface("cellml_api::CellMLElement"))
+      {
+        n->release_ref();
+        continue;
+      }
+      datastore->removeChild(n)->release_ref();
       n->release_ref();
-      continue;
     }
-    datastore->removeChild(n)->release_ref();
-    n->release_ref();
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
   }
 }
 
@@ -430,8 +437,8 @@ CDA_CellMLElement::replaceElement(iface::cellml_api::CellMLElement* x,
 void
 CDA_CellMLElement::removeByName
 (
- const iface::cellml_api::CellMLAttributeString type,
- const iface::cellml_api::CellMLAttributeString name
+ const wchar_t* type,
+ const wchar_t* name
 )
   throw(std::exception&)
 {
@@ -493,17 +500,23 @@ CDA_CellMLElement::modelElement()
 
   while (true)
   {
+    iface::cellml_api::Model* m =
+      dynamic_cast<iface::cellml_api::Model*>(cand);
+    if (m != NULL)
+    {
+      m->add_ref();
+      return m;
+    }
+
     iface::cellml_api::CellMLElement* el =
       dynamic_cast<iface::cellml_api::CellMLElement*>(mParent);
+
     if (el == NULL)
     {
-      // We have reached a point where no parent can be found. Either we have a
-      // Model, or there is no Model at the root.
-      iface::cellml_api::Model* m =
-        dynamic_cast<iface::cellml_api::Model*>(cand);
-      if (m != NULL)
-        m->add_ref();
-      return m;
+      // We have reached a point where no parent can be found, and we did not
+      // hit a model on the way. Therefore, we are looking at a fragment which
+      // does not have a modelElement.
+      return NULL;
     }
     cand = el;
   }
@@ -545,7 +558,7 @@ CDA_NamedCellMLElement::~CDA_NamedCellMLElement()
 {
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_NamedCellMLElement::name()
   throw(std::exception&)
 {
@@ -562,7 +575,7 @@ CDA_NamedCellMLElement::name()
 void
 CDA_NamedCellMLElement::name
 (
- iface::cellml_api::CellMLAttributeString attr
+ const wchar_t* attr
 )
   throw(std::exception&)
 {
@@ -576,11 +589,12 @@ CDA_NamedCellMLElement::name
   }
 }
 
-CDA_Model::CDA_Model(iface::dom::Document* aDoc,
+CDA_Model::CDA_Model(iface::cellml_api::DOMURLLoader* aLoader,
+                     iface::dom::Document* aDoc,
                      iface::dom::Element* modelElement)
   : CDA_CellMLElement(NULL, modelElement),
     CDA_NamedCellMLElement(NULL, modelElement),
-    mDoc(aDoc)
+    mLoader(aLoader), mDoc(aDoc)
 {
   mDoc->add_ref();
 }
@@ -596,7 +610,7 @@ CDA_Model::getAlternateVersion(const wchar_t* cellmlVersion)
 {
   try
   {
-    wchar_t* new_namespace;
+    const wchar_t* new_namespace;
     if (!wcscmp(cellmlVersion, L"1.0"))
       new_namespace = CELLML_1_0_NS;
     else if (!wcscmp(cellmlVersion, L"1.1"))
@@ -616,7 +630,7 @@ CDA_Model::getAlternateVersion(const wchar_t* cellmlVersion)
 
     // newDoc needs a CellML wrapper...
     iface::dom::Element* de = mDoc->documentElement();
-    CDA_Model* cm = new CDA_Model(newDoc, de);
+    CDA_Model* cm = new CDA_Model(&mLoader, newDoc, de);
     de->release_ref();
     return cm;
   }
@@ -645,12 +659,14 @@ CDA_Model::RecursivelyChangeVersionCopy
     wchar_t* nsURI = newItem->namespaceURI();
     if (!wcscmp(nsURI, aNewNamespace))
     {
+        free(nsURI);
       iface::dom::Node* tmp = origItem->cloneNode(false);
       newItem = already_AddRefd<iface::dom::Node>(tmp);
     }
     else if (!wcscmp(nsURI, CELLML_1_0_NS) || 
              !wcscmp(nsURI, CELLML_1_1_NS))
     {
+      free(nsURI);
       // See what type of node it is...
       switch (origItem->nodeType())
       {
@@ -658,8 +674,7 @@ CDA_Model::RecursivelyChangeVersionCopy
         {
           wchar_t* ln = origItem->localName();
           newItem = already_AddRefd<iface::dom::Node>
-            (mDoc->createElementNS(const_cast<wchar_t*>(aNewNamespace),
-                                   ln));
+            (mDoc->createElementNS(aNewNamespace, ln));
           free(ln);
           break;
         }
@@ -670,7 +685,7 @@ CDA_Model::RecursivelyChangeVersionCopy
             already_AddRefd<iface::dom::Node>
             (
              mDoc->createAttributeNS
-             (const_cast<wchar_t*>(aNewNamespace), ln)
+             (aNewNamespace, ln)
             );
           free(ln);
           break;
@@ -689,7 +704,6 @@ CDA_Model::RecursivelyChangeVersionCopy
       }
 
     }
-    free(nsURI);
     aCopy->appendChild(&newItem);
   }
 }
@@ -702,7 +716,7 @@ CDA_Model::groups()
     (
      already_AddRefd<CDA_CellMLElementSet>
      (
-      static_cast<CDA_CellMLElementSet*>((childElements()))
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
      )
     );
 
@@ -715,7 +729,7 @@ CDA_Model::imports()
 {
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
-     (static_cast<CDA_CellMLElementSet*>(childElements())));
+     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
   return new CDA_CellMLImportSet(&allChildren);
 }
 
@@ -756,7 +770,7 @@ CDA_Model::localUnits()
 {
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
-     (static_cast<CDA_CellMLElementSet*>(childElements())));
+     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
 
   return new CDA_UnitsSet(&allChildren /*, false */);
 }
@@ -780,7 +794,7 @@ CDA_Model::localComponents()
 {
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
-     (static_cast<CDA_CellMLElementSet*>(childElements())));
+     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
   return new CDA_CellMLComponentSet(&allChildren);
 }
 
@@ -803,20 +817,20 @@ CDA_Model::connections()
 {
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
-     (static_cast<CDA_CellMLElementSet*>(childElements())));
+     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
   return new CDA_ConnectionSet(&allChildren);
 }
 
 iface::cellml_api::GroupSet*
 CDA_Model::findGroupsWithRelationshipRefName
 (
- const iface::cellml_api::CellMLAttributeString name
+ const wchar_t* name
 )
   throw(std::exception&)
 {
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
-     (static_cast<CDA_CellMLElementSet*>(childElements())));
+     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
   return new CDA_GroupSet(&allChildren, name);
 }
 
@@ -850,7 +864,7 @@ CDA_Model::createComponent()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"component");
     return new CDA_CellMLComponent(NULL, &newNode);
   }
@@ -869,7 +883,7 @@ CDA_Model::createImportComponent()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"component");
     return new CDA_ImportComponent(NULL, &newNode);
   }
@@ -888,7 +902,7 @@ CDA_Model::createUnits()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"units");
     return new CDA_Units(NULL, &newNode);
   }
@@ -907,7 +921,7 @@ CDA_Model::createImportUnits()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"units");
     return new CDA_ImportUnits(NULL, &newNode);
   }
@@ -926,7 +940,7 @@ CDA_Model::createUnit()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()), L"unit");
+      mDoc->createElementNS(myNamespace.c_str(), L"unit");
     return new CDA_Unit(NULL, &newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -944,7 +958,7 @@ CDA_Model::createCellMLImport()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"import");
     return new CDA_CellMLImport(NULL, &newNode);
   }
@@ -963,7 +977,7 @@ CDA_Model::createCellMLVariable()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"variable");
     return new CDA_CellMLVariable(NULL, &newNode);
   }
@@ -982,7 +996,7 @@ CDA_Model::createComponentRef()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"component_ref");
     return new CDA_ComponentRef(NULL, &newNode);
   }
@@ -1001,7 +1015,7 @@ CDA_Model::createRelationshipRef()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"relationship_ref");
     return new CDA_RelationshipRef(NULL, &newNode);
   }
@@ -1020,7 +1034,7 @@ CDA_Model::createGroup()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"group");
     return new CDA_Group(NULL, &newNode);
   }
@@ -1039,7 +1053,7 @@ CDA_Model::createConnection()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"connection");
     return new CDA_Connection(NULL, &newNode);
   }
@@ -1058,7 +1072,7 @@ CDA_Model::createMapVariables()
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"map_variables");
     return new CDA_MapVariables(NULL, &newNode);
   }
@@ -1077,7 +1091,7 @@ CDA_Model::createReaction()
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"reaction");
     return new CDA_Reaction(NULL, &newNode);
   }
@@ -1096,7 +1110,7 @@ CDA_Model::createReactantVariableRef()
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"variable_ref");
     return new CDA_ReactantVariableRef(NULL, &newNode);
   }
@@ -1115,7 +1129,7 @@ CDA_Model::createRateVariableRef()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"variable_ref");
     return new CDA_RateVariableRef(NULL, &newNode);
   }
@@ -1134,10 +1148,10 @@ CDA_Model::createReactantRole()
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"role");
 
-    newNode->setAttributeNS(const_cast<wchar_t*>(myNamespace.c_str()),
+    newNode->setAttributeNS(myNamespace.c_str(),
                             L"role", L"reactant");
     return new CDA_ReactantRole(NULL, &newNode);
   }
@@ -1156,10 +1170,10 @@ CDA_Model::createProductRole()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"role");
 
-    newNode->setAttributeNS(const_cast<wchar_t*>(myNamespace.c_str()),
+    newNode->setAttributeNS(myNamespace.c_str(),
                             L"role", L"product");
     return new CDA_ProductRole(NULL, &newNode);
   }
@@ -1179,10 +1193,10 @@ CDA_Model::createRateRole()
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
 
     ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(const_cast<wchar_t*>(myNamespace.c_str()),
+      mDoc->createElementNS(myNamespace.c_str(),
                             L"role");
     
-    newNode->setAttributeNS(const_cast<wchar_t*>(myNamespace.c_str()),
+    newNode->setAttributeNS(myNamespace.c_str(),
                             L"role", L"rate");
 
     return new CDA_RateRole(NULL, &newNode);
@@ -1303,6 +1317,14 @@ iface::cellml_api::CellMLVariableSet*
 CDA_CellMLComponent::variables()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_CellMLVariableSet(&allChildren);
 }
 
 
@@ -1310,261 +1332,886 @@ iface::cellml_api::UnitsSet*
 CDA_CellMLComponent::units()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_UnitsSet(&allChildren);
 }
 
 iface::cellml_api::ConnectionSet*
 CDA_CellMLComponent::connections()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_ConnectionSet(&allChildren);
 }
 
 iface::cellml_api::CellMLComponent*
 CDA_CellMLComponent::encapsulationParent()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error 'encapsulationParent() is not implemented yet'
+#endif
+  return NULL;
 }
 
 iface::cellml_api::CellMLComponentSet*
 CDA_CellMLComponent::encapsulationChildren()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error 'encapsulationChildren() is not implemented yet'
+#endif
+  return NULL;
 }
 
 iface::cellml_api::CellMLComponent*
 CDA_CellMLComponent::containmentParent()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error 'containmentParent() is not implemented yet'
+#endif
+  return NULL;
 }
 
 iface::cellml_api::CellMLComponentSet*
 CDA_CellMLComponent::containmentChildren()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error 'containmentChildren() is not implemented yet'
+#endif
+  return NULL;
 }
 
 u_int32_t
 CDA_CellMLComponent::importNumber()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error 'importNumber() is not implemented yet'
+#endif
+  return 0;
 }
 
 bool
 CDA_UnitsBase::isBaseUnits()
   throw(std::exception&)
 {
+  try
+  {
+    RETURN_INTO_WSTRING(baseUnits, datastore->getAttribute(L"base_units"));
+    if (baseUnits == L"yes")
+      return true;
+    return false;
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_UnitsBase::isBaseUnits(bool attr)
   throw(std::exception&)
 {
+  try
+  {
+    const wchar_t* str = attr ? L"yes" : L"no";
+    datastore->setAttribute(L"base_units", str);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::UnitSet*
 CDA_UnitsBase::unitCollection()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_UnitSet(&allChildren);
 }
+
+static struct
+{
+  const wchar_t* prefix;
+  int32_t value;
+} PrefixTable[] =
+{
+  {L"atto", -18},
+  {L"centi", -2},
+  {L"deci", -1},
+  {L"deka", 1},
+  {L"exa", 18},
+  {L"femto", -15},
+  {L"giga", 9},
+  {L"hecto", 2},
+  {L"kilo", 3},
+  {L"mega", 6},
+  {L"micro", -6},
+  {L"milli", -3},
+  {L"nano", -9},
+  {L"peta", 15},
+  {L"pico", -12},
+  {L"tera", 12},
+  {L"yocto", -24},
+  {L"yotta", 24},
+  {L"zepto", -21},
+  {L"zetta", 21}
+};
+
+static struct
+{
+  const wchar_t* prefix;
+  int32_t value;
+} PrefixNumberTable[] =
+{
+  {L"yocto", -24},
+  {NULL, -23},
+  {NULL, -22},
+  {L"zepto", -21},
+  {NULL, -20},
+  {NULL, -19},
+  {L"atto", -18},
+  {NULL, -17},
+  {NULL, -16},
+  {L"femto", -15},
+  {NULL, -14},
+  {NULL, -13},
+  {L"pico", -12},
+  {NULL, -11},
+  {NULL, -10},
+  {L"nano", -9},
+  {NULL, -8},
+  {NULL, -7},
+  {L"micro", -6},
+  {NULL, -5},
+  {NULL, -4},
+  {L"milli", -3},
+  {L"centi", -2},
+  {L"deci", -1},
+  {NULL, 0},
+  {L"deka", 1},
+  {L"hecto", 2},
+  {L"kilo", 3},
+  {NULL, 4},
+  {NULL, 5},
+  {L"mega", 6},
+  {NULL, 7},
+  {NULL, 8},
+  {L"giga", 9},
+  {NULL, 10},
+  {NULL, 11},
+  {L"tera", 12},
+  {NULL, 13},
+  {NULL, 14},
+  {L"peta", 15},
+  {NULL, 16},
+  {NULL, 17},
+  {L"exa", 18},
+  {NULL, 19},
+  {NULL, 20},
+  {L"zetta", 21},
+  {NULL, 22},
+  {NULL, 23},
+  {L"yotta", 24}
+};
 
 int32_t
 CDA_Unit::prefix()
   throw(std::exception&)
 {
+  try
+  {
+    RETURN_INTO_WSTRING(prefix, datastore->getAttribute(L"prefix"));
+
+    if (prefix == L"")
+      return 0;
+
+    const wchar_t* prefixWC = prefix.c_str();
+    if ((prefixWC[0] >= '0' && prefixWC[0] <= '9') ||
+        (prefixWC[0] == '-' && prefixWC[1] >= '0' && prefixWC[1] <= '9'))
+    {
+      wchar_t* endPtr;
+      int32_t ret = wcstol(prefixWC, &endPtr, 10);
+      if (*endPtr != 0)
+        throw iface::cellml_api::CellMLException();
+      return ret;
+    }
+    int32_t lowerBound = 0;
+    int32_t upperBound = sizeof(PrefixTable) / sizeof(PrefixTable[0]);
+    while (lowerBound <= upperBound)
+    {
+      int32_t choice = (upperBound + lowerBound) / 2;
+      int32_t cval = wcscasecmp(PrefixTable[choice].prefix, prefixWC);
+      if (cval == 0)
+        return PrefixTable[choice].value;
+      else if (cval < 0)
+        // The prefix in the table is less than the input, so the input must be
+        // after choice...
+        lowerBound = choice + 1;
+      else
+        upperBound = choice - 1;
+    }
+    throw iface::cellml_api::CellMLException();
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_Unit::prefix(int32_t attr)
   throw(std::exception&)
 {
+  try
+  {
+    if (attr == 0)
+    {
+      datastore->removeAttribute(L"prefix");
+      return;
+    }
+
+    if (attr >= -24 && attr <= 24 &&
+        PrefixNumberTable[attr + 24].prefix != NULL)
+    {
+      datastore->setAttribute(L"prefix", PrefixNumberTable[attr + 24].prefix);
+      return;
+    }
+
+    // We have a non-SI prefix, so we need to express it as a number...
+    wchar_t buf[12];
+    swprintf(buf, 12, L"%d", attr);
+    datastore->setAttribute(L"prefix", buf);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 double
 CDA_Unit::multiplier()
   throw(std::exception&)
 {
+  try
+  {
+    wchar_t* mupstr = datastore->getAttribute(L"multiplier");
+    if (mupstr[0] == 0)
+    {
+      free(mupstr);
+      return 1.0;
+    }
+    wchar_t* endstr;
+    double val = wcstod(mupstr, &endstr);
+    bool invalid = false;
+    if (*endstr == 0)
+      invalid = true;
+    free(mupstr);
+
+    if (invalid)
+      throw iface::cellml_api::CellMLException();
+
+    return val;
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_Unit::multiplier(double attr)
   throw(std::exception&)
 {
+  try
+  {
+    if (attr == 1.0)
+    {
+      datastore->removeAttribute(L"multiplier");
+      return;
+    }
+
+    wchar_t buf[24];
+    swprintf(buf, 12, L"%g", attr);
+    datastore->setAttribute(L"multipler", buf);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 double
 CDA_Unit::offset()
   throw(std::exception&)
 {
+  try
+  {
+    wchar_t* offstr = datastore->getAttribute(L"offset");
+    if (offstr[0] == 0)
+    {
+      free(offstr);
+      return 0.0;
+    }
+    wchar_t* endstr;
+    double val = wcstod(offstr, &endstr);
+    bool invalid = false;
+    if (*endstr == 0)
+      invalid = true;
+    free(offstr);
+
+    if (invalid)
+      throw iface::cellml_api::CellMLException();
+
+    return val;
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_Unit::offset(double attr)
   throw(std::exception&)
 {
+  try
+  {
+    if (attr == 0.0)
+    {
+      datastore->removeAttribute(L"offset");
+      return;
+    }
+
+    wchar_t buf[24];
+    swprintf(buf, 12, L"%g", attr);
+    datastore->setAttribute(L"offset", buf);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 double
 CDA_Unit::exponent()
   throw(std::exception&)
 {
+  try
+  {
+    wchar_t* expstr = datastore->getAttribute(L"exponent");
+    if (expstr[0] == 0)
+    {
+      free(expstr);
+      return 0.0;
+    }
+    wchar_t* endstr;
+    double val = wcstod(expstr, &endstr);
+    bool invalid = false;
+    if (*endstr == 0)
+      invalid = true;
+    free(expstr);
+
+    if (invalid)
+      throw iface::cellml_api::CellMLException();
+
+    return val;
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_Unit::exponent(double attr)
   throw(std::exception&)
 {
+  try
+  {
+    if (attr == 1.0)
+    {
+      datastore->removeAttribute(L"exponent");
+      return;
+    }
+
+    wchar_t buf[24];
+    swprintf(buf, 12, L"%g", attr);
+    datastore->setAttribute(L"exponent", buf);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_Unit::units()
   throw(std::exception&)
 {
+  try
+  {
+    return datastore->getAttribute(L"units");
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
-CDA_Unit::units(iface::cellml_api::CellMLAttributeString attr)
+CDA_Unit::units(const wchar_t* attr)
   throw(std::exception&)
 {
+  try
+  {
+    datastore->setAttribute(L"units", attr);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::URI*
 CDA_CellMLImport::xlinkHref()
   throw(std::exception&)
 {
+  try
+  {
+    ObjRef<iface::dom::Attr> attrNode =
+      already_AddRefd<iface::dom::Attr>
+      (datastore->getAttributeNodeNS(XLINK_NS, L"href"));
+    return new CDA_URI(&attrNode);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::ImportComponentSet*
 CDA_CellMLImport::components()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_ImportComponentSet(&allChildren);
 }
 
 iface::cellml_api::ImportUnitsSet*
 CDA_CellMLImport::units()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_ImportUnitsSet(&allChildren);
 }
 
 iface::cellml_api::ConnectionSet*
 CDA_CellMLImport::importedConnections()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_ConnectionSet(&allChildren);
 }
 
 void
 CDA_CellMLImport::fullyInstantiate()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error fullyInstantiate is not implemented yet.
+#endif
 }
 
 bool
 CDA_CellMLImport::wasFullyInstantiated()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error wasFullyInstantiated is not implemented yet.
+#endif
+  return false;
 }
 
 u_int32_t
 CDA_CellMLImport::uniqueIdentifier()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error uniqueIdentifier is not implemented yet.
+#endif
+  return 0;
 }
 
-iface::cellml_api::CellMLAttributeString
-CDA_ImportUnits::componentRef()
+wchar_t*
+CDA_ImportComponent::componentRef()
   throw(std::exception&)
 {
+  try
+  {
+    return datastore->getAttribute(L"component_ref");
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
-CDA_ImportUnits::componentRef(iface::cellml_api::CellMLAttributeString attr)
+CDA_ImportComponent::componentRef(const wchar_t* attr)
   throw(std::exception&)
 {
+  try
+  {
+    datastore->setAttribute(L"component_ref", attr);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
+void
+CDA_ImportComponent::fullyInstantiate()
+  throw(std::exception&)
+{
+#ifdef SHOW_NOT_IMPLEMENTED
+#error fullyInstantiate is not implemented yet.
+#endif
+}
+
+bool
+CDA_ImportComponent::wasFullyInstantiated()
+  throw(std::exception&)
+{
+#ifdef SHOW_NOT_IMPLEMENTED
+#error wasFullyInstantiated is not implemented yet.
+#endif
+  return false;
+}
+
+wchar_t*
+CDA_ImportUnits::unitsRef()
+  throw(std::exception&)
+{
+  try
+  {
+    return datastore->getAttribute(L"units_ref");
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
+void
+CDA_ImportUnits::unitsRef(const wchar_t* attr)
+  throw(std::exception&)
+{
+  try
+  {
+    datastore->setAttribute(L"units_ref", attr);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_ImportUnits::fullyInstantiate()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error fullyInstantiate is not implemented yet.
+#endif
 }
 
 bool
 CDA_ImportUnits::wasFullyInstantiated()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error wasFullyInstantiated is not implemented yet.
+#endif
+  return false;
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_CellMLVariable::initialValue()
   throw(std::exception&)
 {
+  try
+  {
+    return datastore->getAttribute(L"initial_value");
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_CellMLVariable::initialValue
 (
- iface::cellml_api::CellMLAttributeString attr
+ const wchar_t* attr
 )
   throw(std::exception&)
 {
+  try
+  {
+    datastore->setAttribute(L"initial_value", attr);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::VariableInterface
 CDA_CellMLVariable::privateInterface()
   throw(std::exception&)
 {
+  try
+  {
+    RETURN_INTO_WSTRING(privint, datastore->getAttribute(L"private_interface"));
+    if (privint == L"")
+      return iface::cellml_api::INTERFACE_NONE;
+    if (privint == L"in")
+      return iface::cellml_api::INTERFACE_IN;
+    else if (privint == L"out")
+      return iface::cellml_api::INTERFACE_OUT;
+    else if (privint == L"none")
+      return iface::cellml_api::INTERFACE_NONE;
+    throw iface::cellml_api::CellMLException();
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_CellMLVariable::privateInterface(iface::cellml_api::VariableInterface attr)
   throw(std::exception&)
 {
+  try
+  {
+    if (attr == iface::cellml_api::INTERFACE_NONE)
+    {
+      datastore->removeAttribute(L"private_interface");
+      return;
+    }
+
+    const wchar_t* str;
+    switch (attr)
+    {
+    case iface::cellml_api::INTERFACE_IN:
+      str = L"in";
+      break;
+    case iface::cellml_api::INTERFACE_OUT:
+      str = L"out";
+      break;
+    default:
+      throw iface::cellml_api::CellMLException();
+    }
+
+    datastore->setAttribute(L"private_interface", str);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::VariableInterface
 CDA_CellMLVariable::publicInterface()
   throw(std::exception&)
 {
+  try
+  {
+    RETURN_INTO_WSTRING(pubint, datastore->getAttribute(L"public_interface"));
+    if (pubint == L"")
+      return iface::cellml_api::INTERFACE_NONE;
+    if (pubint == L"in")
+      return iface::cellml_api::INTERFACE_IN;
+    else if (pubint == L"out")
+      return iface::cellml_api::INTERFACE_OUT;
+    else if (pubint == L"none")
+      return iface::cellml_api::INTERFACE_NONE;
+    throw iface::cellml_api::CellMLException();
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
 CDA_CellMLVariable::publicInterface(iface::cellml_api::VariableInterface attr)
   throw(std::exception&)
 {
+  try
+  {
+    if (attr == iface::cellml_api::INTERFACE_NONE)
+    {
+      datastore->removeAttribute(L"public_interface");
+      return;
+    }
+
+    const wchar_t* str;
+    switch (attr)
+    {
+    case iface::cellml_api::INTERFACE_IN:
+      str = L"in";
+      break;
+    case iface::cellml_api::INTERFACE_OUT:
+      str = L"out";
+      break;
+    default:
+      throw iface::cellml_api::CellMLException();
+    }
+
+    datastore->setAttribute(L"public_interface", str);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::CellMLVariableSet*
 CDA_CellMLVariable::connectedVariables()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error connectedVariables() implementation not complete.
+#endif
+  return NULL;
 }
 
 iface::cellml_api::CellMLVariable*
 CDA_CellMLVariable::sourceVariable()
   throw(std::exception&)
 {
+#ifdef SHOW_NOT_IMPLEMENTED
+#error sourceVariable() is not implemented yet.
+#endif
+  return NULL;
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
+CDA_CellMLVariable::componentName()
+  throw(std::exception&)
+{
+  try
+  {
+    ObjRef<iface::cellml_api::CellMLElement>
+      pe(already_AddRefd<iface::cellml_api::CellMLElement>
+         (
+          static_cast<iface::cellml_api::CellMLElement*>(parentElement())
+         )
+        );
+
+    iface::cellml_api::CellMLComponent* cc =
+      dynamic_cast<iface::cellml_api::CellMLComponent*>
+      (pe->query_interface("cellml_api::CellMLComponent"));
+    return cc->name();
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
+wchar_t*
 CDA_ComponentRef::componentName()
   throw(std::exception&)
 {
+  try
+  {
+    return datastore->getAttribute(L"component");
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 void
-CDA_ComponentRef::componentName(iface::cellml_api::CellMLAttributeString attr)
+CDA_ComponentRef::componentName(const wchar_t* attr)
   throw(std::exception&)
 {
+  try
+  {
+    datastore->setAttribute(L"component", attr);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::ComponentRefSet*
 CDA_ComponentRef::componentRefs()
   throw(std::exception&)
 {
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+
+  return new CDA_ComponentRefSet(&allChildren);
 }
 
 iface::cellml_api::ComponentRef*
 CDA_ComponentRef::parentComponentRef()
   throw(std::exception&)
 {
+  // There are two cases... 
 }
 
 iface::cellml_api::Group*
@@ -1573,19 +2220,19 @@ CDA_ComponentRef::parentGroup()
 {
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_RelationshipRef::name()
   throw(std::exception&)
 {
 }
 
 void
-CDA_RelationshipRef::name(iface::cellml_api::CellMLAttributeString attr)
+CDA_RelationshipRef::name(const wchar_t* attr)
   throw(std::exception&)
 {
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_RelationshipRef::relationship()
   throw(std::exception&)
 {
@@ -1593,7 +2240,7 @@ CDA_RelationshipRef::relationship()
 
 void
 CDA_RelationshipRef::relationship
-(iface::cellml_api::CellMLAttributeString attr)
+(const wchar_t* attr)
   throw(std::exception&)
 {
 }
@@ -1652,26 +2299,26 @@ CDA_Connection::variableMappings()
 {
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_MapComponents::firstComponentName()
   throw(std::exception&)
 {
 }
 
 void
-CDA_MapComponents::firstComponentName(iface::cellml_api::CellMLAttributeString attr)
+CDA_MapComponents::firstComponentName(const wchar_t* attr)
   throw(std::exception&)
 {
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_MapComponents::secondComponentName()
   throw(std::exception&)
 {
 }
 
 void 
-CDA_MapComponents::secondComponentName(iface::cellml_api::CellMLAttributeString attr)
+CDA_MapComponents::secondComponentName(const wchar_t* attr)
   throw(std::exception&)
 {
 }
@@ -1694,26 +2341,26 @@ CDA_MapComponents::secondComponent()
 {
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_MapVariables::firstVariableName()
   throw(std::exception&)
 {
 }
 
 void
-CDA_MapVariables::firstVariableName(iface::cellml_api::CellMLAttributeString attr)
+CDA_MapVariables::firstVariableName(const wchar_t* attr)
   throw(std::exception&)
 {
 }
 
-iface::cellml_api::CellMLAttributeString
+wchar_t*
 CDA_MapVariables::secondVariableName()
   throw(std::exception&)
 {
 }
 
 void
-CDA_MapVariables::secondVariableName(iface::cellml_api::CellMLAttributeString attr)
+CDA_MapVariables::secondVariableName(const wchar_t* attr)
   throw(std::exception&)
 {
 }
@@ -1809,6 +2456,38 @@ wchar_t*
 CDA_Role::roleType()
   throw(std::exception&)
 {
+}
+
+u_int32_t
+CDA_CellMLElementSetUseIteratorMixin::length()
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(cei, iface::cellml_api::CellMLElementIterator, iterate());
+
+  u_int32_t length = 0;
+  while (true)
+  {
+    RETURN_INTO_OBJREF(ce, iface::cellml_api::CellMLElement, cei->next());
+    if (&ce == NULL)
+      return length;
+    length++;
+  }
+}
+
+bool
+CDA_CellMLElementSetUseIteratorMixin::contains(iface::cellml_api::CellMLElement* x)
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(cei, iface::cellml_api::CellMLElementIterator, iterate());
+  
+  while (true)
+  {
+    RETURN_INTO_OBJREF(ce, iface::cellml_api::CellMLElement, cei->next());
+    if (&ce == x)
+      return true;
+    else if (&ce == NULL)
+      return false;
+  }
 }
 
 CDA_DOMElementIteratorBase::CDA_DOMElementIteratorBase
@@ -1942,7 +2621,8 @@ CDA_DOMElementIteratorBase::handleEvent(iface::events::Event* evt)
     {
       // Convert to a mutation event...
       iface::events::MutationEvent* mevt =
-        dynamic_cast<iface::events::MutationEvent*>(evt->query_interface("events::MutationEvent"));
+        dynamic_cast<iface::events::MutationEvent*>
+        (evt->query_interface("events::MutationEvent"));
 
       ObjRef<iface::dom::Node> rn =
         already_AddRefd<iface::dom::Node>(mevt->relatedNode());
