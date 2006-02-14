@@ -16,7 +16,7 @@
     }
 
 #define CDA_IMPL_QI1(c1) \
-    IObject* query_interface(const iface::XPCOM::utf8string id) \
+    IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -27,7 +27,7 @@
     }
 
 #define CDA_IMPL_QI2(c1, c2) \
-    IObject* query_interface(const iface::XPCOM::utf8string id) \
+    IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -40,7 +40,7 @@
     }
 
 #define CDA_IMPL_QI3(c1, c2, c3) \
-    IObject* query_interface(const iface::XPCOM::utf8string id) \
+    IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -55,7 +55,7 @@
     }
 
 #define CDA_IMPL_QI4(c1, c2, c3, c4) \
-    IObject* query_interface(const iface::XPCOM::utf8string id) \
+    IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -72,7 +72,7 @@
     }
 
 #define CDA_IMPL_QI5(c1, c2, c3, c4, c5) \
-    IObject* query_interface(const iface::XPCOM::utf8string id) \
+    IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -91,7 +91,7 @@
     }
 
 #define CDA_IMPL_QI6(c1, c2, c3, c4, c5, c6) \
-    IObject* query_interface(const iface::XPCOM::utf8string id) \
+    IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -112,7 +112,7 @@
     }
 
 #define CDA_IMPL_QI7(c1, c2, c3, c4, c5, c6, c7) \
-    IObject* query_interface(const iface::XPCOM::utf8string id) \
+    IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -256,3 +256,15 @@ private:
   wchar_t* tmp_##lhs = rhs; \
   std::wstring lhs(tmp_##lhs); \
   free(tmp_##lhs);
+
+#define RETURN_INTO_OBJREF(lhs, type, rhs) \
+  ObjRef<type> lhs \
+  ( \
+    already_AddRefd<type> \
+    ( \
+      static_cast<type> \
+      ( \
+        rhs \
+      ) \
+    )\
+  )
