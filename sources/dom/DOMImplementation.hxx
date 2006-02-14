@@ -19,22 +19,22 @@ public:
   CDA_DOMImplementation(GdomeDOMImplementation*);
   virtual ~CDA_DOMImplementation();
 
-  bool hasFeature(const iface::dom::DOMString feature,
-                  const iface::dom::DOMString version)
+  bool hasFeature(const wchar_t* feature,
+                  const wchar_t* version)
     throw(std::exception&);
 
   iface::dom::DocumentType* createDocumentType
   (
-   const iface::dom::DOMString qualifiedName,
-   const iface::dom::DOMString publicId,
-   const iface::dom::DOMString systemId
+   const wchar_t* qualifiedName,
+   const wchar_t* publicId,
+   const wchar_t* systemId
   )
     throw(std::exception&);
 
   iface::dom::Document* createDocument
   (
-   const iface::dom::DOMString namespaceURI,
-   const iface::dom::DOMString qualifiedName,
+   const wchar_t* namespaceURI,
+   const wchar_t* qualifiedName,
    iface::dom::DocumentType* doctype
   )
     throw(std::exception&);
@@ -52,9 +52,9 @@ public:
   CDA_Node() {}
   virtual ~CDA_Node() {};
 
-  iface::dom::DOMString nodeName() throw(std::exception&);
-  iface::dom::DOMString nodeValue() throw(std::exception&);
-  void nodeValue(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* nodeName() throw(std::exception&);
+  wchar_t* nodeValue() throw(std::exception&);
+  void nodeValue(const wchar_t* attr) throw(std::exception&);
   u_int16_t nodeType() throw(std::exception&);
   iface::dom::Node* parentNode() throw(std::exception&);
   iface::dom::NodeList* childNodes() throw(std::exception&);
@@ -77,17 +77,17 @@ public:
   bool hasChildNodes() throw(std::exception&);
   iface::dom::Node* cloneNode(bool deep) throw(std::exception&);
   void normalize() throw(std::exception&);
-  bool isSupported(const iface::dom::DOMString feature,
-                   const iface::dom::DOMString version) throw(std::exception&);
-  iface::dom::DOMString namespaceURI() throw(std::exception&);
-  iface::dom::DOMString prefix() throw(std::exception&);
-  void prefix(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString localName() throw(std::exception&);
+  bool isSupported(const wchar_t* feature,
+                   const wchar_t* version) throw(std::exception&);
+  wchar_t* namespaceURI() throw(std::exception&);
+  wchar_t* prefix() throw(std::exception&);
+  void prefix(const wchar_t* attr) throw(std::exception&);
+  wchar_t* localName() throw(std::exception&);
   bool hasAttributes() throw(std::exception&);
-  void addEventListener(const iface::dom::DOMString type,
+  void addEventListener(const wchar_t* type,
                         iface::events::EventListener* listener,
                         bool useCapture) throw(std::exception&);
-  void removeEventListener(const iface::dom::DOMString type,
+  void removeEventListener(const wchar_t* type,
                            iface::events::EventListener* listener,
                            bool useCapture) throw(std::exception&);
   bool dispatchEvent(iface::events::Event* evt) throw(std::exception&);
@@ -145,21 +145,21 @@ public:
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(dom::NamedNodeMap)
 
-  iface::dom::Node* getNamedItem(const iface::dom::DOMString name)
+  iface::dom::Node* getNamedItem(const wchar_t* name)
     throw(std::exception&);
   iface::dom::Node* setNamedItem(iface::dom::Node* arg)
     throw(std::exception&);
-  iface::dom::Node* removeNamedItem(const iface::dom::DOMString name)
+  iface::dom::Node* removeNamedItem(const wchar_t* name)
     throw(std::exception&);
   iface::dom::Node* item(u_int32_t index) throw(std::exception&);
   u_int32_t length() throw(std::exception&);
-  iface::dom::Node* getNamedItemNS(const iface::dom::DOMString namespaceURI,
-                                   const iface::dom::DOMString localName)
+  iface::dom::Node* getNamedItemNS(const wchar_t* namespaceURI,
+                                   const wchar_t* localName)
     throw(std::exception&);
   iface::dom::Node* setNamedItemNS(iface::dom::Node* arg)
     throw(std::exception&);
-  iface::dom::Node* removeNamedItemNS(const iface::dom::DOMString namespaceURI,
-                                      const iface::dom::DOMString localName)
+  iface::dom::Node* removeNamedItemNS(const wchar_t* namespaceURI,
+                                      const wchar_t* localName)
     throw(std::exception&);
 
   GdomeNamedNodeMap* impl;
@@ -170,18 +170,18 @@ class CDA_CharacterData
     public CDA_Node
 {
 public:
-  iface::dom::DOMString data() throw(std::exception&);
-  void data(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* data() throw(std::exception&);
+  void data(const wchar_t* attr) throw(std::exception&);
   u_int32_t length() throw(std::exception&);
-  iface::dom::DOMString substringData(u_int32_t offset, u_int32_t count)
+  wchar_t* substringData(u_int32_t offset, u_int32_t count)
     throw(std::exception&);
-  void appendData(const iface::dom::DOMString arg) throw(std::exception&);
-  void insertData(u_int32_t offset, const iface::dom::DOMString arg)
+  void appendData(const wchar_t* arg) throw(std::exception&);
+  void insertData(u_int32_t offset, const wchar_t* arg)
     throw(std::exception&);
   void deleteData(u_int32_t offset, u_int32_t count)
     throw(std::exception&);
   void replaceData(u_int32_t offset, u_int32_t count,
-                   const iface::dom::DOMString arg) throw(std::exception&);
+                   const wchar_t* arg) throw(std::exception&);
 
   /* Implementation only... */
   virtual GdomeCharacterData* fetchCData() const = 0;
@@ -198,10 +198,10 @@ public:
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::Node, dom::Attr)
 
-  iface::dom::DOMString name() throw(std::exception&);
+  wchar_t* name() throw(std::exception&);
   bool specified() throw(std::exception&);
-  iface::dom::DOMString value() throw(std::exception&);
-  void value(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* value() throw(std::exception&);
+  void value(const wchar_t* attr) throw(std::exception&);
   iface::dom::Element* ownerElement() throw(std::exception&);
 
   GdomeAttr* impl;
@@ -219,44 +219,44 @@ public:
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::Node, dom::Element)
 
-  iface::dom::DOMString tagName()
+  wchar_t* tagName()
     throw(std::exception&);
-  iface::dom::DOMString getAttribute(const iface::dom::DOMString name)
+  wchar_t* getAttribute(const wchar_t* name)
     throw(std::exception&);
-  void setAttribute(const iface::dom::DOMString name,
-                    const iface::dom::DOMString value) throw(std::exception&);
-  void removeAttribute(const iface::dom::DOMString name)
+  void setAttribute(const wchar_t* name,
+                    const wchar_t* value) throw(std::exception&);
+  void removeAttribute(const wchar_t* name)
     throw(std::exception&);
-  iface::dom::Attr* getAttributeNode(const iface::dom::DOMString name)
+  iface::dom::Attr* getAttributeNode(const wchar_t* name)
     throw(std::exception&);
   iface::dom::Attr* setAttributeNode(iface::dom::Attr* newAttr)
     throw(std::exception&);
   iface::dom::Attr* removeAttributeNode(iface::dom::Attr* oldAttr)
     throw(std::exception&);
-  iface::dom::NodeList* getElementsByTagName(const iface::dom::DOMString name)
+  iface::dom::NodeList* getElementsByTagName(const wchar_t* name)
     throw(std::exception&);
-  iface::dom::DOMString getAttributeNS(const iface::dom::DOMString namespaceURI,
-                                       const iface::dom::DOMString localName)
+  wchar_t* getAttributeNS(const wchar_t* namespaceURI,
+                                       const wchar_t* localName)
     throw(std::exception&);
-  void setAttributeNS(const iface::dom::DOMString namespaceURI,
-                      const iface::dom::DOMString qualifiedName,
-                      const iface::dom::DOMString value)
+  void setAttributeNS(const wchar_t* namespaceURI,
+                      const wchar_t* qualifiedName,
+                      const wchar_t* value)
     throw(std::exception&);
-  void removeAttributeNS(const iface::dom::DOMString namespaceURI,
-                         const iface::dom::DOMString localName)
+  void removeAttributeNS(const wchar_t* namespaceURI,
+                         const wchar_t* localName)
     throw(std::exception&);
-  iface::dom::Attr* getAttributeNodeNS(const iface::dom::DOMString namespaceURI,
-                                       const iface::dom::DOMString localName)
+  iface::dom::Attr* getAttributeNodeNS(const wchar_t* namespaceURI,
+                                       const wchar_t* localName)
     throw(std::exception&);
   iface::dom::Attr* setAttributeNodeNS(iface::dom::Attr* newAttr)
     throw(std::exception&);
   iface::dom::NodeList*
-  getElementsByTagNameNS(const iface::dom::DOMString namespaceURI,
-                         const iface::dom::DOMString localName)
+  getElementsByTagNameNS(const wchar_t* namespaceURI,
+                         const wchar_t* localName)
     throw(std::exception&);
-  bool hasAttribute(const iface::dom::DOMString name) throw(std::exception&);
-  bool hasAttributeNS(const iface::dom::DOMString namespaceURI,
-                      const iface::dom::DOMString localName)
+  bool hasAttribute(const wchar_t* name) throw(std::exception&);
+  bool hasAttributeNS(const wchar_t* namespaceURI,
+                      const wchar_t* localName)
     throw(std::exception&);
 
   GdomeElement* impl;
@@ -333,12 +333,12 @@ public:
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::DocumentType, dom::Node)
 
-  iface::dom::DOMString name() throw(std::exception&);
+  wchar_t* name() throw(std::exception&);
   iface::dom::NamedNodeMap* entities() throw(std::exception&);
   iface::dom::NamedNodeMap* notations() throw(std::exception&);
-  iface::dom::DOMString publicId() throw(std::exception&);
-  iface::dom::DOMString systemId() throw(std::exception&);
-  iface::dom::DOMString internalSubset() throw(std::exception&);
+  wchar_t* publicId() throw(std::exception&);
+  wchar_t* systemId() throw(std::exception&);
+  wchar_t* internalSubset() throw(std::exception&);
 
   GdomeDocumentType* impl;
   GdomeNode* fetchNode() const;
@@ -355,8 +355,8 @@ public:
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::Notation, dom::Node)
 
-  iface::dom::DOMString publicId() throw(std::exception&);
-  iface::dom::DOMString systemId() throw(std::exception&);
+  wchar_t* publicId() throw(std::exception&);
+  wchar_t* systemId() throw(std::exception&);
 
   GdomeNotation* impl;
   GdomeNode* fetchNode() const;
@@ -373,9 +373,9 @@ public:
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::Entity, dom::Node)
 
-  iface::dom::DOMString publicId() throw(std::exception&);
-  iface::dom::DOMString systemId() throw(std::exception&);
-  iface::dom::DOMString notationName() throw(std::exception&);
+  wchar_t* publicId() throw(std::exception&);
+  wchar_t* systemId() throw(std::exception&);
+  wchar_t* notationName() throw(std::exception&);
 
   GdomeEntity* impl;
   GdomeNode* fetchNode() const;
@@ -407,9 +407,9 @@ public:
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::ProcessingInstruction, dom::Node)
 
-  iface::dom::DOMString target() throw(std::exception&);
-  iface::dom::DOMString data() throw(std::exception&);
-  void data(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* target() throw(std::exception&);
+  wchar_t* data() throw(std::exception&);
+  void data(const wchar_t* attr) throw(std::exception&);
 
   GdomeProcessingInstruction* impl;
   GdomeNode* fetchNode() const;
@@ -447,40 +447,40 @@ public:
     throw(std::exception&);
   iface::dom::Element* documentElement()
     throw(std::exception&);
-  iface::dom::Element* createElement(const iface::dom::DOMString tagName)
+  iface::dom::Element* createElement(const wchar_t* tagName)
     throw(std::exception&);
   iface::dom::DocumentFragment* createDocumentFragment()
     throw(std::exception&);
-  iface::dom::Text* createTextNode(const iface::dom::DOMString data)
+  iface::dom::Text* createTextNode(const wchar_t* data)
     throw(std::exception&);
-  iface::dom::Comment* createComment(const iface::dom::DOMString data)
+  iface::dom::Comment* createComment(const wchar_t* data)
     throw(std::exception&);
-  iface::dom::CDATASection* createCDATASection(const iface::dom::DOMString data)
+  iface::dom::CDATASection* createCDATASection(const wchar_t* data)
     throw(std::exception&);
   iface::dom::ProcessingInstruction* createProcessingInstruction
-  (const iface::dom::DOMString target, const iface::dom::DOMString data)
+  (const wchar_t* target, const wchar_t* data)
     throw(std::exception&);
-  iface::dom::Attr* createAttribute(const iface::dom::DOMString name)
+  iface::dom::Attr* createAttribute(const wchar_t* name)
     throw(std::exception&);
   iface::dom::EntityReference* createEntityReference
-    (const iface::dom::DOMString name) throw(std::exception&);
+    (const wchar_t* name) throw(std::exception&);
   iface::dom::NodeList* getElementsByTagName
-    (const iface::dom::DOMString tagname) throw(std::exception&);
+    (const wchar_t* tagname) throw(std::exception&);
   iface::dom::Node* importNode(iface::dom::Node* importedNode, bool deep)
     throw(std::exception&);
   iface::dom::Element*
-    createElementNS(const iface::dom::DOMString namespaceURI,
-                    const iface::dom::DOMString qualifiedName)
+    createElementNS(const wchar_t* namespaceURI,
+                    const wchar_t* qualifiedName)
     throw(std::exception&);
-  iface::dom::Attr* createAttributeNS(const iface::dom::DOMString namespaceURI,
-                                      const iface::dom::DOMString qualifiedName)
+  iface::dom::Attr* createAttributeNS(const wchar_t* namespaceURI,
+                                      const wchar_t* qualifiedName)
     throw(std::exception&);
   iface::dom::NodeList* getElementsByTagNameNS
-    (const iface::dom::DOMString namespaceURI,
-     const iface::dom::DOMString localName) throw(std::exception&);
-  iface::dom::Element* getElementById(const iface::dom::DOMString elementId)
+    (const wchar_t* namespaceURI,
+     const wchar_t* localName) throw(std::exception&);
+  iface::dom::Element* getElementById(const wchar_t* elementId)
     throw(std::exception&);
-  iface::events::Event* createEvent(const iface::dom::DOMString domEventType)
+  iface::events::Event* createEvent(const wchar_t* domEventType)
     throw(std::exception&);
   
   GdomeDocument* impl;

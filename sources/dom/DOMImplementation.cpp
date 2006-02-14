@@ -27,8 +27,8 @@ CDA_DOMImplementation::~CDA_DOMImplementation()
 bool
 CDA_DOMImplementation::hasFeature
 (
- const iface::dom::DOMString feature,
- const iface::dom::DOMString version
+ const wchar_t* feature,
+ const wchar_t* version
 )
   throw(std::exception&)
 {
@@ -51,9 +51,9 @@ CDA_DOMImplementation::hasFeature
 iface::dom::DocumentType*
 CDA_DOMImplementation::createDocumentType
 (
- const iface::dom::DOMString qualifiedName,
- const iface::dom::DOMString publicId,
- const iface::dom::DOMString systemId
+ const wchar_t* qualifiedName,
+ const wchar_t* publicId,
+ const wchar_t* systemId
 )
   throw(std::exception&)
 {
@@ -75,8 +75,8 @@ CDA_DOMImplementation::createDocumentType
 iface::dom::Document*
 CDA_DOMImplementation::createDocument
 (
- const iface::dom::DOMString namespaceURI,
- const iface::dom::DOMString qualifiedName,
+ const wchar_t* namespaceURI,
+ const wchar_t* qualifiedName,
  iface::dom::DocumentType* doctype
 )
   throw(std::exception&)
@@ -96,7 +96,7 @@ CDA_DOMImplementation::createDocument
   return CDA_WrapDocument(gd);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Node::nodeName()
   throw(std::exception&)
 {
@@ -108,7 +108,7 @@ CDA_Node::nodeName()
   return cxxstr;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Node::nodeValue()
   throw(std::exception&)
 {
@@ -121,7 +121,7 @@ CDA_Node::nodeValue()
 }
 
 void
-CDA_Node::nodeValue(iface::dom::DOMString attr)
+CDA_Node::nodeValue(const wchar_t* attr)
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -308,8 +308,8 @@ CDA_Node::normalize()
 bool
 CDA_Node::isSupported
 (
- const iface::dom::DOMString feature,
- const iface::dom::DOMString version
+ const wchar_t* feature,
+ const wchar_t* version
 )
   throw(std::exception&)
 {
@@ -324,7 +324,7 @@ CDA_Node::isSupported
   return ret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Node::namespaceURI()
   throw(std::exception&)
 {
@@ -337,7 +337,7 @@ CDA_Node::namespaceURI()
   return cxxret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Node::prefix()
   throw(std::exception&)
 {
@@ -353,7 +353,7 @@ CDA_Node::prefix()
 void
 CDA_Node::prefix
 (
- const iface::dom::DOMString attr
+ const wchar_t* attr
 )
   throw(std::exception&)
 {
@@ -364,7 +364,7 @@ CDA_Node::prefix
   EXCEPTION_CATCH;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Node::localName()
   throw(std::exception&)
 {
@@ -398,7 +398,7 @@ static void cda_process_event(GdomeEventListener *self,
 }
 
 void
-CDA_Node::addEventListener(const iface::dom::DOMString type,
+CDA_Node::addEventListener(const wchar_t* type,
                            iface::events::EventListener* listener,
                            bool useCapture)
   throw(std::exception&)
@@ -446,7 +446,7 @@ CDA_Node::addEventListener(const iface::dom::DOMString type,
 }
 
 void
-CDA_Node::removeEventListener(const iface::dom::DOMString type,
+CDA_Node::removeEventListener(const wchar_t* type,
                               iface::events::EventListener* listener,
                               bool useCapture)
   throw(std::exception&)
@@ -532,7 +532,7 @@ CDA_NamedNodeMap::~CDA_NamedNodeMap()
 }
 
 iface::dom::Node*
-CDA_NamedNodeMap::getNamedItem(const iface::dom::DOMString name)
+CDA_NamedNodeMap::getNamedItem(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -557,7 +557,7 @@ CDA_NamedNodeMap::setNamedItem(iface::dom::Node* arg)
 }
 
 iface::dom::Node*
-CDA_NamedNodeMap::removeNamedItem(const iface::dom::DOMString name)
+CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -592,8 +592,8 @@ CDA_NamedNodeMap::length()
 }
 
 iface::dom::Node*
-CDA_NamedNodeMap::getNamedItemNS(const iface::dom::DOMString namespaceURI,
-                                 const iface::dom::DOMString localName)
+CDA_NamedNodeMap::getNamedItemNS(const wchar_t* namespaceURI,
+                                 const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -621,8 +621,8 @@ CDA_NamedNodeMap::setNamedItemNS(iface::dom::Node* arg)
 }
 
 iface::dom::Node*
-CDA_NamedNodeMap::removeNamedItemNS(const iface::dom::DOMString namespaceURI,
-                                  const iface::dom::DOMString localName)
+CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
+                                    const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -637,7 +637,7 @@ CDA_NamedNodeMap::removeNamedItemNS(const iface::dom::DOMString namespaceURI,
   return CDA_WrapNode(ret);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_CharacterData::data()
   throw(std::exception&)
 {
@@ -660,7 +660,7 @@ CDA_CharacterData::length()
   return ret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_CharacterData::substringData(u_int32_t offset, u_int32_t count)
   throw(std::exception&)
 {
@@ -675,7 +675,7 @@ CDA_CharacterData::substringData(u_int32_t offset, u_int32_t count)
 }
 
 void
-CDA_CharacterData::appendData(const iface::dom::DOMString arg)
+CDA_CharacterData::appendData(const wchar_t* arg)
   throw(std::exception&)
 {
   TRDOMSTRING(arg);
@@ -687,7 +687,7 @@ CDA_CharacterData::appendData(const iface::dom::DOMString arg)
 }
 
 void
-CDA_CharacterData::insertData(u_int32_t offset, const iface::dom::DOMString arg)
+CDA_CharacterData::insertData(u_int32_t offset, const wchar_t* arg)
   throw(std::exception&)
 {
   TRDOMSTRING(arg);
@@ -708,7 +708,7 @@ CDA_CharacterData::deleteData(u_int32_t offset, u_int32_t count)
 
 void
 CDA_CharacterData::replaceData(u_int32_t offset, u_int32_t count,
-                               const iface::dom::DOMString arg)
+                               const wchar_t* arg)
   throw(std::exception&)
 {
   TRDOMSTRING(arg);
@@ -729,7 +729,7 @@ CDA_Attr::~CDA_Attr()
   gdome_a_unref(impl, &exc);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Attr::name()
   throw(std::exception&)
 {
@@ -753,7 +753,7 @@ CDA_Attr::specified()
   return ret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Attr::value()
   throw(std::exception&)
 {
@@ -766,7 +766,7 @@ CDA_Attr::value()
 }
 
 void
-CDA_Attr::value(iface::dom::DOMString attr)
+CDA_Attr::value(const wchar_t* attr)
   throw(std::exception&)
 {
   TRDOMSTRING(attr);
@@ -798,7 +798,7 @@ CDA_Element::~CDA_Element()
   gdome_el_unref(impl, &exc);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Element::tagName()
   throw(std::exception&)
 {
@@ -811,8 +811,8 @@ CDA_Element::tagName()
   return cxxret;
 }
 
-iface::dom::DOMString
-CDA_Element::getAttribute(const iface::dom::DOMString name)
+wchar_t*
+CDA_Element::getAttribute(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -827,8 +827,8 @@ CDA_Element::getAttribute(const iface::dom::DOMString name)
 }
 
 void
-CDA_Element::setAttribute(const iface::dom::DOMString name,
-                          const iface::dom::DOMString value)
+CDA_Element::setAttribute(const wchar_t* name,
+                          const wchar_t* value)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -841,7 +841,7 @@ CDA_Element::setAttribute(const iface::dom::DOMString name,
 }
 
 void
-CDA_Element::removeAttribute(const iface::dom::DOMString name)
+CDA_Element::removeAttribute(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -852,7 +852,7 @@ CDA_Element::removeAttribute(const iface::dom::DOMString name)
 }
 
 iface::dom::Attr*
-CDA_Element::getAttributeNode(const iface::dom::DOMString name)
+CDA_Element::getAttributeNode(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -887,7 +887,7 @@ iface::dom::Attr* CDA_Element::removeAttributeNode(iface::dom::Attr* oldAttr)
   return new CDA_Attr(ret);
 }
 
-iface::dom::NodeList* CDA_Element::getElementsByTagName(const iface::dom::DOMString name)
+iface::dom::NodeList* CDA_Element::getElementsByTagName(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -899,9 +899,9 @@ iface::dom::NodeList* CDA_Element::getElementsByTagName(const iface::dom::DOMStr
   return new CDA_NodeList(ret);
 }
 
-iface::dom::DOMString
-CDA_Element::getAttributeNS(const iface::dom::DOMString namespaceURI,
-                            const iface::dom::DOMString localName)
+wchar_t*
+CDA_Element::getAttributeNS(const wchar_t* namespaceURI,
+                            const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -918,9 +918,9 @@ CDA_Element::getAttributeNS(const iface::dom::DOMString namespaceURI,
 }
 
 void
-CDA_Element::setAttributeNS(const iface::dom::DOMString namespaceURI,
-                            const iface::dom::DOMString qualifiedName,
-                            const iface::dom::DOMString value)
+CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
+                            const wchar_t* qualifiedName,
+                            const wchar_t* value)
   throw(std::exception&)
 { 
   TRDOMSTRING(namespaceURI);
@@ -936,8 +936,8 @@ CDA_Element::setAttributeNS(const iface::dom::DOMString namespaceURI,
 }
 
 void
-CDA_Element::removeAttributeNS(const iface::dom::DOMString namespaceURI,
-                               const iface::dom::DOMString localName)
+CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
+                               const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -950,8 +950,8 @@ CDA_Element::removeAttributeNS(const iface::dom::DOMString namespaceURI,
 }
 
 iface::dom::Attr*
-CDA_Element::getAttributeNodeNS(const iface::dom::DOMString namespaceURI,
-                                const iface::dom::DOMString localName)
+CDA_Element::getAttributeNodeNS(const wchar_t* namespaceURI,
+                                const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -979,8 +979,8 @@ iface::dom::Attr* CDA_Element::setAttributeNodeNS(iface::dom::Attr* newAttr)
 }
 
 iface::dom::NodeList*
-CDA_Element::getElementsByTagNameNS(const iface::dom::DOMString namespaceURI,
-                                    const iface::dom::DOMString localName)
+CDA_Element::getElementsByTagNameNS(const wchar_t* namespaceURI,
+                                    const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -996,7 +996,7 @@ CDA_Element::getElementsByTagNameNS(const iface::dom::DOMString namespaceURI,
 }
 
 bool
-CDA_Element::hasAttribute(const iface::dom::DOMString name)
+CDA_Element::hasAttribute(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -1009,8 +1009,8 @@ CDA_Element::hasAttribute(const iface::dom::DOMString name)
 }
 
 bool
-CDA_Element::hasAttributeNS(const iface::dom::DOMString namespaceURI,
-                            const iface::dom::DOMString localName)
+CDA_Element::hasAttributeNS(const wchar_t* namespaceURI,
+                            const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -1133,7 +1133,7 @@ CDA_DocumentType::~CDA_DocumentType()
   gdome_dt_unref(impl, &exc);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_DocumentType::name()
   throw(std::exception&)
 {
@@ -1167,7 +1167,7 @@ CDA_DocumentType::notations()
   return new CDA_NamedNodeMap(ret);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_DocumentType::publicId()
   throw(std::exception&)
 {
@@ -1179,7 +1179,7 @@ CDA_DocumentType::publicId()
   return cxxret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_DocumentType::systemId()
   throw(std::exception&)
 {
@@ -1191,7 +1191,7 @@ CDA_DocumentType::systemId()
   return cxxret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_DocumentType::internalSubset()
   throw(std::exception&)
 {
@@ -1220,7 +1220,7 @@ CDA_Notation::~CDA_Notation()
   gdome_not_unref(impl, &exc);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Notation::publicId()
   throw(std::exception&)
 {
@@ -1232,7 +1232,7 @@ CDA_Notation::publicId()
   return cxxret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Notation::systemId()
   throw(std::exception&)
 {
@@ -1261,7 +1261,7 @@ CDA_Entity::~CDA_Entity()
   gdome_ent_unref(impl, &exc);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Entity::publicId()
   throw(std::exception&)
 {
@@ -1273,7 +1273,7 @@ CDA_Entity::publicId()
   return cxxret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Entity::systemId()
   throw(std::exception&)
 {
@@ -1285,7 +1285,7 @@ CDA_Entity::systemId()
   return cxxret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_Entity::notationName()
   throw(std::exception&)
 {
@@ -1332,7 +1332,7 @@ CDA_ProcessingInstruction::~CDA_ProcessingInstruction()
   gdome_pi_unref(impl, &exc);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_ProcessingInstruction::target()
   throw(std::exception&)
 {
@@ -1344,7 +1344,7 @@ CDA_ProcessingInstruction::target()
   return cxxret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_ProcessingInstruction::data()
   throw(std::exception&)
 {
@@ -1357,7 +1357,7 @@ CDA_ProcessingInstruction::data()
 }
 
 void
-CDA_ProcessingInstruction::data(iface::dom::DOMString attr)
+CDA_ProcessingInstruction::data(const wchar_t* attr)
   throw(std::exception&)
 {
   TRDOMSTRING(attr);
@@ -1426,7 +1426,7 @@ CDA_Document::documentElement()
 }
 
 iface::dom::Element*
-CDA_Document::createElement(const iface::dom::DOMString tagName)
+CDA_Document::createElement(const wchar_t* tagName)
   throw(std::exception&)
 {
   TRDOMSTRING(tagName);
@@ -1449,7 +1449,7 @@ CDA_Document::createDocumentFragment()
 }
 
 iface::dom::Text*
-CDA_Document::createTextNode(const iface::dom::DOMString data)
+CDA_Document::createTextNode(const wchar_t* data)
   throw(std::exception&)
 {
   TRDOMSTRING(data);
@@ -1461,7 +1461,7 @@ CDA_Document::createTextNode(const iface::dom::DOMString data)
 }
 
 iface::dom::Comment*
-CDA_Document::createComment(const iface::dom::DOMString data)
+CDA_Document::createComment(const wchar_t* data)
   throw(std::exception&)
 {
   TRDOMSTRING(data);
@@ -1473,7 +1473,7 @@ CDA_Document::createComment(const iface::dom::DOMString data)
 }
 
 iface::dom::CDATASection*
-CDA_Document::createCDATASection(const iface::dom::DOMString data)
+CDA_Document::createCDATASection(const wchar_t* data)
   throw(std::exception&)
 {
   TRDOMSTRING(data);
@@ -1486,7 +1486,7 @@ CDA_Document::createCDATASection(const iface::dom::DOMString data)
 
 iface::dom::ProcessingInstruction*
 CDA_Document::createProcessingInstruction
-(const iface::dom::DOMString target, const iface::dom::DOMString data)
+(const wchar_t* target, const wchar_t* data)
   throw(std::exception&)
 {
   TRDOMSTRING(target);
@@ -1501,7 +1501,7 @@ CDA_Document::createProcessingInstruction
 }
 
 iface::dom::Attr*
-CDA_Document::createAttribute(const iface::dom::DOMString name)
+CDA_Document::createAttribute(const wchar_t* name)
   throw(std::exception&)
 {
   TRDOMSTRING(name);
@@ -1514,7 +1514,7 @@ CDA_Document::createAttribute(const iface::dom::DOMString name)
 
 iface::dom::EntityReference*
 CDA_Document::createEntityReference
-(const iface::dom::DOMString name) throw(std::exception&)
+(const wchar_t* name) throw(std::exception&)
 {
   TRDOMSTRING(name);
   EXCEPTION_TRY;
@@ -1525,7 +1525,7 @@ CDA_Document::createEntityReference
 }
 
 iface::dom::NodeList*
-CDA_Document::getElementsByTagName(const iface::dom::DOMString tagname)
+CDA_Document::getElementsByTagName(const wchar_t* tagname)
   throw(std::exception&)
 {
   TRDOMSTRING(tagname);
@@ -1549,8 +1549,8 @@ CDA_Document::importNode(iface::dom::Node* importedNode, bool deep)
 }
 
 iface::dom::Element*
-CDA_Document::createElementNS(const iface::dom::DOMString namespaceURI,
-                              const iface::dom::DOMString qualifiedName)
+CDA_Document::createElementNS(const wchar_t* namespaceURI,
+                              const wchar_t* qualifiedName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -1565,8 +1565,8 @@ CDA_Document::createElementNS(const iface::dom::DOMString namespaceURI,
 }
 
 iface::dom::Attr*
-CDA_Document::createAttributeNS(const iface::dom::DOMString namespaceURI,
-                                const iface::dom::DOMString qualifiedName)
+CDA_Document::createAttributeNS(const wchar_t* namespaceURI,
+                                const wchar_t* qualifiedName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -1582,8 +1582,8 @@ CDA_Document::createAttributeNS(const iface::dom::DOMString namespaceURI,
 
 iface::dom::NodeList*
 CDA_Document::getElementsByTagNameNS
-(const iface::dom::DOMString namespaceURI,
- const iface::dom::DOMString localName)
+(const wchar_t* namespaceURI,
+ const wchar_t* localName)
   throw(std::exception&)
 {
   TRDOMSTRING(namespaceURI);
@@ -1599,7 +1599,7 @@ CDA_Document::getElementsByTagNameNS
 }
 
 iface::dom::Element*
-CDA_Document::getElementById(const iface::dom::DOMString elementId)
+CDA_Document::getElementById(const wchar_t* elementId)
   throw(std::exception&)
 {
   TRDOMSTRING(elementId);
@@ -1612,7 +1612,7 @@ CDA_Document::getElementById(const iface::dom::DOMString elementId)
 }
 
 iface::events::Event*
-CDA_Document::createEvent(const iface::dom::DOMString domEventType)
+CDA_Document::createEvent(const wchar_t* domEventType)
   throw(std::exception&)
 {
   TRDOMSTRING(domEventType);
