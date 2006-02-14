@@ -21,19 +21,19 @@ CDA_MathMLDocument::CDA_MathMLDocument(GdomeDocument* d)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLDocument::referrer() throw(std::exception&)
 {
   return wcsdup(L"");
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLDocument::domain() throw(std::exception&)
 {
   return wcsdup(L"");
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLDocument::URI() throw(std::exception&)
 {
   return wcsdup(L"");
@@ -326,7 +326,7 @@ IsOtherwise(iface::dom::Node* n)
   return false;
 }
 
-static wchar_t*
+static const wchar_t*
 GetArity(const wchar_t* name)
 {
 #define AV L"variable"
@@ -335,8 +335,8 @@ GetArity(const wchar_t* name)
 #define A2 L"2"
   struct
     {
-      wchar_t* name;
-      wchar_t* arity;
+      const wchar_t* name;
+      const wchar_t* arity;
     } ArityTable[] =
   {
     {L"abs", A1}, {L"and", AV}, {L"approx", A2}, {L"arccos", A1},
@@ -497,7 +497,7 @@ CDA_MathMLElement::CDA_MathMLElement(GdomeElement* el)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLElement::className()
   throw(std::exception&)
 {
@@ -505,13 +505,13 @@ CDA_MathMLElement::className()
 }
 
 void
-CDA_MathMLElement::className(iface::dom::DOMString attr)
+CDA_MathMLElement::className(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttribute(L"class", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLElement::mathElementStyle()
   throw(std::exception&)
 {
@@ -519,13 +519,13 @@ CDA_MathMLElement::mathElementStyle()
 }
 
 void
-CDA_MathMLElement::mathElementStyle(iface::dom::DOMString attr)
+CDA_MathMLElement::mathElementStyle(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttribute(L"style", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLElement::id()
   throw(std::exception&)
 {
@@ -533,13 +533,13 @@ CDA_MathMLElement::id()
 }
 
 void
-CDA_MathMLElement::id(iface::dom::DOMString attr)
+CDA_MathMLElement::id(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttribute(L"id", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLElement::xref()
   throw(std::exception&)
 {
@@ -547,14 +547,14 @@ CDA_MathMLElement::xref()
 }
 
 void
-CDA_MathMLElement::xref(iface::dom::DOMString attr)
+CDA_MathMLElement::xref(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS(MATHML_NS, L"xref",
                                                   attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLElement::href()
   throw(std::exception&)
 {
@@ -562,7 +562,7 @@ CDA_MathMLElement::href()
 }
 
 void
-CDA_MathMLElement::href(iface::dom::DOMString attr)
+CDA_MathMLElement::href(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS(XLINK_NS, L"href",
@@ -821,7 +821,7 @@ CDA_MathMLMathElement::CDA_MathMLMathElement(GdomeElement* elem)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLMathElement::macros()
   throw(std::exception&)
 {
@@ -830,14 +830,14 @@ CDA_MathMLMathElement::macros()
 }
 
 void
-CDA_MathMLMathElement::macros(iface::dom::DOMString attr)
+CDA_MathMLMathElement::macros(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<iface::mathml_dom::MathMLMathElement*>(this)
     ->setAttributeNS(MATHML_NS, L"macros", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLMathElement::display()
   throw(std::exception&)
 {
@@ -846,7 +846,7 @@ CDA_MathMLMathElement::display()
 }
 
 void
-CDA_MathMLMathElement::display(iface::dom::DOMString attr)
+CDA_MathMLMathElement::display(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<iface::mathml_dom::MathMLMathElement*>(this)
@@ -872,7 +872,7 @@ CDA_MathMLContentToken::arguments()
                                         FILTER_ARGUMENT);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLContentToken::definitionURL()
   throw(std::exception&)
 {
@@ -882,14 +882,14 @@ CDA_MathMLContentToken::definitionURL()
 
 void
 CDA_MathMLContentToken::definitionURL
-(iface::dom::DOMString attr)
+(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<iface::mathml_dom::MathMLContentElement*>(this)
     ->setAttributeNS(MATHML_NS, L"definitionURL", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLContentToken::encoding()
   throw(std::exception&)
 {
@@ -898,7 +898,7 @@ CDA_MathMLContentToken::encoding()
 }
 
 void
-CDA_MathMLContentToken::encoding(iface::dom::DOMString attr)
+CDA_MathMLContentToken::encoding(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<iface::mathml_dom::MathMLContentElement*>(this)
@@ -997,7 +997,7 @@ CDA_MathMLCnElement::CDA_MathMLCnElement(GdomeElement* el)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLCnElement::type()
   throw(std::exception&)
 {
@@ -1006,14 +1006,14 @@ CDA_MathMLCnElement::type()
 }
 
 void
-CDA_MathMLCnElement::type(iface::dom::DOMString attr)
+CDA_MathMLCnElement::type(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<iface::mathml_dom::MathMLContentElement*>(this)
     ->setAttributeNS(MATHML_NS, L"type", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLCnElement::base()
   throw(std::exception&)
 {
@@ -1022,7 +1022,7 @@ CDA_MathMLCnElement::base()
 }
 
 void
-CDA_MathMLCnElement::base(iface::dom::DOMString attr)
+CDA_MathMLCnElement::base(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<iface::mathml_dom::MathMLContentElement*>(this)
@@ -1062,7 +1062,7 @@ CDA_MathMLCiElement::CDA_MathMLCiElement(GdomeElement* elem)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLCiElement::type()
   throw(std::exception&)
 {
@@ -1071,7 +1071,7 @@ CDA_MathMLCiElement::type()
 }
 
 void
-CDA_MathMLCiElement::type(iface::dom::DOMString attr)
+CDA_MathMLCiElement::type(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<iface::mathml_dom::MathMLContentElement*>(this)
@@ -1611,7 +1611,7 @@ CDA_MathMLFnElement::CDA_MathMLFnElement(GdomeElement* el)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLFnElement::definitionURL()
   throw(std::exception&)
 {
@@ -1620,14 +1620,14 @@ CDA_MathMLFnElement::definitionURL()
 }
 
 void
-CDA_MathMLFnElement::definitionURL(iface::dom::DOMString attr)
+CDA_MathMLFnElement::definitionURL(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
     ->setAttributeNS(MATHML_NS, L"definitionURL", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLFnElement::encoding()
   throw(std::exception&)
 {
@@ -1636,7 +1636,7 @@ CDA_MathMLFnElement::encoding()
 }
 
 void
-CDA_MathMLFnElement::encoding(iface::dom::DOMString attr)
+CDA_MathMLFnElement::encoding(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
@@ -1677,7 +1677,7 @@ CDA_MathMLSetElement::isExplicit()
   return (nBoundVariables() == 0);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLSetElement::type()
   throw(std::exception&)
 {
@@ -1686,7 +1686,7 @@ CDA_MathMLSetElement::type()
 }
 
 void
-CDA_MathMLSetElement::type(iface::dom::DOMString attr)
+CDA_MathMLSetElement::type(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
@@ -1707,7 +1707,7 @@ CDA_MathMLListElement::isExplicit()
   return (nBoundVariables() == 0);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLListElement::ordering()
   throw(std::exception&)
 {
@@ -1716,7 +1716,7 @@ CDA_MathMLListElement::ordering()
 }
 
 void
-CDA_MathMLListElement::ordering(iface::dom::DOMString attr)
+CDA_MathMLListElement::ordering(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
@@ -1734,7 +1734,7 @@ CDA_MathMLPredefinedSymbol::CDA_MathMLPredefinedSymbol(GdomeElement* el)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLPredefinedSymbol::definitionURL()
   throw(std::exception&)
 {
@@ -1743,14 +1743,14 @@ CDA_MathMLPredefinedSymbol::definitionURL()
 }
 
 void
-CDA_MathMLPredefinedSymbol::definitionURL(iface::dom::DOMString attr)
+CDA_MathMLPredefinedSymbol::definitionURL(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
     ->setAttributeNS(MATHML_NS, L"definitionURL", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLPredefinedSymbol::encoding()
   throw(std::exception&)
 {
@@ -1759,24 +1759,24 @@ CDA_MathMLPredefinedSymbol::encoding()
 }
 
 void 
-CDA_MathMLPredefinedSymbol::encoding(iface::dom::DOMString attr)
+CDA_MathMLPredefinedSymbol::encoding(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
     ->setAttributeNS(MATHML_NS, L"encoding", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLPredefinedSymbol::arity()
   throw(std::exception&)
 {
   wchar_t* name = static_cast<CDA_Element*>(this)->tagName();
-  iface::dom::DOMString ret = wcsdup(GetArity(name));
+  wchar_t* ret = wcsdup(GetArity(name));
   free(name);
   return ret;
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLPredefinedSymbol::symbolName()
   throw(std::exception&)
 {
@@ -1789,7 +1789,7 @@ CDA_MathMLTendsToElement::CDA_MathMLTendsToElement(GdomeElement* el)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLTendsToElement::type()
   throw(std::exception&)
 {
@@ -1806,7 +1806,7 @@ CDA_MathMLTendsToElement::type()
 }
 
 void
-CDA_MathMLTendsToElement::type(iface::dom::DOMString attr)
+CDA_MathMLTendsToElement::type(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
@@ -1818,7 +1818,7 @@ CDA_MathMLIntervalElement::CDA_MathMLIntervalElement(GdomeElement* el)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLIntervalElement::closure()
   throw(std::exception&)
 {
@@ -1835,7 +1835,7 @@ CDA_MathMLIntervalElement::closure()
 }
 
 void
-CDA_MathMLIntervalElement::closure(iface::dom::DOMString attr)
+CDA_MathMLIntervalElement::closure(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)
@@ -2102,7 +2102,7 @@ CDA_MathMLDeclareElement::CDA_MathMLDeclareElement(GdomeElement* el)
 {
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLDeclareElement::type()
   throw(std::exception&)
 {
@@ -2113,7 +2113,7 @@ CDA_MathMLDeclareElement::type()
 }
 
 void
-CDA_MathMLDeclareElement::type(iface::dom::DOMString attr)
+CDA_MathMLDeclareElement::type(const wchar_t* attr)
   throw(std::exception&)
 {
   return
@@ -2125,7 +2125,7 @@ u_int32_t
 CDA_MathMLDeclareElement::nargs()
   throw(std::exception&)
 {
-  iface::dom::DOMString ds = static_cast<CDA_Element*>(this)->getAttributeNS
+  wchar_t* ds = static_cast<CDA_Element*>(this)->getAttributeNS
                              (MATHML_NS, L"nargs");
   u_int32_t ret = wcstoul(ds, NULL, 10);
   free(ds);
@@ -2141,7 +2141,7 @@ CDA_MathMLDeclareElement::nargs(u_int32_t attr)
   static_cast<CDA_Element*>(this)->setAttributeNS(MATHML_NS, L"nargs", str);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLDeclareElement::occurrence()
   throw(std::exception&)
 {
@@ -2150,14 +2150,14 @@ CDA_MathMLDeclareElement::occurrence()
 }
 
 void
-CDA_MathMLDeclareElement::occurrence(iface::dom::DOMString attr)
+CDA_MathMLDeclareElement::occurrence(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS
     (MATHML_NS, L"occurrence", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLDeclareElement::definitionURL()
   throw(std::exception&)
 {
@@ -2166,14 +2166,14 @@ CDA_MathMLDeclareElement::definitionURL()
 }
 
 void
-CDA_MathMLDeclareElement::definitionURL(iface::dom::DOMString attr)
+CDA_MathMLDeclareElement::definitionURL(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS
     (MATHML_NS, L"definitionURL", attr);
 }
 
-iface::dom::DOMString
+wchar_t*
 CDA_MathMLDeclareElement::encoding()
   throw(std::exception&)
 {
@@ -2182,7 +2182,7 @@ CDA_MathMLDeclareElement::encoding()
 }
 
 void
-CDA_MathMLDeclareElement::encoding(iface::dom::DOMString attr)
+CDA_MathMLDeclareElement::encoding(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS

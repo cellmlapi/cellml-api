@@ -14,9 +14,9 @@ public:
 
   CDA_IMPL_QI3(dom::Node, dom::Document, mathml_dom::MathMLDocument)
 
-  iface::dom::DOMString referrer() throw(std::exception&);
-  iface::dom::DOMString domain() throw(std::exception&);
-  iface::dom::DOMString URI() throw(std::exception&);
+  wchar_t* referrer() throw(std::exception&);
+  wchar_t* domain() throw(std::exception&);
+  wchar_t* URI() throw(std::exception&);
 };
 
 class CDA_MathMLElement
@@ -26,16 +26,16 @@ class CDA_MathMLElement
 public:
   CDA_MathMLElement(GdomeElement* el);
 
-  iface::dom::DOMString className() throw(std::exception&);
-  void className(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString mathElementStyle() throw(std::exception&);
-  void mathElementStyle(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString id() throw(std::exception&);
-  void id(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString xref() throw(std::exception&);
-  void xref(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString href() throw(std::exception&);
-  void href(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* className() throw(std::exception&);
+  void className(const wchar_t* attr) throw(std::exception&);
+  wchar_t* mathElementStyle() throw(std::exception&);
+  void mathElementStyle(const wchar_t* attr) throw(std::exception&);
+  wchar_t* id() throw(std::exception&);
+  void id(const wchar_t* attr) throw(std::exception&);
+  wchar_t* xref() throw(std::exception&);
+  void xref(const wchar_t* attr) throw(std::exception&);
+  wchar_t* href() throw(std::exception&);
+  void href(const wchar_t* attr) throw(std::exception&);
   iface::mathml_dom::MathMLMathElement* ownerMathElement() throw(std::exception&);
 };
 
@@ -73,10 +73,10 @@ public:
 
   CDA_MathMLMathElement(GdomeElement* elem);
 
-  iface::dom::DOMString macros() throw(std::exception&);
-  void macros(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString display() throw(std::exception&);
-  void display(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* macros() throw(std::exception&);
+  void macros(const wchar_t* attr) throw(std::exception&);
+  wchar_t* display() throw(std::exception&);
+  void display(const wchar_t* attr) throw(std::exception&);
 };
 
 class CDA_MathMLContentElement
@@ -95,10 +95,10 @@ public:
   CDA_MathMLContentToken(GdomeElement* elem);
 
   iface::mathml_dom::MathMLNodeList* arguments() throw(std::exception&);
-  iface::dom::DOMString definitionURL() throw(std::exception&);
-  void definitionURL(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString encoding() throw(std::exception&);
-  void encoding(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* definitionURL() throw(std::exception&);
+  void definitionURL(const wchar_t* attr) throw(std::exception&);
+  wchar_t* encoding() throw(std::exception&);
+  void encoding(const wchar_t* attr) throw(std::exception&);
   iface::dom::Node* getArgument(u_int32_t index) throw(std::exception&);
   iface::dom::Node* insertArgument(iface::dom::Node* newArgument, u_int32_t index) throw(std::exception&);
   iface::dom::Node* setArgument(iface::dom::Node* newArgument, u_int32_t index) throw(std::exception&);
@@ -116,10 +116,10 @@ public:
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLContentToken, mathml_dom::MathMLCnElement)
 
-  iface::dom::DOMString type() throw(std::exception&);
-  void type(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString base() throw(std::exception&);
-  void base(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* type() throw(std::exception&);
+  void type(const wchar_t* attr) throw(std::exception&);
+  wchar_t* base() throw(std::exception&);
+  void base(const wchar_t* attr) throw(std::exception&);
   u_int32_t nargs() throw(std::exception&);
 };
 
@@ -134,8 +134,8 @@ public:
 
   CDA_MathMLCiElement(GdomeElement* elem);
 
-  iface::dom::DOMString type() throw(std::exception&);
-  void type(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* type() throw(std::exception&);
+  void type(const wchar_t* attr) throw(std::exception&);
 };
 
 class CDA_MathMLCsymbolElement
@@ -198,10 +198,10 @@ class CDA_MathMLFnElement
 public:
   CDA_MathMLFnElement(GdomeElement* el);
 
-  iface::dom::DOMString definitionURL() throw(std::exception&);
-  void definitionURL(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString encoding() throw(std::exception&);
-  void encoding(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* definitionURL() throw(std::exception&);
+  void definitionURL(const wchar_t* attr) throw(std::exception&);
+  wchar_t* encoding() throw(std::exception&);
+  void encoding(const wchar_t* attr) throw(std::exception&);
 };
 
 class CDA_MathMLLambdaElement
@@ -232,8 +232,8 @@ public:
                mathml_dom::MathMLSetElement)
 
   bool isExplicit() throw(std::exception&);
-  iface::dom::DOMString type() throw(std::exception&);
-  void type(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* type() throw(std::exception&);
+  void type(const wchar_t* attr) throw(std::exception&);
 };
 
 class CDA_MathMLListElement
@@ -248,8 +248,8 @@ public:
                mathml_dom::MathMLListElement)
 
   bool isExplicit() throw(std::exception&);
-  iface::dom::DOMString ordering() throw(std::exception&);
-  void ordering(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* ordering() throw(std::exception&);
+  void ordering(const wchar_t* attr) throw(std::exception&);
 };
 
 class CDA_MathMLBvarElement
@@ -271,12 +271,12 @@ class CDA_MathMLPredefinedSymbol
 public:
   CDA_MathMLPredefinedSymbol(GdomeElement* el);
 
-  iface::dom::DOMString definitionURL() throw(std::exception&);
-  void definitionURL(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString encoding() throw(std::exception&);
-  void encoding(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString arity() throw(std::exception&);
-  iface::dom::DOMString symbolName() throw(std::exception&);
+  wchar_t* definitionURL() throw(std::exception&);
+  void definitionURL(const wchar_t* attr) throw(std::exception&);
+  wchar_t* encoding() throw(std::exception&);
+  void encoding(const wchar_t* attr) throw(std::exception&);
+  wchar_t* arity() throw(std::exception&);
+  wchar_t* symbolName() throw(std::exception&);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLPredefinedSymbol)
@@ -293,8 +293,8 @@ public:
                mathml_dom::MathMLPredefinedSymbol,
                mathml_dom::MathMLTendsToElement)
 
-  iface::dom::DOMString type() throw(std::exception&);
-  void type(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* type() throw(std::exception&);
+  void type(const wchar_t* attr) throw(std::exception&);
 };
 
 class CDA_MathMLIntervalElement
@@ -307,8 +307,8 @@ public:
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLIntervalElement)
 
-  iface::dom::DOMString closure() throw(std::exception&);
-  void closure(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* closure() throw(std::exception&);
+  void closure(const wchar_t* attr) throw(std::exception&);
   iface::mathml_dom::MathMLContentElement* start() throw(std::exception&);
   void start(iface::mathml_dom::MathMLContentElement* attr) throw(std::exception&);
   iface::mathml_dom::MathMLContentElement* end() throw(std::exception&);
@@ -339,16 +339,16 @@ public:
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLDeclareElement)
 
-  iface::dom::DOMString type() throw(std::exception&);
-  void type(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* type() throw(std::exception&);
+  void type(const wchar_t* attr) throw(std::exception&);
   u_int32_t nargs() throw(std::exception&);
   void nargs(u_int32_t attr) throw(std::exception&);
-  iface::dom::DOMString occurrence() throw(std::exception&);
-  void occurrence(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString definitionURL() throw(std::exception&);
-  void definitionURL(iface::dom::DOMString attr) throw(std::exception&);
-  iface::dom::DOMString encoding() throw(std::exception&);
-  void encoding(iface::dom::DOMString attr) throw(std::exception&);
+  wchar_t* occurrence() throw(std::exception&);
+  void occurrence(const wchar_t* attr) throw(std::exception&);
+  wchar_t* definitionURL() throw(std::exception&);
+  void definitionURL(const wchar_t* attr) throw(std::exception&);
+  wchar_t* encoding() throw(std::exception&);
+  void encoding(const wchar_t* attr) throw(std::exception&);
   iface::mathml_dom::MathMLCiElement* identifier() throw(std::exception&);
   void identifier(iface::mathml_dom::MathMLCiElement* attr) throw(std::exception&);
   iface::mathml_dom::MathMLElement* constructor() throw(std::exception&);
