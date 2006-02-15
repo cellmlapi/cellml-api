@@ -852,12 +852,12 @@ module cellml_api
     /**
      * The collection of relationship references.
      */
-    attribute RelationshipRefSet relationshipRefs;
+    readonly attribute RelationshipRefSet relationshipRefs;
 
     /**
      * The collection of component references.
      */
-    attribute ComponentRefSet componentRefs;
+    readonly attribute ComponentRefSet componentRefs;
 
     /**    
      * @todo Find out what Matt meant by the following
