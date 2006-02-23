@@ -501,42 +501,42 @@ wchar_t*
 CDA_MathMLElement::className()
   throw(std::exception&)
 {
-  return static_cast<CDA_Element*>(this)->getAttribute(L"class");
+  return static_cast<CDA_Element*>(this)->getAttributeNS(MATHML_NS, L"class");
 }
 
 void
 CDA_MathMLElement::className(const wchar_t* attr)
   throw(std::exception&)
 {
-  static_cast<CDA_Element*>(this)->setAttribute(L"class", attr);
+  static_cast<CDA_Element*>(this)->setAttributeNS(MATHML_NS, L"class", attr);
 }
 
 wchar_t*
 CDA_MathMLElement::mathElementStyle()
   throw(std::exception&)
 {
-  return static_cast<CDA_Element*>(this)->getAttribute(L"style");
+  return static_cast<CDA_Element*>(this)->getAttributeNS(MATHML_NS, L"style");
 }
 
 void
 CDA_MathMLElement::mathElementStyle(const wchar_t* attr)
   throw(std::exception&)
 {
-  static_cast<CDA_Element*>(this)->setAttribute(L"style", attr);
+  static_cast<CDA_Element*>(this)->setAttributeNS(MATHML_NS, L"style", attr);
 }
 
 wchar_t*
 CDA_MathMLElement::id()
   throw(std::exception&)
 {
-  return static_cast<CDA_Element*>(this)->getAttribute(L"id");
+  return static_cast<CDA_Element*>(this)->getAttributeNS(MATHML_NS, L"id");
 }
 
 void
 CDA_MathMLElement::id(const wchar_t* attr)
   throw(std::exception&)
 {
-  static_cast<CDA_Element*>(this)->setAttribute(L"id", attr);
+  static_cast<CDA_Element*>(this)->setAttributeNS(MATHML_NS, L"id", attr);
 }
 
 wchar_t*

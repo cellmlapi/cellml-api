@@ -6,6 +6,8 @@
 #include <libgdome/gdome-events.h>
 #include "ThreadWrapper.hxx"
 #include <map>
+#include <string>
+#include"Utilities.hxx"
 
 class CDA_DOMImplementation
   : public virtual iface::dom::DOMImplementation,
@@ -40,6 +42,13 @@ public:
     throw(std::exception&);
 
   iface::mathml_dom::MathMLDocument* createMathMLDocument()
+    throw(std::exception&);
+
+  /* This is a non-standard function used by the bootstrap code to load a
+   * document from a URI.
+   */
+  iface::dom::Document* loadDocument(const wchar_t* sourceURL,
+                                     std::wstring& errorMessage)
     throw(std::exception&);
 private:
   GdomeDOMImplementation* impl;
@@ -487,44 +496,62 @@ public:
   GdomeNode* fetchNode() const;
 };
 
-class CDA_Event
-  : public iface::events::Event
+class CDA_EventBase
+  : public virtual iface::events::Event
 {
 public:
   iface::events::DOMString type() throw(std::exception&);
+  iface::dom::Node* target() throw(std::exception&);
+  iface::dom::Node* currentTarget() throw(std::exception&);
   u_int16_t eventPhase() throw(std::exception&);
   bool bubbles() throw(std::exception&);
   bool cancelable() throw(std::exception&);
   iface::events::DOMTimeStamp timeStamp() throw(std::exception&);
   void stopPropagation() throw(std::exception&);
   void preventDefault() throw(std::exception&);
-  void initEvent(const iface::events::DOMString eventTypeArg,
+  void initEvent(const wchar_t* eventTypeArg,
                  bool canBubbleArg, bool cancelableArg) throw(std::exception&);
 
   virtual GdomeEvent* fetchEvent() const = 0;
 };
 
+class CDA_Event
+  : public CDA_EventBase
+{
+public:
+  CDA_Event(GdomeEvent* evt);
+  virtual ~CDA_Event();
+
+  CDA_IMPL_REFCOUNT
+  CDA_IMPL_QI1(events::Event);
+
+  GdomeEvent* fetchEvent() const;
+private:
+  GdomeEvent* impl;
+};
+
 class CDA_MutationEvent
   : public iface::events::MutationEvent,
-    public CDA_Event
+    public CDA_EventBase
 {
 public:
   CDA_MutationEvent(GdomeMutationEvent* me);
   virtual ~CDA_MutationEvent();
 
   CDA_IMPL_REFCOUNT
+  CDA_IMPL_QI2(events::Event, events::MutationEvent)
 
   iface::events::Node relatedNode() throw(std::exception&);
   iface::events::DOMString prevValue() throw(std::exception&);
   iface::events::DOMString newValue() throw(std::exception&);
   iface::events::DOMString attrName() throw(std::exception&);
   u_int16_t attrChange() throw(std::exception&);
-  void initMutationEvent(const iface::events::DOMString typeArg,
+  void initMutationEvent(const wchar_t* typeArg,
                          bool canBubbleArg, bool cancelableArg,
                          iface::events::Node relatedNodeArg,
-                         const iface::events::DOMString prevValueArg,
-                         const iface::events::DOMString newValueArg,
-                         const iface::events::DOMString attrNameArg,
+                         const wchar_t* prevValueArg,
+                         const wchar_t* newValueArg,
+                         const wchar_t* attrNameArg,
                          u_int16_t attrChangeArg)
     throw(std::exception&);
 

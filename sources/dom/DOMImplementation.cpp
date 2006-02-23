@@ -1,6 +1,10 @@
 #include "Utilities.hxx"
 #include "DOMImplementation.hxx"
 #include <string>
+#include "libxml2/libxml/xmlerror.h"
+
+std::map<iface::events::EventListener*,CDA_Node::EventListenerData*> CDA_Node::activeEventListeners;
+CDAMutex CDA_Node::aelprotect;
 
 CDA_DOMImplementation::CDA_DOMImplementation()
   : _cda_refcount(1), impl(gdome_di_mkref())
@@ -69,6 +73,8 @@ CDA_DOMImplementation::createDocumentType
   DDOMSTRING(systemId);
   EXCEPTION_CATCH;
   
+  if (gdt == NULL)
+    return NULL;
   return new CDA_DocumentType(gdt);
 }
 
@@ -94,6 +100,65 @@ CDA_DOMImplementation::createDocument
   EXCEPTION_CATCH;
   
   return CDA_WrapDocument(gd);
+}
+
+iface::dom::Document*
+CDA_DOMImplementation::loadDocument(const wchar_t* sourceURL,
+                                    std::wstring& errorMessage)
+  throw(std::exception&)
+{
+  EXCEPTION_TRY;
+  char* sourceURL8 = g_utf16_to_utf8((const gunichar2*)sourceURL, -1, NULL,
+                                     NULL, NULL);
+  errorMessage = L"";
+
+  GdomeDocument* gd =
+    gdome_di_createDocFromURI(impl, sourceURL8, GDOME_LOAD_PARSING, &exc);
+  free(sourceURL8);
+  if (gd != NULL && GDOME_EXCEPTION_CODE(exc) == GDOME_NOEXCEPTION_ERR)
+    return CDA_WrapDocument(gd);
+
+  // Otherwise, we have an exception to deal with. We do this by creating a
+  // fake document to hold the exception information.
+  xmlErrorPtr ep = xmlGetLastError();
+  switch (ep->domain)
+  {
+  case XML_FROM_PARSER:
+  case XML_FROM_TREE:
+  case XML_FROM_NAMESPACE:
+  case XML_FROM_HTML:
+    {
+      wchar_t buf[27];
+      errorMessage = L"badxml/";
+      // badxml/line/column/msg
+      swprintf(buf, 27, L"%u/%u/", ep->line, ep->int2);
+      errorMessage += buf;
+      if (ep->message)
+      {
+        wchar_t* msg = (wchar_t*)g_utf8_to_utf16(ep->message, -1, NULL, NULL,
+                                                 NULL);
+        errorMessage += msg;
+        free(msg);
+      }
+    }
+    break;
+  case XML_FROM_MEMORY:
+    errorMessage = L"nomemory";
+    break;
+  case XML_FROM_IO:
+    // This could also result from a malformed URL. We need better detection.
+    errorMessage = L"ioerror";
+    break;
+  case XML_FROM_FTP:
+  case XML_FROM_HTTP:
+    // or servererror?
+    errorMessage = L"badurl";
+    break;
+  default:
+    errorMessage = L"othererror";
+    break;
+  }
+  return NULL;
 }
 
 wchar_t*
@@ -152,6 +217,19 @@ CDA_Node::parentNode()
   return CDA_WrapNode(ret);
 }
 
+iface::dom::NodeList*
+CDA_Node::childNodes()
+  throw(std::exception&)
+{
+  EXCEPTION_TRY;
+  GdomeNodeList* ret = gdome_n_childNodes(fetchNode(), &exc);
+  EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
+  return new CDA_NodeList(ret);
+}
+
 iface::dom::Node*
 CDA_Node::firstChild()
   throw(std::exception&)
@@ -204,6 +282,8 @@ CDA_Node::attributes()
   GdomeNamedNodeMap* ret = gdome_n_attributes(fetchNode(), &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_NamedNodeMap(ret);
 }
 
@@ -215,6 +295,8 @@ CDA_Node::ownerDocument()
   GdomeDocument* ret = gdome_n_ownerDocument(fetchNode(), &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Document(ret);
 }
 
@@ -649,6 +731,18 @@ CDA_CharacterData::data()
   return cxxret;
 }
 
+void
+CDA_CharacterData::data(const wchar_t* d)
+  throw(std::exception&)
+{
+  TRDOMSTRING(d);
+  EXCEPTION_TRY;
+  gdome_cd_set_data(fetchCData(), gdd, &exc);
+  DDOMSTRING(d);
+  EXCEPTION_CATCH;
+}
+
+
 u_int32_t
 CDA_CharacterData::length()
   throw(std::exception&)
@@ -787,6 +881,12 @@ CDA_Attr::ownerElement()
   return CDA_WrapElement(ret);
 }
 
+GdomeNode*
+CDA_Attr::fetchNode() const
+{
+  return GDOME_N(impl);
+}
+
 CDA_Element::CDA_Element(GdomeElement* el)
   : _cda_refcount(1), impl(el)
 {
@@ -861,6 +961,8 @@ CDA_Element::getAttributeNode(const wchar_t* name)
   DDOMSTRING(name);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Attr(ret);
 }
 
@@ -873,6 +975,8 @@ iface::dom::Attr*
   GdomeAttr* ret = gdome_el_setAttributeNode(impl, lnewAttr->impl, &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Attr(ret);
 }
 
@@ -884,6 +988,8 @@ iface::dom::Attr* CDA_Element::removeAttributeNode(iface::dom::Attr* oldAttr)
   GdomeAttr* ret = gdome_el_removeAttributeNode(impl, loldAttr->impl, &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Attr(ret);
 }
 
@@ -896,6 +1002,8 @@ iface::dom::NodeList* CDA_Element::getElementsByTagName(const wchar_t* name)
   DDOMSTRING(name);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_NodeList(ret);
 }
 
@@ -963,6 +1071,8 @@ CDA_Element::getAttributeNodeNS(const wchar_t* namespaceURI,
   DDOMSTRING(localName);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Attr(ret);
 }
 
@@ -975,6 +1085,8 @@ iface::dom::Attr* CDA_Element::setAttributeNodeNS(iface::dom::Attr* newAttr)
     gdome_el_setAttributeNodeNS(impl, lnewAttr->impl, &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Attr(ret);
 }
 
@@ -992,6 +1104,8 @@ CDA_Element::getElementsByTagNameNS(const wchar_t* namespaceURI,
   DDOMSTRING(localName);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_NodeList(ret);
 }
 
@@ -1038,6 +1152,8 @@ CDA_TextBase::splitText(u_int32_t offset)
   GdomeText* ret = gdome_t_splitText(fetchText(), offset, &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Text(ret);
 }
 
@@ -1153,6 +1269,8 @@ CDA_DocumentType::entities()
   GdomeNamedNodeMap* ret = gdome_dt_entities(impl, &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_NamedNodeMap(ret);
 }
 
@@ -1164,6 +1282,8 @@ CDA_DocumentType::notations()
   GdomeNamedNodeMap* ret = gdome_dt_notations(impl, &exc);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_NamedNodeMap(ret);
 }
 
@@ -1367,6 +1487,12 @@ CDA_ProcessingInstruction::data(const wchar_t* attr)
   EXCEPTION_CATCH;
 }
 
+GdomeNode*
+CDA_ProcessingInstruction::fetchNode() const
+{
+  return GDOME_N(impl);
+}
+
 CDA_DocumentFragment::CDA_DocumentFragment(GdomeDocumentFragment* df)
   : _cda_refcount(1), impl(df)
 {
@@ -1402,6 +1528,9 @@ CDA_Document::doctype()
   EXCEPTION_TRY;
   GdomeDocumentType* ret = gdome_doc_doctype(impl, &exc);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_DocumentType(ret);
 }
 
@@ -1412,6 +1541,9 @@ CDA_Document::implementation()
   EXCEPTION_TRY;
   GdomeDOMImplementation* ret = gdome_doc_implementation(impl, &exc);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_DOMImplementation(ret);
 }
 
@@ -1435,6 +1567,9 @@ CDA_Document::createElement(const wchar_t* tagName)
   DDOMSTRING(tagName);
   EXCEPTION_CATCH;
   // No namespace => No special type.
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_Element(ret);
 }
 
@@ -1445,6 +1580,9 @@ CDA_Document::createDocumentFragment()
   EXCEPTION_TRY;
   GdomeDocumentFragment* ret = gdome_doc_createDocumentFragment(impl, &exc);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_DocumentFragment(ret);
 }
 
@@ -1457,6 +1595,9 @@ CDA_Document::createTextNode(const wchar_t* data)
   GdomeText* ret = gdome_doc_createTextNode(impl, gddata, &exc);
   DDOMSTRING(data);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_Text(ret);
 }
 
@@ -1469,6 +1610,9 @@ CDA_Document::createComment(const wchar_t* data)
   GdomeComment* ret = gdome_doc_createComment(impl, gddata, &exc);
   DDOMSTRING(data);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_Comment(ret);
 }
 
@@ -1481,6 +1625,9 @@ CDA_Document::createCDATASection(const wchar_t* data)
   GdomeCDATASection* ret = gdome_doc_createCDATASection(impl, gddata, &exc);
   DDOMSTRING(data);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_CDATASection(ret);
 }
 
@@ -1497,6 +1644,9 @@ CDA_Document::createProcessingInstruction
   DDOMSTRING(target);
   DDOMSTRING(data);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_ProcessingInstruction(ret);
 }
 
@@ -1509,6 +1659,9 @@ CDA_Document::createAttribute(const wchar_t* name)
   GdomeAttr* ret = gdome_doc_createAttribute(impl, gdname, &exc);
   DDOMSTRING(name);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_Attr(ret);
 }
 
@@ -1521,6 +1674,9 @@ CDA_Document::createEntityReference
   GdomeEntityReference* ret = gdome_doc_createEntityReference(impl, gdname, &exc);
   DDOMSTRING(name);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_EntityReference(ret);
 }
 
@@ -1533,6 +1689,9 @@ CDA_Document::getElementsByTagName(const wchar_t* tagname)
   GdomeNodeList* ret = gdome_doc_getElementsByTagName(impl, gdtagname, &exc);
   DDOMSTRING(tagname);
   EXCEPTION_CATCH;
+
+  if (ret == NULL)
+    return NULL;
   return new CDA_NodeList(ret);
 }
 
@@ -1577,6 +1736,8 @@ CDA_Document::createAttributeNS(const wchar_t* namespaceURI,
   DDOMSTRING(qualifiedName);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_Attr(ret);
 }
 
@@ -1595,6 +1756,8 @@ CDA_Document::getElementsByTagNameNS
   DDOMSTRING(localName);
   EXCEPTION_CATCH;
 
+  if (ret == NULL)
+    return NULL;
   return new CDA_NodeList(ret);
 }
 
@@ -1631,7 +1794,7 @@ CDA_Document::fetchNode() const
 }
 
 iface::events::DOMString
-CDA_Event::type()
+CDA_EventBase::type()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1641,8 +1804,30 @@ CDA_Event::type()
   return cxxret;
 }
 
+iface::dom::Node*
+CDA_EventBase::target()
+  throw(std::exception&)
+{
+  EXCEPTION_TRY;
+  GdomeNode* ret = gdome_evnt_target(fetchEvent(), &exc);
+  EXCEPTION_CATCH;
+
+  return CDA_WrapNode(ret);
+}
+
+iface::dom::Node*
+CDA_EventBase::currentTarget()
+  throw(std::exception&)
+{
+  EXCEPTION_TRY;
+  GdomeNode* ret = gdome_evnt_currentTarget(fetchEvent(), &exc);
+  EXCEPTION_CATCH;
+
+  return CDA_WrapNode(ret);
+}
+
 u_int16_t
-CDA_Event::eventPhase()
+CDA_EventBase::eventPhase()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1652,7 +1837,7 @@ CDA_Event::eventPhase()
 }
 
 bool
-CDA_Event::bubbles()
+CDA_EventBase::bubbles()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1662,7 +1847,7 @@ CDA_Event::bubbles()
 }
 
 bool
-CDA_Event::cancelable()
+CDA_EventBase::cancelable()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1672,7 +1857,7 @@ CDA_Event::cancelable()
 }
 
 iface::events::DOMTimeStamp
-CDA_Event::timeStamp()
+CDA_EventBase::timeStamp()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1682,7 +1867,7 @@ CDA_Event::timeStamp()
 }
 
 void
-CDA_Event::stopPropagation()
+CDA_EventBase::stopPropagation()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1691,7 +1876,7 @@ CDA_Event::stopPropagation()
 }
 
 void
-CDA_Event::preventDefault()
+CDA_EventBase::preventDefault()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1700,9 +1885,9 @@ CDA_Event::preventDefault()
 }
 
 void
-CDA_Event::initEvent
+CDA_EventBase::initEvent
 (
- const iface::events::DOMString eventTypeArg, bool canBubbleArg,
+ const wchar_t* eventTypeArg, bool canBubbleArg,
  bool cancelableArg
 )
   throw(std::exception&)
@@ -1712,6 +1897,24 @@ CDA_Event::initEvent
   gdome_evnt_initEvent(fetchEvent(), gdeventTypeArg, canBubbleArg, cancelableArg, &exc);
   DDOMSTRING(eventTypeArg);
   EXCEPTION_CATCH;
+}
+
+CDA_Event::CDA_Event(GdomeEvent* evt)
+  : _cda_refcount(1), impl(evt)
+{
+}
+
+CDA_Event::~CDA_Event()
+{
+  EXCEPTION_TRY;
+  gdome_evnt_unref(impl, &exc);
+}
+
+GdomeEvent*
+CDA_Event::fetchEvent()
+  const
+{
+  return impl;
 }
 
 CDA_MutationEvent::CDA_MutationEvent(GdomeMutationEvent* me)
@@ -1781,12 +1984,12 @@ CDA_MutationEvent::attrChange()
 void
 CDA_MutationEvent::initMutationEvent
 (
- const iface::events::DOMString typeArg,
+ const wchar_t* typeArg,
  bool canBubbleArg, bool cancelableArg,
  iface::events::Node relatedNodeArg,
- const iface::events::DOMString prevValueArg,
- const iface::events::DOMString newValueArg,
- const iface::events::DOMString attrNameArg,
+ const wchar_t* prevValueArg,
+ const wchar_t* newValueArg,
+ const wchar_t* attrNameArg,
  u_int16_t attrChangeArg
 )
   throw(std::exception&)
@@ -1881,14 +2084,20 @@ CDARegisteredNamespace::CDARegisteredNamespace
 iface::dom::Element*
 CDA_WrapElement(GdomeElement* el)
 {
+
+  if (el == NULL)
+    return NULL;
+
   // Figure out the namespace...
   GdomeException exc;
+
   GdomeDOMString* ds = gdome_el_namespaceURI(el, &exc);
   if (ds == NULL)
     return new CDA_Element(el);
 
   // We now need to look it up in the constructor list...
   std::string namespaceURI(ds->str);
+  gdome_str_unref(ds);
   std::map<std::string,CDARegisteredNamespace*>::iterator i;
   i = ElementFactories.find(namespaceURI);
   if (i == ElementFactories.end() ||
@@ -1901,6 +2110,9 @@ CDA_WrapElement(GdomeElement* el)
 iface::dom::Document*
 CDA_WrapDocument(GdomeDocument* el)
 {
+  if (el == NULL)
+    return NULL;
+
   // Figure out the namespace...
   GdomeException exc;
   GdomeDOMString* ds = gdome_doc_namespaceURI(el, &exc);
@@ -1916,6 +2128,38 @@ CDA_WrapDocument(GdomeDocument* el)
     return new CDA_Document(el);
 
   return ((*i).second)->wrapDocument(el);
+}
+
+iface::events::Event*
+CDA_WrapEvent(GdomeEvent* evt)
+{
+  if (evt == NULL)
+    return NULL;
+
+  GdomeDOMString* str;
+
+  if (evt == NULL)
+    return NULL;
+  // We need to figure out what type of node it is.
+  EXCEPTION_TRY;
+  str = gdome_evnt_type(evt, &exc);
+  EXCEPTION_CATCH;
+
+  bool isMutation = false;
+  if (!strcmp(str->str, "DOMSubtreeModified") ||
+      !strcmp(str->str, "DOMNodeInserted") ||
+      !strcmp(str->str, "DOMNodeRemoved") ||
+      !strcmp(str->str, "DOMNodeRemovedFromDocument") ||
+      !strcmp(str->str, "DOMNodeInsertedIntoDocument") ||
+      !strcmp(str->str, "DOMAttrModified") ||
+      !strcmp(str->str, "DOMCharacterDataModified"))
+    isMutation = true;
+  gdome_str_unref(str);
+
+  if (isMutation)
+    return new CDA_MutationEvent(GDOME_MEVNT(evt));
+  else
+    return new CDA_Event(evt);
 }
 
 // Add-on: MathML support...

@@ -4,6 +4,8 @@ class CDAMutex
 public:
   CDAMutex()
   {
+    if (!g_thread_supported())
+      g_thread_init(NULL);
     gmutex = g_mutex_new();
   }
 
