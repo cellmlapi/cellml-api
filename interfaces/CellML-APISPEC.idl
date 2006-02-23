@@ -161,8 +161,8 @@ module cellml_api
 
     /**
      * The collection of extension elements associated with this CellML
-     * element. The list is not "live", and so it will not automatically update
-     * as changes to the model are made.
+     * element. The list is "live", and so it will automatically update
+     * as changes to the underlying DOM representation are made.
      */
     readonly attribute ExtensionElementList extensionElements;
 
@@ -246,7 +246,8 @@ module cellml_api
      * @param type The type of element("variable", "component", etc...)
      * @param name The name to remove.
      */
-    void removeByName(in CellMLAttributeString type, in CellMLAttributeString name);
+    void removeByName(in CellMLAttributeString type,
+                      in CellMLAttributeString name);
 
     /**
      * Perform validation according to the validation requirements
@@ -270,7 +271,9 @@ module cellml_api
      * never read from an XML file or written out, but are for the application
      * to use for any purpose it likes.
      * Implementations in languages in which the ability to do this on any
-     * object is built in may choose not to implement this.
+     * object is built in may choose not to implement this, provided that the
+     * implementation does not offer the possibility of remote access to the
+     * object.
      * If the key already exists, then the existing user-data should be removed
      * and the new user-data added.
      * @param key  A string to identify the annotation.
@@ -306,12 +309,10 @@ module cellml_api
   interface Model
     : NamedCellMLElement
   {
-    /** @todo model manager removed from here as previously discussed, but need to
-     *        determine alternative strategy for accessing the model manager.
-     */
-
     /**
-     * This allows a model with a different cellmlVersion to be returned.
+     * This allows a model with a different cellmlVersion to be returned. This
+     * function will automatically flatten CellML 1.1 models if they contain
+     * imports, and conversion to CellML 1.0 is requested.
      * @param cellmlVersion The new version of CellML. The string should be 1.0
      *                      or 1.1
      * @raises CellMLException if the version is not supported by the API.
@@ -330,11 +331,6 @@ module cellml_api
     readonly attribute CellMLImportSet imports;
 
     /**
-     * @todo namespace map removed from here are previously discussed, but we
-     *       need to decide where to put it.
-     */
-
-    /**
      * Models should really set an 'xml:base' attribute in the model element as
      * we need to be able to unambiguously and uniquely reference a model
      * independent of its location. If this is not set, the base_uri could be
@@ -348,26 +344,55 @@ module cellml_api
     readonly attribute UnitsSet localUnits;
 
     /**
-     * The collection of units, including those from imports.
+     * The collection of units. This will fetch all the units retrieved by
+     * localUnits, but in addition will also fetch all the ImportUnits
+     * declared in this model.
      */
-    readonly attribute UnitsSet childUnits;
+    readonly attribute UnitsSet modelUnits;
+
+    /**
+     * The collection of units. Provided that the imports are instantiated,
+     * this will fetch units in both direct and indirect imports. If the
+     * import containing the unit definition has been instantiated, iterating
+     * the set will return the unit definition, otherwise it will return
+     * the ImportUnit. If an import containing unit definitions is instantiated
+     * after iterator creation but before unit retrieval, the implementation
+     * may choose to return either the ImportUnit or the unit definition.
+     * Applications must not rely upon the behaviour of any particular
+     * implementation in this case.
+     */
+    readonly attribute UnitsSet allUnits;
 
     /**
      * Returns a list of all components which are defined in this model.
      */
     readonly attribute CellMLComponentSet localComponents;
 
+
     /**
-     * returns all components with interface 'CellMLComponent' in the model.
-     * This includes components which may or may not have been instantiated.
+     * The collection of components. This will fetch all the components retrieved by
+     * localComponents, but in addition will also fetch all the ImportComponents
+     * declared in this model.
      */
-    readonly attribute CellMLComponentSet components;
+    readonly attribute CellMLComponentSet modelComponents;
+
+    /**
+     * Returns all components with interface 'CellMLComponent' in the model.
+     * Provided that the imports are instantiated, this will fetch components
+     * in both direct and indirect imports. If the import containing the
+     * component definition has been instantiated, iterating the set will
+     * return the component definition, otherwise it will return the
+     * ImportComponent. If an import containing component definitions is
+     * instantiated after iterator creation but before component retrieval,
+     * the implementation may choose to return either the ImportComponent or
+     * the component definition. Applications must not rely upon the behaviour
+     * of any particular implementation in this case.
+     */
+    readonly attribute CellMLComponentSet allComponents;
 
     /**
      * Model connections. If any imports have been fully instantiated, then it
      * includes connections relevant to those also.
-     * Adding or removing from this collection must always add the connection
-     * to the correct model.
      */
     readonly attribute ConnectionSet connections;
 
@@ -381,7 +406,8 @@ module cellml_api
     );
 
     /**
-     * This fully instantiates the import definitions
+     * This fully instantiates the import definitions. It will then recursively
+     * instantiate all imports in the imported models.
      */
     void fullyInstantiateImports();
 
@@ -572,7 +598,8 @@ module cellml_api
     /**
      * Gets the 'import number' in which this component is contained.
      * 0 means it is in the parent, and all other numbers are those allocated
-     * for each import.
+     * for each import. This must match the uniqueIdentifier on the import
+     * element which causes the importation of this model.
      */
     readonly attribute unsigned long importNumber;
   };
@@ -581,7 +608,7 @@ module cellml_api
     : NamedCellMLElement
   {
     /**
-     * True if this set of units is base units, or false otherwise.
+     * True if this units element defines a base unit, or false otherwise.
      */
     attribute boolean isBaseUnits;
 
@@ -632,7 +659,14 @@ module cellml_api
     : CellMLElement
   {
     /**
-     * The URI in the xlink:href attribute.
+     * The URI in the xlink:href attribute. Changing the URL in the xlinkHref
+     * on an instantiated import will cause the import to become
+     * uninstantiated. If there are any iterators(of a kind which is required
+     * to return elements from more than one model) which were created from the
+     * sets prior to changing xlinkHref, an implementation may choose to
+     * continue to provide elements from the previously instantiated import.
+     * Applications must not rely upon the behaviour of any particular
+     * implementation in this case.
      */
     readonly attribute URI xlinkHref;
 
@@ -655,14 +689,16 @@ module cellml_api
     readonly attribute ConnectionSet importedConnections;
 
     /**
-     * Fully instantiate the import.
-     * @todo Definition of full instantiation.
+     * Causes the model referenced by the href attribute to be loaded using the
+     * same model loader used to load this model.
      */
     void fullyInstantiate();
 
     /**
      * Returns true if fullyInstantiate has previously been called on this
-     * import, or false otherwise.
+     * import, or false otherwise. Note that a call to fullyInstantiateImports()
+     * on a model which is an ancestor of this one in the import tree shall be
+     * treated as if it were a call to fullyInstantiate() on all imports.
      */
     readonly attribute boolean wasFullyInstantiated;
 
@@ -681,21 +717,8 @@ module cellml_api
   {
     /**
      * The name of the component referenced by this import component.
-     * @todo what happens if this is changed after fullyInstantiate()?
      */
     attribute CellMLAttributeString componentRef;
-
-    /**
-     * Fully instantiate the import.
-     * @todo Definition of full instantiation.
-     */
-    void fullyInstantiate();
-
-    /**
-     * Returns true if fullyInstantiate has previously been called on this
-     * import, or false otherwise.
-     */
-    readonly attribute boolean wasFullyInstantiated;
   };
 
   /**
@@ -706,21 +729,8 @@ module cellml_api
   {
     /**
      * The name of the units referenced by this import component.
-     * @todo what happens if this is changed after fullyInstantiate()?
      */
     attribute CellMLAttributeString unitsRef;
-
-    /**
-     * Fully instantiate the import.
-     * @todo Definition of full instantiation.
-     */
-    void fullyInstantiate();
-
-    /**
-     * Returns true if fullyInstantiate has previously been called on this
-     * import, or false otherwise.
-     */
-    readonly attribute boolean wasFullyInstantiated;
   };
 
   /**
@@ -746,7 +756,7 @@ module cellml_api
    * Represents a <variable> element in a CellML document.
    */
   interface CellMLVariable
-    : CellMLElement
+    : NamedCellMLElement
   {
     /**
      * The initial value of this variable.
@@ -783,7 +793,6 @@ module cellml_api
      */
     readonly attribute CellMLVariable sourceVariable;
 
-
     /**
      * The name of the component containing this CellMLVariable.
      */
@@ -816,7 +825,7 @@ module cellml_api
     readonly attribute ComponentRef parentComponentRef;
 
     /**
-     * Thie parent group in which the component reference is found.
+     * The parent group in which the component reference is found.
      */
     readonly attribute Group parentGroup;
   };
@@ -836,12 +845,21 @@ module cellml_api
     /**
      * The name of the relationship referenced by this element.
      */
-    attribute CellMLAttributeString relationship;
+    readonly attribute CellMLAttributeString relationship;
 
     /**
      * The namespace in which the relationship attribute belongs.
      */
-    readonly attribute URI relationship_namespace;
+    readonly attribute CellMLAttributeString relationshipNamespace;
+
+    /**
+     * Sets the namespace and relationship name. This will remove any other
+     * relationship attributes in any namespace.
+     * @param namespaceURI The URI of the namespace 
+     * @param name The name of the relationship.
+     */
+    void setRelationshipName(in CellMLAttributeString namespaceURI,
+                             in CellMLAttributeString name);
   };
 
   /**
@@ -858,12 +876,6 @@ module cellml_api
      * The collection of component references.
      */
     readonly attribute ComponentRefSet componentRefs;
-
-    /**    
-     * @todo Find out what Matt meant by the following
-             Component get_parent_component_name(component name)
-             Component get_children_component_names(component name)
-    */
 
     /**
      * True if this is an encapsulation relationship
@@ -904,24 +916,30 @@ module cellml_api
     : CellMLElement
   {
     /**
-     * The name of the first component. This component
+     * The name of the first component. The returned name shall be the same
+     * name as found in the component_1 attribute(that is, the implementation
+     * shall not translate the name of imported components).
      */
     attribute CellMLAttributeString firstComponentName;
 
     /**
-     * The name of the second component.
+     * The name of the second component. The returned name shall be the same
+     * name as found in the component_2 attribute(that is, the implementation
+     * shall not translate the name of imported components).
      */
     attribute CellMLAttributeString secondComponentName;
 
     /**
-     * The first component.
+     * The first component. This component shall be the component definition if
+     * imports have been instantiated, and otherwise shall be the ImportComponent.
      */
     attribute CellMLComponent firstComponent;
 
     /**
-     * The second component.
+     * The second component. This component shall be the component definition if
+     * imports have been instantiated, and otherwise shall be the ImportComponent.
      */
-    readonly attribute CellMLComponent secondComponent;
+    attribute CellMLComponent secondComponent;
   };
 
   /**
@@ -932,7 +950,7 @@ module cellml_api
   {
     /**
      * The name of the first variable. The variable name is interpreted only in
-     * the context of MapComponents, and so may only be read or set once the
+     * the context of MapComponents, and so may only be read or set after the
      * MapVariables is added to a Connection, and the Connection has in turn
      * been added to a model. It also requires that the component name has
      * already been set.
@@ -944,7 +962,7 @@ module cellml_api
 
     /**
      * The name of the second variable. The variable name is interpreted only in
-     * the context of MapComponents, and so may only be read or set once the
+     * the context of MapComponents, and so may only be read or set after the
      * MapVariables is added to a Connection, and the Connection has in turn
      * been added to a model. It also requires that the component name has
      * already been set.
@@ -1650,7 +1668,7 @@ module cellml_api
      * @return The next CellML element, or nil if there are no more CellML
      *         elements.
      */
-    ProductVariableRef nextReactantVariableRef();
+    ProductVariableRef nextProductVariableRef();
   };
 
   /**
@@ -1663,7 +1681,7 @@ module cellml_api
      * Returns a CellMLElementIterator that can be used to iterate through the
      * elements. The iteration order is undefined.
      */
-    ReactantVariableRefIterator iterateReactantVariableRefs();
+    ProductVariableRefIterator iterateProductVariableRefs();
   };
 
   /**
