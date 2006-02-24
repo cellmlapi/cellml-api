@@ -1,5 +1,6 @@
 #include "CellMLImplementation.hpp"
 #include "../dom/DOMImplementation.hxx"
+#include "CellMLBootstrapImpl.hpp"
 #include "CellMLBootstrap.hpp"
 
 CDA_CellMLBootstrap::CDA_CellMLBootstrap()
