@@ -327,6 +327,22 @@ IsOtherwise(iface::dom::Node* n)
   return false;
 }
 
+static bool
+IsContentArgument(iface::dom::Node* n)
+{
+  iface::mathml_dom::MathMLElement* me =
+    dynamic_cast<iface::mathml_dom::MathMLElement*>
+    (n->query_interface("mathml_dom::MathMLElement"));
+
+  if (me == NULL)
+  {
+    return true;
+  }
+
+  RETURN_INTO_WSTRING(ln, me->localName());
+  return (ln != L"sep");
+}
+
 static const wchar_t*
 GetArity(const wchar_t* name)
 {
@@ -413,6 +429,7 @@ public:
   const static unsigned int FILTER_PIECE = 3;
   const static unsigned int FILTER_BVAR = 4;
   const static unsigned int FILTER_CONTENT = 5;
+  const static unsigned int FILTER_CONTENTARGUMENT = 6;
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::NodeList, mathml_dom::MathMLNodeList)
@@ -489,6 +506,8 @@ private:
       return IsBvar(node);
     case FILTER_CONTENT:
       return IsContentElement(node);
+    case FILTER_CONTENTARGUMENT:
+      return IsContentArgument(node);
     }
     // This shouldn't happen.
     return false;
@@ -886,7 +905,7 @@ CDA_MathMLContentToken::arguments()
 {
   return new CDA_MathMLFilteredNodeList(this,
                                         CDA_MathMLFilteredNodeList::
-                                        FILTER_ARGUMENT);
+                                        FILTER_CONTENTARGUMENT);
 }
 
 wchar_t*
@@ -928,7 +947,7 @@ CDA_MathMLContentToken::getArgument(u_int32_t index)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
-                                  FILTER_ARGUMENT);
+                                  FILTER_CONTENTARGUMENT);
   if (index == 0)
     throw iface::dom::DOMException();
   return mfnl.item(index - 1);
@@ -940,7 +959,7 @@ CDA_MathMLContentToken::insertArgument(iface::dom::Node* newArgument, u_int32_t 
 {
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
-                                  FILTER_ARGUMENT);
+                                  FILTER_CONTENTARGUMENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   u_int32_t l = mfnl.length();
@@ -964,7 +983,7 @@ CDA_MathMLContentToken::setArgument(iface::dom::Node* newArgument, u_int32_t ind
 {
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
-                                  FILTER_ARGUMENT);
+                                  FILTER_CONTENTARGUMENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   u_int32_t l = mfnl.length();
@@ -990,7 +1009,7 @@ CDA_MathMLContentToken::deleteArgument(u_int32_t index)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
-                                  FILTER_ARGUMENT);
+                                  FILTER_CONTENTARGUMENT);
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::dom::Node* old2 = removeChild(old);
   old->release_ref();
@@ -1003,7 +1022,7 @@ CDA_MathMLContentToken::removeArgument(u_int32_t index)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
-                                  FILTER_ARGUMENT);
+                                  FILTER_CONTENTARGUMENT);
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::dom::Node* old2 = removeChild(old);
   old->release_ref();

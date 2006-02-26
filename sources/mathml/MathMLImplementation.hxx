@@ -26,6 +26,8 @@ class CDA_MathMLElement
 public:
   CDA_MathMLElement(GdomeElement* el);
 
+  CDA_IMPL_QI3(dom::Node, dom::Element, mathml_dom::MathMLElement)
+
   wchar_t* className() throw(std::exception&);
   void className(const wchar_t* attr) throw(std::exception&);
   wchar_t* mathElementStyle() throw(std::exception&);
@@ -144,6 +146,10 @@ class CDA_MathMLCsymbolElement
 {
 public:
   CDA_MathMLCsymbolElement(GdomeElement* elem);
+
+  CDA_IMPL_QI6(dom::Node, dom::Element, mathml_dom::MathMLElement,
+               mathml_dom::MathMLContentElement,
+               mathml_dom::MathMLContentToken, mathml_dom::MathMLCsymbolElement)
 };
 
 class CDA_MathMLContentContainer
@@ -153,6 +159,11 @@ class CDA_MathMLContentContainer
 {
 public:
   CDA_MathMLContentContainer(GdomeElement* elem);
+
+  CDA_IMPL_QI6(dom::Node, dom::Element, mathml_dom::MathMLElement,
+               mathml_dom::MathMLContentElement,
+               mathml_dom::MathMLContainer,
+               mathml_dom::MathMLContentContainer)
 
   u_int32_t nBoundVariables() throw(std::exception&);
   iface::mathml_dom::MathMLConditionElement* condition() throw(std::exception&);
@@ -197,6 +208,11 @@ class CDA_MathMLFnElement
 {
 public:
   CDA_MathMLFnElement(GdomeElement* el);
+  CDA_IMPL_QI7(dom::Node, dom::Element, mathml_dom::MathMLElement,
+               mathml_dom::MathMLContentElement,
+               mathml_dom::MathMLContainer,
+               mathml_dom::MathMLContentContainer,
+               mathml_dom::MathMLFnElement)
 
   wchar_t* definitionURL() throw(std::exception&);
   void definitionURL(const wchar_t* attr) throw(std::exception&);
