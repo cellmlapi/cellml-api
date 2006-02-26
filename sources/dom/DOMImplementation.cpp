@@ -38,7 +38,7 @@ CDA_DOMImplementation::hasFeature
 {
   if (!wcscmp(feature, L"org.w3c.dom.mathml"))
   {
-    return !!wcscmp(version, L"2.0");
+    return !wcscmp(version, L"2.0");
   }
 
   EXCEPTION_TRY;
@@ -88,7 +88,7 @@ CDA_DOMImplementation::createDocument
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(qualifiedName);
   LOCALCONVERT(doctype, DocumentType)
 
@@ -108,7 +108,7 @@ CDA_DOMImplementation::loadDocument(const wchar_t* sourceURL,
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  char* sourceURL8 = g_utf16_to_utf8((const gunichar2*)sourceURL, -1, NULL,
+  char* sourceURL8 = g_wchar_to_char((const gwchar_t*)sourceURL, -1, NULL,
                                      NULL, NULL);
   errorMessage = L"";
 
@@ -135,7 +135,7 @@ CDA_DOMImplementation::loadDocument(const wchar_t* sourceURL,
       errorMessage += buf;
       if (ep->message)
       {
-        wchar_t* msg = (wchar_t*)g_utf8_to_utf16(ep->message, -1, NULL, NULL,
+        wchar_t* msg = (wchar_t*)g_char_to_wchar(ep->message, -1, NULL, NULL,
                                                  NULL);
         errorMessage += msg;
         free(msg);
@@ -678,7 +678,7 @@ CDA_NamedNodeMap::getNamedItemNS(const wchar_t* namespaceURI,
                                  const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   GdomeNode* ret = gdome_nnm_getNamedItemNS(impl, gdnamespaceURI, gdlocalName,
@@ -707,7 +707,7 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
                                     const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   GdomeNode* ret = gdome_nnm_removeNamedItemNS(impl, gdnamespaceURI,
@@ -1012,7 +1012,7 @@ CDA_Element::getAttributeNS(const wchar_t* namespaceURI,
                             const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   GdomeDOMString* ret =
@@ -1031,7 +1031,7 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
                             const wchar_t* value)
   throw(std::exception&)
 { 
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(qualifiedName);
   TRDOMSTRING(value);
   EXCEPTION_TRY;
@@ -1048,7 +1048,7 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
                                const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   gdome_el_removeAttributeNS(impl, gdnamespaceURI, gdlocalName, &exc);
@@ -1062,7 +1062,7 @@ CDA_Element::getAttributeNodeNS(const wchar_t* namespaceURI,
                                 const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   GdomeAttr* ret = gdome_el_getAttributeNodeNS(impl, gdnamespaceURI,
@@ -1095,7 +1095,7 @@ CDA_Element::getElementsByTagNameNS(const wchar_t* namespaceURI,
                                     const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   GdomeNodeList* ret =
@@ -1127,7 +1127,7 @@ CDA_Element::hasAttributeNS(const wchar_t* namespaceURI,
                             const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   bool ret = gdome_el_hasAttributeNS(impl, gdnamespaceURI, gdlocalName, &exc);
@@ -1712,7 +1712,7 @@ CDA_Document::createElementNS(const wchar_t* namespaceURI,
                               const wchar_t* qualifiedName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(qualifiedName);
   EXCEPTION_TRY;
   GdomeElement* ret = gdome_doc_createElementNS(impl, gdnamespaceURI, gdqualifiedName, &exc);
@@ -1728,7 +1728,7 @@ CDA_Document::createAttributeNS(const wchar_t* namespaceURI,
                                 const wchar_t* qualifiedName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(qualifiedName);
   EXCEPTION_TRY;
   GdomeAttr* ret = gdome_doc_createAttributeNS(impl, gdnamespaceURI, gdqualifiedName, &exc);
@@ -1747,7 +1747,7 @@ CDA_Document::getElementsByTagNameNS
  const wchar_t* localName)
   throw(std::exception&)
 {
-  TRDOMSTRING(namespaceURI);
+  TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(localName);
   EXCEPTION_TRY;
   GdomeNodeList* ret = gdome_doc_getElementsByTagNameNS(impl, gdnamespaceURI,
@@ -2113,19 +2113,34 @@ CDA_WrapDocument(GdomeDocument* el)
   if (el == NULL)
     return NULL;
 
-  // Figure out the namespace...
+  // Find the document element, if there is one...
   GdomeException exc;
-  GdomeDOMString* ds = gdome_doc_namespaceURI(el, &exc);
-  if (ds == NULL)
+  GdomeElement* de = gdome_doc_documentElement(el, &exc);
+  if (de == NULL)
+  {
     return new CDA_Document(el);
+  }
+
+  // Figure out the namespace...
+  GdomeDOMString* ds = gdome_el_namespaceURI(de, &exc);
+  if (ds == NULL)
+  {
+    gdome_el_unref(de, &exc);
+    return new CDA_Document(el);
+  }
+  gdome_el_unref(de, &exc);
 
   // We now need to look it up in the constructor list...
   std::string namespaceURI(ds->str);
+  gdome_str_unref(ds);
+
   std::map<std::string,CDARegisteredNamespace*>::iterator i;
   i = ElementFactories.find(namespaceURI);
   if (i == ElementFactories.end() ||
       ((*i).second)->wrapDocument == NULL)
+  {
     return new CDA_Document(el);
+  }
 
   return ((*i).second)->wrapDocument(el);
 }

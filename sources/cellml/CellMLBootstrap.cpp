@@ -4,7 +4,7 @@
 #include "CellMLBootstrap.hpp"
 
 CDA_CellMLBootstrap::CDA_CellMLBootstrap()
-  : domimpl(new CDA_DOMImplementation())
+  : _cda_refcount(1), domimpl(new CDA_DOMImplementation())
 {
 }
 
@@ -32,7 +32,7 @@ CDA_CellMLBootstrap::localURLLoader()
 }
 
 CDA_DOMURLLoader::CDA_DOMURLLoader(CDA_DOMImplementation* aDOMImpl)
-  : mDOMImpl(aDOMImpl)
+  : _cda_refcount(1), mDOMImpl(aDOMImpl)
 {
   mDOMImpl->add_ref();
 }
@@ -57,7 +57,7 @@ CDA_DOMURLLoader::lastErrorMessage()
 }
 
 CDA_ModelLoader::CDA_ModelLoader(iface::cellml_api::DOMURLLoader* aURLLoader)
-  : mURLLoader(aURLLoader)
+  : _cda_refcount(1), mURLLoader(aURLLoader)
 {
   mURLLoader->add_ref();
 }
@@ -120,4 +120,10 @@ CDA_ModelLoader::createFromDOM(const wchar_t* URL,
     mLastError = L"badxml/0/0/Missing document element";
     throw iface::cellml_api::CellMLException();
   }
+}
+
+iface::cellml_api::CellMLBootstrap*
+CreateCellMLBootstrap()
+{
+  return new CDA_CellMLBootstrap();
 }
