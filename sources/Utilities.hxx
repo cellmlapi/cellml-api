@@ -5,6 +5,7 @@
 #define WCHAR_T_IS_32BIT
 
 #include <list>
+#include <Ifacexpcom.hxx>
 
 #define CDA_IMPL_REFCOUNT \
   private: \
@@ -27,10 +28,12 @@
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1)) \
+      { \
+        add_ref(); \
         return this; \
-      if (!strcmp(id, #c1)) \
-         return this; \
+      } \
       return NULL; \
     }
 
@@ -38,12 +41,13 @@
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
-        return this; \
-      if (!strcmp(id, #c1)) \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1) || \
+          !strcmp(id, #c2)) \
+      { \
+         add_ref(); \
          return this; \
-      if (!strcmp(id, #c2)) \
-         return this; \
+      } \
       return NULL; \
     }
 
@@ -51,14 +55,14 @@
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
-        return this; \
-      if (!strcmp(id, #c1)) \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1) || \
+          !strcmp(id, #c2) || \
+          !strcmp(id, #c3)) \
+      { \
+         add_ref(); \
          return this; \
-      if (!strcmp(id, #c2)) \
-         return this; \
-      if (!strcmp(id, #c3)) \
-         return this; \
+      } \
       return NULL; \
     }
 
@@ -66,16 +70,15 @@
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
-        return this; \
-      if (!strcmp(id, #c1)) \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1) || \
+          !strcmp(id, #c2) || \
+          !strcmp(id, #c3) || \
+          !strcmp(id, #c4)) \
+      { \
+         add_ref(); \
          return this; \
-      if (!strcmp(id, #c2)) \
-         return this; \
-      if (!strcmp(id, #c3)) \
-         return this; \
-      if (!strcmp(id, #c4)) \
-         return this; \
+      } \
       return NULL; \
     }
 
@@ -83,18 +86,16 @@
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1) || \
+          !strcmp(id, #c2) || \
+          !strcmp(id, #c3) || \
+          !strcmp(id, #c4) || \
+          !strcmp(id, #c5)) \
+      { \
+        add_ref(); \
         return this; \
-      if (!strcmp(id, #c1)) \
-        return this; \
-      if (!strcmp(id, #c2)) \
-        return this; \
-      if (!strcmp(id, #c3)) \
-        return this; \
-      if (!strcmp(id, #c4)) \
-        return this; \
-      if (!strcmp(id, #c5)) \
-        return this; \
+      } \
       return NULL; \
     }
 
@@ -102,20 +103,17 @@
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1) || \
+          !strcmp(id, #c2) || \
+          !strcmp(id, #c3) || \
+          !strcmp(id, #c4) || \
+          !strcmp(id, #c5) || \
+          !strcmp(id, #c6)) \
+      { \
+        add_ref(); \
         return this; \
-      if (!strcmp(id, #c1)) \
-        return this; \
-      if (!strcmp(id, #c2)) \
-        return this; \
-      if (!strcmp(id, #c3)) \
-        return this; \
-      if (!strcmp(id, #c4)) \
-        return this; \
-      if (!strcmp(id, #c5)) \
-        return this; \
-      if (!strcmp(id, #c6)) \
-        return this; \
+      } \
       return NULL; \
     }
 
@@ -123,22 +121,18 @@
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1) || \
+          !strcmp(id, #c2) || \
+          !strcmp(id, #c3) || \
+          !strcmp(id, #c4) || \
+          !strcmp(id, #c5) || \
+          !strcmp(id, #c6) || \
+          !strcmp(id, #c7)) \
+      { \
+        add_ref(); \
         return this; \
-      if (!strcmp(id, #c1)) \
-        return this; \
-      if (!strcmp(id, #c2)) \
-        return this; \
-      if (!strcmp(id, #c3)) \
-        return this; \
-      if (!strcmp(id, #c4)) \
-        return this; \
-      if (!strcmp(id, #c5)) \
-        return this; \
-      if (!strcmp(id, #c6)) \
-        return this; \
-      if (!strcmp(id, #c7)) \
-        return this; \
+      } \
       return NULL; \
     }
 
@@ -196,7 +190,12 @@ public:
   {
   }
 
-  T* getPointer()
+  operator T*() const
+  {
+    return mPtr;
+  }
+
+  T* getPointer() const
   {
     return mPtr;
   }
@@ -230,17 +229,17 @@ public:
       mPtr->release_ref();
   }
 
-  T* operator-> ()
+  T* operator-> () const
   {
     return mPtr;
   }
 
-  T* operator& () const
+  T* getPointer() const
   {
     return mPtr;
   }
 
-  T* getPointer()
+  operator T* () const
   {
     return mPtr;
   }
@@ -268,7 +267,7 @@ public:
 
   void operator= (ObjRef<T> newAssign)
   {
-    T* nap = newAssign->getPointer();
+    T* nap = newAssign.getPointer();
     if (mPtr == nap)
       return;
     if (mPtr)
@@ -278,7 +277,24 @@ public:
   }
 private:
   T* mPtr;
+
+  void
+  operator&() const
+  {
+  }
 };
+
+template<class T, class U> bool
+operator==(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
+{
+  return (lhs.getPointer() == rhs.getPointer());
+}
+
+template<class T, class U> bool
+operator!=(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
+{
+  return (lhs.getPointer() != rhs.getPointer());
+}
 
 #define RETURN_INTO_WSTRING(lhs, rhs) \
   wchar_t* tmp_##lhs = rhs; \
@@ -391,5 +407,68 @@ public:
 private:
   WeakReferenceTarget<T>* mReferTo;
 };
+
+#define QUERY_INTERFACE(lhs, rhs, type) \
+  if (rhs != NULL) \
+  { \
+    iface::XPCOM::IObject* _qicast_obj = rhs->query_interface(#type); \
+    if (_qicast_obj != NULL) \
+    { \
+      lhs = already_AddRefd<iface::type>(dynamic_cast<iface::type*>(_qicast_obj)); \
+      if (lhs == NULL) \
+      { \
+        _qicast_obj->release_ref(); \
+      } \
+    } \
+  } \
+  else \
+    lhs = NULL;
+
+#define QUERY_INTERFACE_REPLACE(lhs, rhs, type) \
+  QUERY_INTERFACE(lhs, rhs, type) \
+  if (rhs != NULL) \
+  { \
+    rhs->release_ref(); \
+    rhs = NULL; \
+  }
+
+#define DECLARE_QUERY_INTERFACE(lhs, rhs, type) \
+  iface::type* lhs; \
+  QUERY_INTERFACE(lhs, rhs, type)
+
+#define DECLARE_QUERY_INTERFACE_REPLACE(lhs, rhs, type) \
+  iface::type* lhs; \
+  QUERY_INTERFACE_REPLACE(lhs, rhs, type)
+
+#define DECLARE_QUERY_INTERFACE_OBJREF(lhs, rhs, type) \
+  ObjRef<iface::type> lhs; \
+  QUERY_INTERFACE(lhs, rhs, type)
+
+inline bool hasInterface(iface::XPCOM::IObject* obj, const char* iface)
+{
+  if (obj == NULL)
+    return false;
+  iface::XPCOM::IObject* ret = obj->query_interface(iface);
+  if (ret == NULL)
+    return false;
+  ret->release_ref();
+  return true;
+}
+
+inline bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
+                               const iface::XPCOM::IObject* rhs,
+                               const char* type)
+{
+  iface::XPCOM::IObject* lhsQI = NULL;
+  if (lhs != NULL)
+    lhs->query_interface(type);
+
+  bool eq = (lhsQI == rhs);
+
+  if (lhsQI != NULL)
+    lhsQI->release_ref();
+
+  return eq;
+}
 
 #endif // _UTILITIES_HXX

@@ -13,7 +13,7 @@ CDA_CellMLBootstrap::modelLoader()
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(dul, CDA_DOMURLLoader, new CDA_DOMURLLoader(domimpl));
-  return new CDA_ModelLoader(&dul);
+  return new CDA_ModelLoader(dul);
 }
 
 iface::dom::DOMImplementation*
@@ -91,7 +91,7 @@ CDA_ModelLoader::createFromDOM(const wchar_t* URL,
   {
     RETURN_INTO_OBJREF(modelEl, iface::dom::Element,
                        modelDoc->documentElement());
-    if (&modelEl == NULL)
+    if (modelEl == NULL)
     {
       mLastError = L"nodocumentelement";
       throw iface::cellml_api::CellMLException();
@@ -113,7 +113,7 @@ CDA_ModelLoader::createFromDOM(const wchar_t* URL,
       throw iface::cellml_api::CellMLException();
     }
 
-    return new CDA_Model(loader, &modelDoc, &modelEl);
+    return new CDA_Model(loader, modelDoc, modelEl);
   }
   catch (iface::dom::DOMException& de)
   {
