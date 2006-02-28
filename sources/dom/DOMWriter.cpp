@@ -62,8 +62,7 @@ DOMWriter::writeNode(DOMNamespaceContext* dnc, iface::dom::Node* n, std::wstring
 #define NODETYPE_CODE(nt, ntn) \
  case iface::dom::Node::nt##_NODE: \
   { \
-    iface::dom::ntn* t = dynamic_cast<iface::dom::ntn*> \
-                         (n->query_interface("dom::" #ntn)); \
+    DECLARE_QUERY_INTERFACE_OBJREF(t, n, dom::ntn); \
     if (t == NULL) \
       throw iface::dom::DOMException(); \
     write##ntn(dnc, t, appendTo); \
@@ -166,10 +165,9 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(atn, iface::dom::Node, elnl->item(i));
-    if (&atn == NULL)
+    if (atn == NULL)
       break;
-    iface::dom::Attr* at = dynamic_cast<iface::dom::Attr*>
-      (atn->query_interface("dom::Attr"));
+    DECLARE_QUERY_INTERFACE_OBJREF(at, atn, dom::Attr);
     if (at == NULL)
       continue;
 
@@ -197,10 +195,9 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(atn, iface::dom::Node, elnl->item(i));
-    if (&atn == NULL)
+    if (atn == NULL)
       break;
-    iface::dom::Attr* at = dynamic_cast<iface::dom::Attr*>
-      (atn->query_interface("dom::Attr"));
+    DECLARE_QUERY_INTERFACE_OBJREF(at, atn, dom::Attr);
     if (at == NULL)
       continue;
 
@@ -261,10 +258,9 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(atn, iface::dom::Node, elnl->item(i));
-    if (&atn == NULL)
+    if (atn == NULL)
       break;
-    iface::dom::Attr* at = dynamic_cast<iface::dom::Attr*>
-      (atn->query_interface("dom::Attr"));
+    DECLARE_QUERY_INTERFACE_OBJREF(at, atn, dom::Attr);
     if (at == NULL)
     {
       continue;
@@ -304,7 +300,7 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, elcnl->item(i));
-    if (&n == NULL)
+    if (n == NULL)
       break;
     
     // Gdome doesn't put attributes on child nodes. I'm not sure if this is the
@@ -314,7 +310,7 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
     //if (at != NULL)
     //  continue;
 
-    writeNode(&elementContext, &n, appendTo);
+    writeNode(&elementContext, n, appendTo);
   }
 
   appendTo += L"</" + qname + L">";
@@ -452,10 +448,10 @@ DOMWriter::writeDocument(DOMNamespaceContext* dnc,
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, elnl->item(i));
-    if (&n == NULL)
+    if (n == NULL)
       break;
     
-    writeNode(dnc, &n, appendTo);
+    writeNode(dnc, n, appendTo);
   }
 }
 
@@ -479,10 +475,10 @@ DOMWriter::writeDocumentFragment(DOMNamespaceContext* dnc,
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, elnl->item(i));
-    if (&n == NULL)
+    if (n == NULL)
       break;
     
-    writeNode(dnc, &n, appendTo);
+    writeNode(dnc, n, appendTo);
   }
 }
 
