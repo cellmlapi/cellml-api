@@ -14,7 +14,7 @@ CDA_DOMImplementation::createMathMLDocument()
     (createDocumentType(L"math", L"-//W3C//DTD MathML 2.0//EN",
                         L"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd"));
   return dynamic_cast<iface::mathml_dom::MathMLDocument*>
-    (createDocument(MATHML_NS, L"math", &dt));
+    (createDocument(MATHML_NS, L"math", dt));
 }
 
 CDA_MathMLDocument::CDA_MathMLDocument(GdomeDocument* d)
@@ -123,7 +123,7 @@ IsRow(iface::dom::Node* n)
   free(str);
 
   str = n->localName();
-  if (!wcscmp(str, L"row"))
+  if (!wcscmp(str, L"matrixrow"))
   {
     free(str);
     return true;
@@ -330,9 +330,7 @@ IsOtherwise(iface::dom::Node* n)
 static bool
 IsContentArgument(iface::dom::Node* n)
 {
-  iface::mathml_dom::MathMLElement* me =
-    dynamic_cast<iface::mathml_dom::MathMLElement*>
-    (n->query_interface("mathml_dom::MathMLElement"));
+  DECLARE_QUERY_INTERFACE_OBJREF(me, n, mathml_dom::MathMLElement);
 
   if (me == NULL)
   {
@@ -458,13 +456,13 @@ public:
     for (pos = 0; index != 0 && (pos < children->length()); pos++)
     {
       RETURN_INTO_OBJREF(n, iface::dom::Node, children->item(pos));
-      if (filter(&n))
+      if (filter(n))
       {
         index--;
         if (index == 0)
         {
           n->add_ref();
-          return &n;
+          return n;
         }
       }
     }
@@ -479,7 +477,7 @@ public:
     for (pos = 0; pos < children->length(); pos++)
     {
       RETURN_INTO_OBJREF(n, iface::dom::Node, children->item(pos));
-      if (filter(&n))
+      if (filter(n))
         count++;
     }
     return count;
@@ -967,12 +965,37 @@ CDA_MathMLContentToken::insertArgument(iface::dom::Node* newArgument, u_int32_t 
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
   {
+    if (l != 0)
+    {
+      // Put a sep in between arguments...
+      RETURN_INTO_OBJREF(d, iface::dom::Document, ownerDocument());
+      if (d != NULL)
+      {
+        RETURN_INTO_OBJREF(n, iface::dom::Element,
+                           d->createElementNS(MATHML_NS, L"sep"));
+        iface::dom::Node* c = appendChild(n);
+        c->release_ref();
+      }
+    }
     return appendChild(newArgument);
   }
 
   // Get the child...
   iface::dom::Node* ref = mfnl.item(index - 1);
   iface::dom::Node* newA = insertBefore(newArgument, ref);
+
+  if (index != 1)
+  {
+      RETURN_INTO_OBJREF(d, iface::dom::Document, ownerDocument());
+      if (d != NULL)
+      {
+        RETURN_INTO_OBJREF(n, iface::dom::Element,
+                           d->createElementNS(MATHML_NS, L"sep"));
+        iface::dom::Node* sep2 = insertBefore(n, newA);
+        sep2->release_ref();
+      }
+  }
+
   ref->release_ref();
   return newA;
 }
@@ -1010,10 +1033,27 @@ CDA_MathMLContentToken::deleteArgument(u_int32_t index)
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_CONTENTARGUMENT);
-  iface::dom::Node* old = mfnl.item(index - 1);
-  iface::dom::Node* old2 = removeChild(old);
-  old->release_ref();
-  old2->release_ref();
+  RETURN_INTO_OBJREF(old, iface::dom::Node, mfnl.item(index - 1));
+  // See if the sibling is a sep element...
+
+  RETURN_INTO_OBJREF(sib, iface::dom::Node, old->previousSibling());
+  if (sib == NULL)
+  {
+    RETURN_INTO_OBJREF(sib2, iface::dom::Node, old->nextSibling());
+    RETURN_INTO_WSTRING(nsURI, sib2->namespaceURI());
+    RETURN_INTO_WSTRING(ln, sib2->localName());
+    if (nsURI == MATHML_NS && ln == L"sep")
+      RETURN_INTO_OBJREF(sib3, iface::dom::Node, removeChild(sib));
+  }
+  else
+  {
+    RETURN_INTO_WSTRING(nsURI, sib->namespaceURI());
+    RETURN_INTO_WSTRING(ln, sib->localName());
+    if (nsURI == MATHML_NS && ln == L"sep")
+      RETURN_INTO_OBJREF(sib2, iface::dom::Node, removeChild(sib));
+  }
+
+  RETURN_INTO_OBJREF(old2, iface::dom::Node, removeChild(old));
 }
 
 iface::dom::Node*
@@ -1023,10 +1063,27 @@ CDA_MathMLContentToken::removeArgument(u_int32_t index)
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_CONTENTARGUMENT);
-  iface::dom::Node* old = mfnl.item(index - 1);
-  iface::dom::Node* old2 = removeChild(old);
-  old->release_ref();
-  return old2;
+  RETURN_INTO_OBJREF(old, iface::dom::Node, mfnl.item(index - 1));
+  // See if the sibling is a sep element...
+
+  RETURN_INTO_OBJREF(sib, iface::dom::Node, old->previousSibling());
+  if (sib == NULL)
+  {
+    RETURN_INTO_OBJREF(sib2, iface::dom::Node, old->nextSibling());
+    RETURN_INTO_WSTRING(nsURI, sib2->namespaceURI());
+    RETURN_INTO_WSTRING(ln, sib2->localName());
+    if (nsURI == MATHML_NS && ln == L"sep")
+      RETURN_INTO_OBJREF(sib3, iface::dom::Node, removeChild(sib));
+  }
+  else
+  {
+    RETURN_INTO_WSTRING(nsURI, sib->namespaceURI());
+    RETURN_INTO_WSTRING(ln, sib->localName());
+    if (nsURI == MATHML_NS && ln == L"sep")
+      RETURN_INTO_OBJREF(sib2, iface::dom::Node, removeChild(sib));
+  }
+
+  return removeChild(old);
 }
 
 CDA_MathMLCnElement::CDA_MathMLCnElement(GdomeElement* el)
@@ -1056,7 +1113,7 @@ CDA_MathMLCnElement::base()
   throw(std::exception&)
 {
   return static_cast<iface::mathml_dom::MathMLContentElement*>(this)
-    ->getAttributeNS(NULL_NS, L"type");
+    ->getAttributeNS(NULL_NS, L"base");
 }
 
 void
@@ -1700,7 +1757,7 @@ void
 CDA_MathMLLambdaElement::expression(iface::mathml_dom::MathMLElement* attr)
   throw(std::exception&)
 {
-  setArgument(attr, 1);
+  setArgument(attr, 1)->release_ref();
 }
 
 CDA_MathMLSetElement::CDA_MathMLSetElement(GdomeElement* el)
@@ -1864,9 +1921,15 @@ CDA_MathMLIntervalElement::closure()
 {
   try
   {
-    return
+    wchar_t* ret =
       static_cast<CDA_Element*>(this)
       ->getAttributeNS(NULL_NS, L"closure");
+    if (!wcscmp(ret, L""))
+    {
+      free(ret);
+      return wcsdup(L"closed");
+    }
+    return ret;
   }
   catch (iface::dom::DOMException& de)
   {
@@ -1921,110 +1984,103 @@ void
 CDA_MathMLIntervalElement::start(iface::mathml_dom::MathMLContentElement* attr)
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
+                     static_cast<CDA_Element*>(this)->childNodes());
+
   u_int32_t l = cn->length();
-  iface::mathml_dom::MathMLContentElement* oldStart = NULL;
-  iface::mathml_dom::MathMLContentElement* oldEnd = NULL;
+
+  ObjRef<iface::mathml_dom::MathMLContentElement> oldStart;
+  ObjRef<iface::mathml_dom::MathMLContentElement> oldEnd;
+
   u_int32_t i = 0;
+
   for (i = 0; i < l; i++)
   {
-    iface::dom::Node* n = cn->item(i);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
     iface::mathml_dom::MathMLContentElement* ce =
-      dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n);
+      dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n.getPointer());
     if (ce != NULL)
     {
-      if (oldStart)
+      if (oldStart != NULL)
       {
-        if (oldEnd)
+        if (oldEnd != NULL)
           break;
         oldEnd = ce;
       }
       else
         oldStart = ce;
     }
-    else
-      n->release_ref();
   }
-  cn->release_ref();
 
   if (!oldStart)
   {
     appendChild(attr)->release_ref();
-    iface::dom::Node* n = attr->cloneNode(true);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, attr->cloneNode(true));
     appendChild(n)->release_ref();
-    n->release_ref();
     return;
   }
   
   replaceChild(attr, oldStart)->release_ref();
   if (!oldEnd)
   {
-    iface::dom::Node* n = attr->cloneNode(true);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, attr->cloneNode(true));
     appendChild(n)->release_ref();
-    n->release_ref();
   }
-  else
-    oldEnd->release_ref();
-  oldStart->release_ref();
 }
 
 iface::mathml_dom::MathMLContentElement*
 CDA_MathMLIntervalElement::end()
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
-  try
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
+                     static_cast<CDA_Element*>(this)->childNodes());
+  u_int32_t l = cn->length();
+  u_int32_t i = 0;
+  ObjRef<iface::mathml_dom::MathMLContentElement> firstCandidate;
+  for (i = 0; i < l; i++)
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
-    iface::mathml_dom::MathMLContentElement* firstCandidate = NULL;
-    for (i = 0; i < l; i++)
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
+    iface::mathml_dom::MathMLContentElement* ce =
+      dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n.getPointer());
+    
+    if (ce == NULL)
     {
-      iface::dom::Node* n = cn->item(i);
-      iface::mathml_dom::MathMLContentElement* ce =
-        dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n);
-      if (ce == NULL)
-      {
-        n->release_ref();
-        continue;
-      }
-      else if (firstCandidate != NULL)
-      {
-        cn->release_ref();
-        return ce;
-      }
-      else
-        firstCandidate = ce;
+      continue;
     }
-    cn->release_ref();
-    cn = NULL;
-    if (firstCandidate != NULL)
-      return firstCandidate;
-    throw iface::dom::DOMException();
+    else if (firstCandidate != NULL)
+    {
+      ce->add_ref();
+      return ce;
+    }
+    else
+      firstCandidate = ce;
   }
-  catch (std::exception& e)
+  
+  if (firstCandidate != NULL)
   {
-    if (cn != NULL)
-      cn->release_ref();
-    throw e;
+    firstCandidate->add_ref();
+    return firstCandidate;
   }
+  throw iface::dom::DOMException();
 }
 
 void
 CDA_MathMLIntervalElement::end(iface::mathml_dom::MathMLContentElement* attr)
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
+                     static_cast<CDA_Element*>(this)->childNodes());
   u_int32_t l = cn->length();
-  iface::mathml_dom::MathMLContentElement* oldStart = NULL;
-  iface::mathml_dom::MathMLContentElement* oldEnd = NULL;
+  ObjRef<iface::mathml_dom::MathMLContentElement> oldStart;
+  ObjRef<iface::mathml_dom::MathMLContentElement> oldEnd;
+
   u_int32_t i = 0;
   for (i = 0; i < l; i++)
   {
-    iface::dom::Node* n = cn->item(i);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
     iface::mathml_dom::MathMLContentElement* ce =
-      dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n);
-    if (ce != NULL)
+      dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n.getPointer());
+    if (&ce != NULL)
     {
       if (oldStart)
       {
@@ -2035,10 +2091,7 @@ CDA_MathMLIntervalElement::end(iface::mathml_dom::MathMLContentElement* attr)
       else
         oldStart = ce;
     }
-    else
-      n->release_ref();
   }
-  cn->release_ref();
 
   if (!oldStart)
   {
@@ -2056,9 +2109,7 @@ CDA_MathMLIntervalElement::end(iface::mathml_dom::MathMLContentElement* attr)
   else
   {
     replaceChild(attr, oldEnd)->release_ref();
-    oldEnd->release_ref();
   }
-  oldStart->release_ref();
 }
 
 CDA_MathMLConditionElement::CDA_MathMLConditionElement(GdomeElement* el)
@@ -2166,7 +2217,7 @@ CDA_MathMLDeclareElement::nargs()
   throw(std::exception&)
 {
   wchar_t* ds = static_cast<CDA_Element*>(this)->getAttributeNS
-                             (MATHML_NS, L"nargs");
+                             (NULL_NS, L"nargs");
   u_int32_t ret = wcstoul(ds, NULL, 10);
   free(ds);
   return ret;
@@ -2186,7 +2237,7 @@ CDA_MathMLDeclareElement::occurrence()
   throw(std::exception&)
 {
   return static_cast<CDA_Element*>(this)->getAttributeNS
-    (MATHML_NS, L"occurrence");
+    (NULL_NS, L"occurrence");
 }
 
 void
@@ -2194,7 +2245,7 @@ CDA_MathMLDeclareElement::occurrence(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS
-    (MATHML_NS, L"occurrence", attr);
+    (NULL_NS, L"occurrence", attr);
 }
 
 wchar_t*
@@ -2202,7 +2253,7 @@ CDA_MathMLDeclareElement::definitionURL()
   throw(std::exception&)
 {
   return static_cast<CDA_Element*>(this)->getAttributeNS
-    (MATHML_NS, L"definitionURL");
+    (NULL_NS, L"definitionURL");
 }
 
 void
@@ -2210,7 +2261,7 @@ CDA_MathMLDeclareElement::definitionURL(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS
-    (MATHML_NS, L"definitionURL", attr);
+    (NULL_NS, L"definitionURL", attr);
 }
 
 wchar_t*
@@ -2218,7 +2269,7 @@ CDA_MathMLDeclareElement::encoding()
   throw(std::exception&)
 {
   return static_cast<CDA_Element*>(this)->getAttributeNS
-    (MATHML_NS, L"encoding");
+    (NULL_NS, L"encoding");
 }
 
 void
@@ -2226,41 +2277,32 @@ CDA_MathMLDeclareElement::encoding(const wchar_t* attr)
   throw(std::exception&)
 {
   static_cast<CDA_Element*>(this)->setAttributeNS
-    (MATHML_NS, L"encoding", attr);
+    (NULL_NS, L"encoding", attr);
 }
 
 iface::mathml_dom::MathMLCiElement*
 CDA_MathMLDeclareElement::identifier()
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
-  try
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
+                     static_cast<CDA_Element*>(this)->childNodes());
+  u_int32_t l = cn->length();
+  u_int32_t i = 0;
+  for (i = 0; i < l; i++)
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
-    for (i = 0; i < l; i++)
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
+    iface::mathml_dom::MathMLCiElement* ce =
+      dynamic_cast<iface::mathml_dom::MathMLCiElement*>(n.getPointer());
+    if (ce == NULL)
     {
-      iface::dom::Node* n = cn->item(i);
-      iface::mathml_dom::MathMLCiElement* ce =
-        dynamic_cast<iface::mathml_dom::MathMLCiElement*>(n);
-      if (ce == NULL)
-      {
-        n->release_ref();
-        continue;
-      }
-      else
-      {
-        cn->release_ref();
-        return ce;
-      }
+      continue;
+    }
+    else
+    {
+      ce->add_ref();
+      return ce;
     }
   }
-  catch (std::exception& e)
-  {
-    cn->release_ref();
-    throw e;
-  }
-  cn->release_ref();
   throw iface::dom::DOMException();
 }
 
@@ -2268,35 +2310,26 @@ void
 CDA_MathMLDeclareElement::identifier(iface::mathml_dom::MathMLCiElement* attr)
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
-  try
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
+                     static_cast<CDA_Element*>(this)->childNodes());
+  u_int32_t l = cn->length();
+  u_int32_t i = 0;
+  for (i = 0; i < l; i++)
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
-    for (i = 0; i < l; i++)
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
+    iface::mathml_dom::MathMLCiElement* ce =
+      dynamic_cast<iface::mathml_dom::MathMLCiElement*>(n.getPointer());
+    if (ce == NULL)
     {
-      iface::dom::Node* n = cn->item(i);
-      iface::mathml_dom::MathMLCiElement* ce =
-        dynamic_cast<iface::mathml_dom::MathMLCiElement*>(n);
-      if (ce == NULL)
-      {
-        n->release_ref();
-        continue;
-      }
-      else
-      {
-        cn->release_ref();
-        replaceChild(attr, n)->release_ref();
-        return;
-      }
+      continue;
+    }
+    else
+    {
+      replaceChild(attr, n)->release_ref();
+      return;
     }
   }
-  catch (std::exception& e)
-  {
-    cn->release_ref();
-    throw e;
-  }
-  cn->release_ref();
+
   appendChild(attr)->release_ref();
 }
 
@@ -2304,41 +2337,31 @@ iface::mathml_dom::MathMLElement*
 CDA_MathMLDeclareElement::constructor()
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
+                     static_cast<CDA_Element*>(this)->childNodes());
   bool got_identifier = false;
-  try
+  u_int32_t l = cn->length();
+  u_int32_t i = 0;
+  for (i = 0; i < l; i++)
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
-    for (i = 0; i < l; i++)
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
+    iface::mathml_dom::MathMLElement* ce =
+      dynamic_cast<iface::mathml_dom::MathMLElement*>(n.getPointer());
+    if (ce == NULL)
     {
-      iface::dom::Node* n = cn->item(i);
-      iface::mathml_dom::MathMLElement* ce =
-        dynamic_cast<iface::mathml_dom::MathMLElement*>(n);
-      if (ce == NULL)
-      {
-        n->release_ref();
-        continue;
-      }
-      else if (!got_identifier)
-      {
-        n->release_ref();
-        got_identifier = true;
-        continue;
-      }
-      else
-      {
-        cn->release_ref();
-        return ce;
-      }
+      continue;
+    }
+    else if (!got_identifier)
+    {
+      got_identifier = true;
+      continue;
+    }
+    else
+    {
+      ce->add_ref();
+      return ce;
     }
   }
-  catch (std::exception& e)
-  {
-    cn->release_ref();
-    throw e;
-  }
-  cn->release_ref();
   throw iface::dom::DOMException();
 }
 
@@ -2346,43 +2369,32 @@ void
 CDA_MathMLDeclareElement::constructor(iface::mathml_dom::MathMLElement* attr)
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
+                     static_cast<CDA_Element*>(this)->childNodes());
   bool got_identifier = false;
-  try
+  u_int32_t l = cn->length();
+  u_int32_t i = 0;
+  for (i = 0; i < l; i++)
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
-    for (i = 0; i < l; i++)
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
+    iface::mathml_dom::MathMLElement* ce =
+      dynamic_cast<iface::mathml_dom::MathMLElement*>(n.getPointer());
+    if (ce == NULL)
     {
-      iface::dom::Node* n = cn->item(i);
-      iface::mathml_dom::MathMLElement* ce =
-        dynamic_cast<iface::mathml_dom::MathMLElement*>(n);
-      if (ce == NULL)
-      {
-        n->release_ref();
-        continue;
-      }
-      else if (!got_identifier)
-      {
-        n->release_ref();
-        got_identifier = true;
-        continue;
-      }
-      else
-      {
-        cn->release_ref();
-        replaceChild(attr, n)->release_ref();
-        n->release_ref();
-        return;
-      }
+      continue;
+    }
+    else if (!got_identifier)
+    {
+      got_identifier = true;
+      continue;
+    }
+    else
+    {
+      replaceChild(attr, n)->release_ref();
+      return;
     }
   }
-  catch (std::exception& e)
-  {
-    cn->release_ref();
-    throw e;
-  }
-  cn->release_ref();
+
   throw iface::dom::DOMException();
 }
 
@@ -2513,7 +2525,7 @@ CDA_MathMLMatrixElement::ncols()
 {
   if (nrows() == 0)
     return 0;
-  iface::mathml_dom::MathMLMatrixrowElement* mre = getRow(1);
+  RETURN_INTO_OBJREF(mre, iface::mathml_dom::MathMLMatrixrowElement, getRow(1));
   // Just return the number of entries in the first row, because matrices are
   // supposed to have the same number in each row.
   return mre->nEntries();
