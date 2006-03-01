@@ -84,8 +84,19 @@ CDA_ModelLoader::createFromDOM(const wchar_t* URL,
                                iface::cellml_api::DOMURLLoader* loader)
   throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(modelDoc, iface::dom::Document,
-                     loader->loadDocument(URL));
+  ObjRef<iface::dom::Document> modelDoc;
+  try
+  {
+    modelDoc = already_AddRefd<iface::dom::Document>
+      (loader->loadDocument(URL));
+  }
+  catch (...)
+  {
+    wchar_t* str = loader->lastErrorMessage();
+    mLastError = str;
+    free(str);
+    throw iface::cellml_api::CellMLException();
+  }
 
   try
   {
