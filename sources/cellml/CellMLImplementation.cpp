@@ -107,14 +107,15 @@ CDA_CellMLElement::CDA_CellMLElement
  iface::dom::Element* idata
 )
   : mParent(parent), datastore(idata), _cda_refcount(1),
-    userData(NULL)
+    children(NULL), userData(NULL)
 {
   datastore->add_ref();
 }
 
 CDA_CellMLElement::~CDA_CellMLElement()
 {
-  datastore->release_ref();
+  if (datastore != NULL)
+    datastore->release_ref();
 
   // Reference counts are shared across all connected elements and sets, so
   // when the reference count goes to zero, it is each element's responsibility
@@ -132,7 +133,7 @@ CDA_CellMLElement::cellmlVersion()
   // compatible when a newer version comes out.
   const wchar_t* version = L"1.1";
   wchar_t* ns = datastore->namespaceURI();
-  if (!wcscmp(version, CELLML_1_0_NS))
+  if (!wcscmp(ns, CELLML_1_0_NS))
     version = L"1.0";
   free(ns);
   return wcsdup(version);
@@ -161,7 +162,17 @@ CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
     throw iface::cellml_api::CellMLException();
 
   // We now have to search all RDF elements...
-  CDA_Model* m = dynamic_cast<CDA_Model*>(mParent);
+  CDA_CellMLElement* el = this;
+  CDA_Model* m = NULL;
+  while (true)
+  {
+    m = dynamic_cast<CDA_Model*>(el);
+    if (m != NULL)
+      break;
+    el = dynamic_cast<CDA_CellMLElement*>(el->mParent);
+    if (el == NULL)
+      break;
+  }
   if (m == NULL)
     throw iface::cellml_api::CellMLException();
 
@@ -181,19 +192,43 @@ CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
     RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
     if (nsURI != RDF_NS)
       continue;
+
     RETURN_INTO_WSTRING(ln, el->localName());
-    if (ln != L"Description")
-      continue;
-    RETURN_INTO_WSTRING(about, el->getAttributeNS(RDF_NS, L"about"));
-    if (about != cmid)
+    if (ln != L"RDF")
       continue;
 
-    if (!wcscmp(type, L"http://www.cellml.org/RDFXML/DOM"))
-      return new CDA_RDFXMLDOMRepresentation(datastore);
-    else if (!wcscmp(type, L"http://www.cellml.org/RDFXML/string"))
-      return new CDA_RDFXMLStringRepresentation(datastore);
-    else
-      throw iface::cellml_api::CellMLException();
+    // Next we look for descriptions...
+    u_int32_t j, m = cnodes->length();
+    for (j = 0; j < m; j++)
+    {
+      RETURN_INTO_OBJREF(cnodes2, iface::dom::NodeList,
+                         el->childNodes());
+
+      RETURN_INTO_OBJREF(n2, iface::dom::Node, cnodes2->item(j));
+
+      DECLARE_QUERY_INTERFACE_OBJREF(el2, n2, dom::Element);
+      if (el2 == NULL)
+        continue;
+
+      RETURN_INTO_WSTRING(nsURI2, el2->namespaceURI());
+      if (nsURI2 != RDF_NS)
+        continue;
+
+      RETURN_INTO_WSTRING(ln2, el2->localName());
+
+      if (ln2 != L"Description")
+        continue;
+      RETURN_INTO_WSTRING(about, el2->getAttributeNS(RDF_NS, L"about"));
+      if (about != cmid)
+        continue;
+
+      if (!wcscmp(type, L"http://www.cellml.org/RDFXML/DOM"))
+        return new CDA_RDFXMLDOMRepresentation(el2);
+      else if (!wcscmp(type, L"http://www.cellml.org/RDFXML/string"))
+        return new CDA_RDFXMLStringRepresentation(el2);
+      else
+        throw iface::cellml_api::CellMLException();
+    }
   }
   throw iface::cellml_api::CellMLException();
 }
@@ -648,6 +683,19 @@ CDA_Model::CDA_Model(iface::cellml_api::DOMURLLoader* aLoader,
 
 CDA_Model::~CDA_Model()
 {
+  // XXX this code should run in ~CDA_CellMLElement, but libxml doesn't work
+  // after the document has been destroyed.
+  if (datastore != NULL)
+  {
+    datastore->release_ref();
+    datastore = NULL;
+  }
+  if (children != NULL)
+  {
+    delete children;
+    children = NULL;
+  }
+
   mDoc->release_ref();
 }
 
@@ -728,14 +776,17 @@ CDA_Model::RecursivelyChangeVersionCopy
       case iface::dom::Node::ATTRIBUTE_NODE:
         {
           wchar_t* ln = origItem->localName();
-          newItem = 
-            already_AddRefd<iface::dom::Node>
+          iface::dom::Attr* newAttr = 
+            already_AddRefd<iface::dom::Attr>
             (
              mDoc->createAttributeNS
              (NULL_NS, ln)
             );
           free(ln);
-          break;
+          DECLARE_QUERY_INTERFACE_OBJREF(aCopyEl, aCopy, dom::Element);
+          if (aCopyEl != NULL)
+            aCopyEl->setAttributeNodeNS(newAttr);
+          continue;
         }
       case iface::dom::Node::TEXT_NODE:
       case iface::dom::Node::CDATA_SECTION_NODE:
@@ -801,7 +852,7 @@ CDA_Model::base_uri()
          mDoc->createAttributeNS(L"http://www.w3.org/XML/1998/namespace",
                                  L"xml:base")
         );
-      datastore->appendChild(attr);
+      datastore->setAttributeNodeNS(attr);
     }
     return new CDA_URI(attr);
   }
@@ -956,7 +1007,7 @@ CDA_Model::generateFlattenedModel()
   // Just because its flat doesn't mean it has to be CellML 1.0.
   RETURN_INTO_WSTRING(nsURI, datastore->namespaceURI());
   RETURN_INTO_OBJREF(newDoc, iface::dom::Document,
-                     di->createDocument(nsURI.c_str(), L"model", &dt));
+                     di->createDocument(nsURI.c_str(), L"model", dt));
 
   // Get the document element...
   RETURN_INTO_OBJREF(de, iface::dom::Element, mDoc->documentElement());
@@ -974,11 +1025,11 @@ CDA_Model::generateFlattenedModel()
   {
     RETURN_INTO_OBJREF(c, iface::cellml_api::CellMLComponent,
                        ci->nextComponent());
-    if (&c == NULL)
+    if (c == NULL)
       break;
 
     RETURN_INTO_OBJREF(cdnc, iface::dom::Node,
-                       dynamic_cast<CDA_CellMLComponent*>(&c)->
+                       dynamic_cast<CDA_CellMLComponent*>(c)->
                        datastore->cloneNode(true));
     RETURN_INTO_WSTRING(cn, c->name());
     newComponentNames.insert(std::pair<std::wstring,int>(cn, 1));
@@ -987,7 +1038,7 @@ CDA_Model::generateFlattenedModel()
                                       std::wstring>
                             (std::pair<iface::cellml_api::Model*,std::wstring>
                              (this, cn), cn));
-    de->appendChild(&cdnc)->release_ref();
+    de->appendChild(cdnc)->release_ref();
   }
 
   // Likewise for units...
@@ -1003,15 +1054,15 @@ CDA_Model::generateFlattenedModel()
   {
     RETURN_INTO_OBJREF(u, iface::cellml_api::Units,
                        ui->nextUnits());
-    if (&u == NULL)
+    if (u == NULL)
       break;
 
     RETURN_INTO_OBJREF(cdnc, iface::dom::Node,
-                       dynamic_cast<CDA_Units*>(&u)->
+                       dynamic_cast<CDA_Units*>(u)->
                        datastore->cloneNode(true));
     RETURN_INTO_WSTRING(cn, u->name());
     newUnitsNames.insert(std::pair<std::wstring,int>(cn, 1));
-    de->appendChild(&cdnc)->release_ref();
+    de->appendChild(cdnc)->release_ref();
   }
 
   // Any import components mentioned in the base model are always included.
@@ -1022,10 +1073,10 @@ CDA_Model::generateFlattenedModel()
   
 
   // Create a CellML wrapper...
-  RETURN_INTO_OBJREF(cm, CDA_Model, new CDA_Model(&mLoader, &newDoc, &de));
+  RETURN_INTO_OBJREF(cm, CDA_Model, new CDA_Model(mLoader, newDoc, de));
 
   cm->add_ref();
-  return &cm;
+  return cm;
 #endif
 
   // This is not implemented yet, and may never be.
@@ -2529,6 +2580,12 @@ CDA_CellMLImport::xlinkHref()
     ObjRef<iface::dom::Attr> attrNode =
       already_AddRefd<iface::dom::Attr>
       (datastore->getAttributeNodeNS(XLINK_NS, L"href"));
+    if (attrNode == NULL)
+    {
+      RETURN_INTO_OBJREF(doc, iface::dom::Document, datastore->ownerDocument());
+      attrNode = already_AddRefd<iface::dom::Attr>
+        (doc->createAttributeNS(XLINK_NS, L"href"));
+    }
     return new CDA_URI(attrNode);
   }
   catch (iface::dom::DOMException& de)
@@ -4970,6 +5027,7 @@ CDA_MathMLElementIterator::next()
 }
 
 CDA_ExtensionElementList::CDA_ExtensionElementList(iface::dom::Element* el)
+  : _cda_refcount(1)
 {
   nl = el->childNodes();
 }
