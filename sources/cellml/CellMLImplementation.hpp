@@ -1469,8 +1469,8 @@ public:
     : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1),
       filterByRRName(false) {}
   CDA_GroupSet(CDA_CellMLElementSet* aInner, const wchar_t* aFilterRRName)
-    : CDA_CellMLElementSetOuter(aInner), filterByRRName(true),
-      mFilterRRName(aFilterRRName) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1),
+      filterByRRName(true), mFilterRRName(aFilterRRName) {}
 
   virtual ~CDA_GroupSet() {}
 
