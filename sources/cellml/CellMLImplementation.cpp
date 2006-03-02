@@ -3217,7 +3217,7 @@ CDA_RelationshipRef::relationship()
   {
     // We are looking for relationships in any namespace, so we need to
     // go through all nodes...
-    RETURN_INTO_OBJREF(cn, iface::dom::NodeList, datastore->childNodes());
+    RETURN_INTO_OBJREF(cn, iface::dom::NamedNodeMap, datastore->attributes());
     u_int32_t l = cn->length();
     u_int32_t i;
     for (i = 0; i < l; i++)
@@ -3231,6 +3231,12 @@ CDA_RelationshipRef::relationship()
 
       // We have now found the attribute.
       RETURN_INTO_WSTRING(ln, at->localName());
+      if (ln == L"")
+      {
+        wchar_t* str = at->nodeName();
+        ln = str;
+        free(str);
+      }
       if (ln != L"relationship")
         continue;
 
@@ -3368,7 +3374,7 @@ CDA_Group::isEncapsulation()
                        rri->nextRelationshipRef());
     if (rr == NULL)
       return false;
-    wchar_t* s = rr->name();
+    wchar_t* s = rr->relationship();
     bool match = !wcscmp(s, L"encapsulation");
     free(s);
     if (match)
@@ -3390,7 +3396,7 @@ CDA_Group::isContainment()
                        rri->nextRelationshipRef());
     if (rr == NULL)
       return false;
-    wchar_t* s = rr->name();
+    wchar_t* s = rr->relationship();
     bool match = !wcscmp(s, L"containment");
     free(s);
     if (match)
@@ -5417,9 +5423,14 @@ iface::cellml_api::CellMLElementIterator*
 CDA_GroupSet::iterate()
   throw(std::exception&)
 {
-  return new CDA_GroupIterator(dynamic_cast<CDA_CellMLElementIterator*>
-                               (mInner->iterate()), filterByRRName,
-                               mFilterRRName.c_str());
+  CDA_CellMLElementIterator* ei =
+    dynamic_cast<CDA_CellMLElementIterator*>
+    (mInner->iterate());
+  iface::cellml_api::CellMLElementIterator* it = 
+    new CDA_GroupIterator(ei, filterByRRName,
+                          mFilterRRName.c_str());
+  ei->release_ref();
+  return it;
 }
 
 iface::cellml_api::GroupIterator*
