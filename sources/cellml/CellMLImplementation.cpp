@@ -109,11 +109,17 @@ CDA_CellMLElement::CDA_CellMLElement
   : mParent(parent), datastore(idata), _cda_refcount(1),
     children(NULL), userData(NULL)
 {
+  if (parent != NULL)
+    parent->add_ref();
   datastore->add_ref();
 }
 
 CDA_CellMLElement::~CDA_CellMLElement()
 {
+  if (_cda_refcount != 0)
+    printf("Warning: release_ref called too few times on %s.\n",
+           typeid(this).name());
+
   if (datastore != NULL)
     datastore->release_ref();
 
@@ -348,16 +354,19 @@ CDA_CellMLElement::clearExtensionElements()
     // Any child element which we don't recognise gets removed...
     RETURN_INTO_OBJREF(nl, iface::dom::NodeList, datastore->childNodes());
     u_int32_t i, l = nl->length();
-    for (i = 0; i < l; i++)
+    for (i = 0; i < l;)
     {
-      iface::dom::Node* n = nl->item(i);
-      if (hasInterface(n, "cellml_api::CellMLElement"))
+      RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
+      // All CellML is definitely safe...
+      RETURN_INTO_WSTRING(nsURI, n->namespaceURI());
+      if (nsURI == CELLML_1_0_NS || nsURI == CELLML_1_1_NS ||
+          nsURI == CMETA_NS || nsURI == MATHML_NS || nsURI == RDF_NS)
       {
-        n->release_ref();
+        i++;
         continue;
       }
       datastore->removeChild(n)->release_ref();
-      n->release_ref();
+      l--;
     }
   }
   catch (iface::dom::DOMException& de)
@@ -481,7 +490,7 @@ CDA_CellMLElement::replaceElement(iface::cellml_api::CellMLElement* x,
       throw iface::cellml_api::CellMLException();
     
     // Does the new element already have a parent?
-    if (elNew->mParent == NULL)
+    if (elNew->mParent != NULL)
       throw iface::cellml_api::CellMLException();
 
     if (children)
@@ -1091,9 +1100,9 @@ CDA_Model::createComponent()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"component");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"component"));
     return new CDA_CellMLComponent(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1110,9 +1119,9 @@ CDA_Model::createImportComponent()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"component");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"component"));
     return new CDA_ImportComponent(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1129,9 +1138,9 @@ CDA_Model::createUnits()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"units");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"units"));
     return new CDA_Units(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1148,9 +1157,9 @@ CDA_Model::createImportUnits()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"units");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"units"));
     return new CDA_ImportUnits(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1167,8 +1176,9 @@ CDA_Model::createUnit()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(), L"unit");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"unit"));
     return new CDA_Unit(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1185,9 +1195,9 @@ CDA_Model::createCellMLImport()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"import");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"import"));
     return new CDA_CellMLImport(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1204,9 +1214,9 @@ CDA_Model::createCellMLVariable()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"variable");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"variable"));
     return new CDA_CellMLVariable(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1223,9 +1233,9 @@ CDA_Model::createComponentRef()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"component_ref");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"component_ref"));
     return new CDA_ComponentRef(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1242,9 +1252,9 @@ CDA_Model::createRelationshipRef()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"relationship_ref");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"relationship_ref"));
     return new CDA_RelationshipRef(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1261,9 +1271,9 @@ CDA_Model::createGroup()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"group");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"group"));
     return new CDA_Group(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1280,9 +1290,9 @@ CDA_Model::createConnection()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"connection");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"connection"));
     return new CDA_Connection(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1299,9 +1309,9 @@ CDA_Model::createMapComponents()
   try
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"map_components");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"map_components"));
     return new CDA_MapComponents(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1318,9 +1328,9 @@ CDA_Model::createMapVariables()
   try
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"map_variables");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"map_variables"));
     return new CDA_MapVariables(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1337,9 +1347,9 @@ CDA_Model::createReaction()
   try
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"reaction");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"reaction"));
     return new CDA_Reaction(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1356,9 +1366,9 @@ CDA_Model::createReactantVariableRef()
   try
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"variable_ref");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"variable_ref"));
     return new CDA_ReactantVariableRef(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1375,9 +1385,9 @@ CDA_Model::createRateVariableRef()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"variable_ref");
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"variable_ref"));
     return new CDA_RateVariableRef(NULL, newNode);
   }
   catch (iface::dom::DOMException& de)
@@ -1394,9 +1404,9 @@ CDA_Model::createReactantRole()
   try
   {
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(), L"role");
-
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"role"));
     newNode->setAttributeNS(NULL_NS, L"role", L"reactant");
     return new CDA_ReactantRole(NULL, newNode);
   }
@@ -1414,10 +1424,9 @@ CDA_Model::createProductRole()
   {
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"role");
-
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"role"));
     newNode->setAttributeNS(NULL_NS,
                             L"role", L"product");
     return new CDA_ProductRole(NULL, newNode);
@@ -1437,10 +1446,9 @@ CDA_Model::createRateRole()
     // Get our namespace, and use it for the new node.
     RETURN_INTO_WSTRING(myNamespace, datastore->namespaceURI());
 
-    ObjRef<iface::dom::Element> newNode =
-      mDoc->createElementNS(myNamespace.c_str(),
-                            L"role");
-    
+    RETURN_INTO_OBJREF(newNode, iface::dom::Element,
+                       mDoc->createElementNS(myNamespace.c_str(),
+                                             L"role"));    
     newNode->setAttributeNS(NULL_NS,
                             L"role", L"rate");
 
@@ -4295,13 +4303,15 @@ CDA_CellMLElementSetUseIteratorMixin::length()
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(cei, iface::cellml_api::CellMLElementIterator, iterate());
-
+  
   u_int32_t length = 0;
   while (true)
   {
     RETURN_INTO_OBJREF(ce, iface::cellml_api::CellMLElement, cei->next());
     if (ce == NULL)
+    {
       return length;
+    }
     length++;
   }
 }
@@ -4330,7 +4340,6 @@ CDA_DOMElementIteratorBase::CDA_DOMElementIteratorBase
 {
   mParentElement->add_ref();
   mNodeList = mParentElement->childNodes();
-  mParentElement->addEventListener(L"DOMNodeInserted", this, false);
 }
 
 CDA_DOMElementIteratorBase::~CDA_DOMElementIteratorBase()
@@ -4341,10 +4350,25 @@ CDA_DOMElementIteratorBase::~CDA_DOMElementIteratorBase()
   {
     mPrevElement->release_ref();
   }
+}
+
+void
+CDA_DOMElementIteratorBase::registerListener()
+{
+  mParentElement->addEventListener(L"DOMNodeInserted", this, false);
+  // Don't let the listener queue own us, we will deregister automatically.
+  release_ref();
+}
+
+void
+CDA_DOMElementIteratorBase::deregisterListener()
+{
+  mParentElement->removeEventListener(L"DOMNodeInserted", this, false);
   if (mNextElement != NULL)
   {
     mNextElement->removeEventListener(L"DOMNodeRemoved", this, false);
     mNextElement->release_ref();
+    mNextElement = NULL;
   }
 }
 
@@ -4357,27 +4381,28 @@ CDA_DOMElementIteratorBase::fetchNextElement()
     {
       // Search for the first element...
       u_int32_t i;
-      for (i = 0; i < mNodeList->length(); i++)
+      u_int32_t l = mNodeList->length();
+      for (i = 0; i < l; i++)
       {
         ObjRef<iface::dom::Node> nodeHit
           (already_AddRefd<iface::dom::Node>(mNodeList->item(i)));
-        DECLARE_QUERY_INTERFACE_OBJREF(mPrevElement, nodeHit,
-                                       cellml_api::CellMLElement);
+        QUERY_INTERFACE(mPrevElement, nodeHit, dom::Element);
         if (mPrevElement != NULL)
-        {
-          mPrevElement->add_ref();
           break;
-        }
       }
       if (mPrevElement == NULL)
+      {
         return NULL;
+      }
     }
     else
     {
       // Once mNextElement is NULL, we are at the end until more elements are
       // inserted.
       if (mNextElement == NULL)
+      {
         return NULL;
+      }
       mPrevElement->release_ref();
       mPrevElement = mNextElement;
       mNextElement->removeEventListener(L"DOMNodeRemoved", this, false);
@@ -4386,17 +4411,16 @@ CDA_DOMElementIteratorBase::fetchNextElement()
 
     // We now have a valid previous element, which will be our return value.
     // However, to maintain our assumptions, we need to find mNextElement.
-    ObjRef<iface::dom::Node> nodeHit = mPrevElement->nextSibling();
+    RETURN_INTO_OBJREF(nodeHit, iface::dom::Node, mPrevElement->nextSibling());
     while (nodeHit != NULL)
     {
-      DECLARE_QUERY_INTERFACE_OBJREF(mNextElement, nodeHit, dom::Element);
+      QUERY_INTERFACE(mNextElement, nodeHit, dom::Element);
       if (mNextElement != NULL)
       {
         mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
-        mNextElement->add_ref();
         break;
       }
-      nodeHit = nodeHit->nextSibling();
+      nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
     }
     
     return mPrevElement;
@@ -4887,13 +4911,15 @@ CDA_CellMLElementIterator::CDA_CellMLElementIterator
  CDA_CellMLElementSet* ownerSet
 )
   : CDA_DOMElementIteratorBase(parentElement),
-    parentSet(ownerSet)
+    _cda_refcount(1), parentSet(ownerSet)
 {
   parentSet->add_ref();
+  registerListener();
 }
 
 CDA_CellMLElementIterator::~CDA_CellMLElementIterator()
 {
+  deregisterListener();
   parentSet->release_ref();
 }
 
@@ -4984,7 +5010,9 @@ CDA_CellMLElementIterator::next()
   {
     el = fetchNextElement();
     if (el == NULL)
+    {
       return NULL;
+    }
     RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
     if (nsURI == CELLML_1_0_NS || nsURI == CELLML_1_1_NS)
       break;
@@ -5030,6 +5058,11 @@ CDA_ExtensionElementList::CDA_ExtensionElementList(iface::dom::Element* el)
   : _cda_refcount(1)
 {
   nl = el->childNodes();
+}
+
+CDA_ExtensionElementList::~CDA_ExtensionElementList()
+{
+  nl->release_ref();
 }
 
 u_int32_t
@@ -5135,7 +5168,7 @@ CDA_ExtensionElementList::getAt(u_int32_t index)
 }
 
 CDA_MathList::CDA_MathList(iface::dom::Element* aParentEl)
-  : mParentEl(aParentEl)
+  : _cda_refcount(1), mParentEl(aParentEl)
 {
   mParentEl->add_ref();
 }
@@ -5187,12 +5220,20 @@ CDA_CellMLElementSet::CDA_CellMLElementSet
  CDA_CellMLElement* parent,
  iface::dom::Element* parentEl
 )
-  : mParent(parent), mElement(parentEl), _cda_refcount(0)
+  : mParent(parent), mElement(parentEl),
+    // Note: The reference count starts at zero, because an Element is
+    // permanently part of an Element, and so needs no refcount when it is
+    // constructed.
+    _cda_refcount(0)
 {
 }
 
 CDA_CellMLElementSet::~CDA_CellMLElementSet()
 {
+  if (_cda_refcount != 0)
+    printf("Warning: release_ref called too few times on %s.\n",
+           typeid(this).name());
+
   std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*>::iterator
     i;
 
@@ -5250,7 +5291,10 @@ iface::cellml_api::CellMLElementIterator* \
 setname::iterate() \
   throw(std::exception&) \
 { \
-  return new iteratorname(dynamic_cast<CDA_CellMLElementIterator*>(mInner->iterate())); \
+  CDA_CellMLElementIterator* ei = dynamic_cast<CDA_CellMLElementIterator*>(mInner->iterate()); \
+  iface::cellml_api::CellMLElementIterator* it = new iteratorname(ei); \
+  ei->release_ref(); \
+  return it; \
 } \
 ifacename* \
 setname::funcname() \

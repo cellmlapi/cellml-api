@@ -6,6 +6,7 @@
 #include "Ifacexpcom.hxx"
 #include "IfaceDOM-APISPEC.hxx"
 #include "IfaceCellML-APISPEC.hxx"
+#include <typeinfo>
 
 class CDA_RDFXMLDOMRepresentation
   : public iface::cellml_api::RDFXMLDOMRepresentation
@@ -77,6 +78,11 @@ public:
   void release_ref()
     throw(std::exception&)
   {
+    if (_cda_refcount == 0)
+    {
+      printf("Warning: release_ref called too many times on %s.\n",
+             typeid(this).name());
+    }
     _cda_refcount--;
     if (mParent == NULL)
     {
@@ -711,6 +717,10 @@ public:
 private:
   iface::dom::Element *mPrevElement, *mNextElement, *mParentElement;
   iface::dom::NodeList *mNodeList;
+
+protected:
+  void registerListener();
+  void deregisterListener();
 };
 
 class CDA_CellMLElementIterator
@@ -761,8 +771,14 @@ class CDA_MathMLElementIterator
 {
 public:
   CDA_MathMLElementIterator(iface::dom::Element* parentEl)
-    : CDA_DOMElementIteratorBase(parentEl) {}
-  virtual ~CDA_MathMLElementIterator() {};
+    : CDA_DOMElementIteratorBase(parentEl), _cda_refcount(1)
+  {
+    registerListener();
+  }
+  virtual ~CDA_MathMLElementIterator()
+  {
+    deregisterListener();
+  };
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(iface::cellml_api::MathMLElementIterator)
@@ -775,6 +791,7 @@ class CDA_ExtensionElementList
 {
 public:
   CDA_ExtensionElementList(iface::dom::Element* el);
+  virtual ~CDA_ExtensionElementList();
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(cellml_api::ExtensionElementList)
 
@@ -836,15 +853,22 @@ public:
   void release_ref()
     throw(std::exception&)
   {
-    _cda_refcount--;
-    if (mParent == NULL)
+    if (_cda_refcount == 0)
     {
-      if (_cda_refcount == 0)
-        delete this;
+      printf("Warning: release_ref called too many times on %s.\n",
+             typeid(this).name());
     }
-    else /* if the owner model is non-null, we will be destroyed when there are
-          * no remaining references to the model.
-          */
+
+    _cda_refcount--;
+    // mParent must always be non-NULL for a set.
+    //if (mParent == NULL)
+    //{
+    //  if (_cda_refcount == 0)
+    //    delete this;
+    //}
+    //else /* if the owner model is non-null, we will be destroyed when there are
+    //      * no remaining references to the model.
+    //      */
       mParent->release_ref();
   }
   
@@ -897,9 +921,6 @@ public:
   }
 
   virtual ~CDA_NamedCellMLElementSetBase() {};
-
-  CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI2(cellml_api::NamedCellMLElementSet, cellml_api::CellMLElementSet)
 
   iface::cellml_api::NamedCellMLElement*
   get(const wchar_t* name)
@@ -960,7 +981,7 @@ class CDA_CellMLComponentSet
 {
 public:
   CDA_CellMLComponentSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLComponentSetBase(aInner) {};
+    : CDA_CellMLComponentSetBase(aInner), _cda_refcount(1) {};
   virtual ~CDA_CellMLComponentSet() {}
 
   CDA_IMPL_REFCOUNT
@@ -979,7 +1000,7 @@ public:
    iface::cellml_api::ComponentRefIterator* aCompRefIterator
   )
     : CDA_CellMLComponentSetBase(NULL),
-      mModel(aModel), mCompRefIterator(aCompRefIterator)
+      _cda_refcount(1), mModel(aModel), mCompRefIterator(aCompRefIterator)
   {
     mModel->add_ref();
     aCompRefIterator->add_ref();
@@ -1006,7 +1027,7 @@ class CDA_ImportComponentIterator
 {
 public:
   CDA_ImportComponentIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLComponentIteratorBase(aInner) {}
+    : CDA_CellMLComponentIteratorBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_ImportComponentIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1025,7 +1046,7 @@ class CDA_ImportComponentSet
 {
 public:
   CDA_ImportComponentSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLComponentSetBase(aInner) {}
+    : CDA_CellMLComponentSetBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_ImportComponentSet() {};
 
   CDA_IMPL_REFCOUNT
@@ -1049,7 +1070,7 @@ public:
   CDA_AllComponentSet(iface::cellml_api::CellMLElementIterator* aLocalIterator,
                       iface::cellml_api::CellMLElementIterator* aImportIterator,
                       bool aRecurseIntoImports)
-    : CDA_CellMLComponentSetBase(NULL),
+    : CDA_CellMLComponentSetBase(NULL), _cda_refcount(1),
       mLocalIterator(aLocalIterator), mImportIterator(aImportIterator),
       mRecurseIntoImports(aRecurseIntoImports)
   {}
@@ -1076,7 +1097,7 @@ public:
                              iface::cellml_api::CellMLElementIterator*
                              aImportIterator,
                            bool aRecurseIntoImports)
-    : CDA_CellMLComponentIteratorBase(NULL),
+    : CDA_CellMLComponentIteratorBase(NULL), _cda_refcount(1),
       mLocalIterator(aLocalIterator), mImportIterator(aImportIterator),
       mRecurseIntoImports(aRecurseIntoImports)
   {}
@@ -1099,7 +1120,7 @@ class CDA_CellMLVariableIterator
 {
 public:
   CDA_CellMLVariableIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_CellMLVariableIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1117,8 +1138,12 @@ class CDA_CellMLVariableSet
 {
 public:
   CDA_CellMLVariableSet(CDA_CellMLElementSet* aInner)
-    : CDA_NamedCellMLElementSetBase(aInner) {}
+    : CDA_NamedCellMLElementSetBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_CellMLVariableSet() {}
+
+  CDA_IMPL_REFCOUNT
+  CDA_IMPL_QI3(cellml_api::CellMLVariableSet, cellml_api::NamedCellMLElementSet,
+               cellml_api::CellMLElementSet)
 
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
   iface::cellml_api::CellMLVariableIterator* iterateVariables()
@@ -1168,7 +1193,7 @@ class CDA_UnitsIterator
 {
 public:
   CDA_UnitsIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_UnitsIteratorBase(aInner) {};
+    : CDA_UnitsIteratorBase(aInner), _cda_refcount(1) {};
   virtual ~CDA_UnitsIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1197,7 +1222,7 @@ class CDA_UnitsSet
 {
 public:
   CDA_UnitsSet(CDA_CellMLElementSet* aInner)
-    : CDA_UnitsSetBase(aInner) {}
+    : CDA_UnitsSetBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_UnitsSet() {}
   
   CDA_IMPL_REFCOUNT
@@ -1212,7 +1237,7 @@ public:
   CDA_AllUnitsSet(iface::cellml_api::CellMLElementIterator* aLocalIterator,
                   iface::cellml_api::CellMLElementIterator* aImportIterator,
                   bool aRecurseIntoImports)
-    : CDA_UnitsSetBase(NULL),
+    : CDA_UnitsSetBase(NULL), _cda_refcount(1),
       mLocalIterator(aLocalIterator), mImportIterator(aImportIterator),
       mRecurseIntoImports(aRecurseIntoImports)
   {}
@@ -1238,7 +1263,7 @@ public:
                          iface::cellml_api::CellMLElementIterator*
                          aImportIterator,
                        bool aRecurseIntoImports)
-    : CDA_UnitsIteratorBase(NULL),
+    : CDA_UnitsIteratorBase(NULL), _cda_refcount(1),
       mLocalIterator(aLocalIterator), mImportIterator(aImportIterator),
       mRecurseIntoImports(aRecurseIntoImports)
   {}
@@ -1261,7 +1286,7 @@ class CDA_ImportUnitsIterator
 {
 public:
   CDA_ImportUnitsIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_UnitsIteratorBase(aInner) {}
+    : CDA_UnitsIteratorBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_ImportUnitsIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1282,7 +1307,7 @@ class CDA_ImportUnitsSet
 {
 public:
   CDA_ImportUnitsSet(CDA_CellMLElementSet* aInner)
-    : CDA_UnitsSetBase(aInner) {}
+    : CDA_UnitsSetBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_ImportUnitsSet() {};
 
   CDA_IMPL_REFCOUNT
@@ -1308,7 +1333,7 @@ class CDA_CellMLImportIterator
 {
 public:
   CDA_CellMLImportIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_CellMLImportIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1326,7 +1351,7 @@ class CDA_CellMLImportSet
 {
 public:
   CDA_CellMLImportSet(CDA_CellMLElementSet* aInner)
-    : CDA_NamedCellMLElementSetBase(aInner) {}
+    : CDA_NamedCellMLElementSetBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_CellMLImportSet() {}
 
   CDA_IMPL_REFCOUNT
@@ -1349,7 +1374,7 @@ class CDA_UnitIterator
 {
 public:
   CDA_UnitIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_UnitIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1367,7 +1392,7 @@ class CDA_UnitSet
 {
 public:
   CDA_UnitSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_UnitSet() {};
 
   CDA_IMPL_REFCOUNT
@@ -1385,7 +1410,7 @@ class CDA_ConnectionIterator
 {
 public:
   CDA_ConnectionIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_ConnectionIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1403,7 +1428,7 @@ class CDA_ConnectionSet
 {
 public:
   CDA_ConnectionSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_ConnectionSet() {};
 
   CDA_IMPL_REFCOUNT
@@ -1420,8 +1445,8 @@ class CDA_GroupIterator
 public:
   CDA_GroupIterator(CDA_CellMLElementIterator* aInner, bool aFilterByRRName,
                     const wchar_t* aFilterRRName)
-    : CDA_CellMLElementIteratorOuter(aInner), filterByRRName(aFilterByRRName),
-      mFilterRRName(aFilterRRName) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1),
+      filterByRRName(aFilterByRRName), mFilterRRName(aFilterRRName) {}
   virtual ~CDA_GroupIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1441,7 +1466,8 @@ class CDA_GroupSet
 {
 public:
   CDA_GroupSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner), filterByRRName(false) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1),
+      filterByRRName(false) {}
   CDA_GroupSet(CDA_CellMLElementSet* aInner, const wchar_t* aFilterRRName)
     : CDA_CellMLElementSetOuter(aInner), filterByRRName(true),
       mFilterRRName(aFilterRRName) {}
@@ -1470,7 +1496,7 @@ class CDA_RelationshipRefIterator
 {
 public:
   CDA_RelationshipRefIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_RelationshipRefIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1487,7 +1513,7 @@ class CDA_RelationshipRefSet
 {
 public:
   CDA_RelationshipRefSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_RelationshipRefSet() {}
 
   CDA_IMPL_REFCOUNT
@@ -1503,7 +1529,7 @@ class CDA_ComponentRefIterator
 {
 public:
   CDA_ComponentRefIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_ComponentRefIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1519,7 +1545,7 @@ class CDA_ComponentRefSet
 {
 public:
   CDA_ComponentRefSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_ComponentRefSet() {}
 
   CDA_IMPL_REFCOUNT
@@ -1538,7 +1564,7 @@ public:
    iface::cellml_api::Model* aModel,
    iface::cellml_api::ComponentRefIterator* aCompRefIterator
   )
-    : CDA_CellMLComponentIteratorBase(NULL), mModel(aModel),
+    : CDA_CellMLComponentIteratorBase(NULL), _cda_refcount(1), mModel(aModel),
       mCompRefIterator(aCompRefIterator)
   {
     mModel->add_ref();
@@ -1566,7 +1592,7 @@ class CDA_MapVariablesIterator
 {
 public:
   CDA_MapVariablesIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_MapVariablesIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1582,7 +1608,7 @@ class CDA_MapVariablesSet
 {
 public:
   CDA_MapVariablesSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_MapVariablesSet() {}
 
   CDA_IMPL_REFCOUNT
@@ -1610,7 +1636,7 @@ class CDA_VariableRefIterator
 {
 public:
   CDA_VariableRefIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_VariableRefIteratorBase(aInner) {}
+    : CDA_VariableRefIteratorBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_VariableRefIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1637,7 +1663,7 @@ class CDA_VariableRefSet
 {
 public:
   CDA_VariableRefSet(CDA_CellMLElementSet* aInner)
-    : CDA_VariableRefSetBase(aInner) {}
+    : CDA_VariableRefSetBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_VariableRefSet() {};
 
   CDA_IMPL_REFCOUNT
@@ -1650,7 +1676,7 @@ class CDA_ReactantVariableRefIterator
 {
 public:
   CDA_ReactantVariableRefIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_VariableRefIterator(aInner) {}
+    : CDA_VariableRefIterator(aInner), _cda_refcount(1) {}
   virtual ~CDA_ReactantVariableRefIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1669,7 +1695,7 @@ class CDA_ReactantVariableRefSet
 {
 public:
   CDA_ReactantVariableRefSet(CDA_CellMLElementSet* aInner)
-    : CDA_VariableRefSet(aInner) {}
+    : CDA_VariableRefSet(aInner), _cda_refcount(1) {}
   virtual ~CDA_ReactantVariableRefSet() {}
 
   CDA_IMPL_REFCOUNT
@@ -1687,7 +1713,7 @@ class CDA_ProductVariableRefIterator
 {
 public:
   CDA_ProductVariableRefIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_VariableRefIterator(aInner) {}
+    : CDA_VariableRefIterator(aInner), _cda_refcount(1) {}
   virtual ~CDA_ProductVariableRefIterator() {}
 
   CDA_IMPL_REFCOUNT
@@ -1706,7 +1732,7 @@ class CDA_ProductVariableRefSet
 {
 public:
   CDA_ProductVariableRefSet(CDA_CellMLElementSet* aInner)
-    : CDA_VariableRefSet(aInner) {}
+    : CDA_VariableRefSet(aInner), _cda_refcount(1) {}
   virtual ~CDA_ProductVariableRefSet() {}
   
   CDA_IMPL_REFCOUNT
