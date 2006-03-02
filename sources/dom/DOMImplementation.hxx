@@ -118,6 +118,7 @@ private:
       if (callee != NULL)
       {
         callee->release_ref();
+        callee = NULL;
       }
     }
     u_int32_t copies;

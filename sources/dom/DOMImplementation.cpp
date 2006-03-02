@@ -500,6 +500,8 @@ CDA_Node::addEventListener(const wchar_t* type,
     // call AddRef().
     ed->listener = gdome_evntl_mkref(cda_process_event, listener);
     ed->callee = listener;
+    activeEventListeners.insert(std::pair<iface::events::EventListener*,
+                                struct EventListenerData*>(listener, ed));
     listener->add_ref();
   }
   else
