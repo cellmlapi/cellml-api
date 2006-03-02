@@ -107,7 +107,7 @@ CDA_CellMLElement::CDA_CellMLElement
  iface::dom::Element* idata
 )
   : mParent(parent), datastore(idata), _cda_refcount(1),
-    children(NULL), userData(NULL)
+    children(NULL)
 {
   if (parent != NULL)
     parent->add_ref();
@@ -129,6 +129,11 @@ CDA_CellMLElement::~CDA_CellMLElement()
   // elements in it.
   if (children != NULL)
     delete children;
+
+  std::map<std::wstring,iface::cellml_api::UserData*>::iterator i =
+    userData.begin();
+  for (; i != userData.end(); i++)
+    (*i).second->release_ref();
 }
 
 wchar_t*
@@ -418,9 +423,14 @@ CDA_CellMLElement::addElement(iface::cellml_api::CellMLElement* x)
 
     // TODO: Perhaps we should also check the datastore ownerDocument matches?
 
-    // Add to our local CellML wrapping, if it exists...
-    if (children)
-      children->addChildToWrapper(el);
+    // Make a local CellML wrapping, if it doesn't exist already...
+    if (children == NULL)
+    {
+      children = new CDA_CellMLElementSet(this, datastore);
+    }
+
+    // Add to our local CellML wrapping...
+    children->addChildToWrapper(el);
 
     // Add the element's backing datastore to our datastore...
     datastore->appendChild(el->datastore)->release_ref();
@@ -542,11 +552,11 @@ CDA_CellMLElement::removeByName
     CDA_NamedCellMLElement* el = dynamic_cast<CDA_NamedCellMLElement*>(n);
     if (el != NULL)
     {
-      RETURN_INTO_WSTRING(tn, el->datastore->tagName());
+      RETURN_INTO_WSTRING(tn, el->datastore->localName());
       if (tn == type)
       {
-        RETURN_INTO_WSTRING(name, el->name());
-        if (tn == name)
+        RETURN_INTO_WSTRING(elname, el->name());
+        if (elname == name)
           removeThis = true;
       }
     }
@@ -587,7 +597,7 @@ iface::cellml_api::Model*
 CDA_CellMLElement::modelElement()
   throw(std::exception&)
 {
-  iface::cellml_api::CellMLElement* cand = this;
+  CDA_CellMLElement* cand = this;
 
   while (true)
   {
@@ -599,8 +609,8 @@ CDA_CellMLElement::modelElement()
       return m;
     }
 
-    iface::cellml_api::CellMLElement* el =
-      dynamic_cast<iface::cellml_api::CellMLElement*>(mParent);
+    CDA_CellMLElement* el =
+      dynamic_cast<CDA_CellMLElement*>(cand->mParent);
 
     if (el == NULL)
     {
@@ -621,19 +631,34 @@ CDA_CellMLElement::setUserData
 )
   throw(std::exception&)
 {
-  if (userData != NULL)
-    userData->release_ref();
-  userData = data;
-  userData->add_ref();
+  std::map<std::wstring,iface::cellml_api::UserData*>::iterator i;
+  i = userData.find(key);
+  if (i != userData.end())
+  {
+    (*i).second->release_ref();
+    userData.erase(i);
+  }
+
+  if (data == NULL)
+    return;
+
+  data->add_ref();
+  userData.insert(std::pair<std::wstring,iface::cellml_api::UserData*>
+                  (key, data));
 }
 
 iface::cellml_api::UserData*
 CDA_CellMLElement::getUserData(const wchar_t* key)
   throw(std::exception&)
 {
-  if (userData != NULL)
-    userData->add_ref();
-  return userData;
+  std::map<std::wstring,iface::cellml_api::UserData*>::iterator i;
+  i = userData.find(key);
+  if (i != userData.end())
+  {
+    (*i).second->add_ref();
+    return (*i).second;
+  }
+  throw iface::cellml_api::CellMLException();
 }
 
 CDA_NamedCellMLElement::CDA_NamedCellMLElement

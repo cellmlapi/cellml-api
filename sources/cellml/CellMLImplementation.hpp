@@ -134,7 +134,7 @@ protected:
 
   CDA_CellMLElementSet* children;
 
-  iface::cellml_api::UserData* userData;
+  std::map<std::wstring,iface::cellml_api::UserData*> userData;
 };
 
 class CDA_NamedCellMLElement
