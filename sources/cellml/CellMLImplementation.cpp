@@ -588,7 +588,9 @@ CDA_CellMLElement::parentElement()
   iface::cellml_api::CellMLElement* el =
     dynamic_cast<iface::cellml_api::CellMLElement*>(mParent);
   if (el == NULL)
+  {
     return NULL;
+  }
   el->add_ref();
   return el;
 }
@@ -913,16 +915,11 @@ CDA_Model::modelUnits()
 {
   // Call localUnits, as that is a subset of our work...
   RETURN_INTO_OBJREF(lu, iface::cellml_api::UnitsSet, localUnits());
-  // Now fetch the iterator...
-  RETURN_INTO_OBJREF(lui, iface::cellml_api::CellMLElementIterator, lu->iterate());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
-  // And the import iterator...
-  RETURN_INTO_OBJREF(impi, iface::cellml_api::CellMLElementIterator,
-                     imp->iterate());
 
   // Next construct the special set...
-  return new CDA_AllUnitsSet(lui, impi, false);
+  return new CDA_AllUnitsSet(lu, imp, false);
 }
 
 iface::cellml_api::UnitsSet*
@@ -931,16 +928,11 @@ CDA_Model::allUnits()
 {
   // Call localUnits, as that is a subset of our work...
   RETURN_INTO_OBJREF(lu, iface::cellml_api::UnitsSet, localUnits());
-  // Now fetch the iterator...
-  RETURN_INTO_OBJREF(lui, iface::cellml_api::CellMLElementIterator, lu->iterate());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
-  // And the import iterator...
-  RETURN_INTO_OBJREF(impi, iface::cellml_api::CellMLElementIterator,
-                     imp->iterate());
 
   // Next construct the special set...
-  return new CDA_AllUnitsSet(lui, impi, true);
+  return new CDA_AllUnitsSet(lu, imp, true);
 }
 
 iface::cellml_api::CellMLComponentSet*
@@ -959,16 +951,11 @@ CDA_Model::modelComponents()
 {
   // Call localComponents, as that is a subset of our work...
   RETURN_INTO_OBJREF(lc, iface::cellml_api::CellMLComponentSet, localComponents());
-  // Now fetch the iterator...
-  RETURN_INTO_OBJREF(lci, iface::cellml_api::CellMLElementIterator, lc->iterate());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
-  // And the import iterator...
-  RETURN_INTO_OBJREF(impi, iface::cellml_api::CellMLElementIterator,
-                     imp->iterate());
 
   // Next construct the special set...
-  return new CDA_AllComponentSet(lci, impi, false);
+  return new CDA_AllComponentSet(lc, imp, false);
 }
 
 iface::cellml_api::CellMLComponentSet*
@@ -977,16 +964,11 @@ CDA_Model::allComponents()
 {
   // Call localComponents, as that is a subset of our work...
   RETURN_INTO_OBJREF(lc, iface::cellml_api::CellMLComponentSet, localComponents());
-  // Now fetch the iterator...
-  RETURN_INTO_OBJREF(lci, iface::cellml_api::CellMLElementIterator, lc->iterate());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
-  // And the import iterator...
-  RETURN_INTO_OBJREF(impi, iface::cellml_api::CellMLElementIterator,
-                     imp->iterate());
 
   // Next construct the special set...
-  return new CDA_AllComponentSet(lci, impi, true);
+  return new CDA_AllComponentSet(lc, imp, true);
 }
 
 iface::cellml_api::ConnectionSet*
@@ -1026,7 +1008,13 @@ CDA_Model::fullyInstantiateImports()
                        impi->nextImport());
     if (imp == NULL)
       break;
-    imp->fullyInstantiate();
+    try
+    {
+      imp->fullyInstantiate();
+    }
+    catch (iface::cellml_api::CellMLException& ce)
+    {
+    }
   }
 }
 
@@ -1048,7 +1036,7 @@ CDA_Model::generateFlattenedModel()
 
   // Append copies of all local components, building up a name map as we go...
   std::map<std::wstring,int> newComponentNames;
-  std::map<std::pair<iface::cellml_api::Model*, std::wstring>, std::wstring>
+  std::map<std::pair<iface::cellml_api::Model*, std::wstring, XPCOMComparator>, std::wstring>
     componentNameMap;
 
   RETURN_INTO_OBJREF(cs, iface::cellml_api::CellMLComponentSet,
@@ -1871,9 +1859,7 @@ CDA_CellMLComponentGroupMixin::encapsulationChildren()
         // If it has no children, we need to consider other component refs...
         if (comprsc->length() == 0)
           continue;
-        RETURN_INTO_OBJREF(compric, iface::cellml_api::ComponentRefIterator,
-                           comprsc->iterateComponentRefs());
-        return new CDA_CellMLComponentFromComponentRefSet(currentModel, compric);
+        return new CDA_CellMLComponentFromComponentRefSet(currentModel, comprsc);
       }
     }
 
@@ -2136,7 +2122,7 @@ CDA_CellMLComponentGroupMixin::containmentChildren()
         RETURN_INTO_OBJREF(compric, iface::cellml_api::ComponentRefIterator,
                            comprsc->iterateComponentRefs());
         return new CDA_CellMLComponentFromComponentRefSet
-          (currentModel, compric);
+          (currentModel, comprsc);
       }
     }
 
@@ -2700,8 +2686,7 @@ CDA_CellMLImport::fullyInstantiate()
 
   try
   {
-    RETURN_INTO_OBJREF(modelEl, iface::dom::Element,
-                      dd->documentElement());
+    RETURN_INTO_OBJREF(modelEl, iface::dom::Element, dd->documentElement());
     if (modelEl == NULL)
       throw iface::cellml_api::CellMLException();
 
@@ -2721,8 +2706,19 @@ CDA_CellMLImport::fullyInstantiate()
     // Adjust the refcounts to leave the importedModel completely dependent on
     // the rest of the tree...
     cm->mParent = this;
+    // We increment our refcount(and our other ancestors') by one...
     add_ref();
+    // This will decrement cm's(and its ancestors', which includes us, as we
+    // are cm's parent), refcount by 1. cm's refcount is now 0, and our/our
+    // ancestors' refcounts are back to what they were before the add_ref().
     cm->release_ref();
+
+    // Finally, go through the imported model and instantiate its children...
+    try
+    {
+      cm->fullyInstantiateImports();
+    }
+    catch (iface::cellml_api::CellMLException& ce) {}
   }
   catch (iface::dom::DOMException& de)
   {
@@ -4367,39 +4363,30 @@ CDA_DOMElementIteratorBase::CDA_DOMElementIteratorBase
 (
  iface::dom::Element* parentElement
 )
-  : mPrevElement(NULL), mNextElement(NULL), mParentElement(parentElement)
+  : mPrevElement(NULL), mNextElement(NULL), mParentElement(parentElement),
+    icml(this)
 {
   mParentElement->add_ref();
   mNodeList = mParentElement->childNodes();
+  mParentElement->addEventListener(L"DOMNodeInserted", &icml, false);
 }
 
 CDA_DOMElementIteratorBase::~CDA_DOMElementIteratorBase()
 {
   mNodeList->release_ref();
+
+  mParentElement->removeEventListener(L"DOMNodeInserted", &icml, false);
   mParentElement->release_ref();
+
+  if (mNextElement != NULL)
+  {
+    mNextElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
+    mNextElement->release_ref();
+    mNextElement = NULL;
+  }
   if (mPrevElement != NULL)
   {
     mPrevElement->release_ref();
-  }
-}
-
-void
-CDA_DOMElementIteratorBase::registerListener()
-{
-  mParentElement->addEventListener(L"DOMNodeInserted", this, false);
-  // Don't let the listener queue own us, we will deregister automatically.
-  release_ref();
-}
-
-void
-CDA_DOMElementIteratorBase::deregisterListener()
-{
-  mParentElement->removeEventListener(L"DOMNodeInserted", this, false);
-  if (mNextElement != NULL)
-  {
-    mNextElement->removeEventListener(L"DOMNodeRemoved", this, false);
-    mNextElement->release_ref();
-    mNextElement = NULL;
   }
 }
 
@@ -4436,7 +4423,7 @@ CDA_DOMElementIteratorBase::fetchNextElement()
       }
       mPrevElement->release_ref();
       mPrevElement = mNextElement;
-      mNextElement->removeEventListener(L"DOMNodeRemoved", this, false);
+      mNextElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
       mNextElement = NULL;
     }
 
@@ -4448,7 +4435,7 @@ CDA_DOMElementIteratorBase::fetchNextElement()
       QUERY_INTERFACE(mNextElement, nodeHit, dom::Element);
       if (mNextElement != NULL)
       {
-        mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
+        mNextElement->addEventListener(L"DOMNodeRemoved", &icml, false);
         break;
       }
       nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
@@ -4463,7 +4450,8 @@ CDA_DOMElementIteratorBase::fetchNextElement()
 }
 
 void
-CDA_DOMElementIteratorBase::handleEvent(iface::events::Event* evt)
+CDA_DOMElementIteratorBase::IteratorChildrenModificationListener::
+handleEvent(iface::events::Event* evt)
   throw(std::exception&)
 {
   try
@@ -4486,17 +4474,17 @@ CDA_DOMElementIteratorBase::handleEvent(iface::events::Event* evt)
         return;
 
       // The next node is about to be removed. Advance to a later next...
-      ObjRef<iface::dom::Node> nodeHit = mPrevElement->nextSibling();
+      RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
+                         mIterator->mPrevElement->nextSibling());
       while (nodeHit != NULL)
       {
-        DECLARE_QUERY_INTERFACE_OBJREF(mNextElement, nodeHit, dom::Element);
-        if (mNextElement != NULL)
+        QUERY_INTERFACE(mIterator->mNextElement, nodeHit, dom::Element);
+        if (mIterator->mNextElement != NULL)
         {
-          mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
-          mNextElement->add_ref();
+          mIterator->mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
           break;
         }
-        nodeHit = nodeHit->nextSibling();
+        nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
       }
     }
     else if (isInsertion)
@@ -4504,9 +4492,8 @@ CDA_DOMElementIteratorBase::handleEvent(iface::events::Event* evt)
       // Convert to a mutation event...
       DECLARE_QUERY_INTERFACE_OBJREF(mevt, evt, events::MutationEvent);
 
-      ObjRef<iface::dom::Node> rn =
-        already_AddRefd<iface::dom::Node>(mevt->relatedNode());
-      if (!isEqualAfterLeftQI(rn, mParentElement, "dom::Element"))
+      RETURN_INTO_OBJREF(rn, iface::dom::Node, mevt->relatedNode());
+      if (!isEqualAfterLeftQI(rn, mIterator->mParentElement, "dom::Element"))
         return;
       
       ObjRef<iface::dom::Node> tn =
@@ -4517,29 +4504,40 @@ CDA_DOMElementIteratorBase::handleEvent(iface::events::Event* evt)
         return;
 
       // See if target lies between mPrevElement and mNextElement...
-      ObjRef<iface::dom::Node> curN
-        (already_AddRefd<iface::dom::Node>(mPrevElement->nextSibling()));
-      DECLARE_QUERY_INTERFACE_OBJREF(curE, curN, dom::Element)
-      while ((curE != mNextElement ||
-              (mNextElement == NULL && curN != NULL)) &&
-             curE != te)
+      RETURN_INTO_OBJREF(curN, iface::dom::Node,
+                         mIterator->mPrevElement->nextSibling());
+      DECLARE_QUERY_INTERFACE_OBJREF(curE, curN, dom::Element);
+      while (
+             (curN && !curE) || /* Skip nodes that aren't elements... */
+             (curE && ( /* If curN and curE are both NULL, we are done. */
+                       /* If we reached the end before the target, it is out of
+                        * range. */
+                       curE->compare(mIterator->mNextElement) && 
+                       /* If we reached the target first,
+                        * it is in range.*/
+                       curE->compare(te)
+                      )
+             )
+            )
       {
         curN = already_AddRefd<iface::dom::Node>(curN->nextSibling());
         QUERY_INTERFACE(curE, curN, dom::Element);
       }
+
       // If the target is not in the relevant range, just return...
-      if (curE == mNextElement)
+      if (curE == mIterator->mNextElement)
         return;
 
       // The current next element is no longer next...
-      if (mNextElement)
+      if (mIterator->mNextElement)
       {
-        mNextElement->removeEventListener(L"DOMNodeRemoved", this, false);
-        mNextElement->release_ref();
+        mIterator->mNextElement->removeEventListener
+          (L"DOMNodeRemoved", this, false);
+        mIterator->mNextElement->release_ref();
       }
-      mNextElement = curE;
-      mNextElement->add_ref();
-      mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
+      mIterator->mNextElement = curE;
+      mIterator->mNextElement->add_ref();
+      mIterator->mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
     }
   }
   catch (iface::dom::DOMException& de)
@@ -4552,7 +4550,11 @@ iface::cellml_api::CellMLElementIterator*
 CDA_AllUnitsSet::iterate()
   throw(std::exception&)
 {
-  return new CDA_AllUnitsIterator(mLocalIterator, mImportIterator,
+  RETURN_INTO_OBJREF(localIterator, iface::cellml_api::CellMLElementIterator,
+                     mLocalSet->iterate());
+  RETURN_INTO_OBJREF(importIterator, iface::cellml_api::CellMLElementIterator,
+                     mImportSet->iterate());
+  return new CDA_AllUnitsIterator(localIterator, importIterator,
                                   mRecurseIntoImports);
 }
 
@@ -4564,8 +4566,25 @@ CDA_AllUnitsIterator::next()
   {
     iface::cellml_api::CellMLElement* n = mLocalIterator->next();
     if (n != NULL)
+    {
+      if (mRecurseIntoImports)
+      {
+        CDA_ImportUnits* iu = dynamic_cast<CDA_ImportUnits*>(n);
+        if (iu != NULL)
+        {
+          // We have an import units. Ignore it unless we can't go any
+          // deeper due to non-instantiated imports.
+          if ((dynamic_cast<CDA_CellMLImport*>(iu->mParent))->importedModel
+              != NULL)
+          {
+            n->release_ref();
+            continue;
+          }
+        }
+      }
       return n;
-      
+    }
+
     // We have run out of elements, so we have to find the next import.
     iface::cellml_api::CellMLElement* imp = mImportIterator->next();
 
@@ -4602,7 +4621,11 @@ iface::cellml_api::CellMLElementIterator*
 CDA_AllComponentSet::iterate()
   throw(std::exception&)
 {
-  return new CDA_AllComponentIterator(mLocalIterator, mImportIterator,
+  RETURN_INTO_OBJREF(localIterator, iface::cellml_api::CellMLElementIterator,
+                     mLocalSet->iterate());
+  RETURN_INTO_OBJREF(importIterator, iface::cellml_api::CellMLElementIterator,
+                     mImportSet->iterate());
+  return new CDA_AllComponentIterator(localIterator, importIterator,
                                       mRecurseIntoImports);
 }
 
@@ -4614,7 +4637,25 @@ CDA_AllComponentIterator::next()
   {
     iface::cellml_api::CellMLElement* n = mLocalIterator->next();
     if (n != NULL)
+    {
+      if (mRecurseIntoImports)
+      {
+
+        CDA_ImportComponent* ic = dynamic_cast<CDA_ImportComponent*>(n);
+        if (ic != NULL)
+        {
+          // We have an import units. Ignore it unless we can't go any
+          // deeper due to non-instantiated imports.
+          if ((dynamic_cast<CDA_CellMLImport*>(ic->mParent))->importedModel
+              != NULL)
+          {
+            n->release_ref();
+            continue;
+          }
+        }
+      }
       return n;
+    }
 
     // We have run out of elements, so we have to find the next import.
     iface::cellml_api::CellMLElement* imp = mImportIterator->next();
@@ -4651,8 +4692,10 @@ iface::cellml_api::CellMLElementIterator*
 CDA_CellMLComponentFromComponentRefSet::iterate()
   throw(std::exception&)
 {
+  RETURN_INTO_OBJREF(compRefIterator, iface::cellml_api::ComponentRefIterator,
+                     mCompRefSet->iterateComponentRefs());
   return new CDA_CellMLComponentFromComponentRefIterator
-    (mModel, mCompRefIterator);
+    (mModel, compRefIterator);
 }
 
 iface::cellml_api::CellMLElement*
@@ -4945,12 +4988,10 @@ CDA_CellMLElementIterator::CDA_CellMLElementIterator
     _cda_refcount(1), parentSet(ownerSet)
 {
   parentSet->add_ref();
-  registerListener();
 }
 
 CDA_CellMLElementIterator::~CDA_CellMLElementIterator()
 {
-  deregisterListener();
   parentSet->release_ref();
 }
 
@@ -5050,7 +5091,7 @@ CDA_CellMLElementIterator::next()
   }
 
   // We have an element. Now go back to the set, and look in the map...
-  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*>
+  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*, XPCOMComparator>
      ::iterator i = parentSet->childMap.find(el);
   if (i != parentSet->childMap.end())
   {
@@ -5265,7 +5306,7 @@ CDA_CellMLElementSet::~CDA_CellMLElementSet()
     printf("Warning: release_ref called too few times on %s.\n",
            typeid(this).name());
 
-  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*>::iterator
+  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*,XPCOMComparator>::iterator
     i;
 
   for (i = childMap.begin(); i != childMap.end(); i++)

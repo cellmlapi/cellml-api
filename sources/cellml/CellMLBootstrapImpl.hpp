@@ -7,6 +7,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(cellml_api::DOMModelLoader, cellml_api::ModelLoader);
+  CDA_IMPL_COMPARE_NAIVE(CDA_ModelLoader);
 
   iface::cellml_api::Model* loadFromURL(const wchar_t* URL)
     throw(std::exception&);
@@ -31,6 +32,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(cellml_api::DOMURLLoader);
+  CDA_IMPL_COMPARE_NAIVE(CDA_DOMURLLoader);
 
   iface::dom::Document* loadDocument(const wchar_t* URL)
     throw(std::exception&);
@@ -49,6 +51,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(cellml_api::CellMLBootstrap);
+  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLBootstrap);
 
   iface::cellml_api::DOMModelLoader* modelLoader() throw(std::exception&);
   iface::dom::DOMImplementation* domImplementation() throw(std::exception&);

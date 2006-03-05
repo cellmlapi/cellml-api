@@ -571,6 +571,19 @@ CDA_Node::dispatchEvent(iface::events::Event* evt)
   return ret;
 }
 
+int32_t
+CDA_Node::compare(iface::XPCOM::IObject* obj)
+  throw(std::exception&)
+{
+  CDA_Node* cn = dynamic_cast<CDA_Node*>(obj);
+  // It is essential that the this comes first as the ordering for distinct
+  // objects must maintain the reflexive property.
+  if (cn == NULL)
+    return reinterpret_cast<char*>(this) - reinterpret_cast<char*>(obj);
+  return reinterpret_cast<char*>(fetchNode()) -
+    reinterpret_cast<char*>(cn->fetchNode());
+}
+
 CDA_NodeList::CDA_NodeList(GdomeNodeList* nl)
   : _cda_refcount(1), impl(nl)
 {

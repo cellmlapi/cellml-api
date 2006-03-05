@@ -15,8 +15,9 @@ public:
   CDA_RDFXMLDOMRepresentation(iface::dom::Element* idata);
   virtual ~CDA_RDFXMLDOMRepresentation();
 
-  CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI2(cellml_api::RDFRepresentation, cellml_api::RDFXMLDOMRepresentation)
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI2(cellml_api::RDFRepresentation, cellml_api::RDFXMLDOMRepresentation);
+  CDA_IMPL_COMPARE_NAIVE(CDA_RDFXMLDOMRepresentation);
 
   wchar_t* type() throw(std::exception&);
   iface::dom::Element* data() throw(std::exception&);
@@ -33,6 +34,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(cellml_api::RDFRepresentation, cellml_api::RDFXMLStringRepresentation)
+  CDA_IMPL_COMPARE_NAIVE(CDA_RDFXMLStringRepresentation);
 
   wchar_t* type() throw(std::exception&);
   wchar_t* serialisedData() throw(std::exception&);
@@ -50,6 +52,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(cellml_api::URI)
+  CDA_IMPL_COMPARE_NAIVE(CDA_URI);
 
   wchar_t* asText() throw(std::exception&);
   void asText(const wchar_t* attr) throw(std::exception&);
@@ -65,6 +68,8 @@ class CDA_CellMLElement
 public:
   CDA_CellMLElement(iface::XPCOM::IObject* parent, iface::dom::Element* idata);
   virtual ~CDA_CellMLElement();
+
+  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElement);
 
   void add_ref()
     throw(std::exception&)
@@ -346,8 +351,8 @@ class CDA_CellMLImport
 public:
   CDA_CellMLImport(iface::XPCOM::IObject* parent,
                    iface::dom::Element* importElement)
-    : CDA_CellMLElement(parent, importElement) {}
-  virtual ~CDA_CellMLImport() { if (importedModel) importedModel->release_ref(); }
+    : CDA_CellMLElement(parent, importElement), importedModel(NULL) {}
+  virtual ~CDA_CellMLImport() { if (importedModel) delete importedModel; }
 
 
   CDA_IMPL_QI2(cellml_api::CellMLImport, cellml_api::CellMLElement)
@@ -704,23 +709,38 @@ public:
 };
 
 class CDA_DOMElementIteratorBase
-  : public iface::events::EventListener
 {
 public:
   CDA_DOMElementIteratorBase(iface::dom::Element* parentElement);
   virtual ~CDA_DOMElementIteratorBase();
 
   iface::dom::Element* fetchNextElement();
-  void handleEvent(iface::events::Event* evt)
-    throw(std::exception&);
 
 private:
   iface::dom::Element *mPrevElement, *mNextElement, *mParentElement;
   iface::dom::NodeList *mNodeList;
 
-protected:
-  void registerListener();
-  void deregisterListener();
+  class IteratorChildrenModificationListener
+    : public iface::events::EventListener
+  {
+  public:
+    IteratorChildrenModificationListener(CDA_DOMElementIteratorBase* aIt)
+      : mIterator(aIt)
+    {
+    }
+
+    CDA_IMPL_COMPARE_NAIVE(IteratorChildrenModificationListener);
+    void add_ref() throw(std::exception&) {}
+    void release_ref() throw(std::exception&) {}
+    CDA_IMPL_QI1(events::EventListener);
+
+    void handleEvent(iface::events::Event* evt)
+      throw(std::exception&);
+  private:
+    CDA_DOMElementIteratorBase* mIterator;
+  };
+  IteratorChildrenModificationListener icml;
+  friend class IteratorChildrenModificationListener;
 };
 
 class CDA_CellMLElementIterator
@@ -732,8 +752,9 @@ public:
                             CDA_CellMLElementSet* ownerSet);
   virtual ~CDA_CellMLElementIterator();
 
-  CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI1(cellml_api::CellMLElementIterator)
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(cellml_api::CellMLElementIterator);
+  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementIterator);
 
   iface::cellml_api::CellMLElement* next() throw(std::exception&);
 
@@ -748,13 +769,17 @@ public:
   CDA_CellMLElementIteratorOuter(CDA_CellMLElementIterator* aInner)
     : mInner(aInner)
   {
-    mInner->add_ref();
+    if (mInner)
+      mInner->add_ref();
   }
 
   virtual ~CDA_CellMLElementIteratorOuter()
   {
-    mInner->release_ref();
+    if (mInner)
+      mInner->release_ref();
   }
+
+  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementIteratorOuter);
 
   iface::cellml_api::CellMLElement* next()
     throw(std::exception&)
@@ -773,15 +798,14 @@ public:
   CDA_MathMLElementIterator(iface::dom::Element* parentEl)
     : CDA_DOMElementIteratorBase(parentEl), _cda_refcount(1)
   {
-    registerListener();
   }
   virtual ~CDA_MathMLElementIterator()
   {
-    deregisterListener();
   };
 
-  CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI1(iface::cellml_api::MathMLElementIterator)
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(iface::cellml_api::MathMLElementIterator);
+  CDA_IMPL_COMPARE_NAIVE(CDA_MathMLElementIterator);
 
   iface::cellml_api::MathMLElement next() throw(std::exception&);
 };
@@ -792,8 +816,9 @@ class CDA_ExtensionElementList
 public:
   CDA_ExtensionElementList(iface::dom::Element* el);
   virtual ~CDA_ExtensionElementList();
-  CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI1(cellml_api::ExtensionElementList)
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(cellml_api::ExtensionElementList);
+  CDA_IMPL_COMPARE_NAIVE(CDA_ExtensionElementList);
 
   u_int32_t length() throw(std::exception&);
   bool contains(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
@@ -812,6 +837,7 @@ public:
   virtual ~CDA_MathList();
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(cellml_api::MathList)
+  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementIterator);
 
   u_int32_t length() throw(std::exception&);
   bool contains(const iface::cellml_api::MathMLElement x) throw(std::exception&);
@@ -838,6 +864,7 @@ public:
   virtual ~CDA_CellMLElementSet();
 
   CDA_IMPL_QI1(dom::CellMLElementSet)
+  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementSet);
 
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
 
@@ -881,7 +908,7 @@ public:
 private:
   friend class CDA_CellMLElementIterator;
   iface::dom::Element* mElement;
-  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*> childMap;
+  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*,XPCOMComparator> childMap;
 
   // This is used only when ownerModel is null. When ownerModel is assigned,
   // add_ref() must be called on ownerModel the correct number of times.
@@ -905,6 +932,8 @@ public:
     if (mInner != NULL)
       mInner->release_ref();
   }
+
+  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementSetOuter);
 
 protected:
   CDA_CellMLElementSet* mInner;
@@ -997,13 +1026,13 @@ public:
   CDA_CellMLComponentFromComponentRefSet
   (
    iface::cellml_api::Model* aModel,
-   iface::cellml_api::ComponentRefIterator* aCompRefIterator
+   iface::cellml_api::ComponentRefSet* aCompRefSet
   )
     : CDA_CellMLComponentSetBase(NULL),
-      _cda_refcount(1), mModel(aModel), mCompRefIterator(aCompRefIterator)
+      _cda_refcount(1), mModel(aModel), mCompRefSet(aCompRefSet)
   {
     mModel->add_ref();
-    aCompRefIterator->add_ref();
+    aCompRefSet->add_ref();
   }
 
   virtual ~CDA_CellMLComponentFromComponentRefSet()
@@ -1018,7 +1047,7 @@ public:
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
 private:
   iface::cellml_api::Model *mModel;
-  iface::cellml_api::ComponentRefIterator *mCompRefIterator;
+  iface::cellml_api::ComponentRefSet *mCompRefSet;
 };
 
 class CDA_ImportComponentIterator
@@ -1067,11 +1096,11 @@ class CDA_AllComponentSet
   : public CDA_CellMLComponentSetBase
 {
 public:
-  CDA_AllComponentSet(iface::cellml_api::CellMLElementIterator* aLocalIterator,
-                      iface::cellml_api::CellMLElementIterator* aImportIterator,
+  CDA_AllComponentSet(iface::cellml_api::CellMLComponentSet* aLocalSet,
+                      iface::cellml_api::CellMLImportSet* aImportSet,
                       bool aRecurseIntoImports)
     : CDA_CellMLComponentSetBase(NULL), _cda_refcount(1),
-      mLocalIterator(aLocalIterator), mImportIterator(aImportIterator),
+      mLocalSet(aLocalSet), mImportSet(aImportSet),
       mRecurseIntoImports(aRecurseIntoImports)
   {}
   virtual ~CDA_AllComponentSet() {}
@@ -1083,8 +1112,8 @@ public:
   
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
 private:
-  ObjRef<iface::cellml_api::CellMLElementIterator> mLocalIterator;
-  ObjRef<iface::cellml_api::CellMLElementIterator> mImportIterator;
+  ObjRef<iface::cellml_api::CellMLComponentSet> mLocalSet;
+  ObjRef<iface::cellml_api::CellMLImportSet> mImportSet;
   bool mRecurseIntoImports;
 };
 
@@ -1234,11 +1263,11 @@ class CDA_AllUnitsSet
   : public CDA_UnitsSetBase
 {
 public:
-  CDA_AllUnitsSet(iface::cellml_api::CellMLElementIterator* aLocalIterator,
-                  iface::cellml_api::CellMLElementIterator* aImportIterator,
+  CDA_AllUnitsSet(iface::cellml_api::UnitsSet* aLocalSet,
+                  iface::cellml_api::CellMLImportSet* aImportSet,
                   bool aRecurseIntoImports)
     : CDA_UnitsSetBase(NULL), _cda_refcount(1),
-      mLocalIterator(aLocalIterator), mImportIterator(aImportIterator),
+      mLocalSet(aLocalSet), mImportSet(aImportSet),
       mRecurseIntoImports(aRecurseIntoImports)
   {}
   virtual ~CDA_AllUnitsSet() {}
@@ -1249,8 +1278,8 @@ public:
   
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
 private:
-  ObjRef<iface::cellml_api::CellMLElementIterator> mLocalIterator;
-  ObjRef<iface::cellml_api::CellMLElementIterator> mImportIterator;
+  ObjRef<iface::cellml_api::UnitsSet> mLocalSet;
+  ObjRef<iface::cellml_api::CellMLImportSet> mImportSet;
   bool mRecurseIntoImports;
 };
 
@@ -1260,7 +1289,7 @@ class CDA_AllUnitsIterator
 public:
   CDA_AllUnitsIterator(iface::cellml_api::CellMLElementIterator*
                          aLocalIterator,
-                         iface::cellml_api::CellMLElementIterator*
+                       iface::cellml_api::CellMLElementIterator*
                          aImportIterator,
                        bool aRecurseIntoImports)
     : CDA_UnitsIteratorBase(NULL), _cda_refcount(1),

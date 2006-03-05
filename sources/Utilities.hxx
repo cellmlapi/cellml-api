@@ -24,6 +24,17 @@
         delete this; \
     }
 
+#define CDA_IMPL_COMPARE_NAIVE(c1) \
+    int32_t compare(iface::XPCOM::IObject* obj) \
+      throw(std::exception&) \
+    { \
+      c1* x = dynamic_cast<c1*>(obj); \
+      if (x == obj) \
+        return 0; \
+    \
+      return (reinterpret_cast<char*>(this) - reinterpret_cast<char*>(obj)); \
+    }
+
 #define CDA_IMPL_QI1(c1) \
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
@@ -420,6 +431,8 @@ private:
         _qicast_obj->release_ref(); \
       } \
     } \
+    else \
+      lhs = NULL; \
   } \
   else \
     lhs = NULL;
@@ -470,5 +483,21 @@ inline bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
 
   return eq;
 }
+
+class XPCOMComparator
+{
+public:
+  bool
+  operator()(
+             iface::XPCOM::IObject* const& o1,
+             iface::XPCOM::IObject* const& o2
+            )
+  {
+    /* In the strict ordering, NULL < x unless x == NULL. */
+    if (o1 == NULL)
+      return o2 ? true : false;
+    return (o1->compare(o2) < 0);
+  }
+};
 
 #endif // _UTILITIES_HXX

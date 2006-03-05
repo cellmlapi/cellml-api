@@ -429,8 +429,9 @@ public:
   const static unsigned int FILTER_CONTENT = 5;
   const static unsigned int FILTER_CONTENTARGUMENT = 6;
 
-  CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI2(dom::NodeList, mathml_dom::MathMLNodeList)
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI2(dom::NodeList, mathml_dom::MathMLNodeList);
+  CDA_IMPL_COMPARE_NAIVE(CDA_MathMLFilteredNodeList);
 
   CDA_MathMLFilteredNodeList(iface::dom::Node* parent,
                              int ifilterType)

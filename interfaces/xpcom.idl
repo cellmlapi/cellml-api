@@ -35,6 +35,7 @@ module XPCOM
     oneway void add_ref();
     oneway void release_ref();
     IObject query_interface(in utf8string id);
+    long compare(in IObject compareTo);
   };
 #pragma flat_name CORBA_IObject
 #pragma ID IObject "DCE:00000000-0000-0000-c000-000000000046:1"
