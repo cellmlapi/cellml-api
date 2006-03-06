@@ -1,0 +1,49 @@
+#include "CellML-APISPEC.idl"
+
+/**
+ * This module contains a description of the CellML supplementary service interfaces
+ * in the language-neutral IDL form.
+ */
+module cellml_services
+{
+  /**
+   * This is the base interface for CellML validation services. This base
+   * specification is not intended to be complete; individual validation
+   * services should provide a more detailed interface which extends from
+   * this one, and defines exactly what types of validation is and is not
+   * performed.
+   */
+  interface ValidationService
+  {
+    /**
+     * Validates part of a CellML model.
+     * @param el The element to validate.
+     * @return The empty string, if the element is valid according to this
+     *         validator, or an error message, the format of which shall be
+     *         defined by validation services implementing this interface.
+     * @raises CelllMLException If some error occurs during validation.
+     */
+    wstring validateElement(in cellml_api::CellMLElement el)
+      raises(cellml_api::CellMLException);
+  };
+
+  /**
+   * This is the base interface for CellML services which transform models from
+   * one form to another. For example, a ModelTransformationService which
+   * flattens a CellML 1.1 model into a CellML 1.0 model according to some set
+   * of rules could be defined in this form, as could a method for re-arranging
+   * mathematics into another form.
+   */
+  interface ModelTransformationService
+  {
+    /**
+     * Performs a transformation of a model from one form to another.
+     * @param m The input model to transform. This model shall not be modified
+     *          in any way by the transformation.
+     * @return The model, with the transformations applied.
+     * @raises CellMLException If the input model cannot be transformed.
+     */
+    cellml_api::Model transformModel(in cellml_api::Model m)
+      raises(cellml_api::CellMLException);
+  };
+};

@@ -11,9 +11,7 @@ module cellml_api
   interface Model;
   interface Units;
   interface Group;
-  interface RateVariableRef;
   interface MapComponents;
-  interface ReactantRole;
   interface CellMLComponent;
   interface ImportComponent;
   interface ImportUnits;
@@ -26,10 +24,8 @@ module cellml_api
   interface Connection;
   interface MapVariables;
   interface Reaction;
-  interface ReactantVariableRef;
-  interface ProductRole;
-  interface RateRole;
-
+  interface VariableRef;
+  interface Role;
   interface ExtensionElementList;
   interface MathList;
   interface ModelSet;
@@ -47,8 +43,6 @@ module cellml_api
   interface ComponentRefSet;
   interface MapVariablesSet;
   interface VariableRefSet;
-  interface ReactantVariableRefSet;
-  interface ProductVariableRefSet;
 
   typedef dom::Element ExtensionElement;
 
@@ -103,6 +97,18 @@ module cellml_api
    */
   interface UserData : XPCOM::IObject
   {
+  };
+
+  /**
+   * This interface is implemented by the application to receive notification
+   * when an asynchronous import instantiatiation is complete.
+   */
+  interface ImportInstantiationListener : XPCOM::IObject
+  {
+    /**
+     * This is called after imports have been instantiated.
+     */
+    void loadCompleted();
   };
 
   /**
@@ -250,13 +256,6 @@ module cellml_api
                       in CellMLAttributeString name);
 
     /**
-     * Perform validation according to the validation requirements
-     * specification. Some validation only makes sense once entire model is
-     * loaded.
-     */
-    boolean validate();
-
-    /**
      * The parent element of this model...
      */
     readonly attribute CellMLElement parentElement;
@@ -311,12 +310,14 @@ module cellml_api
   {
     /**
      * This allows a model with a different cellmlVersion to be returned. This
-     * function will automatically flatten CellML 1.1 models if they contain
-     * imports, and conversion to CellML 1.0 is requested.
+     * function changes the namespace of the CellML attributes, but it does not
+     * change the model structure(even if, for example, this produces a model
+     * with import elements in the CellML 1.0 namespace). Applications should
+     * use a flattening ModelTransformationService if they wish to change
+     * CellML 1.1 import structures into valid CellML 1.0 constructs.
      * @param cellmlVersion The new version of CellML. The string should be 1.0
      *                      or 1.1
      * @raises CellMLException if the version is not supported by the API.
-     * @raises CellMLException if there are uninstantiated imports.
      */
     Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
     
@@ -411,11 +412,12 @@ module cellml_api
     void fullyInstantiateImports();
 
     /**
-     * Return a flattened model, i.e. all imported component trees are promoted
-     * to model level and import objects are removed.
-     * @return The flattened model.
+     * This starts an asynchronous full instantiatation of the import
+     * definitions. It will then recursively instantiate all imports in the
+     * imported models.
+     * @param listener A listener which will be notified when imports are instantiated.
      */
-    Model generateFlattenedModel();
+    void asyncFullyInstantiateImports(in ImportInstantiationListener listener);
 
     /**
      * Creates a new (local) CellMLComponent
@@ -483,29 +485,14 @@ module cellml_api
     Reaction createReaction();
 
     /**
-     * Creates a new ReactantVariableRef
+     * Creates a new VariableRef
      */
-    ReactantVariableRef createReactantVariableRef();
+    VariableRef createVariableRef();
 
     /**
-     * Creates a new RateVariableRef
+     * Creates a new Role
      */
-    RateVariableRef createRateVariableRef();
-
-    /**
-     * Creates a new ReactantRole
-     */
-    ReactantRole createReactantRole();
-
-    /**
-     * Creates a new ProductRole
-     */
-    ProductRole createProductRole();
-
-    /**
-     * Creates a new RateRole
-     */
-    RateRole createRateRole();
+    Role createRole();
   };
 
   interface MathContainer : XPCOM::IObject
@@ -694,6 +681,13 @@ module cellml_api
     void fullyInstantiate();
 
     /**
+     * Causes the model referenced by the href attribute to be asynchronously
+     * loaded using the same model loader used to load this model.
+     * @param listener The listener to load the model with.
+     */
+    void asyncFullyInstantiate(in ImportInstantiationListener listener);
+
+    /**
      * Returns true if fullyInstantiate has previously been called on this
      * import, or false otherwise. Note that a call to fullyInstantiateImports()
      * on a model which is an ancestor of this one in the import tree shall be
@@ -705,6 +699,13 @@ module cellml_api
      * A number that, within the parent model, uniquely represents the CellMLImport.
      */
     readonly attribute unsigned long uniqueIdentifier;
+
+
+    /**
+     * Returns NULL if imports have not been fully instantiated. Otherwise returns
+     * the imported Model corresponding to this CellMLImport.
+     */
+    readonly attribute Model importedModel;
   };
 
   /**
@@ -990,6 +991,9 @@ module cellml_api
     attribute CellMLVariable secondVariable;
   };
 
+  interface VariableRef;
+  interface Role;
+
   /**
    * An interface to a <reaction> element.
    */
@@ -999,107 +1003,93 @@ module cellml_api
     /**
      * A collection of all the reactants involved in this reaction.
      */
-    readonly attribute ReactantVariableRefSet reactants;
+    readonly attribute VariableRefSet variableReferences;
 
     /**
-     * A collection of all the products for this reaction.
+     * Whether or not the reaction is reversible. May be yes, no,
+     * or the empty string(if the attribute is absent).
      */
-    readonly attribute ProductVariableRefSet products;
+    attribute boolean reversible;
 
     /**
-     * A reference to the rate variable.
+     * Fetches a VariableRef by the variable name.
+     * @param varName The name of the variable, within this component.
+     * @param create Whether or not to create a VariableRef if not found.
+     * @return The variable reference corresponding to this variable.
+     *   If no such VariableRef exists, then:
+     *     i) If create is true, a new one is created and added to this
+     *        reaction.
+     *    ii) If create is false, NULL is returned.
      */
-    readonly attribute RateVariableRef rate;
+    VariableRef getVariableRef(in wstring varName, in boolean create);
+
+    /**
+     * Fetches a Role by the delta variable name.
+     * @param varName The name of the delta variable, within this component.
+     * @return The Role corresponding to this delta variable.
+     * If no such Role exists, then NULL is returned.
+     */
+    Role getDeltaVariableRef(in wstring varName, in boolean create);
   };
 
   /**
-   * An interface to any type of variable reference.
+   * An interface to the <variable_ref> element.
    */
   interface VariableRef
     : CellMLElement
   {
     /**
-     * The variable being referenced.
+     * The variable being referenced. This may be assigned to a variable in the
+     * same component.
      */
-    readonly attribute CellMLVariable variable;
+    attribute CellMLVariable variable;
 
     /**
-     * A string representing the type of variable reference.
-     * "reactant" if this is a reference to a variable with the reactant role.
-     * "product" if this is a reference to a variable with the product role.
-     * "rate" if this is a reference to a variable with the rate role.
+     * The name of the variable being referenced.
      */
-    readonly attribute wstring refType;
+    attribute wstring variableName;
   };
 
   /**
-   * An interface to a reactant variable reference.
-   */
-  interface ReactantVariableRef
-    : VariableRef
-  {
-    attribute ReactantRole role;
-  };
-
-  interface ProductRole;
-
-  /*
-   * An interface to a reactant variable reference.
-   */
-  interface ProductVariableRef
-    : VariableRef
-  {
-    attribute ProductRole role;
-  };
-
-  interface RateRole;
-
-  /**
-   * An interface to a rate variable reference.
-   */
-  interface RateVariableRef
-    : VariableRef
-  {
-    attribute RateRole role;
-  };
-
-  /**
-   * An interface to any type of role.
+   * An interface to the <role> element.
    */
   interface Role
-    : CellMLElement
+    : CellMLElement, MathContainer
   {
+    enum RoleType
+    {
+      REACTANT, PRODUCT, RATE, CATALYST, ACTIVATOR, INHIBITOR, MODIFIER
+    };
+
+    enum DirectionType
+    {
+      FORWARD, REVERSE, BOTH
+    };
+
     /**
-     * A string representing the type of role.
-     * "reactant" if this is a reactant role.
-     * "product" if this is a product role.
-     * "rate" if this is a rate role.
+     * The role this variable plays.
      */
-    readonly attribute wstring roleType;
-  };
+    attribute RoleType variableRole;
+    
+    /**
+     * The direction of the reaction for which this role applies.
+     */
+    attribute DirectionType direction;
 
-  /**
-   * An interface to a reactant role.
-   */
-  interface ReactantRole
-    : Role
-  {
-  };
+    /**
+     * The stoichiometry for this role.
+     */
+    attribute double stoichiometry;
 
-  /**
-   * An interface to a product role.
-   */
-  interface ProductRole
-    : Role
-  {
-  };
+    /**
+     * The variable represented by the delta_variable attribute.
+     */
+    attribute CellMLVariable deltaVariable;
 
-  /**
-   * An interface to a rate role.
-   */
-  interface RateRole
-    : Role, MathContainer
-  {
+    /**
+     * The name of the variable represented by the delta_variable attribute.
+     */
+    attribute wstring deltaVariableName;
   };
 
   /**
@@ -1637,50 +1627,56 @@ module cellml_api
     VariableRefIterator iterateVariableRefs();
   };
 
-  interface ReactantVariableRefIterator : VariableRefIterator
+  interface RoleIterator : CellMLElementIterator
   {
     /**
      * Fetches the next CellML element, and advances the iterator.
      * @return The next CellML element, or nil if there are no more CellML
      *         elements.
      */
-    ReactantVariableRef nextReactantVariableRef();
+    Role nextRole();
   };
 
   /**
    * An interface for accessing a set of VariableRefs
    */
-  interface ReactantVariableRefSet
-    : VariableRefSet
+  interface RoleSet
+    : CellMLElementSet
   {
     /**
      * Returns a CellMLElementIterator that can be used to iterate through the
      * elements. The iteration order is undefined.
      */
-    ReactantVariableRefIterator iterateReactantVariableRefs();
+    RoleIterator iterateRoles();
   };
 
-  interface ProductVariableRefIterator : VariableRefIterator
+
+  /**
+   * An interface allowing notifications that model loading has completed to
+   * be delivered. This is implemented by the application and not the API.
+   */
+  interface ModelLoadedListener
+    : XPCOM::IObject
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Called when the model has been loaded.
+     * @param m The model which has just been loaded.
      */
-    ProductVariableRef nextProductVariableRef();
+    void loadCompleted(in Model m);
   };
 
   /**
-   * An interface for accessing a set of VariableRefs
+   * An interface allowing notifications that document loading has completed
+   * to be delivered.
    */
-  interface ProductVariableRefSet
-    : VariableRefSet
+  interface DocumentLoadedListener
+    : XPCOM::IObject
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Called when the document has been loaded.
+     * @param doc The document which has just been loaded.
      */
-    ProductVariableRefIterator iterateProductVariableRefs();
+    void loadCompleted(in dom::Document doc);
   };
 
   /**
@@ -1701,6 +1697,18 @@ module cellml_api
     Model loadFromURL(in dom::DOMString URL)
       raises(CellMLException);
 
+    /**
+     * Loads a model from the given URL asynchronously, using the local URL
+     * loader. Note that this operation may be unavailable(or restricted to
+     * certain URLs) due to security restrictions on some remotely hosted model
+     * loaders. Applications should be aware that the loadCompleted operation on
+     * listener may be called prior to the return on this operation.
+     * @param URL The URL from which to load the model.
+     * @param listener A ModelLoadedListener to inform when loading completes.
+     * @raises CellMLException if the model cannot be loaded.
+     */
+    void asyncLoadFromURL(in dom::DOMString URL,
+                          in ModelLoadedListener listener);
 
     /**
      * An error message describing the cause of the last CellMLException.
@@ -1734,6 +1742,17 @@ module cellml_api
      * @raises CellMLException if the model cannot be loaded.
      */
     dom::Document loadDocument(in dom::DOMString URL)
+      raises(CellMLException);
+
+    /**
+     * Asynchronously loads an XML formatted document from a given URL into a
+     * DOM. This may be restricted to certain URLs due to security restrictions
+     * on some remotely hosted URL loaders.
+     * @param URL The URL from which to load the document.
+     * @param listener The listener to notify when the load completes.
+     * @raises CellMLException if the model cannot be loaded.
+     */
+    void asyncLoadDocument(in dom::DOMString URL, in DocumentLoadedListener listener)
       raises(CellMLException);
 
     /**
@@ -1773,6 +1792,20 @@ module cellml_api
      *           DOM document.
      */
     Model createFromDOM(in dom::DOMString url, in DOMURLLoader loader)
+      raises(CellMLException);
+
+    /**
+     * Loads the DOM for the model from the specified URL using the supplied
+     * DOMURLLoader. If further URLs need to be loaded(for example, to satisfy
+     * imports), the supplied loader will be used.
+     * @param url The URL from which to load.
+     * @param loader The URL loader to load the model and any imports needed.
+     * @param listener A listener to notify when the model is fully loaded.
+     * @raises CellMLException if there is an error loading the model or the
+     *           DOM document.
+     */
+    void asyncCreateFromDOM(in dom::DOMString url, in DOMURLLoader loader,
+                       in ModelLoadedListener listener)
       raises(CellMLException);
   };
 
