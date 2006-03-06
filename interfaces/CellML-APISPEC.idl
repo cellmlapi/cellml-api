@@ -391,8 +391,7 @@ module cellml_api
     readonly attribute CellMLComponentSet allComponents;
 
     /**
-     * Model connections. If any imports have been fully instantiated, then it
-     * includes connections relevant to those also.
+     * The set of all connections defined in this model document.
      */
     readonly attribute ConnectionSet connections;
 
