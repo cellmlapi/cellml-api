@@ -978,7 +978,7 @@ class CDA_CellMLComponentIterator
 {
 public:
   CDA_CellMLComponentIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLComponentIteratorBase(aInner) {}
+    : CDA_CellMLComponentIteratorBase(aInner), _cda_refcount(1) {}
   virtual ~CDA_CellMLComponentIterator() {}
 
   CDA_IMPL_REFCOUNT

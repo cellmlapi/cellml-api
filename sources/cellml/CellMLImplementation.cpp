@@ -4352,10 +4352,10 @@ CDA_CellMLElementSetUseIteratorMixin::contains(iface::cellml_api::CellMLElement*
   while (true)
   {
     RETURN_INTO_OBJREF(ce, iface::cellml_api::CellMLElement, cei->next());
-    if (ce == x)
-      return true;
-    else if (ce == NULL)
+    if (ce == NULL)
       return false;
+    if (ce->compare(x) == 0)
+      return true;
   }
 }
 
@@ -5174,7 +5174,7 @@ CDA_ExtensionElementList::contains(const iface::cellml_api::ExtensionElement x)
     if (el == NULL)
       continue;
 
-    if (el == x)
+    if (el->compare(x) == 0)
       return true;
   }
 
@@ -5247,6 +5247,7 @@ CDA_MathList::CDA_MathList(iface::dom::Element* aParentEl)
 
 CDA_MathList::~CDA_MathList()
 {
+  mParentEl->release_ref();
 }
 
 u_int32_t
@@ -5265,7 +5266,7 @@ CDA_MathList::length()
 }
 
 bool
-CDA_MathList::contains(const iface::cellml_api::MathMLElement x)
+CDA_MathList::contains(iface::mathml_dom::MathMLElement* x)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(ml, iface::cellml_api::MathMLElementIterator, iterate());
@@ -5274,8 +5275,9 @@ CDA_MathList::contains(const iface::cellml_api::MathMLElement x)
     RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement, ml->next());
     if (me == NULL)
       return false;
-    iface::mathml_dom::MathMLElement* xme = (iface::mathml_dom::MathMLElement*)x;
-    if (me == xme)
+    iface::mathml_dom::MathMLElement* xme =
+      static_cast<iface::mathml_dom::MathMLElement*>(x);
+    if (me->compare(xme) == 0)
       return true;
   }
 }
