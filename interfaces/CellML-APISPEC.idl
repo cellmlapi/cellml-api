@@ -107,8 +107,10 @@ module cellml_api
   {
     /**
      * This is called after imports have been instantiated.
+     * @param wasStale If an xlink:href was changed while the corresponding
+     *                 import was loading.
      */
-    void loadCompleted();
+    void loadCompleted(in boolean wasStale);
   };
 
   /**
@@ -678,14 +680,14 @@ module cellml_api
      * Causes the model referenced by the href attribute to be loaded using the
      * same model loader used to load this model.
      */
-    void fullyInstantiate();
+    void instantiate();
 
     /**
      * Causes the model referenced by the href attribute to be asynchronously
      * loaded using the same model loader used to load this model.
      * @param listener The listener to load the model with.
      */
-    void asyncFullyInstantiate(in ImportInstantiationListener listener);
+    void asyncInstantiate(in ImportInstantiationListener listener);
 
     /**
      * Returns true if fullyInstantiate has previously been called on this
@@ -693,7 +695,7 @@ module cellml_api
      * on a model which is an ancestor of this one in the import tree shall be
      * treated as if it were a call to fullyInstantiate() on all imports.
      */
-    readonly attribute boolean wasFullyInstantiated;
+    readonly attribute boolean wasInstantiated;
 
     /**
      * A number that, within the parent model, uniquely represents the CellMLImport.
@@ -1029,7 +1031,7 @@ module cellml_api
      * @return The Role corresponding to this delta variable.
      * If no such Role exists, then NULL is returned.
      */
-    Role getDeltaVariableRef(in wstring varName, in boolean create);
+    Role getRoleByDeltaVariable(in wstring varName);
   };
 
   /**
