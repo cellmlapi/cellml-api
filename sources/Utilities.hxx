@@ -35,6 +35,18 @@
       return (reinterpret_cast<char*>(this) - reinterpret_cast<char*>(obj)); \
     }
 
+#define CDA_IMPL_QI0 \
+    IObject* query_interface(const char* id) \
+      throw(std::exception&) \
+    { \
+      if (!strcmp(id, "xpcom::Object")) \
+      { \
+        add_ref(); \
+        return this; \
+      } \
+      return NULL; \
+    }
+
 #define CDA_IMPL_QI1(c1) \
     IObject* query_interface(const char* id) \
       throw(std::exception&) \
