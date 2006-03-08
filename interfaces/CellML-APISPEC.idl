@@ -43,6 +43,7 @@ module cellml_api
   interface ComponentRefSet;
   interface MapVariablesSet;
   interface VariableRefSet;
+  interface RoleSet;
 
   typedef dom::Element ExtensionElement;
 
@@ -1050,6 +1051,11 @@ module cellml_api
      * The name of the variable being referenced.
      */
     attribute wstring variableName;
+
+    /**
+     * A collection of all the Roles that this VariableRef plays in this reaction.
+     */
+    readonly attribute RoleSet roles;
   };
 
   /**
