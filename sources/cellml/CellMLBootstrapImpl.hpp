@@ -11,16 +11,23 @@ public:
 
   iface::cellml_api::Model* loadFromURL(const wchar_t* URL)
     throw(std::exception&);
+  void asyncLoadFromURL(const wchar_t* URL,
+                        iface::cellml_api::ModelLoadedListener* listener)
+    throw(std::exception&);
   wchar_t* lastErrorMessage() throw(std::exception&);
 
   iface::cellml_api::Model*
   createFromDOM(const wchar_t* url,
                 iface::cellml_api::DOMURLLoader* loader)
     throw(std::exception&);
+  void asyncCreateFromDOM(const wchar_t* URL,
+                          iface::cellml_api::DOMURLLoader* loader,
+                          iface::cellml_api::ModelLoadedListener* listener)
+    throw(std::exception&);
 
+  std::wstring mLastError;
 private:
   iface::cellml_api::DOMURLLoader* mURLLoader;
-  std::wstring mLastError;
 };
 
 class CDA_DOMURLLoader
@@ -35,6 +42,9 @@ public:
   CDA_IMPL_COMPARE_NAIVE(CDA_DOMURLLoader);
 
   iface::dom::Document* loadDocument(const wchar_t* URL)
+    throw(std::exception&);
+  void asyncLoadDocument(const wchar_t* URL,
+                         iface::cellml_api::DocumentLoadedListener* listener)
     throw(std::exception&);
   wchar_t* lastErrorMessage() throw(std::exception&);
 private:
