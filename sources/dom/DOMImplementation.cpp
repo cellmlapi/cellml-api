@@ -90,11 +90,11 @@ CDA_DOMImplementation::createDocument
   EXCEPTION_TRY;
   TRDOMSTRING_EMPTYNULL(namespaceURI);
   TRDOMSTRING(qualifiedName);
-  LOCALCONVERT(doctype, DocumentType)
+  LOCALCONVERT_NULLOK(doctype, DocumentType)
 
   GdomeDocument* gd =
     gdome_di_createDocument(impl, gdnamespaceURI, gdqualifiedName,
-                            ldoctype->impl, &exc);
+                            ldoctype ? ldoctype->impl : NULL, &exc);
   DDOMSTRING(namespaceURI);
   DDOMSTRING(qualifiedName);
   EXCEPTION_CATCH;
