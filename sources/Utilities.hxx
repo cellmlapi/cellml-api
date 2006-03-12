@@ -200,6 +200,17 @@
   if (l##x == NULL) \
     throw iface::dom::DOMException();
 
+#define LOCALCONVERT_NULLOK(x, t) \
+  const CDA_##t* l##x; \
+  if (x == NULL) \
+    l##x = NULL; \
+  else \
+  { \
+    l##x = dynamic_cast<const CDA_##t*>(x); \
+  if (l##x == NULL) \
+    throw iface::dom::DOMException(); \
+  }
+
 template<class T>
 class already_AddRefd
 {
