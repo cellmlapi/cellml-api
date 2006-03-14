@@ -59,8 +59,15 @@ class CDA_Node
   : public virtual iface::dom::Node
 {
 public:
-  CDA_Node() {}
-  virtual ~CDA_Node() {};
+  CDA_Node(GdomeNode* n)
+    : mNode(n)
+  {
+    n->user_data = reinterpret_cast<void*>(this);
+  }
+
+  virtual ~CDA_Node()
+  {
+  }
 
   wchar_t* nodeName() throw(std::exception&);
   wchar_t* nodeValue() throw(std::exception&);
@@ -102,10 +109,7 @@ public:
                            bool useCapture) throw(std::exception&);
   bool dispatchEvent(iface::events::Event* evt) throw(std::exception&);
 
-  int32_t compare(iface::XPCOM::IObject* obj) throw(std::exception&);
-
-  /* Implementation only... */
-  virtual GdomeNode* fetchNode() const = 0;
+  CDA_IMPL_COMPARE_NAIVE(CDA_Node);
 
 private:
   struct EventListenerData
@@ -129,7 +133,11 @@ private:
     iface::events::EventListener* callee;
   };
   static std::map<iface::events::EventListener*,struct EventListenerData*> activeEventListeners;
-  static CDAMutex aelprotect;
+  static CDAMutex mStaticMutex;
+public:
+  GdomeNode* mNode;
+
+  static CDA_Node* findExistingWrapper(GdomeNode* n);
 };
 
 class CDA_NodeList
@@ -185,6 +193,9 @@ class CDA_CharacterData
     public CDA_Node
 {
 public:
+  CDA_CharacterData(GdomeNode* aNode)
+    : CDA_Node(aNode) {}
+
   wchar_t* data() throw(std::exception&);
   void data(const wchar_t* attr) throw(std::exception&);
   u_int32_t length() throw(std::exception&);
@@ -202,12 +213,27 @@ public:
   virtual GdomeCharacterData* fetchCData() const = 0;
 };
 
+
+#define CDA_IMPL_WRAP(gdometype, cdatype) \
+  static cdatype* wrap(gdometype* x) \
+  { \
+    cdatype* ret = static_cast<cdatype*>(findExistingWrapper(GDOME_N(x))); \
+    if (ret == NULL) \
+      return new cdatype(x); \
+    ret->add_ref(); \
+    GdomeException exc; \
+    gdome_n_unref(GDOME_N(x), &exc); \
+    return ret; \
+  }
+
 class CDA_Attr
   : public iface::dom::Attr,
     public CDA_Node
 {
 public:
   CDA_Attr(GdomeAttr* at);
+  CDA_IMPL_WRAP(GdomeAttr, CDA_Attr);
+
   virtual ~CDA_Attr();
 
   CDA_IMPL_REFCOUNT
@@ -220,12 +246,11 @@ public:
   iface::dom::Element* ownerElement() throw(std::exception&);
 
   GdomeAttr* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_Element
   : public virtual iface::dom::Element,
-    public virtual CDA_Node
+    public CDA_Node
 {
 public:
   CDA_Element(GdomeElement* el);
@@ -275,31 +300,32 @@ public:
     throw(std::exception&);
 
   GdomeElement* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_TextBase
   : public virtual iface::dom::Text,
-    public virtual CDA_CharacterData
+    public CDA_CharacterData
 {
 public:
+  CDA_TextBase(GdomeNode* aNode)
+    : CDA_CharacterData(aNode) {}
   iface::dom::Text* splitText(u_int32_t offset) throw(std::exception&);
 
   virtual GdomeText* fetchText() const = 0;
 };
 
 class CDA_Text
-  : public virtual CDA_TextBase
+  : public CDA_TextBase
 {
 public:
   CDA_Text(GdomeText* txt);
+  CDA_IMPL_WRAP(GdomeText, CDA_Text);
   virtual ~CDA_Text();
   
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI3(dom::Text, dom::CharacterData, dom::Node)
 
   GdomeText* impl;
-  GdomeNode* fetchNode() const;
   GdomeCharacterData* fetchCData() const;
   GdomeText* fetchText() const;
 };
@@ -313,10 +339,10 @@ public:
   virtual ~CDA_Comment();
 
   CDA_IMPL_REFCOUNT
+  CDA_IMPL_WRAP(GdomeComment, CDA_Comment);
   CDA_IMPL_QI3(dom::Comment, dom::CharacterData, dom::Node)
 
   GdomeComment* impl;
-  GdomeNode* fetchNode() const;
   GdomeCharacterData* fetchCData() const;
 };
 
@@ -326,23 +352,24 @@ class CDA_CDATASection
 {
 public:
   CDA_CDATASection(GdomeCDATASection* cds);
+  CDA_IMPL_WRAP(GdomeCDATASection, CDA_CDATASection);
   virtual ~CDA_CDATASection();
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI4(dom::CDATASection, dom::Text, dom::CharacterData, dom::Node)
 
   GdomeCDATASection* impl;
-  GdomeNode* fetchNode() const;
   GdomeCharacterData* fetchCData() const;
   GdomeText* fetchText() const;
 };
 
 class CDA_DocumentType
-  : public virtual CDA_Node,
+  : public CDA_Node,
     public virtual iface::dom::DocumentType
 {
 public:
   CDA_DocumentType(GdomeDocumentType* dt);
+  CDA_IMPL_WRAP(GdomeDocumentType, CDA_DocumentType);
   virtual ~CDA_DocumentType();
 
   CDA_IMPL_REFCOUNT
@@ -356,7 +383,6 @@ public:
   wchar_t* internalSubset() throw(std::exception&);
 
   GdomeDocumentType* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_Notation
@@ -365,6 +391,7 @@ class CDA_Notation
 {
 public:
   CDA_Notation(GdomeNotation* nt);
+  CDA_IMPL_WRAP(GdomeNotation, CDA_Notation);
   virtual ~CDA_Notation();
 
   CDA_IMPL_REFCOUNT
@@ -374,7 +401,6 @@ public:
   wchar_t* systemId() throw(std::exception&);
 
   GdomeNotation* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_Entity
@@ -383,6 +409,7 @@ class CDA_Entity
 {
 public:
   CDA_Entity(GdomeEntity* ent);
+  CDA_IMPL_WRAP(GdomeEntity, CDA_Entity);
   virtual ~CDA_Entity();
 
   CDA_IMPL_REFCOUNT
@@ -393,7 +420,6 @@ public:
   wchar_t* notationName() throw(std::exception&);
 
   GdomeEntity* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_EntityReference
@@ -402,13 +428,13 @@ class CDA_EntityReference
 {
 public:
   CDA_EntityReference(GdomeEntityReference* ent);
+  CDA_IMPL_WRAP(GdomeEntityReference, CDA_EntityReference);
   virtual ~CDA_EntityReference();
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::EntityReference, dom::Node)
 
   GdomeEntityReference* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_ProcessingInstruction
@@ -417,6 +443,7 @@ class CDA_ProcessingInstruction
 {
 public:
   CDA_ProcessingInstruction(GdomeProcessingInstruction* pri);
+  CDA_IMPL_WRAP(GdomeProcessingInstruction, CDA_ProcessingInstruction);
   virtual ~CDA_ProcessingInstruction();
 
   CDA_IMPL_REFCOUNT
@@ -427,7 +454,6 @@ public:
   void data(const wchar_t* attr) throw(std::exception&);
 
   GdomeProcessingInstruction* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_DocumentFragment
@@ -436,24 +462,25 @@ class CDA_DocumentFragment
 {
 public:
   CDA_DocumentFragment(GdomeDocumentFragment* df);
+  CDA_IMPL_WRAP(GdomeDocumentFragment, CDA_DocumentFragment);
   virtual ~CDA_DocumentFragment();
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(dom::DocumentFragment, dom::Node)
 
   GdomeDocumentFragment* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_Document
   : public virtual iface::dom::Document,
-    public virtual CDA_Node
+    public CDA_Node
 {
 public:
   CDA_Document(GdomeDocument* doc);
   virtual ~CDA_Document();
 
   CDA_IMPL_REFCOUNT
+  CDA_IMPL_WRAP(GdomeDocument, CDA_Document);
   CDA_IMPL_QI2(dom::Document, dom::Node)
 
   iface::dom::DocumentType* doctype()
@@ -499,7 +526,6 @@ public:
     throw(std::exception&);
   
   GdomeDocument* impl;
-  GdomeNode* fetchNode() const;
 };
 
 class CDA_EventBase
