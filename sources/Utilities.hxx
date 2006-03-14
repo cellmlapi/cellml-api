@@ -28,11 +28,9 @@
     int32_t compare(iface::XPCOM::IObject* obj) \
       throw(std::exception&) \
     { \
-      c1* x = dynamic_cast<c1*>(obj); \
-      if (x == obj) \
-        return 0; \
-    \
-      return (reinterpret_cast<char*>(this) - reinterpret_cast<char*>(obj)); \
+      return (reinterpret_cast<char*>(static_cast<iface::XPCOM::IObject*> \
+                                      (this)) - \
+              reinterpret_cast<char*>(obj)); \
     }
 
 #define CDA_IMPL_QI0 \
@@ -161,12 +159,14 @@
 
 #ifdef WCHAR_T_IS_32BIT
 #define g_wchar_to_char g_ucs4_to_utf8
-#define g_char_to_wchar g_utf8_to_ucs4
+#define g_char_to_wchar g_utf8_to_ucs4_fast
 #define gwchar_t gunichar
+#define POSSIBLE_EXTRA_NULLS
 #else
 #define g_wchar_to_char g_utf16_to_utf8
 #define g_char_to_wchar g_utf8_to_utf16
 #define gwchar_t gunichar2
+#define POSSIBLE_EXTRA_NULLS ,NULL, NULL
 #endif
 
 #define TRDOMSTRING(x) \
@@ -184,7 +184,7 @@
     gdome_str_unref(gd##x)
 
 #define TRGDOMSTRING(x) \
-  iface::dom::DOMString cxx##x = ((x) && (x)->str) ? ((wchar_t*)g_char_to_wchar(x->str, -1, NULL, NULL, NULL)) : wcsdup(L""); \
+  iface::dom::DOMString cxx##x = ((x) && (x)->str) ? ((wchar_t*)g_char_to_wchar(x->str, -1, NULL POSSIBLE_EXTRA_NULLS)) : wcsdup(L""); \
   if (x) \
     gdome_str_unref(x);
 
@@ -246,13 +246,20 @@ public:
   {
   }
 
+  ObjRef(const ObjRef<T>& aPtr)
+  {
+    mPtr = aPtr.getPointer();
+    if (mPtr != NULL)
+      mPtr->add_ref();
+  }
+
   ObjRef(T* aPtr)
     : mPtr(aPtr)
   {
     mPtr->add_ref();
   }
 
-  ObjRef(already_AddRefd<T> aar)
+  ObjRef(const already_AddRefd<T> aar)
   {
     mPtr = aar.getPointer();
   }
@@ -289,7 +296,7 @@ public:
       mPtr->add_ref();
   }
 
-  void operator= (already_AddRefd<T> newAssign)
+  void operator= (const already_AddRefd<T>& newAssign)
   {
     T* nap = newAssign.getPointer();
     if (mPtr == nap)
@@ -299,7 +306,7 @@ public:
     mPtr = nap;
   }
 
-  void operator= (ObjRef<T> newAssign)
+  void operator= (const ObjRef<T>& newAssign)
   {
     T* nap = newAssign.getPointer();
     if (mPtr == nap)
@@ -307,8 +314,10 @@ public:
     if (mPtr)
       mPtr->release_ref();
     mPtr = nap;
-    nap->add_ref();
+    if (mPtr != NULL)
+      mPtr->add_ref();
   }
+
 private:
   T* mPtr;
 
