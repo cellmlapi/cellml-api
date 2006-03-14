@@ -1751,3 +1751,60 @@ private:
   std::list<VariableStackFrame*> variableStack;
   bool mConsider1, mConsider2;
 };
+
+class CDA_ImportConnectionIterator
+  : public CDA_ConnectionIterator
+{
+public:
+  CDA_ImportConnectionIterator(CDA_CellMLImport* aImport)
+    : CDA_ConnectionIterator(NULL), mImport(aImport)
+  {
+    pushStackFrame(aImport);
+  }
+
+  ~CDA_ImportConnectionIterator();
+
+  iface::cellml_api::CellMLElement* next() throw(std::exception&);
+
+private:
+
+  struct ImportStackFrame
+  {
+    ImportStackFrame() {}
+    ~ImportStackFrame() {}
+    
+    enum { DEEP_CONNECTIONS, SHALLOW_CONNECTIONS } mState;
+    ObjRef<iface::cellml_api::CellMLImportIterator> mImportIterator;
+    ObjRef<iface::cellml_api::ConnectionIterator> mConnectionIterator;
+  };
+
+  std::list<ImportStackFrame*> importStack;
+  void pushStackFrame(iface::cellml_api::CellMLImport* aImport)
+    throw(std::exception&);
+  ObjRef<iface::cellml_api::CellMLImport> mImport;
+};
+
+class CDA_ImportConnectionSet
+  : public CDA_ConnectionSet
+{
+public:
+  CDA_ImportConnectionSet(CDA_CellMLImport* aImport)
+    : CDA_ConnectionSet(NULL), mImport(aImport)
+  {
+    mImport->add_ref();
+  }
+
+  ~CDA_ImportConnectionSet()
+  {
+    mImport->release_ref();
+  }
+
+  iface::cellml_api::CellMLElementIterator*
+  iterate()
+    throw(std::exception&)
+  {
+    return new CDA_ImportConnectionIterator(mImport);
+  }
+private:
+  CDA_CellMLImport* mImport;
+};

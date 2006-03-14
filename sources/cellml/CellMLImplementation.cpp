@@ -1756,8 +1756,7 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
         wchar_t* str = icomp->name();
         componentName = str;
         free(str);
-        model = dynamic_cast<CDA_Model*>
-          (dynamic_cast<CDA_ImportComponent*>(icomp.getPointer())->mParent);
+        model = dynamic_cast<CDA_Model*>(import->mParent);
         if (model == NULL)
           throw iface::cellml_api::CellMLException();
         wentDown = true;
@@ -1853,7 +1852,7 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
             return ic;
           }
           wchar_t *cr = ic->componentRef();
-          componentName = cr;
+          parname = cr;
           free(cr);
         }
       }
@@ -2185,7 +2184,7 @@ CDA_CellMLComponentGroupMixin::containmentParent()
             return ic;
           }
           wchar_t *cr = ic->componentRef();
-          componentName = cr;
+          parname = cr;
           free(cr);
         }
       }
@@ -2614,7 +2613,7 @@ CDA_Unit::multiplier()
     wchar_t* endstr;
     double val = wcstod(mupstr, &endstr);
     bool invalid = false;
-    if (*endstr == 0)
+    if (*endstr != 0)
       invalid = true;
     free(mupstr);
 
@@ -2643,7 +2642,7 @@ CDA_Unit::multiplier(double attr)
 
     wchar_t buf[24];
     swprintf(buf, 12, L"%g", attr);
-    datastore->setAttribute(L"multipler", buf);
+    datastore->setAttribute(L"multiplier", buf);
   }
   catch (iface::dom::DOMException& de)
   {
@@ -2667,7 +2666,7 @@ CDA_Unit::offset()
     wchar_t* endstr;
     double val = wcstod(offstr, &endstr);
     bool invalid = false;
-    if (*endstr == 0)
+    if (*endstr != 0)
       invalid = true;
     free(offstr);
 
@@ -2715,12 +2714,12 @@ CDA_Unit::exponent()
     if (expstr[0] == 0)
     {
       free(expstr);
-      return 0.0;
+      return 1.0;
     }
     wchar_t* endstr;
     double val = wcstod(expstr, &endstr);
     bool invalid = false;
-    if (*endstr == 0)
+    if (*endstr != 0)
       invalid = true;
     free(expstr);
 
@@ -2841,14 +2840,7 @@ iface::cellml_api::ConnectionSet*
 CDA_CellMLImport::importedConnections()
   throw(std::exception&)
 {
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
-  return new CDA_ConnectionSet(allChildren);
+  return new CDA_ImportConnectionSet(this);
 }
 
 void
@@ -6263,4 +6255,199 @@ CDA_ComponentConnectionIterator::next()
     }
 
   }
+}
+
+/**
+ * Determines if a R(aImport, aComponent) holds.
+ * R(import, component) holds iff
+ *   R(import, component->encapsulationParent) holds, or
+ *   import references component(directly or via a chain of imports) as an
+ *   import component.
+ */
+static bool
+IsComponentRelatedToImport
+(
+ iface::cellml_api::CellMLImport* aImport,
+ iface::cellml_api::CellMLComponent* aComponent
+)
+{
+  ObjRef<iface::cellml_api::CellMLComponent> component = aComponent;
+
+  while (component)
+  {
+    ObjRef<iface::cellml_api::CellMLComponent> ctmp = component;
+    while (ctmp)
+    {
+      CDA_NamedCellMLElement* nce =
+        dynamic_cast<CDA_NamedCellMLElement*>(ctmp.getPointer());
+      if (nce == NULL)
+        throw iface::cellml_api::CellMLException();
+      RETURN_INTO_WSTRING(name, nce->name());
+
+      CDA_Model* m = dynamic_cast<CDA_Model*>(nce->mParent);
+      if (m == NULL)
+      {
+        CDA_CellMLImport* ci = dynamic_cast<CDA_CellMLImport*>(nce->mParent);
+        if (ci == NULL)
+          throw iface::cellml_api::CellMLException();
+
+        m = dynamic_cast<CDA_Model*>(ci->mParent);
+        if (m == NULL)
+          throw iface::cellml_api::CellMLException();
+      }
+
+      CDA_CellMLImport* ci = dynamic_cast<CDA_CellMLImport*>(m->mParent);
+      if (ci == NULL)
+        break;
+
+      // Look for this component in this import...
+      RETURN_INTO_OBJREF(ics, iface::cellml_api::ImportComponentSet,
+                         ci->components());
+      RETURN_INTO_OBJREF(ici, iface::cellml_api::ImportComponentIterator,
+                         ics->iterateImportComponents());
+      bool notFound = false;
+      while (true)
+      {
+        RETURN_INTO_OBJREF(ic, iface::cellml_api::ImportComponent,
+                           ici->nextImportComponent());
+        if (ic == NULL)
+        {
+          notFound = true;
+          break;
+        }
+        RETURN_INTO_WSTRING(cr, ic->componentRef());
+        if (cr == name)
+        {
+          ctmp = ic;
+          break;
+        }
+      }
+
+      if (notFound)
+        break;
+
+      if (ci->compare(aImport) == 0)
+        return true;
+    }
+    component = already_AddRefd<iface::cellml_api::CellMLComponent>
+      (component->encapsulationParent());
+  }
+  return false;
+}
+
+CDA_ImportConnectionIterator::~CDA_ImportConnectionIterator()
+{
+  while (!importStack.empty())
+  {
+    delete importStack.front();
+    importStack.pop_front();
+  }
+}
+
+void
+CDA_ImportConnectionIterator::pushStackFrame
+(
+ iface::cellml_api::CellMLImport* aImport
+)
+  throw(std::exception&)
+{
+  CDA_CellMLImport* ic = dynamic_cast<CDA_CellMLImport*>(aImport);
+  if (ic == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  iface::cellml_api::Model* m = ic->mImportedModel;
+  if (m == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet, m->imports());
+  RETURN_INTO_OBJREF(importIterator, iface::cellml_api::CellMLImportIterator,
+                     cis->iterateImports());
+  RETURN_INTO_OBJREF(conns, iface::cellml_api::ConnectionSet,
+                     m->connections());
+  RETURN_INTO_OBJREF(connectionIterator, iface::cellml_api::ConnectionIterator,
+                     conns->iterateConnections());
+
+  ImportStackFrame* isf = new ImportStackFrame();
+  isf->mState = ImportStackFrame::DEEP_CONNECTIONS;
+  isf->mImportIterator = importIterator;
+  isf->mConnectionIterator = connectionIterator;
+  importStack.push_front(isf);
+}
+
+iface::cellml_api::CellMLElement*
+CDA_ImportConnectionIterator::next()
+  throw(std::exception&)
+{
+  while (!importStack.empty())
+  {
+    ImportStackFrame* isf = importStack.front();
+
+    while (isf->mState == ImportStackFrame::DEEP_CONNECTIONS)
+    {
+      RETURN_INTO_OBJREF(import, iface::cellml_api::CellMLImport,
+                         isf->mImportIterator->nextImport());
+      if (import == NULL)
+      {
+        isf->mState = ImportStackFrame::SHALLOW_CONNECTIONS;
+        break;
+      }
+      // Now see if there is any point going into this import...
+      bool hasSuitableComponent = false;
+      RETURN_INTO_OBJREF(comps, iface::cellml_api::ImportComponentSet,
+                         import->components());
+      RETURN_INTO_OBJREF(compi, iface::cellml_api::ImportComponentIterator,
+                         comps->iterateImportComponents());
+      while (true)
+      {
+        RETURN_INTO_OBJREF(comp, iface::cellml_api::ImportComponent,
+                           compi->nextImportComponent());
+        if (comp == NULL)
+          break;
+        if (IsComponentRelatedToImport(mImport, comp))
+        {
+          hasSuitableComponent = true;
+          break;
+        }
+      }
+      if (!hasSuitableComponent)
+        continue;
+
+      // We now have a suitable import, so it is the next stack frame...
+      pushStackFrame(import);
+      isf = importStack.front();
+      continue;
+    }
+
+    // We can't go deeper, so deal with this stack frame...
+    while (true)
+    {
+      RETURN_INTO_OBJREF(conn, iface::cellml_api::Connection,
+                         isf->mConnectionIterator->nextConnection());
+      if (conn == NULL)
+        break;
+
+      RETURN_INTO_OBJREF(cm, iface::cellml_api::MapComponents,
+                         conn->componentMapping());
+
+      // See if this connection is a candidate to be returned...
+      RETURN_INTO_OBJREF(c1, iface::cellml_api::CellMLComponent,
+                         cm->firstComponent());
+      if (!IsComponentRelatedToImport(mImport, c1))
+        continue;
+      RETURN_INTO_OBJREF(c2, iface::cellml_api::CellMLComponent,
+                         cm->secondComponent());
+      if (!IsComponentRelatedToImport(mImport, c2))
+        continue;
+
+      // We have a hit, so return it...
+      conn->add_ref();
+      return conn;
+    }
+
+    // Nothing further in this stack frame. Remove it...
+    delete isf;
+    importStack.pop_front();
+  }
+  // If we get here, there is nothing left to return...
+  return NULL;
 }
