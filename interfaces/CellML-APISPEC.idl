@@ -24,6 +24,7 @@ module cellml_api
   interface Connection;
   interface MapVariables;
   interface Reaction;
+  interface ReactionSet;
   interface VariableRef;
   interface Role;
   interface ExtensionElementList;
@@ -583,6 +584,11 @@ module cellml_api
      * across imports if imports have been instantiated.
      */
     readonly attribute CellMLComponentSet containmentChildren;
+
+    /**
+     * A set of all reaction elements contained within this component.
+     */
+    readonly attribute ReactionSet reactions;
 
     /**
      * Gets the 'import number' in which this component is contained.
@@ -1612,6 +1618,30 @@ module cellml_api
     MapVariablesIterator iterateMapVariables();
   };
 
+  interface ReactionIterator
+    : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Reaction nextReaction();
+  };
+
+  /**
+   * An interface for accessing a set of Reactions
+   */
+  interface ReactionSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    ReactionIterator iterateReactions();
+  };
+
   interface VariableRefIterator : CellMLElementIterator
   {
     /**
@@ -1657,7 +1687,6 @@ module cellml_api
      */
     RoleIterator iterateRoles();
   };
-
 
   /**
    * An interface allowing notifications that model loading has completed to
