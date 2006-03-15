@@ -424,6 +424,14 @@ public:
 
   wchar_t* unitsRef() throw(std::exception&);
   void unitsRef(const wchar_t* attr) throw(std::exception&);
+  bool isBaseUnits() throw(std::exception&);
+  void isBaseUnits(bool attr) throw(std::exception&);
+  iface::cellml_api::UnitSet* unitCollection() throw(std::exception&);
+
+private:
+  // This is an internal API only, and *does not* increment the refcount on
+  // the return value.
+  CDA_Units* fetchDefinition() throw(std::exception&);
 };
 
 typedef enum _enum_VariableInterface

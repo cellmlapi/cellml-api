@@ -3193,6 +3193,46 @@ CDA_ImportComponent::componentRef(const wchar_t* attr)
   }
 }
 
+CDA_Units*
+CDA_ImportUnits::fetchDefinition()
+  throw(std::exception&)
+{
+  // Fetch the name in the parent...
+  CDA_CellMLImport* cmi = dynamic_cast<CDA_CellMLImport*>(mParent);
+  if (cmi == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  // We need imports to be instantiated for this to work, too...
+  if (cmi->mImportedModel == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  // Fetch the components...
+  RETURN_INTO_WSTRING(unitsName, unitsRef());
+
+  // Now search for it in the imported model...
+  CDA_Model* m = dynamic_cast<CDA_Model*>(cmi->mImportedModel);
+
+  RETURN_INTO_OBJREF(mu, iface::cellml_api::UnitsSet,
+                     m->modelUnits());
+  RETURN_INTO_OBJREF(u, iface::cellml_api::Units,
+                     mu->getUnits(unitsName.c_str()));
+  if (u == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  CDA_ImportUnits* iu =
+    dynamic_cast<CDA_ImportUnits*>(u.getPointer());
+  if (iu != NULL)
+  {
+    // Just recurse to finish the work...
+    return iu->fetchDefinition();
+  }
+
+  // We are documented as not calling add_ref. This design might need to be
+  // changed for threadsafety later.
+  return dynamic_cast<CDA_Units*>(u.getPointer());
+}
+
+
 wchar_t*
 CDA_ImportUnits::unitsRef()
   throw(std::exception&)
@@ -3220,6 +3260,27 @@ CDA_ImportUnits::unitsRef(const wchar_t* attr)
   {
     throw iface::cellml_api::CellMLException();
   }
+}
+
+bool
+CDA_ImportUnits::isBaseUnits()
+  throw(std::exception&)
+{
+  return fetchDefinition()->isBaseUnits();
+}
+
+void
+CDA_ImportUnits::isBaseUnits(bool attr)
+  throw(std::exception&)
+{
+  fetchDefinition()->isBaseUnits(attr);
+}
+
+iface::cellml_api::UnitSet*
+CDA_ImportUnits::unitCollection()
+  throw(std::exception&)
+{
+  return fetchDefinition()->unitCollection();
 }
 
 wchar_t*
@@ -3383,6 +3444,14 @@ iface::cellml_api::CellMLVariable*
 CDA_CellMLVariable::sourceVariable()
   throw(std::exception&)
 {
+  // Test for the easy special case where this is the source variable...
+  if (publicInterface() != iface::cellml_api::INTERFACE_IN &&
+      privateInterface() != iface::cellml_api::INTERFACE_IN)
+  {
+    add_ref();
+    return this;
+  }
+
   // Find all connected variables...
   RETURN_INTO_OBJREF(cvs, iface::cellml_api::CellMLVariableSet,
                      connectedVariables());
@@ -3579,7 +3648,7 @@ CDA_RelationshipRef::relationshipNamespace()
   {
     // We are looking for relationships in any namespace, so we need to
     // go through all nodes...
-    RETURN_INTO_OBJREF(cn, iface::dom::NodeList, datastore->childNodes());
+    RETURN_INTO_OBJREF(cn, iface::dom::NamedNodeMap, datastore->attributes());
     u_int32_t l = cn->length();
     u_int32_t i;
     for (i = 0; i < l; i++)
@@ -3593,6 +3662,12 @@ CDA_RelationshipRef::relationshipNamespace()
 
       // We have now found the attribute.
       RETURN_INTO_WSTRING(ln, at->localName());
+      if (ln == L"")
+      {
+        wchar_t* str = at->nodeName();
+        ln = str;
+        free(str);
+      }
       if (ln != L"relationship")
         continue;
 
@@ -3615,7 +3690,7 @@ CDA_RelationshipRef::setRelationshipName(const wchar_t* namespaceURI,
   {
     // We are looking for relationships in any namespace, so we need to
     // go through all nodes...
-    RETURN_INTO_OBJREF(cn, iface::dom::NodeList, datastore->childNodes());
+    RETURN_INTO_OBJREF(cn, iface::dom::NamedNodeMap, datastore->attributes());
     u_int32_t l = cn->length();
     u_int32_t i;
     for (i = 0; i < l;)
@@ -3632,6 +3707,12 @@ CDA_RelationshipRef::setRelationshipName(const wchar_t* namespaceURI,
 
       // We have now found the attribute.
       RETURN_INTO_WSTRING(ln, at->localName());
+      if (ln == L"")
+      {
+        wchar_t* str = at->nodeName();
+        ln = str;
+        free(str);
+      }
       if (ln != L"relationship")
       {
         i++;
@@ -3639,10 +3720,10 @@ CDA_RelationshipRef::setRelationshipName(const wchar_t* namespaceURI,
       }
 
       // Remove the attribute...
-      datastore->removeChild(at);
+      datastore->removeAttributeNode(at)->release_ref();
     }
 
-    datastore->setAttributeNS(NULL_NS, L"relationship", name);
+    datastore->setAttributeNS(namespaceURI, L"relationship", name);
     return;
   }
   catch (iface::dom::DOMException& de)
@@ -5366,6 +5447,11 @@ CDA_ConnectedCellMLVariableIterator::next()
     // Now fetch the MapVariables
     RETURN_INTO_OBJREF(mv, iface::cellml_api::MapVariables,
                        topFrame->mapVariableIterator->nextMapVariable());
+    if (mv == NULL)
+    {
+      topFrame->mapVariableIterator = NULL;
+      continue;
+    }
 
     // See if variable_1 is the variable of interest...
     ObjRef<iface::cellml_api::CellMLVariable> vother;
