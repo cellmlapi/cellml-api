@@ -2374,6 +2374,20 @@ CDA_CellMLComponentGroupMixin::containmentChildren()
   return new CDA_CellMLComponentEmptySet();
 }
 
+iface::cellml_api::ReactionSet*
+CDA_CellMLComponent::reactions()
+  throw(std::exception&)
+{
+  ObjRef<CDA_CellMLElementSet> allChildren
+    (
+     already_AddRefd<CDA_CellMLElementSet>
+     (
+      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
+     )
+    );
+  return new CDA_ReactionSet(allChildren);
+}
+
 u_int32_t
 CDA_CellMLComponent::importNumber()
   throw(std::exception&)
@@ -3143,6 +3157,13 @@ CDA_ImportComponent::connections()
   throw(std::exception&)
 {
   return fetchDefinition()->connections();
+}
+
+iface::cellml_api::ReactionSet*
+CDA_ImportComponent::reactions()
+  throw(std::exception&)
+{
+  return fetchDefinition()->reactions();
 }
 
 u_int32_t
@@ -6007,6 +6028,14 @@ SIMPLE_SET_ITERATORFETCH
  iterateConnections
 );
 
+SIMPLE_SET_ITERATORFETCH
+(
+ CDA_ReactionSet,
+ CDA_ReactionIterator,
+ iface::cellml_api::ReactionIterator,
+ iterateReactions
+);
+
 iface::cellml_api::CellMLElementIterator*
 CDA_GroupSet::iterate()
   throw(std::exception&)
@@ -6109,6 +6138,7 @@ SIMPLE_ITERATOR_NEXT(CDA_UnitIterator, Unit,
                      nextUnit);
 SIMPLE_ITERATOR_NEXT(CDA_ConnectionIterator, Connection,
                      nextConnection);
+SIMPLE_ITERATOR_NEXT(CDA_ReactionIterator, Reaction, nextReaction);
 
 static bool
 DoesGroupHaveRelationshipRef(iface::dom::Element* el, const std::wstring& rrname)

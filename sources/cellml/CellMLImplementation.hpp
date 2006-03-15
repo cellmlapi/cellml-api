@@ -288,6 +288,7 @@ public:
   iface::cellml_api::CellMLVariableSet* variables() throw(std::exception&);
   iface::cellml_api::UnitsSet* units() throw(std::exception&);
   iface::cellml_api::ConnectionSet* connections() throw(std::exception&);
+  iface::cellml_api::ReactionSet* reactions() throw(std::exception&);
   u_int32_t importNumber() throw(std::exception&);
 };
 
@@ -401,6 +402,7 @@ public:
   u_int32_t importNumber() throw(std::exception&);
   wchar_t* componentRef() throw(std::exception&);
   void componentRef(const wchar_t* attr) throw(std::exception&);
+  iface::cellml_api::ReactionSet* reactions() throw(std::exception&);
 
 private:
   // This is an internal API only, and *does not* increment the refcount on
@@ -1635,13 +1637,45 @@ public:
   iface::cellml_api::MapVariablesIterator* iterateMapVariables() throw(std::exception&);
 };
 
+class CDA_ReactionIterator
+  : public virtual iface::cellml_api::ReactionIterator,
+    public CDA_CellMLElementIteratorOuter
+{
+public:
+  CDA_ReactionIterator(CDA_CellMLElementIterator* aInner)
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
+  virtual ~CDA_ReactionIterator() {}
+  CDA_IMPL_REFCOUNT
+  CDA_IMPL_QI2(cellml_api::ReactionIterator,
+               cellml_api::CellMLElementIterator)
+
+  iface::cellml_api::CellMLElement* next() throw(std::exception&);
+  iface::cellml_api::Reaction* nextReaction() throw(std::exception&);
+};
+
+class CDA_ReactionSet
+  : public virtual iface::cellml_api::ReactionSet,
+    public CDA_CellMLElementSetOuter
+{
+public:
+  CDA_ReactionSet(CDA_CellMLElementSet* aInner)
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
+  virtual ~CDA_ReactionSet() {}
+  CDA_IMPL_REFCOUNT
+  CDA_IMPL_QI2(cellml_api::ReactionSet, cellml_api::CellMLElementSet);
+
+  iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
+  iface::cellml_api::ReactionIterator* iterateReactions()
+    throw(std::exception&);
+};
+
 class CDA_VariableRefIterator
   : public virtual iface::cellml_api::VariableRefIterator,
     public CDA_CellMLElementIteratorOuter
 {
 public:
   CDA_VariableRefIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_VariableRefIterator() {}
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(cellml_api::VariableRefIterator,
@@ -1657,7 +1691,7 @@ class CDA_VariableRefSet
 {
 public:
   CDA_VariableRefSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_VariableRefSet() {}
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(cellml_api::VariableRefSet, cellml_api::CellMLElementSet);
@@ -1673,7 +1707,7 @@ class CDA_RoleIterator
 {
 public:
   CDA_RoleIterator(CDA_CellMLElementIterator* aInner)
-    : CDA_CellMLElementIteratorOuter(aInner) {}
+    : CDA_CellMLElementIteratorOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_RoleIterator() {}
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(cellml_api::RoleIterator,
@@ -1689,7 +1723,7 @@ class CDA_RoleSet
 {
 public:
   CDA_RoleSet(CDA_CellMLElementSet* aInner)
-    : CDA_CellMLElementSetOuter(aInner) {}
+    : CDA_CellMLElementSetOuter(aInner), _cda_refcount(1) {}
   virtual ~CDA_RoleSet() {}
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(cellml_api::RoleSet, cellml_api::CellMLElementSet);
