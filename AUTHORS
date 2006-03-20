@@ -1,0 +1,10 @@
+Authors of the CellML DOM API:
+Andrew Miller<ak.miller@auckland.ac.nz>, for the Bioengineering Institute at
+the University of Auckland.
+
+The interfaces were initially coded in IDL, based loosely on earlier interfaces
+provided by Matt Halstead<matt.halstead@auckland.ac.nz>. These interfaces have
+since been refined by Andrew Miller, with advice from other members of the
+CellML team.
+
+The implementation code was originally written by Andrew Miller.

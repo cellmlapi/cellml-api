@@ -1,0 +1,8 @@
+CellML DOM API README
+---------------------
+
+This is the CellML DOM API, an implementation of the CellML API built on top
+of the W3C Document Object Model.
+
+This software requires a patched libxml2 and a patched gdome2 in order to work.
+Please follow the instructions in INSTALL carefully to install this software.
