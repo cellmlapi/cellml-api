@@ -72,8 +72,8 @@ void
 CDA_RDFXMLStringRepresentation::serialisedData(const wchar_t* attr)
   throw(std::exception&)
 {
-  // We need to parse attr, and update the element accordingly.
-  return;
+  // This is not implemented in this API implementation.
+  throw iface::cellml_api::CellMLException();
 }
 
 CDA_URI::CDA_URI(iface::dom::Attr* idata)
@@ -772,11 +772,35 @@ CDA_Model::RecursivelyChangeVersionCopy
 )
   throw(std::exception&)
 {
-  ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>(aOriginal->childNodes()));
+  //ObjRef<iface::dom::NamedNodeMap> nnm(already_AddRefd<iface::dom::NamedNodeMap>
+  //                                     (aOriginal->attributes()));
+  //u_int32_t i, l;
+  //if (nnm)
+  //{
+  //  DECLARE_QUERY_INTERFACE_OBJREF(aCopyEl, aCopy, dom::Element);
+
+    //l = nnm->length();
+    //for (i = 0; i < l; i++)
+    //{
+    //  RETURN_INTO_OBJREF(origItemN, iface::dom::Node, nnm->item(i));
+    //  DECLARE_QUERY_INTERFACE_OBJREF(origItem, origItemN, dom::Attr);
+    //  RETURN_INTO_WSTRING(ln, origItem->nodeName());
+    //  RETURN_INTO_WSTRING(nsuri, origItem->namespaceURI());
+    //  RETURN_INTO_WSTRING(v, origItem->nodeValue());
+    //  if (nsuri == CELLML_1_0_NS || nsuri == CELLML_1_1_NS)
+    //    nsuri = aNewNamespace;
+      
+      // aCopyEl->setAttributeNS(ln.c_str(), nsuri.c_str(), v.c_str());
+    //}
+  //}  
+
+  ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
+                                  (aOriginal->childNodes()));
   u_int32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
-    ObjRef<iface::dom::Node> origItem(already_AddRefd<iface::dom::Node>(nl->item(i)));
+    ObjRef<iface::dom::Node> origItem(already_AddRefd<iface::dom::Node>
+                                      (nl->item(i)));
     ObjRef<iface::dom::Node> newItem;
     // See if we need to change the namespace...
     wchar_t* nsURI = origItem->namespaceURI();
@@ -815,21 +839,6 @@ CDA_Model::RecursivelyChangeVersionCopy
           free(ln);
           break;
         }
-      case iface::dom::Node::ATTRIBUTE_NODE:
-        {
-          wchar_t* ln = origItem->localName();
-          iface::dom::Attr* newAttr = 
-            already_AddRefd<iface::dom::Attr>
-            (
-             aNewDoc->createAttributeNS
-             (NULL_NS, ln)
-            );
-          free(ln);
-          DECLARE_QUERY_INTERFACE_OBJREF(aCopyEl, aCopy, dom::Element);
-          if (aCopyEl != NULL)
-            aCopyEl->setAttributeNodeNS(newAttr);
-          continue;
-        }
       case iface::dom::Node::TEXT_NODE:
       case iface::dom::Node::CDATA_SECTION_NODE:
       case iface::dom::Node::ENTITY_REFERENCE_NODE:
@@ -837,8 +846,11 @@ CDA_Model::RecursivelyChangeVersionCopy
       case iface::dom::Node::PROCESSING_INSTRUCTION_NODE:
       case iface::dom::Node::COMMENT_NODE:
       case iface::dom::Node::NOTATION_NODE:
-          newItem = already_AddRefd<iface::dom::Node>(origItem->cloneNode(false));
-          break;
+        newItem = already_AddRefd<iface::dom::Node>(origItem->cloneNode(false));
+        break;
+
+      case iface::dom::Node::ATTRIBUTE_NODE:
+        continue;
 
       default:
         throw iface::cellml_api::CellMLException();
@@ -895,7 +907,9 @@ CDA_Model::base_uri()
          mDoc->createAttributeNS(L"http://www.w3.org/XML/1998/namespace",
                                  L"xml:base")
         );
-      datastore->setAttributeNodeNS(attr);
+      iface::dom::Attr* at = datastore->setAttributeNodeNS(attr);
+      if (at != NULL)
+        at->release_ref();
     }
     return new CDA_URI(attr);
   }
@@ -4561,6 +4575,8 @@ CDA_Reaction::getVariableRef(const wchar_t* varName, bool create)
     RETURN_INTO_WSTRING(vn, vr->variableName());
     if (vn == varName)
     {
+      vr->add_ref();
+      return vr;
     }
   }
 }
@@ -4608,8 +4624,12 @@ CDA_VariableRef::variable()
   RETURN_INTO_WSTRING(vn, datastore->getAttributeNS(NULL_NS, L"variable"));
 
   // Find the component...
+  CDA_Reaction* r =
+    dynamic_cast<CDA_Reaction*>(mParent);
+  if (r == NULL)
+    throw iface::cellml_api::CellMLException();
   iface::cellml_api::CellMLComponent* c =
-    dynamic_cast<iface::cellml_api::CellMLComponent*>(mParent);
+    dynamic_cast<iface::cellml_api::CellMLComponent*>(r->mParent);
   if (c == NULL)
     throw iface::cellml_api::CellMLException();
 
@@ -4943,6 +4963,7 @@ CDA_DOMElementIteratorBase::~CDA_DOMElementIteratorBase()
   }
   if (mPrevElement != NULL)
   {
+    mPrevElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
     mPrevElement->release_ref();
   }
 }
@@ -4959,11 +4980,13 @@ CDA_DOMElementIteratorBase::fetchNextElement()
       u_int32_t l = mNodeList->length();
       for (i = 0; i < l; i++)
       {
-        ObjRef<iface::dom::Node> nodeHit
-          (already_AddRefd<iface::dom::Node>(mNodeList->item(i)));
+        RETURN_INTO_OBJREF(nodeHit, iface::dom::Node, mNodeList->item(i));
         QUERY_INTERFACE(mPrevElement, nodeHit, dom::Element);
         if (mPrevElement != NULL)
+        {
+          mPrevElement->addEventListener(L"DOMNodeRemoved", &icml, false);
           break;
+        }
       }
       if (mPrevElement == NULL)
       {
@@ -4978,9 +5001,9 @@ CDA_DOMElementIteratorBase::fetchNextElement()
       {
         return NULL;
       }
+      mPrevElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
       mPrevElement->release_ref();
       mPrevElement = mNextElement;
-      mNextElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
       mNextElement = NULL;
     }
 
@@ -5030,18 +5053,74 @@ handleEvent(iface::events::Event* evt)
       if (evt->eventPhase() != iface::events::Event::AT_TARGET)
         return;
 
-      // The next node is about to be removed. Advance to a later next...
-      RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
-                         mIterator->mPrevElement->nextSibling());
-      while (nodeHit != NULL)
+      RETURN_INTO_OBJREF(target, iface::dom::Node, evt->target());
+      int cmp1 = target->compare(mIterator->mPrevElement);
+      int cmp2 = target->compare(mIterator->mNextElement);
+      if (cmp1 && cmp2)
       {
-        QUERY_INTERFACE(mIterator->mNextElement, nodeHit, dom::Element);
-        if (mIterator->mNextElement != NULL)
+        printf("Warning: Unexpected event sent to handler.\n");
+        return;
+      }
+
+      if (cmp1 == 0)
+      {
+        // The previous node is about to be removed. Advance to an earlier
+        // previous...
+        mIterator->mPrevElement->removeEventListener(L"DOMNodeRemoved", this,
+                                                     false);
+        RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
+                           mIterator->mPrevElement->previousSibling());
+        mIterator->mPrevElement->release_ref();
+        mIterator->mPrevElement = NULL;
+        while (true)
         {
-          mIterator->mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
-          break;
+          if (nodeHit == NULL)
+          {
+            // If we just deleted the first element, reset to the initial
+            // iterator state...
+            if (mIterator->mNextElement != NULL)
+            {
+              mIterator->mNextElement->release_ref();
+              mIterator->mNextElement->
+                removeEventListener(L"DOMNodeRemoved", this, false);
+            }
+            mIterator->mNextElement = NULL;
+            return;
+          }
+          QUERY_INTERFACE(mIterator->mPrevElement, nodeHit, dom::Element);
+          if (mIterator->mPrevElement != NULL)
+          {
+            mIterator->mPrevElement->addEventListener(L"DOMNodeRemoved", this, false);
+            break;
+          }
+          nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->previousSibling());
         }
-        nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
+      }
+      else
+      {
+        mIterator->mNextElement->removeEventListener(L"DOMNodeRemoved", this,
+                                                     false);
+        // The next node is about to be removed. Advance to a later next...
+        RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
+                           mIterator->mNextElement->nextSibling());
+        mIterator->mNextElement->release_ref();
+        mIterator->mNextElement = NULL;
+
+        while (true)
+        {
+          if (nodeHit == NULL)
+          {
+            // If we just deleted the last element, we are done.
+            return;
+          }
+          QUERY_INTERFACE(mIterator->mNextElement, nodeHit, dom::Element);
+          if (mIterator->mNextElement != NULL)
+          {
+            mIterator->mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
+            break;
+          }
+          nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
+        }
       }
     }
     else if (isInsertion)
@@ -5053,37 +5132,69 @@ handleEvent(iface::events::Event* evt)
       if (!isEqualAfterLeftQI(rn, mIterator->mParentElement, "dom::Element"))
         return;
       
-      ObjRef<iface::dom::Node> tn =
-        already_AddRefd<iface::dom::Node>(mevt->target());
+      RETURN_INTO_OBJREF(tn, iface::dom::Node, mevt->target());
       DECLARE_QUERY_INTERFACE_OBJREF(te, tn, dom::Element);
       
       if (te == NULL)
         return;
 
-      // See if target lies between mPrevElement and mNextElement...
-      RETURN_INTO_OBJREF(curN, iface::dom::Node,
-                         mIterator->mPrevElement->nextSibling());
-      DECLARE_QUERY_INTERFACE_OBJREF(curE, curN, dom::Element);
-      while (
-             (curN && !curE) || /* Skip nodes that aren't elements... */
-             (curE && ( /* If curN and curE are both NULL, we are done. */
-                       /* If we reached the end before the target, it is out of
-                        * range. */
-                       curE->compare(mIterator->mNextElement) && 
-                       /* If we reached the target first,
-                        * it is in range.*/
-                       curE->compare(te)
-                      )
-             )
-            )
+      if (mIterator->mPrevElement == NULL)
       {
-        curN = already_AddRefd<iface::dom::Node>(curN->nextSibling());
-        QUERY_INTERFACE(curE, curN, dom::Element);
+        // The iterator is sitting at the beginning. In this case, we don't
+        // need to do anything now, as the first element will be found later.
+        return;
       }
 
-      // If the target is not in the relevant range, just return...
-      if (curE == mIterator->mNextElement)
-        return;
+      ObjRef<iface::dom::Element> curE;
+      if (mIterator->mNextElement)
+      {
+        // See if target lies between mPrevElement and mNextElement...
+        RETURN_INTO_OBJREF(curN, iface::dom::Node,
+                           mIterator->mPrevElement->nextSibling());
+        QUERY_INTERFACE(curE, curN, dom::Element);
+        while (
+               (curN && !curE) || /* Skip nodes that aren't elements... */
+               (curE && ( /* If curN and curE are both NULL, we are done. */
+                         /* If we reached the end before the target, it is out of
+                          * range. */
+                         curE->compare(mIterator->mNextElement) && 
+                         /* If we reached the target first,
+                          * it is in range.*/
+                         curE->compare(te)
+                        )
+               )
+              )
+        {
+          curN = already_AddRefd<iface::dom::Node>(curN->nextSibling());
+          QUERY_INTERFACE(curE, curN, dom::Element);
+        }
+
+        // If the target is not in the relevant range, just return...
+        if (curE == mIterator->mNextElement)
+          return;
+
+        if (curE == NULL)
+          printf("Something is wrong: we got from the previous node to the "
+                 "last node without passing the next node, but the next node "
+                 "is non-null!\n");
+      }
+      else
+      {
+        // The iterator was finished, but we might now have one more element...
+        RETURN_INTO_OBJREF(curN, iface::dom::Node,
+                           mIterator->mPrevElement->nextSibling());
+        QUERY_INTERFACE(curE, curN, dom::Element);
+        while (
+               (curN && !curE) /* Skip nodes that aren't elements... */
+              )
+        {
+          curN = already_AddRefd<iface::dom::Node>(curN->nextSibling());
+          QUERY_INTERFACE(curE, curN, dom::Element);
+        }
+        
+        if (curE == NULL)
+          return;
+      }
 
       // The current next element is no longer next...
       if (mIterator->mNextElement)
@@ -5624,12 +5735,14 @@ WrapCellMLElement(iface::XPCOM::IObject* newParent,
   {
     return new CDA_Reaction(newParent, el);
   }
-  // This part of the API is broken because the interfaces are bad. Need to
-  // redesign them.
-  //else if (ln == L"variable_ref")
-  //{
-  //  return new CDA_VariableRef(newParent, el);
-  //}
+  else if (ln == L"variable_ref")
+  {
+    return new CDA_VariableRef(newParent, el);
+  }
+  else if (ln == L"role")
+  {
+    return new CDA_Role(newParent, el);
+  }
   // Role goes here once we fix everything up.
   else
   {
