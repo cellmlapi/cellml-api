@@ -483,7 +483,9 @@ static void cda_process_event(GdomeEventListener *self,
 {
   iface::events::EventListener* l =
     reinterpret_cast<iface::events::EventListener*>(gdome_evntl_get_priv(self));
-  l->handleEvent(CDA_WrapEvent(event));
+  gdome_evnt_ref(event, exc);
+  RETURN_INTO_OBJREF(e, iface::events::Event, CDA_WrapEvent(event));
+  l->handleEvent(e);
 }
 
 void
@@ -999,7 +1001,10 @@ iface::dom::Attr*
   EXCEPTION_CATCH;
 
   if (ret == NULL)
+  {
+    gdome_a_ref(lnewAttr->impl, &exc);
     return NULL;
+  }
   return CDA_Attr::wrap(ret);
 }
 
@@ -1109,7 +1114,10 @@ iface::dom::Attr* CDA_Element::setAttributeNodeNS(iface::dom::Attr* newAttr)
   EXCEPTION_CATCH;
 
   if (ret == NULL)
+  {
     return NULL;
+  }
+
   return CDA_Attr::wrap(ret);
 }
 
