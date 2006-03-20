@@ -1,0 +1,191 @@
+diff -udr libxml2-2.6.23-pristine/include/libxml/tree.h libxml2-2.6.23/include/libxml/tree.h
+--- libxml2-2.6.23-pristine/include/libxml/tree.h	2005-08-22 21:14:24.000000000 +1200
++++ libxml2-2.6.23/include/libxml/tree.h	2006-02-22 10:55:43.363837631 +1300
+@@ -871,6 +871,12 @@
+ 		xmlSearchNsByHref	(xmlDocPtr doc,
+ 					 xmlNodePtr node,
+ 					 const xmlChar *href);
++XMLPUBFUN xmlNsPtr XMLCALL	
++		xmlSearchNsByHrefAndPrefix	(xmlDocPtr doc,
++						 xmlNodePtr node,
++						 const xmlChar *prefix,
++						 const xmlChar *href);
++
+ #if defined(LIBXML_TREE_ENABLED) || defined(LIBXML_XPATH_ENABLED)
+ XMLPUBFUN xmlNsPtr * XMLCALL	
+ 		xmlGetNsList		(xmlDocPtr doc,
+diff -udr libxml2-2.6.23-pristine/include/libxml/xmlversion.h libxml2-2.6.23/include/libxml/xmlversion.h
+--- libxml2-2.6.23-pristine/include/libxml/xmlversion.h	2006-01-06 04:39:31.000000000 +1300
++++ libxml2-2.6.23/include/libxml/xmlversion.h	2006-02-20 13:29:20.272765076 +1300
+@@ -50,7 +50,7 @@
+  *
+  * extra version information, used to show a CVS compilation
+  */
+-#define LIBXML_VERSION_EXTRA "-CVS2717"
++#define LIBXML_VERSION_EXTRA ""
+ 
+ /**
+  * LIBXML_TEST_VERSION:
+@@ -290,7 +290,7 @@
+  *
+  * Whether the memory debugging is configured in
+  */
+-#if 1
++#if 0
+ #define DEBUG_MEMORY_LOCATION
+ #endif
+ 
+@@ -299,7 +299,7 @@
+  *
+  * Whether the runtime debugging is configured in
+  */
+-#if 1
++#if 0
+ #define LIBXML_DEBUG_RUNTIME
+ #endif
+ 
+diff -udr libxml2-2.6.23-pristine/tree.c libxml2-2.6.23/tree.c
+--- libxml2-2.6.23-pristine/tree.c	2005-12-23 03:57:41.000000000 +1300
++++ libxml2-2.6.23/tree.c	2006-02-22 10:58:39.479674117 +1300
+@@ -3872,20 +3872,33 @@
+     if (node->ns != NULL) {
+         xmlNsPtr ns;
+ 
+-	ns = xmlSearchNs(doc, ret, node->ns->prefix);
++	if (node->ns->prefix == NULL)
++	    ns = NULL;
++	else
++	{
++	    ns = xmlSearchNsByHrefAndPrefix(doc, ret, node->ns->prefix,
++                                            node->ns->href);
++	}
+ 	if (ns == NULL) {
+ 	    /*
+ 	     * Humm, we are copying an element whose namespace is defined
+ 	     * out of the new tree scope. Search it in the original tree
+ 	     * and add it at the top of the new tree
+ 	     */
+-	    ns = xmlSearchNs(node->doc, node, node->ns->prefix);
++	    ns = xmlSearchNsByHrefAndPrefix(node->doc, node, node->ns->prefix,
++                                            node->ns->href);
+ 	    if (ns != NULL) {
+ 	        xmlNodePtr root = ret;
+ 
+-		while (root->parent != NULL) root = root->parent;
++		while (root->parent != NULL &&
++		       root->parent->type == XML_ELEMENT_NODE)
++		    root = root->parent;
+ 		ret->ns = xmlNewNs(root, ns->href, ns->prefix);
+ 	    }
++            else
++            {
++              ret->ns = xmlNewNs(ret, node->ns->href, node->ns->prefix);
++            }
+ 	} else {
+ 	    /*
+ 	     * reference the existing namespace definition in our own tree.
+@@ -5474,6 +5487,104 @@
+  * Returns the namespace pointer or NULL.
+  */
+ xmlNsPtr
++xmlSearchNsByHrefAndPrefix(xmlDocPtr doc, xmlNodePtr node, const xmlChar *nameSpace, const xmlChar *href) {
++	
++    xmlNsPtr cur;
++    xmlNodePtr orig = node;
++
++    if (node == NULL) return(NULL);
++    if ((nameSpace != NULL) &&
++	(xmlStrEqual(nameSpace, (const xmlChar *)"xml"))) {
++	if ((doc == NULL) && (node->type == XML_ELEMENT_NODE)) {
++	    /*
++	     * The XML-1.0 namespace is normally held on the root
++	     * element. In this case exceptionally create it on the
++	     * node element.
++	     */
++	    cur = (xmlNsPtr) xmlMalloc(sizeof(xmlNs));
++	    if (cur == NULL) {
++		xmlTreeErrMemory("searching namespace");
++		return(NULL);
++	    }
++	    memset(cur, 0, sizeof(xmlNs));
++	    cur->type = XML_LOCAL_NAMESPACE;
++	    cur->href = xmlStrdup(XML_XML_NAMESPACE); 
++	    cur->prefix = xmlStrdup((const xmlChar *)"xml"); 
++	    cur->next = node->nsDef;
++	    node->nsDef = cur;
++	    return(cur);
++	}
++	if (doc->oldNs == NULL) {
++	    /*
++	     * Allocate a new Namespace and fill the fields.
++	     */
++	    doc->oldNs = (xmlNsPtr) xmlMalloc(sizeof(xmlNs));
++	    if (doc->oldNs == NULL) {
++		xmlTreeErrMemory("searching namespace");
++		return(NULL);
++	    }
++	    memset(doc->oldNs, 0, sizeof(xmlNs));
++	    doc->oldNs->type = XML_LOCAL_NAMESPACE;
++
++	    doc->oldNs->href = xmlStrdup(XML_XML_NAMESPACE); 
++	    doc->oldNs->prefix = xmlStrdup((const xmlChar *)"xml"); 
++	}
++	return(doc->oldNs);
++    }
++    while (node != NULL) {
++	if ((node->type == XML_ENTITY_REF_NODE) ||
++	    (node->type == XML_ENTITY_NODE) ||
++	    (node->type == XML_ENTITY_DECL))
++	    return(NULL);
++	if (node->type == XML_ELEMENT_NODE) {
++	    cur = node->nsDef;
++	    while (cur != NULL) {
++		if ((cur->prefix == NULL) && (nameSpace == NULL) &&
++		    (cur->href != NULL) && xmlStrEqual(cur->href, href))
++		    return(cur);
++		if ((cur->prefix != NULL) && (nameSpace != NULL) &&
++		    (cur->href != NULL) && (href != NULL) &&
++		    (xmlStrEqual(cur->prefix, nameSpace)) &&
++		    (xmlStrEqual(cur->href, href)))
++		    return(cur);
++		cur = cur->next;
++	    }
++	    if (orig != node) { 
++	        cur = node->ns;
++	        if (cur != NULL) {
++		    if ((cur->prefix == NULL) && (nameSpace == NULL) &&
++		        (cur->href != NULL) && xmlStrEqual(cur->href, href))
++		        return(cur);
++		    if ((cur->prefix != NULL) && (nameSpace != NULL) &&
++		        (cur->href != NULL) &&
++		        (xmlStrEqual(cur->prefix, nameSpace) &&
++		        (xmlStrEqual(cur->href, href))))
++		        return(cur);
++	        }
++	    }    
++	}
++	node = node->parent;
++    }
++    return(NULL);
++}
++
++/**
++ * xmlSearchNs:
++ * @doc:  the document
++ * @node:  the current node
++ * @nameSpace:  the namespace prefix
++ *
++ * Search a Ns registered under a given name space for a document.
++ * recurse on the parents until it finds the defined namespace
++ * or return NULL otherwise.
++ * @nameSpace can be NULL, this is a search for the default namespace.
++ * We don't allow to cross entities boundaries. If you don't declare
++ * the namespace within those you will be in troubles !!! A warning
++ * is generated to cover this case.
++ *
++ * Returns the namespace pointer or NULL.
++ */
++xmlNsPtr
+ xmlSearchNs(xmlDocPtr doc, xmlNodePtr node, const xmlChar *nameSpace) {
+ 	
+     xmlNsPtr cur;
