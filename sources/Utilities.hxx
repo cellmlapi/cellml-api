@@ -506,7 +506,7 @@ inline bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
 {
   iface::XPCOM::IObject* lhsQI = NULL;
   if (lhs != NULL)
-    lhs->query_interface(type);
+    lhsQI = lhs->query_interface(type);
 
   bool eq = (lhsQI == rhs);
 
