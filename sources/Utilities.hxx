@@ -1,7 +1,7 @@
 #ifndef _UTILITIES_HXX
 #define _UTILITIES_HXX
 
-#include "config.h"
+#include "../config.h"
 
 #if SIZEOF_WCHAR_TP == 4
 #define WCHAR_T_IS_32BIT
