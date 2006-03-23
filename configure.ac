@@ -11,6 +11,7 @@ PKG_PROG_PKG_CONFIG
 
 # Checks for programs.
 AC_PROG_CXX
+AC_LANG(C++)
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
@@ -32,11 +33,23 @@ AC_HEADER_STDC
 # Check for size of wchar_t...
 AC_CHECK_SIZEOF(wchar_t*)
 
+case $srcdir in
+  [\\/]* | ?:[\\/]* ) # Absolute
+     testdir=$srcdir/tests
+     ;;
+  *)
+     testdir=`pwd`/$srcdir/tests ;;
+esac
+
+AC_DEFINE_UNQUOTED(TESTDIR, "$testdir",
+                   [Define TESTDIR to path of test sources.])
+
 AC_CONFIG_FILES([
                  Makefile
                  interfaces/Makefile
                  sources/Makefile
                  sources/dom/Makefile
                  sources/mathml/Makefile
-                 sources/cellml/Makefile])
+                 sources/cellml/Makefile
+                 tests/Makefile])
 AC_OUTPUT

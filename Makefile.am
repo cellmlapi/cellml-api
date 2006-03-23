@@ -1,1 +1,1 @@
-SUBDIRS=interfaces sources
+SUBDIRS=interfaces sources tests
