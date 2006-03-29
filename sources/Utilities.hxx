@@ -15,7 +15,7 @@
 
 #define CDA_IMPL_REFCOUNT \
   private: \
-    u_int32_t _cda_refcount; \
+    uint32_t _cda_refcount; \
   public: \
     void add_ref() \
       throw() \
@@ -326,11 +326,6 @@ public:
 
 private:
   T* mPtr;
-
-  void
-  operator&() const
-  {
-  }
 };
 
 template<class T, class U> bool
