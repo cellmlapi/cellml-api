@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <exception>
 #include <string>
 #include <map>
@@ -136,7 +137,7 @@ protected:
   friend class CDA_CellMLElementSet;
   // This is used only when ownerModel is null. When ownerModel is assigned,
   // add_ref() must be called on ownerModel the correct number of times.
-  u_int32_t _cda_refcount;
+  uint32_t _cda_refcount;
 
   CDA_CellMLElementSet* children;
 
@@ -210,13 +211,13 @@ public:
   iface::cellml_api::Reaction* createReaction() throw(std::exception&);
   iface::cellml_api::VariableRef* createVariableRef() throw(std::exception&);
   iface::cellml_api::Role* createRole() throw(std::exception&);
-  u_int32_t assignUniqueIdentifier();
+  uint32_t assignUniqueIdentifier();
 
   ObjRef<iface::cellml_api::DOMURLLoader> mLoader;
 
 protected:
   iface::dom::Document* mDoc;
-  u_int32_t mNextUniqueIdentifier;
+  uint32_t mNextUniqueIdentifier;
 
   void RecursivelyChangeVersionCopy(
                                     const wchar_t* aNewNamespace,
@@ -289,7 +290,7 @@ public:
   iface::cellml_api::UnitsSet* units() throw(std::exception&);
   iface::cellml_api::ConnectionSet* connections() throw(std::exception&);
   iface::cellml_api::ReactionSet* reactions() throw(std::exception&);
-  u_int32_t importNumber() throw(std::exception&);
+  uint32_t importNumber() throw(std::exception&);
 };
 
 class CDA_UnitsBase
@@ -369,7 +370,7 @@ public:
   (iface::cellml_api::ImportInstantiationListener* listener)
     throw(std::exception&);
   bool wasInstantiated() throw(std::exception&);
-  u_int32_t uniqueIdentifier() throw(std::exception&);
+  uint32_t uniqueIdentifier() throw(std::exception&);
 
   iface::cellml_api::Model* mImportedModel;
   iface::cellml_api::Model* importedModel() throw(std::exception&);
@@ -378,7 +379,7 @@ public:
   // This number uniquely identifies the CellML import within the toplevel
   // parent model. It is computed lazily when requested and lastIdentifierModel
   // doesn't match.
-  u_int32_t mUniqueIdentifier;
+  uint32_t mUniqueIdentifier;
 };
 
 class CDA_ImportComponent
@@ -399,7 +400,7 @@ public:
   iface::cellml_api::CellMLVariableSet* variables() throw(std::exception&);
   iface::cellml_api::UnitsSet* units() throw(std::exception&);
   iface::cellml_api::ConnectionSet* connections() throw(std::exception&);
-  u_int32_t importNumber() throw(std::exception&);
+  uint32_t importNumber() throw(std::exception&);
   wchar_t* componentRef() throw(std::exception&);
   void componentRef(const wchar_t* attr) throw(std::exception&);
   iface::cellml_api::ReactionSet* reactions() throw(std::exception&);
@@ -770,10 +771,10 @@ public:
   CDA_IMPL_QI1(cellml_api::ExtensionElementList);
   CDA_IMPL_COMPARE_NAIVE(CDA_ExtensionElementList);
 
-  u_int32_t length() throw(std::exception&);
+  uint32_t length() throw(std::exception&);
   bool contains(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
   int32_t getIndexOf(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
-  iface::cellml_api::ExtensionElement getAt(u_int32_t index) throw(std::exception&);
+  iface::cellml_api::ExtensionElement getAt(uint32_t index) throw(std::exception&);
 
 private:
   iface::dom::NodeList* nl;
@@ -789,7 +790,7 @@ public:
   CDA_IMPL_QI1(cellml_api::MathList)
   CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementIterator);
 
-  u_int32_t length() throw(std::exception&);
+  uint32_t length() throw(std::exception&);
   bool contains(const iface::cellml_api::MathMLElement x) throw(std::exception&);
   iface::cellml_api::MathMLElementIterator* iterate() throw(std::exception&);
 
@@ -801,7 +802,7 @@ class CDA_CellMLElementSetUseIteratorMixin
   : public virtual iface::cellml_api::CellMLElementSet
 {
 public:
-  u_int32_t length() throw(std::exception&);
+  uint32_t length() throw(std::exception&);
   bool contains(iface::cellml_api::CellMLElement* x) throw(std::exception&);
 };
 
@@ -862,7 +863,7 @@ private:
 
   // This is used only when ownerModel is null. When ownerModel is assigned,
   // add_ref() must be called on ownerModel the correct number of times.
-  u_int32_t _cda_refcount;
+  uint32_t _cda_refcount;
 };
 
 class CDA_CellMLElementSetOuter

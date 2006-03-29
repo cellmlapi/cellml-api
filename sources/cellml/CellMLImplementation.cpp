@@ -10,6 +10,10 @@
 #define RDF_NS L"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define XLINK_NS L"http://www.w3.org/1999/xlink"
 
+#ifdef _WIN32
+#define swprintf _snwprintf
+#endif
+
 CDA_RDFXMLDOMRepresentation::CDA_RDFXMLDOMRepresentation(iface::dom::Element* idata)
   : _cda_refcount(1), datastore(idata)
 {
@@ -191,7 +195,7 @@ CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
                      m->datastore->childNodes());
 
   cmid = L"#" + cmid;
-  u_int32_t i, l = cnodes->length();
+  uint32_t i, l = cnodes->length();
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cnodes->item(i));
@@ -209,7 +213,7 @@ CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
       continue;
 
     // Next we look for descriptions...
-    u_int32_t j, m = cnodes->length();
+    uint32_t j, m = cnodes->length();
     for (j = 0; j < m; j++)
     {
       RETURN_INTO_OBJREF(cnodes2, iface::dom::NodeList,
@@ -358,7 +362,7 @@ CDA_CellMLElement::clearExtensionElements()
   {
     // Any child element which we don't recognise gets removed...
     RETURN_INTO_OBJREF(nl, iface::dom::NodeList, datastore->childNodes());
-    u_int32_t i, l = nl->length();
+    uint32_t i, l = nl->length();
     for (i = 0; i < l;)
     {
       RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
@@ -417,7 +421,7 @@ CDA_CellMLElement::addElement(iface::cellml_api::CellMLElement* x)
     // Adopt the node...
     el->mParent = this;
     // We adopted the node, so we also take on its references...
-    u_int32_t i;
+    uint32_t i;
     for (i = 0; i < el->_cda_refcount; i++)
       add_ref();
 
@@ -465,7 +469,7 @@ CDA_CellMLElement::removeElement(iface::cellml_api::CellMLElement* x)
 
     // The node is now orphaned...
     el->mParent = NULL;
-    u_int32_t i;
+    uint32_t i;
     // We don't need to be kept around for its references any more.
     for (i = 0; i < el->_cda_refcount; i++)
       release_ref();
@@ -516,7 +520,7 @@ CDA_CellMLElement::replaceElement(iface::cellml_api::CellMLElement* x,
 
     // The old node is now orphaned...
     elOld->mParent = NULL;
-    u_int32_t i;
+    uint32_t i;
     // We don't need to be kept around for its references any more.
     for (i = 0; i < elOld->_cda_refcount; i++)
       release_ref();
@@ -774,7 +778,7 @@ CDA_Model::RecursivelyChangeVersionCopy
 {
   //ObjRef<iface::dom::NamedNodeMap> nnm(already_AddRefd<iface::dom::NamedNodeMap>
   //                                     (aOriginal->attributes()));
-  //u_int32_t i, l;
+  //uint32_t i, l;
   //if (nnm)
   //{
   //  DECLARE_QUERY_INTERFACE_OBJREF(aCopyEl, aCopy, dom::Element);
@@ -796,7 +800,7 @@ CDA_Model::RecursivelyChangeVersionCopy
 
   ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
                                   (aOriginal->childNodes()));
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     ObjRef<iface::dom::Node> origItem(already_AddRefd<iface::dom::Node>
@@ -1093,7 +1097,7 @@ public:
   CDA_IMPL_COMPARE_NAIVE(CDA_Model_AsyncInstantiate_CommonState);
 
   bool mInRecursion, mContainsStale;
-  u_int32_t mActiveInstantiationCount;
+  uint32_t mActiveInstantiationCount;
   std::list<iface::cellml_api::CellMLImport*> importQueue;
 
   iface::cellml_api::ImportInstantiationListener* mListener;
@@ -1550,7 +1554,7 @@ CDA_Model::createRole()
   }
 }
 
-u_int32_t
+uint32_t
 CDA_Model::assignUniqueIdentifier()
 {
   return mNextUniqueIdentifier++;
@@ -1640,7 +1644,7 @@ CDA_MathContainer::clearMath()
     ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
                                     (datastore->childNodes()));
     // Go through and find all math nodes...
-    u_int32_t i, l = nl->length();
+    uint32_t i, l = nl->length();
     for (i = 0; i < l; i++)
     {
       ObjRef<iface::dom::Node> node
@@ -2402,7 +2406,7 @@ CDA_CellMLComponent::reactions()
   return new CDA_ReactionSet(allChildren);
 }
 
-u_int32_t
+uint32_t
 CDA_CellMLComponent::importNumber()
   throw(std::exception&)
 {
@@ -2577,7 +2581,7 @@ CDA_Unit::prefix()
     while (lowerBound <= upperBound)
     {
       int32_t choice = (upperBound + lowerBound) / 2;
-      int32_t cval = wcscasecmp(PrefixTable[choice].prefix, prefixWC);
+      int32_t cval = wcscmp(PrefixTable[choice].prefix, prefixWC);
       if (cval == 0)
         return PrefixTable[choice].value;
       else if (cval < 0)
@@ -3075,7 +3079,7 @@ CDA_CellMLImport::wasInstantiated()
   return (mImportedModel != NULL);
 }
 
-u_int32_t
+uint32_t
 CDA_CellMLImport::uniqueIdentifier()
   throw(std::exception&)
 {
@@ -3180,7 +3184,7 @@ CDA_ImportComponent::reactions()
   return fetchDefinition()->reactions();
 }
 
-u_int32_t
+uint32_t
 CDA_ImportComponent::importNumber()
   throw(std::exception&)
 {
@@ -3643,8 +3647,8 @@ CDA_RelationshipRef::relationship()
     // We are looking for relationships in any namespace, so we need to
     // go through all nodes...
     RETURN_INTO_OBJREF(cn, iface::dom::NamedNodeMap, datastore->attributes());
-    u_int32_t l = cn->length();
-    u_int32_t i;
+    uint32_t l = cn->length();
+    uint32_t i;
     for (i = 0; i < l; i++)
     {
       RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -3684,8 +3688,8 @@ CDA_RelationshipRef::relationshipNamespace()
     // We are looking for relationships in any namespace, so we need to
     // go through all nodes...
     RETURN_INTO_OBJREF(cn, iface::dom::NamedNodeMap, datastore->attributes());
-    u_int32_t l = cn->length();
-    u_int32_t i;
+    uint32_t l = cn->length();
+    uint32_t i;
     for (i = 0; i < l; i++)
     {
       RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -3726,8 +3730,8 @@ CDA_RelationshipRef::setRelationshipName(const wchar_t* namespaceURI,
     // We are looking for relationships in any namespace, so we need to
     // go through all nodes...
     RETURN_INTO_OBJREF(cn, iface::dom::NamedNodeMap, datastore->attributes());
-    u_int32_t l = cn->length();
-    u_int32_t i;
+    uint32_t l = cn->length();
+    uint32_t i;
     for (i = 0; i < l;)
     {
       RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -4902,13 +4906,13 @@ CDA_Role::deltaVariableName(const wchar_t* attr)
   datastore->setAttributeNS(NULL_NS, L"delta_variable", attr);
 }
 
-u_int32_t
+uint32_t
 CDA_CellMLElementSetUseIteratorMixin::length()
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(cei, iface::cellml_api::CellMLElementIterator, iterate());
   
-  u_int32_t length = 0;
+  uint32_t length = 0;
   while (true)
   {
     RETURN_INTO_OBJREF(ce, iface::cellml_api::CellMLElement, cei->next());
@@ -4976,8 +4980,8 @@ CDA_DOMElementIteratorBase::fetchNextElement()
     if (mPrevElement == NULL)
     {
       // Search for the first element...
-      u_int32_t i;
-      u_int32_t l = mNodeList->length();
+      uint32_t i;
+      uint32_t l = mNodeList->length();
       for (i = 0; i < l; i++)
       {
         RETURN_INTO_OBJREF(nodeHit, iface::dom::Node, mNodeList->item(i));
@@ -5816,12 +5820,12 @@ CDA_ExtensionElementList::~CDA_ExtensionElementList()
   nl->release_ref();
 }
 
-u_int32_t
+uint32_t
 CDA_ExtensionElementList::length()
   throw(std::exception&)
 {
   // Anything except CellML 1.0 / CellML 1.1 / RDF elements...
-  u_int32_t le = 0, l = nl->length(), i;
+  uint32_t le = 0, l = nl->length(), i;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
@@ -5845,7 +5849,7 @@ CDA_ExtensionElementList::contains(const iface::cellml_api::ExtensionElement x)
   throw(std::exception&)
 {
   // Anything except CellML 1.0 / CellML 1.1 / RDF elements...
-  u_int32_t l = nl->length(), i;
+  uint32_t l = nl->length(), i;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
@@ -5865,7 +5869,7 @@ CDA_ExtensionElementList::getIndexOf(const iface::cellml_api::ExtensionElement x
   throw(std::exception&)
 {
   // Anything except CellML 1.0 / CellML 1.1 / RDF elements...
-  u_int32_t le = 0, l = nl->length(), i;
+  uint32_t le = 0, l = nl->length(), i;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
@@ -5889,11 +5893,11 @@ CDA_ExtensionElementList::getIndexOf(const iface::cellml_api::ExtensionElement x
 }
 
 iface::cellml_api::ExtensionElement
-CDA_ExtensionElementList::getAt(u_int32_t index)
+CDA_ExtensionElementList::getAt(uint32_t index)
   throw(std::exception&)
 {
   // Anything except CellML 1.0 / CellML 1.1 / RDF elements...
-  u_int32_t l = nl->length(), i;
+  uint32_t l = nl->length(), i;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
@@ -5929,12 +5933,12 @@ CDA_MathList::~CDA_MathList()
   mParentEl->release_ref();
 }
 
-u_int32_t
+uint32_t
 CDA_MathList::length()
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(ml, iface::cellml_api::MathMLElementIterator, iterate());
-  u_int32_t l = 0;
+  uint32_t l = 0;
   while (true)
   {
     RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement, ml->next());
@@ -6257,7 +6261,7 @@ static bool
 DoesGroupHaveRelationshipRef(iface::dom::Element* el, const std::wstring& rrname)
 {
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList, el->childNodes());
-  u_int32_t i, l = cn->length();
+  uint32_t i, l = cn->length();
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(cni, iface::dom::Node, cn->item(i));
