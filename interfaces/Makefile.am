@@ -4,4 +4,4 @@ include_HEADERS=IfaceDOM-APISPEC.hxx \
 		IfaceCellML-APISPEC.hxx IfaceCellML-Services.hxx
 
 Iface%.hxx: %.idl
-	omniidl -p ../simple_interface_generators/omniidl_be -bsimple_cpp $<
+	omniidl -p $(top_srcdir)/simple_interface_generators/omniidl_be -bsimple_cpp $<
