@@ -1,5 +1,5 @@
 #include <exception>
-#include <sys/types.h>
+#include <inttypes.h>
 #include "IfaceMathML-content-APISPEC.hxx"
 #include "DOMImplementation.hxx"
 #include <map>
@@ -49,19 +49,19 @@ class CDA_MathMLContainer
 public:
   CDA_MathMLContainer();
 
-  u_int32_t nArguments() throw(std::exception&);
+  uint32_t nArguments() throw(std::exception&);
   iface::mathml_dom::MathMLNodeList* arguments() throw(std::exception&);
   iface::mathml_dom::MathMLNodeList* declarations() throw(std::exception&);
-  iface::mathml_dom::MathMLElement* getArgument(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLElement* setArgument(iface::mathml_dom::MathMLElement* newArgument, u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLElement* insertArgument(iface::mathml_dom::MathMLElement* newArgument, u_int32_t index) throw(std::exception&);
-  void deleteArgument(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLElement* removeArgument(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLDeclareElement* getDeclaration(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLDeclareElement* setDeclaration(iface::mathml_dom::MathMLDeclareElement* newDeclaration, u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLDeclareElement* insertDeclaration(iface::mathml_dom::MathMLDeclareElement* newDeclaration, u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLDeclareElement* removeDeclaration(u_int32_t index) throw(std::exception&);
-  void deleteDeclaration(u_int32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLElement* getArgument(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLElement* setArgument(iface::mathml_dom::MathMLElement* newArgument, uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLElement* insertArgument(iface::mathml_dom::MathMLElement* newArgument, uint32_t index) throw(std::exception&);
+  void deleteArgument(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLElement* removeArgument(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLDeclareElement* getDeclaration(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLDeclareElement* setDeclaration(iface::mathml_dom::MathMLDeclareElement* newDeclaration, uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLDeclareElement* insertDeclaration(iface::mathml_dom::MathMLDeclareElement* newDeclaration, uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLDeclareElement* removeDeclaration(uint32_t index) throw(std::exception&);
+  void deleteDeclaration(uint32_t index) throw(std::exception&);
 };
 
 class CDA_MathMLMathElement
@@ -101,11 +101,11 @@ public:
   void definitionURL(const wchar_t* attr) throw(std::exception&);
   wchar_t* encoding() throw(std::exception&);
   void encoding(const wchar_t* attr) throw(std::exception&);
-  iface::dom::Node* getArgument(u_int32_t index) throw(std::exception&);
-  iface::dom::Node* insertArgument(iface::dom::Node* newArgument, u_int32_t index) throw(std::exception&);
-  iface::dom::Node* setArgument(iface::dom::Node* newArgument, u_int32_t index) throw(std::exception&);
-  void deleteArgument(u_int32_t index) throw(std::exception&);
-  iface::dom::Node* removeArgument(u_int32_t index) throw(std::exception&);
+  iface::dom::Node* getArgument(uint32_t index) throw(std::exception&);
+  iface::dom::Node* insertArgument(iface::dom::Node* newArgument, uint32_t index) throw(std::exception&);
+  iface::dom::Node* setArgument(iface::dom::Node* newArgument, uint32_t index) throw(std::exception&);
+  void deleteArgument(uint32_t index) throw(std::exception&);
+  iface::dom::Node* removeArgument(uint32_t index) throw(std::exception&);
 };
 
 class CDA_MathMLCnElement
@@ -122,7 +122,7 @@ public:
   void type(const wchar_t* attr) throw(std::exception&);
   wchar_t* base() throw(std::exception&);
   void base(const wchar_t* attr) throw(std::exception&);
-  u_int32_t nargs() throw(std::exception&);
+  uint32_t nargs() throw(std::exception&);
 };
 
 class CDA_MathMLCiElement
@@ -165,7 +165,7 @@ public:
                mathml_dom::MathMLContainer,
                mathml_dom::MathMLContentContainer)
 
-  u_int32_t nBoundVariables() throw(std::exception&);
+  uint32_t nBoundVariables() throw(std::exception&);
   iface::mathml_dom::MathMLConditionElement* condition() throw(std::exception&);
   void condition(iface::mathml_dom::MathMLConditionElement* attr) throw(std::exception&);
   iface::mathml_dom::MathMLElement* opDegree() throw(std::exception&);
@@ -174,11 +174,11 @@ public:
   void domainOfApplication(iface::mathml_dom::MathMLElement* attr) throw(std::exception&);
   iface::mathml_dom::MathMLElement* momentAbout() throw(std::exception&);
   void momentAbout(iface::mathml_dom::MathMLElement* attr) throw(std::exception&);
-  iface::mathml_dom::MathMLBvarElement* getBoundVariable(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLBvarElement* insertBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLBvarElement* setBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, u_int32_t index) throw(std::exception&);
-  void deleteBoundVariable(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLBvarElement* removeBoundVariable(u_int32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLBvarElement* getBoundVariable(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLBvarElement* insertBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLBvarElement* setBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, uint32_t index) throw(std::exception&);
+  void deleteBoundVariable(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLBvarElement* removeBoundVariable(uint32_t index) throw(std::exception&);
 };
 
 class CDA_MathMLApplyElement
@@ -357,8 +357,8 @@ public:
 
   wchar_t* type() throw(std::exception&);
   void type(const wchar_t* attr) throw(std::exception&);
-  u_int32_t nargs() throw(std::exception&);
-  void nargs(u_int32_t attr) throw(std::exception&);
+  uint32_t nargs() throw(std::exception&);
+  void nargs(uint32_t attr) throw(std::exception&);
   wchar_t* occurrence() throw(std::exception&);
   void occurrence(const wchar_t* attr) throw(std::exception&);
   wchar_t* definitionURL() throw(std::exception&);
@@ -381,12 +381,12 @@ public:
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLVectorElement)
 
-  u_int32_t ncomponents() throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* getComponent(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* insertComponent(iface::mathml_dom::MathMLContentElement* newComponent, u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* setComponent(iface::mathml_dom::MathMLContentElement* newComponent, u_int32_t index) throw(std::exception&);
-  void deleteComponent(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* removeComponent(u_int32_t index) throw(std::exception&);
+  uint32_t ncomponents() throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* getComponent(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* insertComponent(iface::mathml_dom::MathMLContentElement* newComponent, uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* setComponent(iface::mathml_dom::MathMLContentElement* newComponent, uint32_t index) throw(std::exception&);
+  void deleteComponent(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* removeComponent(uint32_t index) throw(std::exception&);
 };
 
 class CDA_MathMLMatrixElement
@@ -399,14 +399,14 @@ public:
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLMatrixElement)
 
-  u_int32_t nrows() throw(std::exception&);
-  u_int32_t ncols() throw(std::exception&);
+  uint32_t nrows() throw(std::exception&);
+  uint32_t ncols() throw(std::exception&);
   iface::mathml_dom::MathMLNodeList* rows() throw(std::exception&);
-  iface::mathml_dom::MathMLMatrixrowElement* getRow(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLMatrixrowElement* insertRow(iface::mathml_dom::MathMLMatrixrowElement* newRow, u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLMatrixrowElement* setRow(iface::mathml_dom::MathMLMatrixrowElement* newRow, u_int32_t index) throw(std::exception&);
-  void deleteRow(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLMatrixrowElement* removeRow(u_int32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLMatrixrowElement* getRow(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLMatrixrowElement* insertRow(iface::mathml_dom::MathMLMatrixrowElement* newRow, uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLMatrixrowElement* setRow(iface::mathml_dom::MathMLMatrixrowElement* newRow, uint32_t index) throw(std::exception&);
+  void deleteRow(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLMatrixrowElement* removeRow(uint32_t index) throw(std::exception&);
 };
 
 class CDA_MathMLMatrixrowElement
@@ -419,12 +419,12 @@ public:
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLMatrixrowElement)
 
-  u_int32_t nEntries() throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* getEntry(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* insertEntry(iface::mathml_dom::MathMLContentElement* newEntry, u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* setEntry(iface::mathml_dom::MathMLContentElement* newEntry, u_int32_t index) throw(std::exception&);
-  void deleteEntry(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* removeEntry(u_int32_t index) throw(std::exception&);
+  uint32_t nEntries() throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* getEntry(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* insertEntry(iface::mathml_dom::MathMLContentElement* newEntry, uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* setEntry(iface::mathml_dom::MathMLContentElement* newEntry, uint32_t index) throw(std::exception&);
+  void deleteEntry(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* removeEntry(uint32_t index) throw(std::exception&);
 };
 
 class CDA_MathMLPiecewiseElement
@@ -440,15 +440,15 @@ public:
   iface::mathml_dom::MathMLNodeList* pieces() throw(std::exception&);
   iface::mathml_dom::MathMLContentElement* otherwise() throw(std::exception&);
   void otherwise(iface::mathml_dom::MathMLContentElement* attr) throw(std::exception&);
-  iface::mathml_dom::MathMLCaseElement* getCase(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLCaseElement* setCase(u_int32_t index, iface::mathml_dom::MathMLCaseElement* caseEl) throw(std::exception&);
-  void deleteCase(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLCaseElement* removeCase(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLCaseElement* insertCase(u_int32_t index, iface::mathml_dom::MathMLCaseElement* newCase) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* getCaseValue(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* setCaseValue(u_int32_t index, iface::mathml_dom::MathMLContentElement* value) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* getCaseCondition(u_int32_t index) throw(std::exception&);
-  iface::mathml_dom::MathMLContentElement* setCaseCondition(u_int32_t index, iface::mathml_dom::MathMLContentElement* condition) throw(std::exception&);
+  iface::mathml_dom::MathMLCaseElement* getCase(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLCaseElement* setCase(uint32_t index, iface::mathml_dom::MathMLCaseElement* caseEl) throw(std::exception&);
+  void deleteCase(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLCaseElement* removeCase(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLCaseElement* insertCase(uint32_t index, iface::mathml_dom::MathMLCaseElement* newCase) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* getCaseValue(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* setCaseValue(uint32_t index, iface::mathml_dom::MathMLContentElement* value) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* getCaseCondition(uint32_t index) throw(std::exception&);
+  iface::mathml_dom::MathMLContentElement* setCaseCondition(uint32_t index, iface::mathml_dom::MathMLContentElement* condition) throw(std::exception&);
 };
 
 class CDA_MathMLCaseElement

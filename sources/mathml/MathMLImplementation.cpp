@@ -57,7 +57,7 @@ IsQualifier(iface::dom::Node* n)
 #endif
 
   wchar_t* str = n->localName();
-  u_int32_t i;
+  uint32_t i;
   for (i = 0; i < (sizeof(qualifiers)/sizeof(*qualifiers)); i++)
     if (!wcscmp(qualifiers[i], str))
     {
@@ -390,11 +390,11 @@ GetArity(const wchar_t* name)
 #undef A1
 #undef A2
 
-  u_int32_t min_entry = 0;
-  u_int32_t max_entry = sizeof(ArityTable)/sizeof(*ArityTable) - 1;
+  uint32_t min_entry = 0;
+  uint32_t max_entry = sizeof(ArityTable)/sizeof(*ArityTable) - 1;
   while (min_entry <= max_entry)
   {
-    u_int32_t selentry = (max_entry + min_entry) / 2;
+    uint32_t selentry = (max_entry + min_entry) / 2;
     int x = wcscmp(name, ArityTable[selentry].name);
     if (x == 0)
     {
@@ -445,11 +445,11 @@ public:
     children->release_ref();
   }
 
-  iface::dom::Node* item(u_int32_t index)
+  iface::dom::Node* item(uint32_t index)
     throw(std::exception&)
   {
     // Count all the nodes...
-    u_int32_t pos;
+    uint32_t pos;
     index++;
     if (index == 0)
       throw iface::dom::DOMException();
@@ -470,11 +470,11 @@ public:
     return NULL;
   }
 
-  u_int32_t length()
+  uint32_t length()
     throw(std::exception&)
   {
     // Count all the nodes...
-    u_int32_t pos, count = 0;
+    uint32_t pos, count = 0;
     for (pos = 0; pos < children->length(); pos++)
     {
       RETURN_INTO_OBJREF(n, iface::dom::Node, children->item(pos));
@@ -614,7 +614,7 @@ CDA_MathMLContainer::CDA_MathMLContainer()
 {
 }
 
-u_int32_t
+uint32_t
 CDA_MathMLContainer::nArguments()
   throw(std::exception&)
 {
@@ -643,7 +643,7 @@ CDA_MathMLContainer::declarations()
 }
 
 iface::mathml_dom::MathMLElement*
-CDA_MathMLContainer::getArgument(u_int32_t index)
+CDA_MathMLContainer::getArgument(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -656,7 +656,7 @@ CDA_MathMLContainer::getArgument(u_int32_t index)
 
 iface::mathml_dom::MathMLElement*
 CDA_MathMLContainer::setArgument(iface::mathml_dom::MathMLElement* newArgument,
-                                 u_int32_t index)
+                                 uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -664,7 +664,7 @@ CDA_MathMLContainer::setArgument(iface::mathml_dom::MathMLElement* newArgument,
                                   FILTER_ARGUMENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -689,7 +689,7 @@ iface::mathml_dom::MathMLElement*
 CDA_MathMLContainer::insertArgument
 (
  iface::mathml_dom::MathMLElement* newArgument,
- u_int32_t index
+ uint32_t index
 )
   throw(std::exception&)
 {
@@ -698,7 +698,7 @@ CDA_MathMLContainer::insertArgument
                                   FILTER_ARGUMENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -717,7 +717,7 @@ CDA_MathMLContainer::insertArgument
 }
 
 void
-CDA_MathMLContainer::deleteArgument(u_int32_t index)
+CDA_MathMLContainer::deleteArgument(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -732,7 +732,7 @@ CDA_MathMLContainer::deleteArgument(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLElement*
-CDA_MathMLContainer::removeArgument(u_int32_t index)
+CDA_MathMLContainer::removeArgument(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -747,7 +747,7 @@ CDA_MathMLContainer::removeArgument(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLDeclareElement*
-CDA_MathMLContainer::getDeclaration(u_int32_t index)
+CDA_MathMLContainer::getDeclaration(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -762,7 +762,7 @@ iface::mathml_dom::MathMLDeclareElement*
 CDA_MathMLContainer::setDeclaration
 (
  iface::mathml_dom::MathMLDeclareElement* newDeclaration,
- u_int32_t index
+ uint32_t index
 )
   throw(std::exception&)
 {
@@ -771,7 +771,7 @@ CDA_MathMLContainer::setDeclaration
                                   FILTER_DECLARATOR);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -794,7 +794,7 @@ iface::mathml_dom::MathMLDeclareElement*
 CDA_MathMLContainer::insertDeclaration
 (
  iface::mathml_dom::MathMLDeclareElement* newDeclaration,
- u_int32_t index
+ uint32_t index
 )
   throw(std::exception&)
 {
@@ -803,7 +803,7 @@ CDA_MathMLContainer::insertDeclaration
                                   FILTER_DECLARATOR);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -822,7 +822,7 @@ CDA_MathMLContainer::insertDeclaration
 }
 
 iface::mathml_dom::MathMLDeclareElement*
-CDA_MathMLContainer::removeDeclaration(u_int32_t index)
+CDA_MathMLContainer::removeDeclaration(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -837,7 +837,7 @@ CDA_MathMLContainer::removeDeclaration(u_int32_t index)
 }
 
 void
-CDA_MathMLContainer::deleteDeclaration(u_int32_t index)
+CDA_MathMLContainer::deleteDeclaration(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -941,7 +941,7 @@ CDA_MathMLContentToken::encoding(const wchar_t* attr)
 }
 
 iface::dom::Node*
-CDA_MathMLContentToken::getArgument(u_int32_t index)
+CDA_MathMLContentToken::getArgument(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -953,7 +953,7 @@ CDA_MathMLContentToken::getArgument(u_int32_t index)
 }
 
 iface::dom::Node*
-CDA_MathMLContentToken::insertArgument(iface::dom::Node* newArgument, u_int32_t index)
+CDA_MathMLContentToken::insertArgument(iface::dom::Node* newArgument, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -961,7 +961,7 @@ CDA_MathMLContentToken::insertArgument(iface::dom::Node* newArgument, u_int32_t 
                                   FILTER_CONTENTARGUMENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -1002,7 +1002,7 @@ CDA_MathMLContentToken::insertArgument(iface::dom::Node* newArgument, u_int32_t 
 }
 
 iface::dom::Node*
-CDA_MathMLContentToken::setArgument(iface::dom::Node* newArgument, u_int32_t index)
+CDA_MathMLContentToken::setArgument(iface::dom::Node* newArgument, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1010,7 +1010,7 @@ CDA_MathMLContentToken::setArgument(iface::dom::Node* newArgument, u_int32_t ind
                                   FILTER_CONTENTARGUMENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -1028,7 +1028,7 @@ CDA_MathMLContentToken::setArgument(iface::dom::Node* newArgument, u_int32_t ind
 }
 
 void
-CDA_MathMLContentToken::deleteArgument(u_int32_t index)
+CDA_MathMLContentToken::deleteArgument(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1058,7 +1058,7 @@ CDA_MathMLContentToken::deleteArgument(u_int32_t index)
 }
 
 iface::dom::Node*
-CDA_MathMLContentToken::removeArgument(u_int32_t index)
+CDA_MathMLContentToken::removeArgument(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1125,14 +1125,14 @@ CDA_MathMLCnElement::base(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"base", attr);
 }
 
-u_int32_t
+uint32_t
 CDA_MathMLCnElement::nargs()
   throw(std::exception&)
 {
   // We count seps and add one...
-  u_int32_t count = 1;
+  uint32_t count = 1;
   iface::dom::NodeList* nl = this->childNodes();
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     iface::dom::Node* n = nl->item(i);
@@ -1185,7 +1185,7 @@ CDA_MathMLContentContainer::CDA_MathMLContentContainer(GdomeElement* elem)
 {
 }
 
-u_int32_t
+uint32_t
 CDA_MathMLContentContainer::nBoundVariables()
   throw(std::exception&)
 {
@@ -1202,7 +1202,7 @@ CDA_MathMLContentContainer::condition()
   // See if we can find a condition...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1231,7 +1231,7 @@ CDA_MathMLContentContainer::condition(iface::mathml_dom::MathMLConditionElement*
   // See if we can find a condition...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1260,7 +1260,7 @@ CDA_MathMLContentContainer::opDegree()
   // See if we can find a degree...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1289,7 +1289,7 @@ CDA_MathMLContentContainer::opDegree(iface::mathml_dom::MathMLElement* attr)
   // See if we can find a degree...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1318,7 +1318,7 @@ CDA_MathMLContentContainer::domainOfApplication()
   // See if we can find a domainofapplication...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1347,7 +1347,7 @@ CDA_MathMLContentContainer::domainOfApplication(iface::mathml_dom::MathMLElement
   // See if we can find a degree...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1376,7 +1376,7 @@ CDA_MathMLContentContainer::momentAbout()
   // See if we can find a degree...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1405,7 +1405,7 @@ CDA_MathMLContentContainer::momentAbout(iface::mathml_dom::MathMLElement* attr)
   // See if we can find a degree...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1428,7 +1428,7 @@ CDA_MathMLContentContainer::momentAbout(iface::mathml_dom::MathMLElement* attr)
 }
 
 iface::mathml_dom::MathMLBvarElement*
-CDA_MathMLContentContainer::getBoundVariable(u_int32_t index)
+CDA_MathMLContentContainer::getBoundVariable(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1440,7 +1440,7 @@ CDA_MathMLContentContainer::getBoundVariable(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLBvarElement*
-CDA_MathMLContentContainer::insertBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, u_int32_t index)
+CDA_MathMLContentContainer::insertBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1448,7 +1448,7 @@ CDA_MathMLContentContainer::insertBoundVariable(iface::mathml_dom::MathMLBvarEle
                                   FILTER_BVAR);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -1467,7 +1467,7 @@ CDA_MathMLContentContainer::insertBoundVariable(iface::mathml_dom::MathMLBvarEle
 }
 
 iface::mathml_dom::MathMLBvarElement*
-CDA_MathMLContentContainer::setBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, u_int32_t index)
+CDA_MathMLContentContainer::setBoundVariable(iface::mathml_dom::MathMLBvarElement* newBVar, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1475,7 +1475,7 @@ CDA_MathMLContentContainer::setBoundVariable(iface::mathml_dom::MathMLBvarElemen
                                   FILTER_BVAR);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -1495,7 +1495,7 @@ CDA_MathMLContentContainer::setBoundVariable(iface::mathml_dom::MathMLBvarElemen
 }
 
 void
-CDA_MathMLContentContainer::deleteBoundVariable(u_int32_t index)
+CDA_MathMLContentContainer::deleteBoundVariable(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1508,7 +1508,7 @@ CDA_MathMLContentContainer::deleteBoundVariable(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLBvarElement*
-CDA_MathMLContentContainer::removeBoundVariable(u_int32_t index)
+CDA_MathMLContentContainer::removeBoundVariable(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -1532,7 +1532,7 @@ CDA_MathMLApplyElement::_cxx_operator()
 {
   // If there is a first child, it is the operator...
   iface::dom::NodeList* nl = childNodes();
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     iface::dom::Node* n = nl->item(i);
@@ -1561,7 +1561,7 @@ CDA_MathMLApplyElement::_cxx_operator(iface::mathml_dom::MathMLElement* attr)
 {
   // If there is a first child, it is the operator...
   iface::dom::NodeList* nl = childNodes();
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     iface::dom::Node* n = nl->item(i);
@@ -1594,7 +1594,7 @@ CDA_MathMLApplyElement::lowLimit()
   // See if we can find a lowlimit...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1623,7 +1623,7 @@ CDA_MathMLApplyElement::lowLimit(iface::mathml_dom::MathMLElement* attr)
   // See if we can find a lowlimit...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1652,7 +1652,7 @@ CDA_MathMLApplyElement::upLimit()
   // See if we can find a uplimit...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1681,7 +1681,7 @@ CDA_MathMLApplyElement::upLimit(iface::mathml_dom::MathMLElement* attr)
   // See if we can find a lowlimit...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -1953,8 +1953,8 @@ CDA_MathMLIntervalElement::start()
   iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
   try
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
+    uint32_t l = cn->length();
+    uint32_t i = 0;
     for (i = 0; i < l; i++)
     {
       iface::dom::Node* n = cn->item(i);
@@ -1988,12 +1988,12 @@ CDA_MathMLIntervalElement::start(iface::mathml_dom::MathMLContentElement* attr)
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
 
-  u_int32_t l = cn->length();
+  uint32_t l = cn->length();
 
   ObjRef<iface::mathml_dom::MathMLContentElement> oldStart;
   ObjRef<iface::mathml_dom::MathMLContentElement> oldEnd;
 
-  u_int32_t i = 0;
+  uint32_t i = 0;
 
   for (i = 0; i < l; i++)
   {
@@ -2035,8 +2035,8 @@ CDA_MathMLIntervalElement::end()
 {
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
-  u_int32_t l = cn->length();
-  u_int32_t i = 0;
+  uint32_t l = cn->length();
+  uint32_t i = 0;
   ObjRef<iface::mathml_dom::MathMLContentElement> firstCandidate;
   for (i = 0; i < l; i++)
   {
@@ -2071,11 +2071,11 @@ CDA_MathMLIntervalElement::end(iface::mathml_dom::MathMLContentElement* attr)
 {
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
-  u_int32_t l = cn->length();
+  uint32_t l = cn->length();
   ObjRef<iface::mathml_dom::MathMLContentElement> oldStart;
   ObjRef<iface::mathml_dom::MathMLContentElement> oldEnd;
 
-  u_int32_t i = 0;
+  uint32_t i = 0;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -2125,8 +2125,8 @@ CDA_MathMLConditionElement::condition()
   iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
   try
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
+    uint32_t l = cn->length();
+    uint32_t i = 0;
     for (i = 0; i < l; i++)
     {
       iface::dom::Node* n = cn->item(i);
@@ -2160,8 +2160,8 @@ CDA_MathMLConditionElement::condition(iface::mathml_dom::MathMLApplyElement* att
   iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
   try
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
+    uint32_t l = cn->length();
+    uint32_t i = 0;
     for (i = 0; i < l; i++)
     {
       iface::dom::Node* n = cn->item(i);
@@ -2213,19 +2213,19 @@ CDA_MathMLDeclareElement::type(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"type", attr);
 }
 
-u_int32_t
+uint32_t
 CDA_MathMLDeclareElement::nargs()
   throw(std::exception&)
 {
   wchar_t* ds = static_cast<CDA_Element*>(this)->getAttributeNS
                              (NULL_NS, L"nargs");
-  u_int32_t ret = wcstoul(ds, NULL, 10);
+  uint32_t ret = wcstoul(ds, NULL, 10);
   free(ds);
   return ret;
 }
 
 void
-CDA_MathMLDeclareElement::nargs(u_int32_t attr)
+CDA_MathMLDeclareElement::nargs(uint32_t attr)
   throw(std::exception&)
 {
   wchar_t str[20];
@@ -2287,8 +2287,8 @@ CDA_MathMLDeclareElement::identifier()
 {
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
-  u_int32_t l = cn->length();
-  u_int32_t i = 0;
+  uint32_t l = cn->length();
+  uint32_t i = 0;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -2313,8 +2313,8 @@ CDA_MathMLDeclareElement::identifier(iface::mathml_dom::MathMLCiElement* attr)
 {
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
-  u_int32_t l = cn->length();
-  u_int32_t i = 0;
+  uint32_t l = cn->length();
+  uint32_t i = 0;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -2341,8 +2341,8 @@ CDA_MathMLDeclareElement::constructor()
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
   bool got_identifier = false;
-  u_int32_t l = cn->length();
-  u_int32_t i = 0;
+  uint32_t l = cn->length();
+  uint32_t i = 0;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -2373,8 +2373,8 @@ CDA_MathMLDeclareElement::constructor(iface::mathml_dom::MathMLElement* attr)
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
   bool got_identifier = false;
-  u_int32_t l = cn->length();
-  u_int32_t i = 0;
+  uint32_t l = cn->length();
+  uint32_t i = 0;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -2404,7 +2404,7 @@ CDA_MathMLVectorElement::CDA_MathMLVectorElement(GdomeElement* el)
 {
 }
 
-u_int32_t
+uint32_t
 CDA_MathMLVectorElement::ncomponents()
   throw(std::exception&)
 {
@@ -2415,7 +2415,7 @@ CDA_MathMLVectorElement::ncomponents()
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLVectorElement::getComponent(u_int32_t index)
+CDA_MathMLVectorElement::getComponent(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2427,7 +2427,7 @@ CDA_MathMLVectorElement::getComponent(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLVectorElement::insertComponent(iface::mathml_dom::MathMLContentElement* newComponent, u_int32_t index)
+CDA_MathMLVectorElement::insertComponent(iface::mathml_dom::MathMLContentElement* newComponent, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2435,7 +2435,7 @@ CDA_MathMLVectorElement::insertComponent(iface::mathml_dom::MathMLContentElement
                                   FILTER_CONTENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -2454,7 +2454,7 @@ CDA_MathMLVectorElement::insertComponent(iface::mathml_dom::MathMLContentElement
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLVectorElement::setComponent(iface::mathml_dom::MathMLContentElement* newComponent, u_int32_t index)
+CDA_MathMLVectorElement::setComponent(iface::mathml_dom::MathMLContentElement* newComponent, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2462,7 +2462,7 @@ CDA_MathMLVectorElement::setComponent(iface::mathml_dom::MathMLContentElement* n
                                   FILTER_CONTENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -2481,7 +2481,7 @@ CDA_MathMLVectorElement::setComponent(iface::mathml_dom::MathMLContentElement* n
   return newComponent;
 }
 
-void CDA_MathMLVectorElement::deleteComponent(u_int32_t index)
+void CDA_MathMLVectorElement::deleteComponent(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2494,7 +2494,7 @@ void CDA_MathMLVectorElement::deleteComponent(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLVectorElement::removeComponent(u_int32_t index)
+CDA_MathMLVectorElement::removeComponent(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2511,7 +2511,7 @@ CDA_MathMLMatrixElement::CDA_MathMLMatrixElement(GdomeElement* el)
 {
 }
 
-u_int32_t CDA_MathMLMatrixElement::nrows()
+uint32_t CDA_MathMLMatrixElement::nrows()
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2520,7 +2520,7 @@ u_int32_t CDA_MathMLMatrixElement::nrows()
   return mfnl.length();
 }
 
-u_int32_t
+uint32_t
 CDA_MathMLMatrixElement::ncols()
   throw(std::exception&)
 {
@@ -2542,7 +2542,7 @@ CDA_MathMLMatrixElement::rows()
 }
 
 iface::mathml_dom::MathMLMatrixrowElement*
-CDA_MathMLMatrixElement::getRow(u_int32_t index)
+CDA_MathMLMatrixElement::getRow(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2555,7 +2555,7 @@ CDA_MathMLMatrixElement::getRow(u_int32_t index)
 
 iface::mathml_dom::MathMLMatrixrowElement*
 CDA_MathMLMatrixElement::insertRow
-(iface::mathml_dom::MathMLMatrixrowElement* newRow, u_int32_t index)
+(iface::mathml_dom::MathMLMatrixrowElement* newRow, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2563,7 +2563,7 @@ CDA_MathMLMatrixElement::insertRow
                                   FILTER_ROW);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -2582,7 +2582,7 @@ CDA_MathMLMatrixElement::insertRow
 }
 
 iface::mathml_dom::MathMLMatrixrowElement*
-CDA_MathMLMatrixElement::setRow(iface::mathml_dom::MathMLMatrixrowElement* newRow, u_int32_t index)
+CDA_MathMLMatrixElement::setRow(iface::mathml_dom::MathMLMatrixrowElement* newRow, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2590,7 +2590,7 @@ CDA_MathMLMatrixElement::setRow(iface::mathml_dom::MathMLMatrixrowElement* newRo
                                   FILTER_ROW);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -2610,7 +2610,7 @@ CDA_MathMLMatrixElement::setRow(iface::mathml_dom::MathMLMatrixrowElement* newRo
 }
 
 void
-CDA_MathMLMatrixElement::deleteRow(u_int32_t index)
+CDA_MathMLMatrixElement::deleteRow(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2623,7 +2623,7 @@ CDA_MathMLMatrixElement::deleteRow(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLMatrixrowElement*
-CDA_MathMLMatrixElement::removeRow(u_int32_t index)
+CDA_MathMLMatrixElement::removeRow(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2640,7 +2640,7 @@ CDA_MathMLMatrixrowElement::CDA_MathMLMatrixrowElement(GdomeElement* el)
 {
 }
 
-u_int32_t
+uint32_t
 CDA_MathMLMatrixrowElement::nEntries()
   throw(std::exception&)
 {
@@ -2651,7 +2651,7 @@ CDA_MathMLMatrixrowElement::nEntries()
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLMatrixrowElement::getEntry(u_int32_t index)
+CDA_MathMLMatrixrowElement::getEntry(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2663,7 +2663,7 @@ CDA_MathMLMatrixrowElement::getEntry(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLMatrixrowElement::insertEntry(iface::mathml_dom::MathMLContentElement* newEntry, u_int32_t index)
+CDA_MathMLMatrixrowElement::insertEntry(iface::mathml_dom::MathMLContentElement* newEntry, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2671,7 +2671,7 @@ CDA_MathMLMatrixrowElement::insertEntry(iface::mathml_dom::MathMLContentElement*
                                   FILTER_CONTENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -2690,7 +2690,7 @@ CDA_MathMLMatrixrowElement::insertEntry(iface::mathml_dom::MathMLContentElement*
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLMatrixrowElement::setEntry(iface::mathml_dom::MathMLContentElement* newEntry, u_int32_t index)
+CDA_MathMLMatrixrowElement::setEntry(iface::mathml_dom::MathMLContentElement* newEntry, uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2698,7 +2698,7 @@ CDA_MathMLMatrixrowElement::setEntry(iface::mathml_dom::MathMLContentElement* ne
                                   FILTER_CONTENT);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -2718,7 +2718,7 @@ CDA_MathMLMatrixrowElement::setEntry(iface::mathml_dom::MathMLContentElement* ne
 }
 
 void
-CDA_MathMLMatrixrowElement::deleteEntry(u_int32_t index)
+CDA_MathMLMatrixrowElement::deleteEntry(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2731,7 +2731,7 @@ CDA_MathMLMatrixrowElement::deleteEntry(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLMatrixrowElement::removeEntry(u_int32_t index)
+CDA_MathMLMatrixrowElement::removeEntry(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2764,7 +2764,7 @@ CDA_MathMLPiecewiseElement::otherwise()
   // See if we can find an otherwise...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -2788,7 +2788,7 @@ CDA_MathMLPiecewiseElement::otherwise(iface::mathml_dom::MathMLContentElement* a
   // See if we can find an otherwise...
   iface::dom::NodeList* nl = childNodes();
   iface::dom::Node* n;
-  u_int32_t i, l = nl->length();
+  uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
     n = nl->item(i);
@@ -2808,7 +2808,7 @@ CDA_MathMLPiecewiseElement::otherwise(iface::mathml_dom::MathMLContentElement* a
 }
 
 iface::mathml_dom::MathMLCaseElement*
-CDA_MathMLPiecewiseElement::getCase(u_int32_t index)
+CDA_MathMLPiecewiseElement::getCase(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2827,7 +2827,7 @@ CDA_MathMLPiecewiseElement::getCase(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLCaseElement*
-CDA_MathMLPiecewiseElement::setCase(u_int32_t index, iface::mathml_dom::MathMLCaseElement* caseEl)
+CDA_MathMLPiecewiseElement::setCase(uint32_t index, iface::mathml_dom::MathMLCaseElement* caseEl)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2835,7 +2835,7 @@ CDA_MathMLPiecewiseElement::setCase(u_int32_t index, iface::mathml_dom::MathMLCa
                                   FILTER_PIECE);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
     throw iface::dom::DOMException();
   if (index == l + 1)
@@ -2855,7 +2855,7 @@ CDA_MathMLPiecewiseElement::setCase(u_int32_t index, iface::mathml_dom::MathMLCa
 }
 
 void
-CDA_MathMLPiecewiseElement::deleteCase(u_int32_t index)
+CDA_MathMLPiecewiseElement::deleteCase(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2868,7 +2868,7 @@ CDA_MathMLPiecewiseElement::deleteCase(u_int32_t index)
 }
 
 iface::mathml_dom::MathMLCaseElement*
-CDA_MathMLPiecewiseElement::removeCase(u_int32_t index)
+CDA_MathMLPiecewiseElement::removeCase(uint32_t index)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2882,7 +2882,7 @@ CDA_MathMLPiecewiseElement::removeCase(u_int32_t index)
 
 iface::mathml_dom::MathMLCaseElement*
 CDA_MathMLPiecewiseElement::insertCase
-(u_int32_t index, iface::mathml_dom::MathMLCaseElement* newCase)
+(uint32_t index, iface::mathml_dom::MathMLCaseElement* newCase)
   throw(std::exception&)
 {
   CDA_MathMLFilteredNodeList mfnl(this,
@@ -2890,7 +2890,7 @@ CDA_MathMLPiecewiseElement::insertCase
                                   FILTER_PIECE);
 
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
-  u_int32_t l = mfnl.length();
+  uint32_t l = mfnl.length();
   if (index > l + 1)
     throw iface::dom::DOMException();
   if (index == 0 || index == l + 1)
@@ -2906,7 +2906,7 @@ CDA_MathMLPiecewiseElement::insertCase
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLPiecewiseElement::getCaseValue(u_int32_t index)
+CDA_MathMLPiecewiseElement::getCaseValue(uint32_t index)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(ce, iface::mathml_dom::MathMLCaseElement, getCase(index));
@@ -2916,7 +2916,7 @@ CDA_MathMLPiecewiseElement::getCaseValue(u_int32_t index)
 
 iface::mathml_dom::MathMLContentElement*
 CDA_MathMLPiecewiseElement::setCaseValue
-(u_int32_t index, iface::mathml_dom::MathMLContentElement* value)
+(uint32_t index, iface::mathml_dom::MathMLContentElement* value)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(ce, iface::mathml_dom::MathMLCaseElement, getCase(index));
@@ -2926,7 +2926,7 @@ CDA_MathMLPiecewiseElement::setCaseValue
 }
 
 iface::mathml_dom::MathMLContentElement*
-CDA_MathMLPiecewiseElement::getCaseCondition(u_int32_t index)
+CDA_MathMLPiecewiseElement::getCaseCondition(uint32_t index)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(ce, iface::mathml_dom::MathMLCaseElement, getCase(index));
@@ -2936,7 +2936,7 @@ CDA_MathMLPiecewiseElement::getCaseCondition(u_int32_t index)
 
 iface::mathml_dom::MathMLContentElement*
 CDA_MathMLPiecewiseElement::setCaseCondition
-(u_int32_t index, iface::mathml_dom::MathMLContentElement* condition)
+(uint32_t index, iface::mathml_dom::MathMLContentElement* condition)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(ce, iface::mathml_dom::MathMLCaseElement, getCase(index));
@@ -2956,8 +2956,8 @@ CDA_MathMLCaseElement::caseValue()
 {
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
-  u_int32_t l = cn->length();
-  u_int32_t i = 0;
+  uint32_t l = cn->length();
+  uint32_t i = 0;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -2980,8 +2980,8 @@ CDA_MathMLCaseElement::caseValue(iface::mathml_dom::MathMLContentElement* attr)
 {
   RETURN_INTO_OBJREF(cn, iface::dom::NodeList,
                      static_cast<CDA_Element*>(this)->childNodes());
-  u_int32_t l = cn->length();
-  u_int32_t i = 0;
+  uint32_t l = cn->length();
+  uint32_t i = 0;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
@@ -3009,8 +3009,8 @@ CDA_MathMLCaseElement::caseCondition()
   bool got_condition = false;
   try
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
+    uint32_t l = cn->length();
+    uint32_t i = 0;
     for (i = 0; i < l; i++)
     {
       iface::dom::Node* n = cn->item(i);
@@ -3051,8 +3051,8 @@ CDA_MathMLCaseElement::caseCondition(iface::mathml_dom::MathMLContentElement* at
   bool got_condition = false;
   try
   {
-    u_int32_t l = cn->length();
-    u_int32_t i = 0;
+    uint32_t l = cn->length();
+    uint32_t i = 0;
     for (i = 0; i < l; i++)
     {
       iface::dom::Node* n = cn->item(i);
@@ -3323,11 +3323,11 @@ WrapMathMLElement(GdomeElement* el)
   EXCEPTION_CATCH;
 
   TRGDOMSTRING(str);
-  u_int32_t min_entry = 0;
-  u_int32_t max_entry = sizeof(MathMLConstructors)/sizeof(*MathMLConstructors) - 1;
+  uint32_t min_entry = 0;
+  uint32_t max_entry = sizeof(MathMLConstructors)/sizeof(*MathMLConstructors) - 1;
   while (min_entry <= max_entry)
   {
-    u_int32_t selentry = (max_entry + min_entry) / 2;
+    uint32_t selentry = (max_entry + min_entry) / 2;
     int x = wcscmp(cxxstr, MathMLConstructors[selentry].name);
     if (x == 0)
     {
