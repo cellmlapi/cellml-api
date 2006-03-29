@@ -49,6 +49,7 @@ AC_CONFIG_FILES([
                  interfaces/Makefile
                  sources/Makefile
                  sources/dom/Makefile
+                 sources/dom_direct/Makefile
                  sources/mathml/Makefile
                  sources/cellml/Makefile
                  tests/Makefile])
