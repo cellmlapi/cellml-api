@@ -10,7 +10,7 @@
 #include"Utilities.hxx"
 
 class CDA_DOMImplementation
-  : public virtual iface::dom::DOMImplementation,
+  : public CellML_DOMImplementationBase,
     public virtual iface::mathml_dom::MathMLDOMImplementation
 {
 public:
