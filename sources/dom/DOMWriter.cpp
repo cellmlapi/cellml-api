@@ -33,7 +33,7 @@ static TranslateEntities(const std::wstring& inp, bool isAttribute = false)
   else
     table = kEntities;
 
-  u_int32_t i, l = inp.length();
+  uint32_t i, l = inp.length();
   wchar_t c;
   for (i = 0; i < l; i++)
   {
@@ -57,7 +57,7 @@ void
 DOMWriter::writeNode(DOMNamespaceContext* dnc, iface::dom::Node* n, std::wstring& appendTo)
   throw(std::exception&)
 {
-  u_int16_t nt = n->nodeType();
+  uint16_t nt = n->nodeType();
 
 #define NODETYPE_CODE(nt, ntn) \
  case iface::dom::Node::nt##_NODE: \
@@ -95,7 +95,7 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
 
   // Firstly scan for xmlns attributes...
   RETURN_INTO_OBJREF(elnl, iface::dom::NamedNodeMap, el->attributes());
-  u_int32_t l = elnl->length(), i;
+  uint32_t l = elnl->length(), i;
 
   // See if this element has a prefix...
   RETURN_INTO_WSTRING(elpr, el->prefix());
@@ -443,7 +443,7 @@ DOMWriter::writeDocument(DOMNamespaceContext* dnc,
   appendTo += L"<?xml version=\"1.0\"?>\n";
 
   RETURN_INTO_OBJREF(elnl, iface::dom::NodeList, doc->childNodes());
-  u_int32_t l = elnl->length(), i;
+  uint32_t l = elnl->length(), i;
 
   for (i = 0; i < l; i++)
   {
@@ -470,7 +470,7 @@ DOMWriter::writeDocumentFragment(DOMNamespaceContext* dnc,
   throw(std::exception)
 {
   RETURN_INTO_OBJREF(elnl, iface::dom::NodeList, df->childNodes());
-  u_int32_t l = elnl->length(), i;
+  uint32_t l = elnl->length(), i;
 
   for (i = 0; i < l; i++)
   {
@@ -592,7 +592,7 @@ DOMNamespaceContext::resolveOrInventPrefixes()
       suggestion = L"ns";
     
     std::wstring attempt = suggestion;
-    u_int32_t attemptCount = 0;
+    uint32_t attemptCount = 0;
     while (findPrefixForNamespace(attempt) != L"")
     {
       attempt = suggestion;

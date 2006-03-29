@@ -1,5 +1,5 @@
 #include <exception>
-#include <sys/types.h>
+#include <inttypes.h>
 #include "IfaceDOM-APISPEC.hxx"
 #include <map>
 #include <string>

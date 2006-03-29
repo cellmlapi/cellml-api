@@ -1,5 +1,5 @@
 #include <exception>
-#include <sys/types.h>
+#include <inttypes.h>
 #include "IfaceDOM-APISPEC.hxx"
 #include "IfaceMathML-content-APISPEC.hxx"
 #include <libgdome/gdome.h>
@@ -72,7 +72,7 @@ public:
   wchar_t* nodeName() throw(std::exception&);
   wchar_t* nodeValue() throw(std::exception&);
   void nodeValue(const wchar_t* attr) throw(std::exception&);
-  u_int16_t nodeType() throw(std::exception&);
+  uint16_t nodeType() throw(std::exception&);
   iface::dom::Node* parentNode() throw(std::exception&);
   iface::dom::NodeList* childNodes() throw(std::exception&);
   iface::dom::Node* firstChild() throw(std::exception&);
@@ -128,7 +128,7 @@ private:
         callee = NULL;
       }
     }
-    u_int32_t copies;
+    uint32_t copies;
     GdomeEventListener* listener;
     iface::events::EventListener* callee;
   };
@@ -151,8 +151,8 @@ public:
   CDA_NodeList(GdomeNodeList* nl);
   virtual ~CDA_NodeList();
 
-  iface::dom::Node* item(u_int32_t index) throw(std::exception&);
-  u_int32_t length() throw(std::exception&);
+  iface::dom::Node* item(uint32_t index) throw(std::exception&);
+  uint32_t length() throw(std::exception&);
 
   GdomeNodeList* impl;
 };
@@ -174,8 +174,8 @@ public:
     throw(std::exception&);
   iface::dom::Node* removeNamedItem(const wchar_t* name)
     throw(std::exception&);
-  iface::dom::Node* item(u_int32_t index) throw(std::exception&);
-  u_int32_t length() throw(std::exception&);
+  iface::dom::Node* item(uint32_t index) throw(std::exception&);
+  uint32_t length() throw(std::exception&);
   iface::dom::Node* getNamedItemNS(const wchar_t* namespaceURI,
                                    const wchar_t* localName)
     throw(std::exception&);
@@ -198,15 +198,15 @@ public:
 
   wchar_t* data() throw(std::exception&);
   void data(const wchar_t* attr) throw(std::exception&);
-  u_int32_t length() throw(std::exception&);
-  wchar_t* substringData(u_int32_t offset, u_int32_t count)
+  uint32_t length() throw(std::exception&);
+  wchar_t* substringData(uint32_t offset, uint32_t count)
     throw(std::exception&);
   void appendData(const wchar_t* arg) throw(std::exception&);
-  void insertData(u_int32_t offset, const wchar_t* arg)
+  void insertData(uint32_t offset, const wchar_t* arg)
     throw(std::exception&);
-  void deleteData(u_int32_t offset, u_int32_t count)
+  void deleteData(uint32_t offset, uint32_t count)
     throw(std::exception&);
-  void replaceData(u_int32_t offset, u_int32_t count,
+  void replaceData(uint32_t offset, uint32_t count,
                    const wchar_t* arg) throw(std::exception&);
 
   /* Implementation only... */
@@ -309,7 +309,7 @@ class CDA_TextBase
 public:
   CDA_TextBase(GdomeNode* aNode)
     : CDA_CharacterData(aNode) {}
-  iface::dom::Text* splitText(u_int32_t offset) throw(std::exception&);
+  iface::dom::Text* splitText(uint32_t offset) throw(std::exception&);
 
   virtual GdomeText* fetchText() const = 0;
 };
@@ -535,7 +535,7 @@ public:
   iface::events::DOMString type() throw(std::exception&);
   iface::dom::Node* target() throw(std::exception&);
   iface::dom::Node* currentTarget() throw(std::exception&);
-  u_int16_t eventPhase() throw(std::exception&);
+  uint16_t eventPhase() throw(std::exception&);
   bool bubbles() throw(std::exception&);
   bool cancelable() throw(std::exception&);
   iface::events::DOMTimeStamp timeStamp() throw(std::exception&);
@@ -579,14 +579,14 @@ public:
   iface::events::DOMString prevValue() throw(std::exception&);
   iface::events::DOMString newValue() throw(std::exception&);
   iface::events::DOMString attrName() throw(std::exception&);
-  u_int16_t attrChange() throw(std::exception&);
+  uint16_t attrChange() throw(std::exception&);
   void initMutationEvent(const wchar_t* typeArg,
                          bool canBubbleArg, bool cancelableArg,
                          iface::events::Node relatedNodeArg,
                          const wchar_t* prevValueArg,
                          const wchar_t* newValueArg,
                          const wchar_t* attrNameArg,
-                         u_int16_t attrChangeArg)
+                         uint16_t attrChangeArg)
     throw(std::exception&);
 
   GdomeMutationEvent* impl;

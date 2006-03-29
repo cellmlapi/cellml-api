@@ -3,6 +3,10 @@
 #include <string>
 #include "libxml2/libxml/xmlerror.h"
 
+#ifdef _WIN32
+#define swprintf _snwprintf
+#endif
+
 std::map<iface::events::EventListener*,CDA_Node::EventListenerData*> CDA_Node::activeEventListeners;
 CDAMutex CDA_Node::mStaticMutex;
 
@@ -203,12 +207,12 @@ CDA_Node::nodeValue(const wchar_t* attr)
   EXCEPTION_CATCH;
 }
 
-u_int16_t
+uint16_t
 CDA_Node::nodeType()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  u_int16_t ret = gdome_n_nodeType(mNode, &exc);
+  uint16_t ret = gdome_n_nodeType(mNode, &exc);
   EXCEPTION_CATCH;
   return ret;
 }
@@ -609,7 +613,7 @@ CDA_NodeList::~CDA_NodeList()
 }
 
 iface::dom::Node*
-CDA_NodeList::item(u_int32_t index)
+CDA_NodeList::item(uint32_t index)
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -619,12 +623,12 @@ CDA_NodeList::item(u_int32_t index)
   return CDA_WrapNode(ret);
 }
 
-u_int32_t
+uint32_t
 CDA_NodeList::length()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  u_int32_t ret = gdome_nl_length(impl, &exc);
+  uint32_t ret = gdome_nl_length(impl, &exc);
   EXCEPTION_CATCH;
 
   return ret;
@@ -681,7 +685,7 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
 }
 
 iface::dom::Node*
-CDA_NamedNodeMap::item(u_int32_t index)
+CDA_NamedNodeMap::item(uint32_t index)
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -691,12 +695,12 @@ CDA_NamedNodeMap::item(u_int32_t index)
   return CDA_WrapNode(ret);
 }
 
-u_int32_t
+uint32_t
 CDA_NamedNodeMap::length()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  u_int32_t ret = gdome_nnm_length(impl, &exc);
+  uint32_t ret = gdome_nnm_length(impl, &exc);
   EXCEPTION_CATCH;
 
   return ret;
@@ -772,19 +776,19 @@ CDA_CharacterData::data(const wchar_t* d)
 }
 
 
-u_int32_t
+uint32_t
 CDA_CharacterData::length()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  u_int32_t ret = gdome_cd_length(fetchCData(), &exc);
+  uint32_t ret = gdome_cd_length(fetchCData(), &exc);
   EXCEPTION_CATCH;  
 
   return ret;
 }
 
 wchar_t*
-CDA_CharacterData::substringData(u_int32_t offset, u_int32_t count)
+CDA_CharacterData::substringData(uint32_t offset, uint32_t count)
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -810,7 +814,7 @@ CDA_CharacterData::appendData(const wchar_t* arg)
 }
 
 void
-CDA_CharacterData::insertData(u_int32_t offset, const wchar_t* arg)
+CDA_CharacterData::insertData(uint32_t offset, const wchar_t* arg)
   throw(std::exception&)
 {
   TRDOMSTRING(arg);
@@ -821,7 +825,7 @@ CDA_CharacterData::insertData(u_int32_t offset, const wchar_t* arg)
 }
 
 void
-CDA_CharacterData::deleteData(u_int32_t offset, u_int32_t count)
+CDA_CharacterData::deleteData(uint32_t offset, uint32_t count)
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -830,7 +834,7 @@ CDA_CharacterData::deleteData(u_int32_t offset, u_int32_t count)
 }
 
 void
-CDA_CharacterData::replaceData(u_int32_t offset, u_int32_t count,
+CDA_CharacterData::replaceData(uint32_t offset, uint32_t count,
                                const wchar_t* arg)
   throw(std::exception&)
 {
@@ -1170,7 +1174,7 @@ CDA_Element::hasAttributeNS(const wchar_t* namespaceURI,
 }
 
 iface::dom::Text*
-CDA_TextBase::splitText(u_int32_t offset)
+CDA_TextBase::splitText(uint32_t offset)
   throw(std::exception&)
 {
   EXCEPTION_TRY;
@@ -1801,12 +1805,12 @@ CDA_EventBase::currentTarget()
   return CDA_WrapNode(ret);
 }
 
-u_int16_t
+uint16_t
 CDA_EventBase::eventPhase()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  u_int16_t ret = gdome_evnt_eventPhase(fetchEvent(), &exc);
+  uint16_t ret = gdome_evnt_eventPhase(fetchEvent(), &exc);
   EXCEPTION_CATCH;
   return ret;
 }
@@ -1948,12 +1952,12 @@ CDA_MutationEvent::attrName()
   return cxxret;
 }
 
-u_int16_t
+uint16_t
 CDA_MutationEvent::attrChange()
   throw(std::exception&)
 {
   EXCEPTION_TRY;
-  u_int16_t ret = gdome_mevnt_attrChange(impl, &exc);
+  uint16_t ret = gdome_mevnt_attrChange(impl, &exc);
   EXCEPTION_CATCH;
   return ret;
 }
@@ -1967,7 +1971,7 @@ CDA_MutationEvent::initMutationEvent
  const wchar_t* prevValueArg,
  const wchar_t* newValueArg,
  const wchar_t* attrNameArg,
- u_int16_t attrChangeArg
+ uint16_t attrChangeArg
 )
   throw(std::exception&)
 {
