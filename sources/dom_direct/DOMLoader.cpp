@@ -1,7 +1,15 @@
 #include <inttypes.h>
 #include "DOMImplementation.hpp"
 #include <stdexcept>
+
+#ifdef _WIN32
+#define LIBXML_STATIC
+#endif
 #include <libxml/tree.h>
+
+#ifdef _WIN32
+#define swprintf _snwprintf
+#endif
 
 struct
 {

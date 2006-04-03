@@ -432,7 +432,7 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
 
   newChild->mParent = this;
   newChild->mPositionInParent = mNodeList.insert(posit, newChild);
-  u_int32_t i;
+  uint32_t i;
   for (i = 0; i < newChild->_cda_refcount; i++)
     add_ref();
 
@@ -519,7 +519,7 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
 
   mNodeList.erase(posit);
   oldChild->mParent = NULL;
-  u_int32_t i;
+  uint32_t i;
   for (i = 0; i < oldChild->_cda_refcount; i++)
     release_ref();
 
@@ -911,7 +911,7 @@ CDA_Node::searchForElementById(const wchar_t* elementId)
 }
 
 iface::dom::Node*
-CDA_NodeList::item(u_int32_t index)
+CDA_NodeList::item(uint32_t index)
   throw(std::exception&)
 {
   if (mParent == NULL)
@@ -956,7 +956,7 @@ CDA_NodeList::length()
 }
 
 iface::dom::Node*
-CDA_NodeListDFSSearch::item(u_int32_t index)
+CDA_NodeListDFSSearch::item(uint32_t index)
   throw(std::exception&)
 {
   if (mParent == NULL)

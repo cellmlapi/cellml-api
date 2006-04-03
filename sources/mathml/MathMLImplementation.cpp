@@ -1,6 +1,10 @@
 #include "Utilities.hxx"
 #include "MathMLImplementation.hxx"
 
+#ifdef _WIN32
+#define swprintf _snwprintf
+#endif
+
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
 #define XLINK_NS L"http://www.w3.org/1999/xlink"
 #define NULL_NS L""

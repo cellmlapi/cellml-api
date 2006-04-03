@@ -2,6 +2,10 @@
 #include <string>
 #include "DOMWriter.hxx"
 
+#ifdef _WIN32
+#define swprintf _snwprintf
+#endif
+
 // These tables were adapted from the Mozilla code.
 static const wchar_t* kEntities[] = {
 L"", L"", L"", L"", L"", L"", L"", L"", L"", L"",
