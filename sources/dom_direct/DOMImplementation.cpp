@@ -5,6 +5,30 @@
 CDA_DOMImplementation* CDA_DOMImplementation::sDOMImplementation = 
   new CDA_DOMImplementation();
 
+CDA_Element* CDA_NewElement
+(
+ CDA_Document* doc,  const wchar_t* nsURI, const wchar_t* elname
+)
+{
+  if (!wcscmp(nsURI, L"http://www.w3.org/1998/Math/MathML"))
+    return WrapMathMLElement(doc, elname);
+
+  return new CDA_Element(doc);
+}
+
+CDA_Document* CDA_NewDocument
+(
+ const wchar_t* nsURI
+)
+{
+  if (!wcscmp(nsURI, L"http://www.w3.org/1998/Math/MathML"))
+  {
+    return WrapMathMLDocument();
+  }
+
+  return new CDA_Document();
+}
+
 bool
 CDA_DOMImplementation::hasFeature(const wchar_t* feature, const wchar_t* version)
   throw(std::exception&)
@@ -13,6 +37,8 @@ CDA_DOMImplementation::hasFeature(const wchar_t* feature, const wchar_t* version
       (!wcscmp(version, L"1.0") || !wcscmp(version, L"2.0")))
     return true;
   if (!wcscmp(feature, L"Events") && !wcscmp(version, L"2.0"))
+    return true;
+  if (!wcscmp(feature, L"org.w3c.dom.mathml") && !wcscmp(version, L"2.0"))
     return true;
 
   return false;
@@ -31,7 +57,7 @@ CDA_DOMImplementation::createDocumentType(const wchar_t* qualifiedName,
 iface::dom::Document*
 CDA_DOMImplementation::createDocument(const wchar_t* namespaceURI,
                                       const wchar_t* qualifiedName,
-                                      iface::dom::DocumentType* doctype)
+                                      iface::dom::DocumentType* idoctype)
   throw(std::exception&)
 {
   const wchar_t* colon = wcschr(qualifiedName, L':');
@@ -45,7 +71,38 @@ CDA_DOMImplementation::createDocument(const wchar_t* namespaceURI,
       throw iface::dom::DOMException();
   }
 
-  return new CDA_Document(namespaceURI, qualifiedName, doctype);
+  CDA_DocumentType* doctype = dynamic_cast<CDA_DocumentType*>(idoctype);
+  if (doctype == NULL)
+    throw iface::dom::DOMException();
+
+  if (doctype && doctype->mDocument != NULL)
+    throw iface::dom::DOMException();
+
+  RETURN_INTO_OBJREF(doc, CDA_Document, CDA_NewDocument(namespaceURI));
+
+  if (doctype)
+  {
+    doctype->mDocument = doc;
+    doctype->mDocumentIsAncestor = false;
+    doc->add_ref();
+    doc->insertBeforePrivate(doctype, NULL)->release_ref();
+  }
+
+  const wchar_t* pos = wcschr(qualifiedName, L':');
+  if (pos == NULL)
+    pos = qualifiedName;
+  else
+    pos++;
+  RETURN_INTO_OBJREF(docel, CDA_Element,
+                     CDA_NewElement(doc, namespaceURI, pos));
+  docel->mNamespaceURI = namespaceURI;
+  docel->mNodeName = qualifiedName;
+  docel->mLocalName = pos;
+
+  doc->appendChild(docel)->release_ref();
+
+  doc->add_ref();
+  return doc;
 }
 
 CDA_Node::CDA_Node(CDA_Document* aDocument)
@@ -64,6 +121,10 @@ CDA_Node::~CDA_Node()
      ::iterator i(mListeners.begin());
   for (; i != mListeners.end(); i++)
     (*i).second->release_ref();
+  std::list<CDA_Node*>::iterator i2(mNodeList.begin());
+  // Now start deleting the children...
+  for (; i2 != mNodeList.end(); i2++)
+    delete (*i2);
 }
 
 wchar_t*
@@ -91,7 +152,8 @@ iface::dom::Node*
 CDA_Node::parentNode()
   throw(std::exception&)
 {
-  mParent->add_ref();
+  if (mParent != NULL)
+    mParent->add_ref();
   return mParent;
 }
 
@@ -145,9 +207,11 @@ iface::dom::Node*
 CDA_Node::previousSibling()
   throw(std::exception&)
 {
+  if (mParent == NULL)
+    return NULL;
+
   bool iAmAnAttr = (nodeType() == iface::dom::Node::ATTRIBUTE_NODE);
-  std::list<CDA_Node*>::iterator i =
-    std::find(mParent->mNodeList.begin(), mParent->mNodeList.end(), this);
+  std::list<CDA_Node*>::iterator i = mPositionInParent;
   while (true)
   {
     if (i == mParent->mNodeList.begin())
@@ -169,9 +233,11 @@ iface::dom::Node*
 CDA_Node::nextSibling()
   throw(std::exception&)
 {
+  if (mParent == NULL)
+    return NULL;
+
   bool iAmAnAttr = (nodeType() == iface::dom::Node::ATTRIBUTE_NODE);
-  std::list<CDA_Node*>::iterator i =
-    std::find(mParent->mNodeList.begin(), mParent->mNodeList.end(), this);
+  std::list<CDA_Node*>::iterator i = mPositionInParent;
 
   while (true)
   {
@@ -212,6 +278,17 @@ CDA_Node::updateDocumentAncestorStatus(bool aStatus)
 {
   if (mDocumentIsAncestor == aStatus)
     return;
+
+  if (aStatus && mDocument)
+  {
+    // We are now under the document's refcount...
+    mDocument->release_ref();
+  }
+  else if (mDocument && !aStatus)
+  {
+    // The document is no longer sharing our refcount, so needs an explicit ref
+    mDocument->add_ref();
+  }
 
   mDocumentIsAncestor = aStatus;
   // Now tell our children...
@@ -296,9 +373,20 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
   if (newChild == NULL)
     throw iface::dom::DOMException();
 
+  // If there is a refchild, it must belong to us...
+  if (refChild && refChild->mParent != this)
+    throw iface::dom::DOMException();
+
   if (newChild->mDocument != mDocument)
     throw iface::dom::DOMException();
   
+  if (newChild == refChild)
+  {
+    // It is already in the right place...
+    newChild->add_ref();
+    return newChild;
+  }
+
   if (newChild->mParent != NULL)
   {
     // Check that it is not our ancestor
@@ -313,46 +401,55 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
 
   std::list<CDA_Node*>::iterator posit;
 
-  if (refChild != NULL)
-  {
-    posit = std::find(mNodeList.begin(), mNodeList.end(), refChild);
-    if (posit == mNodeList.end())
-      throw iface::dom::DOMException();
-  }
-  else
-    posit = mNodeList.end();
-
   if (newChild->mParent)
   {
+    assert(!refChild || (refChild->mParent == this));
     newChild->mParent->removeChild(newChild)->release_ref();
+    assert(!refChild || (refChild->mParent == this));
   }
 
   // Just in case the remove failed.
   if (newChild->mParent != NULL)
     throw iface::dom::DOMException();
 
-  newChild->mParent = this;
-  u_int32_t i;
-  for (i = 0; i < newChild->_cda_refcount; i++)
-    add_ref();
+  if (refChild != NULL)
+  {
+    posit = std::find(mNodeList.begin(), mNodeList.end(), refChild);
+    if (posit == mNodeList.end())
+    {
+      // The child belongs to us, but isn't on the list!
+      assert(refChild->mParent == this);
+      assert(0);
+      throw iface::dom::DOMException();
+    }
+  }
+  else
+    posit = mNodeList.end();
 
   // Update nodes' mDocumentIsAncestor...
   if (mDocumentIsAncestor)
     newChild->updateDocumentAncestorStatus(true);
 
-  mNodeList.insert(posit, newChild);
+  newChild->mParent = this;
+  newChild->mPositionInParent = mNodeList.insert(posit, newChild);
+  u_int32_t i;
+  for (i = 0; i < newChild->_cda_refcount; i++)
+    add_ref();
 
   // Fire off a DOMNodeInserted
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMNodeInserted", true, false,
-                        this, L"", L"", L"",
-                        iface::events::MutationEvent::MODIFICATION);
-  newChild->dispatchEvent(me);
-
-  if (mDocumentIsAncestor)
+  if (newChild->eventsHaveEffects())
   {
-    // All ancestors of newChild now need a DOMNodeInsertedIntoDocument...
-    newChild->dispatchInsertedIntoDocument(me);
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMNodeInserted", true, false,
+                          this, L"", L"", L"",
+                          iface::events::MutationEvent::MODIFICATION);
+    newChild->dispatchEvent(me);
+    
+    if (mDocumentIsAncestor)
+    {
+      // All ancestors of newChild now need a DOMNodeInsertedIntoDocument...
+      newChild->dispatchInsertedIntoDocument(me);
+    }
   }
 
   newChild->add_ref();
@@ -366,6 +463,12 @@ CDA_Node::replaceChild(iface::dom::Node* inewChild,
 {
   CDA_Node* newChild = dynamic_cast<CDA_Node*>(inewChild);
   CDA_Node* oldChild = dynamic_cast<CDA_Node*>(ioldChild);
+
+  if (newChild == oldChild)
+  {
+    oldChild->add_ref();
+    return oldChild;
+  }
 
   if (oldChild == NULL)
     throw iface::dom::DOMException();
@@ -398,13 +501,16 @@ iface::dom::Node*
 CDA_Node::removeChildPrivate(CDA_Node* oldChild)
   throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMNodeRemoved", true, false,
-                        this, L"", L"", L"",
-                        iface::events::MutationEvent::MODIFICATION);
-  oldChild->dispatchEvent(me);
-  if (mDocumentIsAncestor)
-    oldChild->dispatchRemovedFromDocument(me);
+  if (oldChild->eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMNodeRemoved", true, false,
+                          this, L"", L"", L"",
+                          iface::events::MutationEvent::MODIFICATION);
+    oldChild->dispatchEvent(me);
+    if (mDocumentIsAncestor)
+      oldChild->dispatchRemovedFromDocument(me);
+  }
 
   std::list<CDA_Node*>::iterator posit =
     std::find(mNodeList.begin(), mNodeList.end(), oldChild);
@@ -444,7 +550,14 @@ iface::dom::Node*
 CDA_Node::cloneNode(bool deep)
   throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(c, CDA_Node, shallowCloneNode());
+  return cloneNodePrivate(mDocument, deep);
+}
+
+CDA_Node*
+CDA_Node::cloneNodePrivate(CDA_Document* aDoc, bool deep)
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(c, CDA_Node, shallowCloneNode(aDoc));
 
   if (!deep)
   {
@@ -459,11 +572,12 @@ CDA_Node::cloneNode(bool deep)
     // See if its an attribute(in which case we already cloned it).
     if ((*i)->nodeType() == iface::dom::Node::ATTRIBUTE_NODE)
       continue;
-    RETURN_INTO_OBJREF(n, iface::dom::Node, (*i)->cloneNode(true));
-    c->appendChild(n)->release_ref();
+    RETURN_INTO_OBJREF(n, CDA_Node, (*i)->cloneNodePrivate(c->mDocument, true));
+    c->insertBeforePrivate(n, NULL)->release_ref();
   }
 
   c->add_ref();
+
   return c;
 }
 
@@ -512,6 +626,8 @@ CDA_Node::isSupported(const wchar_t* feature, const wchar_t* version)
       (!wcscmp(version, L"1.0") || !wcscmp(version, L"2.0")))
     return true;
   if (!wcscmp(feature, L"Events") && !wcscmp(version, L"2.0"))
+    return true;
+  if (!wcscmp(feature, L"org.w3c.dom.mathml") && !wcscmp(version, L"2.0"))
     return true;
 
   return false;
@@ -602,22 +718,47 @@ CDA_Node::removeEventListener(const wchar_t* type,
 }
 
 bool
+CDA_Node::eventsHaveEffects()
+  throw(std::exception&)
+{
+  bool anyoneListening = false;
+  CDA_Node* n = this;
+  while (true)
+  {
+    if (n->hasEventListeners())
+    {
+      anyoneListening = true;
+      break;
+    }
+    n = n->mParent;
+    if (!n)
+      break;
+  }
+
+  return anyoneListening;
+}
+
+bool
 CDA_Node::dispatchEvent(iface::events::Event* evt)
   throw(std::exception&)
 {
-  // We can't dispatch just any even, so try a cast first.
+  // We can't dispatch just any event, so try a cast first.
   CDA_MutationEvent* me = dynamic_cast<CDA_MutationEvent*>(evt);
-  if (evt != NULL)
+  if (me == NULL)
     throw iface::dom::DOMException();
 
   // Build a list of all ancestors, in case it changes...
   std::list<ObjRef<CDA_Node> > nodeList;
+
   CDA_Node* n = this;
+
   while (true)
   {
     n = n->mParent;
     if (n)
+    {
       nodeList.push_back(n);
+    }
     else
       break;
   }
@@ -632,9 +773,9 @@ CDA_Node::dispatchEvent(iface::events::Event* evt)
   std::list<ObjRef<CDA_Node> >::iterator i = nodeList.end();
   while (true)
   {
-    i--;
     if (i == nodeList.begin())
       break;
+    i--;
     me->mCurrentTarget = (*i);
 
     (*i)->callEventListeners(me);
@@ -664,11 +805,22 @@ CDA_Node::dispatchEvent(iface::events::Event* evt)
   return !(me->mCanceled);
 }
 
+bool
+CDA_Node::hasEventListeners()
+  throw(std::exception&)
+{
+  return (mListeners.begin() != mListeners.end());
+}
+
 void
 CDA_Node::callEventListeners(CDA_MutationEvent* me)
   throw(std::exception&)
 {
   bool wantCapturing, wantBubbling;
+
+  if (!hasEventListeners())
+    return;
+
   if (me->mPhase == iface::events::Event::CAPTURING_PHASE)
   {
     wantCapturing = true;
@@ -688,12 +840,15 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
   {
     std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
        ::iterator i(mListeners.find(std::pair<std::wstring,bool>
-                                    (me->mType, true)));
-    for (; i != mListeners.end(); i++)
+                                    (me->mType, true))), i2;
+    for (; i != mListeners.end();)
     {
+      i2 = i;
+      i++;
+
       try
       {
-        (*i).second->handleEvent(me);
+        (*i2).second->handleEvent(me);
       }
       catch (...)
       {
@@ -707,12 +862,14 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
   {
     std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
        ::iterator i(mListeners.find(std::pair<std::wstring,bool>
-                                    (me->mType, false)));
-    for (; i != mListeners.end(); i++)
+                                    (me->mType, false))), i2;
+    for (; i != mListeners.end();)
     {
+      i2 = i;
+      i++;
       try
       {
-        (*i).second->handleEvent(me);
+        (*i2).second->handleEvent(me);
       }
       catch (...)
       {
@@ -742,6 +899,14 @@ CDA_Node::recursivelyChangeDocument(CDA_Document* aNewDocument)
 iface::dom::Element*
 CDA_Node::searchForElementById(const wchar_t* elementId)
 {
+  std::list<CDA_Node*>::iterator i = mNodeList.begin();
+  for (; i != mNodeList.end(); i++)
+  {
+    iface::dom::Element* e = (*i)->searchForElementById(elementId);
+    if (e != NULL)
+      return e;
+  }
+  
   return NULL;
 }
 
@@ -755,6 +920,11 @@ CDA_NodeList::item(u_int32_t index)
   std::list<CDA_Node*>::iterator i = mParent->mNodeList.begin();
   for (; i != mParent->mNodeList.end(); i++)
   {
+    // See if it is a type we ignore...
+    uint16_t type = (*i)->nodeType();
+    if (type == iface::dom::Node::ATTRIBUTE_NODE ||
+        type == iface::dom::Node::DOCUMENT_TYPE_NODE)
+      continue;
     if (index == 0)
     {
       (*i)->add_ref();
@@ -772,9 +942,13 @@ CDA_NodeList::length()
   throw(std::exception&)
 {
   std::list<CDA_Node*>::iterator i = mParent->mNodeList.begin();
-  uint32_t length;
+  uint32_t length = 0;
   for (; i != mParent->mNodeList.end(); i++)
   {
+    uint16_t type = (*i)->nodeType();
+    if (type == iface::dom::Node::ATTRIBUTE_NODE ||
+        type == iface::dom::Node::DOCUMENT_TYPE_NODE)
+      continue;
     length++;
   }
 
@@ -845,36 +1019,6 @@ CDA_NodeListDFSSearch::item(u_int32_t index)
                              ((*(itp.first))->mNodeList.begin(),
                               (*(itp.first))->mNodeList.end()));
   }
-
-  std::list<CDA_Node*>::iterator i = mParent->mNodeList.begin();
-  for (; i != mParent->mNodeList.end(); i++)
-  {
-    // Skip this run if it is filtered...
-    switch (mFilterType)
-    {
-    case LEVEL_1_NAME_FILTER:
-      if ((*i)->mNodeName != mNameFilter)
-        continue;
-      break;
-    case LEVEL_2_NAME_FILTER:
-      if ((*i)->mLocalName != mNameFilter &&
-          (mNameFilter != L"*"))
-        continue;
-      if ((*i)->mNamespaceURI != mNamespaceFilter &&
-          (mNamespaceFilter != L"*"))
-        continue;
-      break;
-    }
-
-    if (index == 0)
-    {
-      (*i)->add_ref();
-      return (*i);
-      break;
-    }
-    index--;
-  }
-
   return NULL;
 }
 
@@ -882,31 +1026,69 @@ uint32_t
 CDA_NodeListDFSSearch::length()
   throw(std::exception&)
 {
-  std::list<CDA_Node*>::iterator i = mParent->mNodeList.begin();
-  uint32_t length;
-  for (; i != mParent->mNodeList.end(); i++)
+  if (mParent == NULL)
+    return 0;
+
+  uint32_t length = 0;
+
+  // We have a list of iterators...
+  std::list<std::pair<std::list<CDA_Node*>::iterator,
+                      std::list<CDA_Node*>::iterator> > iteratorStack;
+  iteratorStack.push_front(std::pair<std::list<CDA_Node*>::iterator,
+                                     std::list<CDA_Node*>::iterator>
+                           (mParent->mNodeList.begin(),
+                            mParent->mNodeList.end()));
+
+  while (!iteratorStack.empty())
   {
-    switch (mFilterType)
+    std::pair<std::list<CDA_Node*>::iterator,
+              std::list<CDA_Node*>::iterator> itp
+      = iteratorStack.front();
+
+    if (itp.first == itp.second)
     {
-    case LEVEL_1_NAME_FILTER:
-      if ((*i)->mNodeName != mNameFilter)
-        continue;
-      break;
-    case LEVEL_2_NAME_FILTER:
-      if ((*i)->mLocalName != mNameFilter)
-        continue;
-      if ((*i)->mNamespaceURI != mNamespaceFilter)
-        continue;
-      break;
+      iteratorStack.pop_front();
+      continue;
     }
-    length++;
+
+    // This is a pre-order traversal, so consider the element first...
+    if ((*(itp.first))->nodeType() == iface::dom::Node::ELEMENT_NODE)
+    {
+      bool hit = true;
+      switch (mFilterType)
+      {
+      case LEVEL_1_NAME_FILTER:
+        if ((*(itp.first))->mNodeName != mNameFilter &&
+            (*(itp.first))->mNodeName != L"*")
+          hit = false;
+        break;
+      case LEVEL_2_NAME_FILTER:
+        if ((*(itp.first))->mLocalName != mNameFilter &&
+            (mNameFilter != L"*"))
+          hit = false;
+        if ((*(itp.first))->mNamespaceURI != mNamespaceFilter &&
+            (mNamespaceFilter != L"*"))
+          hit = false;
+        break;
+      }
+      if (hit)
+      {
+        length++;
+      }
+    }
+
+    // Next, we need to recurse...
+    iteratorStack.push_front(std::pair<std::list<CDA_Node*>::iterator,
+                             std::list<CDA_Node*>::iterator>
+                             ((*(itp.first))->mNodeList.begin(),
+                              (*(itp.first))->mNodeList.end()));
   }
 
   return length;
 }
 
 CDA_NamedNodeMap::CDA_NamedNodeMap(CDA_Element* aElement)
-  : mElement(aElement)
+  : _cda_refcount(1), mElement(aElement)
 {
   mElement->add_ref();
 }
@@ -920,10 +1102,8 @@ iface::dom::Node*
 CDA_NamedNodeMap::getNamedItem(const wchar_t* name)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p =
-    std::pair<std::wstring,std::wstring>(L"", name);
-  std::map<std::pair<std::wstring,std::wstring>, CDA_Attr*>::iterator i =
-    mElement->attributeMap.find(p);
+  std::map<std::wstring, CDA_Attr*>::iterator i =
+    mElement->attributeMap.find(name);
   if (i == mElement->attributeMap.end())
     return NULL;
   (*i).second->add_ref();
@@ -943,9 +1123,9 @@ iface::dom::Node*
 CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = mElement->attributeMap.find(p);
+  // std::pair<std::wstring,std::wstring> p(L"", name);
+  std::map<std::wstring, CDA_Attr*>::iterator
+    i = mElement->attributeMap.find(name);
 
   if (i == mElement->attributeMap.end())
     throw iface::dom::DOMException();
@@ -953,13 +1133,22 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   mElement->removeChildPrivate(at)->release_ref();
-  mElement->attributeMap.erase(i);
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        at, at->mNodeValue.c_str(), L"", name,
-                        iface::events::MutationEvent::REMOVAL);
-  mElement->dispatchEvent(me);
+  mElement->attributeMap.erase(i);
+  mElement->attributeMapNS.erase
+    (
+     std::pair<std::wstring,std::wstring>(at->mNamespaceURI,
+                                          at->mLocalName)
+    );
+
+  if (mElement->eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          at, at->mNodeValue.c_str(), L"", name,
+                          iface::events::MutationEvent::REMOVAL);
+    mElement->dispatchEvent(me);
+  }
 
   at->add_ref();
   return at;
@@ -970,8 +1159,8 @@ CDA_NamedNodeMap::item(uint32_t index)
   throw(std::exception&)
 {
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator i =
-    mElement->attributeMap.begin();
-  for (; i != mElement->attributeMap.end(); i++)
+    mElement->attributeMapNS.begin();
+  for (; i != mElement->attributeMapNS.end(); i++)
   {
     if (index == 0)
     {
@@ -998,8 +1187,8 @@ CDA_NamedNodeMap::getNamedItemNS(const wchar_t* namespaceURI,
   std::pair<std::wstring,std::wstring> p =
     std::pair<std::wstring,std::wstring>(namespaceURI, localName);
   std::map<std::pair<std::wstring,std::wstring>, CDA_Attr*>::iterator i =
-    mElement->attributeMap.find(p);
-  if (i == mElement->attributeMap.end())
+    mElement->attributeMapNS.find(p);
+  if (i == mElement->attributeMapNS.end())
     return NULL;
   (*i).second->add_ref();
   return (*i).second;
@@ -1021,29 +1210,33 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
 {
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = mElement->attributeMap.find(p);
+    i = mElement->attributeMapNS.find(p);
 
-  if (i == mElement->attributeMap.end())
+  if (i == mElement->attributeMapNS.end())
     throw iface::dom::DOMException();
 
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   mElement->removeChildPrivate(at)->release_ref();
-  mElement->attributeMap.erase(i);
+  mElement->attributeMapNS.erase(i);
+  mElement->attributeMap.erase(at->mNodeName);
   at->add_ref();
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        at, at->mNodeValue.c_str(), L"", localName,
-                        iface::events::MutationEvent::REMOVAL);
-  mElement->dispatchEvent(me);
+  if (mElement->eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          at, at->mNodeValue.c_str(), L"", localName,
+                          iface::events::MutationEvent::REMOVAL);
+    mElement->dispatchEvent(me);
+  }
 
   return at;
 }
 
 CDA_NamedNodeMapDT::CDA_NamedNodeMapDT(CDA_DocumentType* aDocType,
                                        uint16_t aType)
-  : mDocType(aDocType), mType(aType)
+  : _cda_refcount(1), mDocType(aDocType), mType(aType)
 {
   mDocType->add_ref();
 }
@@ -1109,7 +1302,7 @@ CDA_NamedNodeMapDT::length()
   throw(std::exception&)
 {
   std::list<CDA_Node*>::iterator i = mDocType->mNodeList.begin();
-  uint32_t l;
+  uint32_t l = 0;
   for (; i != mDocType->mNodeList.end(); i++)
   {
     if ((*i)->nodeType() != mType)
@@ -1262,6 +1455,9 @@ CDA_CharacterData::replaceData(uint32_t offset, uint32_t count,
 void
 CDA_CharacterData::dispatchCharDataModified(const std::wstring& oldValue)
 {
+  if (!eventsHaveEffects())
+    return;
+
   RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
   me->initMutationEvent(L"DOMCharacterData", true, false,
                         NULL, oldValue.c_str(), mNodeValue.c_str(), L"",
@@ -1270,10 +1466,10 @@ CDA_CharacterData::dispatchCharDataModified(const std::wstring& oldValue)
 }
 
 CDA_Node*
-CDA_Attr::shallowCloneNode()
+CDA_Attr::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  CDA_Attr* ca = new CDA_Attr(mDocument);
+  CDA_Attr* ca = new CDA_Attr(aDoc);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
@@ -1322,22 +1518,23 @@ CDA_Attr::ownerElement()
 }
 
 CDA_Node*
-CDA_Element::shallowCloneNode()
+CDA_Element::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  CDA_Element* ca = new CDA_Element(mDocument);
+  CDA_Element* ca = CDA_NewElement(aDoc, mNamespaceURI.c_str(),
+                                   mLocalName.c_str());
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
   ca->mNodeValue = mNodeValue;
   // Attributes get cloned too...
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator i
-    = attributeMap.begin();
-  for (; i != attributeMap.end(); i++)
+    = attributeMapNS.begin();
+  for (; i != attributeMapNS.end(); i++)
   {
-    RETURN_INTO_OBJREF(n, CDA_Node, (*i).second->shallowCloneNode());
+    RETURN_INTO_OBJREF(n, CDA_Node, (*i).second->shallowCloneNode(aDoc));
     CDA_Attr* at = static_cast<CDA_Attr*>(n.getPointer());
-    ca->setAttributeNodeNS(at);
+    assert(ca->setAttributeNodeNS(at) == NULL);
   }
 
   return ca;
@@ -1368,9 +1565,8 @@ wchar_t*
 CDA_Element::getAttribute(const wchar_t* name)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+  std::map<std::wstring, CDA_Attr*>::iterator
+    i = attributeMap.find(name);
   if (i == attributeMap.end())
     return wcsdup(L"");
 
@@ -1381,9 +1577,8 @@ void
 CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+  std::map<std::wstring, CDA_Attr*>::iterator
+    i = attributeMap.find(name);
 
   if (i == attributeMap.end())
   {
@@ -1391,24 +1586,34 @@ CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
     a->mNodeValue = value;
     a->mNodeName = name;
     insertBeforePrivate(a, NULL)->release_ref();
-    attributeMap.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                        CDA_Attr*>(p, a));
+    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
+                          CDA_Attr*>
+                          (std::pair<std::wstring,std::wstring>(L"", name),
+                           a));
+    attributeMap.insert(std::pair<std::wstring,CDA_Attr*>(name, a));
 
-    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-    me->initMutationEvent(L"DOMAttrModified", true, false,
-                          a, L"", value, name,
-                          iface::events::MutationEvent::ADDITION);
-    dispatchEvent(me);
+    if (eventsHaveEffects())
+    {
+      RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+      me->initMutationEvent(L"DOMAttrModified", true, false,
+                            a, L"", value, name,
+                            iface::events::MutationEvent::ADDITION);
+      dispatchEvent(me);
+    }
     return;
   }
   
   std::wstring oldValue = (*i).second->mNodeValue;
   (*i).second->mNodeValue = value;
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        (*i).second, oldValue.c_str(), value, name,
-                        iface::events::MutationEvent::MODIFICATION);
-  dispatchEvent(me);
+
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          (*i).second, oldValue.c_str(), value, name,
+                          iface::events::MutationEvent::MODIFICATION);
+    dispatchEvent(me);
+  }
 }
 
 void
@@ -1416,8 +1621,8 @@ CDA_Element::removeAttribute(const wchar_t* name)
   throw(std::exception&)
 {
   std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+  std::map<std::wstring, CDA_Attr*>::iterator
+    i = attributeMap.find(name);
 
   if (i == attributeMap.end())
   {
@@ -1429,21 +1634,25 @@ CDA_Element::removeAttribute(const wchar_t* name)
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
+  attributeMapNS.erase(std::pair<std::wstring,std::wstring>
+                       (at->mNamespaceURI, at->mLocalName));
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        (*i).second, at->mNodeValue.c_str(), L"", name,
-                        iface::events::MutationEvent::REMOVAL);
-  dispatchEvent(me);
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          (*i).second, at->mNodeValue.c_str(), L"", name,
+                          iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+  }
 }
 
 iface::dom::Attr*
 CDA_Element::getAttributeNode(const wchar_t* name)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+  std::map<std::wstring, CDA_Attr*>::iterator
+    i = attributeMap.find(name);
   if (i == attributeMap.end())
     return NULL;
 
@@ -1459,38 +1668,49 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   if (newAttr == NULL)
     throw iface::dom::DOMException();
   RETURN_INTO_WSTRING(name, newAttr->name());
-  std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+  std::map<std::wstring, CDA_Attr*>::iterator
+    i = attributeMap.find(name);
   if (i == attributeMap.end())
   {
     insertBeforePrivate(newAttr, NULL)->release_ref();
-    attributeMap.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                        CDA_Attr*>(p, newAttr));
+    attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
+                        (name, newAttr));
+    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
+                          CDA_Attr*>(std::pair<std::wstring,std::wstring>
+                                     (L"", name), newAttr));
 
-    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-    me->initMutationEvent(L"DOMAttrModified", true, false,
-                          (*i).second, L"", newAttr->mNodeValue.c_str(),
-                          name.c_str(), iface::events::MutationEvent::ADDITION);
-    dispatchEvent(me);
+    if (eventsHaveEffects())
+    {
+      RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+      me->initMutationEvent(L"DOMAttrModified", true, false,
+                            newAttr, L"", newAttr->mNodeValue.c_str(),
+                            name.c_str(), iface::events::MutationEvent::ADDITION);
+      dispatchEvent(me);
+    }
     return NULL;
   }
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
   insertBeforePrivate(newAttr, NULL)->release_ref();
-  attributeMap.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                      CDA_Attr*>(p, newAttr));
+  attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
+                      (name, newAttr));
+  attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
+                        CDA_Attr*>(std::pair<std::wstring,std::wstring>
+                                   (L"", name), newAttr));
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        at, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
-                        name.c_str(), iface::events::MutationEvent::REMOVAL);
-  dispatchEvent(me);
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        newAttr, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
-                        name.c_str(), iface::events::MutationEvent::ADDITION);
-  dispatchEvent(me);
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          at, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
+                          name.c_str(), iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          newAttr, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
+                          name.c_str(), iface::events::MutationEvent::ADDITION);
+    dispatchEvent(me);
+  }
 
   at->add_ref();
   return at;
@@ -1504,9 +1724,8 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   if (oldAttr == NULL)
     throw iface::dom::DOMException();
   RETURN_INTO_WSTRING(name, oldAttr->name());
-  std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+  std::map<std::wstring, CDA_Attr*>::iterator
+    i = attributeMap.find(name);
   if (i == attributeMap.end())
   {
     throw iface::dom::DOMException();
@@ -1514,12 +1733,16 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
+  attributeMapNS.erase(std::pair<std::wstring,std::wstring>(L"", name));
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        at, at->mNodeValue.c_str(), L"",
-                        name.c_str(), iface::events::MutationEvent::REMOVAL);
-  dispatchEvent(me);
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          at, at->mNodeValue.c_str(), L"",
+                          name.c_str(), iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+  }
 
   at->add_ref();
   return at;
@@ -1539,8 +1762,8 @@ CDA_Element::getAttributeNS(const wchar_t* namespaceURI,
 {
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
-  if (i == attributeMap.end())
+    i = attributeMapNS.find(p);
+  if (i == attributeMapNS.end())
     return wcsdup(L"");
 
   return (*i).second->value();
@@ -1561,9 +1784,9 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
 
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+    i = attributeMapNS.find(p);
 
-  if (i == attributeMap.end())
+  if (i == attributeMapNS.end())
   {
     RETURN_INTO_OBJREF(a, CDA_Attr, new CDA_Attr(mDocument));
     a->value(value);
@@ -1571,24 +1794,32 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
     a->mLocalName = localName;
     a->mNamespaceURI = namespaceURI;
     insertBeforePrivate(a, NULL)->release_ref();
-    attributeMap.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                        CDA_Attr*>(p, a));
+    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
+                          CDA_Attr*>(p, a));
+    attributeMap.insert(std::pair<std::wstring,CDA_Attr*>(qualifiedName, a));
 
-    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-    me->initMutationEvent(L"DOMAttrModified", true, false,
-                          a, L"", value, localName,
-                          iface::events::MutationEvent::ADDITION);
-    dispatchEvent(me);
+    if (eventsHaveEffects())
+    {
+      RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+      me->initMutationEvent(L"DOMAttrModified", true, false,
+                            a, L"", value, localName,
+                            iface::events::MutationEvent::ADDITION);
+      dispatchEvent(me);
+    }
     return;
   }
 
   std::wstring oldValue = (*i).second->mNodeValue;
   (*i).second->mNodeValue = value;
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        (*i).second, oldValue.c_str(), value, localName,
-                        iface::events::MutationEvent::MODIFICATION);
-  dispatchEvent(me);
+
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          (*i).second, oldValue.c_str(), value, localName,
+                          iface::events::MutationEvent::MODIFICATION);
+    dispatchEvent(me);
+  }
 }
 
 void
@@ -1598,9 +1829,9 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
 {
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
+    i = attributeMapNS.find(p);
 
-  if (i == attributeMap.end())
+  if (i == attributeMapNS.end())
   {
     // DOM doesn't say its an error to remove a non-existant attribute.
     return;
@@ -1609,13 +1840,17 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
-  attributeMap.erase(i);
+  attributeMapNS.erase(i);
+  attributeMap.erase((*i).second->mNodeName);
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        (*i).second, at->mNodeValue.c_str(), L"", localName,
-                        iface::events::MutationEvent::REMOVAL);
-  dispatchEvent(me);
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          (*i).second, at->mNodeValue.c_str(), L"", localName,
+                          iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+  }
 }
 
 iface::dom::Attr*
@@ -1625,8 +1860,8 @@ CDA_Element::getAttributeNodeNS(const wchar_t* namespaceURI,
 {
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
-  if (i == attributeMap.end())
+    i = attributeMapNS.find(p);
+  if (i == attributeMapNS.end())
     return NULL;
 
   (*i).second->add_ref();
@@ -1640,40 +1875,53 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
   CDA_Attr* newAttr = dynamic_cast<CDA_Attr*>(inewAttr);
   if (newAttr == NULL)
     throw iface::dom::DOMException();
-  RETURN_INTO_WSTRING(namespaceURI, newAttr->namespaceURI());
-  RETURN_INTO_WSTRING(localName, newAttr->localName());
-  std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
+  std::pair<std::wstring,std::wstring> p
+    (newAttr->mNamespaceURI, newAttr->mLocalName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(p);
-  if (i == attributeMap.end())
+    i = attributeMapNS.find(p);
+  if (i == attributeMapNS.end())
   {
     insertBeforePrivate(newAttr, NULL)->release_ref();
-    attributeMap.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                        CDA_Attr*>(p, newAttr));
+    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
+                          CDA_Attr*>(p, newAttr));
+    attributeMap.insert(std::pair<std::wstring,CDA_Attr*>
+                        (newAttr->mNodeName, newAttr));
 
-    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-    me->initMutationEvent(L"DOMAttrModified", true, false,
-                          (*i).second, L"", newAttr->mNodeValue.c_str(),
-                          localName.c_str(), iface::events::MutationEvent::ADDITION);
-    dispatchEvent(me);
+    if (eventsHaveEffects())
+    {
+      RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+      me->initMutationEvent(L"DOMAttrModified", true, false,
+                            newAttr, L"", newAttr->mNodeValue.c_str(),
+                            newAttr->mLocalName.c_str(),
+                            iface::events::MutationEvent::ADDITION);
+      dispatchEvent(me);
+    }
+
     return NULL;
   }
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
-  attributeMap.erase(i);
+  attributeMapNS.erase(i);
+  attributeMap.erase(at->mNodeName);
   insertBeforePrivate(newAttr, NULL)->release_ref();
-  attributeMap.insert(std::pair<std::pair<std::wstring, std::wstring>,
+  attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
                       CDA_Attr*>(p, newAttr));
+  attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
+                      (at->mNodeName, newAttr));
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        at, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
-                        localName.c_str(), iface::events::MutationEvent::REMOVAL);
-  dispatchEvent(me);
-  me->initMutationEvent(L"DOMAttrModified", true, false,
-                        newAttr, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
-                        localName.c_str(), iface::events::MutationEvent::ADDITION);
-  dispatchEvent(me);
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          at, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
+                          newAttr->mLocalName.c_str(), iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          newAttr, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
+                          newAttr->mLocalName.c_str(),
+                          iface::events::MutationEvent::ADDITION);
+    dispatchEvent(me);
+  }
 
   at->add_ref();
   return at;
@@ -1691,19 +1939,16 @@ bool
 CDA_Element::hasAttribute(const wchar_t* name)
   throw(std::exception&)
 {
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(std::pair<std::wstring,std::wstring>(L"", name));
-  return (i != attributeMap.end());
+  return attributeMap.find(name) != attributeMap.end();
 }
 
 bool CDA_Element::hasAttributeNS(const wchar_t* namespaceURI,
                                  const wchar_t* localName)
   throw(std::exception&)
 {
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMap.find(std::pair<std::wstring,std::wstring>(namespaceURI,
-                                                               localName));
-  return (i != attributeMap.end());
+  return attributeMapNS.find(std::pair<std::wstring, std::wstring>
+                             (namespaceURI, localName))
+    != attributeMapNS.end();
 }
 
 iface::dom::Element*
@@ -1713,6 +1958,15 @@ CDA_Element::searchForElementById(const wchar_t* elementId)
   //     defined.', but we don't deal with DTDs, so we deviate from the DOM and
   //     just assume that "id" in namespace "" is of type ID.
   RETURN_INTO_WSTRING(ourId, getAttribute(L"id"));
+  if (ourId == L"")
+  {
+    wchar_t* tmp = getAttribute(L"xml:id");
+    if (tmp != NULL)
+    {
+      ourId = tmp;
+      free(tmp);
+    }
+  }
   if (ourId == elementId)
   {
     add_ref();
@@ -1737,7 +1991,7 @@ CDA_TextBase::splitText(uint32_t offset)
   if (mParent == NULL)
     throw iface::dom::DOMException();
 
-  RETURN_INTO_OBJREF(n, CDA_Node, shallowCloneNode());
+  RETURN_INTO_OBJREF(n, CDA_Node, shallowCloneNode(mDocument));
   CDA_TextBase* tb = static_cast<CDA_TextBase*>(n.getPointer());
   std::wstring oldData;
   oldData = mNodeValue;
@@ -1753,10 +2007,10 @@ CDA_TextBase::splitText(uint32_t offset)
 }
 
 CDA_Node*
-CDA_Text::shallowCloneNode()
+CDA_Text::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  CDA_Text* ca = new CDA_Text(mDocument);
+  CDA_Text* ca = new CDA_Text(aDoc);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
@@ -1767,10 +2021,10 @@ CDA_Text::shallowCloneNode()
 }
 
 CDA_Node*
-CDA_Comment::shallowCloneNode()
+CDA_Comment::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  CDA_Comment* ca = new CDA_Comment(mDocument);
+  CDA_Comment* ca = new CDA_Comment(aDoc);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
@@ -1781,10 +2035,10 @@ CDA_Comment::shallowCloneNode()
 }
 
 CDA_Node*
-CDA_CDATASection::shallowCloneNode()
+CDA_CDATASection::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  CDA_CDATASection* ca = new CDA_CDATASection(mDocument);
+  CDA_CDATASection* ca = new CDA_CDATASection(aDoc);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
@@ -1795,11 +2049,11 @@ CDA_CDATASection::shallowCloneNode()
 }
 
 CDA_Node*
-CDA_DocumentType::shallowCloneNode()
+CDA_DocumentType::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
   CDA_DocumentType* ca =
-    new CDA_DocumentType(mDocument, mNodeName, mPublicId, mSystemId);
+    new CDA_DocumentType(aDoc, mNodeName, mPublicId, mSystemId);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeValue = mNodeValue;
@@ -1852,10 +2106,10 @@ CDA_DocumentType::internalSubset()
 }
 
 CDA_Node*
-CDA_Notation::shallowCloneNode()
+CDA_Notation::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  CDA_Notation* ca = new CDA_Notation(mDocument, mPublicId, mSystemId);
+  CDA_Notation* ca = new CDA_Notation(aDoc, mPublicId, mSystemId);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
@@ -1878,10 +2132,10 @@ CDA_Notation::systemId()
 }
 
 CDA_Node*
-CDA_Entity::shallowCloneNode()
+CDA_Entity::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  CDA_Entity* ca = new CDA_Entity(mDocument, mPublicId, mSystemId,
+  CDA_Entity* ca = new CDA_Entity(aDoc, mPublicId, mSystemId,
                                   mNotationName);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
@@ -1912,11 +2166,11 @@ CDA_Entity::notationName()
 }
 
 CDA_Node*
-CDA_EntityReference::shallowCloneNode()
+CDA_EntityReference::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
   CDA_EntityReference* ca =
-    new CDA_EntityReference(mDocument);
+    new CDA_EntityReference(aDoc);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
@@ -1925,11 +2179,11 @@ CDA_EntityReference::shallowCloneNode()
 }
 
 CDA_Node*
-CDA_ProcessingInstruction::shallowCloneNode()
+CDA_ProcessingInstruction::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
   CDA_ProcessingInstruction* ca =
-    new CDA_ProcessingInstruction(mDocument, mNodeName, mNodeValue);
+    new CDA_ProcessingInstruction(aDoc, mNodeName, mNodeValue);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   return ca;
@@ -1956,24 +2210,68 @@ CDA_ProcessingInstruction::data(const wchar_t* attr)
   std::wstring oldData = mNodeValue;
   mNodeValue = attr;
 
-  RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMCharacterData", true, false,
-                        NULL, oldData.c_str(), mNodeValue.c_str(), L"",
-                        iface::events::MutationEvent::MODIFICATION);
-  dispatchEvent(me);
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMCharacterData", true, false,
+                          NULL, oldData.c_str(), mNodeValue.c_str(), L"",
+                          iface::events::MutationEvent::MODIFICATION);
+    dispatchEvent(me);
+  }
 }
 
 CDA_Node*
-CDA_DocumentFragment::shallowCloneNode()
+CDA_DocumentFragment::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
   CDA_DocumentFragment* ca =
-    new CDA_DocumentFragment(mDocument);
+    new CDA_DocumentFragment(aDoc);
   ca->mLocalName = mLocalName;
   ca->mNamespaceURI = mNamespaceURI;
   ca->mNodeName = mNodeName;
   ca->mNodeValue = mNodeValue;
   return ca;
+}
+
+CDA_Document::CDA_Document
+(
+ const wchar_t* namespaceURI,
+ const wchar_t* qualifiedName,
+ CDA_DocumentType* doctype
+)
+  : CDA_Node(this)
+{
+  const wchar_t* pos = wcschr(qualifiedName, L':');
+  
+  // We are our own document ancestor, so fix the refcounts...
+  mDocumentIsAncestor = true;
+  mDocument->release_ref();
+
+  if (doctype && doctype->mDocument != NULL)
+    throw iface::dom::DOMException();
+  
+  if (doctype)
+  {
+    doctype->mDocument = this;
+    doctype->mDocumentIsAncestor = false;
+    doctype->mDocument->add_ref();
+  }
+  
+  if (doctype != NULL)
+    insertBeforePrivate(doctype, NULL)->release_ref();
+
+  if (pos == NULL)
+    pos = qualifiedName;
+  else
+    pos++;
+
+  RETURN_INTO_OBJREF(docel, CDA_Element,
+                     CDA_NewElement(this, namespaceURI, pos));
+  docel->mNamespaceURI = namespaceURI;
+  docel->mNodeName = qualifiedName;
+  docel->mLocalName = pos;
+
+  appendChild(docel)->release_ref();
 }
 
 iface::dom::DocumentType*
@@ -2018,7 +2316,7 @@ iface::dom::Element*
 CDA_Document::createElement(const wchar_t* tagName)
   throw(std::exception&)
 {
-  CDA_Element* el = new CDA_Element(this);
+  CDA_Element* el = CDA_NewElement(this, L"", tagName);
   el->mNodeName = tagName;
   return el;
 }
@@ -2120,14 +2418,15 @@ CDA_Document::createElementNS(const wchar_t* namespaceURI,
                               const wchar_t* qualifiedName)
   throw(std::exception&)
 {
-  CDA_Element* el = new CDA_Element(mDocument);
-  el->mNamespaceURI = namespaceURI;
-  el->mNodeName = qualifiedName;
   const wchar_t* pos = wcschr(qualifiedName, L':');
   if (pos == NULL)
-    el->mLocalName = qualifiedName;
+    pos = qualifiedName;
   else
-    el->mLocalName = pos + 1;
+    pos++;
+  CDA_Element* el = CDA_NewElement(this, namespaceURI, pos);
+  el->mNamespaceURI = namespaceURI;
+  el->mNodeName = qualifiedName;
+  el->mLocalName = pos;
   return el;
 }
 
@@ -2179,12 +2478,11 @@ CDA_Document::createEvent(const wchar_t* domEventType)
 }
 
 CDA_Node*
-CDA_Document::shallowCloneNode()
+CDA_Document::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType, doctype());
-  CDA_Document* ca = new CDA_Document(mNamespaceURI.c_str(), mNodeName.c_str(),
-                                      dt);
+  /* RETURN_INTO_OBJREFD(dt, CDA_DocumentType, doctype()); */
+  CDA_Document* ca = new CDA_Document();
   ca->mLocalName = mLocalName;
   ca->mNodeValue = mNodeValue;
   return ca;

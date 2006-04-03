@@ -32,40 +32,30 @@ struct
 /* 0xF8 */ D D D D D D D {0, 0x00}
 };
 
-wchar_t*
-CDA_utf8_to_wchar(const char *str)
+static void
+operator+=(std::wstring& data, const char* str)
 {
   uint8_t c;
-  uint32_t allocCount = 0;
+  wchar_t buf[512];
   const char* p = str;
+  wchar_t* np = buf;
 
   if (str == NULL)
-    return NULL;
+    return;
 
-  for (; (c = (uint8_t)*p); p++)
-  {
-    if (CDA_utf8_data[c].len == 0)
-      return NULL;
-#ifdef WCHAR_T_IS_32_BIT
-    allocCount++;
-#else
-    // Check if the character is in the range 0x10000(>16 bits)
-    // to 0x110000. This only happens with 4 byte UTF8 sequences.
-    if (CDA_utf8_data[c].len == 4)
-      allocCount += 2;
-#endif
-    p += CDA_utf8_data[c].len;
-  }
-
-  wchar_t* newData = new wchar_t[allocCount];
-  wchar_t* np = newData;
   while ((c = *p++))
   {
     uint8_t l = CDA_utf8_data[c].len;
-    *np = CDA_utf8_data[c].mask & c;
 
-#ifndef WCHAR_T_IS_32_BIT
-    if (CDA_utf8_data[c].len == 4)
+    if (((uint32_t)(np - buf)) > ((sizeof(buf)/sizeof(wchar_t)) - 4))
+    {
+      *np = 0;
+      data += buf;
+      np = buf;
+    }
+
+#ifndef WCHAR_T_IS_32BIT
+    if (l == 4)
     {
       uint8_t c2 = (uint8_t)*p++;
       uint8_t c3 = (uint8_t)*p++;
@@ -77,26 +67,26 @@ CDA_utf8_to_wchar(const char *str)
     else
     {
 #endif
+      *np = CDA_utf8_data[c].mask & c;
       while (--l)
       {
         *np <<= 6;
         *np |= ((*p++) & 0x3F);
       }
-#ifndef WCHAR_T_IS_32_BIT
+#ifndef WCHAR_T_IS_32BIT
     }
 #endif
 
     np++;
   }
   *np = 0;
-
-  return newData;
+  data += buf;
 }
 
 char*
 CDA_wchar_to_UTF8(const wchar_t *str)
 {
-  uint32_t len;
+  uint32_t len = 0;
   const wchar_t* p = str;
   wchar_t c;
   for (; (c = *p); p++)
@@ -110,8 +100,9 @@ CDA_wchar_to_UTF8(const wchar_t *str)
     else
       len += 4;
   }
-  char* newData = new char[len];
+  char* newData = (char*)malloc(len + 1);
   char* np = newData;
+  p = str;
 
   while ((c = *p++))
   {
@@ -122,7 +113,7 @@ CDA_wchar_to_UTF8(const wchar_t *str)
       *np++ = (char)(0xC0 | ((c >> 6) & 0x1F));
       *np++ = (char)(0x80 | (c & 0x3F));
     }
-#ifndef WCHAR_T_IS_32_BIT
+#ifndef WCHAR_T_IS_32BIT
     else if ((c & 0xFC00) == 0xD800)
     {
       uint16_t u = ((c >> 6) & 0xF) + 1;
@@ -134,7 +125,7 @@ CDA_wchar_to_UTF8(const wchar_t *str)
     }
 #endif
     else
-#ifdef WCHAR_T_IS_32_BIT
+#ifdef WCHAR_T_IS_32BIT
          if (c <= 0xFFFF)
 #endif
     {
@@ -142,7 +133,7 @@ CDA_wchar_to_UTF8(const wchar_t *str)
       *np++ = (char)(0x80 | ((c >> 6) & 0x3F));
       *np++ = (char)(0x80 | (c & 0x3F));
     }
-#ifdef WCHAR_T_IS_32_BIT
+#ifdef WCHAR_T_IS_32BIT
     else
     {
       *np++ = (char)(0xF0 | ((c >> 18) & 0x7));
@@ -154,7 +145,7 @@ CDA_wchar_to_UTF8(const wchar_t *str)
   }
 
   *np++ = 0;
-  return np;
+  return newData;
 }
 
 CDA_Node*
@@ -166,40 +157,47 @@ WrapXML2Node
 {
   ObjRef<CDA_Document> docR;
   ObjRef<CDA_Node> n;
+
+  std::wstring localName, namespaceURI;
+
+  if (x2node->name != NULL)
+  {
+    localName += (const char*)x2node->name;
+  }
+
+  bool setNS = false;
+
   bool isNodeStructure = false;
   switch (x2node->type)
   {
   case XML_ELEMENT_NODE:
     {
+      setNS = true;
+      if (x2node->ns && x2node->ns->href)
+        namespaceURI += (const char*)x2node->ns->href;
       isNodeStructure = true;
-      RETURN_INTO_OBJREF(el, CDA_Element, new CDA_Element(doc));
+      RETURN_INTO_OBJREF(el, CDA_Element, CDA_NewElement(doc, namespaceURI.c_str(),
+                                                         localName.c_str()));
       n = el;
       xmlAttr* at;
       for (at = x2node->properties; at != NULL; at = at->next)
       {
         RETURN_INTO_OBJREF(cattr, CDA_Attr, new CDA_Attr(doc));
-        // Ownership of the attribute lies with the parent...
-        cattr->mParent = el;
-        el->add_ref();
-        cattr->release_ref();
 
-        el->mNodeList.push_back(cattr);
-        std::wstring nsURI, prefix;
+        std::wstring nsURI, prefix, name;
         if (at->ns && at->ns->href)
         {
-          wchar_t* tmp = CDA_utf8_to_wchar((const char*)at->ns->href);
-          nsURI = tmp;
-          delete [] tmp;
-          tmp = CDA_utf8_to_wchar((const char*)at->ns->prefix);
-          prefix = tmp;
-          delete [] tmp;
+          nsURI += (const char*)at->ns->href;
+          prefix += (const char*)at->ns->prefix;
         }
-        RETURN_INTO_WSTRING(name, CDA_utf8_to_wchar((const char*)at->name));
+        name += (const char*)at->name;
 
-        if (at->ns)
-          cattr->mLocalName = name;
-        if (nsURI != L"")
+        cattr->mLocalName = name;
+        if (prefix != L"")
           cattr->mNodeName = prefix + L":" + name;
+        else
+          cattr->mNodeName = name;
+        cattr->mNamespaceURI = nsURI;
 
         xmlNode* tmp;
         for (tmp = at->children; tmp != NULL; tmp = tmp->next)
@@ -215,23 +213,25 @@ WrapXML2Node
         else
           txt = (char*)xmlGetNoNsProp(at->parent, at->name);
 
-        wchar_t* wtxt = CDA_utf8_to_wchar(txt);
-        cattr->mNodeValue = wtxt;
-        delete [] wtxt;
+        cattr->mNodeValue += txt;
         xmlFree(txt);
 
-        el->attributeMap.insert
+        el->attributeMapNS.insert
           (
            std::pair<std::pair<std::wstring, std::wstring>, CDA_Attr*>
            (std::pair<std::wstring, std::wstring>(nsURI, name), cattr)
           );
+        el->attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
+                                (cattr->mNodeName, cattr));
+        el->insertBeforePrivate(cattr, NULL)->release_ref();
       }
     }
     break;
   case XML_TEXT_NODE:
     {
       isNodeStructure = true;
-      n = already_AddRefd<CDA_Text>(new CDA_Text(doc));
+      CDA_Text* txt = new CDA_Text(doc);
+      n = already_AddRefd<CDA_Text>(txt);
     }
     break;
   case XML_CDATA_SECTION_NODE:
@@ -249,9 +249,10 @@ WrapXML2Node
   case XML_ENTITY_NODE:
     {
       xmlEntity* se = (xmlEntity*)x2node;
-      RETURN_INTO_WSTRING(notName, CDA_utf8_to_wchar((const char*)se->name));
-      RETURN_INTO_WSTRING(pubID, CDA_utf8_to_wchar((const char*)se->ExternalID));
-      RETURN_INTO_WSTRING(sysID, CDA_utf8_to_wchar((const char*)se->SystemID));
+      std::wstring notName, pubID, sysID;
+      notName += (const char*)se->name;
+      pubID += (const char*)se->ExternalID;
+      sysID += (const char*)se->SystemID;
       n = already_AddRefd<CDA_Entity>
           (new CDA_Entity(doc, pubID, sysID, notName));
     }
@@ -263,6 +264,7 @@ WrapXML2Node
         already_AddRefd<CDA_ProcessingInstruction>
         (new CDA_ProcessingInstruction(doc, L"", L""));
     }
+    break;
   case XML_COMMENT_NODE:
     {
       isNodeStructure = true;
@@ -274,7 +276,21 @@ WrapXML2Node
   case XML_DOCB_DOCUMENT_NODE:
   case XML_HTML_DOCUMENT_NODE:
     {
-      docR = already_AddRefd<CDA_Document>(new CDA_Document(L"", L"", NULL));
+      // We need to decide what type of document before we add the children to
+      // it(e.g. for MathML support), so do a preliminary scan...
+      xmlNode* tnode = x2node->children;
+      std::wstring rootNS;
+      for (; tnode; tnode = tnode->next)
+      {
+        if (tnode->type != XML_ELEMENT_NODE)
+          continue;
+        if (tnode->ns == NULL || tnode->ns->href == NULL)
+          break;
+        rootNS += (const char*)tnode->ns->href;
+        break;
+      }
+
+      docR = already_AddRefd<CDA_Document>(CDA_NewDocument(rootNS.c_str()));
       doc = docR;
       xmlDoc* sd = (xmlDoc*)x2node;
       xmlDtd* dt = sd->intSubset;
@@ -286,15 +302,16 @@ WrapXML2Node
       }
       n = doc;
     }
+    break;
 
   case XML_DOCUMENT_TYPE_NODE:
     {
       xmlDtd* dt = (xmlDtd*)x2node;
-      RETURN_INTO_WSTRING(name, CDA_utf8_to_wchar((const char*)dt->name));
-      RETURN_INTO_WSTRING(pubID, CDA_utf8_to_wchar((const char*)dt->ExternalID));
-      RETURN_INTO_WSTRING(sysID, CDA_utf8_to_wchar((const char*)dt->SystemID));
+      std::wstring pubID, sysID;
+      pubID += (const char*)dt->ExternalID;
+      sysID += (const char*)dt->SystemID;
       n = already_AddRefd<CDA_DocumentType>
-          (new CDA_DocumentType(doc, name, pubID, sysID));
+          (new CDA_DocumentType(doc, localName, pubID, sysID));
     }
     break;
 
@@ -322,29 +339,32 @@ WrapXML2Node
 
   if (isNodeStructure)
   {
-    if (x2node->name)
+    if (!setNS)
     {
-      RETURN_INTO_WSTRING(name, CDA_utf8_to_wchar((const char*)x2node->name));
-      n->mNodeName = name;
-      n->mLocalName = name;
+      if (x2node->ns && x2node->ns->href)
+      {
+        namespaceURI += (const char*)x2node->ns->href;
+      }
     }
+
+    n->mLocalName = localName;
     if (x2node->ns && x2node->ns->href)
     {
-      RETURN_INTO_WSTRING(name,
-                          CDA_utf8_to_wchar((const char*)x2node->ns->href));
-      n->mNamespaceURI = name;
+      n->mNamespaceURI = namespaceURI;
     }
     if (x2node->ns && x2node->ns->prefix)
     {
-      RETURN_INTO_WSTRING(prefix,
-                          CDA_utf8_to_wchar((const char*)x2node->ns->prefix));
-      RETURN_INTO_WSTRING(name, CDA_utf8_to_wchar((const char*)x2node->name));
-      n->mNodeName = prefix + name;
+      std::wstring prefix;
+      prefix += (const char*)x2node->ns->prefix;
+      n->mNodeName = prefix + L":" + localName;
     }
+    else
+      n->mNodeName = localName;
+
     if (x2node->content)
     {
-      RETURN_INTO_WSTRING(content,
-                          CDA_utf8_to_wchar((const char*)x2node->content));
+      std::wstring content;
+      content += (const char*)x2node->content;
       n->mNodeValue = content;
     }
   }
@@ -370,10 +390,11 @@ CDA_DOMImplementation::loadDocument
  const wchar_t* aURL,
  std::wstring& aErrorMessage
 )
+  throw(std::exception&)
 {
   char* URL = CDA_wchar_to_UTF8(aURL);
   std::string sURL = URL;
-  delete [] URL;
+  free(URL);
   wchar_t buf[20];
 
   xmlParserCtxtPtr ctxt =
@@ -398,15 +419,13 @@ CDA_DOMImplementation::loadDocument
     std::wstring fname, msg;
     if (err->file)
     {
-      wchar_t* tmp = CDA_utf8_to_wchar(err->file);
-      fname = tmp;
-      delete [] tmp;
+      std::wstring fname;
+      fname += (const char*)err->file;
     }
     if (err->message)
     {
-      wchar_t* tmp = CDA_utf8_to_wchar(err->message);
-      msg = tmp;
-      delete [] tmp;      
+      std::wstring msg;
+      msg += (const char*)err->message;
     }
 
     switch (err->code)

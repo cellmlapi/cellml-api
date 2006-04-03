@@ -1,3 +1,5 @@
+#include "DOMBootstrap.hxx"
+
 class CDA_ModelLoader
   : public iface::cellml_api::DOMModelLoader
 {
@@ -34,7 +36,7 @@ class CDA_DOMURLLoader
   : public iface::cellml_api::DOMURLLoader
 {
 public:
-  CDA_DOMURLLoader(CDA_DOMImplementation* aDOMImpl);
+  CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl);
   virtual ~CDA_DOMURLLoader() { mDOMImpl->release_ref(); }
 
   CDA_IMPL_REFCOUNT
@@ -48,7 +50,7 @@ public:
     throw(std::exception&);
   wchar_t* lastErrorMessage() throw(std::exception&);
 private:
-  CDA_DOMImplementation* mDOMImpl;
+  CellML_DOMImplementationBase* mDOMImpl;
   std::wstring mLastError;
 };
 
@@ -67,5 +69,5 @@ public:
   iface::dom::DOMImplementation* domImplementation() throw(std::exception&);
   iface::cellml_api::DOMURLLoader* localURLLoader() throw(std::exception&);
 private:
-  CDA_DOMImplementation* domimpl;
+  CellML_DOMImplementationBase* domimpl;
 };

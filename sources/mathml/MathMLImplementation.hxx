@@ -1,7 +1,7 @@
 #include <exception>
 #include <inttypes.h>
 #include "IfaceMathML-content-APISPEC.hxx"
-#include "DOMImplementation.hxx"
+#include "DOMImplementation.hpp"
 #include <map>
 
 class CDA_MathMLDocument
@@ -9,7 +9,11 @@ class CDA_MathMLDocument
     public virtual CDA_Document
 {
 public:
-  CDA_MathMLDocument(GdomeDocument* d);
+  CDA_MathMLDocument(
+#ifdef USE_GDOME
+                     GdomeDocument* d
+#endif
+                    );
   virtual ~CDA_MathMLDocument() {};
 
   CDA_IMPL_QI3(dom::Node, dom::Document, mathml_dom::MathMLDocument)
@@ -19,12 +23,20 @@ public:
   wchar_t* URI() throw(std::exception&);
 };
 
+#ifdef USE_GDOME
+#define ELCONSARG GdomeElement* el
+#define ELCONSCALL el
+#else
+#define ELCONSARG CDA_Document* doc
+#define ELCONSCALL doc
+#endif
+
 class CDA_MathMLElement
   : public virtual iface::mathml_dom::MathMLElement,
     public virtual CDA_Element
 {
 public:
-  CDA_MathMLElement(GdomeElement* el);
+  CDA_MathMLElement(ELCONSARG);
 
   CDA_IMPL_QI3(dom::Node, dom::Element, mathml_dom::MathMLElement)
 
@@ -73,7 +85,7 @@ public:
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContainer, mathml_dom::MathMLMathElement)
 
-  CDA_MathMLMathElement(GdomeElement* elem);
+  CDA_MathMLMathElement(ELCONSARG);
 
   wchar_t* macros() throw(std::exception&);
   void macros(const wchar_t* attr) throw(std::exception&);
@@ -86,7 +98,7 @@ class CDA_MathMLContentElement
     public virtual CDA_MathMLElement
 {
 public:
-  CDA_MathMLContentElement(GdomeElement* elem);
+  CDA_MathMLContentElement(ELCONSARG);
 };
 
 class CDA_MathMLContentToken
@@ -94,7 +106,7 @@ class CDA_MathMLContentToken
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLContentToken(GdomeElement* elem);
+  CDA_MathMLContentToken(ELCONSARG);
 
   iface::mathml_dom::MathMLNodeList* arguments() throw(std::exception&);
   wchar_t* definitionURL() throw(std::exception&);
@@ -113,7 +125,7 @@ class CDA_MathMLCnElement
     public virtual CDA_MathMLContentToken
 {
 public:
-  CDA_MathMLCnElement(GdomeElement* el);
+  CDA_MathMLCnElement(ELCONSARG);
   CDA_IMPL_QI6(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLContentToken, mathml_dom::MathMLCnElement)
@@ -134,7 +146,7 @@ public:
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLContentToken, mathml_dom::MathMLCiElement)
 
-  CDA_MathMLCiElement(GdomeElement* elem);
+  CDA_MathMLCiElement(ELCONSARG);
 
   wchar_t* type() throw(std::exception&);
   void type(const wchar_t* attr) throw(std::exception&);
@@ -145,7 +157,7 @@ class CDA_MathMLCsymbolElement
     public virtual CDA_MathMLContentToken
 {
 public:
-  CDA_MathMLCsymbolElement(GdomeElement* elem);
+  CDA_MathMLCsymbolElement(ELCONSARG);
 
   CDA_IMPL_QI6(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
@@ -158,7 +170,7 @@ class CDA_MathMLContentContainer
     public virtual CDA_MathMLContainer
 {
 public:
-  CDA_MathMLContentContainer(GdomeElement* elem);
+  CDA_MathMLContentContainer(ELCONSARG);
 
   CDA_IMPL_QI6(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
@@ -192,7 +204,7 @@ public:
                mathml_dom::MathMLContainer, mathml_dom::MathMLContentContainer,
                mathml_dom::MathMLApplyElement)
 
-  CDA_MathMLApplyElement(GdomeElement* el);
+  CDA_MathMLApplyElement(ELCONSARG);
 
   iface::mathml_dom::MathMLElement* _cxx_operator() throw(std::exception&);
   void _cxx_operator(iface::mathml_dom::MathMLElement* attr) throw(std::exception&);
@@ -207,7 +219,7 @@ class CDA_MathMLFnElement
     public virtual CDA_MathMLContentContainer
 {
 public:
-  CDA_MathMLFnElement(GdomeElement* el);
+  CDA_MathMLFnElement(ELCONSARG);
   CDA_IMPL_QI7(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLContainer,
@@ -225,7 +237,7 @@ class CDA_MathMLLambdaElement
     public virtual CDA_MathMLContentContainer
 {
 public:
-  CDA_MathMLLambdaElement(GdomeElement* el);
+  CDA_MathMLLambdaElement(ELCONSARG);
 
   CDA_IMPL_QI7(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
@@ -241,7 +253,7 @@ class CDA_MathMLSetElement
     public virtual CDA_MathMLContentContainer
 {
 public:
-  CDA_MathMLSetElement(GdomeElement* el);
+  CDA_MathMLSetElement(ELCONSARG);
   CDA_IMPL_QI7(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLContainer, mathml_dom::MathMLContentContainer,
@@ -257,7 +269,7 @@ class CDA_MathMLListElement
     public virtual CDA_MathMLContentContainer
 {
 public:
-  CDA_MathMLListElement(GdomeElement* el);
+  CDA_MathMLListElement(ELCONSARG);
   CDA_IMPL_QI7(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLContainer, mathml_dom::MathMLContentContainer,
@@ -273,7 +285,7 @@ class CDA_MathMLBvarElement
     public virtual CDA_MathMLContentContainer
 {
 public:
-  CDA_MathMLBvarElement(GdomeElement* el);
+  CDA_MathMLBvarElement(ELCONSARG);
   CDA_IMPL_QI7(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLContainer, mathml_dom::MathMLContentContainer,
@@ -285,7 +297,7 @@ class CDA_MathMLPredefinedSymbol
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLPredefinedSymbol(GdomeElement* el);
+  CDA_MathMLPredefinedSymbol(ELCONSARG);
 
   wchar_t* definitionURL() throw(std::exception&);
   void definitionURL(const wchar_t* attr) throw(std::exception&);
@@ -303,7 +315,7 @@ class CDA_MathMLTendsToElement
     public virtual CDA_MathMLPredefinedSymbol
 {
 public:
-  CDA_MathMLTendsToElement(GdomeElement* el);
+  CDA_MathMLTendsToElement(ELCONSARG);
   CDA_IMPL_QI6(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLPredefinedSymbol,
@@ -318,7 +330,7 @@ class CDA_MathMLIntervalElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLIntervalElement(GdomeElement* el);
+  CDA_MathMLIntervalElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLIntervalElement)
@@ -336,7 +348,7 @@ class CDA_MathMLConditionElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLConditionElement(GdomeElement* el);
+  CDA_MathMLConditionElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLConditionElement)
@@ -350,7 +362,7 @@ class CDA_MathMLDeclareElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLDeclareElement(GdomeElement* el);
+  CDA_MathMLDeclareElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLDeclareElement)
@@ -376,7 +388,7 @@ class CDA_MathMLVectorElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLVectorElement(GdomeElement* el);
+  CDA_MathMLVectorElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLVectorElement)
@@ -394,7 +406,7 @@ class CDA_MathMLMatrixElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLMatrixElement(GdomeElement* el);
+  CDA_MathMLMatrixElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLMatrixElement)
@@ -414,7 +426,7 @@ class CDA_MathMLMatrixrowElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLMatrixrowElement(GdomeElement* el);
+  CDA_MathMLMatrixrowElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLMatrixrowElement)
@@ -432,7 +444,7 @@ class CDA_MathMLPiecewiseElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLPiecewiseElement(GdomeElement* el);
+  CDA_MathMLPiecewiseElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLPiecewiseElement)
@@ -456,7 +468,7 @@ class CDA_MathMLCaseElement
     public virtual CDA_MathMLContentElement
 {
 public:
-  CDA_MathMLCaseElement(GdomeElement* el);
+  CDA_MathMLCaseElement(ELCONSARG);
   CDA_IMPL_QI5(dom::Node, dom::Element, mathml_dom::MathMLElement,
                mathml_dom::MathMLContentElement,
                mathml_dom::MathMLCaseElement)

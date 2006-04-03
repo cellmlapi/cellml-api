@@ -5,4 +5,5 @@ libcellml_la_SOURCES =
 libcellml_la_LIBADD = \
   cellml/libcellmlonly.la \
   mathml/libmathmlonly.la \
-  dom/libdomonly.la
+  dom/libdomonly.la \
+  dom_direct/libdomdirectonly.la

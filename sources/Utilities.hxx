@@ -302,6 +302,7 @@ public:
       mPtr->add_ref();
   }
 
+  // We need these explicit forms or the default overloads the templates below.
   void operator= (const already_AddRefd<T>& newAssign)
   {
     T* nap = newAssign.getPointer();
@@ -313,6 +314,30 @@ public:
   }
 
   void operator= (const ObjRef<T>& newAssign)
+  {
+    T* nap = newAssign.getPointer();
+    if (mPtr == nap)
+      return;
+    if (mPtr)
+      mPtr->release_ref();
+    mPtr = nap;
+    if (mPtr != NULL)
+      mPtr->add_ref();
+  }
+
+  template<class U>
+  void operator= (const already_AddRefd<U>& newAssign)
+  {
+    T* nap = newAssign.getPointer();
+    if (mPtr == nap)
+      return;
+    if (mPtr)
+      mPtr->release_ref();
+    mPtr = nap;
+  }
+
+  template<class U>
+  void operator= (const ObjRef<U>& newAssign)
   {
     T* nap = newAssign.getPointer();
     if (mPtr == nap)

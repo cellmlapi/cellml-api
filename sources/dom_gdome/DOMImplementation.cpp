@@ -1,5 +1,5 @@
 #include "Utilities.hxx"
-#include "DOMImplementation.hxx"
+#include "DOMImplementation.hpp"
 #include <string>
 #include "libxml2/libxml/xmlerror.h"
 

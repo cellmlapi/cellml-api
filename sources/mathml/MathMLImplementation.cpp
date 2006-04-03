@@ -17,8 +17,15 @@ CDA_DOMImplementation::createMathMLDocument()
     (createDocument(MATHML_NS, L"math", dt));
 }
 
-CDA_MathMLDocument::CDA_MathMLDocument(GdomeDocument* d)
+CDA_MathMLDocument::CDA_MathMLDocument
+(
+#ifdef USE_GDOME
+ GdomeDocument* d
+#endif
+)
+#ifdef USE_GDOME
   : CDA_Document(d)
+#endif
 {
 }
 
@@ -513,8 +520,8 @@ private:
   }
 };
 
-CDA_MathMLElement::CDA_MathMLElement(GdomeElement* el)
-  : CDA_Element(el)
+CDA_MathMLElement::CDA_MathMLElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL)
 {
 }
 
@@ -851,8 +858,8 @@ CDA_MathMLContainer::deleteDeclaration(uint32_t index)
   old2->release_ref();
 }
 
-CDA_MathMLMathElement::CDA_MathMLMathElement(GdomeElement* elem)
-  : CDA_Element(elem), CDA_MathMLElement(elem)
+CDA_MathMLMathElement::CDA_MathMLMathElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL)
 {
 }
 
@@ -888,13 +895,13 @@ CDA_MathMLMathElement::display(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"display", attr);
 }
 
-CDA_MathMLContentElement::CDA_MathMLContentElement(GdomeElement* elem)
-  : CDA_Element(elem), CDA_MathMLElement(elem)
+CDA_MathMLContentElement::CDA_MathMLContentElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL)
 {
 }
 
-CDA_MathMLContentToken::CDA_MathMLContentToken(GdomeElement* elem)
-  : CDA_Element(elem), CDA_MathMLElement(elem), CDA_MathMLContentElement(elem)
+CDA_MathMLContentToken::CDA_MathMLContentToken(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL), CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -1087,9 +1094,9 @@ CDA_MathMLContentToken::removeArgument(uint32_t index)
   return removeChild(old);
 }
 
-CDA_MathMLCnElement::CDA_MathMLCnElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el), CDA_MathMLContentElement(el),
-    CDA_MathMLContentToken(el)
+CDA_MathMLCnElement::CDA_MathMLCnElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),
+    CDA_MathMLContentElement(ELCONSCALL), CDA_MathMLContentToken(ELCONSCALL)
 {
 }
 
@@ -1152,9 +1159,9 @@ CDA_MathMLCnElement::nargs()
   return count;
 }
 
-CDA_MathMLCiElement::CDA_MathMLCiElement(GdomeElement* elem)
-  : CDA_Element(elem), CDA_MathMLElement(elem), CDA_MathMLContentElement(elem),
-    CDA_MathMLContentToken(elem)
+CDA_MathMLCiElement::CDA_MathMLCiElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL), CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentToken(ELCONSCALL)
 {
 }
 
@@ -1174,14 +1181,14 @@ CDA_MathMLCiElement::type(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"type", attr);
 }
 
-CDA_MathMLCsymbolElement::CDA_MathMLCsymbolElement(GdomeElement* elem)
-  : CDA_Element(elem), CDA_MathMLElement(elem), CDA_MathMLContentElement(elem),
-    CDA_MathMLContentToken(elem)
+CDA_MathMLCsymbolElement::CDA_MathMLCsymbolElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL), CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentToken(ELCONSCALL)
 {
 }
 
-CDA_MathMLContentContainer::CDA_MathMLContentContainer(GdomeElement* elem)
-  : CDA_Element(elem), CDA_MathMLElement(elem), CDA_MathMLContentElement(elem)
+CDA_MathMLContentContainer::CDA_MathMLContentContainer(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL), CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -1520,9 +1527,9 @@ CDA_MathMLContentContainer::removeBoundVariable(uint32_t index)
   return dynamic_cast<iface::mathml_dom::MathMLBvarElement*>(old2);
 }
 
-CDA_MathMLApplyElement::CDA_MathMLApplyElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el),
-    CDA_MathMLContentContainer(el)
+CDA_MathMLApplyElement::CDA_MathMLApplyElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentContainer(ELCONSCALL)
 {
 }
 
@@ -1703,9 +1710,9 @@ CDA_MathMLApplyElement::upLimit(iface::mathml_dom::MathMLElement* attr)
   n->release_ref();
 }
 
-CDA_MathMLFnElement::CDA_MathMLFnElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el),
-    CDA_MathMLContentContainer(el)
+CDA_MathMLFnElement::CDA_MathMLFnElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentContainer(ELCONSCALL)
 {
 }
 
@@ -1741,9 +1748,9 @@ CDA_MathMLFnElement::encoding(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"encoding", attr);
 }
 
-CDA_MathMLLambdaElement::CDA_MathMLLambdaElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el),
-    CDA_MathMLContentContainer(el)
+CDA_MathMLLambdaElement::CDA_MathMLLambdaElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentContainer(ELCONSCALL)
 {
 }
 
@@ -1761,9 +1768,9 @@ CDA_MathMLLambdaElement::expression(iface::mathml_dom::MathMLElement* attr)
   setArgument(attr, 1)->release_ref();
 }
 
-CDA_MathMLSetElement::CDA_MathMLSetElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el),
-    CDA_MathMLContentContainer(el)
+CDA_MathMLSetElement::CDA_MathMLSetElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentContainer(ELCONSCALL)
 {
 }
 
@@ -1791,9 +1798,9 @@ CDA_MathMLSetElement::type(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"type", attr);
 }
 
-CDA_MathMLListElement::CDA_MathMLListElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el),
-    CDA_MathMLContentContainer(el)
+CDA_MathMLListElement::CDA_MathMLListElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentContainer(ELCONSCALL)
 {
 }
 
@@ -1821,14 +1828,14 @@ CDA_MathMLListElement::ordering(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"order", attr);
 }
 
-CDA_MathMLBvarElement::CDA_MathMLBvarElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el),
-    CDA_MathMLContentContainer(el)
+CDA_MathMLBvarElement::CDA_MathMLBvarElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLContentContainer(ELCONSCALL)
 {
 }
 
-CDA_MathMLPredefinedSymbol::CDA_MathMLPredefinedSymbol(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLPredefinedSymbol::CDA_MathMLPredefinedSymbol(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -1881,9 +1888,9 @@ CDA_MathMLPredefinedSymbol::symbolName()
   return static_cast<CDA_Element*>(this)->tagName();
 }
 
-CDA_MathMLTendsToElement::CDA_MathMLTendsToElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el),
-    CDA_MathMLPredefinedSymbol(el)
+CDA_MathMLTendsToElement::CDA_MathMLTendsToElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL),
+    CDA_MathMLPredefinedSymbol(ELCONSCALL)
 {
 }
 
@@ -1911,8 +1918,8 @@ CDA_MathMLTendsToElement::type(const wchar_t* attr)
     ->setAttributeNS(NULL_NS, L"type", attr);
 }
 
-CDA_MathMLIntervalElement::CDA_MathMLIntervalElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLIntervalElement::CDA_MathMLIntervalElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -2113,8 +2120,8 @@ CDA_MathMLIntervalElement::end(iface::mathml_dom::MathMLContentElement* attr)
   }
 }
 
-CDA_MathMLConditionElement::CDA_MathMLConditionElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLConditionElement::CDA_MathMLConditionElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -2189,8 +2196,8 @@ CDA_MathMLConditionElement::condition(iface::mathml_dom::MathMLApplyElement* att
   appendChild(attr)->release_ref();
 }
 
-CDA_MathMLDeclareElement::CDA_MathMLDeclareElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLDeclareElement::CDA_MathMLDeclareElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -2399,8 +2406,8 @@ CDA_MathMLDeclareElement::constructor(iface::mathml_dom::MathMLElement* attr)
   throw iface::dom::DOMException();
 }
 
-CDA_MathMLVectorElement::CDA_MathMLVectorElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLVectorElement::CDA_MathMLVectorElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -2506,8 +2513,8 @@ CDA_MathMLVectorElement::removeComponent(uint32_t index)
   return dynamic_cast<iface::mathml_dom::MathMLContentElement*>(old2);
 }
 
-CDA_MathMLMatrixElement::CDA_MathMLMatrixElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLMatrixElement::CDA_MathMLMatrixElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -2635,8 +2642,8 @@ CDA_MathMLMatrixElement::removeRow(uint32_t index)
   return dynamic_cast<iface::mathml_dom::MathMLMatrixrowElement*>(old2);
 }
 
-CDA_MathMLMatrixrowElement::CDA_MathMLMatrixrowElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLMatrixrowElement::CDA_MathMLMatrixrowElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -2743,8 +2750,8 @@ CDA_MathMLMatrixrowElement::removeEntry(uint32_t index)
   return dynamic_cast<iface::mathml_dom::MathMLContentElement*>(old2);
 }
 
-CDA_MathMLPiecewiseElement::CDA_MathMLPiecewiseElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLPiecewiseElement::CDA_MathMLPiecewiseElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -2945,8 +2952,8 @@ CDA_MathMLPiecewiseElement::setCaseCondition
   return condition;
 }
 
-CDA_MathMLCaseElement::CDA_MathMLCaseElement(GdomeElement* el)
-  : CDA_Element(el), CDA_MathMLElement(el),  CDA_MathMLContentElement(el)
+CDA_MathMLCaseElement::CDA_MathMLCaseElement(ELCONSARG)
+  : CDA_Element(ELCONSCALL), CDA_MathMLElement(ELCONSCALL),  CDA_MathMLContentElement(ELCONSCALL)
 {
 }
 
@@ -3087,10 +3094,10 @@ CDA_MathMLCaseElement::caseCondition(iface::mathml_dom::MathMLContentElement* at
   throw iface::dom::DOMException();
 }
 
-#define C(x) static iface::dom::Element*\
-ConstructMathML##x(GdomeElement* el) \
+#define C(x) static CDA_Element*\
+ConstructMathML##x(ELCONSARG) \
 { \
-  return new CDA_MathML##x(el); \
+  return new CDA_MathML##x(ELCONSCALL); \
 }
 C(ApplyElement);
 C(PredefinedSymbol);
@@ -3116,13 +3123,19 @@ C(VectorElement);
 C(Element);
 #undef C
 
-iface::dom::Element*
-WrapMathMLElement(GdomeElement* el)
+CDA_Element*
+WrapMathMLElement
+(
+ ELCONSARG
+#ifndef USE_GDOME
+ , const wchar_t* cxxstr // The element name.
+#endif
+)
 {
   struct
   {
     const wchar_t* name;
-    iface::dom::Element* (*factory)(GdomeElement* el);
+    CDA_Element* (*factory)(ELCONSARG);
   } MathMLConstructors[] =
   { // Note: The presentation API isn't implemented.
     {L"abs", ConstructMathMLPredefinedSymbol},
@@ -3318,11 +3331,13 @@ WrapMathMLElement(GdomeElement* el)
   };
 
   // It is guaranteed to be in the MathML namespace. Get the local name...
+#ifdef USE_GDOME
   EXCEPTION_TRY;
   GdomeDOMString* str = gdome_el_localName(el, &exc);
   EXCEPTION_CATCH;
-
   TRGDOMSTRING(str);
+#endif
+
   uint32_t min_entry = 0;
   uint32_t max_entry = sizeof(MathMLConstructors)/sizeof(*MathMLConstructors) - 1;
   while (min_entry <= max_entry)
@@ -3331,8 +3346,10 @@ WrapMathMLElement(GdomeElement* el)
     int x = wcscmp(cxxstr, MathMLConstructors[selentry].name);
     if (x == 0)
     {
+#ifdef USE_GDOME
       free(cxxstr);
-      return MathMLConstructors[selentry].factory(el);
+#endif
+      return MathMLConstructors[selentry].factory(ELCONSCALL);
     }
     else if (x > 0)
     {
@@ -3347,12 +3364,21 @@ WrapMathMLElement(GdomeElement* el)
       max_entry = selentry - 1;
     }
   }
+#ifdef USE_GDOME
   free(cxxstr);
-  return ConstructMathMLElement(el);
+#endif
+  return ConstructMathMLElement(ELCONSCALL);
 }
 
-iface::dom::Document*
+CDA_Document*
+#ifdef USE_GDOME
 WrapMathMLDocument(GdomeDocument* doc)
 {
   return new CDA_MathMLDocument(doc);
 }
+#else
+WrapMathMLDocument()
+{
+  return new CDA_MathMLDocument();
+}
+#endif

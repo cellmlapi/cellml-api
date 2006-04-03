@@ -1,7 +1,7 @@
-#include "DOMImplementation.hxx"
-#include "DOMBootstrap.hxx"
+#include <inttypes.h>
+#include "DOMImplementation.hpp"
 
-iface::dom::DOMImplementation*
+CellML_DOMImplementationBase*
 CreateDOMImplementation()
 {
   return new CDA_DOMImplementation();

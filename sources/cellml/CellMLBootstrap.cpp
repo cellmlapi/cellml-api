@@ -1,10 +1,9 @@
 #include "CellMLImplementation.hpp"
-#include "../dom/DOMImplementation.hxx"
 #include "CellMLBootstrapImpl.hpp"
 #include "CellMLBootstrap.hpp"
 
 CDA_CellMLBootstrap::CDA_CellMLBootstrap()
-  : _cda_refcount(1), domimpl(new CDA_DOMImplementation())
+  : _cda_refcount(1), domimpl(CreateDOMImplementation())
 {
 }
 
@@ -31,7 +30,7 @@ CDA_CellMLBootstrap::localURLLoader()
   return new CDA_DOMURLLoader(domimpl);
 }
 
-CDA_DOMURLLoader::CDA_DOMURLLoader(CDA_DOMImplementation* aDOMImpl)
+CDA_DOMURLLoader::CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl)
   : _cda_refcount(1), mDOMImpl(aDOMImpl)
 {
   mDOMImpl->add_ref();

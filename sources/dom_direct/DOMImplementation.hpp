@@ -1,5 +1,6 @@
 #include "Utilities.hxx"
 #include "IfaceDOM-APISPEC.hxx"
+#include "IfaceMathML-content-APISPEC.hxx"
 #include <string>
 #include <list>
 #include <map>
@@ -8,9 +9,29 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <time.h>
+#include "DOMBootstrap.hxx"
+
+class CDA_Element;
+class CDA_Document;
+
+// Our hooks into the MathML code...
+extern CDA_Element* WrapMathMLElement(CDA_Document* doc, const wchar_t* elname);
+extern CDA_Document* WrapMathMLDocument();
+
+// The construction method for elements...
+CDA_Element* CDA_NewElement
+(
+ CDA_Document* doc,  const wchar_t* nsURI, const wchar_t* elname
+);
+// The construction method for document...
+CDA_Document* CDA_NewDocument
+(
+ const wchar_t* nsURI
+);
 
 class CDA_DOMImplementation
-  : public iface::dom::DOMImplementation
+  : public CellML_DOMImplementationBase,
+    public iface::mathml_dom::MathMLDOMImplementation
 {
 public:
   CDA_DOMImplementation() : _cda_refcount(1) {}
@@ -20,7 +41,7 @@ public:
   virtual ~CDA_DOMImplementation() {}
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(dom::DOMImplementation);
+  CDA_IMPL_QI2(dom::DOMImplementation, mathml_dom::MathMLDOMImplementation);
   CDA_IMPL_COMPARE_NAIVE(CDA_DOMImplementation);
 
   bool hasFeature(const wchar_t* feature, const wchar_t* version)
@@ -37,7 +58,11 @@ public:
 
   // A non-standard function used by the bootstrap code to load documents...
   iface::dom::Document* loadDocument(const wchar_t* aURL,
-                                     std::wstring& aErrorMessage);
+                                     std::wstring& aErrorMessage)
+    throw(std::exception&);
+
+  iface::mathml_dom::MathMLDocument* createMathMLDocument()
+    throw(std::exception&);
 };
 
 class CDA_Document;
@@ -53,6 +78,10 @@ public:
   void add_ref()
     throw(std::exception&)
   {
+#ifdef DEBUG_REFCOUNT
+    printf("%s: add_ref(), previous refcount was %u\n",
+           typeid(*this).name(), _cda_refcount);
+#endif
     _cda_refcount++;
     
     if (mParent != NULL)
@@ -65,19 +94,34 @@ public:
     if (_cda_refcount == 0)
     {
       printf("Warning: release_ref called too many times on %s.\n",
-             typeid(this).name());
+             typeid(*this).name());
       assert(0);
     }
+
+#ifdef DEBUG_REFCOUNT
+    printf("%s: release_ref(), previous refcount was %u\n",
+           typeid(*this).name(), _cda_refcount);
+#endif
     _cda_refcount--;
     if (mParent == NULL)
     {
       if (_cda_refcount == 0)
+      {
+#ifdef DEBUG_REFCOUNT
+        printf("Destroying object.\n");
+#endif
         delete this;
+      }
     }
     else /* if the owner model is non-null, we will be destroyed when there are
           * no remaining references to the model.
           */
+    {
+#ifdef DEBUG_REFCOUNT
+      printf("Object has parent, removing parent ref...\n");
+#endif
       mParent->release_ref();
+    }
   }
 
   wchar_t* nodeName() throw(std::exception&);
@@ -107,8 +151,9 @@ public:
   iface::dom::Node* appendChild(iface::dom::Node* newChild)
     throw(std::exception&);
   bool hasChildNodes() throw(std::exception&);
-  virtual CDA_Node* shallowCloneNode() throw(std::exception&) = 0;
+  virtual CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&) = 0;
   iface::dom::Node* cloneNode(bool deep) throw(std::exception&);
+  CDA_Node* cloneNodePrivate(CDA_Document* aDoc, bool deep) throw(std::exception&);
   void normalize() throw(std::exception&);
   bool isSupported(const wchar_t* feature, const wchar_t* version)
     throw(std::exception&);
@@ -127,6 +172,8 @@ public:
   // removed to be post-order.
   void dispatchInsertedIntoDocument(CDA_MutationEvent* me) throw(std::exception&);
   void dispatchRemovedFromDocument(CDA_MutationEvent* me) throw(std::exception&);
+  bool hasEventListeners() throw(std::exception&);
+  bool eventsHaveEffects() throw(std::exception&);
   void callEventListeners(CDA_MutationEvent* me) throw(std::exception&);
   bool hasAttributes() throw(std::exception&) { return false; }
   void updateDocumentAncestorStatus(bool aStatus);
@@ -134,6 +181,7 @@ public:
   virtual iface::dom::Element* searchForElementById(const wchar_t* elementId);
 
   CDA_Node* mParent;
+  std::list<CDA_Node*>::iterator mPositionInParent;
   bool mDocumentIsAncestor;
   CDA_Document* mDocument;
   std::wstring mNodeName, mLocalName, mNodeValue, mNamespaceURI;
@@ -149,7 +197,7 @@ class CDA_NodeList
 {
 public:
   CDA_NodeList(CDA_Node* parent)
-    : mParent(parent)
+    : _cda_refcount(1), mParent(parent)
   {
     mParent->add_ref();
   }
@@ -381,7 +429,7 @@ public:
   CDA_IMPL_COMPARE_NAIVE(CDA_Attr);
   CDA_IMPL_NODETYPE(ATTRIBUTE);
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   wchar_t* name() throw(std::exception&);
   bool specified() throw(std::exception&);
   wchar_t* value() throw(std::exception&);
@@ -392,7 +440,7 @@ public:
 };
 
 class CDA_Element
-  : public iface::dom::Element, public CDA_Node
+  : public virtual iface::dom::Element, public CDA_Node
 {
 public:
   CDA_Element(CDA_Document* aDocument) : CDA_Node(aDocument) {}
@@ -403,7 +451,7 @@ public:
   CDA_IMPL_NODETYPE(ELEMENT)
 
   iface::dom::NamedNodeMap* attributes() throw(std::exception&);
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   wchar_t* tagName() throw(std::exception&);
   wchar_t* getAttribute(const wchar_t* name) throw(std::exception&);
   void setAttribute(const wchar_t* name, const wchar_t* value)
@@ -437,7 +485,8 @@ public:
   bool hasAttributes() throw(std::exception&);
   iface::dom::Element* searchForElementById(const wchar_t* elementId);
 
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*> attributeMap;
+  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*> attributeMapNS;
+  std::map<std::wstring, CDA_Attr*> attributeMap;
 };
 
 class CDA_TextBase
@@ -459,7 +508,7 @@ public:
   CDA_IMPL_QI3(dom::Node, dom::CharacterData, dom::Text);
   CDA_IMPL_COMPARE_NAIVE(CDA_Text);
   CDA_IMPL_NODETYPE(TEXT);
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
 };
 
 class CDA_Comment
@@ -472,7 +521,7 @@ public:
   CDA_IMPL_QI3(dom::Node, dom::CharacterData, dom::Comment);
   CDA_IMPL_COMPARE_NAIVE(CDA_Comment);
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(COMMENT);
 };
 
@@ -486,7 +535,7 @@ public:
   CDA_IMPL_QI4(dom::Node, dom::CharacterData, dom::Text, dom::CDATASection);
   CDA_IMPL_COMPARE_NAIVE(CDA_CDATASection);
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(CDATA_SECTION);
 };
 
@@ -512,7 +561,7 @@ public:
   CDA_IMPL_COMPARE_NAIVE(CDA_DocumentType);
   CDA_IMPL_NODETYPE(DOCUMENT_TYPE)
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   wchar_t* name() throw(std::exception&);
   iface::dom::NamedNodeMap* entities() throw(std::exception&);
   iface::dom::NamedNodeMap* notations() throw(std::exception&);
@@ -539,7 +588,7 @@ public:
   CDA_IMPL_QI2(dom::Node, dom::Notation);
   CDA_IMPL_COMPARE_NAIVE(CDA_Notation);
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(NOTATION);
   wchar_t* publicId() throw(std::exception&);
   wchar_t* systemId() throw(std::exception&);
@@ -561,7 +610,7 @@ public:
   CDA_IMPL_QI2(dom::Node, dom::Entity);
   CDA_IMPL_COMPARE_NAIVE(CDA_Entity);
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(ENTITY);
   wchar_t* publicId() throw(std::exception&);
   wchar_t* systemId() throw(std::exception&);
@@ -580,7 +629,7 @@ public:
   CDA_IMPL_QI2(dom::Node, dom::EntityReference);
   CDA_IMPL_COMPARE_NAIVE(CDA_EntityReference);
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(ENTITY_REFERENCE);
 };
 
@@ -600,7 +649,7 @@ public:
   CDA_IMPL_QI2(dom::Node, dom::ProcessingInstruction);
   CDA_IMPL_COMPARE_NAIVE(CDA_ProcessingInstruction);
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(PROCESSING_INSTRUCTION);
   wchar_t* target() throw(std::exception&);
   wchar_t* data() throw(std::exception&);
@@ -618,7 +667,7 @@ public:
   CDA_IMPL_COMPARE_NAIVE(CDA_DocumentFragment);
   CDA_IMPL_NODETYPE(DOCUMENT_FRAGMENT)
 
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
 };
 
 class CDA_Document
@@ -627,22 +676,13 @@ class CDA_Document
 public:
   CDA_Document(const wchar_t* namespaceURI,
                const wchar_t* qualifiedName,
-               iface::dom::DocumentType* doctype)
+               CDA_DocumentType* doctype);
+  CDA_Document()
     : CDA_Node(this)
   {
-    mNamespaceURI = namespaceURI;
-    mNodeName = qualifiedName;
-    const wchar_t* pos = wcschr(qualifiedName, L':');
-    if (pos == NULL)
-    {
-      mLocalName = qualifiedName;
-    }
-    else
-    {
-      mLocalName = pos + 1;
-    }
-
-    appendChild(doctype)->release_ref();
+    // We are our own document ancestor...
+    mDocumentIsAncestor = true;
+    mDocument->release_ref();
   }
 
   virtual ~CDA_Document()
@@ -687,7 +727,7 @@ public:
     throw(std::exception&);
   iface::events::Event* createEvent(const wchar_t* domEventType)
     throw(std::exception&);
-  CDA_Node* shallowCloneNode() throw(std::exception&);
+  CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   iface::dom::Element* searchForElementById(const wchar_t* elementId);
 };
 
@@ -696,7 +736,8 @@ class CDA_MutationEvent
 {
 public:
   CDA_MutationEvent()
-    : mCancelable(false), mBubbles(true), mCanceled(false),
+    : _cda_refcount(1),
+      mCancelable(false), mBubbles(true), mCanceled(false),
       mPropagationStopped(false),
       mPhase(iface::events::Event::CAPTURING_PHASE),
       mAttrChange(iface::events::MutationEvent::MODIFICATION)
