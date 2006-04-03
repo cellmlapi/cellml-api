@@ -163,6 +163,8 @@
       return NULL; \
     }
 
+#ifdef USE_GDOME // Various code only used with GDOME...
+
 #ifdef WCHAR_T_IS_32BIT
 #define g_wchar_to_char g_ucs4_to_utf8
 #define g_char_to_wchar g_utf8_to_ucs4_fast
@@ -216,6 +218,8 @@
   if (l##x == NULL) \
     throw iface::dom::DOMException(); \
   }
+
+#endif // USE_GDOME
 
 template<class T>
 class already_AddRefd

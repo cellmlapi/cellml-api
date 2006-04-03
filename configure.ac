@@ -15,8 +15,8 @@ AC_LANG(C++)
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-PKG_CHECK_MODULES([GLIB], [glib-2.0])
-PKG_CHECK_MODULES([GDOME], [gdome2])
+# PKG_CHECK_MODULES([GLIB], [glib-2.0])
+# PKG_CHECK_MODULES([GDOME], [gdome2])
 
 
 # Checks for header files.
