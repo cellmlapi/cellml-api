@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <inttypes.h>
 #include "DOMImplementation.hpp"
 #include <stdexcept>
@@ -131,14 +132,14 @@ wchar_t*
 CDA_Node::nodeName()
   throw(std::exception&)
 {
-  return wcsdup(mNodeName.c_str());
+  return CDA_wcsdup(mNodeName.c_str());
 }
 
 wchar_t*
 CDA_Node::nodeValue()
   throw(std::exception&)
 {
-  return wcsdup(mNodeValue.c_str());
+  return CDA_wcsdup(mNodeValue.c_str());
 }
 
 void
@@ -637,7 +638,7 @@ wchar_t*
 CDA_Node::namespaceURI()
   throw(std::exception&)
 {
-  return wcsdup(mNamespaceURI.c_str());
+  return CDA_wcsdup(mNamespaceURI.c_str());
 }
 
 wchar_t*
@@ -646,10 +647,10 @@ CDA_Node::prefix()
 {
   size_t pos = mNodeName.find(L':');
   if (pos == std::wstring::npos)
-    return wcsdup(L"");
+    return CDA_wcsdup(L"");
 
   std::wstring s = mNodeName.substr(0, pos);
-  return wcsdup(s.c_str());
+  return CDA_wcsdup(s.c_str());
 }
 
 void
@@ -679,7 +680,7 @@ wchar_t*
 CDA_Node::localName()
   throw(std::exception&)
 {
-  return wcsdup(mLocalName.c_str());
+  return CDA_wcsdup(mLocalName.c_str());
 }
 
 void
@@ -706,7 +707,7 @@ CDA_Node::removeEventListener(const wchar_t* type,
   if (listener == NULL)
     throw iface::dom::DOMException();
   listener->add_ref();
-  std::map<std::pair<std::wstring,bool>,iface::events::EventListener*>
+  std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
      ::iterator i =
     mListeners.find(std::pair<std::wstring,bool>(type, useCapture));
   for (; i != mListeners.end(); i++)
@@ -1352,7 +1353,7 @@ wchar_t*
 CDA_CharacterData::data()
   throw(std::exception&)
 {
-  return wcsdup(mNodeValue.c_str());
+  return CDA_wcsdup(mNodeValue.c_str());
 }
 
 void
@@ -1378,7 +1379,7 @@ CDA_CharacterData::substringData(uint32_t offset, uint32_t count)
   try
   {
     std::wstring s = mNodeValue.substr(offset, count);
-    return wcsdup(s.c_str());
+    return CDA_wcsdup(s.c_str());
   }
   catch (std::out_of_range& oor)
   {
@@ -1482,7 +1483,7 @@ wchar_t*
 CDA_Attr::name()
   throw(std::exception&)
 {
-  return wcsdup(mNodeName.c_str());
+  return CDA_wcsdup(mNodeName.c_str());
 }
 
 bool
@@ -1496,7 +1497,7 @@ wchar_t*
 CDA_Attr::value()
   throw(std::exception&)
 {
-  return wcsdup(mNodeValue.c_str());
+  return CDA_wcsdup(mNodeValue.c_str());
 }
 
 void
@@ -1558,7 +1559,7 @@ wchar_t*
 CDA_Element::tagName()
   throw(std::exception&)
 {
-  return wcsdup(mNodeName.c_str());
+  return CDA_wcsdup(mNodeName.c_str());
 }
 
 wchar_t*
@@ -1568,7 +1569,7 @@ CDA_Element::getAttribute(const wchar_t* name)
   std::map<std::wstring, CDA_Attr*>::iterator
     i = attributeMap.find(name);
   if (i == attributeMap.end())
-    return wcsdup(L"");
+    return CDA_wcsdup(L"");
 
   return (*i).second->value();
 }
@@ -1764,7 +1765,7 @@ CDA_Element::getAttributeNS(const wchar_t* namespaceURI,
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
     i = attributeMapNS.find(p);
   if (i == attributeMapNS.end())
-    return wcsdup(L"");
+    return CDA_wcsdup(L"");
 
   return (*i).second->value();
 }
@@ -2065,7 +2066,7 @@ wchar_t*
 CDA_DocumentType::name()
   throw(std::exception&)
 {
-  return wcsdup(mNodeName.c_str());
+  return CDA_wcsdup(mNodeName.c_str());
 }
 
 iface::dom::NamedNodeMap*
@@ -2086,14 +2087,14 @@ wchar_t*
 CDA_DocumentType::publicId()
   throw(std::exception&)
 {
-  return wcsdup(mPublicId.c_str());
+  return CDA_wcsdup(mPublicId.c_str());
 }
 
 wchar_t*
 CDA_DocumentType::systemId()
   throw(std::exception&)
 {
-  return wcsdup(mSystemId.c_str());
+  return CDA_wcsdup(mSystemId.c_str());
 }
 
 wchar_t*
@@ -2102,7 +2103,7 @@ CDA_DocumentType::internalSubset()
 {
   // The DOM basically leaves this up to the API, and since we don't store this
   // information as it is irrelevant to CellML, lets just skip it...
-  return wcsdup(L"");
+  return CDA_wcsdup(L"");
 }
 
 CDA_Node*
@@ -2121,14 +2122,14 @@ wchar_t*
 CDA_Notation::publicId()
   throw(std::exception&)
 {
-  return wcsdup(mPublicId.c_str());
+  return CDA_wcsdup(mPublicId.c_str());
 }
 
 wchar_t*
 CDA_Notation::systemId()
   throw(std::exception&)
 {
-  return wcsdup(mSystemId.c_str());
+  return CDA_wcsdup(mSystemId.c_str());
 }
 
 CDA_Node*
@@ -2148,21 +2149,21 @@ wchar_t*
 CDA_Entity::publicId()
   throw(std::exception&)
 {
-  return wcsdup(mPublicId.c_str());
+  return CDA_wcsdup(mPublicId.c_str());
 }
 
 wchar_t*
 CDA_Entity::systemId()
   throw(std::exception&)
 {
-  return wcsdup(mSystemId.c_str());
+  return CDA_wcsdup(mSystemId.c_str());
 }
 
 wchar_t*
 CDA_Entity::notationName()
   throw(std::exception&)
 {
-  return wcsdup(mNotationName.c_str());
+  return CDA_wcsdup(mNotationName.c_str());
 }
 
 CDA_Node*
@@ -2193,14 +2194,14 @@ wchar_t*
 CDA_ProcessingInstruction::target()
   throw(std::exception&)
 {
-  return wcsdup(mNodeName.c_str());
+  return CDA_wcsdup(mNodeName.c_str());
 }
 
 wchar_t*
 CDA_ProcessingInstruction::data()
   throw(std::exception&)
 {
-  return wcsdup(mNodeValue.c_str());
+  return CDA_wcsdup(mNodeValue.c_str());
 }
 
 void
@@ -2506,7 +2507,7 @@ wchar_t*
 CDA_MutationEvent::type()
   throw(std::exception&)
 {
-  return wcsdup(mType.c_str());
+  return CDA_wcsdup(mType.c_str());
 }
 
 iface::dom::Node*
@@ -2594,21 +2595,21 @@ wchar_t*
 CDA_MutationEvent::prevValue()
   throw(std::exception&)
 {
-  return wcsdup(mPrevValue.c_str());
+  return CDA_wcsdup(mPrevValue.c_str());
 }
 
 wchar_t*
 CDA_MutationEvent::newValue()
   throw(std::exception&)
 {
-  return wcsdup(mNewValue.c_str());
+  return CDA_wcsdup(mNewValue.c_str());
 }
 
 wchar_t*
 CDA_MutationEvent::attrName()
   throw(std::exception&)
 {
-  return wcsdup(mAttrName.c_str());
+  return CDA_wcsdup(mAttrName.c_str());
 }
 
 uint16_t

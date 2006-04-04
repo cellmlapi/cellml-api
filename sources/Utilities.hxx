@@ -40,7 +40,7 @@
     }
 
 #define CDA_IMPL_QI0 \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
@@ -52,7 +52,7 @@
     }
 
 #define CDA_IMPL_QI1(c1) \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object") || \
@@ -65,7 +65,7 @@
     }
 
 #define CDA_IMPL_QI2(c1, c2) \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object") || \
@@ -79,7 +79,7 @@
     }
 
 #define CDA_IMPL_QI3(c1, c2, c3) \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object") || \
@@ -94,7 +94,7 @@
     }
 
 #define CDA_IMPL_QI4(c1, c2, c3, c4) \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object") || \
@@ -110,7 +110,7 @@
     }
 
 #define CDA_IMPL_QI5(c1, c2, c3, c4, c5) \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object") || \
@@ -127,7 +127,7 @@
     }
 
 #define CDA_IMPL_QI6(c1, c2, c3, c4, c5, c6) \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object") || \
@@ -145,7 +145,7 @@
     }
 
 #define CDA_IMPL_QI7(c1, c2, c3, c4, c5, c6, c7) \
-    IObject* query_interface(const char* id) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object") || \
@@ -192,7 +192,7 @@
     gdome_str_unref(gd##x)
 
 #define TRGDOMSTRING(x) \
-  iface::dom::DOMString cxx##x = ((x) && (x)->str) ? ((wchar_t*)g_char_to_wchar(x->str, -1, NULL POSSIBLE_EXTRA_NULLS)) : wcsdup(L""); \
+  iface::dom::DOMString cxx##x = ((x) && (x)->str) ? ((wchar_t*)g_char_to_wchar(x->str, -1, NULL POSSIBLE_EXTRA_NULLS)) : CDA_wcsdup(L""); \
   if (x) \
     gdome_str_unref(x);
 
@@ -546,14 +546,13 @@ inline bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
   return eq;
 }
 
-class XPCOMComparator
+struct XPCOMComparator
 {
-public:
   bool
   operator()(
-             iface::XPCOM::IObject* const& o1,
-             iface::XPCOM::IObject* const& o2
-            )
+             iface::XPCOM::IObject* o1,
+             iface::XPCOM::IObject* o2
+            ) const
   {
     /* In the strict ordering, NULL < x unless x == NULL. */
     if (o1 == NULL)
@@ -561,5 +560,7 @@ public:
     return (o1->compare(o2) < 0);
   }
 };
+
+wchar_t* CDA_wcsdup(const wchar_t* str);
 
 #endif // _UTILITIES_HXX

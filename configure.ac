@@ -41,7 +41,7 @@ case $srcdir in
      testdir=`pwd`/$srcdir/tests ;;
 esac
 
-AC_DEFINE_UNQUOTED(TESTDIR, "$testdir",
+AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])
 
 AC_CONFIG_FILES([

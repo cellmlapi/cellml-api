@@ -36,19 +36,19 @@ CDA_MathMLDocument::CDA_MathMLDocument
 wchar_t*
 CDA_MathMLDocument::referrer() throw(std::exception&)
 {
-  return wcsdup(L"");
+  return CDA_wcsdup(L"");
 }
 
 wchar_t*
 CDA_MathMLDocument::domain() throw(std::exception&)
 {
-  return wcsdup(L"");
+  return CDA_wcsdup(L"");
 }
 
 wchar_t*
 CDA_MathMLDocument::URI() throw(std::exception&)
 {
-  return wcsdup(L"");
+  return CDA_wcsdup(L"");
 }
 
 static bool
@@ -1880,7 +1880,7 @@ CDA_MathMLPredefinedSymbol::arity()
   throw(std::exception&)
 {
   wchar_t* name = static_cast<CDA_Element*>(this)->tagName();
-  wchar_t* ret = wcsdup(GetArity(name));
+  wchar_t* ret = CDA_wcsdup(GetArity(name));
   free(name);
   return ret;
 }
@@ -1910,7 +1910,7 @@ CDA_MathMLTendsToElement::type()
   }
   catch (iface::dom::DOMException& de)
   {
-    return wcsdup(L"two-sided");
+    return CDA_wcsdup(L"two-sided");
   }
 }
 
@@ -1939,13 +1939,13 @@ CDA_MathMLIntervalElement::closure()
     if (!wcscmp(ret, L""))
     {
       free(ret);
-      return wcsdup(L"closed");
+      return CDA_wcsdup(L"closed");
     }
     return ret;
   }
   catch (iface::dom::DOMException& de)
   {
-    return wcsdup(L"closed");
+    return CDA_wcsdup(L"closed");
   }
 }
 

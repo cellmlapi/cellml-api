@@ -29,7 +29,7 @@ wchar_t*
 CDA_RDFXMLDOMRepresentation::type()
   throw(std::exception&)
 {
-  return wcsdup(L"http://www.cellml.org/RDFXML/DOM");
+  return CDA_wcsdup(L"http://www.cellml.org/RDFXML/DOM");
 }
 
 iface::dom::Element*
@@ -58,7 +58,7 @@ wchar_t*
 CDA_RDFXMLStringRepresentation::type()
   throw(std::exception&)
 {
-  return wcsdup(L"http://www.cellml.org/RDFXML/string");
+  return CDA_wcsdup(L"http://www.cellml.org/RDFXML/string");
 }
 
 wchar_t*
@@ -69,7 +69,7 @@ CDA_RDFXMLStringRepresentation::serialisedData()
   DOMWriter dw;
   std::wstring str;
   dw.writeElement(NULL, datastore, str);
-  return wcsdup(str.c_str());
+  return CDA_wcsdup(str.c_str());
 }
 
 void
@@ -151,7 +151,7 @@ CDA_CellMLElement::cellmlVersion()
   if (!wcscmp(ns, CELLML_1_0_NS))
     version = L"1.0";
   free(ns);
-  return wcsdup(version);
+  return CDA_wcsdup(version);
 }
 
 wchar_t*

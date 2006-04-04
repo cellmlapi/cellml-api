@@ -66,7 +66,7 @@ wchar_t*
 CDA_DOMURLLoader::lastErrorMessage()
   throw(std::exception&)
 {
-  return wcsdup(mLastError.c_str());
+  return CDA_wcsdup(mLastError.c_str());
 }
 
 CDA_ModelLoader::CDA_ModelLoader(iface::cellml_api::DOMURLLoader* aURLLoader)
@@ -97,7 +97,7 @@ wchar_t*
 CDA_ModelLoader::lastErrorMessage()
   throw(std::exception&)
 {
-  return wcsdup(mLastError.c_str());
+  return CDA_wcsdup(mLastError.c_str());
 }
 
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
