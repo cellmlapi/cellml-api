@@ -11,7 +11,9 @@
 #endif
 
 #include <list>
+#include <exception>
 #include <Ifacexpcom.hxx>
+#include <wchar.h>
 
 #define CDA_IMPL_REFCOUNT \
   private: \

@@ -2219,8 +2219,7 @@ void
 CDA_MathMLDeclareElement::type(const wchar_t* attr)
   throw(std::exception&)
 {
-  return
-    static_cast<CDA_Element*>(this)
+  static_cast<CDA_Element*>(this)
     ->setAttributeNS(NULL_NS, L"type", attr);
 }
 

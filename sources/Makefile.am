@@ -7,3 +7,5 @@ libcellml_la_LIBADD = \
   mathml/libmathmlonly.la \
   dom/libdomonly.la \
   dom_direct/libdomdirectonly.la
+
+AM_CXXFLAGS=-I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_builddir)/interfaces

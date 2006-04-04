@@ -1,3 +1,4 @@
+#include <exception>
 #include "Utilities.hxx"
 #include "IfaceDOM-APISPEC.hxx"
 #include "IfaceMathML-content-APISPEC.hxx"

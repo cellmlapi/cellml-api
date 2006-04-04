@@ -165,7 +165,7 @@ void
 CDA_CellMLElement::cmetaId(const wchar_t* attr)
   throw(std::exception&)
 {
-  return datastore->setAttributeNS(CMETA_NS, L"id", attr);
+  datastore->setAttributeNS(CMETA_NS, L"id", attr);
 }
 
 iface::cellml_api::RDFRepresentation*
