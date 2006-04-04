@@ -11,11 +11,13 @@
 #define swprintf _snwprintf
 #endif
 
-struct
+struct CDA_utf8_data_t
 {
   uint8_t len;
   uint8_t mask;
-} CDA_utf8_data[] =
+};
+
+CDA_utf8_data_t CDA_utf8_data[] =
 {
 #define D {1, 0x7F},
 /* 0x00 */ D D D D D D D D D D D D D D D D D D D D D D D D D D D D D D D D D D D
