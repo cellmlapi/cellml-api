@@ -2510,7 +2510,7 @@ CDA_MutationEvent::type()
   return CDA_wcsdup(mType.c_str());
 }
 
-iface::dom::Node*
+iface::events::EventTarget*
 CDA_MutationEvent::target()
   throw(std::exception&)
 {
@@ -2519,7 +2519,7 @@ CDA_MutationEvent::target()
   return mTarget;
 }
 
-iface::dom::Node*
+iface::events::EventTarget*
 CDA_MutationEvent::currentTarget()
   throw(std::exception&)
 {

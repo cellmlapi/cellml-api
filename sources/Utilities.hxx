@@ -165,6 +165,26 @@
       return NULL; \
     }
 
+#define CDA_IMPL_QI8(c1, c2, c3, c4, c5, c6, c7, c8) \
+    iface::XPCOM::IObject* query_interface(const char* id) \
+      throw(std::exception&) \
+    { \
+      if (!strcmp(id, "xpcom::Object") || \
+          !strcmp(id, #c1) || \
+          !strcmp(id, #c2) || \
+          !strcmp(id, #c3) || \
+          !strcmp(id, #c4) || \
+          !strcmp(id, #c5) || \
+          !strcmp(id, #c6) || \
+          !strcmp(id, #c7) || \
+          !strcmp(id, #c8)) \
+      { \
+        add_ref(); \
+        return this; \
+      } \
+      return NULL; \
+    }
+
 #ifdef USE_GDOME // Various code only used with GDOME...
 
 #ifdef WCHAR_T_IS_32BIT

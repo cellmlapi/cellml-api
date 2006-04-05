@@ -5,16 +5,6 @@
 
 #include "xpcom.idl"
 
-module events
-{
-  interface EventListener;
-  interface Event;
-
-  exception EventException {
-    unsigned short   code;
-  };
-};
-
 module dom
 {
 
@@ -127,16 +117,6 @@ module dom
     readonly attribute DOMString        localName;
     // Introduced in DOM Level 2:
     boolean            hasAttributes();
-
-    // These were moved from events::EventTarget to here(so are not part of the DOM core)...
-    void               addEventListener(in DOMString type, 
-                                        in events::EventListener listener, 
-                                        in boolean useCapture);
-    void               removeEventListener(in DOMString type,
-                                           in events::EventListener listener,
-                                           in boolean useCapture);
-    boolean            dispatchEvent(in events::Event evt)
-                                        raises(events::EventException);
   };
 
   interface NodeList : XPCOM::IObject {
@@ -322,71 +302,6 @@ module dom
                                               in DOMString localName);
     // Introduced in DOM Level 2:
     Element            getElementById(in DOMString elementId);
-
-    // This is part of the events module...
-    events::Event              createEvent(in DOMString domEventType)
-                                        raises(dom::DOMException);
-  };
-};
-
-module events
-{
-  typedef dom::DOMString DOMString;
-  typedef dom::DOMTimeStamp DOMTimeStamp;
-  typedef dom::Node Node;
-
-  // EventExceptionCode
-  const unsigned short      UNSPECIFIED_EVENT_TYPE_ERR     = 0;
-
-  // Introduced in DOM Level 2:
-  interface EventListener : XPCOM::IObject {
-    void               handleEvent(in Event evt);
-  };
-
-  // Introduced in DOM Level 2:
-  interface Event : XPCOM::IObject {
-
-    // PhaseType
-    const unsigned short      CAPTURING_PHASE                = 1;
-    const unsigned short      AT_TARGET                      = 2;
-    const unsigned short      BUBBLING_PHASE                 = 3;
-
-    readonly attribute DOMString        type;
-    // target and current target were modified from EventTarget to Node for this implementation.
-    readonly attribute Node             target;
-    readonly attribute Node             currentTarget;
-    readonly attribute unsigned short   eventPhase;
-    readonly attribute boolean          bubbles;
-    readonly attribute boolean          cancelable;
-    readonly attribute DOMTimeStamp     timeStamp;
-    void               stopPropagation();
-    void               preventDefault();
-    void               initEvent(in DOMString eventTypeArg, 
-                                 in boolean canBubbleArg, 
-                                 in boolean cancelableArg);
-  };
-
-  // Introduced in DOM Level 2:
-  interface MutationEvent : Event {
-
-    // attrChangeType
-    const unsigned short      MODIFICATION                   = 1;
-    const unsigned short      ADDITION                       = 2;
-    const unsigned short      REMOVAL                        = 3;
-
-    readonly attribute Node             relatedNode;
-    readonly attribute DOMString        prevValue;
-    readonly attribute DOMString        newValue;
-    readonly attribute DOMString        attrName;
-    readonly attribute unsigned short   attrChange;
-    void               initMutationEvent(in DOMString typeArg, 
-                                         in boolean canBubbleArg, 
-                                         in boolean cancelableArg, 
-                                         in Node relatedNodeArg, 
-                                         in DOMString prevValueArg, 
-                                         in DOMString newValueArg, 
-                                         in DOMString attrNameArg, 
-                                         in unsigned short attrChangeArg);
   };
 };
 

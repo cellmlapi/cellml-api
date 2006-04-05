@@ -4949,25 +4949,31 @@ CDA_DOMElementIteratorBase::CDA_DOMElementIteratorBase
 {
   mParentElement->add_ref();
   mNodeList = mParentElement->childNodes();
-  mParentElement->addEventListener(L"DOMNodeInserted", &icml, false);
+  DECLARE_QUERY_INTERFACE_OBJREF(targ, mParentElement, events::EventTarget);
+  targ->addEventListener(L"DOMNodeInserted", &icml, false);
 }
 
 CDA_DOMElementIteratorBase::~CDA_DOMElementIteratorBase()
 {
   mNodeList->release_ref();
 
-  mParentElement->removeEventListener(L"DOMNodeInserted", &icml, false);
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, mParentElement, events::EventTarget);
+    targ->removeEventListener(L"DOMNodeInserted", &icml, false);
+  }
   mParentElement->release_ref();
 
   if (mNextElement != NULL)
   {
-    mNextElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, mNextElement, events::EventTarget);
+    targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
     mNextElement->release_ref();
     mNextElement = NULL;
   }
   if (mPrevElement != NULL)
   {
-    mPrevElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
+    targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
     mPrevElement->release_ref();
   }
 }
@@ -4988,7 +4994,8 @@ CDA_DOMElementIteratorBase::fetchNextElement()
         QUERY_INTERFACE(mPrevElement, nodeHit, dom::Element);
         if (mPrevElement != NULL)
         {
-          mPrevElement->addEventListener(L"DOMNodeRemoved", &icml, false);
+          DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
+          targ->addEventListener(L"DOMNodeRemoved", &icml, false);
           break;
         }
       }
@@ -5005,7 +5012,8 @@ CDA_DOMElementIteratorBase::fetchNextElement()
       {
         return NULL;
       }
-      mPrevElement->removeEventListener(L"DOMNodeRemoved", &icml, false);
+      DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
+      targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
       mPrevElement->release_ref();
       mPrevElement = mNextElement;
       mNextElement = NULL;
@@ -5019,7 +5027,8 @@ CDA_DOMElementIteratorBase::fetchNextElement()
       QUERY_INTERFACE(mNextElement, nodeHit, dom::Element);
       if (mNextElement != NULL)
       {
-        mNextElement->addEventListener(L"DOMNodeRemoved", &icml, false);
+        DECLARE_QUERY_INTERFACE_OBJREF(targ, mNextElement, events::EventTarget);
+        targ->addEventListener(L"DOMNodeRemoved", &icml, false);
         break;
       }
       nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
@@ -5057,7 +5066,9 @@ handleEvent(iface::events::Event* evt)
       if (evt->eventPhase() != iface::events::Event::AT_TARGET)
         return;
 
-      RETURN_INTO_OBJREF(target, iface::dom::Node, evt->target());
+      RETURN_INTO_OBJREF(targetET, iface::events::EventTarget,
+                         evt->target());
+      DECLARE_QUERY_INTERFACE_OBJREF(target, targetET, dom::Node);
       int cmp1 = target->compare(mIterator->mPrevElement);
       int cmp2 = target->compare(mIterator->mNextElement);
       if (cmp1 && cmp2)
@@ -5070,8 +5081,9 @@ handleEvent(iface::events::Event* evt)
       {
         // The previous node is about to be removed. Advance to an earlier
         // previous...
-        mIterator->mPrevElement->removeEventListener(L"DOMNodeRemoved", this,
-                                                     false);
+        DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mPrevElement,
+                                       events::EventTarget);
+        targ->removeEventListener(L"DOMNodeRemoved", this, false);
         RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
                            mIterator->mPrevElement->previousSibling());
         mIterator->mPrevElement->release_ref();
@@ -5085,8 +5097,9 @@ handleEvent(iface::events::Event* evt)
             if (mIterator->mNextElement != NULL)
             {
               mIterator->mNextElement->release_ref();
-              mIterator->mNextElement->
-                removeEventListener(L"DOMNodeRemoved", this, false);
+              DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
+                                             events::EventTarget);
+              targ->removeEventListener(L"DOMNodeRemoved", this, false);
             }
             mIterator->mNextElement = NULL;
             return;
@@ -5094,7 +5107,8 @@ handleEvent(iface::events::Event* evt)
           QUERY_INTERFACE(mIterator->mPrevElement, nodeHit, dom::Element);
           if (mIterator->mPrevElement != NULL)
           {
-            mIterator->mPrevElement->addEventListener(L"DOMNodeRemoved", this, false);
+            DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mPrevElement, events::EventTarget);
+            targ->addEventListener(L"DOMNodeRemoved", this, false);
             break;
           }
           nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->previousSibling());
@@ -5102,8 +5116,9 @@ handleEvent(iface::events::Event* evt)
       }
       else
       {
-        mIterator->mNextElement->removeEventListener(L"DOMNodeRemoved", this,
-                                                     false);
+        DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
+                                       events::EventTarget);
+        targ->removeEventListener(L"DOMNodeRemoved", this, false);
         // The next node is about to be removed. Advance to a later next...
         RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
                            mIterator->mNextElement->nextSibling());
@@ -5120,7 +5135,9 @@ handleEvent(iface::events::Event* evt)
           QUERY_INTERFACE(mIterator->mNextElement, nodeHit, dom::Element);
           if (mIterator->mNextElement != NULL)
           {
-            mIterator->mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
+            DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
+                                           events::EventTarget);
+            targ->addEventListener(L"DOMNodeRemoved", this, false);
             break;
           }
           nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
@@ -5136,7 +5153,7 @@ handleEvent(iface::events::Event* evt)
       if (!isEqualAfterLeftQI(rn, mIterator->mParentElement, "dom::Element"))
         return;
       
-      RETURN_INTO_OBJREF(tn, iface::dom::Node, mevt->target());
+      RETURN_INTO_OBJREF(tn, iface::events::EventTarget, mevt->target());
       DECLARE_QUERY_INTERFACE_OBJREF(te, tn, dom::Element);
       
       if (te == NULL)
@@ -5203,13 +5220,16 @@ handleEvent(iface::events::Event* evt)
       // The current next element is no longer next...
       if (mIterator->mNextElement)
       {
-        mIterator->mNextElement->removeEventListener
-          (L"DOMNodeRemoved", this, false);
+        DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
+                                       events::EventTarget);
+        targ->removeEventListener(L"DOMNodeRemoved", this, false);
         mIterator->mNextElement->release_ref();
       }
       mIterator->mNextElement = curE;
       mIterator->mNextElement->add_ref();
-      mIterator->mNextElement->addEventListener(L"DOMNodeRemoved", this, false);
+      DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
+                                     events::EventTarget);
+      targ->addEventListener(L"DOMNodeRemoved", this, false);
     }
   }
   catch (iface::dom::DOMException& de)

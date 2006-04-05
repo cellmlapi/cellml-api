@@ -7,6 +7,7 @@
 #include "Ifacexpcom.hxx"
 #include "IfaceDOM-APISPEC.hxx"
 #include "IfaceCellML-APISPEC.hxx"
+#include "IfaceDOM-events.hxx"
 #include <typeinfo>
 #include <assert.h>
 

@@ -1,4 +1,5 @@
 include_HEADERS=IfaceDOM-APISPEC.hxx \
+		IfaceDOM-events.hxx \
 		Ifacexpcom.hxx \
 		IfaceMathML-content-APISPEC.hxx \
 		IfaceCellML-APISPEC.hxx IfaceCellML-Services.hxx
