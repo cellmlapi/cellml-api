@@ -138,6 +138,8 @@ CDA_CellMLElement::~CDA_CellMLElement()
     userData.begin();
   for (; i != userData.end(); i++)
     (*i).second->release_ref();
+
+  cleanupEvents();
 }
 
 wchar_t*

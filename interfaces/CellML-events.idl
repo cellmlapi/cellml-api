@@ -1,0 +1,57 @@
+#include "CellML-APISPEC.idl"
+#include "DOM-events.idl"
+
+/**
+ * The CellML Events module is an optional extension which may be supported by
+ * implementations of the CellML API. It provides a mechanism by which
+ * applications can be informed of changes to the CellML model.
+ *
+ * It is built on top of W3C DOM Level 2 events model.
+ */
+module cellml_events
+{
+/*
+ *  This interface represents an modification event in the cellml document
+ */
+interface MutationEvent : events::Event
+{
+  /**
+   * For an attribute change notification, describes the type of change...
+   */
+  const unsigned short      MODIFICATION                   = 1;
+  const unsigned short      ADDITION                       = 2;
+  const unsigned short      REMOVAL                        = 3;
+
+  /**
+   * The CellML Element which is related to this change(see specification for
+   *   details on when this is present, and its exact value).
+   */
+  readonly attribute cellml_api::CellMLElement    relatedElement;
+
+  /**
+   * Previous value of an attribute being changed.
+   */
+  readonly attribute dom::DOMString        prevValue;
+
+  /**
+   * New value of an attribute being changed.
+   */
+  readonly attribute dom::DOMString        newValue;
+
+  /**
+   * The localName of the attribute being changed(or the nodeName if the
+   *  localName is null or the empty string).
+   */
+  readonly attribute dom::DOMString        attrLocalName;
+
+  /**
+   * The namespaceURI of the attribute being changed.
+   */
+  readonly attribute dom::DOMString        attrNamespaceURI;
+
+  /**
+   * For an attribute change, one of ADDITION, REMOVAL, or MODIFICATION.
+   */
+  readonly attribute unsigned short   attrChange;
+};
+};
