@@ -497,6 +497,20 @@ module cellml_api
      * Creates a new Role
      */
     Role createRole();
+
+    /**
+     * Creates a new MathMLMathElement...
+     * @return The new MathML math element.
+     */
+    mathml_dom::MathMLMathElement createMathElement();
+
+    /**
+     * Creates a new extension element...
+     * @param namespaceURI The new namespace URI.
+     * @param qualifiedName The new (optionally) qualified name.
+     */
+    dom::Element createExtensionElement(in dom::DOMString namespaceURI,
+                                        in dom::DOMString qualifiedName);
   };
 
   interface MathContainer : XPCOM::IObject
