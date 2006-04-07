@@ -133,7 +133,7 @@ public:
   iface::cellml_api::Model* modelElement() throw(std::exception&);
   void setUserData(const wchar_t* key, iface::cellml_api::UserData* data) throw(std::exception&);
   iface::cellml_api::UserData* getUserData(const wchar_t* key) throw(std::exception&);
-
+  
   void addEventListener(const wchar_t* aType,
                         iface::events::EventListener* aListener,
                         bool aUseCapture)
@@ -234,6 +234,10 @@ public:
   iface::cellml_api::VariableRef* createVariableRef() throw(std::exception&);
   iface::cellml_api::Role* createRole() throw(std::exception&);
   uint32_t assignUniqueIdentifier();
+  iface::mathml_dom::MathMLMathElement* createMathElement() throw(std::exception&);
+  iface::dom::Element* createExtensionElement(const wchar_t* namespaceURI,
+                                              const wchar_t* qualifiedName)
+    throw(std::exception&);
 
   ObjRef<iface::cellml_api::DOMURLLoader> mLoader;
 

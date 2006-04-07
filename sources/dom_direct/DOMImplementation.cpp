@@ -437,8 +437,9 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
   for (i = 0; i < newChild->_cda_refcount; i++)
     add_ref();
 
-  // Fire off a DOMNodeInserted
-  if (newChild->eventsHaveEffects())
+  // Fire off a DOMNodeInserted(unless it is an attribute)...
+  if (newChild->eventsHaveEffects() &&
+      newChild->nodeType() != iface::dom::Node::ATTRIBUTE_NODE)
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMNodeInserted", true, false,
@@ -502,7 +503,8 @@ iface::dom::Node*
 CDA_Node::removeChildPrivate(CDA_Node* oldChild)
   throw(std::exception&)
 {
-  if (oldChild->eventsHaveEffects())
+  if (oldChild->eventsHaveEffects() &&
+      oldChild->nodeType() != iface::dom::Node::ATTRIBUTE_NODE)
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMNodeRemoved", true, false,
@@ -691,11 +693,20 @@ CDA_Node::addEventListener(const wchar_t* type,
 {
   if (listener == NULL)
     throw iface::dom::DOMException();
+  mListeners.find(std::pair<std::wstring,bool>(type, useCapture));
+  std::pair<std::wstring,bool> p(type, useCapture);
+  std::multimap<std::pair<std::wstring,bool>, iface::events::EventListener*>
+    ::iterator i = mListeners.find(p);
+
+  // Silently ignore a request to add a duplicate, as per spec...
+  for (;i != mListeners.end() && (*i).first == p; i++)
+    if ((*i).second->compare(listener) == 0)
+      return;
+
   listener->add_ref();
   mListeners.insert(std::pair<std::pair<std::wstring,bool>,
                     iface::events::EventListener*>
-                    (std::pair<std::wstring,bool>(type, useCapture),
-                     listener));
+                    (p, listener));
 }
 
 void
@@ -706,7 +717,6 @@ CDA_Node::removeEventListener(const wchar_t* type,
 {
   if (listener == NULL)
     throw iface::dom::DOMException();
-  listener->add_ref();
   std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
      ::iterator i =
     mListeners.find(std::pair<std::wstring,bool>(type, useCapture));
@@ -714,6 +724,7 @@ CDA_Node::removeEventListener(const wchar_t* type,
     if ((*i).second->compare(listener) == 0)
     {
       mListeners.erase(i);
+      listener->release_ref();
       return;
     }
 }
@@ -839,10 +850,10 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
 
   if (wantCapturing)
   {
+    std::pair<std::wstring,bool> p(me->mType, true);
     std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
-       ::iterator i(mListeners.find(std::pair<std::wstring,bool>
-                                    (me->mType, true))), i2;
-    for (; i != mListeners.end();)
+       ::iterator i(mListeners.find(p)), i2;
+    while (i != mListeners.end() && (*i).first == p)
     {
       i2 = i;
       i++;
@@ -861,10 +872,10 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
   }
   if (wantBubbling)
   {
+    std::pair<std::wstring,bool> p(me->mType, false);
     std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
-       ::iterator i(mListeners.find(std::pair<std::wstring,bool>
-                                    (me->mType, false))), i2;
-    for (; i != mListeners.end();)
+       ::iterator i(mListeners.find(p)), i2;
+    while (i != mListeners.end() && (*i).first == p)
     {
       i2 = i;
       i++;
@@ -1349,6 +1360,7 @@ CDA_NamedNodeMapDT::removeNamedItemNS(const wchar_t* namespaceURI,
   throw iface::dom::DOMException();
 }
 
+
 wchar_t*
 CDA_CharacterData::data()
   throw(std::exception&)
@@ -1358,6 +1370,15 @@ CDA_CharacterData::data()
 
 void
 CDA_CharacterData::data(const wchar_t* attr)
+  throw(std::exception&)
+{
+  std::wstring oldData = mNodeValue;
+  mNodeValue = attr;
+  dispatchCharDataModified(oldData);
+}
+
+void
+CDA_CharacterData::nodeValue(const wchar_t* attr)
   throw(std::exception&)
 {
   std::wstring oldData = mNodeValue;
@@ -1460,7 +1481,7 @@ CDA_CharacterData::dispatchCharDataModified(const std::wstring& oldValue)
     return;
 
   RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
-  me->initMutationEvent(L"DOMCharacterData", true, false,
+  me->initMutationEvent(L"DOMCharacterDataModified", true, false,
                         NULL, oldValue.c_str(), mNodeValue.c_str(), L"",
                         iface::events::MutationEvent::MODIFICATION);
   dispatchEvent(me);

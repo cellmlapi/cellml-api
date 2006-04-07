@@ -110,8 +110,8 @@ class CDA_CellMLMutationEvent
 {
 public:
   CDA_CellMLMutationEvent()
-    : mCurrentTarget(NULL), mTarget(NULL), mRelatedElement(NULL),
-      mEventPhase(iface::events::Event::AT_TARGET),
+    : _cda_refcount(1), mCurrentTarget(NULL), mTarget(NULL),
+      mRelatedElement(NULL), mEventPhase(iface::events::Event::AT_TARGET),
       mAttrChange(iface::cellml_events::MutationEvent::MODIFICATION),
       mPropagationStopped(false), mDefaultPrevented(false)
   {
@@ -315,9 +315,10 @@ CDA_CellMLElement::addEventListener
 
   if (i == mListenerToAdaptor.end())
   {
-    adaptor = already_AddRefd<CDA_CellMLElementEventAdaptor>
-      (new CDA_CellMLElementEventAdaptor(this, aListener));
-    adaptor->add_ref();
+    // We add a refcount, putting the total to 2...
+    adaptor = new CDA_CellMLElementEventAdaptor(this, aListener);
+    // One refcount is used for the map, the other belongs to the ObjRef and
+    // will be automatically dropped.
     mListenerToAdaptor.insert(std::pair<iface::events::EventListener*,
                               CDA_CellMLElementEventAdaptor*>
                               (aListener, adaptor)
@@ -389,7 +390,7 @@ CDA_CellMLElementEventAdaptor::CDA_CellMLElementEventAdaptor
 (
  CDA_CellMLElement* aParent, iface::events::EventListener* aCellMLListener
 )
-  : mParent(aParent), mCellMLListener(aCellMLListener)
+  : _cda_refcount(1), mParent(aParent), mCellMLListener(aCellMLListener)
 {
   memset(mDOMCount, 0, sizeof(mDOMCount));
   memset(mGotEvent, 0, sizeof(mGotEvent));
@@ -464,7 +465,9 @@ CDA_CellMLElementEventAdaptor::removeAllEventTypes()
        domevent++)
   {
     if (mDOMCount[domevent] != 0)
+    {
       targ->removeEventListener(kDOMEventNames[domevent], this, false);
+    }
   }
   memset(mDOMCount, 0, sizeof(mDOMCount));
   memset(mGotEvent, 0, sizeof(mGotEvent));
@@ -483,7 +486,7 @@ CDA_CellMLElementEventAdaptor::considerDestruction()
   // The typemap is empty, so we need to remove ourselves from our parent and
   // self-destruct...
   mParent->mListenerToAdaptor.erase(mCellMLListener);
-  delete this;
+  release_ref();
 }
 
 void
@@ -901,4 +904,43 @@ CDA_CellMLElementEventAdaptor::handleCellMLOutOfCellML
     aEvent->stopPropagation();
   if (me->mDefaultPrevented)
     aEvent->preventDefault();
+}
+
+static CDA_CellMLElement*
+recurseFindCellMLElementFromNode
+(
+ CDA_CellMLElement* aSearchRoot,
+ iface::dom::Node* aTarget
+)
+{
+  if (aSearchRoot->datastore->compare(aTarget) == 0)
+  {
+    aSearchRoot->add_ref();
+    return aSearchRoot;
+  }
+
+  RETURN_INTO_OBJREF(ce, iface::cellml_api::CellMLElementSet,
+                     aSearchRoot->childElements());
+  RETURN_INTO_OBJREF(it, iface::cellml_api::CellMLElementIterator,
+                     ce->iterate());
+  while (true)
+  {
+    RETURN_INTO_OBJREFD(el, CDA_CellMLElement, it->next());
+    if (el == NULL)
+      return NULL;
+    CDA_CellMLElement* ret =
+      recurseFindCellMLElementFromNode(el, aTarget);
+    if (ret != NULL)
+      return ret;
+  }
+}
+
+CDA_CellMLElement*
+CDA_CellMLElementEventAdaptor::findCellMLElementFromNode
+(
+ iface::dom::Node* aTarget
+)
+  throw(std::exception&)
+{
+  return recurseFindCellMLElementFromNode(mParent, aTarget);
 }

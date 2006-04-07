@@ -402,6 +402,7 @@ public:
 
   wchar_t* data() throw(std::exception&);
   void data(const wchar_t* attr) throw(std::exception&);
+  void nodeValue(const wchar_t* attr) throw(std::exception&);
   uint32_t length() throw(std::exception&);
   wchar_t* substringData(uint32_t offset, uint32_t count)
     throw(std::exception&);

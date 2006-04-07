@@ -124,6 +124,9 @@ CDA_CellMLElement::~CDA_CellMLElement()
     printf("Warning: release_ref called too few times on %s.\n",
            typeid(this).name());
 
+
+  cleanupEvents();
+
   if (datastore != NULL)
     datastore->release_ref();
 
@@ -138,8 +141,6 @@ CDA_CellMLElement::~CDA_CellMLElement()
     userData.begin();
   for (; i != userData.end(); i++)
     (*i).second->release_ref();
-
-  cleanupEvents();
 }
 
 wchar_t*
@@ -716,16 +717,16 @@ CDA_Model::~CDA_Model()
 {
   // XXX this code should run in ~CDA_CellMLElement, but libxml doesn't work
   // after the document has been destroyed.
-  if (datastore != NULL)
-  {
-    datastore->release_ref();
-    datastore = NULL;
-  }
-  if (children != NULL)
-  {
-    delete children;
-    children = NULL;
-  }
+  //if (datastore != NULL)
+  //{
+  //  datastore->release_ref();
+  //  datastore = NULL;
+  // }
+  //if (children != NULL)
+  //{
+  //  delete children;
+  //  children = NULL;
+  //}
 
   mDoc->release_ref();
 }
@@ -1560,6 +1561,27 @@ uint32_t
 CDA_Model::assignUniqueIdentifier()
 {
   return mNextUniqueIdentifier++;
+}
+
+iface::mathml_dom::MathMLMathElement*
+CDA_Model::createMathElement()
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(el, iface::dom::Element,
+                     mDoc->createElementNS(MATHML_NS, L"math"));
+  DECLARE_QUERY_INTERFACE(mel, el, mathml_dom::MathMLMathElement);
+  return mel;
+}
+
+iface::dom::Element*
+CDA_Model::createExtensionElement
+(
+ const wchar_t* namespaceURI,
+ const wchar_t* qualifiedName
+)
+  throw(std::exception&)
+{
+  return mDoc->createElementNS(namespaceURI, qualifiedName);
 }
 
 CDA_MathContainer::CDA_MathContainer(iface::XPCOM::IObject* parent,
