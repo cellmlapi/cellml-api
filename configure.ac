@@ -46,11 +46,5 @@ AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
 
 AC_CONFIG_FILES([
                  Makefile
-                 interfaces/Makefile
-                 sources/Makefile
-                 sources/dom/Makefile
-                 sources/dom_direct/Makefile
-                 sources/mathml/Makefile
-                 sources/cellml/Makefile
-                 tests/Makefile])
+                ])
 AC_OUTPUT
