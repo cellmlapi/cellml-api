@@ -1,0 +1,45 @@
+# The overall libcellml.la library...
+lib_LTLIBRARIES += libcellml.la
+noinst_LTLIBRARIES += libdomonly.la libdomdirectonly.la libmathmlonly.la libcellmlonly.la
+libcellml_la_SOURCES := sources/Utilities.cpp
+libcellml_la_LIBADD := \
+  libcellmlonly.la \
+  libmathmlonly.la \
+  libdomonly.la \
+  libdomdirectonly.la
+libcellml_la_CXXFLAGS := -I$(top_srcdir) -I$(top_srcdir)/sources \
+  -I$(top_builddir)/interfaces
+
+libdomdirectonly_la_SOURCES := \
+  sources/dom_direct/DOMImplementation.cpp \
+  sources/dom_direct/DOMLoader.cpp
+libdomdirectonly_la_CXXFLAGS := \
+  -I$(top_srcdir) -I$(top_srcdir)/sources -I $(top_srcdir)/sources/dom_direct \
+  -I $(top_srcdir)/sources/dom -I$(top_builddir)/interfaces \
+  `xml2-config --cflags`
+
+libdomonly_la_SOURCES := \
+  sources/dom/DOMBootstrap.cpp \
+  sources/dom/DOMWriter.cpp
+
+libdomonly_la_CXXFLAGS := \
+  -I$(top_srcdir) -I$(top_srcdir)/sources -I $(top_srcdir)/sources/dom \
+  -I $(top_srcdir)/sources/dom_direct -I$(top_builddir)/interfaces \
+  $(GDOME_CFLAGS) $(GLIB_CFLAGS)
+
+libmathmlonly_la_SOURCES := \
+  sources/mathml/MathMLImplementation.cpp
+libmathmlonly_la_CXXFLAGS := \
+  -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/cellml \
+  -I $(top_srcdir)/sources/dom -I $(top_srcdir)/sources/dom_direct \
+  -I $(top_srcdir)/sources/mathml -I$(top_builddir)/interfaces
+
+include_HEADERS += sources/cellml/CellMLBootstrap.hpp
+libcellmlonly_la_SOURCES := \
+  sources/cellml/CellMLImplementation.cpp \
+  sources/cellml/CellMLBootstrap.cpp \
+  sources/cellml/CellMLEvents.cpp
+libcellmlonly_la_CXXFLAGS := \
+  -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/cellml \
+  -I $(top_srcdir)/sources/dom -I $(top_srcdir)/sources/dom_direct \
+  -I $(top_srcdir)/sources/mathml -I$(top_builddir)/interfaces
