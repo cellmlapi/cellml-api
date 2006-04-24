@@ -1,0 +1,403 @@
+#include "CellML-APISPEC.idl"
+
+/**
+ * This module contains a description of code which ties together all of the
+ * CellML code into an environment that tools can integrate into. This allows
+ * separate tools which have no knowledge of each other to integrate without
+ * problems.
+ */
+module cellml_context
+{
+  /**
+   * This interface represents a CellML module. The module can be a tool (which
+   * has a user interface) or a service (which does not have a user interface,
+   * but can be called from other UIs).
+   * It is provided mainly so other modules can determine what else is running.
+   * All modules should provide a class which derives from this class, and
+   * register it with the CellMLToolManager. For services, the module can also
+   * implement one of the service interfaces in IDL module cellml_services.
+   */
+  interface CellMLModule : XPCOM::IObject
+  {
+    enum ModuleTypes
+    {
+      TOOL,
+      SERVICE
+    };
+
+    /**
+     * The type of module.
+     */
+    readonly attribute ModuleTypes moduleType;
+
+    /**
+     * The module name(should be short).
+     */
+    readonly attribute wstring moduleName;
+
+    /**
+     * A brief description of what the module does, in the language the module
+     * is currently operating in.
+     */
+    readonly attribute wstring moduleDescription;
+
+    /**
+     * The version of the module. Module developers are free to format this
+     * however they like...
+     */
+    readonly attribute wstring moduleVersion;
+
+    /**
+     * A URL for an icon for the module(PNG format), or the empty string if no
+     * icon is provided.
+     */
+    readonly attribute wstring moduleIconURL;
+
+    /**
+     * Called to request that a module unload itself and exit. A tool may
+     * still ask the user to confirm, and if the user doesn't confirm, cancel
+     * the unload. Modules which decide to unload must still deregister
+     * themselves with the module manager.
+     */
+    void unload();
+  };
+
+  interface CellMLModuleIterator : XPCOM::IObject
+  {
+    /**
+     * Fetches the next tool, or returns nil if no more tools.
+     */
+    CellMLModule nextModule();
+  };
+
+  interface ModelNode;
+
+  interface ModelNodeIterator : XPCOM::IObject
+  {
+    /**
+     * Fetches the next tool, or returns nil if no more tools.
+     */
+    ModelNode nextModelNode();
+  };
+
+  /**
+   * A monitors which is notified when tools are loaded or unloaded.
+   */
+  interface CellMLModuleMonitor : XPCOM::IObject
+  {
+    /**
+     * Called when a new tool is added to the tool manager.
+     * @param mod The module being registered.
+     */
+    void moduleRegistered(in CellMLModule mod);
+
+    /**
+     * Called when a tool is removed from the tool manager.
+     * @param mod The module being deregistered.
+     */
+    void moduleDeregistered(in CellMLModule mod);
+  };
+
+  /**
+   * This interface is for a 'module manager': a way of managing the modules
+   * currently loaded.
+   */
+  interface CellMLModuleManager : XPCOM::IObject
+  {
+    /**
+     * Registers a new module.
+     * @param mod The new module.
+     */
+    void registerModule(in CellMLModule mod);
+
+    /**
+     * Deregisters a module. Does nothing if the tool not registered.
+     * @param mod The module to deregister.
+     */
+    void deregisterModule(in CellMLModule mod);
+
+    /**
+     * Finds a module, by name, and optionally version. Return nil of the
+     * object could not be found.
+     * @param moduleName The name of the module.
+     * @param moduleVersion The version of the module.
+     */
+    CellMLModule findModuleByName(in wstring moduleName,
+                                  in wstring moduleVersion)
+      raises(cellml_api::CellMLException);
+
+    /**
+     * Requests that a module become available. Modules which are configured as
+     * being dynamic, and are not currently available, will be launched. If the
+     * module is already loaded, does nothing.
+     * @param moduleName The name of the module to load.
+     * @param moduleVersion The version of the module to load.
+     * @raises CellMLException If the module is not loaded and not configured.
+     * Note that requested module may take some time to start up. The best way
+     * to know when it is ready is to use a CellMLModuleMonitor.
+     */
+    void requestModuleByName(in wstring moduleName, in wstring moduleVersion)
+      raises(cellml_api::CellMLException);
+
+    /**
+     * Adds a CellMLModuleMonitor.
+     * @param moduleMonitor The CellMLModuleMonitor to add.
+     */
+    void addMonitor(in CellMLModuleMonitor moduleMonitor);
+
+    /**
+     * Removes a CellMLModuleMonitor. Does nothing if the CellMLModuleMonitor
+     * is not registered to receive events.
+     * @param moduleMonitor The CellMLModuleMonitor to remove.
+     */
+    void removeMonitor(in CellMLModuleMonitor moduleMonitor);
+
+    /**
+     * Begins iterating through the modules...
+     * @return A CellMLModuleIterator pointing to the first module.
+     */
+    CellMLModuleIterator iterateModules();
+  };
+
+  /**
+   * This provides per-interface annotations(as opposed to the per-object
+   * annotations available through cellml_api::CellMLElement). This will likely
+   * be useful for information added by tools and services describing extra
+   * functionality added for that element.
+   *
+   * The string http://www.cellml.org/tools/CellMLContext/UIPropertyList is
+   *  used for the list of properties which a CellML editor can allow the user
+   *  to edit.
+   */
+  interface CellMLTypeAnnotationManager : XPCOM::IObject
+  {
+    /**
+     * Sets user-supplied annotations on this element. These annotations are
+     * never read from an XML file or written out, but are for the application
+     * to use for any purpose it likes.
+     * It is recommended that the key be a URL under the control of the person
+     * defining the meaning of the key.
+     * If the key already exists, then the existing user-data should be removed
+     * and the new user-data added.
+     * @param type The type to annotate.
+     * @param key  A string to identify the annotation.
+     * @param data The data to set, or nil to clear the UserData for a key.
+     */
+    void setUserData(in wstring type, in wstring key, in XPCOM::IObject data);
+
+    /**
+     * Retrieves user-supplied annotations previously set on this element. Note
+     * that annotations on a base type will be visible on a derived type.
+     * However, the order in which annotations are set affects which annotation
+     * is visible(i.e. if you set on the base class, and then on the more
+     * derived, the more derived setting will apply, but if you reverse the
+     * order, the base class setting will apply).
+     * @param type The type to annotate.
+     * @param key A string to identify the annotation.
+     * @return The user-data associated with the key.
+     * @raises CellMLException if no user data is set for the given key.
+     */
+    XPCOM::IObject getUserData(in wstring type, in wstring key)
+      raises(cellml_api::CellMLException);
+  };
+
+  interface ModelList;
+  interface ModelNode;
+
+  /**
+   * A monitor for changes to model nodes.
+   */
+  interface ModelNodeMonitor : XPCOM::IObject
+  {
+    /**
+     * @param renamedNode The node which was renamed. Fetching name from the
+     *                    node will return the old name until after
+     *                    modelRenamed has returned.
+     * @param newName The new name of the model.
+     */
+    void modelRenamed(in ModelNode renamedNode,
+                      in wstring newName);
+  };
+
+  /**
+   * A monitor for changes to model lists.
+   */
+  interface ModelListMonitor : XPCOM::IObject
+  {
+    /**
+     * Called after a model is added to the list(or a list on a child of the
+     * list, and so on).
+     * @param newNode The model node added.
+     * @param depth The depth at which the node was added. This is 0 if a model
+     *              is added to the toplevel list, 1 for a direct derivative
+     *              of a toplevel model, and so on.
+     */
+    void modelAdded(in ModelNode newNode, in short depth);
+
+    /**
+     * Called before a model is removed from the list(or a direct or indirect
+     * derivative list).
+     * @param oldNode The model node removed.
+     * @param depth The depth at which the node was removed. This is 0 if a
+     *              model is added to the toplevel list, 1 for a direct
+     *              derivative of a toplevel model, and so on.
+     */
+    void modelRemoved(in ModelNode oldNode, in short depth);
+  };
+
+  /**
+   * This represents a node in the tree containing all models available to the
+   * user interface.
+   */
+  interface ModelNode : XPCOM::IObject
+  {
+    /**
+     * The name of the model, according to the user.
+     */
+    attribute wstring name;
+
+    /**
+     * Returns the node in the derivative tree which is the latest
+     * (i.e. greatest modificationTimestamp). This can return itself if it is
+     * the latest model(this will only happen under the normal usage convention
+     * if there are no derivatives).
+     */
+    ModelNode getLatestDerivative();
+
+    /**
+     * Gets a model node which is writable. If this node is not frozen, will
+     * return itself. Otherwise, the model is cloned, and a new node pointing
+     * to the cloned is inserted into this node, and the new node returned.
+     */
+    ModelNode getWritable();
+
+    /**
+     * Returns true if freeze has been called, or false otherwise.
+     */
+    readonly attribute boolean isFrozen;
+
+    /**
+     * Called to freeze the model.
+     */
+    void freeze();
+
+    /**
+     * A timestamp representing when stampModifiedNow was last called.
+     * Equal to 0 if stampModifiedNow() never called.
+     */
+    readonly attribute unsigned long modificationTimestamp;
+
+    /**
+     * Sets the last modified stamp to now.
+     */
+    void stampModifiedNow();
+
+    /**
+     * The model this node points to...
+     */
+    readonly attribute cellml_api::Model model;
+
+    /**
+     * The list of all derived models...
+     */
+    readonly attribute ModelList derivedModels;
+
+    /**
+     * Adds a model monitor. This will receive notifications for all models
+     * in the list, and all more derived models.
+     * @param monitor The model monitor to add.
+     */
+    void addModelMonitor(in ModelNodeMonitor monitor);
+
+    /**
+     * Removes a model monitor.
+     * @param monitor The model node monitor to remove.
+     */
+    void removeModelMonitor(in ModelNodeMonitor monitor);
+  };
+
+  interface ModelList : XPCOM::IObject
+  {
+    /**
+     * Adds a model monitor. This will receive notifications for all models
+     * in the list, and all more derived models.
+     * @param monitor The model monitor to add.
+     */
+    void addModelMonitor(in ModelNodeMonitor monitor);
+
+    /**
+     * Removes a model monitor.
+     * @param monitor The model monitor to remove.
+     */
+    void removeModelMonitor(in ModelNodeMonitor monitor);
+
+    /**
+     * Adds a model list monitor. This will receive notifications of changes to
+     * the model list, and of changes to more derived model lists.
+     * @param monitor The model list monitor to add.
+     */
+    void addListMonitor(in ModelListMonitor monitor);
+
+    /**
+     * Removes a model list monitor.
+     * @param monitor The model list monitor to remove.
+     */
+    void removeListMonitor(in ModelListMonitor monitor);
+
+    /**
+     * Makes a node suitable for passing to addModel. It does not actually add
+     * the node to the list.
+     * @param mod The model the node refers to.
+     * @returns The new node.
+     */
+    ModelNode makeNode(in cellml_api::Model mod);
+
+    /**
+     * Adds a model to the list...
+     * @param node The model node to add to the list...
+     * Note: node must be created in the same context as the ModelList. You
+     *   cannot define your own nodes, or mix across contexts. However, the
+     *   model itself can be created any way and in any context you like.
+     */
+    void addModel(in ModelNode node);
+
+    /**
+     * Removes a model from the list...
+     * @param node The model node to remove from the list...
+     */
+    void removeModel(in ModelNode node);
+
+    /**
+     * Iterates over all model nodes in the list.
+     * @return an iterate to do the iteration.
+     */
+    ModelNodeIterator iterateModelNodes();
+  };
+
+  /**
+   * This is intended as the top-level object through which everything else
+   * can be accessed.
+   */
+  interface CellMLContext : XPCOM::IObject
+  {
+    /**
+     * The module manager for this CellML context...
+     */
+    readonly attribute CellMLModuleManager moduleManager;
+
+    /**
+     * The type annotation manager for this CellML context...
+     */
+    readonly attribute CellMLTypeAnnotationManager typeAnnotationManager;
+    
+    /**
+     * The model loader...
+     */
+    readonly attribute cellml_api::CellMLBootstrap cellmlBootstrap;
+
+    /**
+     * The list of all loaded models and their derivatives.
+     */
+    readonly attribute ModelList loadedModels;
+  };
+};
