@@ -26,8 +26,12 @@ libcellml_corba_la_LIBADD := \
 libcellml_corba_la_CXXFLAGS := -I$(top_srcdir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
 
 # Force correct order of compilation...
-CCI%.cxx: %SK.cc
-SCI%.cxx: %SK.cc
+$(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc
+$(top_builddir)/interfaces/SCI%.cxx: $(top_builddir)/interfaces/%SK.cc
 
 %.hh %SK.cc: $(top_srcdir)/interfaces/%.idl
-	omniidl -bcxx $<
+	SAVEDIR=`pwd` && \
+	mkdir -p $(top_builddir)/interfaces && \
+	cd $(top_builddir)/interfaces && \
+	omniidl -bcxx $$SAVEDIR/$< && \
+	cd $$SAVEDIR
