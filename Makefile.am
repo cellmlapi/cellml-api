@@ -11,3 +11,6 @@ include $(top_srcdir)/tests/build.mk
 # These parts relate to CORBA...
 include $(top_srcdir)/interfaces/corba_build.mk
 include $(top_srcdir)/sources/cellml_corba_server/build.mk
+
+# These parts relate to the CellML Context...
+include $(top_srcdir)/sources/cellml_context/build.mk
