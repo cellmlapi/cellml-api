@@ -277,6 +277,8 @@ module cellml_api
      * object is built in may choose not to implement this, provided that the
      * implementation does not offer the possibility of remote access to the
      * object.
+     * It is recommended that the key be a URL under the control of the person
+     * defining the meaning of the key.
      * If the key already exists, then the existing user-data should be removed
      * and the new user-data added.
      * @param key  A string to identify the annotation.
