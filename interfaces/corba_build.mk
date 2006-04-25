@@ -2,34 +2,37 @@
 
 lib_LTLIBRARIES += libcellml_corba.la
 libcellml_corba_la_SOURCES := \
-  interfaces/CCIDOM-APISPEC.cxx \
-  interfaces/CCIDOM-events.cxx \
-  interfaces/CCIxpcom.cxx \
-  interfaces/CCIMathML-content-APISPEC.cxx \
-  interfaces/CCICellML-APISPEC.cxx \
-  interfaces/CCICellML-events.cxx \
-  interfaces/SCIDOM-APISPEC.cxx \
-  interfaces/SCIDOM-events.cxx \
-  interfaces/SCIxpcom.cxx \
-  interfaces/SCIMathML-content-APISPEC.cxx \
-  interfaces/SCICellML-APISPEC.cxx \
-  interfaces/SCICellML-events.cxx \
-  interfaces/DOM-APISPECSK.cc \
-  interfaces/DOM-eventsSK.cc \
-  interfaces/xpcomSK.cc \
-  interfaces/MathML-content-APISPECSK.cc \
-  interfaces/CellML-APISPECSK.cc \
-  interfaces/CellML-eventsSK.cc
+  $(top_builddir)/interfaces/CCIDOM-APISPEC.cxx \
+  $(top_builddir)/interfaces/CCIDOM-events.cxx \
+  $(top_builddir)/interfaces/CCIxpcom.cxx \
+  $(top_builddir)/interfaces/CCIMathML-content-APISPEC.cxx \
+  $(top_builddir)/interfaces/CCICellML-APISPEC.cxx \
+  $(top_builddir)/interfaces/CCICellML-events.cxx \
+  $(top_builddir)/interfaces/SCIDOM-APISPEC.cxx \
+  $(top_builddir)/interfaces/SCIDOM-events.cxx \
+  $(top_builddir)/interfaces/SCIxpcom.cxx \
+  $(top_builddir)/interfaces/SCIMathML-content-APISPEC.cxx \
+  $(top_builddir)/interfaces/SCICellML-APISPEC.cxx \
+  $(top_builddir)/interfaces/SCICellML-events.cxx \
+  $(top_builddir)/interfaces/DOM-APISPECSK.cc \
+  $(top_builddir)/interfaces/DOM-eventsSK.cc \
+  $(top_builddir)/interfaces/xpcomSK.cc \
+  $(top_builddir)/interfaces/MathML-content-APISPECSK.cc \
+  $(top_builddir)/interfaces/CellML-APISPECSK.cc \
+  $(top_builddir)/interfaces/CellML-eventsSK.cc
 libcellml_corba_la_LIBADD := \
   $(top_builddir)/libCORBASupport.la
 
-libcellml_corba_la_CXXFLAGS := -I$(top_srcdir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
+libcellml_corba_la_CXXFLAGS := \
+  -I$(top_srcdir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
 
 # Force correct order of compilation...
 $(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc
 $(top_builddir)/interfaces/SCI%.cxx: $(top_builddir)/interfaces/%SK.cc
 
-%.hh %SK.cc: $(top_srcdir)/interfaces/%.idl
+$(top_builddir)/interfaces/%.hh \
+$(top_builddir)/interfaces/%SK.cc: \
+  $(top_srcdir)/interfaces/%.idl
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
