@@ -534,7 +534,7 @@ CDA_ModelList::addModel(iface::cellml_context::ModelNode* node)
   cnode->mParentList = this;
 
   // Call the monitors back...
-  std::list<iface::cellml_context::ModelListMonitor*>::iterator i;  
+  std::list<iface::cellml_context::ModelListMonitor*>::iterator i;
   CDA_ModelList* curList = this;
   uint16_t depth = 0;
   while (curList)
@@ -555,7 +555,7 @@ CDA_ModelList::removeModel(iface::cellml_context::ModelNode* node)
   throw(std::exception&)
 {
   // Call the monitors back...
-  std::list<iface::cellml_context::ModelListMonitor*>::iterator i;  
+  std::list<iface::cellml_context::ModelListMonitor*>::iterator i;
   CDA_ModelList* curList = this;
   uint16_t depth = 0;
   while (curList)
@@ -604,4 +604,10 @@ CDA_CellMLContext::~CDA_CellMLContext()
     mCellMLBootstrap->release_ref();
   if (mModelList != NULL)
     mModelList->release_ref();
+}
+
+iface::cellml_context::CellMLContext*
+CreateCellMLContext()
+{
+  return new CDA_CellMLContext();
 }

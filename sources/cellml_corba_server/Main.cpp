@@ -8,10 +8,12 @@
 #include <inttypes.h>
 #include "CellML-APISPEC.hh"
 #include "IfaceCellML-APISPEC.hxx"
-#include "CellMLBootstrap.hpp"
-#include "SCICellML-APISPEC.hxx"
+#include "CellMLContextBootstrap.hxx"
+#include "SCICellML-Context.hxx"
 
 CORBA::ORB_var gBroker;
+
+bool gShutdownServer = false;
 
 FILE*
 PrepareCellMLHome(void)
@@ -115,20 +117,24 @@ main(int argc, char** argv)
   pm->activate();
 
   // Next, create the bootstrap object...
-  iface::cellml_api::CellMLBootstrap* cbs = CreateCellMLBootstrap();
+  iface::cellml_context::CellMLContext* cbs = CreateCellMLContext();
 
   // Now wrap it...
-  SCI::cellml_api::_final_CellMLBootstrap* fcb = 
-    new SCI::cellml_api::_final_CellMLBootstrap(cbs, rootPoa);
+  SCI::cellml_context::_final_CellMLContext* fcb = 
+    new SCI::cellml_context::_final_CellMLContext(cbs, rootPoa);
   delete rootPoa->activate_object(fcb);
   cbs->release_ref();
 
-  cellml_api::CellMLBootstrap_var cbsV = fcb->_this();
+  cellml_context::CellMLContext_var cbsV = fcb->_this();
   char* iorStr = gBroker->object_to_string(cbsV);
   fprintf(fIOR, "%s", iorStr);
   CORBA::string_free(iorStr);
+  fclose(fIOR);
+
+  while (!gShutdownServer)
+    sleep(1);
 
   // Finally, clean up...
   fcb->release_ref();
-  fcb->_remove_ref();
+  gBroker->shutdown(true);
 }

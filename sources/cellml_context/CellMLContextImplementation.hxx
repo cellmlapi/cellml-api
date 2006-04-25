@@ -2,7 +2,7 @@
 #include <inttypes.h>
 #include <map>
 #include <string>
-#include "IfaceCellML-Context.hxx"
+#include "CellMLContextBootstrap.hxx"
 #include "Utilities.hxx"
 
 class CDA_ModuleManager;
@@ -220,7 +220,7 @@ public:
   }
 
   iface::cellml_api::CellMLBootstrap*
-  cellmlBoostrap()
+  cellmlBootstrap()
     throw(std::exception&)
   {
     mCellMLBootstrap->add_ref();

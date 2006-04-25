@@ -14,3 +14,6 @@ include $(top_srcdir)/sources/cellml_corba_server/build.mk
 
 # These parts relate to the CellML Context...
 include $(top_srcdir)/sources/cellml_context/build.mk
+
+# CellML Context and also CORBA...
+include $(top_srcdir)/sources/cellml_context/corba_build.mk
