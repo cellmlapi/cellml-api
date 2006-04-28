@@ -1,5 +1,5 @@
-#include "CellML-APISPEC.idl"
-#include "DOM-events.idl"
+#include "CellML_APISPEC.idl"
+#include "DOM_events.idl"
 
 /**
  * The CellML Events module is an optional extension which may be supported by

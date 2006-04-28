@@ -1,6 +1,6 @@
 #include "xpcom.idl"
-#include "DOM-APISPEC.idl"
-#include "MathML-content-APISPEC.idl"
+#include "DOM_APISPEC.idl"
+#include "MathML_content_APISPEC.idl"
 /**
  * This module contains a description of the CellML Application Programming
  * Interface in the language-neutral IDL form.

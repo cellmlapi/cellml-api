@@ -1,5 +1,5 @@
 #include "CellMLImplementation.hpp"
-#include "IfaceCellML-events.hxx"
+#include "IfaceCellML_events.hxx"
 
 #ifndef _WIN32
 #include <sys/time.h>

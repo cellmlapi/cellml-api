@@ -4,7 +4,7 @@
 #define _MATHMLDOM_IDL_
 
 #include "xpcom.idl"
-#include "DOM-APISPEC.idl"
+#include "DOM_APISPEC.idl"
 
 module mathml_dom
 {

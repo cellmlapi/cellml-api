@@ -5,9 +5,9 @@
 #include <wchar.h>
 #include "Utilities.hxx"
 #include "Ifacexpcom.hxx"
-#include "IfaceDOM-APISPEC.hxx"
-#include "IfaceCellML-APISPEC.hxx"
-#include "IfaceDOM-events.hxx"
+#include "IfaceDOM_APISPEC.hxx"
+#include "IfaceCellML_APISPEC.hxx"
+#include "IfaceDOM_events.hxx"
 #include <typeinfo>
 #include <assert.h>
 

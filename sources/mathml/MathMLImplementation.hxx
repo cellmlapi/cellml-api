@@ -1,6 +1,6 @@
 #include <exception>
 #include <inttypes.h>
-#include "IfaceMathML-content-APISPEC.hxx"
+#include "IfaceMathML_content_APISPEC.hxx"
 #include "DOMImplementation.hpp"
 #include <map>
 

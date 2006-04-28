@@ -3,7 +3,7 @@
 #ifndef _EVENTS_IDL_
 #define _EVENTS_IDL_
 
-#include "DOM-APISPEC.idl"
+#include "DOM_APISPEC.idl"
 
 module events
 {

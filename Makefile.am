@@ -2,6 +2,10 @@
 include_HEADERS :=
 lib_LTLIBRARIES :=
 noinst_LTLIBRARIES :=
+BUILT_SOURCES :=
+
+# Parts needed to build the interface generates...
+include $(top_srcdir)/simple_interface_generators/build.mk
 
 # Parts needed to build and test the core...
 include $(top_srcdir)/interfaces/build.mk

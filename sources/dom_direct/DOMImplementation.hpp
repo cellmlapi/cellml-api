@@ -1,8 +1,8 @@
 #include <exception>
 #include "Utilities.hxx"
-#include "IfaceDOM-APISPEC.hxx"
-#include "IfaceDOM-events.hxx"
-#include "IfaceMathML-content-APISPEC.hxx"
+#include "IfaceDOM_APISPEC.hxx"
+#include "IfaceDOM_events.hxx"
+#include "IfaceMathML_content_APISPEC.hxx"
 #include <string>
 #include <list>
 #include <map>
