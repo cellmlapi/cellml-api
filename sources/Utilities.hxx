@@ -14,6 +14,42 @@
 #include <exception>
 #include <Ifacexpcom.hxx>
 #include <wchar.h>
+#include <inttypes.h>
+
+unsigned long mersenne_genrand_int32(void);
+
+class CDA_ID
+{
+public:
+  CDA_ID()
+  {
+    uint32_t a, b, c, d;
+    a = mersenne_genrand_int32();
+    b = mersenne_genrand_int32();
+    c = mersenne_genrand_int32();
+    d = mersenne_genrand_int32();
+    sprintf(mIDString, "%08X-%04X-%04X-%04X-%04X%08X",
+            a, (b & 0xFFFF), (b >> 16) & 0xFFFF,
+            c & 0xFFFF, (c >> 16) & 0xFFFF, d);
+  }
+
+  char* cloneID()
+  {
+    return strdup(mIDString);
+  }
+private:
+  char mIDString[37];
+};
+
+#define CDA_IMPL_ID \
+  private: \
+    CDA_ID _cda_id; \
+  public: \
+    char* objid() \
+      throw() \
+    { \
+      return _cda_id.cloneID(); \
+    }
 
 #define CDA_IMPL_REFCOUNT \
   private: \
@@ -30,15 +66,6 @@
       _cda_refcount--; \
       if (_cda_refcount == 0) \
         delete this; \
-    }
-
-#define CDA_IMPL_COMPARE_NAIVE(c1) \
-    int32_t compare(iface::XPCOM::IObject* obj) \
-      throw(std::exception&) \
-    { \
-      return (reinterpret_cast<char*>(static_cast<iface::XPCOM::IObject*> \
-                                      (this)) - \
-              reinterpret_cast<char*>(obj)); \
     }
 
 #define CDA_IMPL_QI0 \
@@ -568,6 +595,15 @@ inline bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
   return eq;
 }
 
+/**
+ * Compares two objects, o1 and o2.
+ * Returns: 0 if o1 == o2
+ *         <0 if o2 < o1
+ *         >0 if o2 > o1
+ */
+int CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
+  throw();
+
 struct XPCOMComparator
 {
   bool
@@ -579,7 +615,7 @@ struct XPCOMComparator
     /* In the strict ordering, NULL < x unless x == NULL. */
     if (o1 == NULL)
       return o2 ? true : false;
-    return (o1->compare(o2) < 0);
+    return (CDA_objcmp(o1, o2) < 0);
   }
 };
 

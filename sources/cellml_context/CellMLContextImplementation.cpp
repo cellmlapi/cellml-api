@@ -16,23 +16,24 @@ CDA_TypeAnnotationManager::setUserData(const wchar_t* type, const wchar_t* key,
                                        iface::XPCOM::IObject* data)
   throw(std::exception&)
 {
+  printf("In setUserData...\n");
+  printf("  type = %S\n", type);
+  printf("  key = %S\n", key);
+  printf("Setting data...\n");
   data->add_ref();
   std::pair<std::wstring,std::wstring> p(type, key);
   std::map<std::pair<std::wstring,std::wstring>, iface::XPCOM::IObject*>
     ::iterator i = annotations.find(p);
   if (i != annotations.end())
   {
-    if (data == NULL)
+    // If we can't release the reference, just drop it...
+    try
     {
       (*i).second->release_ref();
-      annotations.erase(i);
-      return;
     }
-    if ((*i).second->compare(data) == 0)
-      return;
-    (*i).second->release_ref();
-    (*i).second = data;
-    return;
+    catch (...) {}
+    
+    annotations.erase(i);
   }
   if (data == NULL)
     return;
@@ -238,7 +239,7 @@ CDA_ModuleManager::removeMonitor
 {
   std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i;
   for (i = mMonitors.begin(); i != mMonitors.end(); i++)
-    if ((*i)->compare(aModuleMonitor) == 0)
+    if (CDA_objcmp((*i), aModuleMonitor) == 0)
     {
       aModuleMonitor->release_ref();
       mMonitors.erase(i);

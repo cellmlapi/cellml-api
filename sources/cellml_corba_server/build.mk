@@ -10,5 +10,7 @@ cellml_corba_server_LDADD := \
   $(top_builddir)/libcellml_context.la \
   $(top_builddir)/libcellml_context_corba.la \
   $(top_builddir)/libcellml.la \
-  $(top_builddir)/libcellml_corba.la
-cellml_corba_server_LDFLAGS := -lomniORB4 -lxml2
+  $(top_builddir)/libcellml_corba.la \
+  $(top_builddir)/libCORBASupport.la -lxml2
+
+cellml_corba_server_LDFLAGS := -static -lomniORB4

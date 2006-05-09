@@ -6,10 +6,10 @@
 #include <sys/stat.h>
 #include <sys/errno.h>
 #include <inttypes.h>
-#include "CellML-APISPEC.hh"
-#include "IfaceCellML-APISPEC.hxx"
+#include "CellML_APISPEC.hh"
+#include "IfaceCellML_APISPEC.hxx"
 #include "CellMLContextBootstrap.hxx"
-#include "SCICellML-Context.hxx"
+#include "SCICellML_Context.hxx"
 
 CORBA::ORB_var gBroker;
 
@@ -62,6 +62,9 @@ PrepareCellMLHome(void)
       exit(-1);
     }
     // No server, so open the file to write the new IOR.
+#ifdef DEBUG
+    printf("No IOR file now, creating new server...\n");
+#endif
     return fopen(ior_file.c_str(), "w");
   }
 
@@ -72,19 +75,39 @@ PrepareCellMLHome(void)
   {
     fclose(f);
     // Invalid IOR, so return...
+#ifdef DEBUG
+    printf("Unreadable IOR file, creating new server...\n");
+#endif
     return fopen(ior_file.c_str(), "w");
   }
   buf[len] = 0;
   try
   {
+#ifdef DEBUG
+    printf("Converting string to object...\n");
+#endif
     CORBA::Object_var op = gBroker->string_to_object(buf);
-    cellml_api::CellMLBootstrap_var cbv =
-      cellml_api::CellMLBootstrap::_narrow(op);
+#ifdef DEBUG
+    printf("Narrowing...\n");
+#endif
+    cellml_context::CellMLContext_var cbv =
+      cellml_context::CellMLContext::_narrow(op);
+#ifdef DEBUG
+    printf("Checking exists...\n");
+#endif
     if (cbv->_non_existent())
+    {
+#ifdef DEBUG
+      printf("Doesn't exist, throwing exception.\n");
+#endif
       throw std::exception();
+    }
   }
   catch (...)
   {
+#ifdef DEBUG
+    printf("Caught exception, creating new server...\n");
+#endif
     fclose(f);
     // Invalid IOR, so return...
     return fopen(ior_file.c_str(), "w");

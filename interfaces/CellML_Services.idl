@@ -1,4 +1,4 @@
-#include "CellML-APISPEC.idl"
+#include "CellML_APISPEC.idl"
 
 /**
  * This module contains a description of the CellML supplementary service interfaces

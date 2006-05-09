@@ -1,5 +1,5 @@
 #include <inttypes.h>
-#include "IfaceDOM-APISPEC.hxx"
+#include "IfaceDOM_APISPEC.hxx"
 
 /*
  * Note: Everything in this file is specific to locally hosted C++(with no

@@ -1,6 +1,12 @@
 /*	-*- IDL -*-
- * Copyright (C) 2001,  Christof Meerwald <cmeerw@web.de>
- * http://xpcom2corba.sunsite.dk/
+ * This IDL has been substantially modified from the original version by Andrew
+ * Miller <ak.miller@auckland.ac.nz> for the Bioengineering Institute at the
+ *  University of Auckland. These modifications are:
+ *   Copyright (C) 2004-2006 by The Bioengineering Institute at the University
+ *   of Auckland.
+ * Original author's copyright:
+ *   Copyright (C) 2001,  Christof Meerwald <cmeerw@web.de>
+ *   http://xpcom2corba.sunsite.dk/
  */
 
 /*
@@ -21,21 +27,79 @@
  * Christof Meerwald.  All Rights Reserved.
  *
  * Contributor(s): Christof Meerwald <cmeerw@web.de> (original author)
+ *                 Andrew Miller <ak.miller@auckland.ac.nz>
  */
 #ifndef IDL__XPCOM__INCLUDED
 #define IDL__XPCOM__INCLUDED
 
+/**
+ * The XPCOM module represents core infrastructure shared by XPCOM in Mozilla
+ * and the base of all objects CORBA-side.
+ */
 module XPCOM
 {
+  /**
+   * This is used to represent a string of 8-bit bytes making up a UTF8 string.
+   */
   typedef string utf8string;
+
+  /**
+   * This is used to represent a wider string. On the Mozilla side, this will
+   * be UTF16, although it may be UCS4 on other platforms, depending on the
+   * compiler and platform.
+   */
   typedef wstring utf8wstring;
 
+  /**
+   * The object is the top-level object, from which anything which needs to
+   * get passed between modules should inherit.
+   */
   interface IObject
   {
+    /**
+     * Called to indicate that some code is keeping an owning reference to the
+     * object. That code must call release_ref() later when it has finished
+     * with the object, or a memory leak may result. The object should be
+     * preserved in memory. Care should be taken to ensure that a cycle of
+     * objects waiting for each other to call release_ref is not created.
+     */
     oneway void add_ref();
+
+    /**
+     * Removes a reference to an object which was created by some other means
+     * (e.g. by return from a function, out parameters, or add_ref). The object
+     * may destroy itself any time after no references remain.
+     */
     oneway void release_ref();
+
+    /**
+     * Returns an IObject of the same implementation, which supports a specific
+     * interface.
+     * @param id The name of the interface, with each part of the scope
+     *           separated by double colons. For example, "XPCOM::IObject".
+     * @return A supporting IObject, or null if interface not supported.
+     * An implementation should support query_interface for all interfaces
+     * directly or indirectly (through inheritance) supported by that
+     * interface.
+     * @note This particular operation needs special treatment by bridges,
+     *       because although the return type is XPCOM::IObject, the bridge is
+     *       expected to look up the id and produce a bridge suitable for
+     *       casting to the desired type. If the bridge cannot do this,
+     *       because, for example, it doesn't know the interface, it should
+     *       return null (since the bridges + implementation cannot support the
+     *       desired interface).
+     */
     IObject query_interface(in utf8string id);
-    long compare(in IObject compareTo);
+
+    /**
+     * Fetches the ID of the object. IDs should be generated in a way which
+     * makes the probability of a collision negligible. The recommended method
+     * is to use a random number generated seeded with a sufficient amount of
+     * data, and output data in this form %08X-%04X-%04X-%04X-%04X%08X (where
+     * %0nX represents a hex string of n digits padded to the left with zeros
+     * if needed). The id must never change once set.
+     */
+    readonly attribute string objid;
   };
 #pragma flat_name CORBA_IObject
 #pragma ID IObject "DCE:00000000-0000-0000-c000-000000000046:1"

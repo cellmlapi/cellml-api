@@ -700,7 +700,7 @@ CDA_Node::addEventListener(const wchar_t* type,
 
   // Silently ignore a request to add a duplicate, as per spec...
   for (;i != mListeners.end() && (*i).first == p; i++)
-    if ((*i).second->compare(listener) == 0)
+    if (CDA_objcmp((*i).second, listener) == 0)
       return;
 
   listener->add_ref();
@@ -721,7 +721,7 @@ CDA_Node::removeEventListener(const wchar_t* type,
      ::iterator i =
     mListeners.find(std::pair<std::wstring,bool>(type, useCapture));
   for (; i != mListeners.end(); i++)
-    if ((*i).second->compare(listener) == 0)
+    if (CDA_objcmp((*i).second, listener) == 0)
     {
       mListeners.erase(i);
       listener->release_ref();

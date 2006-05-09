@@ -20,7 +20,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(cellml_api::RDFRepresentation, cellml_api::RDFXMLDOMRepresentation);
-  CDA_IMPL_COMPARE_NAIVE(CDA_RDFXMLDOMRepresentation);
+  CDA_IMPL_ID;
 
   wchar_t* type() throw(std::exception&);
   iface::dom::Element* data() throw(std::exception&);
@@ -37,7 +37,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(cellml_api::RDFRepresentation, cellml_api::RDFXMLStringRepresentation)
-  CDA_IMPL_COMPARE_NAIVE(CDA_RDFXMLStringRepresentation);
+  CDA_IMPL_ID;
 
   wchar_t* type() throw(std::exception&);
   wchar_t* serialisedData() throw(std::exception&);
@@ -55,7 +55,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(cellml_api::URI)
-  CDA_IMPL_COMPARE_NAIVE(CDA_URI);
+  CDA_IMPL_ID;
 
   wchar_t* asText() throw(std::exception&);
   void asText(const wchar_t* attr) throw(std::exception&);
@@ -74,7 +74,7 @@ public:
   CDA_CellMLElement(iface::XPCOM::IObject* parent, iface::dom::Element* idata);
   virtual ~CDA_CellMLElement();
 
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElement);
+  CDA_IMPL_ID;
 
   void add_ref()
     throw(std::exception&)
@@ -143,6 +143,9 @@ public:
                            bool aUseCapture)
     throw(std::exception&);
   bool dispatchEvent(iface::events::Event* aEvent)
+    throw(std::exception&);
+
+  iface::cellml_api::CellMLElement* clone(bool aDeep)
     throw(std::exception&);
 
   iface::XPCOM::IObject* mParent;
@@ -720,7 +723,7 @@ private:
     {
     }
 
-    CDA_IMPL_COMPARE_NAIVE(IteratorChildrenModificationListener);
+    CDA_IMPL_ID;
     void add_ref() throw(std::exception&) {}
     void release_ref() throw(std::exception&) {}
     CDA_IMPL_QI1(events::EventListener);
@@ -745,7 +748,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_api::CellMLElementIterator);
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementIterator);
+  CDA_IMPL_ID;
 
   iface::cellml_api::CellMLElement* next() throw(std::exception&);
 
@@ -770,7 +773,7 @@ public:
       mInner->release_ref();
   }
 
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementIteratorOuter);
+  CDA_IMPL_ID;
 
   iface::cellml_api::CellMLElement* next()
     throw(std::exception&)
@@ -796,7 +799,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_api::MathMLElementIterator);
-  CDA_IMPL_COMPARE_NAIVE(CDA_MathMLElementIterator);
+  CDA_IMPL_ID;
 
   iface::cellml_api::MathMLElement next() throw(std::exception&);
 };
@@ -809,7 +812,7 @@ public:
   virtual ~CDA_ExtensionElementList();
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_api::ExtensionElementList);
-  CDA_IMPL_COMPARE_NAIVE(CDA_ExtensionElementList);
+  CDA_IMPL_ID;
 
   uint32_t length() throw(std::exception&);
   bool contains(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
@@ -828,7 +831,7 @@ public:
   virtual ~CDA_MathList();
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(cellml_api::MathList)
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementIterator);
+  CDA_IMPL_ID;
 
   uint32_t length() throw(std::exception&);
   bool contains(const iface::cellml_api::MathMLElement x) throw(std::exception&);
@@ -855,7 +858,7 @@ public:
   virtual ~CDA_CellMLElementSet();
 
   CDA_IMPL_QI1(dom::CellMLElementSet)
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementSet);
+  CDA_IMPL_ID;
 
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
 
@@ -924,7 +927,7 @@ public:
       mInner->release_ref();
   }
 
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementSetOuter);
+  CDA_IMPL_ID;
 
 protected:
   CDA_CellMLElementSet* mInner;

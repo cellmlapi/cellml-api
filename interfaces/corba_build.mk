@@ -20,8 +20,6 @@ libcellml_corba_la_SOURCES := \
   $(top_builddir)/interfaces/MathML_content_APISPECSK.cc \
   $(top_builddir)/interfaces/CellML_APISPECSK.cc \
   $(top_builddir)/interfaces/CellML_eventsSK.cc
-libcellml_corba_la_LIBADD := \
-  $(top_builddir)/libCORBASupport.la
 
 libcellml_corba_la_CXXFLAGS := \
   -I$(top_srcdir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue

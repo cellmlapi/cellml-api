@@ -442,7 +442,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(dom::NodeList, mathml_dom::MathMLNodeList);
-  CDA_IMPL_COMPARE_NAIVE(CDA_MathMLFilteredNodeList);
+  CDA_IMPL_ID;
 
   CDA_MathMLFilteredNodeList(iface::dom::Node* parent,
                              int ifilterType)

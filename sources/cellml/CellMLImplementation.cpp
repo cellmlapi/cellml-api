@@ -14,6 +14,11 @@
 #define swprintf _snwprintf
 #endif
 
+static iface::cellml_api::CellMLElement*
+WrapCellMLElement(iface::XPCOM::IObject* newParent,
+                  iface::dom::Element* el) throw(std::exception&);
+
+
 CDA_RDFXMLDOMRepresentation::CDA_RDFXMLDOMRepresentation(iface::dom::Element* idata)
   : _cda_refcount(1), datastore(idata)
 {
@@ -659,6 +664,31 @@ CDA_CellMLElement::getUserData(const wchar_t* key)
   throw iface::cellml_api::CellMLException();
 }
 
+iface::cellml_api::CellMLElement*
+CDA_CellMLElement::clone(bool aDeep)
+  throw(std::exception&)
+{
+  // Clone the underlying node...
+  ObjRef<iface::dom::Node> cn = datastore->cloneNode(aDeep);
+  DECLARE_QUERY_INTERFACE_OBJREF(cel, cn, dom::Element);
+  if (cel == NULL)
+    return NULL;
+
+  CDA_CellMLElement* el = this;
+  CDA_Model* m = NULL;
+  while (true)
+  {
+    m = dynamic_cast<CDA_Model*>(el);
+    if (m != NULL)
+      break;
+    el = dynamic_cast<CDA_CellMLElement*>(el->mParent);
+    if (el == NULL)
+      break;
+  }
+
+  return WrapCellMLElement(NULL, cel);
+}
+
 CDA_NamedCellMLElement::CDA_NamedCellMLElement
 (
  iface::XPCOM::IObject* parent,
@@ -1097,7 +1127,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI0;
-  CDA_IMPL_COMPARE_NAIVE(CDA_Model_AsyncInstantiate_CommonState);
+  CDA_IMPL_ID;
 
   bool mInRecursion, mContainsStale;
   uint32_t mActiveInstantiationCount;
@@ -1129,7 +1159,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(iface::cellml_api::ImportInstantiationListener);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Model_AsyncInstantiateDoneListener);
+  CDA_IMPL_ID;
 
   void loadCompleted(bool aWasStale)
     throw(std::exception&)
@@ -2991,7 +3021,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(iface::cellml_api::DocumentLoadedListener);
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLImport_DocumentLoadedListener);
+  CDA_IMPL_ID;
 
   void loadCompleted(iface::dom::Document* dd)
     throw(std::exception&)
@@ -4690,7 +4720,7 @@ void CDA_VariableRef::variable(iface::cellml_api::CellMLVariable* v) throw(std::
   if (r->mParent == NULL)
     throw iface::cellml_api::CellMLException();
 
-  if (r->mParent->compare(o1) != 0)
+  if (CDA_objcmp(r->mParent, o1) != 0)
     throw iface::cellml_api::CellMLException();
 
   RETURN_INTO_WSTRING(vn, v->name());
@@ -4907,7 +4937,7 @@ CDA_Role::deltaVariable(iface::cellml_api::CellMLVariable* attr)
   if (cv == NULL || cv->mParent == NULL)
     throw iface::cellml_api::CellMLException();
 
-  if (cv->mParent->compare(c) != 0)
+  if (CDA_objcmp(cv->mParent, c) != 0)
   {
     throw iface::cellml_api::CellMLException();
   }
@@ -4959,7 +4989,7 @@ CDA_CellMLElementSetUseIteratorMixin::contains(iface::cellml_api::CellMLElement*
     RETURN_INTO_OBJREF(ce, iface::cellml_api::CellMLElement, cei->next());
     if (ce == NULL)
       return false;
-    if (ce->compare(x) == 0)
+    if (CDA_objcmp(ce, x) == 0)
       return true;
   }
 }
@@ -5093,8 +5123,8 @@ handleEvent(iface::events::Event* evt)
       RETURN_INTO_OBJREF(targetET, iface::events::EventTarget,
                          evt->target());
       DECLARE_QUERY_INTERFACE_OBJREF(target, targetET, dom::Node);
-      int cmp1 = target->compare(mIterator->mPrevElement);
-      int cmp2 = target->compare(mIterator->mNextElement);
+      int cmp1 = CDA_objcmp(target, mIterator->mPrevElement);
+      int cmp2 = CDA_objcmp(target, mIterator->mNextElement);
       if (cmp1 && cmp2)
       {
         printf("Warning: Unexpected event sent to handler.\n");
@@ -5202,10 +5232,10 @@ handleEvent(iface::events::Event* evt)
                (curE && ( /* If curN and curE are both NULL, we are done. */
                          /* If we reached the end before the target, it is out of
                           * range. */
-                         curE->compare(mIterator->mNextElement) && 
+                         CDA_objcmp(curE, mIterator->mNextElement) && 
                          /* If we reached the target first,
                           * it is in range.*/
-                         curE->compare(te)
+                         CDA_objcmp(curE, te)
                         )
                )
               )
@@ -5901,7 +5931,7 @@ CDA_ExtensionElementList::contains(const iface::cellml_api::ExtensionElement x)
     if (el == NULL)
       continue;
 
-    if (el->compare(x) == 0)
+    if (CDA_objcmp(el, x) == 0)
       return true;
   }
 
@@ -6004,7 +6034,7 @@ CDA_MathList::contains(iface::mathml_dom::MathMLElement* x)
       return false;
     iface::mathml_dom::MathMLElement* xme =
       static_cast<iface::mathml_dom::MathMLElement*>(x);
-    if (me->compare(xme) == 0)
+    if (CDA_objcmp(me, xme) == 0)
       return true;
   }
 }
@@ -6603,7 +6633,7 @@ IsComponentRelatedToImport
       if (notFound)
         break;
 
-      if (ci->compare(aImport) == 0)
+      if (CDA_objcmp(ci, aImport) == 0)
         return true;
     }
     component = already_AddRefd<iface::cellml_api::CellMLComponent>

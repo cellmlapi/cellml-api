@@ -17,7 +17,7 @@ public:
   ~CDA_CellMLModuleIterator();
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLModuleIterator);
+  CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_context::CellMLModuleIterator)
 
   iface::cellml_context::CellMLModule* nextModule()
@@ -43,7 +43,7 @@ public:
   ~CDA_ModelNodeIterator();
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_COMPARE_NAIVE(CDA_ModelNodeIterator);
+  CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_context::ModelNodeIterator)
 
   iface::cellml_context::ModelNode* nextModelNode()
@@ -60,11 +60,11 @@ class CDA_TypeAnnotationManager
   : public iface::cellml_context::CellMLTypeAnnotationManager
 {
 public:
-  CDA_TypeAnnotationManager() {}
+  CDA_TypeAnnotationManager() : _cda_refcount(1) {}
   ~CDA_TypeAnnotationManager();
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_COMPARE_NAIVE(CDA_TypeAnnotationManager);
+  CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_context::CellMLTypeAnnotationManager);
 
   void setUserData(const wchar_t* type, const wchar_t* key,
@@ -86,7 +86,7 @@ public:
   ~CDA_ModuleManager();
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_COMPARE_NAIVE(CDA_ModuleManager);
+  CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_context::CellMLModuleManager);
 
   void registerModule(iface::cellml_context::CellMLModule* aModule)
@@ -125,7 +125,7 @@ public:
   
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_context::ModelNode);
-  CDA_IMPL_COMPARE_NAIVE(CDA_ModelNode);
+  CDA_IMPL_ID;
 
   void name(const wchar_t* name) throw(std::exception&);
   wchar_t* name() throw(std::exception&);
@@ -164,7 +164,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_context::ModelList);
-  CDA_IMPL_COMPARE_NAIVE(CDA_ModelList);
+  CDA_IMPL_ID;
 
   void addModelMonitor(iface::cellml_context::ModelNodeMonitor* monitor)
     throw(std::exception&);
@@ -201,7 +201,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_context::CellMLContext);
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLContext);
+  CDA_IMPL_ID;
 
   iface::cellml_context::CellMLModuleManager*
   moduleManager()

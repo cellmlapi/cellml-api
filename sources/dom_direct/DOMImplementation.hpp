@@ -44,7 +44,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(dom::DOMImplementation, mathml_dom::MathMLDOMImplementation);
-  CDA_IMPL_COMPARE_NAIVE(CDA_DOMImplementation);
+  CDA_IMPL_ID;
 
   bool hasFeature(const wchar_t* feature, const wchar_t* version)
     throw(std::exception&);
@@ -212,7 +212,7 @@ public:
   }
 
   CDA_IMPL_QI1(dom::NodeList);
-  CDA_IMPL_COMPARE_NAIVE(CDA_NodeList);
+  CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
   iface::dom::Node* item(uint32_t index) throw(std::exception&);
@@ -254,7 +254,7 @@ public:
   }
 
   CDA_IMPL_QI1(dom::NodeList);
-  CDA_IMPL_COMPARE_NAIVE(CDA_NodeList);
+  CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
   iface::dom::Node* item(uint32_t index) throw(std::exception&);
@@ -277,7 +277,7 @@ public:
   ~CDA_EmptyNamedNodeMap() {}
 
   CDA_IMPL_QI1(dom::NamedNodeMap);
-  CDA_IMPL_COMPARE_NAIVE(CDA_NamedNodeMap);
+  CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
   iface::dom::Node* getNamedItem(const wchar_t* name)
@@ -338,7 +338,7 @@ public:
   ~CDA_NamedNodeMap();
 
   CDA_IMPL_QI1(dom::NamedNodeMap);
-  CDA_IMPL_COMPARE_NAIVE(CDA_NamedNodeMap);
+  CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
   iface::dom::Node* getNamedItem(const wchar_t* name) throw(std::exception&);
@@ -370,7 +370,7 @@ public:
   ~CDA_NamedNodeMapDT();
 
   CDA_IMPL_QI1(dom::NamedNodeMap);
-  CDA_IMPL_COMPARE_NAIVE(CDA_NamedNodeMap);
+  CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
   iface::dom::Node* getNamedItem(const wchar_t* name) throw(std::exception&);
@@ -428,7 +428,7 @@ public:
   virtual ~CDA_Attr() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::Attr);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Attr);
+  CDA_IMPL_ID;
   CDA_IMPL_NODETYPE(ATTRIBUTE);
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
@@ -449,7 +449,7 @@ public:
   virtual ~CDA_Element() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::Element);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Element);
+  CDA_IMPL_ID;
   CDA_IMPL_NODETYPE(ELEMENT)
 
   iface::dom::NamedNodeMap* attributes() throw(std::exception&);
@@ -508,7 +508,7 @@ public:
   virtual ~CDA_Text() {}
 
   CDA_IMPL_QI4(events::EventTarget, dom::Node, dom::CharacterData, dom::Text);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Text);
+  CDA_IMPL_ID;
   CDA_IMPL_NODETYPE(TEXT);
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
 };
@@ -521,7 +521,7 @@ public:
   virtual ~CDA_Comment() {}
 
   CDA_IMPL_QI4(events::EventTarget, dom::Node, dom::CharacterData, dom::Comment);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Comment);
+  CDA_IMPL_ID;
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(COMMENT);
@@ -536,7 +536,7 @@ public:
 
   CDA_IMPL_QI5(events::EventTarget, dom::Node, dom::CharacterData, dom::Text,
                dom::CDATASection);
-  CDA_IMPL_COMPARE_NAIVE(CDA_CDATASection);
+  CDA_IMPL_ID;
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(CDATA_SECTION);
@@ -561,7 +561,7 @@ public:
   virtual ~CDA_DocumentType() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::DocumentType);
-  CDA_IMPL_COMPARE_NAIVE(CDA_DocumentType);
+  CDA_IMPL_ID;
   CDA_IMPL_NODETYPE(DOCUMENT_TYPE)
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
@@ -589,7 +589,7 @@ public:
   virtual ~CDA_Notation() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::Notation);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Notation);
+  CDA_IMPL_ID;
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(NOTATION);
@@ -611,7 +611,7 @@ public:
   virtual ~CDA_Entity() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::Entity);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Entity);
+  CDA_IMPL_ID;
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(ENTITY);
@@ -630,7 +630,7 @@ public:
   virtual ~CDA_EntityReference() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::EntityReference);
-  CDA_IMPL_COMPARE_NAIVE(CDA_EntityReference);
+  CDA_IMPL_ID;
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(ENTITY_REFERENCE);
@@ -650,7 +650,7 @@ public:
   virtual ~CDA_ProcessingInstruction() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::ProcessingInstruction);
-  CDA_IMPL_COMPARE_NAIVE(CDA_ProcessingInstruction);
+  CDA_IMPL_ID;
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
   CDA_IMPL_NODETYPE(PROCESSING_INSTRUCTION);
@@ -667,7 +667,7 @@ public:
   virtual ~CDA_DocumentFragment() {}
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::DocumentFragment);
-  CDA_IMPL_COMPARE_NAIVE(CDA_DocumentFragment);
+  CDA_IMPL_ID;
   CDA_IMPL_NODETYPE(DOCUMENT_FRAGMENT)
 
   CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&);
@@ -695,7 +695,7 @@ public:
   }
 
   CDA_IMPL_QI4(events::DocumentEvent, events::EventTarget, dom::Node, dom::Document);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Document);
+  CDA_IMPL_ID;
   CDA_IMPL_NODETYPE(DOCUMENT)
 
   iface::dom::DocumentType* doctype() throw(std::exception&);
@@ -759,7 +759,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(events::Event, events::MutationEvent);
-  CDA_IMPL_COMPARE_NAIVE(CDA_MutationEvent);
+  CDA_IMPL_ID;
 
   wchar_t* type() throw(std::exception&);
   iface::events::EventTarget* target() throw(std::exception&);

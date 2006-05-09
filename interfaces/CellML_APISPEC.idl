@@ -293,6 +293,15 @@ module cellml_api
      * @raises CellMLException if no UserData is set for the given key.
      */
     UserData getUserData(in wstring key) raises(CellMLException);
+
+    /**
+     * Clones a CellMLElement, and optionally all children.
+     * This will not clone the contents of imported models.
+     * @param deep If false, only clones the element. It will then have no children.
+     *             If true, clones the element, and its children, which are added
+     *               into the new element.
+     */
+    CellMLElement clone(in boolean deep);
   };
 
   /**

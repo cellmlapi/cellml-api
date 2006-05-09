@@ -584,7 +584,8 @@ CDA_Node::dispatchEvent(iface::events::Event* evt)
   return ret;
 }
 
-#if 0
+#if 0 // If ever re-enabled, this has to be fixed, because compare changed to
+      // id.
 int32_t
 CDA_Node::compare(iface::XPCOM::IObject* obj)
   throw(std::exception&)

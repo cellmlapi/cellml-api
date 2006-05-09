@@ -16,7 +16,7 @@ class CDA_DOMImplementation
 public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(dom::DOMImplementation, mathml_dom::MathMLDOMImplementation);
-  CDA_IMPL_COMPARE_NAIVE(CDA_DOMImplementation);
+  CDA_IMPL_ID;
 
   CDA_DOMImplementation();
   CDA_DOMImplementation(GdomeDOMImplementation*);
@@ -109,7 +109,7 @@ public:
                            bool useCapture) throw(std::exception&);
   bool dispatchEvent(iface::events::Event* evt) throw(std::exception&);
 
-  CDA_IMPL_COMPARE_NAIVE(CDA_Node);
+  CDA_IMPL_ID;
 
 private:
   struct EventListenerData
@@ -146,7 +146,7 @@ class CDA_NodeList
 public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(dom::NodeList);
-  CDA_IMPL_COMPARE_NAIVE(CDA_NodeList);
+  CDA_IMPL_ID;
 
   CDA_NodeList(GdomeNodeList* nl);
   virtual ~CDA_NodeList();
@@ -166,7 +166,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(dom::NamedNodeMap);
-  CDA_IMPL_COMPARE_NAIVE(CDA_NamedNodeMap);
+  CDA_IMPL_ID;
 
   iface::dom::Node* getNamedItem(const wchar_t* name)
     throw(std::exception&);
@@ -556,7 +556,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(events::Event);
-  CDA_IMPL_COMPARE_NAIVE(CDA_Event);
+  CDA_IMPL_ID;
 
   GdomeEvent* fetchEvent() const;
 private:
@@ -573,7 +573,7 @@ public:
 
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI2(events::Event, events::MutationEvent)
-  CDA_IMPL_COMPARE_NAIVE(CDA_MutationEvent);
+  CDA_IMPL_ID;
 
   iface::events::Node relatedNode() throw(std::exception&);
   iface::events::DOMString prevValue() throw(std::exception&);

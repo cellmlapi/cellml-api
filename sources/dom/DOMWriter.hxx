@@ -1,6 +1,6 @@
 #include <exception>
 #include <inttypes.h>
-#include "IfaceDOM-APISPEC.hxx"
+#include "IfaceDOM_APISPEC.hxx"
 #include <map>
 #include <string>
 #include <list>

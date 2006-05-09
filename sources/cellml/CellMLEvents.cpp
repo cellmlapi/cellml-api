@@ -65,7 +65,7 @@ public:
   
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(iface::events::EventListener);
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLElementEventAdaptor);
+  CDA_IMPL_ID;
 
   void newEventType(int32_t aType) throw(std::exception&);
   void removeEventType(int32_t aType) throw(std::exception&);
@@ -126,7 +126,7 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(events::Event, cellml_events::MutationEvent);
-  CDA_IMPL_COMPARE_NAIVE(CDA_CellMLMutationEvent);
+  CDA_IMPL_ID;
 
   virtual ~CDA_CellMLMutationEvent()
   {
@@ -832,7 +832,7 @@ CDA_CellMLElementEventAdaptor::handleCellMLIntoCellML
   else
     me->mRelatedElement->add_ref();
   me->mTarget = el;
-  if (me->mTarget->compare(me->mCurrentTarget) == 0)
+  if (CDA_objcmp(me->mTarget, me->mCurrentTarget) == 0)
     me->mEventPhase = iface::events::Event::AT_TARGET;
   else
     me->mEventPhase = iface::events::Event::BUBBLING_PHASE;
@@ -894,7 +894,7 @@ CDA_CellMLElementEventAdaptor::handleCellMLOutOfCellML
   else
     me->mRelatedElement->add_ref();
   me->mTarget = el;
-  if (me->mTarget->compare(me->mCurrentTarget) == 0)
+  if (CDA_objcmp(me->mTarget, me->mCurrentTarget) == 0)
     me->mEventPhase = iface::events::Event::AT_TARGET;
   else
     me->mEventPhase = iface::events::Event::BUBBLING_PHASE;
@@ -913,7 +913,7 @@ recurseFindCellMLElementFromNode
  iface::dom::Node* aTarget
 )
 {
-  if (aSearchRoot->datastore->compare(aTarget) == 0)
+  if (CDA_objcmp(aSearchRoot->datastore, aTarget) == 0)
   {
     aSearchRoot->add_ref();
     return aSearchRoot;
