@@ -1894,5 +1894,12 @@ module cellml_api
      * isn't, nil should be returned.
      */
     readonly attribute DOMURLLoader localURLLoader;
+
+    /**
+     * Creates a new, empty, model.
+     * @param version The version of the new model. This currently must be
+     *                1.0 or 1.1.
+     */
+    Model createModel(in wstring version);
   };
 };

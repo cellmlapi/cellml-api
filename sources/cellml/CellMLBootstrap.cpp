@@ -30,6 +30,28 @@ CDA_CellMLBootstrap::localURLLoader()
   return new CDA_DOMURLLoader(domimpl);
 }
 
+iface::cellml_api::Model*
+CDA_CellMLBootstrap::createModel(const wchar_t* version)
+  throw(std::exception&)
+{
+  ObjRef<iface::cellml_api::DOMURLLoader> ul =
+    already_AddRefd<iface::cellml_api::DOMURLLoader>(localURLLoader());
+  const wchar_t* ns;
+  if (!wcscmp(version, L"1.0"))
+    ns = L"http://www.cellml.org/cellml/1.0#";
+  else if (!wcscmp(version, L"1.1"))
+    ns = L"http://www.cellml.org/cellml/1.1#";
+  else // unrecognised CellML version requested.
+    throw iface::cellml_api::CellMLException();
+  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType,
+                     domimpl->createDocumentType(L"model", L"", L""));
+  RETURN_INTO_OBJREF(doc, iface::dom::Document,
+                     domimpl->createDocument(ns, L"model", dt));
+  RETURN_INTO_OBJREF(de, iface::dom::Element,
+                     doc->documentElement());
+  return new CDA_Model(ul, doc, de);
+}
+
 CDA_DOMURLLoader::CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl)
   : _cda_refcount(1), mDOMImpl(aDOMImpl)
 {

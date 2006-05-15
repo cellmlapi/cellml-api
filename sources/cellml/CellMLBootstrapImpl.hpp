@@ -68,6 +68,8 @@ public:
   iface::cellml_api::DOMModelLoader* modelLoader() throw(std::exception&);
   iface::dom::DOMImplementation* domImplementation() throw(std::exception&);
   iface::cellml_api::DOMURLLoader* localURLLoader() throw(std::exception&);
+  iface::cellml_api::Model* createModel(const wchar_t* version)
+    throw(std::exception&);
 private:
   CellML_DOMImplementationBase* domimpl;
 };
