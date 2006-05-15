@@ -16,11 +16,6 @@ CDA_TypeAnnotationManager::setUserData(const wchar_t* type, const wchar_t* key,
                                        iface::XPCOM::IObject* data)
   throw(std::exception&)
 {
-  printf("In setUserData...\n");
-  printf("  type = %S\n", type);
-  printf("  key = %S\n", key);
-  printf("Setting data...\n");
-  data->add_ref();
   std::pair<std::wstring,std::wstring> p(type, key);
   std::map<std::pair<std::wstring,std::wstring>, iface::XPCOM::IObject*>
     ::iterator i = annotations.find(p);
@@ -441,7 +436,7 @@ CDA_ModelNode::removeModelMonitor
 }
 
 CDA_ModelList::CDA_ModelList()
-  : mParentNode(NULL)
+  : _cda_refcount(1), mParentNode(NULL)
 {
 }
 
@@ -593,6 +588,7 @@ CDA_CellMLContext::CDA_CellMLContext()
   mModuleManager = new CDA_ModuleManager();
   mTypeAnnotationManager = new CDA_TypeAnnotationManager();
   mCellMLBootstrap = CreateCellMLBootstrap();
+  mModelList = new CDA_ModelList();
 }
 
 CDA_CellMLContext::~CDA_CellMLContext()
