@@ -142,6 +142,8 @@ public:
     throw(std::exception&);
   void removeModelMonitor(iface::cellml_context::ModelNodeMonitor* monitor)
     throw(std::exception&);
+  iface::cellml_context::ModelList* parentList()
+    throw(std::exception&);
 
 private:
   std::wstring mName;
@@ -181,6 +183,8 @@ public:
   void removeModel(iface::cellml_context::ModelNode* node)
     throw(std::exception&);
   iface::cellml_context::ModelNodeIterator* iterateModelNodes()
+    throw(std::exception&);
+  iface::cellml_context::ModelNode* parentNode()
     throw(std::exception&);
 
 private:

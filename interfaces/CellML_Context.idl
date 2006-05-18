@@ -314,6 +314,12 @@ module cellml_context
      * @param monitor The model node monitor to remove.
      */
     void removeModelMonitor(in ModelNodeMonitor monitor);
+
+    /**
+     * Fetches the model list this node belongs to, or null if this node has no
+     * parent.
+     */
+    readonly attribute ModelList parentList;
   };
 
   interface ModelList : XPCOM::IObject
@@ -372,6 +378,12 @@ module cellml_context
      * @return an iterate to do the iteration.
      */
     ModelNodeIterator iterateModelNodes();
+
+    /**
+     * Fetches the model node under which this list belongs, or null if
+     * this list has no parent.
+     */
+    readonly attribute ModelNode parentNode;
   };
 
   /**

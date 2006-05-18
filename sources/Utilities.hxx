@@ -31,6 +31,7 @@ public:
     sprintf(mIDString, "%08X-%04X-%04X-%04X-%04X%08X",
             a, (b & 0xFFFF), (b >> 16) & 0xFFFF,
             c & 0xFFFF, (c >> 16) & 0xFFFF, d);
+    mIDString[36] = 0;
   }
 
   char* cloneID()
@@ -38,7 +39,7 @@ public:
     return strdup(mIDString);
   }
 private:
-  char mIDString[37];
+  char mIDString[38];
 };
 
 #define CDA_IMPL_ID \

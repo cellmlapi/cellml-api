@@ -8,7 +8,9 @@ CDA_TypeAnnotationManager::~CDA_TypeAnnotationManager()
   std::map<std::pair<std::wstring,std::wstring>, iface::XPCOM::IObject*>
     ::iterator i;
   for (i = annotations.begin(); i != annotations.end(); i++)
+  {
     (*i).second->release_ref();
+  }
 }
 
 void
@@ -22,12 +24,7 @@ CDA_TypeAnnotationManager::setUserData(const wchar_t* type, const wchar_t* key,
   if (i != annotations.end())
   {
     // If we can't release the reference, just drop it...
-    try
-    {
-      (*i).second->release_ref();
-    }
-    catch (...) {}
-    
+    (*i).second->release_ref();
     annotations.erase(i);
   }
   if (data == NULL)
@@ -72,12 +69,15 @@ iface::cellml_context::CellMLModule*
 CDA_CellMLModuleIterator::nextModule()
   throw(std::exception&)
 {
-  if (mCurrent == mList.end())
-    return NULL;
-  iface::cellml_context::CellMLModule* ret = *mCurrent;
-  ret->add_ref();
-  mCurrent++;
-  return ret;
+  while (true)
+  {
+    if (mCurrent == mList.end())
+      return NULL;
+    iface::cellml_context::CellMLModule* ret = *mCurrent;
+    ret->add_ref();
+    mCurrent++;
+    return ret;
+  }
 }
 
 CDA_ModelNodeIterator::CDA_ModelNodeIterator
@@ -117,12 +117,16 @@ CDA_ModuleManager::~CDA_ModuleManager()
 {
   std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i;
   for (i = mMonitors.begin(); i != mMonitors.end(); i++)
+  {
     (*i)->release_ref();
+  }
 
   std::list<iface::cellml_context::CellMLModule*>::iterator i2;
   for (i2 = mRegisteredModuleList.begin(); i2 != mRegisteredModuleList.end();
        i2++)
+  {
     (*i2)->release_ref();
+  }
 }
 
 void
@@ -141,14 +145,29 @@ CDA_ModuleManager::registerModule
   if (mRegisteredModules.find(nvp) != mRegisteredModules.end())
     return;
 
+  // If add_ref fails, so does registerModule, which is the correct behaviour.
+  aModule->add_ref();
+
   mRegisteredModules.insert(std::pair<std::pair<std::wstring,std::wstring>,
                             iface::cellml_context::CellMLModule*>
                             (nvp, aModule));
   mRegisteredModuleList.push_back(aModule);
 
-  std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i;
-  for (i = mMonitors.begin(); i != mMonitors.end(); i++)
-    (*i)->moduleRegistered(aModule);
+  std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i, j;
+  for (i = mMonitors.begin(); i != mMonitors.end();)
+  {
+    j = i;
+    i++;
+    try
+    {
+      (*j)->moduleRegistered(aModule);
+    }
+    catch (...)
+    {
+      (*j)->release_ref();
+      mMonitors.erase(j);
+    }
+  }
 }
 
 void
@@ -170,10 +189,21 @@ CDA_ModuleManager::deregisterModule
   if (i == mRegisteredModules.end())
     return;
 
-  std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i2;
+  std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i2, j2;
   for (i2 = mMonitors.begin(); i2 != mMonitors.end(); i2++)
-    (*i2)->moduleDeregistered(aModule);
-
+  {
+    j2 = i2;
+    i2++;
+    try
+    {
+      (*j2)->moduleDeregistered(aModule);
+    }
+    catch (...)
+    {
+      (*j2)->release_ref();
+      mMonitors.erase(j2);
+    }
+  }
 
   std::list<iface::cellml_context::CellMLModule*>::iterator i3
     = std::find(mRegisteredModuleList.begin(), mRegisteredModuleList.end(),
@@ -181,6 +211,7 @@ CDA_ModuleManager::deregisterModule
 
   mRegisteredModules.erase(i);
   mRegisteredModuleList.erase(i3);
+  // We might be removing a dead module, so ignore failures...
   (*i3)->release_ref();
 }
 
@@ -221,6 +252,7 @@ CDA_ModuleManager::addMonitor
 )
   throw(std::exception&)
 {
+  // If add_ref fails, so does the call (correct behaviour).
   aModuleMonitor->add_ref();
   mMonitors.push_back(aModuleMonitor);
 }
@@ -252,6 +284,8 @@ CDA_ModuleManager::iterateModules()
 CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
   : _cda_refcount(1), mIsFrozen(false), mParentList(NULL)
 {
+  // If add_ref fails, so does this call (correct behaviour).
+  aModel->add_ref();
   mDerivedModels = new CDA_ModelList();
   mDerivedModels->mParentNode = this;
   mModel = aModel;
@@ -274,23 +308,50 @@ CDA_ModelNode::~CDA_ModelNode()
   mModel->release_ref();
   std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i;
   for (i = mModelMonitors.begin(); i != mModelMonitors.end(); i++)
+  {
     (*i)->release_ref();
+  }
 }
 
 void
 CDA_ModelNode::name(const wchar_t* name)
   throw(std::exception&)
 {
-  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i;
-  for (i = mModelMonitors.begin(); i != mModelMonitors.end(); i++)
-    (*i)->modelRenamed(this, name);
+  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, j;
+  for (i = mModelMonitors.begin(); i != mModelMonitors.end();)
+  {
+    j = i;
+    i++;
+    try
+    {
+      (*j)->modelRenamed(this, name);
+    }
+    catch (...)
+    {
+      // Dead listeners get removed from the list...
+      (*j)->release_ref();
+      mModelMonitors.erase(j);
+    }
+  }
   // Now inform the ancestor lists...
   CDA_ModelList* curList = mParentList;
   while (curList)
   {
-    for (i = curList->mNodeMonitors.begin(); i != curList->mNodeMonitors.end();
-         i++)
-      (*i)->modelRenamed(this, name);
+    for (i = curList->mNodeMonitors.begin(); i != curList->mNodeMonitors.end();)
+    {
+      j = i;
+      i++;
+      try
+      {
+        (*j)->modelRenamed(this, name);
+      }
+      catch (...)
+      {
+        // Dead listeners get removed from the list...
+        (*j)->release_ref();
+        curList->mNodeMonitors.erase(j);
+      }
+    }
     if (curList->mParentNode)
       curList = curList->mParentNode->mParentList;
     else
@@ -435,6 +496,16 @@ CDA_ModelNode::removeModelMonitor
   }
 }
 
+iface::cellml_context::ModelList*
+CDA_ModelNode::parentList()
+  throw(std::exception&)
+{
+  if (mParentList == NULL)
+    return NULL;
+  mParentList->add_ref();
+  return mParentList;
+}
+
 CDA_ModelList::CDA_ModelList()
   : _cda_refcount(1), mParentNode(NULL)
 {
@@ -569,6 +640,8 @@ CDA_ModelList::removeModel(iface::cellml_context::ModelNode* node)
   std::list<CDA_ModelNode*>::iterator i2;
   for (i2 = mModels.begin(); i2 != mModels.end(); i2++)
   {
+    if ((*i2) != node)
+      continue;
     (*i2)->release_ref();
     (*i2)->mParentList = NULL;
     mModels.erase(i2);
@@ -580,6 +653,16 @@ CDA_ModelList::iterateModelNodes()
   throw(std::exception&)
 {
   return new CDA_ModelNodeIterator(this, mModels);
+}
+
+iface::cellml_context::ModelNode*
+CDA_ModelList::parentNode()
+  throw(std::exception&)
+{
+  if (mParentNode == NULL)
+    return NULL;
+  mParentNode->add_ref();
+  return mParentNode;
 }
 
 CDA_CellMLContext::CDA_CellMLContext()
