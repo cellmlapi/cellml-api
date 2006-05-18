@@ -1,0 +1,1881 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--  FILE :Ach_cascade.xml
+
+CREATED :  30th October 2002
+
+LAST MODIFIED : 5th April 2003
+
+AUTHOR :  Catherine Lloyd
+          Bioengineering Institute
+          The University of Auckland
+          
+MODEL STATUS :  This model conforms to the CellML 1.0 Specification released on
+10th August 2001, and the 16/01/2002 CellML Metadata 1.0 Specification.
+
+DESCRIPTION :  This file contains a CellML description of Wang and Lipsius's 1995 kinetic analysis of an acetylcholine induced signal transduction cascade resulting in ATP-sensitive K+ channel activation.
+
+CHANGES:  
+  05/04/2003 - AAC - Changed the model name so the model loads in the database 
+                     easier.
+-->
+<model name="Ach_cascade_1995" cmeta:id="Ach_cascade" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" xml:base="http://www.example.org/repository/Ach_cascade_1995.xml">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqs="http://www.cellml.org/bqs/1.0#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#">
+    <!--
+      The following RDF block contains metadata that applies to this document
+      as a whole, as indicated by the empty about attribute on the 
+      <rdf:Description> element.
+    -->
+    <rdf:Description rdf:about="">
+      <!--
+        The Model Builder Metadata.  The Dublin Core "creator" element is used  
+        to indicate the person who translated the model into CellML.
+      -->
+      <dc:creator rdf:parseType="Resource">
+        <vCard:N rdf:parseType="Resource">
+          <vCard:Family>Lloyd</vCard:Family>
+          <vCard:Given>Catherine</vCard:Given>
+          <vCard:Other>May</vCard:Other>
+        </vCard:N>
+        <vCard:EMAIL rdf:parseType="Resource">
+          <rdf:value>c.lloyd@auckland.ac.nz</rdf:value>
+          <rdf:type rdf:resource="http://imc.org/vCard/3.0#internet"/>
+        </vCard:EMAIL>
+        <vCard:ORG rdf:parseType="Resource">
+          <vCard:Orgname>The University of Auckland</vCard:Orgname>
+          <vCard:Orgunit>The Bioengineering Institute</vCard:Orgunit>
+        </vCard:ORG>
+      </dc:creator>
+      
+      <!--
+        The Creation Date metadata. This is the date on which the model
+        was translated into CellML.
+      -->
+      <dcterms:created rdf:parseType="Resource">
+        <dcterms:W3CDTF>2002-10-30</dcterms:W3CDTF>
+      </dcterms:created>
+      
+      <!--
+        The Modification History metadata. This lists the changes that have been
+        made to the document, who made the changes, and when they were made.
+      -->
+      <cmeta:modification rdf:parseType="Resource">
+        <rdf:value>
+          Changed the model name so the model loads in the database easier.
+        </rdf:value>
+        <cmeta:modifier rdf:parseType="Resource">
+          <vCard:N rdf:parseType="Resource">
+            <vCard:Family>Cuellar</vCard:Family>
+            <vCard:Given>Autumn</vCard:Given>
+            <vCard:Other>A</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified rdf:parseType="Resource"> 
+          <dcterms:W3CDTF>2003-04-05</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      
+      
+      <!-- The Publisher metadata. -->
+      <dc:publisher>
+        The University of Auckland, Bioengineering Institute
+      </dc:publisher>
+    </rdf:Description>
+    
+    <!--
+      The following metadata refers to the model itself, as indicated by the
+      reference to the ID "Ach_cascade", which is declared on the  
+      <model> element.
+    -->
+    <rdf:Description rdf:about="#Ach_cascade">
+      <!-- A human readable name for the model. -->
+      <dc:title>
+        Wang and Lipsius's 1995 kinetic analysis of an acetylcholine induced 
+        signal transduction cascade resulting in ATP-sensitive K+ channel 
+        activation.
+      </dc:title>
+      
+      <!-- A comment regarding the model. -->
+      <cmeta:comment rdf:parseType="Resource">
+        <rdf:value>
+          This is the CellML descripition of Wang and Lipsius's 1995 kinetic 
+          analysis of an acetylcholine induced signal transduction cascade 
+          resulting in ATP-sensitive K+ channel activation.
+        </rdf:value>
+        <!-- The creator of the comment. -->
+        <dc:creator rdf:parseType="Resource">
+          <vCard:FN>Catherine Lloyd</vCard:FN>
+        </dc:creator>
+      </cmeta:comment>
+      
+      <!--  Keyword(s) -->
+      <bqs:reference rdf:parseType="Resource">
+        <dc:subject rdf:parseType="Resource">
+          <bqs:subject_type>keyword</bqs:subject_type>
+          <rdf:value>signal transduction</rdf:value>
+        </dc:subject>
+      </bqs:reference>
+      
+      <!-- 
+        The CellML Metadata Specification recommends that bibliographic metadata
+        is used to provide information about the original model reference.  The 
+        "identifier" attribute on the "BibliographicReference" class provides an
+        elegant way to identify a cited reference using a database identifier   
+        such as Pubmed.  All associated data such as author, journal title,     
+        date, etc can be looked up on the database.
+      -->
+      <bqs:reference rdf:parseType="Resource">
+        <bqs:Pubmed_id>7641326</bqs:Pubmed_id>
+        <bqs:JournalArticle rdf:parseType="Resource">
+          <dc:creator>
+            <rdf:Seq>
+              <rdf:li rdf:parseType="Resource">
+                <bqs:Person rdf:parseType="Resource">
+                  <vCard:N rdf:parseType="Resource">
+                    <vCard:Family>Wang</vCard:Family>
+                    <vCard:Given>Yong Gao</vCard:Given>
+                  </vCard:N>
+                </bqs:Person>
+              </rdf:li>
+              <rdf:li rdf:parseType="Resource">
+                <bqs:Person rdf:parseType="Resource">
+                  <vCard:N rdf:parseType="Resource">
+                    <vCard:Family>Lipsius</vCard:Family>
+                    <vCard:Given>Stephen</vCard:Given>
+                    <vCard:Other>L</vCard:Other>
+                  </vCard:N>
+                </bqs:Person>
+              </rdf:li>
+            </rdf:Seq>
+          </dc:creator>
+          <dc:title>
+            beta-Adrenergic Stimulation Induces Acetylcholine to Activate 
+            ATP-Sensitive K+ Current in Cat Atrial Myocytes
+          </dc:title>
+          <dcterms:issued rdf:parseType="Resource">
+            <dcterms:W3CDTF>1995-09</dcterms:W3CDTF>
+          </dcterms:issued>
+          <bqs:Journal rdf:parseType="Resource">
+            <dc:title>Circulation Research</dc:title>
+          </bqs:Journal>
+          <bqs:volume>77</bqs:volume>
+          <bqs:first_page>565</bqs:first_page>
+          <bqs:last_page>574</bqs:last_page>
+        </bqs:JournalArticle>
+      </bqs:reference>
+    </rdf:Description>
+  </rdf:RDF>
+    
+  <!--
+    Below, we define some additional units for association with variables and
+    constants within the model. The identifiers are fairly self-explanatory.
+  -->
+
+   <units name="micromolar">
+      <unit prefix="micro" units="mole"/>
+      <unit units="litre" exponent="-1"/>
+   </units>
+   
+   <units name="flux">
+      <unit units="micromolar" exponent="1"/>
+      <unit units="second" exponent="-1"/>
+   </units>
+   
+   <units name="first_order_rate_constant">
+      <unit units="second" exponent="-1"/>
+   </units>
+  
+   <units name="second_order_rate_constant">
+      <unit units="micromolar" exponent="-1"/>
+      <unit units="second" exponent="-1"/>
+   </units>
+  
+  <!--
+    The "environment" component is used to declare variables that are used by
+    all or most of the other components, in this case just "time".
+  -->
+   
+   <component name="environment">
+      <variable name="time" public_interface="out" units="second"/>
+   </component>
+   
+   <!--
+     The following components describe all the reactants, products, enzymes, 
+     activators and inhibitors involved in the reactions. 
+   --> 
+   
+   <component name="ACh1" cmeta:id="ACh1">
+      <variable name="ACh1" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_ACh1_rxn0" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>ACh1</ci>
+            </apply>
+            <ci>delta_ACh1_rxn0</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="ACh2" cmeta:id="ACh2">
+      <variable name="ACh2" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_ACh2_rxn5" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>ACh2</ci>
+            </apply>
+            <ci>delta_ACh2_rxn5</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="M1" cmeta:id="M1">
+      <variable name="M1" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_M1_rxn5" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>M1</ci>
+            </apply>
+            <ci>delta_M1_rxn5</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="M2" cmeta:id="M2">
+      <variable name="M2" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_M2_rxn0" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>M2</ci>
+            </apply>
+            <ci>delta_M2_rxn0</ci>
+         </apply>
+      </math>
+   </component>
+  
+   <component name="M1_ACh2_complex" cmeta:id="M1_ACh2_complex">
+      <variable name="M1_ACh2_complex" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_M1_ACh2_complex_rxn5" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>M1_ACh2_complex</ci>
+            </apply>
+            <ci>delta_M1_ACh2_complex_rxn5</ci>
+         </apply>
+      </math>
+   </component>
+  
+   <component name="M2_ACh1_complex" cmeta:id="M2_ACh1_complex">
+      <variable name="M2_ACh1_complex" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_M2_ACh1_complex_rxn0" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>M2_ACh1_complex</ci>
+            </apply>
+            <ci>delta_M2_ACh1_complex_rxn0</ci>
+         </apply>
+      </math>
+   </component>
+  
+   <component name="inactive_Gi_protein" cmeta:id="inactive_Gi_protein">
+      <variable name="inactive_Gi_protein" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_inactive_Gi_protein_rxn1" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>inactive_Gi_protein</ci>
+            </apply>
+            <ci>delta_inactive_Gi_protein_rxn1</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="active_Gi_protein" cmeta:id="active_Gi_protein">
+      <variable name="active_Gi_protein" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_active_Gi_protein_rxn1" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>active_Gi_protein</ci>
+            </apply>
+            <ci>delta_active_Gi_protein_rxn1</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="inactive_ACh_sensitive_K_channel" cmeta:id="inactive_ACh_sensitive_K_channel">
+      <variable name="inactive_ACh_sensitive_K_channel" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_inactive_ACh_sensitive_K_channel_rxn3" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>inactive_ACh_sensitive_K_channel</ci>
+            </apply>
+            <ci>delta_inactive_ACh_sensitive_K_channel_rxn3</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="active_ACh_sensitive_K_channel" cmeta:id="active_ACh_sensitive_K_channel">
+      <variable name="active_ACh_sensitive_K_channel" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_active_ACh_sensitive_K_channel_rxn3" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>active_ACh_sensitive_K_channel</ci>
+            </apply>
+            <ci>delta_active_ACh_sensitive_K_channel_rxn3</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="inactive_Gq_protein" cmeta:id="inactive_Gq_protein">
+      <variable name="inactive_Gq_protein" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_inactive_Gq_protein_rxn6" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>inactive_Gq_protein</ci>
+            </apply>
+            <ci>delta_inactive_Gq_protein_rxn6</ci>
+         </apply>
+      </math>
+   </component>
+  
+   <component name="active_Gq_protein" cmeta:id="active_Gq_protein">
+      <variable name="active_Gq_protein" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_active_Gq_protein_rxn6" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>active_Gq_protein</ci>
+            </apply>
+            <ci>delta_active_Gq_protein_rxn6</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="inactive_PLC" cmeta:id="inactive_PLC">
+      <variable name="inactive_PLC" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_inactive_PLC_rxn8" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>inactive_PLC</ci>
+            </apply>
+            <ci>delta_inactive_PLC_rxn8</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="active_PLC" cmeta:id="active_PLC">
+      <variable name="active_PLC" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_active_PLC_rxn8" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>active_PLC</ci>
+            </apply>
+            <ci>delta_active_PLC_rxn8</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="PIP2" cmeta:id="PIP2">
+      <variable name="PIP2" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_PIP2_rxn10" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>PIP2</ci>
+            </apply>
+            <ci>delta_PIP2_rxn10</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="DAG" cmeta:id="DAG">
+      <variable name="DAG" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_DAG_rxn10" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>DAG</ci>
+            </apply>
+            <ci>delta_DAG_rxn10</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="IP3" cmeta:id="IP3">
+      <variable name="IP3" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_IP3_rxn10" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>IP3</ci>
+            </apply>
+            <ci>delta_IP3_rxn10</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="inactive_PKC" cmeta:id="inactive_PKC">
+      <variable name="inactive_PKC" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_inactive_PKC_rxn11" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>inactive_PKC</ci>
+            </apply>
+            <ci>delta_inactive_PKC_rxn11</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="active_PKC" cmeta:id="active_PKC">
+      <variable name="active_PKC" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_active_PKC_rxn11" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>active_PKC</ci>
+            </apply>
+            <ci>delta_active_PKC_rxn11</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="inactive_ER_Ca_channel" cmeta:id="inactive_ER_Ca_channel">
+      <variable name="inactive_ER_Ca_channel" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_inactive_ER_Ca_channel_rxn13" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>inactive_ER_Ca_channel</ci>
+            </apply>
+            <ci>delta_inactive_ER_Ca_channel_rxn13</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="active_ER_Ca_channel" cmeta:id="active_ER_Ca_channel">
+      <variable name="active_ER_Ca_channel" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_active_ER_Ca_channel_rxn13" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>active_ER_Ca_channel</ci>
+            </apply>
+            <ci>delta_active_ER_Ca_channel_rxn13</ci>
+         </apply>
+      </math>
+   </component>
+  
+   <component name="ER_Ca" cmeta:id="ER_Ca">
+      <variable name="ER_Ca" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_ER_Ca_rxn15" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>ER_Ca</ci>
+            </apply>
+            <ci>delta_ER_Ca_rxn15</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="Ca_i" cmeta:id="Ca_i">
+      <variable name="Ca_i" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_Ca_i_rxn15" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>Ca_i</ci>
+            </apply>
+            <ci>delta_Ca_i_rxn15</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="P" cmeta:id="P">
+      <variable name="P" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_P_rxn18" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>P</ci>
+            </apply>
+            <ci>delta_P_rxn18</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="ATP_sensitive_K_channel" cmeta:id="ATP_sensitive_K_channel">
+      <variable name="ATP_sensitive_K_channel" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_ATP_sensitive_K_channel_rxn18" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>ATP_sensitive_K_channel</ci>
+            </apply>
+            <ci>delta_ATP_sensitive_K_channel_rxn18</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="Phosphorylated_ATP_sensitive_K_channel" cmeta:id="Phosphorylated_ATP_sensitive_K_channel">
+      <variable name="Phosphorylated_ATP_sensitive_K_channel" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_Phosphorylated_ATP_sensitive_K_channel_rxn18" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>Phosphorylated_ATP_sensitive_K_channel</ci>
+            </apply>
+            <ci>delta_Phosphorylated_ATP_sensitive_K_channel_rxn18</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <component name="K_i" cmeta:id="K_i">
+      <variable name="K_i" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_K_i_rxn19" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>K_i</ci>
+            </apply>
+            <ci>delta_K_i_rxn19</ci>
+         </apply>
+      </math>
+   </component>
+ 
+   <component name="K_e" cmeta:id="K_e">
+      <variable name="K_e" public_interface="out" initial_value="1.0" units="micromolar"/>
+      <variable name="delta_K_e_rxn19" public_interface="in" units="flux"/>
+      <variable name="time" public_interface="in" units="second"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply>
+            <eq/>
+            <apply>
+               <diff/>
+               <bvar>
+                  <ci>time</ci>
+               </bvar>
+               <ci>K_e</ci>
+            </apply>
+            <ci>delta_K_e_rxn19</ci>
+         </apply>
+      </math>
+   </component>
+   
+   <!--
+    The following components describe the reactions of the model.
+   -->
+   
+   <component name="reaction0">
+      <variable name="ACh1" public_interface="in" units="micromolar"/>
+      <variable name="M2" public_interface="in" units="micromolar"/>
+      <variable name="M2_ACh1_complex" public_interface="in" units="micromolar"/>
+      <variable name="delta_ACh1_rxn0" public_interface="out" units="flux"/>
+      <variable name="delta_M2_rxn0" public_interface="out" units="flux"/>
+      <variable name="delta_M2_ACh1_complex_rxn0" public_interface="out" units="flux"/>
+      <variable name="k0" initial_value="1.0" units="second_order_rate_constant"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="ACh1">
+            <role role="reactant" delta_variable="delta_ACh1_rxn0" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="M2">
+            <role role="reactant" delta_variable="delta_M2_rxn0" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="M2_ACh1_complex">
+            <role role="product" delta_variable="delta_M2_ACh1_complex_rxn0" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k0</ci>
+                        <ci>ACh1</ci>
+                        <ci>M2</ci>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+  
+   <component name="reaction1">
+      <variable name="inactive_Gi_protein" public_interface="in" units="micromolar"/>
+      <variable name="active_Gi_protein" public_interface="in" units="micromolar"/>
+      <variable name="M2_ACh1_complex" public_interface="in" units="micromolar"/>
+      <variable name="delta_inactive_Gi_protein_rxn1" public_interface="out" units="flux"/>
+      <variable name="delta_active_Gi_protein_rxn1" public_interface="out" units="flux"/>
+      <variable name="k1" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="vmax1" initial_value="1.0" units="flux"/>
+      <variable name="km1" initial_value="1.0" units="micromolar"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="inactive_Gi_protein">
+            <role role="reactant" delta_variable="delta_inactive_Gi_protein_rxn1" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_Gi_protein">
+            <role role="product" delta_variable="delta_active_Gi_protein_rxn1" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="M2_ACh1_complex">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k1</ci>
+                        <ci>inactive_Gi_protein</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax1</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>M2_ACh1_complex</ci>
+                                          <ci>km1</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction3">
+      <variable name="inactive_ACh_sensitive_K_channel" public_interface="in" units="micromolar"/>
+      <variable name="active_ACh_sensitive_K_channel" public_interface="in" units="micromolar"/>
+      <variable name="active_Gi_protein" public_interface="in" units="micromolar"/>
+      <variable name="delta_inactive_ACh_sensitive_K_channel_rxn3" public_interface="out" units="flux"/>
+      <variable name="delta_active_ACh_sensitive_K_channel_rxn3" public_interface="out" units="flux"/>
+      <variable name="k3" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="vmax3" initial_value="1.0" units="flux"/>
+      <variable name="km3" initial_value="1.0" units="micromolar"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="inactive_ACh_sensitive_K_channel">
+            <role role="reactant" delta_variable="delta_inactive_ACh_sensitive_K_channel_rxn3" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_ACh_sensitive_K_channel">
+            <role role="product" delta_variable="delta_active_ACh_sensitive_K_channel_rxn3" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_Gi_protein">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k3</ci>
+                        <ci>inactive_ACh_sensitive_K_channel</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax3</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>active_Gi_protein</ci>
+                                          <ci>km3</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction5">
+      <variable name="ACh2" public_interface="in" units="micromolar"/>
+      <variable name="M1" public_interface="in" units="micromolar"/>
+      <variable name="M1_ACh2_complex" public_interface="in" units="micromolar"/>
+      <variable name="delta_ACh2_rxn5" public_interface="out" units="flux"/>
+      <variable name="delta_M1_rxn5" public_interface="out" units="flux"/>
+      <variable name="delta_M1_ACh2_complex_rxn5" public_interface="out" units="flux"/>
+      <variable name="k5" initial_value="1.0" units="second_order_rate_constant"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="ACh2">
+            <role role="reactant" delta_variable="delta_ACh2_rxn5" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="M1">
+            <role role="reactant" delta_variable="delta_M1_rxn5" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="M1_ACh2_complex">
+            <role role="product" delta_variable="delta_M1_ACh2_complex_rxn5" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k5</ci>
+                        <ci>ACh2</ci>
+                        <ci>M1</ci>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction6">
+      <variable name="inactive_Gq_protein" public_interface="in" units="micromolar"/>
+      <variable name="active_Gq_protein" public_interface="in" units="micromolar"/>
+      <variable name="M1_ACh2_complex" public_interface="in" units="micromolar"/>
+      <variable name="delta_inactive_Gq_protein_rxn6" public_interface="out" units="flux"/>
+      <variable name="delta_active_Gq_protein_rxn6" public_interface="out" units="flux"/>
+      <variable name="k6" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="vmax6" initial_value="1.0" units="flux"/>
+      <variable name="km6" initial_value="1.0" units="micromolar"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="inactive_Gq_protein">
+            <role role="reactant" delta_variable="delta_inactive_Gq_protein_rxn6" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_Gq_protein">
+            <role role="product" delta_variable="delta_active_Gq_protein_rxn6" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="M1_ACh2_complex">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k6</ci>
+                        <ci>inactive_Gq_protein</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax6</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>M1_ACh2_complex</ci>
+                                          <ci>km6</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction8">
+      <variable name="inactive_PLC" public_interface="in" units="micromolar"/>
+      <variable name="active_PLC" public_interface="in" units="micromolar"/>
+      <variable name="active_Gq_protein" public_interface="in" units="micromolar"/>
+      <variable name="delta_inactive_PLC_rxn8" public_interface="out" units="flux"/>
+      <variable name="delta_active_PLC_rxn8" public_interface="out" units="flux"/>
+      <variable name="k8" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="km8" initial_value="1.0" units="micromolar"/>
+      <variable name="vmax8" initial_value="1.0" units="flux"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="inactive_PLC">
+            <role role="reactant" delta_variable="delta_inactive_PLC_rxn8" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_PLC">
+            <role role="product" delta_variable="delta_active_PLC_rxn8" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_Gq_protein">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k8</ci>
+                        <ci>inactive_PLC</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax8</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>active_Gq_protein</ci>
+                                          <ci>km8</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction10">
+      <variable name="PIP2" public_interface="in" units="micromolar"/>
+      <variable name="DAG" public_interface="in" units="micromolar"/>
+      <variable name="IP3" public_interface="in" units="micromolar"/>
+      <variable name="active_PLC" public_interface="in" units="micromolar"/>
+      <variable name="delta_PIP2_rxn10" public_interface="out" units="flux"/>
+      <variable name="delta_DAG_rxn10" public_interface="out" units="flux"/>
+      <variable name="delta_IP3_rxn10" public_interface="out" units="flux"/>
+      <variable name="km10" initial_value="1.0" units="micromolar"/>
+      <variable name="vmax10" initial_value="1.0" units="flux"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="PIP2">
+            <role role="reactant" delta_variable="delta_PIP2_rxn10" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="DAG">
+            <role role="product" delta_variable="delta_DAG_rxn10" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="IP3">
+            <role role="product" delta_variable="delta_IP3_rxn10" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_PLC">
+            <role role="catalyst"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <divide/>
+                        <apply>
+                           <times/>
+                           <ci>PIP2</ci>
+                           <ci>vmax10</ci>
+                        </apply>
+                        <apply>
+                           <plus/>
+                           <ci>km10</ci>
+                           <ci>PIP2</ci>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction11">
+      <variable name="inactive_PKC" public_interface="in" units="micromolar"/>
+      <variable name="active_PKC" public_interface="in" units="micromolar"/>
+      <variable name="DAG" public_interface="in" units="micromolar"/>
+      <variable name="Ca_i" public_interface="in" units="micromolar"/>
+      <variable name="delta_inactive_PKC_rxn11" public_interface="out" units="flux"/>
+      <variable name="delta_active_PKC_rxn11" public_interface="out" units="flux"/>
+      <variable name="k11" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="vmax11a" initial_value="1.0" units="flux"/>
+      <variable name="km11a" initial_value="1.0" units="micromolar"/>
+      <variable name="vmax11b" initial_value="1.0" units="flux"/>
+      <variable name="km11b" initial_value="1.0" units="micromolar"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="inactive_PKC">
+            <role role="reactant" delta_variable="delta_inactive_PKC_rxn11" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_PKC">
+            <role role="product" delta_variable="delta_active_PKC_rxn11" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="DAG">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="Ca_i">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k11</ci>
+                        <ci>inactive_PKC</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax11a</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>DAG</ci>
+                                          <ci>km11a</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax11b</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>Ca_i</ci>
+                                          <ci>km11b</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction13">
+      <variable name="inactive_ER_Ca_channel" public_interface="in" units="micromolar"/>
+      <variable name="active_ER_Ca_channel" public_interface="in" units="micromolar"/>
+      <variable name="IP3" public_interface="in" units="micromolar"/>
+      <variable name="delta_inactive_ER_Ca_channel_rxn13" public_interface="out" units="flux"/>
+      <variable name="delta_active_ER_Ca_channel_rxn13" public_interface="out" units="flux"/>
+      <variable name="k13" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="vmax13" initial_value="1.0" units="flux"/>
+      <variable name="km13" initial_value="1.0" units="micromolar"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="inactive_ER_Ca_channel">
+            <role role="reactant" delta_variable="delta_inactive_ER_Ca_channel_rxn13" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_ER_Ca_channel">
+            <role role="product" delta_variable="delta_active_ER_Ca_channel_rxn13" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="IP3">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k13</ci>
+                        <ci>inactive_ER_Ca_channel</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax13</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>IP3</ci>
+                                          <ci>km13</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction15">
+      <variable name="ER_Ca" public_interface="in" units="micromolar"/>
+      <variable name="Ca_i" public_interface="in" units="micromolar"/>
+      <variable name="active_ER_Ca_channel" public_interface="in" units="micromolar"/>
+      <variable name="delta_ER_Ca_rxn15" public_interface="out" units="flux"/>
+      <variable name="delta_Ca_i_rxn15" public_interface="out" units="flux"/>
+      <variable name="k15" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="vmax15" initial_value="1.0" units="flux"/>
+      <variable name="km15" initial_value="1.0" units="micromolar"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="ER_Ca">
+            <role role="reactant" delta_variable="delta_ER_Ca_rxn15" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="Ca_i">
+            <role role="product" delta_variable="delta_Ca_i_rxn15" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_ER_Ca_channel">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k15</ci>
+                        <ci>ER_Ca</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax15</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>active_ER_Ca_channel</ci>
+                                          <ci>km15</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction18">
+      <variable name="ATP_sensitive_K_channel" public_interface="in" units="micromolar"/>
+      <variable name="P" public_interface="in" units="micromolar"/>
+      <variable name="Phosphorylated_ATP_sensitive_K_channel" public_interface="in" units="micromolar"/>
+      <variable name="active_PKC" public_interface="in" units="micromolar"/>
+      <variable name="delta_ATP_sensitive_K_channel_rxn18" public_interface="out" units="flux"/>
+      <variable name="delta_Phosphorylated_ATP_sensitive_K_channel_rxn18" public_interface="out" units="flux"/>
+      <variable name="delta_P_rxn18" public_interface="out" units="flux"/>
+      <variable name="km18" initial_value="1.0" units="micromolar"/>
+      <variable name="vmax18" initial_value="1.0" units="flux"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="ATP_sensitive_K_channel">
+            <role role="reactant" delta_variable="delta_ATP_sensitive_K_channel_rxn18" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="P">
+            <role role="reactant" delta_variable="delta_P_rxn18" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="Phosphorylated_ATP_sensitive_K_channel">
+            <role role="product" delta_variable="delta_Phosphorylated_ATP_sensitive_K_channel_rxn18" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="active_PKC">
+            <role role="catalyst"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <divide/>
+                        <apply>
+                           <times/>
+                           <ci>ATP_sensitive_K_channel</ci>
+                           <ci>P</ci>
+                           <ci>vmax18</ci>
+                        </apply>
+                        <apply>
+                           <plus/>
+                           <ci>km18</ci>
+                           <ci>ATP_sensitive_K_channel</ci>
+                           <ci>P</ci>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <component name="reaction19">
+      <variable name="K_i" public_interface="in" units="micromolar"/>
+      <variable name="K_e" public_interface="in" units="micromolar"/>
+      <variable name="active_ACh_sensitive_K_channel" public_interface="in" units="micromolar"/>
+      <variable name="Phosphorylated_ATP_sensitive_K_channel" public_interface="in" units="micromolar"/>
+      <variable name="delta_K_i_rxn19" public_interface="out" units="flux"/>
+      <variable name="delta_K_e_rxn19" public_interface="out" units="flux"/>
+      <variable name="k19" initial_value="1.0" units="first_order_rate_constant"/>
+      <variable name="vmax19a" initial_value="1.0" units="flux"/>
+      <variable name="km19a" initial_value="1.0" units="micromolar"/>
+      <variable name="vmax19b" initial_value="1.0" units="flux"/>
+      <variable name="km19b" initial_value="1.0" units="micromolar"/>
+      <variable name="rate" units="flux"/>
+      <reaction reversible="no">
+         <variable_ref variable="K_i">
+            <role role="reactant" delta_variable="delta_K_i_rxn19" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="K_e">
+            <role role="product" delta_variable="delta_K_e_rxn19" stoichiometry="1"/>
+         </variable_ref>
+         <variable_ref variable="Phosphorylated_ATP_sensitive_K_channel">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="active_ACh_sensitive_K_channel">
+            <role role="activator"/>
+         </variable_ref>
+         <variable_ref variable="rate">
+            <role role="rate">
+               <math xmlns="http://www.w3.org/1998/Math/MathML">
+                  <apply>
+                     <eq/>
+                     <ci>rate</ci>
+                     <apply>
+                        <times/>
+                        <ci>k19</ci>
+                        <ci>K_i</ci>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax19a</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>Phosphorylated_ATP_sensitive_K_channel</ci>
+                                          <ci>km19a</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                        <apply>
+                           <plus/>
+                           <cn cellml:units="dimensionless">1.0</cn>
+                           <apply>
+                              <times/>
+                              <apply>
+                                 <minus/>
+                                 <ci>vmax19b</ci>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                              </apply>
+                              <apply>
+                                 <minus/>
+                                 <cn cellml:units="dimensionless">1.0</cn>
+                                 <apply>
+                                    <exp/>
+                                    <apply>
+                                       <minus/>
+                                       <apply>
+                                          <divide/>
+                                          <ci>active_ACh_sensitive_K_channel</ci>
+                                          <ci>km19b</ci>
+                                       </apply>
+                                    </apply>
+                                 </apply>
+                              </apply>
+                           </apply>
+                        </apply>
+                     </apply>
+                  </apply>
+               </math>
+            </role>
+         </variable_ref>
+      </reaction>
+   </component>
+   
+   <connection>
+      <map_components component_1="ACh1" component_2="reaction0"/>
+      <map_variables variable_1="ACh1" variable_2="ACh1"/>
+      <map_variables variable_1="delta_ACh1_rxn0" variable_2="delta_ACh1_rxn0"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="ACh2" component_2="reaction5"/>
+      <map_variables variable_1="ACh2" variable_2="ACh2"/>
+      <map_variables variable_1="delta_ACh2_rxn5" variable_2="delta_ACh2_rxn5"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="M1" component_2="reaction5"/>
+      <map_variables variable_1="M1" variable_2="M1"/>
+      <map_variables variable_1="delta_M1_rxn5" variable_2="delta_M1_rxn5"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="M2" component_2="reaction0"/>
+      <map_variables variable_1="M2" variable_2="M2"/>
+      <map_variables variable_1="delta_M2_rxn0" variable_2="delta_M2_rxn0"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="M1_ACh2_complex" component_2="reaction5"/>
+      <map_variables variable_1="M1_ACh2_complex" variable_2="M1_ACh2_complex"/>
+      <map_variables variable_1="delta_M1_ACh2_complex_rxn5" variable_2="delta_M1_ACh2_complex_rxn5"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="M1_ACh2_complex" component_2="reaction6"/>
+      <map_variables variable_1="M1_ACh2_complex" variable_2="M1_ACh2_complex"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="M2_ACh1_complex" component_2="reaction0"/>
+      <map_variables variable_1="M2_ACh1_complex" variable_2="M2_ACh1_complex"/>
+      <map_variables variable_1="delta_M2_ACh1_complex_rxn0" variable_2="delta_M2_ACh1_complex_rxn0"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="M2_ACh1_complex" component_2="reaction1"/>
+      <map_variables variable_1="M2_ACh1_complex" variable_2="M2_ACh1_complex"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="inactive_Gi_protein" component_2="reaction1"/>
+      <map_variables variable_1="inactive_Gi_protein" variable_2="inactive_Gi_protein"/>
+      <map_variables variable_1="delta_inactive_Gi_protein_rxn1" variable_2="delta_inactive_Gi_protein_rxn1"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_Gi_protein" component_2="reaction1"/>
+      <map_variables variable_1="active_Gi_protein" variable_2="active_Gi_protein"/>
+      <map_variables variable_1="delta_active_Gi_protein_rxn1" variable_2="delta_active_Gi_protein_rxn1"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_Gi_protein" component_2="reaction3"/>
+      <map_variables variable_1="active_Gi_protein" variable_2="active_Gi_protein"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="inactive_ACh_sensitive_K_channel" component_2="reaction3"/>
+      <map_variables variable_1="inactive_ACh_sensitive_K_channel" variable_2="inactive_ACh_sensitive_K_channel"/>
+      <map_variables variable_1="delta_inactive_ACh_sensitive_K_channel_rxn3" variable_2="delta_inactive_ACh_sensitive_K_channel_rxn3"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="active_ACh_sensitive_K_channel" component_2="reaction3"/>
+      <map_variables variable_1="active_ACh_sensitive_K_channel" variable_2="active_ACh_sensitive_K_channel"/>
+      <map_variables variable_1="delta_active_ACh_sensitive_K_channel_rxn3" variable_2="delta_active_ACh_sensitive_K_channel_rxn3"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_ACh_sensitive_K_channel" component_2="reaction19"/>
+      <map_variables variable_1="active_ACh_sensitive_K_channel" variable_2="active_ACh_sensitive_K_channel"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="inactive_Gq_protein" component_2="reaction6"/>
+      <map_variables variable_1="inactive_Gq_protein" variable_2="inactive_Gq_protein"/>
+      <map_variables variable_1="delta_inactive_Gq_protein_rxn6" variable_2="delta_inactive_Gq_protein_rxn6"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_Gq_protein" component_2="reaction6"/>
+      <map_variables variable_1="active_Gq_protein" variable_2="active_Gq_protein"/>
+      <map_variables variable_1="delta_active_Gq_protein_rxn6" variable_2="delta_active_Gq_protein_rxn6"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_Gq_protein" component_2="reaction8"/>
+      <map_variables variable_1="active_Gq_protein" variable_2="active_Gq_protein"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="inactive_PLC" component_2="reaction8"/>
+      <map_variables variable_1="inactive_PLC" variable_2="inactive_PLC"/>
+      <map_variables variable_1="delta_inactive_PLC_rxn8" variable_2="delta_inactive_PLC_rxn8"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_PLC" component_2="reaction8"/>
+      <map_variables variable_1="active_PLC" variable_2="active_PLC"/>
+      <map_variables variable_1="delta_active_PLC_rxn8" variable_2="delta_active_PLC_rxn8"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_PLC" component_2="reaction10"/>
+      <map_variables variable_1="active_PLC" variable_2="active_PLC"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="PIP2" component_2="reaction10"/>
+      <map_variables variable_1="PIP2" variable_2="PIP2"/>
+      <map_variables variable_1="delta_PIP2_rxn10" variable_2="delta_PIP2_rxn10"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="DAG" component_2="reaction10"/>
+      <map_variables variable_1="DAG" variable_2="DAG"/>
+      <map_variables variable_1="delta_DAG_rxn10" variable_2="delta_DAG_rxn10"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="DAG" component_2="reaction11"/>
+      <map_variables variable_1="DAG" variable_2="DAG"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="IP3" component_2="reaction10"/>
+      <map_variables variable_1="IP3" variable_2="IP3"/>
+      <map_variables variable_1="delta_IP3_rxn10" variable_2="delta_IP3_rxn10"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="IP3" component_2="reaction13"/>
+      <map_variables variable_1="IP3" variable_2="IP3"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="inactive_PKC" component_2="reaction11"/>
+      <map_variables variable_1="inactive_PKC" variable_2="inactive_PKC"/>
+      <map_variables variable_1="delta_inactive_PKC_rxn11" variable_2="delta_inactive_PKC_rxn11"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_PKC" component_2="reaction11"/>
+      <map_variables variable_1="active_PKC" variable_2="active_PKC"/>
+      <map_variables variable_1="delta_active_PKC_rxn11" variable_2="delta_active_PKC_rxn11"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_PKC" component_2="reaction18"/>
+      <map_variables variable_1="active_PKC" variable_2="active_PKC"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="inactive_ER_Ca_channel" component_2="reaction13"/>
+      <map_variables variable_1="inactive_ER_Ca_channel" variable_2="inactive_ER_Ca_channel"/>
+      <map_variables variable_1="delta_inactive_ER_Ca_channel_rxn13" variable_2="delta_inactive_ER_Ca_channel_rxn13"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_ER_Ca_channel" component_2="reaction13"/>
+      <map_variables variable_1="active_ER_Ca_channel" variable_2="active_ER_Ca_channel"/>
+      <map_variables variable_1="delta_active_ER_Ca_channel_rxn13" variable_2="delta_active_ER_Ca_channel_rxn13"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_ER_Ca_channel" component_2="reaction15"/>
+      <map_variables variable_1="active_ER_Ca_channel" variable_2="active_ER_Ca_channel"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="ER_Ca" component_2="reaction15"/>
+      <map_variables variable_1="ER_Ca" variable_2="ER_Ca"/>
+      <map_variables variable_1="delta_ER_Ca_rxn15" variable_2="delta_ER_Ca_rxn15"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="Ca_i" component_2="reaction15"/>
+      <map_variables variable_1="Ca_i" variable_2="Ca_i"/>
+      <map_variables variable_1="delta_Ca_i_rxn15" variable_2="delta_Ca_i_rxn15"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="Ca_i" component_2="reaction11"/>
+      <map_variables variable_1="Ca_i" variable_2="Ca_i"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="ATP_sensitive_K_channel" component_2="reaction18"/>
+      <map_variables variable_1="ATP_sensitive_K_channel" variable_2="ATP_sensitive_K_channel"/>
+      <map_variables variable_1="delta_ATP_sensitive_K_channel_rxn18" variable_2="delta_ATP_sensitive_K_channel_rxn18"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="P" component_2="reaction18"/>
+      <map_variables variable_1="P" variable_2="P"/>
+      <map_variables variable_1="delta_P_rxn18" variable_2="delta_P_rxn18"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="Phosphorylated_ATP_sensitive_K_channel" component_2="reaction18"/>
+      <map_variables variable_1="Phosphorylated_ATP_sensitive_K_channel" variable_2="Phosphorylated_ATP_sensitive_K_channel"/>
+      <map_variables variable_1="delta_Phosphorylated_ATP_sensitive_K_channel_rxn18" variable_2="delta_Phosphorylated_ATP_sensitive_K_channel_rxn18"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="Phosphorylated_ATP_sensitive_K_channel" component_2="reaction19"/>
+      <map_variables variable_1="Phosphorylated_ATP_sensitive_K_channel" variable_2="Phosphorylated_ATP_sensitive_K_channel"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="K_i" component_2="reaction19"/>
+      <map_variables variable_1="K_i" variable_2="K_i"/>
+      <map_variables variable_1="delta_K_i_rxn19" variable_2="delta_K_i_rxn19"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="K_e" component_2="reaction19"/>
+      <map_variables variable_1="K_e" variable_2="K_e"/>
+      <map_variables variable_1="delta_K_e_rxn19" variable_2="delta_K_e_rxn19"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="ACh1" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="ACh2" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="M1" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="M2" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="M1_ACh2_complex" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="M2_ACh1_complex" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="inactive_Gi_protein" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_Gi_protein" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="inactive_ACh_sensitive_K_channel" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_ACh_sensitive_K_channel" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="inactive_Gq_protein" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_Gq_protein" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="inactive_PLC" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="active_PLC" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="PIP2" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="DAG" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="IP3" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="inactive_PKC" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="active_PKC" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="inactive_ER_Ca_channel" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="active_ER_Ca_channel" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+  
+   <connection>
+      <map_components component_1="ER_Ca" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="Ca_i" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="P" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="ATP_sensitive_K_channel" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="Phosphorylated_ATP_sensitive_K_channel" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="K_i" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   
+   <connection>
+      <map_components component_1="K_e" component_2="environment"/>
+      <map_variables variable_1="time" variable_2="time"/>
+   </connection>
+   <foo xmlns="http://www.example.org/somenamespace/foons#1">
+     <bar />
+     <baz />
+   </foo>
+   <blah xmlns="http://www.example.org/somenamespace/blahns#1" />
+   <foo xmlns="http://www.example.org/somenamespace/foons#1" />
+   <abc xmlns="http://www.example.org/somenamespace/abcns#1" />
+   <def xmlns="http://www.example.org/somenamespace/abcns#1" />
+</model>

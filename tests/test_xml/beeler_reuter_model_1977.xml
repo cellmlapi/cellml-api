@@ -1,0 +1,1396 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- FILE : beeler_reuter_mammalian_ventricle_1977.xml
+
+Note: Do not use this file for a real simulation as it has been modified to make
+it a better test case and no longer accurately represents the publication or
+biological/physical reality.
+
+CREATED : September 2001
+
+LAST MODIFIED : 5th April 2003
+
+AUTHOR : Catherine Lloyd
+         Department of Engineering Science
+         The University of Auckland
+         
+MODEL STATUS : This model conforms to the CellML 1.0 Specification released on
+10th August 2001, and the 16/01/2002 CellML Metadata 1.0 Specification.
+
+DESCRIPTION : This file contains a CellML description of the mammalian
+ventricular action potential, based on the Beeler-Reuter model, 1977. 
+
+CHANGES: 
+  19/10/2001 - CML - Removed document type definition as this is declared as
+                     optional according to the WC3 recommendation.  
+  24/10/2001 - CML - Made changes to some of the metadata, bringing them up to
+                     date with the most recent working draft (26th September) of
+                     the Metadata specification.
+  07/12/2001 - CML - Changed some equations after using the MathML validator.
+  21/01/2002 - AAC - Updated metadata to conform to the 16/01/02 CellML Metadata
+                     1.0 Specification.
+  28/02/2002 - CML - Corrected the membrane voltage differential equation.
+  19/07/2002 - CML - Added more metadata.
+  05/04/2003 - AAC - Changed the model name so the model loads in the database 
+                     easier.
+-->
+<model name="beeler_reuter_model_1977" xml:base="http://www.example.com/base/beelerreuter.xml" cmeta:id="beeler_reuter_mammalian_ventricle_1977" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
+  <foo:bar xmlns:foo="http://www.example.com/myexample/test" />
+  <!--
+    Below, we define some additional units for association with variables and
+    constants within the model. The identifiers are fairly self-explanatory.
+  -->
+  <units name="notarealunit" base_units="yes"/>
+
+  <units name="millisecond">
+    <unit prefix="milli" units="second" multiplier="1.5" offset="2.8"/>
+  </units>
+  
+  <units name="per_millisecond">
+    <unit prefix="-3" units="second" exponent="-1"/>
+  </units>
+
+  <units name="millivolt">
+    <unit prefix="milli" units="volt"/>
+  </units>
+
+  <units name="per_millivolt">
+    <unit prefix="milli" units="volt" exponent="-1"/>
+  </units>
+
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqs="http://www.cellml.org/bqs/1.0#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#">
+    <foo xmlns="http://www.example.org/foo/bar/baz" />
+    <!--
+      The following RDF block contains metadata that applies to this document
+      as a whole, as indicated by the empty about attribute on the 
+      <rdf:Description> element.
+    -->
+    <rdf:Description rdf:about="">
+      <!--
+        The Model Builder Metadata.  The Dublin Core "creator" element is used  
+        to indicate the person who translated the model into CellML.
+      -->
+      <dc:creator rdf:parseType="Resource">
+        <vCard:N rdf:parseType="Resource">
+          <vCard:Family>Lloyd</vCard:Family>
+          <vCard:Given>Catherine</vCard:Given>
+          <vCard:Other>May</vCard:Other>
+        </vCard:N>
+        <vCard:EMAIL rdf:parseType="Resource">
+          <rdf:value>c.lloyd@auckland.ac.nz</rdf:value>
+          <rdf:type rdf:resource="http://imc.org/vCard/3.0#internet"/>
+        </vCard:EMAIL>
+        <vCard:ORG rdf:parseType="Resource">
+          <vCard:Orgname>The University of Auckland</vCard:Orgname>
+          <vCard:Orgunit>The Bioengineering Research Group</vCard:Orgunit>
+        </vCard:ORG>
+      </dc:creator>
+      
+      <!--
+        The Creation Date metadata. This is the date on which the model
+        was translated into CellML.
+      -->
+      <dcterms:created rdf:parseType="Resource">
+        <dcterms:W3CDTF>2001-09-10</dcterms:W3CDTF>
+      </dcterms:created>
+      
+      <!--
+        The Modification History metadata. This lists the changes that have been
+        made to the document, who made the changes, and when they were made.
+      -->
+      <cmeta:modification rdf:parseType="Resource">
+        <rdf:value>
+          Changed the model name so the model loads in the database easier.
+        </rdf:value>
+        <cmeta:modifier rdf:parseType="Resource">
+          <vCard:N rdf:parseType="Resource">
+            <vCard:Family>Cuellar</vCard:Family>
+            <vCard:Given>Autumn</vCard:Given>
+            <vCard:Other>A</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified rdf:parseType="Resource"> 
+          <dcterms:W3CDTF>2003-04-05</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      <cmeta:modification rdf:parseType="Resource">
+        <rdf:value>
+          Added more metadata.
+        </rdf:value>
+        <cmeta:modifier rdf:parseType="Resource">
+          <vCard:N rdf:parseType="Resource">
+            <vCard:Family>Lloyd</vCard:Family>
+            <vCard:Given>Catherine</vCard:Given>
+            <vCard:Other>May</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified rdf:parseType="Resource"> 
+          <dcterms:W3CDTF>2002-07-19</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      <cmeta:modification>
+        <rdf:value>
+          Corrected the membrane voltage differential equation.
+        </rdf:value>
+        <cmeta:modifier>
+          <vCard:N rdf:parseType="Resource">
+            <vCard:Family>Lloyd</vCard:Family>
+            <vCard:Given>Catherine</vCard:Given>
+            <vCard:Other>May</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified>
+          <dcterms:W3CDTF>2002-02-28</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      <cmeta:modification>
+        <rdf:value>
+          Updated metadata to conform to the 16/01/2002 CellML Metadata 1.0
+          Specification.
+        </rdf:value>
+        <cmeta:modifier>
+          <vCard:N>
+            <vCard:Family>Cuellar</vCard:Family>
+            <vCard:Given>Autumn</vCard:Given>
+            <vCard:Other>A.</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified>
+          <dcterms:W3CDTF>2002-01-21</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      <cmeta:modification>
+        <rdf:value>
+          Changed some equations after using the MathML validator.
+        </rdf:value>
+        <cmeta:modifier>
+          <vCard:N rdf:parseType="Resource">
+            <vCard:Family>Lloyd</vCard:Family>
+            <vCard:Given>Catherine</vCard:Given>
+            <vCard:Other>May</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified>
+          <dcterms:W3CDTF>2001-12-07</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      <cmeta:modification>
+        <rdf:value>
+          Made changes to some of the metadata, bringing them up to date with 
+          the most recent working draft (26th September) of the Metadata 
+          Specification.
+        </rdf:value>
+        <cmeta:modifier>
+          <vCard:N rdf:parseType="Resource">
+            <vCard:Family>Lloyd</vCard:Family>
+            <vCard:Given>Catherine</vCard:Given>
+            <vCard:Other>May</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified>
+          <dcterms:W3CDTF>2001-10-24</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      <cmeta:modification>
+        <rdf:value>
+          Removed document type definition as this is declared as optional 
+          according to the WC3 recommendation. 
+        </rdf:value>
+        <cmeta:modifier>
+          <vCard:N rdf:parseType="Resource">
+            <vCard:Family>Lloyd</vCard:Family>
+            <vCard:Given>Catherine</vCard:Given>
+            <vCard:Other>May</vCard:Other>
+          </vCard:N>
+        </cmeta:modifier>
+        <dcterms:modified>
+          <dcterms:W3CDTF>2001-10-19</dcterms:W3CDTF>
+        </dcterms:modified>
+      </cmeta:modification>
+      
+      <!-- The Publisher metadata. -->
+      <dc:publisher>
+        The University of Auckland, Bioengineering Research Group
+      </dc:publisher>
+    </rdf:Description>
+    
+    <!--
+      The following metadata refers to the model itself, as indicated by the
+      reference to the ID "beeler_reuter_mammalian_ventricle_1977", which is    
+      declared on the <model> element.
+    -->
+    <rdf:Description rdf:about="#beeler_reuter_mammalian_ventricle_1977">
+      <!-- A human readable name for the model. -->
+      <dc:title>
+        The Beeler-Reuter Model of Membrane Action Potentials of Mammalian
+        Ventricular Myocytes, 1977
+      </dc:title>
+      
+      <!-- A comment regarding the model. -->
+      <cmeta:comment rdf:parseType="Resource">
+        <rdf:value>
+          This is the CellML description of Beeler and Reuter's mathematical    
+          model of membrane action potentials of mammalian ventricular          
+          myocardial fibres.  It describes four ionic currents in terms of      
+          Hodkin-Huxley type equations.  
+        </rdf:value>
+        <!-- The creator of the comment. -->
+        <dc:creator rdf:parseType="Resource">
+          <vCard:FN>Catherine Lloyd</vCard:FN>
+        </dc:creator>
+      </cmeta:comment>
+      
+      <!-- The model is relevant to all mammals. -->
+      <cmeta:species>Mammalia</cmeta:species>
+      
+      <cmeta:bio_entity>Ventricular Myocyte</cmeta:bio_entity>
+      
+      <!--  Keyword(s) -->
+      <bqs:reference rdf:parseType="Resource">
+        <dc:subject rdf:parseType="Resource">
+          <bqs:subject_type>keyword</bqs:subject_type>
+          <rdf:value>
+            <rdf:Bag>
+              <rdf:li>ventricular myocyte</rdf:li>
+              <rdf:li>electrophysiological</rdf:li>
+            </rdf:Bag>
+          </rdf:value>
+        </dc:subject>
+      </bqs:reference>
+
+      <!-- 
+        The CellML Metadata Specification recommends that bibliographic metadata
+        is used to provide information about the original model reference.  The 
+        "identifier" attribute on the "BibliographicReference" class provides an
+        elegant way to identify a cited reference using a database identifier            such as Pubmed.  All associated data such as author, journal title,     
+        date, etc can be looked up on the database.
+      -->
+      <bqs:reference rdf:parseType="Resource">
+        <bqs:Pubmed_id>874889</bqs:Pubmed_id>
+        <bqs:JournalArticle rdf:parseType="Resource">
+          <dc:creator>
+            <rdf:Seq>
+              <rdf:li rdf:parseType="Resource">
+                <bqs:Person rdf:parseType="Resource">
+                  <vCard:N rdf:parseType="Resource">
+                    <vCard:Family>Beeler</vCard:Family>
+                    <vCard:Given>G</vCard:Given>
+                    <vCard:Other>W</vCard:Other>
+                  </vCard:N>
+                </bqs:Person>
+              </rdf:li>
+              <rdf:li rdf:parseType="Resource">
+                <bqs:Person rdf:parseType="Resource">
+                  <vCard:N rdf:parseType="Resource">
+                    <vCard:Family>Reuter</vCard:Family>
+                    <vCard:Given>H</vCard:Given>
+                  </vCard:N>
+                </bqs:Person>
+              </rdf:li>
+            </rdf:Seq>
+          </dc:creator>
+          <dc:title>
+            Reconstruction of the action potential of ventricular myocardial                 fibres
+          </dc:title>
+          <dcterms:issued rdf:parseType="Resource">
+            <dcterms:W3CDTF>1977-06</dcterms:W3CDTF>
+          </dcterms:issued>
+          <bqs:Journal rdf:parseType="Resource">
+            <dc:title>Journal of Physiology</dc:title>
+          </bqs:Journal>
+          <bqs:volume>268</bqs:volume>
+          <bqs:first_page>177</bqs:first_page>
+          <bqs:last_page>210</bqs:last_page>
+        </bqs:JournalArticle>
+      </bqs:reference>
+    </rdf:Description>
+  </rdf:RDF>  
+  <units name="per_millivolt_millisecond">
+    <unit units="millivolt" exponent="-1"/>
+    <unit units="millisecond" exponent="-1"/>
+  </units>
+  
+  <units name="milliS_per_cm2">
+    <unit prefix="milli" units="siemens"/>
+    <unit prefix="centi" units="metre" exponent="-2"/>
+  </units>
+
+  <units name="microF_per_cm2">
+    <unit prefix="micro" units="farad"/>
+    <unit prefix="centi" units="metre" exponent="-2"/>
+  </units>
+
+  <units name="microA_per_cm2">
+    <unit prefix="micro" units="ampere"/>
+    <unit prefix="centi" units="metre" exponent="-2"/>
+  </units>
+  
+  <units name="concentration_units">
+    <unit prefix="milli" units="mole"/>
+    <unit units="litre" exponent="-1"/>
+  </units>
+    
+  <!--
+    The "environment" component is used to declare variables that are used by
+    all or most of the other components, in this case just "time".
+  -->
+  <component name="environment">
+    <variable name="footime" public_interface="out" units="millisecond"/>
+    <units name="single_component_units">
+      <unit prefix="milli" units="metre" />
+    </units>
+  </component>
+
+  <!--
+    The "membrane" component is really the `root' node of our model.
+    It defines the action potential variable "V" among other things.
+  -->
+  <component name="membrane">
+    <!-- These variables are defined here and used in other components. -->
+    <variable name="V" public_interface="out" initial_value="-84.624" units="millivolt"/>
+    
+    <!-- This variable is defined here and only used internally. -->
+    <variable name="C" initial_value="1.0" units="microF_per_cm2"/>
+    
+    <!-- These variables are imported from other components. -->
+    <variable name="time" public_interface="in" units="millisecond"/>
+    <variable name="i_Na" public_interface="in" units="microA_per_cm2"/>
+    <variable name="i_s" public_interface="in" units="microA_per_cm2"/>
+    <variable name="i_x1" public_interface="in" units="microA_per_cm2"/>
+    <variable name="i_K1" public_interface="in" units="microA_per_cm2"/>
+    
+    <!--
+      The membrane voltage (V) is calculated as an ordinary
+      differential equation in terms of the currents.
+    -->
+    <math xmlns="http://www.w3.org/1998/Math/MathML" class="testmath">
+      <apply id="membrane_voltage_diff_eq"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> V </ci>
+        </apply>
+        <apply><times/>
+          <apply><minus/>
+            <apply><divide/>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+              <ci> C </ci>
+            </apply>
+          </apply>
+          <apply><plus/>
+            <ci> i_Na </ci>
+            <ci> i_s </ci>
+            <ci> i_x1 </ci>
+            <ci> i_K1 </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+     
+  <!--
+    The "sodium_current" component contains the differential equations
+    governing the influx of sodium ions through the cell surface membrane into  
+    the cell.  This sodium current is primarily responsible for the rapid       
+    upstroke of the action potential during membrane depolarisation.
+    Note that no initial values are needed on many variables as they are
+    all directly dependent on the membrane voltage.
+  -->
+  <component name="sodium_current">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="i_Na" public_interface="out" units="microA_per_cm2"/>
+
+    <!-- These variables are defined here and only used internally. -->
+    <variable name="g_Na" initial_value="4.0" units="milliS_per_cm2"/>
+    <variable name="E_Na" initial_value="50.0" units="millivolt"/>
+    <variable name="g_Nac" initial_value="0.003" units="milliS_per_cm2"/>
+    
+    <!-- 
+      Time is imported from the environment, and membrane potential is
+      imported from the membrane component.  These variables are used in the 
+      "sodium_current" parent component, which also acts as an interface, 
+      passing the variables to its encapsulated gate components.
+    -->
+    <variable name="time" public_interface="in" private_interface="out" units="millisecond"/>
+    <variable name="V" public_interface="in" private_interface="out" units="millivolt"/>
+    
+    <!-- These variables are imported from encapsulated components. -->
+    <variable name="m" private_interface="in" units="dimensionless"/>
+    <variable name="h" private_interface="in" units="dimensionless"/>
+    <variable name="j" private_interface="in" units="dimensionless"/>
+    
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <!--
+        The following equation calculates the sodium current in terms
+        of the conductance, the membrane voltage, and the gate variables.
+      -->
+      <apply id="i_Na_calculation"><eq/>
+        <ci> i_Na </ci>
+        <apply><times/>
+          <apply><plus/>
+            <apply><times/>
+              <ci> g_Na </ci>
+              <apply><power/>
+                <ci> m </ci>
+                <cn cellml:units="dimensionless"> 3.0 </cn>
+              </apply>
+              <ci> h </ci>
+              <ci> j </ci>
+            </apply>
+            <ci> g_Nac </ci>
+          </apply>
+          <apply><minus/>
+            <ci> V </ci>
+            <ci> E_Na </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+     
+  <!--
+    The "sodium_current_m_gate" is the m gate encapsulated inside the sodium
+    current 
+  -->
+  <component name="sodium_current_m_gate">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="m" public_interface="out" initial_value="0.011" units="dimensionless"/>
+        
+    <!-- These variables are defined here and only used internally. -->
+    <variable name="alpha_m" units="per_millisecond"/>
+    <variable name="beta_m" units="per_millisecond"/>
+        
+    <!-- These variables are imported from parent and sibling components. -->
+    <variable name="V" public_interface="in" units="millivolt"/>
+    <variable name="time" public_interface="in" units="millisecond"/>
+    
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <!--
+        The rate constants on the m and h gates are functions
+        of membrane voltage.
+      -->
+      <apply id="alpha_m_calculation"><eq/>
+        <ci> alpha_m </ci>
+        <apply><divide/>
+          <apply><times/>
+            <cn cellml:units="per_millivolt_millisecond"> -1 </cn>
+            <apply><plus/>
+              <ci> V </ci>
+              <cn cellml:units="millivolt"> 47.0 </cn>
+            </apply>
+          </apply>
+          <apply><minus/>
+            <apply><exp/>
+              <apply><times/>
+                <cn cellml:units="per_millivolt"> -0.1 </cn>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 47.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <cn cellml:units="dimensionless"> 1.0 </cn>
+          </apply>
+        </apply>
+      </apply>
+      
+      <apply id="beta_m_calculation"><eq/>
+        <ci> beta_m </ci>
+        <apply><times/>
+          <cn cellml:units="per_millisecond"> 40.0 </cn>
+          <apply><exp/>
+            <apply><times/>
+              <cn cellml:units="per_millivolt"> -0.056 </cn>
+              <apply><plus/>
+                <ci> V </ci>
+                <cn cellml:units="millivolt"> 72.0 </cn>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+      
+      <apply id="dm_dt"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> m </ci>
+        </apply>
+        <apply><minus/>
+          <apply><times/>
+            <ci> alpha_m </ci>
+            <apply><minus/>
+              <cn cellml:units="per_millivolt"> 1.0 </cn>
+              <ci> m </ci>
+            </apply>
+          </apply>
+          <apply><times/>
+            <ci> beta_m </ci>
+            <ci> m </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+  
+  
+  <!--
+    The "sodium_current_h_gate" component is the h gate encapsulated in
+    the sodium current.
+  -->
+  <component name="sodium_current_h_gate">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="h" public_interface="out" initial_value="0.988" units="dimensionless"/>
+        
+    <!-- These variables are defined here and only used internally. -->
+    <variable name="alpha_h" units="per_millisecond"/>
+    <variable name="beta_h" units="per_millisecond"/>
+    
+    
+    <!-- These variables are imported from parent and sibling components. -->
+    <variable name="V" public_interface="in" units="millivolt"/>
+    <variable name="time" public_interface="in" units="millisecond"/>
+    
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply id="alpha_h_calculation"><eq/>
+        <ci> alpha_h </ci>
+        <apply><times/>
+          <cn cellml:units="per_millisecond"> 0.126 </cn>
+          <apply><exp/>
+            <apply><times/>
+              <cn cellml:units="per_millivolt"> -0.25 </cn>
+              <apply><plus/>
+                <ci> V </ci>
+                <cn cellml:units="millivolt"> 77.0 </cn>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+      
+      <apply id="beta_h_calculation"><eq/>
+        <ci> beta_h </ci>
+        <apply><divide/>
+          <cn cellml:units="per_millisecond"> 1.7 </cn>
+          <apply><plus/>
+            <apply><exp/>
+              <apply><times/>
+                <cn cellml:units="per_millivolt"> -0.082 </cn>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 22.5 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <cn cellml:units="dimensionless"> 1.0 </cn>
+          </apply>
+        </apply>
+      </apply>
+      
+      <apply id="dh_dt"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> h </ci>
+        </apply>
+        <apply><minus/>
+          <apply><times/>
+            <ci> alpha_h </ci>
+            <apply><minus/>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+              <ci> h </ci>
+            </apply>
+          </apply>
+          <apply><times/>
+            <ci> beta_h </ci>
+            <ci> h </ci>
+          </apply>
+        </apply>
+      </apply>  
+    </math>
+  </component>
+  
+  <!--
+    The "sodium_current_j_gate" component is the j gate encapsulated in
+    the sodium current.
+  -->
+  <component name="sodium_current_j_gate">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="j" public_interface="out" initial_value="0.975" units="dimensionless"/>
+        
+    <!-- These variables are defined here and only used internally. -->
+    <variable name="alpha_j" units="per_millisecond"/>
+    <variable name="beta_j" units="per_millisecond"/>
+    
+    <!-- These variables are imported from parent and sibling components. -->
+    <variable name="V" public_interface="in" units="millivolt"/>
+    <variable name="time" public_interface="in" units="millisecond"/>
+    
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply id="alpha_j_calculation"><eq/>
+        <ci> alpha_j </ci>
+        <apply><divide/>
+          <apply><times/>
+            <cn cellml:units="per_millisecond"> 0.055 </cn>
+            <apply><exp/>
+              <apply><times/>
+                <cn cellml:units="per_millivolt"> -0.25 </cn>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 78.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+          <apply><plus/>
+            <apply><exp/>
+              <apply><times/>
+                <cn cellml:units="per_millivolt"> -0.2 </cn>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 78.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <cn cellml:units="dimensionless"> 1.0 </cn>
+          </apply>
+        </apply>
+      </apply>
+      
+      <apply id="beta_j_calculation"><eq/>
+        <ci> beta_j </ci>
+        <apply><divide/>
+          <cn cellml:units="per_millisecond"> 0.3 </cn>
+          <apply><plus/>
+            <apply><exp/>
+              <apply><times/>
+                <cn cellml:units="per_millivolt"> -0.1 </cn>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 32.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <cn cellml:units="dimensionless"> 1.0 </cn>
+          </apply>
+        </apply>
+      </apply>
+
+      <apply id="dj_dt"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> j </ci>
+        </apply>
+        <apply><minus/>
+          <apply><times/>
+            <ci> alpha_j </ci>
+            <apply><minus/>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+              <ci> j </ci>
+            </apply>
+          </apply>
+          <apply><times/>
+            <ci> beta_j </ci>
+            <ci> j </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+  
+  <!-- The "slow_inward_current " component contains the differential           
+   equations governing the transient inward ionic current.  This current is     
+   predominately carried by calcium ions and it is largely responsible for      
+   maintaining the plateau of the action potential. -->
+  <component name="slow_inward_current">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="i_s" public_interface="out" units="microA_per_cm2"/>
+ 
+    <!-- These variables are defined here and only used internally. -->
+    <variable name="g_s" initial_value="0.09" units="milliS_per_cm2"/>
+    <variable name="E_s" units="millivolt"/>
+    <variable name="Cai" units="concentration_units"/>
+    
+    <!-- These variables are imported from parent and sibling components. -->
+    <variable name="time" public_interface="in" private_interface="out" units="millisecond"/>
+    <variable name="V" public_interface="in" private_interface="out" units="millivolt"/>
+    
+    <!-- These variables are imported from encapsulated components. -->
+    <variable name="d" private_interface="in" units="dimensionless"/>
+    <variable name="f" private_interface="in" units="dimensionless"/>
+    
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <!--
+        The following equation determines the reversal potential of the
+        slow inward current.
+      -->
+      <apply id="E_s_calculation"><eq/>
+        <ci> E_s </ci>
+        <apply><minus/>
+          <cn cellml:units="millivolt"> -82.3 </cn>
+          <apply><times/>
+            <cn cellml:units="millivolt"> 13.0287 </cn>
+            <apply><ln/>
+              <ci> Cai </ci>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+      
+      <!--
+        The following equation calculates the slow inward current in terms of   
+        the conductance, the membrane voltage and the gate variables.
+      -->
+      <apply id="i_s_calculation"><eq/>
+        <ci> i_s </ci>
+        <apply><times/>
+          <ci> g_s </ci>
+          <ci> d </ci>
+          <ci> f </ci>
+          <apply><minus/>
+            <ci> V </ci>
+            <ci> E_s </ci>
+          </apply>
+        </apply>
+      </apply>
+  
+      <!--  Change in {Ca}i (intracellular calcium concentration) is given in   
+            terms of the slow inward current as: -->
+      <apply id="dCai_dt"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> Cai </ci>
+        </apply>
+        <apply><plus/>
+          <apply><times/>
+            <cn cellml:units="dimensionless"> -0.001 </cn>
+            <ci> i_s </ci>
+          </apply>
+          <apply><times/>
+            <cn cellml:units="dimensionless"> 0.07 </cn>
+            <apply><minus/>
+              <cn cellml:units="dimensionless"> 0.001 </cn>
+              <ci> Cai </ci>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+          
+  <!--
+    The "slow_inward_current_d_gate" component is the d gate encapsulated in
+    the slow inward current.
+  -->
+  <component name="slow_inward_current_d_gate">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="d" public_interface="out" initial_value="0.003" units="dimensionless"/>
+
+    <!-- These variables are defined here and only used internally. -->
+    <variable name="alpha_d" units="per_millisecond"/>
+    <variable name="beta_d" units="per_millisecond"/>
+    
+    <!-- These variables are imported from parent and sibling components. -->
+    <variable name="V" public_interface="in" units="millivolt"/>
+    <variable name="time" public_interface="in" units="millisecond"/>
+
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <!--
+        The rate constants on the d gate are functions of membrane voltage.
+      -->
+      <apply id="alpha_d_calculation"><eq/>
+        <ci> alpha_d </ci>
+        <apply><divide/>
+          <apply><times/>
+            <cn cellml:units="per_millisecond"> 0.095 </cn>
+            <apply><exp/>
+              <apply><minus/>
+                <apply><divide/>
+                  <apply><plus/>
+                    <ci> V </ci>
+                    <cn cellml:units="millivolt"> -5.0 </cn>
+                  </apply>
+                  <cn cellml:units="millivolt"> 100.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+          <apply><plus/>
+            <cn cellml:units="dimensionless"> 1.0 </cn>
+            <apply><exp/>
+              <apply><minus/>
+                <apply><divide/>
+                  <apply><plus/>
+                    <ci> V </ci>
+                    <cn cellml:units="millivolt"> -5.0 </cn>
+                  </apply>
+                  <cn cellml:units="millivolt"> 13.89 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+      
+      <apply id="beta_d_calculation"><eq/>
+        <ci> beta_d </ci>
+        <apply><divide/>
+          <apply><times/>
+            <cn cellml:units="per_millisecond"> 0.07 </cn>
+            <apply><exp/>
+              <apply><minus/>
+                <apply><divide/>
+                  <apply><plus/>
+                    <ci> V </ci>
+                    <cn cellml:units="millivolt"> 44.0 </cn>
+                  </apply>
+                  <cn cellml:units="millivolt"> 59.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+          <apply><plus/>
+            <cn cellml:units="dimensionless"> 1.0 </cn>
+            <apply><exp/>
+              <apply><divide/>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 44.0 </cn>
+                </apply>
+                <cn cellml:units="millivolt"> 20.0 </cn>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+          
+      <apply id="dd_dt"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> d </ci>
+        </apply>
+        <apply><minus/>
+          <apply><times/>
+            <ci> alpha_d </ci>
+            <apply><minus/>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+              <ci> d </ci>
+            </apply>
+          </apply>
+          <apply><times/>
+            <ci> beta_d </ci>
+            <ci> d </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+  
+  <!--
+    The "slow_inward_current_f_gate" component is the f gate encapsulated in
+    the slow inward current.
+  -->
+  <component name="slow_inward_current_f_gate">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="f" public_interface="out" initial_value="0.994" units="dimensionless"/> 
+
+    <!-- These variables are defined here and only used internally. -->
+    <variable name="alpha_f" units="per_millisecond"/>
+    <variable name="beta_f" units="per_millisecond"/>
+    
+    <!-- These variables are imported from parent and sibling components. -->
+    <variable name="V" public_interface="in" units="millivolt"/>
+    <variable name="time" public_interface="in" units="millisecond"/>
+     
+     
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <!--
+        The rate constants on the f gate are functions of membrane voltage.
+      -->
+      <apply id="alpha_f_calculation"><eq/>
+        <ci> alpha_f </ci>
+        <apply><divide/>
+          <apply><times/>
+          <cn cellml:units="per_millisecond"> 0.012 </cn>
+          <apply><exp/>
+            <apply><minus/>
+              <apply><divide/>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 28.0 </cn>
+                </apply>
+                <cn cellml:units="millivolt"> 125.0 </cn>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+        <apply><plus/>
+          <cn cellml:units="dimensionless"> 1.0 </cn>
+          <apply><exp/>
+            <apply><divide/>
+              <apply><plus/>
+                <ci> V </ci>
+                <cn cellml:units="millivolt"> 28.0 </cn>
+              </apply>
+              <cn cellml:units="millivolt"> 6.67 </cn>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+    </apply>
+         
+    <apply id="beta_f_calculation"><eq/>
+      <ci> beta_f </ci>
+      <apply><divide/>
+        <apply><times/>
+          <cn cellml:units="per_millisecond"> 0.0065 </cn>
+          <apply><exp/>
+            <apply><minus/>
+              <apply><divide/>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 30.0 </cn>
+                </apply>
+                <cn cellml:units="millivolt"> 50.0 </cn>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+        <apply><plus/>
+          <cn cellml:units="dimensionless"> 1.0 </cn>
+            <apply><exp/>
+              <apply><minus/>
+                <apply><divide/>
+                  <apply><plus/>
+                    <ci> V </ci>
+                    <cn cellml:units="millivolt"> 30.0 </cn>
+                  </apply>
+                  <cn cellml:units="millivolt"> 5.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+         
+      <apply id="df_dt"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> f </ci>
+        </apply>
+        <apply><minus/>
+          <apply><times/>
+            <ci> alpha_f </ci>
+             <apply><minus/>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+              <ci> f </ci>
+            </apply>
+          </apply>
+          <apply><times/>
+            <ci> beta_f </ci>
+            <ci> f </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+    
+  <!--  
+    The "time_dependent_outward_current" component contains the                 
+    differential equations governing the voltage- and time-dependent outward    
+    current.  This current is predominately carried by potassium ions and it    
+    is involved in the plateau of the action potential and in the               
+    re-polarisation phase.  
+  -->
+    
+  <component name="time_dependent_outward_current">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="i_x1" public_interface="out" units="microA_per_cm2"/>
+    
+    <!-- These variables are imported from parent and sibling components. -->
+    <variable name="time" public_interface="in" private_interface="out" units="millisecond"/>
+    <variable name="V" public_interface="in" private_interface="out" units="millivolt"/>
+     
+    <!-- This variable is imported from encapsulated components. -->   
+    <variable name="x1" private_interface="in" units="dimensionless"/>
+        
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <!--   
+        The following equation calculates the time-dependent outward current    
+        in terms of the membrane voltage. 
+      -->
+      <apply id="i_x1_calculation"><eq/>
+        <ci> i_x1 </ci>
+        <apply><times/>
+          <ci> x1 </ci>
+          <cn cellml:units="dimensionless"> 0.8 </cn>
+          <apply><divide/>
+            <apply><minus/>
+              <apply><exp/>
+                <apply><times/>
+                  <cn cellml:units="per_millivolt"> 0.04 </cn>
+                  <apply><plus/>
+                    <ci> V </ci>
+                    <cn cellml:units="millivolt"> 77.0 </cn>
+                  </apply>
+                </apply>
+              </apply>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+            </apply>
+            <apply><exp/>
+              <apply><times/>
+                <cn cellml:units="per_millivolt"> 0.04 </cn>
+                <apply><plus/> 
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 35.0 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+  
+  <component name="time_dependent_outward_current_x1_gate">
+    <variable name="x1" public_interface="out" units="dimensionless"/>
+    <variable name="alpha_x1" units="per_millisecond"/>
+    <variable name="beta_x1" units="per_millisecond"/>
+    <variable name="V" public_interface="in" units="millivolt"/>
+    <variable name="time" public_interface="in" units="millisecond"/>
+    
+    <math xmlns="http://www.w3.org/1998/Math/MathML">        
+      <apply id="alpha_x1_calculation"><eq/>
+        <ci> alpha_x1 </ci>
+        <apply><times/>
+          <cn cellml:units="per_millisecond"> 5E-4 </cn>
+          <apply><divide/>
+            <apply><exp/>
+              <apply><divide/>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 50.0 </cn>                      
+                </apply>
+                <cn cellml:units="millivolt"> 12.1 </cn>
+              </apply>
+            </apply>
+            <apply><plus/>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+              <apply><exp/>
+                <apply><divide/>
+                  <apply><plus/>
+                    <ci> V </ci>
+                    <cn cellml:units="millivolt"> 50.0 </cn>
+                  </apply>
+                  <cn cellml:units="millivolt"> 17.5 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+         
+      <apply id="beta_x1_calculation"><eq/>
+        <ci> beta_x1 </ci>
+        <apply><times/>
+          <cn cellml:units="per_millisecond"> 0.0013 </cn>
+          <apply><divide/>
+            <apply><exp/>
+              <apply><minus/>
+                <apply><divide/>
+                  <apply><plus/>
+                    <ci> V </ci>                                                
+                    <cn cellml:units="millivolt"> 20.0 </cn>
+                  </apply>
+                  <cn cellml:units="millivolt"> 16.67 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <apply><plus/>
+              <cn cellml:units="dimensionless"> 1.0 </cn>
+              <apply><exp/>
+                <apply><minus/>
+                  <apply><divide/>
+                    <apply><plus/>
+                      <ci> V </ci>
+                      <cn cellml:units="millivolt"> 20.0 </cn>
+                    </apply>
+                    <cn cellml:units="millivolt"> 25.0 </cn>
+                  </apply> 
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+      
+      <apply id="dx1_dt"><eq/>
+        <apply><diff/>
+          <bvar><ci> time </ci></bvar>
+          <ci> x1 </ci>
+        </apply>
+        <apply><minus/>
+          <apply><times/>
+            <ci> alpha_x1 </ci>
+            <apply><minus/>
+              <cn cellml:units="per_millivolt"> 1.0 </cn>
+              <ci> x1 </ci>
+            </apply>
+          </apply>
+          <apply><times/>
+            <ci> beta_x1 </ci>
+            <ci> x1 </ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+     
+  <!--  
+    The "time_independent_outward_current" component contains the               
+    equations governing the voltage-dependent, time-independent                 
+    outward current.  This current is carried by potassium ions and it is       
+    involved in the plateau of the action potential and in the                  
+    re-polarisation phase.  Because the current is time-independent, it         
+    can also be described as a background current.  
+   -->
+     
+  <component name="time_independent_outward_current">
+    <!-- This variable is defined here and used in other components. -->
+    <variable name="i_K1" public_interface="out" units="microA_per_cm2"/>
+    
+    <!-- These variables are imported from other components. -->
+    <variable name="time" public_interface="in" units="millisecond"/>
+    <variable name="V" public_interface="in" units="millivolt"/>
+        
+    <!--  
+      The following equation calculates the time-independent outward            
+      potassium current in terms of membrane voltage.  
+    -->
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply id="i_K1_calculation"><eq/>
+        <ci> i_K1 </ci>
+        <apply><times/>
+          <cn cellml:units="dimensionless"> 0.35 </cn>
+          <apply><plus/>
+            <apply><times/>
+              <cn cellml:units="per_millisecond"> 4.0 </cn>
+              <apply><divide/>
+                <apply><minus/>
+                  <apply><exp/>
+                    <apply><times/>
+                      <cn cellml:units="per_millivolt"> 0.04 </cn>
+                      <apply><plus/>
+                        <ci> V </ci>
+                        <cn cellml:units="millivolt"> 85.0 </cn>
+                      </apply>
+                    </apply>                   
+                  </apply>
+                  <cn cellml:units="dimensionless"> 1.0 </cn>
+                </apply>
+                <apply><plus/>
+                  <apply><exp/>
+                    <apply><times/>
+                      <cn cellml:units="per_millivolt"> 0.08 </cn>
+                      <apply><plus/>
+                        <ci> V </ci>
+                        <cn cellml:units="millivolt"> 53 </cn>
+                      </apply>
+                    </apply>
+                  </apply>
+                  <apply><exp/>
+                    <apply><times/> 
+                      <cn cellml:units="per_millivolt"> 0.04 </cn>
+                      <apply><plus/>
+                        <ci> V </ci>
+                        <cn cellml:units="millivolt"> 53.0 </cn>
+                      </apply>
+                    </apply>          
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+            <apply><times/>
+              <cn cellml:units="per_millisecond"> 0.2 </cn>
+              <apply><divide/>
+                <apply><plus/>
+                  <ci> V </ci>
+                  <cn cellml:units="millivolt"> 23.0 </cn>
+                </apply>
+                <apply><minus/>
+                  <cn cellml:units="dimensionless"> 1.0 </cn>
+                  <apply><exp/>
+                    <apply><times/>
+                      <cn cellml:units="per_millivolt"> -0.04 </cn>
+                      <apply><plus/>
+                        <ci> V </ci>
+                        <cn cellml:units="millivolt"> 23.0 </cn>
+                      </apply>
+                    </apply>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+   
+  <!--
+    The following <group> element specifies a single containment hierarchy
+    that encompasses all of the components in the model, with the exception of
+    the "environment" component.
+  -->
+  <group>
+    <relationship_ref relationship="containment"/>
+    <component_ref component="membrane">
+      <component_ref component="sodium_current">
+        <component_ref component="sodium_current_m_gate"/>
+        <component_ref component="sodium_current_h_gate"/>
+        <component_ref component="sodium_current_j_gate"/>
+      </component_ref>
+      <component_ref component="slow_inward_current">
+        <component_ref component="slow_inward_current_d_gate"/>
+        <component_ref component="slow_inward_current_f_gate"/>
+      </component_ref>
+      <component_ref component="time_dependent_outward_current">
+        <component_ref component="time_dependent_outward_current_x1_gate"/>
+      </component_ref>
+      <component_ref component="time_independent_outward_current"/>
+    </component_ref>
+  </group>
+
+
+  <!--
+    The following <group> element specifies how the components representing
+    activation and inactivation coefficients are encapsulated inside the
+    sodium and potassium channel components.  
+  -->
+  <group>
+    <relationship_ref name="foobar" relationship="encapsulation"/>
+    <component_ref component="sodium_current">
+      <component_ref component="sodium_current_m_gate"/>
+      <component_ref component="sodium_current_h_gate"/>
+      <component_ref component="sodium_current_j_gate"/>
+    </component_ref>
+    <component_ref component="slow_inward_current">
+      <component_ref component="slow_inward_current_d_gate"/>
+      <component_ref component="slow_inward_current_f_gate"/>
+    </component_ref>
+    <component_ref component="time_dependent_outward_current">
+      <component_ref component="time_dependent_outward_current_x1_gate"/>
+    </component_ref>
+  </group>
+  
+<!--
+  The connections hold the actual mappings between variables declared in
+  different components. When more than one variable is mapped between two
+  components, all variable mappings must be listed in the same connection
+  element (there can only be one connection between two components). The
+  variables are assumed to be listed in the same order within the two
+  <component_ref> elements. The modeler should NOT rely on matching the
+  names of the variables in the two components.
+-->
+
+  <!--
+    "time" is passed from the "environment" component into the
+    "membrane" and current components.
+  -->
+  <connection>
+    <map_components component_1="membrane" component_2="environment"/>
+    <map_variables variable_1="time" variable_2="footime"/>
+  </connection>
+
+  <connection>
+    <map_components component_1="sodium_current" component_2="environment"/>
+    <map_variables variable_1="time" variable_2="footime"/>
+  </connection>
+
+  <connection>
+    <map_components component_1="slow_inward_current" component_2="environment"/>
+    <map_variables variable_1="time" variable_2="footime"/>
+  </connection>
+
+  <connection>
+    <map_components component_1="time_dependent_outward_current" component_2="environment"/>
+    <map_variables variable_1="time" variable_2="footime"/>
+  </connection>
+   
+  <connection>
+    <map_components component_1="time_independent_outward_current" component_2="environment"/>
+    <map_variables variable_1="time" variable_2="footime"/>
+  </connection>
+  
+  <!--
+    A number of variables are passed between the "membrane" and its four
+    sub-components, the "sodium_current", "slow_inward_current",                
+    "time_dependent_outward_current" and the "time_independent_outward_current".
+  -->
+  <connection>
+    <map_components component_1="membrane" component_2="sodium_current"/>
+    <map_variables variable_1="V" variable_2="V"/>
+     <map_variables variable_1="i_Na" variable_2="i_Na"/>
+  </connection>
+
+  <connection>
+    <map_components component_1="membrane" component_2="slow_inward_current"/>
+    <map_variables variable_1="V" variable_2="V"/>
+    <map_variables variable_1="i_s" variable_2="i_s"/>
+  </connection>
+
+  <connection>
+    <map_components component_1="membrane" component_2="time_dependent_outward_current"/>
+    <map_variables variable_1="V" variable_2="V"/>
+    <map_variables variable_1="i_x1" variable_2="i_x1"/>
+  </connection>
+  
+  <connection>
+    <map_components component_1="membrane" component_2="time_independent_outward_current"/>
+    <map_variables variable_1="V" variable_2="V"/>
+    <map_variables variable_1="i_K1" variable_2="i_K1"/>
+  </connection>
+   
+   <!--
+    Various gating variables are passed between the "sodium_current" and
+    "slow_inward_current" components and the encapsulated "beeler_reuter_gate"
+    components.
+  -->
+  <connection>
+    <map_components component_1="sodium_current" component_2="sodium_current_m_gate"/>
+    <map_variables variable_1="m" variable_2="m"/>
+    <map_variables variable_1="time" variable_2="time"/>
+    <map_variables variable_1="V" variable_2="V"/>
+  </connection>
+
+  <connection>
+    <map_components component_1="sodium_current" component_2="sodium_current_h_gate"/>
+    <map_variables variable_1="h" variable_2="h"/>
+    <map_variables variable_1="time" variable_2="time"/>
+    <map_variables variable_1="V" variable_2="V"/>
+  </connection>
+ 
+  <connection>
+    <map_components component_1="sodium_current" component_2="sodium_current_j_gate"/>
+    <map_variables variable_1="j" variable_2="j"/>
+    <map_variables variable_1="time" variable_2="time"/>
+    <map_variables variable_1="V" variable_2="V"/>
+  </connection>
+  
+  <connection>
+    <map_components component_1="time_dependent_outward_current" component_2="time_dependent_outward_current_x1_gate"/>
+    <map_variables variable_1="x1" variable_2="x1"/>
+    <map_variables variable_1="time" variable_2="time"/>
+    <map_variables variable_1="V" variable_2="V"/>
+  </connection>
+  
+  <connection>
+    <map_components component_1="slow_inward_current" component_2="slow_inward_current_d_gate"/>
+    <map_variables variable_1="d" variable_2="d"/>
+    <map_variables variable_1="time" variable_2="time"/>
+    <map_variables variable_1="V" variable_2="V"/>
+  </connection>
+  
+  <connection>
+    <map_components component_1="slow_inward_current" component_2="slow_inward_current_f_gate"/>
+    <map_variables variable_1="f" variable_2="f"/>
+    <map_variables variable_1="time" variable_2="time"/>
+    <map_variables variable_1="V" variable_2="V"/>
+  </connection>
+</model>

@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <apply>
+    <fn xml:id="functionel" definitionURL="http://www.example.com/defnurl/function"
+        encoding="some-encoding">
+      <ci>foo</ci>
+    </fn>
+    <ci>bar</ci>
+    <cn>3</cn>
+  </apply>
+  <lambda xml:id="lambdael">
+    <bvar><ci> x </ci></bvar>
+    <apply class="lambdaexpr"><sin/>
+      <apply>
+        <plus/>
+        <ci> x </ci>
+        <cn> 1 </cn>
+      </apply>
+    </apply>
+  </lambda>
+  <set xml:id="implicitset">
+    <bvar><ci> x </ci></bvar>
+    <condition>
+      <apply>
+        <lt/>
+        <ci> x </ci>
+        <cn> 1 </cn>
+      </apply>
+    </condition>
+    <ci> x </ci>
+  </set>
+  <set type="normal" xml:id="explicitset">
+    <ci> b </ci>
+    <ci> a </ci>
+    <ci> c </ci>
+  </set>
+  <list xml:id="implicitlist">
+    <bvar><ci> x </ci></bvar>
+    <condition>
+      <apply>
+        <lt/>
+        <ci> x </ci>
+        <cn> 1 </cn>
+      </apply>
+    </condition>
+    <ci> x </ci>
+  </list>
+  <list order="lexicographic" xml:id="explicitlist">
+    <ci> b </ci>
+    <ci> a </ci>
+    <ci> c </ci>
+  </list>
+</math>

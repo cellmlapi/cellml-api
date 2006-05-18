@@ -1,0 +1,1 @@
+GLIBCPP_FORCE_NEW=true valgrind --leak-check=yes --suppressions=libc.vgsuppress ./RunTestBin

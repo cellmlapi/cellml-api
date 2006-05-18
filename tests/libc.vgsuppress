@@ -1,0 +1,21 @@
+{
+   libc_dlopen_suppression
+   Memcheck:Cond
+   obj:/lib/ld-2.3.5.so
+   obj:/lib/tls/i686/cmov/libc-2.3.5.so
+   obj:/lib/ld-2.3.5.so
+   fun:_dl_open
+   obj:/lib/tls/i686/cmov/libc-2.3.5.so
+   obj:/lib/ld-2.3.5.so
+   fun:__libc_dlopen_mode
+}
+{
+   vgexit_suppression
+   Memcheck:Free
+   fun:free
+   obj:/lib/tls/i686/cmov/libc-2.3.5.so
+   fun:__libc_freeres
+   fun:_vgw_freeres
+   fun:_Exit
+   fun:__libc_start_main
+}

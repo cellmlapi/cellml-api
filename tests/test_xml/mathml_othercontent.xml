@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <interval xml:id="intervalel" closure="open">
+    <apply class="intervalapply1" />
+    <apply class="intervalapply2" />
+  </interval>
+  <condition xml:id="conditionel">
+    <apply class="conditionapply"/>
+  </condition>
+  <declare xml:id="declareel" occurrence="prefix" type="vector" nargs="5"
+           definitionURL="http://www.example.com/defnurl/old"
+           encoding="some-encoding">
+    <ci class="theci"> A </ci>
+    <vector class="theconstructor">
+      <ci> a </ci>
+      <ci> b </ci>
+      <ci> c </ci>
+    </vector>
+  </declare>
+  <vector xml:id="vectorel">
+    <ci class="content1"> a </ci>
+    <apply><plus/>
+      <ci> b </ci>
+      <cn> 4 </cn>
+    </apply>
+    <cn> 3 </cn>
+  </vector>
+  <matrix xml:id="matrixel">
+    <matrixrow class="firstrow">
+      <cn class="entry1">1</cn>
+      <cn>2</cn>
+      <cn>3</cn>
+    </matrixrow>
+    <matrixrow>
+      <cn>4</cn>
+      <cn>5</cn>
+      <cn>6</cn>
+    </matrixrow>
+    <matrixrow>
+      <cn>7</cn>
+      <cn>8</cn>
+      <cn>9</cn>
+    </matrixrow>
+    <matrixrow>
+      <cn>10</cn>
+      <cn>11</cn>
+      <cn>12</cn>
+    </matrixrow>
+  </matrix>
+  <piecewise xml:id="piecewise1">
+    <piece class="pwp1">
+      <apply class="pwp1value"><minus/><ci> x </ci></apply>
+      <apply class="pwp1cond"><lt/><ci> x </ci> <cn> 0 </cn></apply>
+    </piece>
+    <piece>
+      <cn> 0 </cn>
+      <apply><eq/><ci> x </ci> <cn> 0 </cn></apply>
+    </piece>
+    <piece>
+      <ci> x </ci>
+      <apply><and/>
+        <apply><gt/><ci> x </ci> <cn> 0 </cn></apply>
+        <apply><neq/><ci> x </ci> <cn> 4 </cn></apply>
+      </apply>
+    </piece>
+    <otherwise class="otherwiseel">
+      <ci>1234</ci>
+    </otherwise>
+  </piecewise>
+</math>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<math xmlns="http://www.w3.org/1998/Math/MathML" class="foo" style="bar" id="baz"
+      xref="blah" xlink:href="http://www.example.com/maths/test" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <apply xml:id="applyel">
+    <eq xml:id="eqel" definitionURL="http://www.example.com/defnurl/myequals" encoding="myencoding"/>
+    <apply>
+      <plus/>
+      <cn xml:id="cnel" definitionURL="http://www.example.com/definitionURL/" encoding="test123" type="vector" base="10">0<sep/>1<sep/>2</cn>
+      <ci> Y </ci>
+    </apply>
+    <ci xml:id="ciel" type="real"> Z </ci>
+    <bvar class="bvarel"><ci>foo</ci></bvar>
+    <condition class="testcondition"><ci>somecondition</ci></condition>
+    <degree class="degreeel">3</degree>
+    <domainofapplication class="doael" />
+    <momentabout class="momentaboutel" />
+    <lowlimit class="llel">1</lowlimit>
+    <uplimit class="ulel">10</uplimit>
+    <tendsto xml:id="ttel" type="above">50</tendsto>
+  </apply>
+  <lowlimit>1</lowlimit>
+  <uplimit>10</uplimit>
+  <declare/>
+</math>
