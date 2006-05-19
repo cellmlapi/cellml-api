@@ -18,6 +18,43 @@ AC_PROG_LIBTOOL
 # PKG_CHECK_MODULES([GLIB], [glib-2.0])
 # PKG_CHECK_MODULES([GDOME], [gdome2])
 
+AC_ARG_ENABLE(corba,
+[  --enable-corba    Build CORBA glue],
+[case "${enableval}" in
+  yes) corba=true ;;
+  no)  corba=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-corba) ;;
+esac],[debug=false])
+AM_CONDITIONAL(ENABLE_CORBA, test x$corba = xtrue)
+AC_ARG_ENABLE(context,
+[  --enable-context    Build the CellML Context],
+[case "${enableval}" in
+  yes) context=true ;;
+  no)  context=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-context) ;;
+esac],[debug=false])
+AM_CONDITIONAL(ENABLE_CONTEXT, test x$context = xtrue)
+# This is verbose but it should (I hope) be portable...
+contextandcorba=false
+if test x$context = xtrue; then
+  if test x$corba = xtrue; then
+    contextandcorba=true
+  fi
+fi
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
+AC_ARG_ENABLE(server,
+[  --enable-server    Build the CellML CORBA Server (requires CORBA and Context)],
+[case "${enableval}" in
+  yes)
+    server=true
+    if test x$contextandcorba = xfalse; then
+      AC_MSG_ERROR(You need --enable-context and --enable-corba to support --enable-server)
+    fi
+  ;;
+  no)  server=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-server) ;;
+esac],[debug=false])
+AM_CONDITIONAL(ENABLE_CELLML_CORBA_SERVER, test x$server = xtrue)
 
 # Checks for header files.
 AC_CHECK_HEADERS([strings.h wchar.h])
