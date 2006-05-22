@@ -30,3 +30,7 @@ endif
 if ENABLE_CELLML_CORBA_SERVER
 include $(top_srcdir)/sources/cellml_corba_server/build.mk
 endif
+
+if ENABLE_CCGS
+include $(top_srcdir)/CCGS/build.mk
+endif

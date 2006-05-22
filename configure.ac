@@ -24,7 +24,7 @@ AC_ARG_ENABLE(corba,
   yes) corba=true ;;
   no)  corba=false ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-corba) ;;
-esac],[debug=false])
+esac],[corba=false])
 AM_CONDITIONAL(ENABLE_CORBA, test x$corba = xtrue)
 AC_ARG_ENABLE(context,
 [  --enable-context    Build the CellML Context],
@@ -32,7 +32,7 @@ AC_ARG_ENABLE(context,
   yes) context=true ;;
   no)  context=false ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-context) ;;
-esac],[debug=false])
+esac],[context=false])
 AM_CONDITIONAL(ENABLE_CONTEXT, test x$context = xtrue)
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
@@ -53,8 +53,17 @@ AC_ARG_ENABLE(server,
   ;;
   no)  server=false ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-server) ;;
-esac],[debug=false])
+esac],[server=false])
 AM_CONDITIONAL(ENABLE_CELLML_CORBA_SERVER, test x$server = xtrue)
+
+AC_ARG_ENABLE(ccgs,
+[  --enable-ccgs    Build the CellML C Code Generation Service],
+[case "${enableval}" in
+  yes) ccgs=true ;;
+  no)  ccgs=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-ccgs) ;;
+esac],[ccgs=false])
+AM_CONDITIONAL(ENABLE_CCGS, test x$ccgs = xtrue)
 
 # Checks for header files.
 AC_CHECK_HEADERS([strings.h wchar.h])

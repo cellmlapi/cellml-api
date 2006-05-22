@@ -384,7 +384,6 @@ module cellml_api
      */
     readonly attribute CellMLComponentSet localComponents;
 
-
     /**
      * The collection of components. This will fetch all the components retrieved by
      * localComponents, but in addition will also fetch all the ImportComponents

@@ -1,0 +1,220 @@
+#include "CellML_APISPEC.idl"
+#include "MathML_content_APISPEC.idl"
+
+module cellml_services
+{
+  enum VariableEvaluationType
+  {
+    /**
+     * The variable appears in the MathML as a bvar for a differential. The
+     * integrator needs to integrate across this.
+     */
+    BOUND,
+
+    /**
+     * The variable has a specific, immediate value, taken from an
+     * initial_value attribute.
+     */
+    CONSTANT,
+    
+    /**
+     * The variable can be computed using only constants, and other computed
+     * constants.
+     */
+    COMPUTED_CONSTANT,
+
+    /**
+     * The variable is computed by the integrator from its initial value and
+     * rates.
+     */
+    DIFFERENTIAL,
+
+    /**
+     * The variable needs to be computed from other variables in every
+     * integrator step.
+     */
+    COMPUTED
+  };
+
+  typedef sequence<cellml_api::CellMLVariable> VariableSequence;
+
+  interface CCodeVariable
+    : XPCOM::IObject
+  {
+    /**
+     * The index of the variable in the array. If hasDifferential is true,
+     * this index is also valid in the rates array.
+     * @note DIFFERENTIAL variables are always first (so indices are matched
+     *       with the rate array, in which every index is used).
+     */
+    readonly attribute unsigned long variableIndex;
+
+    /**
+     * True if and only if variableIndex in the differential array is also
+     * used.
+     */
+    readonly attribute boolean hasDifferential;
+
+    /**
+     * Indicates whether or not this variable was added automatically to allow
+     * computation of second or higher order derivatives. For example, if we
+     * have something like:
+       <apply><equals>
+         <apply><diff/>
+           <bvar><ci>x_1</ci></bvar>
+           <ci>x_2</ci>
+           <degree>2</degree>
+         </apply>
+         <ci>x_3</ci>
+       </apply>
+     * then we will automatically produce a new variable for the first degree
+     * differential of x_3 with respect to x_1, with derivative=1, as well as
+     * the standard variable for x_2, with derivative 0.
+     * When no higher differentials are involved, only derivative=0 variables
+     * will be created.
+     */
+    readonly attribute unsigned long derivative;
+
+    /**
+     * The type of variable.
+     */
+    readonly attribute VariableEvaluationType type;
+
+    /**
+     * The CellML variable element of the source (no in interfaces).
+     */
+    readonly attribute cellml_api::CellMLVariable source;
+  };
+
+  interface CCodeVariableIterator
+    : XPCOM::IObject
+  {
+    /**
+     * Fetches the next variable.
+     */
+    CCodeVariable nextVariable();
+  };
+
+  enum ModelConstraintLevel
+  {
+    /**
+     * The model is underconstrained. In this case, all code fragments will be
+     * empty strings. The set of variables which cannot be computed is available
+     * in iterateVariables. In order to make the model work, it is necessary
+     * to add equations or initial conditions which define some of these
+     * variables in terms of variables which can be computed.
+     * Note: This can occur in adequately constrained models too, if the only
+     *  solution requires something that the solver doesn't support, such as
+     *  solving systems of equations.
+     * The effect of fetching the evaluation type for these variables is
+     * undefined.
+     */
+    UNDERCONSTRAINED,
+
+    /**
+     * The model is overconstrained. In this case, all code fragments are empty.
+     * iterateVariables() will iterate all variables defined at the time the
+     * error occurred. flaggedEquations contains the redundant equation. The
+     * effect of fetching the evaluation type for these variables is undefined.
+     */
+    OVERCONSTRAINED,
+
+    /**
+     * The model is correctly constrained. flaggedEquations contains all
+     * equations which are evaluated using Newton-Raphson. iterateVariables()
+     * iterates all variables. The code fragments are available.
+     */
+    CORRECTLY_CONSTRAINED
+  };
+
+  interface CCodeInformation
+    : XPCOM::IObject
+  {
+    /**
+     * The constraint level, describing whether or not the model is correctly
+     * constrained.
+     */
+    readonly attribute ModelConstraintLevel constraintLevel;
+
+    /**
+     * The number of variables (including variables inserted due to higher
+     * order differentials).
+     */
+    readonly attribute unsigned long variableCount;
+
+    /**
+     * The number of rate variables.
+     */
+    readonly attribute unsigned long rateVariableCount;
+
+    /**
+     * Code for assigning fixed constants to the values taken from the
+     * initial_value attribute. This only needs to be run once on the array.
+     * The code is generated as a series of assignments in the form
+     * CONSTANT[index] = 1.2467E5;
+     * The caller needs to provide the surrounding function, and may define
+     * CONSTANT to be a macro.
+     */
+    readonly attribute string fixedConstantFragment;
+
+    /**
+     * Code for assigning variables which can be computed from fixed constants
+     * or computed constants. This code only needs to be run once on the array.
+     * The code fragment will be a series of assignments of the form
+     * VAR[index] = f(VAR[0], ..., VAR[n], CONSTANT[0], ..., CONSTANT[n]);
+     * The caller needs to provide the surrounding function, and may define VAR
+     * and CONSTANT to be macros.
+     * @note This code also assigns initial value to differential variables.
+     */
+    readonly attribute string computedConstantFragment;
+
+    /**
+     * Code for computing rates. The code will be a sequence in the form...
+     * RATE[index] = f(VAR[0], ..., VAR[n], CONSTANT[0], ..., CONSTANT[n]);
+     * The caller needs to provide the surrounding function, and may define
+     * RATE, VAR, and CONSTANT to be macros. This code needs to be run during
+     * each iteration of the solver.
+     */
+    readonly attribute string rateCodeFragment;
+
+    /**
+     * Code for computing variables. The code will be a sequence in the form...
+     * VAR[index] = f(VAR[0], ..., VAR[n], CONSTANT[0], ..., CONSTANT[n]);
+     * The caller needs to provide the surrounding function, and may define
+     * VAR, and CONSTANT to be macros. This code needs to be run during
+     * each iteration of the solver.
+     */
+    readonly attribute string variableCodeFragment;
+
+    /**
+     * Iterates through all variables. Note that the list of variables depends
+     * on the outcome in constraintLevel. See the documentation on
+     * ModelConstraintLevel for more information.
+     */
+    CCodeVariableIterator iterateVariables();
+
+    /**
+     * The list of flagged equations. Which equations are flagged depends on
+     * the outcome in constraintLevel. See the documentation on
+     * ModelConstraintLevel for more information.
+     */
+    readonly attribute mathml_dom::MathMLNodeList flaggedEquations;
+  };
+
+  interface CGenerator
+    : XPCOM::IObject
+  {
+    /**
+     * Produce a code information object (from which C source code strings can
+     * be extracted) using the CellML API model.
+     * @param sourceModel A CellML model.
+     * @raises CellMLException If invalid or unsupported CellML constructs
+     *                         were encountered.
+     * @note if the model structure is valid, but describes an over or under
+     *       constrained model, CCodeInformation is returned with a
+     *       constraintLevel other than CORRECTLY_CONSTRAINED.
+     */
+    CCodeInformation generateCode(in cellml_api::Model sourceModel)
+      raises (cellml_api::CellMLException);
+  };
+};
