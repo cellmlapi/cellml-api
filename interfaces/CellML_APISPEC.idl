@@ -830,6 +830,19 @@ module cellml_api
      * The name of the component containing this CellMLVariable.
      */
     readonly attribute CellMLAttributeString componentName;
+
+    /**
+     * The name of the units this CellMLVariable is in. This is the value of
+     * the units attribute.
+     */
+    attribute CellMLAttributeString unitsName;
+
+    /**
+     * The Units element which is referenced from this variable. This must be
+     * in either the component or the model. It will be an ImportUnits for
+     * units imported into the component.
+     */
+    attribute Units unitsElement;
   };
 
   /**

@@ -2231,6 +2231,45 @@ CellMLTest::testCellMLVariable()
   CPPUNIT_ASSERT(!wcscmp(str, L"membrane"));
   free(str);
 
+  str = v1->unitsName();
+  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
+  free(str);
+
+  str = v2->unitsName();
+  CPPUNIT_ASSERT(!wcscmp(str, L"millisecond"));
+  free(str);
+
+  str = v3->unitsName();
+  CPPUNIT_ASSERT(!wcscmp(str, L"dimensionless"));
+  free(str);
+
+  v3->unitsName(L"millivolt");
+  str = v3->unitsName();
+  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
+  free(str);
+  v3->unitsName(L"dimensionless");
+
+  iface::cellml_api::Units* u1 = v1->unitsElement();
+  str = u1->name();
+  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
+  free(str);
+
+  iface::cellml_api::Units* u2 = v2->unitsElement();
+  str = u2->name();
+  CPPUNIT_ASSERT(!wcscmp(str, L"millisecond"));
+  free(str);
+  u2->release_ref();
+
+  v2->unitsElement(u1);
+
+  u2 = v2->unitsElement();
+  str = u2->name();
+  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
+  free(str);
+  u2->release_ref();
+
+  u1->release_ref();
+
   v1->release_ref();
   v2->release_ref();
   v3->release_ref();

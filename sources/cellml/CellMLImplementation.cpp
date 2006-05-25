@@ -3587,6 +3587,120 @@ CDA_CellMLVariable::componentName()
 }
 
 wchar_t*
+CDA_CellMLVariable::unitsName()
+  throw(std::exception&)
+{
+  try
+  {
+    return datastore->getAttributeNS(NULL_NS, L"units");
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
+void
+CDA_CellMLVariable::unitsName(const wchar_t* aUnitsName)
+  throw(std::exception&)
+{
+  try
+  {
+    datastore->setAttributeNS(NULL_NS, L"units", aUnitsName);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
+iface::cellml_api::Units*
+CDA_CellMLVariable::unitsElement()
+  throw(std::exception&)
+{
+  try
+  {
+    // Go up to the component...
+    CDA_CellMLComponent* comp
+      = dynamic_cast<CDA_CellMLComponent*>(mParent);
+    if (comp == NULL)
+      throw iface::cellml_api::CellMLException();
+    
+    RETURN_INTO_OBJREF(unitsSet, iface::cellml_api::UnitsSet, comp->units());
+    RETURN_INTO_WSTRING(uName, unitsName());
+    if (uName == L"")
+      throw iface::cellml_api::CellMLException();
+    RETURN_INTO_OBJREF(units, iface::cellml_api::Units,
+                       unitsSet->getUnits(uName.c_str()));
+    if (units != NULL)
+    {
+      units->add_ref();
+      return units;
+    }
+
+    // Not in the component, find the model...
+    CDA_Model* model
+      = dynamic_cast<CDA_Model*>(comp->mParent);
+
+    if (model == NULL)
+      throw iface::cellml_api::CellMLException();
+      
+    unitsSet = already_AddRefd<iface::cellml_api::UnitsSet>
+      (model->modelUnits());
+    units = already_AddRefd<iface::cellml_api::Units>
+      (unitsSet->getUnits(uName.c_str()));
+    if (units != NULL)
+    {
+      units->add_ref();
+      return units;
+    }
+    throw iface::cellml_api::CellMLException();
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
+void
+CDA_CellMLVariable::unitsElement(iface::cellml_api::Units* aUnits)
+  throw(std::exception&)
+{
+  try
+  {
+    CDA_CellMLElement* units = dynamic_cast<CDA_CellMLElement*>(aUnits);
+    if (units == NULL)
+      throw iface::cellml_api::CellMLException();
+    CDA_CellMLElement* ce = dynamic_cast<CDA_CellMLElement*>(units->mParent);
+    if (ce == NULL)
+      throw iface::cellml_api::CellMLException();
+    CDA_CellMLImport* imp = dynamic_cast<CDA_CellMLImport*>(ce);
+    if (imp != NULL)
+      ce = dynamic_cast<CDA_CellMLElement*>(imp->mParent);
+
+    CDA_CellMLElement* comp = dynamic_cast<CDA_CellMLElement*>(mParent);
+    if (comp == NULL)
+      throw iface::cellml_api::CellMLException();
+    if (comp != ce)
+    {
+      CDA_CellMLElement* model = dynamic_cast<CDA_CellMLElement*>
+        (comp->mParent);
+      if (model == NULL || model != ce)
+        throw iface::cellml_api::CellMLException();
+    }
+
+    // Well, the units is usable here, so get the name...
+    RETURN_INTO_WSTRING(name, aUnits->name());
+    
+    // Set the attribute...
+    datastore->setAttributeNS(NULL_NS, L"units", name.c_str());
+  }
+  catch (iface::dom::DOMException& de)
+  {
+  }
+}
+
+wchar_t*
 CDA_ComponentRef::componentName()
   throw(std::exception&)
 {

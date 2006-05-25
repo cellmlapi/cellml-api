@@ -499,6 +499,10 @@ public:
   iface::cellml_api::CellMLVariableSet* connectedVariables() throw(std::exception&);
   iface::cellml_api::CellMLVariable* sourceVariable() throw(std::exception&);
   wchar_t* componentName() throw(std::exception&);
+  wchar_t* unitsName() throw(std::exception&);
+  void unitsName(const wchar_t* aUnitsName) throw(std::exception&);
+  iface::cellml_api::Units* unitsElement() throw(std::exception&);
+  void unitsElement(iface::cellml_api::Units* aUnits) throw(std::exception&);
 };
 
 class CDA_ComponentRef
