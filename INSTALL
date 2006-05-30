@@ -19,27 +19,11 @@ Dependencies
    Before installing the CellML DOM API, you must install all the software on
 which the CellML DOM API depends.
 
-  1) libxml2, with the CellML patch:
+  1) libxml2:
       Download libxml2-2.6.23 from
         http://xmlsoft.org/sources/libxml2-sources-2.6.23.tar.gz
-      Extract the archives
-      Apply cellml-libxml2-2.6.23.patch (found in the patches directory off
-      the CellML_DOM_API root directory):
 
-         cd libxml2-2.6.23
-         patch -p1 < PATH_TO_CELLML_DOM_API/patches/cellml-libxml2-2.6.23
-         ./configure && make && make install
-
-  2) gdome2, with the CellML patch:
-      Download gdome2 from
-        http://gdome2.cs.unibo.it/tarball/gdome2-0.8.1.tar.gz
-      Extract the archives
-      Apply cellml-gdome2-0.8.1.patch (found in the patches directory off
-      the CellML_DOM_API root directory):
-
-         cd gdome2-0.8.1
-         patch -p1 < PATH_TO_CELLML_DOM_API/patches/cellml-gdome2-0.8.1.patch
-         ./configure && make && make install
+  2) omniORB 4.0.7
 
 Basic Installation
 ==================
