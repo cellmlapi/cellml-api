@@ -187,6 +187,12 @@ module cellml_services
     readonly attribute string variableCodeFragment;
 
     /**
+     * The code for all extra generated functions (which are used, for example,
+     * for Newton-Raphson steps, evaluating definite integrals, and so on).
+     */
+    readonly attribute string functionsFragment;
+
+    /**
      * Iterates through all variables. Note that the list of variables depends
      * on the outcome in constraintLevel. See the documentation on
      * ModelConstraintLevel for more information.
