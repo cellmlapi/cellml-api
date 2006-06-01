@@ -985,7 +985,7 @@ CDA_NodeListDFSSearch::item(uint32_t index)
   while (!iteratorStack.empty())
   {
     std::pair<std::list<CDA_Node*>::iterator,
-              std::list<CDA_Node*>::iterator> itp
+              std::list<CDA_Node*>::iterator>& itp
       = iteratorStack.front();
 
     if (itp.first == itp.second)
@@ -994,22 +994,25 @@ CDA_NodeListDFSSearch::item(uint32_t index)
       continue;
     }
 
+    std::list<CDA_Node*>::iterator p = itp.first;
+    itp.first++;
+
     // This is a pre-order traversal, so consider the element first...
-    if ((*(itp.first))->nodeType() == iface::dom::Node::ELEMENT_NODE)
+    if ((*p)->nodeType() == iface::dom::Node::ELEMENT_NODE)
     {
       bool hit = true;
       switch (mFilterType)
       {
       case LEVEL_1_NAME_FILTER:
-        if ((*(itp.first))->mNodeName != mNameFilter &&
-            (*(itp.first))->mNodeName != L"*")
+        if ((*p)->mNodeName != mNameFilter &&
+            (*p)->mNodeName != L"*")
           hit = false;
         break;
       case LEVEL_2_NAME_FILTER:
-        if ((*(itp.first))->mLocalName != mNameFilter &&
+        if ((*p)->mLocalName != mNameFilter &&
             (mNameFilter != L"*"))
           hit = false;
-        if ((*(itp.first))->mNamespaceURI != mNamespaceFilter &&
+        if ((*p)->mNamespaceURI != mNamespaceFilter &&
             (mNamespaceFilter != L"*"))
           hit = false;
         break;
@@ -1018,8 +1021,8 @@ CDA_NodeListDFSSearch::item(uint32_t index)
       {
         if (index == 0)
         {
-          (*(itp.first))->add_ref();
-          return *(itp.first);
+          (*p)->add_ref();
+          return *p;
         }
         index--;
       }
@@ -1028,8 +1031,8 @@ CDA_NodeListDFSSearch::item(uint32_t index)
     // Next, we need to recurse...
     iteratorStack.push_front(std::pair<std::list<CDA_Node*>::iterator,
                              std::list<CDA_Node*>::iterator>
-                             ((*(itp.first))->mNodeList.begin(),
-                              (*(itp.first))->mNodeList.end()));
+                             ((*p)->mNodeList.begin(),
+                              (*p)->mNodeList.end()));
   }
   return NULL;
 }
