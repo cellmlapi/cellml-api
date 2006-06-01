@@ -1,6 +1,7 @@
 #include "CellMLImplementation.hpp"
 #include "DOMWriter.hxx"
 #include <memory>
+#include <assert.h>
 
 #define NULL_NS L""
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
@@ -126,9 +127,12 @@ CDA_CellMLElement::CDA_CellMLElement
 CDA_CellMLElement::~CDA_CellMLElement()
 {
   if (_cda_refcount != 0)
+  {
     printf("Warning: release_ref called too few times on %s (%S).\n",
            typeid(this).name(),
            datastore->nodeName());
+    assert(0);
+  }
 
 
   cleanupEvents();
@@ -1079,31 +1083,25 @@ CDA_Model::fullyInstantiateImports()
                        importQueue.front());
     importQueue.pop_front();
 
-    try
+    imp->instantiate();
+    // Now that the model is loaded, add its children to the importQueue...
+    iface::cellml_api::Model* m =
+      dynamic_cast<CDA_CellMLImport*>(imp.getPointer())->mImportedModel;
+    if (m == NULL)
+      continue;
+    
+    // Go through the list of imports and add them to the queue...
+    imps = already_AddRefd<iface::cellml_api::CellMLImportSet>(m->imports());
+    impi = already_AddRefd<iface::cellml_api::CellMLImportIterator>
+      (imps->iterateImports());
+    while (true)
     {
-      imp->instantiate();
-      // Now that the model is loaded, add its children to the importQueue...
-      iface::cellml_api::Model* m =
-        dynamic_cast<CDA_CellMLImport*>(imp.getPointer())->mImportedModel;
-      if (m == NULL)
-        continue;
-
-      // Go through the list of imports and add them to the queue...
-      imps = already_AddRefd<iface::cellml_api::CellMLImportSet>(m->imports());
-      impi = already_AddRefd<iface::cellml_api::CellMLImportIterator>
-             (imps->iterateImports());
-      while (true)
-      {
-        RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImport,
-                           impi->nextImport());
-        if (imp == NULL)
-          break;
-        imp->add_ref();
-        importQueue.push_back(imp);
-      }
-    }
-    catch (iface::cellml_api::CellMLException& ce)
-    {
+      RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImport,
+                         impi->nextImport());
+      if (imp == NULL)
+        break;
+      imp->add_ref();
+      importQueue.push_back(imp);
     }
   }
 }
@@ -1215,6 +1213,8 @@ public:
       }
       catch (iface::cellml_api::CellMLException& ce)
       {
+        mModel->mInRecursion = false;
+        throw ce;
       }
     }
     mModel->mInRecursion = false;
@@ -1273,6 +1273,8 @@ CDA_Model::asyncFullyInstantiateImports
     }
     catch (iface::cellml_api::CellMLException& ce)
     {
+      aics->mInRecursion = false;
+      throw ce;
     }
   }
   aics->mInRecursion = false;
@@ -3168,7 +3170,8 @@ iface::cellml_api::Model*
 CDA_CellMLImport::importedModel()
   throw(std::exception&)
 {
-  mImportedModel->add_ref();
+  if (mImportedModel != NULL)
+    mImportedModel->add_ref();
   return mImportedModel;
 }
 
