@@ -4,7 +4,8 @@
 #include <sstream>
 
 Equation::Equation()
-  : mDiffCI(NULL), mTriggersNewtonRaphson(false)
+  : _cda_refcount(1), mDiffCI(NULL), mBoundCI(NULL), mDiff(NULL),
+    mTriggersNewtonRaphson(false)
 {
 }
 
@@ -13,7 +14,7 @@ Equation::AddPart(iface::cellml_api::CellMLComponent* aComp,
                   iface::mathml_dom::MathMLElement* aEl)
 {
   // See if the part is an <apply><diff/>...</apply>...
-  DECLARE_QUERY_INTERFACE_OBJREF(apply, aComp, mathml_dom::MathMLApplyElement);
+  DECLARE_QUERY_INTERFACE_OBJREF(apply, aEl, mathml_dom::MathMLApplyElement);
   if (apply != NULL)
   {
     RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement,
@@ -25,6 +26,7 @@ Equation::AddPart(iface::cellml_api::CellMLComponent* aComp,
       RETURN_INTO_WSTRING(sn, oppds->symbolName());
       if (sn == L"diff")
       {
+        mDiff = aEl;
         if (mDiffCI)
           throw CodeGenerationError
             (L"Equating two or more differentials not supported");
@@ -231,18 +233,7 @@ RecursivelyCountUnknown
   {
     RETURN_INTO_OBJREF(var, iface::cellml_api::CellMLVariable,
                        FindVariableForCI(aComponent, ci));
-    RETURN_INTO_OBJREF(sv, iface::cellml_api::CellMLVariable,
-                       var->sourceVariable());
-    if (sv == NULL)
-    {
-      std::wstring emsg = L"Variable ";
-      RETURN_INTO_WSTRING(v, var->name());
-      emsg += v;
-      emsg += L" has no source (i.e. the variable is not connected to any "
-        L"variable without an in interface).";
-      throw CodeGenerationError(emsg);
-    }
-    VariableInformation* vi = aCGS->FindOrAddVariableInformation(sv);
+    VariableInformation* vi = aCGS->FindOrAddVariableInformation(var);
 
     if (aWanted.count(vi))
     {
@@ -436,27 +427,17 @@ GenerateExpression
     {
       RETURN_INTO_OBJREF(vloc, iface::cellml_api::CellMLVariable,
                          FindVariableForCI(aComponent, ci));
-      RETURN_INTO_OBJREF(vsource, iface::cellml_api::CellMLVariable,
-                         vloc->sourceVariable());
-      if (vsource == NULL)
-      {
-        std::wstring emsg = L"Variable ";
-        RETURN_INTO_WSTRING(v, vloc->name());
-        emsg += v;
-        emsg += L" has no source (i.e. the variable is not connected to any "
-          L"variable without an in interface).";
-        throw CodeGenerationError(emsg);
-      }
+      VariableInformation* svi = aCGS->FindOrAddVariableInformation(vloc);
       // Get conversion factor information...
       double offset;
-      double factor = aCGS->GetConversion(vsource, vloc, offset);
+      double factor = aCGS->GetConversion(svi->GetSourceVariable(), vloc,
+                                          offset);
 
       if (offset != 0.0)
         expression << "(";
       if (factor != 1.0)
         expression << "(";
 
-      VariableInformation* svi = aCGS->FindOrAddVariableInformation(vsource);
       switch (svi->GetArray())
       {
       case VariableInformation::INDEPENDENT:
@@ -467,7 +448,7 @@ GenerateExpression
         expression << "VARIABLES[" << svi->GetIndex() << "]";
         break;
       case VariableInformation::CONSTANT:
-        expression << "CONSTANTS[" << svi->GetIndex() << "] = ";
+        expression << "CONSTANTS[" << svi->GetIndex() << "]";
         break;
       }
 
@@ -861,21 +842,8 @@ GenerateExpression
           VariableInformation* bvcivi;
           RETURN_INTO_OBJREF(bvv, iface::cellml_api::CellMLVariable,
                              FindVariableForCI(aComponent, bvci));
-          RETURN_INTO_OBJREF(bvvs, iface::cellml_api::CellMLVariable,
-                             bvv->sourceVariable());
-          if (bvvs == NULL)
-          {
-            std::wstring aMsg = L"Cannot find CellML source variable "
-              L"corresponding to variable ";
-            RETURN_INTO_WSTRING(vn, bvv->name());
-            aMsg += vn;
-            aMsg += L" in component ";
-            RETURN_INTO_WSTRING(cn, aComponent->name());
-            aMsg += cn;
-            throw CodeGenerationError(aMsg);
-          }
           
-          bvcivi = aCGS->FindOrAddVariableInformation(bvvs);
+          bvcivi = aCGS->FindOrAddVariableInformation(bvv);
           if (bvcivi == NULL)
             throw CodeGenerationError
               (L"No varinfo found for bvar ci source(bug).");
@@ -1102,22 +1070,11 @@ ProcessInitialValue(
           L"variable name within that component.";
         throw CodeGenerationError(emsg);
       }
-      RETURN_INTO_OBJREF(ssv, iface::cellml_api::CellMLVariable,
-                         svar->sourceVariable());
-      if (sv == NULL)
-      {
-        std::wstring emsg = L"Variable ";
-        RETURN_INTO_WSTRING(v, svar->name());
-        emsg += v;
-        emsg += L" has no source (i.e. the variable is not connected to any "
-          L"variable without an in interface).";
-        throw CodeGenerationError(emsg);
-      }
       VariableInformation* svi = aCGS->FindOrAddVariableInformation(sv);
-      ProcessInitialValue(aCGS, aComponent, aInitial, svi, svar, ssv,
-                          depth + 1);
+      ProcessInitialValue(aCGS, aComponent, aInitial, svi, svar,
+                          svi->GetSourceVariable(), depth + 1);
       ia.source = svi;
-      ia.factor = aCGS->GetConversion(ssv, sv, ia.offset);
+      ia.factor = aCGS->GetConversion(svi->GetSourceVariable(), sv, ia.offset);
       aInitial.push_back(ia);
     }
   }
@@ -1140,20 +1097,10 @@ RecursivelyFlagVariables
   {
     RETURN_INTO_OBJREF(var, iface::cellml_api::CellMLVariable,
                        FindVariableForCI(aComponent, ci));
-    RETURN_INTO_OBJREF(sv, iface::cellml_api::CellMLVariable,
-                       var->sourceVariable());
-    if (sv == NULL)
-    {
-      std::wstring emsg = L"Variable ";
-      RETURN_INTO_WSTRING(v, var->name());
-      emsg += v;
-      emsg += L" has no source (i.e. the variable is not connected to any "
-        L"variable without an in interface).";
-      throw CodeGenerationError(emsg);
-    }
-    VariableInformation* vi = aCGS->FindOrAddVariableInformation(sv);
-    ProcessInitialValue(aCGS, aComponent, aInitial, vi, var, sv, 0);
-    if (contextFlags & CONTEXT_DIFF)
+    VariableInformation* vi = aCGS->FindOrAddVariableInformation(var);
+    ProcessInitialValue(aCGS, aComponent, aInitial, vi, var,
+                        vi->GetSourceVariable(), 0);
+    if ((contextFlags & CONTEXT_DIFFBVAR) == CONTEXT_DIFF)
     {
       vi->SetFlag(VariableInformation::SUBJECT_OF_DIFF);
       vi->SetDegree(degree);
@@ -1189,9 +1136,13 @@ RecursivelyFlagVariables
     if (sn == L"diff")
     {
       contextFlags |= CONTEXT_DIFF;
-      // Also find the degree...
-      RETURN_INTO_OBJREF(deg, iface::mathml_dom::MathMLElement,
-                         apply->opDegree());
+      // Also find the degree. Can't use opDegree, because it creates if not
+      // found.
+      RETURN_INTO_OBJREF(nl, iface::dom::NodeList,
+                         apply->getElementsByTagNameNS
+                         (L"http://www.w3.org/1998/Math/MathML",
+                          L"degree"));
+      RETURN_INTO_OBJREF(deg, iface::dom::Node, nl->item(0));
       DECLARE_QUERY_INTERFACE_OBJREF(degc, deg,
                                      mathml_dom::MathMLContentContainer);
       if (degc == NULL)
@@ -1324,8 +1275,15 @@ Equation::FlagVariables(CodeGenerationState* aCGS,
   std::list<std::pair<iface::cellml_api::CellMLComponent*,
                       iface::mathml_dom::MathMLElement*> >::iterator i;
   std::set<VariableInformation*> emptySet;
+  iface::cellml_api::CellMLComponent* comp = NULL;
   for (i = equal.begin(); i != equal.end(); i++)
+  {
     RecursivelyFlagVariables(aCGS, (*i).first, (*i).second, emptySet, 0, 0,
+                             aInitial);
+    comp = (*i).first;
+  }
+  if (mDiff != NULL)
+    RecursivelyFlagVariables(aCGS, comp, mDiff, emptySet, 0, 0,
                              aInitial);
 }
 
@@ -1420,7 +1378,7 @@ Equation::AttemptEvaluation
                                    aWanted, wantedCount, xCI1, xVI1, 0))
         continue;
       RETURN_INTO_OBJREF(vloc1, iface::cellml_api::CellMLVariable,
-                         FindVariableForCI(comp, xCI1));
+                         FindVariableForCI((*i).first, xCI1));
       if (vloc1 == NULL)
       {
         std::wstring msg = L"Cannot find variable ";
@@ -1430,9 +1388,8 @@ Equation::AttemptEvaluation
         msg += L"; referenced in ci but not in component.";
         throw CodeGenerationError(msg);
       }
-      RETURN_INTO_OBJREF(vsource1, iface::cellml_api::CellMLVariable,
-                         vloc1->sourceVariable());
-      char* id1 = vsource1->objid();
+      char* id1 = aCGS->FindOrAddVariableInformation(vloc1)
+        ->GetSourceVariable()->objid();
 
       for (j = i; j != equal.end(); j++)
       {
@@ -1443,7 +1400,7 @@ Equation::AttemptEvaluation
                                      aWanted, wantedCount, xCI2, xVI2, 0))
           continue;
         RETURN_INTO_OBJREF(vloc2, iface::cellml_api::CellMLVariable,
-                           FindVariableForCI(comp, xCI2));
+                           FindVariableForCI((*i).first, xCI2));
         if (vloc2 == NULL)
         {
           std::wstring msg = L"Cannot find variable ";
@@ -1453,9 +1410,9 @@ Equation::AttemptEvaluation
           msg += L"; referenced in ci but not in component.";
           throw CodeGenerationError(msg);
         }
-        RETURN_INTO_OBJREF(vsource2, iface::cellml_api::CellMLVariable,
-                           vloc2->sourceVariable());
-        char* id2 = vsource2->objid();
+        
+        char* id2 = aCGS->FindOrAddVariableInformation(vloc2)
+          ->GetSourceVariable()->objid();
         if (strcmp(id1, id2))
         {
           free(id2);
@@ -1467,6 +1424,7 @@ Equation::AttemptEvaluation
         // same Newton-Raphson code for this case...
         completelyKnown = (*j).second;
         singleWanted = (*i).second;
+        comp = (*i).first;
         wantedCI = xCI1;
         wantedVI = xVI1;
         er = i;
@@ -1489,8 +1447,8 @@ Equation::AttemptEvaluation
     msg += L"; referenced in ci but not in component.";
     throw CodeGenerationError(msg);
   }
-  RETURN_INTO_OBJREF(vsource, iface::cellml_api::CellMLVariable,
-                     vloc->sourceVariable());
+  iface::cellml_api::CellMLVariable* vsource = 
+    aCGS->FindOrAddVariableInformation(vloc)->GetSourceVariable();
 
   // See if singleWanted is a bare CI...
   DECLARE_QUERY_INTERFACE_OBJREF(swci, singleWanted,
@@ -1572,29 +1530,19 @@ Equation::AttemptRateEvaluation
 
   RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                      FindVariableForCI(comp, mDiffCI));
-  RETURN_INTO_OBJREF(scv, iface::cellml_api::CellMLVariable,
-                     cv->sourceVariable());
-  if (scv == NULL)
-    throw CodeGenerationError
-      (L"Could not find the source variable corresponding to a ci element in "
-       L"an apply diff.");
+  VariableInformation* vi = aCGS->FindOrAddVariableInformation(cv);
+
   RETURN_INTO_OBJREF(bcv, iface::cellml_api::CellMLVariable,
                      FindVariableForCI(comp, mBoundCI));
-  RETURN_INTO_OBJREF(sbcv, iface::cellml_api::CellMLVariable,
-                     bcv->sourceVariable());
-  if (sbcv == NULL)
-    throw CodeGenerationError
-      (L"Could not find the source variable corresponding to a ci element in "
-       L"an apply diff bound variable.");
 
   // Find out the conversion factors. We ignore the offsets, because it is a
   // rate, and only the factors matter.
   double unused;
-  double boundfac = aCGS->GetConversion(bcv, sbcv, unused);
-  double difffac = aCGS->GetConversion(cv, scv, unused);
+  double boundfac = aCGS->GetConversion
+    (bcv, aCGS->FindOrAddVariableInformation(bcv)->GetSourceVariable(),
+     unused);
+  double difffac = aCGS->GetConversion(cv, vi->GetSourceVariable(), unused);
   double fac = difffac / boundfac;
-
-  VariableInformation* vi = aCGS->FindOrAddVariableInformation(scv);
 
   uint32_t deg = vi->GetDegree(), idx = vi->GetIndex();
   uint32_t i;

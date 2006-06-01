@@ -162,7 +162,7 @@ public:
    iface::cellml_api::Units* aUnits
   )
     : mFactor(1.0), mOffset(0.0), mCellML(aUnits), mScope(aScope),
-      mIsBase(aUnits->isBaseUnits()), mIsReentrant(true), mUnitsCapacity(0),
+      mIsBase(aUnits->isBaseUnits()), mIsReentrant(false), mUnitsCapacity(0),
       mExponents(NULL), mUnits(NULL)
   {
   }
@@ -405,7 +405,7 @@ CellMLUnitDefinition::ComputeBaseUnits()
     offsetEligible = false;
 
     // Now multiply the prefix...
-    mFactor *= u->multiplier() *
+    mFactor /= u->multiplier() *
       pow(ur->getOverallFactor() * pow(10.0, u->prefix()), u->exponent());
 
     // Push the prefix onto the multiplexer...
@@ -426,7 +426,7 @@ CellMLUnitDefinition::ComputeBaseUnits()
     for (i = unitMultiplexer.begin(); i != unitMultiplexer.end(); i++)
     {
       // Should we clear these from the list?
-      if ((*i).nextUnit == NULL)
+      if (*((*i).nextUnit) == NULL)
         continue;
       if (nextUnit == NULL ||
           ((unsigned int)(*((*i).nextUnit))) < (unsigned int)nextUnit)
@@ -453,13 +453,15 @@ CellMLUnitDefinition::ComputeBaseUnits()
     // Advance all pointers to nextUnit/nextExponent...
     for (i = unitMultiplexer.begin(); i != unitMultiplexer.end(); i++)
     {
-      if ((*i).nextUnit && ((*((*i).nextUnit)) != nextUnit))
+      if ((!(*i).nextUnit) || ((*((*i).nextUnit)) != nextUnit))
         continue;
       (*i).nextUnit++;
       (*i).nextExponent++;
     }
   }
   // Put the terminating NULL on...
+
+  mIsReentrant = false;
   mUnits[size] = NULL;
 }
 
@@ -556,12 +558,12 @@ CodeGenerationState::SetupBuiltinUnits()
   // Celsius is special because it has an offset...
   CanonicalUnitRepresentation* ibuarr_celsius[] = {ibu_kelvin, NULL};
   const double exparr_celsius[] = {1.0};
-  mGlobalScope.addUnit(L"celsius",
-                       new ImplicitDerivedUnit
-                       (
-                        exparr_celsius, ibuarr_celsius, 1.0, 273.15
-                       )
-                      );
+  ImplicitDerivedUnit* idu_celsius = new ImplicitDerivedUnit
+    (
+     exparr_celsius, ibuarr_celsius, 1.0, 273.15
+    );
+  mGlobalScope.addUnit(L"celsius", idu_celsius);
+  idu_celsius->release_ref();
 }
 
 void

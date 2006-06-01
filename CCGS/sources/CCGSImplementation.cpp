@@ -1,5 +1,6 @@
 #include "CCGSImplementation.hpp"
 #include "CodeGenerationError.hxx"
+#include "CCGSBootstrap.hpp"
 
 iface::cellml_services::CCodeInformation*
 CDA_CGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
@@ -12,6 +13,7 @@ CDA_CGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
   }
   catch (CodeGenerationError& cge)
   {
+    mLastError = cge.str();
     throw iface::cellml_api::CellMLException();
   }
 }
@@ -95,4 +97,10 @@ CDA_CCodeInformation::flaggedEquations()
   throw (std::exception&)
 {
   return new CDA_CCodeMathList(this, mFlaggedEquations);
+}
+
+iface::cellml_services::CGenerator*
+CreateCGenerator(void)
+{
+  return new CDA_CGenerator();
 }

@@ -11,11 +11,19 @@ public:
   VariableInformation(iface::cellml_api::CellMLVariable* aSourceVariable,
                       TemporaryAnnotationKey& aKey)
     : TemporaryAnnotation(aSourceVariable, aKey), mSource(aSourceVariable),
-      mFlags(0), mDegree(1)
+      mFlags(0), mDegree(1), mSourceInformation(NULL)
   {
     wchar_t* tmp = aSourceVariable->name();
     mName = tmp;
     free(tmp);
+  }
+
+  VariableInformation(iface::cellml_api::CellMLVariable* aRealVariable,
+                      TemporaryAnnotationKey& aKey,
+                      VariableInformation* aSourceInformation)
+    : TemporaryAnnotation(aRealVariable, aKey),
+      mSourceInformation(aSourceInformation)
+  {
   }
 
   enum
@@ -37,30 +45,81 @@ public:
   };
 
   void SetFlag(uint32_t flag) throw(CodeGenerationError&);
-  bool IsFlagged(uint32_t flag) { return ((mFlags & flag) != 0); }
-  uint32_t GetDegree() { return mDegree; }
+  bool IsFlagged(uint32_t flag)
+  {
+    if (mSourceInformation)
+      return mSourceInformation->IsFlagged(flag);
+    return ((mFlags & flag) != 0);
+  }
+  uint32_t GetDegree()
+  {
+    if (mSourceInformation)
+      return mSourceInformation->GetDegree();
+    return mDegree;
+  }
   void SetDegree(uint32_t degree)
   {
-    mDegree = degree;
+    if (mSourceInformation)
+      mSourceInformation->SetDegree(degree);
+    else
+      mDegree = degree;
   }
 
   void SetIndex(uint32_t index)
   {
-    mIndex = index;
+    if (mSourceInformation)
+      mSourceInformation->SetIndex(index);
+    else
+      mIndex = index;
   }
-  uint32_t GetIndex() { return mIndex; }
+  uint32_t GetIndex()
+  {
+    if (mSourceInformation)
+      return mSourceInformation->GetIndex();
+    return mIndex;
+  }
 
-  void SetArray(uint32_t aArray) { mArrayType = aArray; }
-  uint32_t GetArray() { return mArrayType; }
-  void SetInitialValue(double aVal) { mInitialValue = aVal; }
-  double GetInitialValue() { return mInitialValue; }
-  iface::cellml_api::CellMLVariable* GetSourceVariable() { return mSource; }
+  void SetArray(uint32_t aArray)
+  {
+    if (mSourceInformation)
+      mSourceInformation->SetArray(aArray);
+    else
+      mArrayType = aArray;
+  }
+  uint32_t GetArray()
+  {
+    if (mSourceInformation)
+      return mSourceInformation->GetArray();
+    return mArrayType;
+  }
+  void SetInitialValue(double aVal)
+  {
+    if (mSourceInformation)
+      mSourceInformation->SetInitialValue(aVal);
+    else
+      mInitialValue = aVal;
+  }
+  double GetInitialValue()
+  {
+    if (mSourceInformation)
+      return mSourceInformation->GetInitialValue();
+    else
+      return mInitialValue;
+  }
+  iface::cellml_api::CellMLVariable* GetSourceVariable()
+  {
+    if (mSourceInformation)
+      return mSourceInformation->GetSourceVariable();
+    else
+      return mSource;
+  }
 private:
   iface::cellml_api::CellMLVariable* mSource;
   double mInitialValue;
   uint32_t mFlags, mDegree, mIndex;
   std::wstring mName;
   uint32_t mArrayType;
+  VariableInformation* mSourceInformation;
 };
 
 #endif // _Variables_hxx

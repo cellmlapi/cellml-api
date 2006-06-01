@@ -70,12 +70,12 @@ public:
   void VariablesToCCodeVariables
   (std::list<iface::cellml_services::CCodeVariable*>& aVarList);
   void ListFlaggedEquations(std::vector<iface::dom::Element*>& aFlaggedEqns);
+
 private:
   TemporaryAnnotationManager annot;
   TemporaryAnnotationKey scopeKey, varinfoKey;
   CellMLScope mGlobalScope;
   std::list<Equation*> mEquations;
-  std::list<CellMLScope*> mGlobalScopes;
   std::list<CellMLScope*> mModelScopes, mComponentScopes;
   // Note that we don't hold references to these components, because we
   // will always be destroyed before the components...

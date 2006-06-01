@@ -61,7 +61,7 @@ public:
   TemporaryAnnotation(
                       iface::cellml_api::CellMLElement* aCellMLElement
                      )
-    : mCellMLElement(aCellMLElement)
+    : _cda_refcount(1), mCellMLElement(aCellMLElement)
   {
     mCellMLElement->setUserData(mKey.str().c_str(), this);
   }
@@ -70,7 +70,7 @@ public:
                       iface::cellml_api::CellMLElement* aCellMLElement,
                       const TemporaryAnnotationKey& aKey
                      )
-    : mCellMLElement(aCellMLElement), mKey(aKey)
+    : _cda_refcount(1), mCellMLElement(aCellMLElement), mKey(aKey)
   {
     mCellMLElement->setUserData(mKey.str().c_str(), this);
   }
@@ -94,11 +94,10 @@ public:
 
   ~TemporaryAnnotationManager()
   {
-    AnnotationList::iterator i, i2;
+    AnnotationList::iterator i;
     for (i = mActiveAnnotations.begin(); i != mActiveAnnotations.end(); i++)
     {
       TemporaryAnnotation* ta = (*i);
-      mActiveAnnotations.erase(i);
       try
       {
         ta->mCellMLElement->setUserData(ta->mKey.str().c_str(), NULL);

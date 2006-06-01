@@ -222,5 +222,11 @@ module cellml_services
      */
     CCodeInformation generateCode(in cellml_api::Model sourceModel)
       raises (cellml_api::CellMLException);
+    
+    /**
+     * Retrieves a reason for the last exception raised, as a string suitable
+     * to show to the user.
+     */
+    readonly attribute wstring lastError;
   };
 };

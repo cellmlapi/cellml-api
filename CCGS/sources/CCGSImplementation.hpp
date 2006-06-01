@@ -24,6 +24,12 @@ public:
   iface::cellml_services::CCodeInformation*
   generateCode(iface::cellml_api::Model* aSourceModel)
     throw(std::exception&);
+
+  wchar_t* lastError() throw (std::exception&)
+  { return CDA_wcsdup(mLastError.c_str()); }
+
+private:
+  std::wstring mLastError;
 };
 
 class CDA_CCodeInformation
@@ -141,7 +147,7 @@ public:
    const std::list<iface::cellml_services::CCodeVariable*>::iterator& aBegin,
    const std::list<iface::cellml_services::CCodeVariable*>::iterator& aEnd
   )
-    : _cda_refcount(1), mInformation(aInformation), mCursor(aBegin)
+    : _cda_refcount(1), mInformation(aInformation), mCursor(aBegin), mEnd(aEnd)
   {
   }
 
@@ -192,6 +198,7 @@ public:
   {
     if (mNodes.size() <= index)
       return NULL;
+    mNodes[index]->add_ref();
     return mNodes[index];
   }
 

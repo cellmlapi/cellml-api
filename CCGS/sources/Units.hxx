@@ -17,6 +17,11 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI0;
 
+  CanonicalUnitRepresentation()
+    : _cda_refcount(1)
+  {
+  }
+
   virtual ~CanonicalUnitRepresentation()
   {
   }
@@ -63,6 +68,7 @@ class CellMLScope
 {
 public:
   CellMLScope()
+    : mParentScope(NULL)
   {
   }
 
@@ -75,6 +81,15 @@ public:
     : TemporaryAnnotation(aCellMLElement, aKey),
       mParentScope(aParentScope)
   {
+  }
+
+  ~CellMLScope()
+  {
+    std::map<std::wstring, CanonicalUnitRepresentation*>::iterator i;
+    for (i = mUnits.begin(); i != mUnits.end(); i++)
+    {
+      (*i).second->release_ref();
+    }
   }
 
   void addUnit(const wchar_t* name, CanonicalUnitRepresentation* u)
@@ -99,6 +114,6 @@ public:
   }
 private:
   std::map<std::wstring, CanonicalUnitRepresentation*> mUnits;
-  ObjRef<CellMLScope> mParentScope;
+  CellMLScope* mParentScope;
 };
 #endif // UNITS_HXX

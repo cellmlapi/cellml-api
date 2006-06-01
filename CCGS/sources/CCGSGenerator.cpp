@@ -65,6 +65,12 @@ CodeGenerationState::~CodeGenerationState()
   std::list<Equation*>::iterator i;
   for (i = mEquations.begin(); i != mEquations.end(); i++)
     (*i)->release_ref();
+
+  std::list<CellMLScope*>::iterator i2;
+  for (i2 = mModelScopes.begin(); i2 != mModelScopes.end(); i2++)
+    (*i2)->release_ref();
+  for (i2 = mComponentScopes.begin(); i2 != mComponentScopes.end(); i2++)
+    (*i2)->release_ref();
 }
 
 void
@@ -73,7 +79,8 @@ CodeGenerationState::CreateModelScopes(iface::cellml_api::Model* aModel)
   // Go through each model and create a scope...
   RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet,
                      aModel->imports());
-  iface::cellml_api::CellMLImportIterator* it = cis->iterateImports();
+  RETURN_INTO_OBJREF(it, iface::cellml_api::CellMLImportIterator,
+                     cis->iterateImports());
   while (true)
   {
     RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImport,
@@ -274,6 +281,8 @@ CodeGenerationState::ProcessMathInComponent
   while (true)
   {
     RETURN_INTO_OBJREF(r, iface::cellml_api::Reaction, ri->nextReaction());
+    if (r == NULL)
+      break;
     RETURN_INTO_OBJREF(vrs, iface::cellml_api::VariableRefSet,
                        r->variableReferences());
     RETURN_INTO_OBJREF(vri, iface::cellml_api::VariableRefIterator,
@@ -282,6 +291,8 @@ CodeGenerationState::ProcessMathInComponent
     {
       RETURN_INTO_OBJREF(vr, iface::cellml_api::VariableRef,
                          vri->nextVariableRef());
+      if (vr == NULL)
+        break;
       RETURN_INTO_OBJREF(roles, iface::cellml_api::RoleSet,
                          vr->roles());
       RETURN_INTO_OBJREF(rolei, iface::cellml_api::RoleIterator,
@@ -290,7 +301,8 @@ CodeGenerationState::ProcessMathInComponent
       {
         RETURN_INTO_OBJREF(role, iface::cellml_api::Role,
                            rolei->nextRole());
-        
+        if (role == NULL)
+          break;
         RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, role->math());
         RETURN_INTO_OBJREF(mei, iface::cellml_api::MathMLElementIterator,
                            ml->iterate());
@@ -345,16 +357,53 @@ CodeGenerationState::FindOrAddVariableInformation
   std::string id = xId;
   free(xId);
   std::map<std::string,VariableInformation*>::iterator i;
+
   i = mVariableByObjid.find(id);
   if (i == mVariableByObjid.end())
   {
+    RETURN_INTO_OBJREF(svar, iface::cellml_api::CellMLVariable,
+                       var->sourceVariable());
+    if (svar == NULL)
+    {
+      std::wstring aMsg = L"Cannot find source for variable ";
+      RETURN_INTO_WSTRING(vn, var->name());
+      aMsg += vn;
+      throw CodeGenerationError(aMsg);
+    }
     RETURN_INTO_OBJREF(vi, VariableInformation,
-                       new VariableInformation(var, varinfoKey));
+                       new VariableInformation(svar, varinfoKey));
     // Set the annotation...
-    var->setUserData(varinfoKey.str().c_str(), vi);
+    annot.addAnnotation(vi);
+    xId = svar->objid();
+    id = xId;
+    free(xId);
     mVariableByObjid.insert(std::pair<std::string,VariableInformation*>
                             (id, vi));
     mVariableList.push_back(vi);
+
+    // Now we iterate all connected variables, and set them up too...
+    RETURN_INTO_OBJREF(cvs, iface::cellml_api::CellMLVariableSet,
+                       svar->connectedVariables());
+    RETURN_INTO_OBJREF(cvi, iface::cellml_api::CellMLVariableIterator,
+                       cvs->iterateVariables());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(cvar, iface::cellml_api::CellMLVariable,
+                         cvi->nextVariable());
+      if (cvar == NULL)
+        break;
+      RETURN_INTO_OBJREF(vic, VariableInformation,
+                         new VariableInformation(cvar, varinfoKey, vi));
+      RETURN_INTO_WSTRING(svn, svar->name());
+      RETURN_INTO_WSTRING(cvn, cvar->name());
+      annot.addAnnotation(vic);
+      xId = cvar->objid();
+      id = xId;
+      free(xId);
+      mVariableByObjid.insert(std::pair<std::string,VariableInformation*>
+                              (id, vi));
+    }
+
     return vi;
   }
   return (*i).second;
@@ -407,8 +456,8 @@ CodeGenerationState::DetermineConstants(std::stringstream& aConstStream)
   for (i = mVariableList.begin(); i != mVariableList.end(); i++)
   {
     if ((*i)->GetArray() == VariableInformation::CONSTANT)
-      aConstStream << "CONSTANTS[" << (*i)->GetIndex() << "] = ";
-    // << (*i)->
+      aConstStream << "CONSTANTS[" << (*i)->GetIndex() << "] = "
+                   << (*i)->GetInitialValue() << ";" << std::endl;;
   }
 }
 
@@ -720,6 +769,7 @@ CodeGenerationState::EquationFullyUsed(Equation* aUsedEquation)
     {
       delete (*i);
       mEquations.erase(i);
+      return;
     }
 }
 
@@ -842,6 +892,7 @@ CDA_CCodeInformation::CDA_CCodeInformation
     for (i = oce.mKnownVariables.begin(); i != oce.mKnownVariables.end();
          i++)
       mVariables.push_back(new CDA_CCodeVariable(*i));
+    oce.mEqn->add_ref();
     mFlaggedEquations.push_back(oce.mEqn);
     mConstraintLevel = iface::cellml_services::OVERCONSTRAINED;
   }
