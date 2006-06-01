@@ -534,8 +534,12 @@ CDA_DOMImplementation::loadDocument
     case XML_ERR_ENTITY_PE_INTERNAL:
     case XML_ERR_ENTITY_LOOP:
     case XML_ERR_ENTITY_BOUNDARY:
+#if LIBXML_VERSION > 20403
     case XML_WAR_CATALOG_PI:
+#endif
+#if LIBXML_VERSION > 20404
     case XML_ERR_NO_DTD:
+#endif
     case XML_ERR_CONDSEC_INVALID_KEYWORD:
     case XML_ERR_VERSION_MISSING:
     case XML_WAR_UNKNOWN_VERSION:
@@ -550,9 +554,11 @@ CDA_DOMImplementation::loadDocument
     case XML_WAR_NS_COLUMN:
     case XML_WAR_ENTITY_REDEFINED:
       // case XML_NS_ERR_XML:
+#if LIBXML_VERSION > 20600
     case XML_NS_ERR_UNDEFINED_NAMESPACE:
     case XML_NS_ERR_QNAME:
     case XML_NS_ERR_ATTRIBUTE_REDEFINED:
+#endif
     case XML_NS_ERR_EMPTY:
       // case XML_DTD_ATTRIBUTE:
     case XML_DTD_ATTRIBUTE_REDEFINED:

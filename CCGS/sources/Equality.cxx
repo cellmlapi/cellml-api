@@ -3,6 +3,25 @@
 #include <set>
 #include <sstream>
 
+void
+TrimString(std::wstring& aStr)
+{
+  uint32_t wsFront = 0;
+  uint32_t l = aStr.size();
+  while (wsFront < l && wcschr(L" \t\r\n", aStr[wsFront]))
+    wsFront++;
+  if (wsFront == l)
+  {
+    aStr = L"";
+    return;
+  }
+  aStr = aStr.substr(wsFront);
+  l = aStr.size() - 1;
+  while (l > 0 && wcschr(L" \t\r\n", aStr[l]))
+    l--;
+  aStr = aStr.substr(0, l + 1);
+}
+
 Equation::Equation()
   : _cda_refcount(1), mDiffCI(NULL), mBoundCI(NULL), mDiff(NULL),
     mTriggersNewtonRaphson(false)
@@ -196,7 +215,8 @@ FindVariableForCI(iface::cellml_api::CellMLComponent* aComp,
   if (n == NULL)
     throw CodeGenerationError(L"Found an empty ci");
   RETURN_INTO_WSTRING(v, n->nodeValue());
-  
+  TrimString(v);
+
   // Ask the component for the variable...
   RETURN_INTO_OBJREF(vs, iface::cellml_api::CellMLVariableSet,
                      aComp->variables());
@@ -513,6 +533,7 @@ GenerateExpression
         throw CodeGenerationError(aMsg);
       }
       RETURN_INTO_WSTRING(cd, tn->data());
+      TrimString(cd);
       const wchar_t* str1;
       wchar_t* str2;
       str1 = cd.c_str();
@@ -1171,6 +1192,7 @@ RecursivelyFlagVariables
         if (dcnn == NULL)
           throw CodeGenerationError(L"cn inside degree can't be empty.");
         RETURN_INTO_WSTRING(dcnval, dcnn->nodeValue());
+        TrimString(dcnval);
         const wchar_t* tmp = dcnval.c_str();
         wchar_t* end;
         degree = wcstoul(tmp, &end, 10);
