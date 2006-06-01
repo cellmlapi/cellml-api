@@ -152,6 +152,7 @@ public:
   iface::dom::Element* datastore;
 protected:
   friend class CDA_CellMLElementSet;
+  friend class CDA_Debugger;
   // This is used only when ownerModel is null. When ownerModel is assigned,
   // add_ref() must be called on ownerModel the correct number of times.
   uint32_t _cda_refcount;
