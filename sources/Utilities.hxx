@@ -28,10 +28,33 @@ public:
     b = mersenne_genrand_int32();
     c = mersenne_genrand_int32();
     d = mersenne_genrand_int32();
-    sprintf(mIDString, "%08X-%04X-%04X-%04X-%04X%08X",
-            a, (b & 0xFFFF), (b >> 16) & 0xFFFF,
-            c & 0xFFFF, (c >> 16) & 0xFFFF, d);
-    mIDString[36] = 0;
+    mIDString[0] = ((a << 1) & 0xFE) | 1;
+    mIDString[1] = ((a >> 6) & 0xFE) | 1;
+    mIDString[2] = ((a >> 13) & 0xFE) | 1;
+    mIDString[3] = ((a >> 20) & 0xFE) | 1;
+    mIDString[4] = ((a >> 26) & 0x1E) | ((b << 5) & 0x70) | 1;
+    mIDString[5] = ((b >> 2) & 0xFE) | 1;
+    mIDString[6] = ((b >> 9) & 0xFE) | 1;
+    mIDString[7] = ((b >> 16) & 0xFE) | 1;
+    mIDString[8] = ((b >> 23) & 0xFE) | 1;
+    mIDString[9] = ((b >> 30) & 0x2) | ((c << 2) & (0xFC)) | 1;
+    mIDString[10] = ((c >> 5) & 0xFE) | 1;
+    mIDString[11] = ((c >> 12) & 0xFE) | 1;
+    mIDString[12] = ((c >> 19) & 0xFE) | 1;
+    mIDString[13] = ((c >> 26) & 0x3E) | ((d << 6) & 0xC0) | 1;
+    mIDString[14] = ((d >> 1) & 0xFE) | 1;
+    mIDString[15] = ((d >> 8) & 0xFE) | 1;
+    mIDString[16] = ((d >> 15) & 0xFE) | 1;
+    mIDString[17] = ((d >> 22) & 0xFE) | 1;
+    mIDString[18] = ((d >> 29) & 0x06) | 1;
+    mIDString[19] = 0;
+
+    // This form is more readable, but too expensive to generate routinely.
+    // sprintf(mIDString, "%08X-%04X-%04X-%04X-%04X%08X",
+    //        a, (b & 0xFFFF), (b >> 16) & 0xFFFF,
+    //        c & 0xFFFF, (c >> 16) & 0xFFFF, d);
+    //mIDString[36] = 0;
+
   }
 
   char* cloneID()

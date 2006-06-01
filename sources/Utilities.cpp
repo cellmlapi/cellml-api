@@ -203,7 +203,9 @@ CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
 
   int cmp;
   if (s1 && s2)
+  {
     cmp = strcmp(s1, s2);
+  }
   // if we have a dead object, we can't compare them so easily, so we just
   // follow a basic rule. This can break ordering relationships, but once
   // they are dead, it is the best we can do.
