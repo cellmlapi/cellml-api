@@ -229,7 +229,7 @@ public:
   (
    CDA_Node* parent, const std::wstring& aNameFilter
   )
-    : mParent(parent), mNameFilter(aNameFilter),
+    : _cda_refcount(1), mParent(parent), mNameFilter(aNameFilter),
       mFilterType(LEVEL_1_NAME_FILTER)
   {
     mParent->add_ref();
@@ -240,7 +240,7 @@ public:
    CDA_Node* parent, const std::wstring& aNamespaceFilter,
    const std::wstring& aLocalnameFilter
    )
-    : mParent(parent), mNamespaceFilter(aNamespaceFilter),
+    : _cda_refcount(1), mParent(parent), mNamespaceFilter(aNamespaceFilter),
       mNameFilter(aLocalnameFilter),
       mFilterType(LEVEL_2_NAME_FILTER)
   {
