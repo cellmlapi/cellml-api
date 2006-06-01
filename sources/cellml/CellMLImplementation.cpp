@@ -126,8 +126,9 @@ CDA_CellMLElement::CDA_CellMLElement
 CDA_CellMLElement::~CDA_CellMLElement()
 {
   if (_cda_refcount != 0)
-    printf("Warning: release_ref called too few times on %s.\n",
-           typeid(this).name());
+    printf("Warning: release_ref called too few times on %s (%S).\n",
+           typeid(this).name(),
+           datastore->nodeName());
 
 
   cleanupEvents();
@@ -4115,8 +4116,6 @@ CDA_MapComponents::firstComponent()
   {
     RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet, 
                        m->modelComponents());
-    RETURN_INTO_OBJREF(mci, iface::cellml_api::CellMLComponentIterator,
-                       mc->iterateComponents());
     RETURN_INTO_OBJREF(ce, iface::cellml_api::NamedCellMLElement,
                        mc->get(cn.c_str()));
     if (ce == NULL)
@@ -4272,8 +4271,6 @@ CDA_MapComponents::secondComponent()
   {
     RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet, 
                        m->modelComponents());
-    RETURN_INTO_OBJREF(mci, iface::cellml_api::CellMLComponentIterator,
-                       mc->iterateComponents());
     RETURN_INTO_OBJREF(ce, iface::cellml_api::NamedCellMLElement,
                        mc->get(cn.c_str()));
     if (ce == NULL)
@@ -5747,7 +5744,7 @@ CDA_ConnectedCellMLVariableIterator::next()
                     (c1, topFrame->whichComponent));
 
       RETURN_INTO_OBJREF(c2, iface::cellml_api::CellMLComponent,
-                         cm->firstComponent());
+                         cm->secondComponent());
       if (c2 == NULL)
         continue;
       mConsider2 = (CompareComponentsImportAware
@@ -5796,7 +5793,7 @@ CDA_ConnectedCellMLVariableIterator::next()
       RETURN_INTO_WSTRING(vn, mv->secondVariableName());
       if (vn == targetVn)
       {
-        // See if variable_2 has already been found...
+        // See if variable_1 has already been found...
         vother = already_AddRefd<iface::cellml_api::CellMLVariable>
           (mv->firstVariable());
         if (vother == NULL)
