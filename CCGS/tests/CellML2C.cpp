@@ -150,6 +150,8 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
   mnl->release_ref();
   printf(" * The main variable array needs %u entries.\n", cci->variableCount());
   printf(" * The rate array needs %u entries.\n", cci->rateVariableCount());  
+  printf(" * The constant array needs %u entries.\n", cci->constantCount());
+  printf(" * The bound array needs %u entries.\n", cci->boundCount());
   printf(" * Variable storage is as follows:\n");
   
   iface::cellml_services::CCodeVariableIterator* cvi = cci->iterateVariables();

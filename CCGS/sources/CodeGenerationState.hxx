@@ -66,7 +66,10 @@ public:
   bool UnitsValid(iface::cellml_api::CellMLComponent* aComponent,
                   const std::wstring& aUnits);
 
-  void CountVariablesAndRates(uint32_t& aVariableCount, uint32_t& aRateCount);
+  void CountVariablesAndRates(uint32_t& aVariableCount,
+                              uint32_t& aConstantCount,
+                              uint32_t& aBoundCount,
+                              uint32_t& aRateCount);
   void VariablesToCCodeVariables
   (std::list<iface::cellml_services::CCodeVariable*>& aVarList);
   void ListFlaggedEquations(std::vector<iface::dom::Element*>& aFlaggedEqns);

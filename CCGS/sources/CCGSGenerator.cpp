@@ -775,16 +775,30 @@ CodeGenerationState::EquationFullyUsed(Equation* aUsedEquation)
 
 void
 CodeGenerationState::CountVariablesAndRates
-(uint32_t& aVariableCount, uint32_t& aRateCount)
+(
+ uint32_t& aVariableCount,
+ uint32_t& aConstantCount,
+ uint32_t& aBoundCount,
+ uint32_t& aRateCount
+)
 {
   std::list<VariableInformation*>::iterator vii;
   aVariableCount = 0;
+  aConstantCount = 0;
+  aBoundCount = 0;
   aRateCount = 0;
   for (vii = mVariableList.begin(); vii != mVariableList.end(); vii++)
   {
-    aVariableCount += (*vii)->GetDegree();
-    if ((*vii)->GetArray() == VariableInformation::DEPENDENT_AND_RATE)
-    aRateCount += (*vii)->GetDegree();
+    if ((*vii)->GetArray() == VariableInformation::INDEPENDENT)
+      aBoundCount++;
+    else if ((*vii)->GetArray() == VariableInformation::CONSTANT)
+      aConstantCount++;
+    else
+    {
+      aVariableCount += (*vii)->GetDegree();
+      if ((*vii)->GetArray() == VariableInformation::DEPENDENT_AND_RATE)
+        aRateCount += (*vii)->GetDegree();
+    }
   }
 }
 
@@ -854,7 +868,8 @@ CDA_CCodeInformation::CDA_CCodeInformation
   // Assign indices (and arrays) to variables...
   cgs.AssignVariableIndices();
 
-  cgs.CountVariablesAndRates(mVariableCount, mRateVariableCount);
+  cgs.CountVariablesAndRates(mVariableCount, mConstantCount, mBoundCount,
+                             mRateVariableCount);
 
   // Generate the constant assignment code...
   cgs.DetermineConstants(mFixedConstantFragment);

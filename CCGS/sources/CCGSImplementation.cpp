@@ -43,6 +43,20 @@ CDA_CCodeInformation::variableCount()
 }
 
 uint32_t
+CDA_CCodeInformation::constantCount()
+  throw (std::exception&)
+{
+  return mConstantCount;
+}
+
+uint32_t
+CDA_CCodeInformation::boundCount()
+  throw (std::exception&)
+{
+  return mBoundCount;
+}
+
+uint32_t
 CDA_CCodeInformation::rateVariableCount()
   throw (std::exception&)
 {

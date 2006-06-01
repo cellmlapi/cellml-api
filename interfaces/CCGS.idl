@@ -138,9 +138,21 @@ module cellml_services
 
     /**
      * The number of variables (including variables inserted due to higher
-     * order differentials).
+     * order differentials). This count include computed constants, but not
+     * constants or bound variables...
      */
     readonly attribute unsigned long variableCount;
+
+    /**
+     * The number of constants. This doesn't include MathML cn elements, only
+     * those which have a variable in the model.
+     */
+    readonly attribute unsigned long constantCount;
+
+    /**
+     * The number of bound variables.
+     */
+    readonly attribute unsigned long boundCount;
 
     /**
      * The number of rate variables.

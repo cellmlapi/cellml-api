@@ -46,6 +46,8 @@ public:
   iface::cellml_services::ModelConstraintLevel constraintLevel()
     throw (std::exception&);
   uint32_t variableCount() throw (std::exception&);
+  uint32_t constantCount() throw (std::exception&);
+  uint32_t boundCount() throw (std::exception&);
   uint32_t rateVariableCount() throw (std::exception&);
   char* fixedConstantFragment() throw (std::exception&);
   char* computedConstantFragment() throw (std::exception&);
@@ -58,7 +60,7 @@ public:
     throw (std::exception&);
 private:
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
-  uint32_t mVariableCount, mRateVariableCount;
+  uint32_t mVariableCount, mConstantCount, mBoundCount, mRateVariableCount;
   std::stringstream mFixedConstantFragment, mComputedConstantFragment,
     mRateCodeFragment, mVariableCodeFragment, mFunctionsFragment;
   typedef std::list<iface::cellml_services::CCodeVariable*> CCVL_t;
