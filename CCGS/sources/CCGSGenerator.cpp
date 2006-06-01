@@ -159,6 +159,7 @@ CodeGenerationState::CreateComponentScope
 void
 CodeGenerationState::CreateComponentList(iface::cellml_api::Model* aModel)
 {
+  std::set<iface::cellml_api::CellMLComponent*, XPCOMComparator> compset;
   // Go through each local or directly imported component...
   RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet,
                      aModel->modelComponents());
@@ -173,15 +174,19 @@ CodeGenerationState::CreateComponentList(iface::cellml_api::Model* aModel)
     // Append the component to the component list...
     // Don't addref, they will outlive us anyway (otherwise we create a
     //  cycle).
+    if (compset.count(c) != 0)
+      continue;
     mComponentList.push_back(c);
+    compset.insert(c);
     // Also, any encapsulation descendents go on the list...
-    AddEncapsulationDescendentComponents(c);
+    AddEncapsulationDescendentComponents(compset, c);
   }
 }
 
 void
 CodeGenerationState::AddEncapsulationDescendentComponents
 (
+ std::set<iface::cellml_api::CellMLComponent*,XPCOMComparator>& compset,
  iface::cellml_api::CellMLComponent* aComponent
 )
 {
@@ -196,8 +201,12 @@ CodeGenerationState::AddEncapsulationDescendentComponents
     if (c == NULL)
       break;
     
+    if (compset.count(c) != 0)
+      continue;
+
     mComponentList.push_back(c);
-    AddEncapsulationDescendentComponents(c);
+    compset.insert(c);
+    AddEncapsulationDescendentComponents(compset, c);
   }
 }
 
@@ -238,6 +247,7 @@ CodeGenerationState::ComponentHasMath
     eqn->AddPart(aComp, arg);
   }
   mEquations.push_back(eqn);
+  mUnusedEquations.push_back(eqn);
   eqn->add_ref();
 }
 
@@ -526,7 +536,7 @@ CodeGenerationState::DetermineComputedConstants
     }
 
     std::list<Equation*>::iterator i2, itmp;
-    for (i2 = mEquations.begin(); i2 != mEquations.end();)
+    for (i2 = mUnusedEquations.begin(); i2 != mUnusedEquations.end();)
     {
       itmp = i2;
       i2++;
@@ -584,7 +594,7 @@ CodeGenerationState::DetermineIterationVariables
     lastRoundUseful = false;
     
     std::list<Equation*>::iterator i2, itmp;
-    for (i2 = mEquations.begin(); i2 != mEquations.end();)
+    for (i2 = mUnusedEquations.begin(); i2 != mUnusedEquations.end();)
     {
       itmp = i2;
       i2++;
@@ -808,11 +818,11 @@ void
 CodeGenerationState::EquationFullyUsed(Equation* aUsedEquation)
 {
   std::list<Equation*>::iterator i;
-  for (i = mEquations.begin(); i != mEquations.end(); i++)
+  for (i = mUnusedEquations.begin(); i != mUnusedEquations.end(); i++)
     if ((*i) == aUsedEquation)
     {
-      delete (*i);
-      mEquations.erase(i);
+      // delete (*i);
+      mUnusedEquations.erase(i);
       return;
     }
 }

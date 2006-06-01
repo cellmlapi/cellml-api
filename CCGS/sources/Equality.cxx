@@ -924,7 +924,7 @@ GenerateExpression
           GenerateExpression(aCGS, aComponent, arg, func,
                              supplementaryFunctions);
           func << ");" << std::endl << "}" << std::endl;
-          supplementaryFunctions << func;
+          supplementaryFunctions << func.str();
           expression << "defint(integrand_" << id << ", BOUND, CONSTANTS, "
             "RATES, VARIABLES, " << bvarId << ", ";
           GenerateExpression(aCGS, aComponent, lowl, expression,
@@ -1521,7 +1521,7 @@ Equation::AttemptEvaluation
                        aSupplementary);
     func << "));" << std::endl
          << "}" << std::endl;
-    aSupplementary << func;
+    aSupplementary << func.str();
     aExpressions << "NR_MINIMIZE(NR_minfunc_" << id
                  << ", BOUND, CONSTANTS, RATES, VARIABLES, "
                  << aCGS->GetVariableIndex(vsource) << ");" << std::endl;
@@ -1535,12 +1535,21 @@ Equation::AttemptEvaluation
   equal.erase(er);
 
   // The variable is no longer wanted, instead its available...
+  {
+    RETURN_INTO_WSTRING(sn, wantedVI->GetSourceVariable()->name());
+    RETURN_INTO_OBJREF(topapply, iface::dom::Node, singleWanted->parentNode());
+    RETURN_INTO_OBJREF(math, iface::dom::Node, topapply->parentNode());
+    DECLARE_QUERY_INTERFACE_OBJREF(mathel, math, dom::Element);
+    RETURN_INTO_WSTRING(cm, mathel->getAttributeNS
+                        (L"http://www.cellml.org/metadata/1.0#", L"id"));
+  }
+
   aWanted.erase(wantedVI);
   aAvailable.insert(wantedVI);
 
   // If we only have one equal left, it isn't an equation any more, so we
   // should request that the CGS delete us...
-  if (equal.size() == 1 && mDiffCI == NULL)
+  if (equal.size() == 1)
     aCGS->EquationFullyUsed(this);
 
   return true;

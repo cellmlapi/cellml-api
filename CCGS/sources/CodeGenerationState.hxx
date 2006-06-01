@@ -5,6 +5,7 @@
 #include "Variables.hxx"
 #include "IfaceCCGS.hxx"
 #include <vector>
+#include <set>
 
 class Equation;
 
@@ -28,7 +29,11 @@ public:
   void CreateComponentScope(CellMLScope* aModelScope,
                             iface::cellml_api::CellMLComponent* aComp);
   void CreateComponentList(iface::cellml_api::Model* aModel);
-  void AddEncapsulationDescendentComponents(iface::cellml_api::CellMLComponent*
+  void AddEncapsulationDescendentComponents(
+                                            std::set<iface::cellml_api::CellMLComponent*,
+                                                     XPCOMComparator>&
+                                            aCompSet,
+                                            iface::cellml_api::CellMLComponent*
                                             aComponent);
   void ProcessMath();
   void ComponentHasMath(iface::cellml_api::CellMLComponent* aComp,
@@ -79,7 +84,7 @@ private:
   TemporaryAnnotationManager annot;
   TemporaryAnnotationKey scopeKey, varinfoKey;
   CellMLScope mGlobalScope;
-  std::list<Equation*> mEquations;
+  std::list<Equation*> mEquations, mUnusedEquations;
   std::list<CellMLScope*> mModelScopes, mComponentScopes;
   // Note that we don't hold references to these components, because we
   // will always be destroyed before the components...

@@ -51,7 +51,7 @@ public:
   {
     std::list<iface::cellml_api::CellMLVariable*>::iterator i;
     for (i = mUnresolvedWanted.begin(); i != mUnresolvedWanted.end(); i++)
-      delete (*i);
+      (*i)->release_ref();
   }
 
   void addUnresolvedWanted(iface::cellml_api::CellMLVariable* aSource)

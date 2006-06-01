@@ -462,6 +462,7 @@ CellMLUnitDefinition::ComputeBaseUnits()
   // Put the terminating NULL on...
 
   mIsReentrant = false;
+  EnsureCapacity(0);
   mUnits[size] = NULL;
 }
 
