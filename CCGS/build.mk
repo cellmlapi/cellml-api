@@ -11,3 +11,5 @@ libccgs_la_CXXFLAGS := \
 
 include_HEADERS += $(top_builddir)/interfaces/IfaceCCGS.hxx
 BUILT_SOURCES += $(top_builddir)/interfaces/IfaceCCGS.hxx
+
+include $(top_srcdir)/CCGS/tests/build.mk
