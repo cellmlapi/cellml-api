@@ -33,7 +33,8 @@ public:
     OTHER_BVAR        = 0x0004, /* e.g. definite integral */
     HAS_INITIAL_VALUE = 0x0008, /* Compatible with SUBJECT_OF_DIFF. */
     NONBVAR_USE       = 0x0010,
-    PRECOMPUTED       = 0x0020  /* Set on constants and computed constants. */
+    PRECOMPUTED       = 0x0020, /* Set on constants and computed constants. */
+    SEEN_INITIAL_VALUE= 0x0040  /* Initial value tested. */
   };
 
   enum

@@ -1023,7 +1023,6 @@ GenerateExpression
 void
 ProcessInitialValue(
                     CodeGenerationState* aCGS,
-                    iface::cellml_api::CellMLComponent* aComponent,
                     std::list<InitialAssignment>& aInitial,
                     VariableInformation* vi,
                     iface::cellml_api::CellMLVariable *var,
@@ -1037,6 +1036,10 @@ ProcessInitialValue(
                               L"from other variables was found. You probably "
                               L"created a loop.");
   }
+
+  if (vi->IsFlagged(VariableInformation::SEEN_INITIAL_VALUE))
+    return;
+  vi->SetFlag(VariableInformation::SEEN_INITIAL_VALUE);
 
   RETURN_INTO_WSTRING(iv, sv->initialValue());
   if (iv != L"")
@@ -1054,9 +1057,16 @@ ProcessInitialValue(
     {
       InitialAssignment ia;
       ia.destination = vi;
+      // Find the component...
+      RETURN_INTO_OBJREF(compel, iface::cellml_api::CellMLElement,
+                         sv->parentElement());
+      DECLARE_QUERY_INTERFACE_OBJREF(comp, compel,
+                                     cellml_api::CellMLComponent);
+      if (comp == NULL)
+        throw CodeGenerationError(L"Parent of variable isn't a component.");
       // Search for the variable...
       RETURN_INTO_OBJREF(varset, iface::cellml_api::CellMLVariableSet,
-                         aComponent->variables());
+                         comp->variables());
       RETURN_INTO_OBJREF(svar, iface::cellml_api::CellMLVariable,
                          varset->getVariable(ivs));
       if (svar == NULL)
@@ -1070,8 +1080,8 @@ ProcessInitialValue(
           L"variable name within that component.";
         throw CodeGenerationError(emsg);
       }
-      VariableInformation* svi = aCGS->FindOrAddVariableInformation(sv);
-      ProcessInitialValue(aCGS, aComponent, aInitial, svi, svar,
+      VariableInformation* svi = aCGS->FindOrAddVariableInformation(svar);
+      ProcessInitialValue(aCGS, aInitial, svi, svar,
                           svi->GetSourceVariable(), depth + 1);
       ia.source = svi;
       ia.factor = aCGS->GetConversion(svi->GetSourceVariable(), sv, ia.offset);
@@ -1098,7 +1108,7 @@ RecursivelyFlagVariables
     RETURN_INTO_OBJREF(var, iface::cellml_api::CellMLVariable,
                        FindVariableForCI(aComponent, ci));
     VariableInformation* vi = aCGS->FindOrAddVariableInformation(var);
-    ProcessInitialValue(aCGS, aComponent, aInitial, vi, var,
+    ProcessInitialValue(aCGS, aInitial, vi, var,
                         vi->GetSourceVariable(), 0);
     if ((contextFlags & CONTEXT_DIFFBVAR) == CONTEXT_DIFF)
     {

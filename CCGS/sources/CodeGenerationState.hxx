@@ -55,6 +55,7 @@ public:
   double GetConversion(iface::cellml_api::CellMLVariable* vfrom,
                        iface::cellml_api::CellMLVariable* vto, double& offset);
   std::string GetVariableText(iface::cellml_api::CellMLVariable* var);
+  std::string GetVariableText(VariableInformation* vi);
   uint32_t GetVariableIndex(iface::cellml_api::CellMLVariable* var);
   void EquationFullyUsed(Equation* aUsedEquation);
 

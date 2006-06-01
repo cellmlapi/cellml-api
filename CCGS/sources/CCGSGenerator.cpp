@@ -497,25 +497,31 @@ CodeGenerationState::DetermineComputedConstants
       // If the source is available, and the destination wanted, do the
       // assignment...
       if (availableVariables.count((*iiatmp).source) &&
-          wantedVariables.count((*iiatmp).destination))
+          (wantedVariables.count((*iiatmp).destination) ||
+           ((*iiatmp).destination->GetArray() ==
+            VariableInformation::DEPENDENT_AND_RATE)))
       {
-        wantedVariables.erase((*iiatmp).destination);
-        availableVariables.insert((*iiatmp).destination);
+        if ((*iiatmp).destination->GetArray() !=
+            VariableInformation::DEPENDENT_AND_RATE)
+        {
+          wantedVariables.erase((*iiatmp).destination);
+          availableVariables.insert((*iiatmp).destination);
+        }
         mInitialAssignments.erase(iiatmp);
         lastRoundUseful = true;
         // Write out the assignment...
-        aCompConstStream << "VARIABLES[" << (*iiatmp).destination->GetIndex()
-                         << "] = ";
+        aCompConstStream << GetVariableText((*iiatmp).destination)
+                         << " = ";
         if ((*iiatmp).offset != 0.0)
           aCompConstStream << "(";
         if ((*iiatmp).factor != 1.0)
           aCompConstStream << "(";
-        aCompConstStream << "VARIABLES[" << (*iiatmp).source->GetIndex()
-                         << "]";
+        aCompConstStream << GetVariableText((*iiatmp).source);
         if ((*iiatmp).factor != 1.0)
           aCompConstStream << ") * " << (*iiatmp).factor;
         if ((*iiatmp).offset != 0.0)
           aCompConstStream << ") + " << (*iiatmp).offset;
+        aCompConstStream << ";" << std::endl;
       }
     }
 
@@ -535,6 +541,18 @@ CodeGenerationState::DetermineComputedConstants
   std::set<VariableInformation*>::iterator i2;
   for (i2 = availableVariables.begin(); i2 != availableVariables.end(); i2++)
     (*i2)->SetFlag(VariableInformation::PRECOMPUTED);
+
+  // Initial values can now be computed...
+  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
+  {
+    if ((*i)->GetArray() != VariableInformation::DEPENDENT_AND_RATE)
+      continue;
+    if ((*i)->IsFlagged(VariableInformation::HAS_INITIAL_VALUE))
+    {
+      aCompConstStream << GetVariableText((*i)) << " = "
+                       << (*i)->GetInitialValue() << ";" << std::endl;
+    }
+  }
 }
 
 void
@@ -740,6 +758,32 @@ CodeGenerationState::GetVariableText
   if (vi == NULL)
     throw CodeGenerationError(L"Could not convert the user data to variable "
                               L"information");
+  std::string text;
+  switch (vi->GetArray())
+  {
+  case VariableInformation::INDEPENDENT:
+    text = "BOUND[";
+    break;
+  case VariableInformation::DEPENDENT_AND_RATE:
+  case VariableInformation::DEPENDENT:
+    text = "VARIABLES[";
+    break;
+  case VariableInformation::CONSTANT:
+    text = "CONSTANTS[";
+  }
+  char buf[30];
+  sprintf(buf, "%u]", vi->GetIndex());
+  text += buf;
+
+  return text;
+}
+
+std::string
+CodeGenerationState::GetVariableText
+(
+ VariableInformation* vi
+)
+{
   std::string text;
   switch (vi->GetArray())
   {
