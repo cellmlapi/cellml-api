@@ -839,7 +839,7 @@ GenerateExpression
             throw CodeGenerationError(aMsg);
           }
           // Find the bound variable...
-          if (apply->nBoundVariables() != 0)
+          if (apply->nBoundVariables() != 1)
             throw CodeGenerationError
               (
                L"Only one bound variable per int application is supported. If "
@@ -932,7 +932,7 @@ GenerateExpression
           expression << ", ";
           GenerateExpression(aCGS, aComponent, upl, expression,
                              supplementaryFunctions);
-          expression << ");";
+          expression << ")";
         }
         break;
       }

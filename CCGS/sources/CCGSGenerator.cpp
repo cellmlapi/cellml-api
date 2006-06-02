@@ -31,6 +31,11 @@ static struct
     VariableInformation::NONBVAR_USE,
     L"You cannot use a variable as a bound variable (other than for "
     L"differentiation) and then later as a free variable."
+  },
+  {
+    VariableInformation::OTHER_BVAR |
+    VariableInformation::HAS_INITIAL_VALUE,
+    L"Integration bound variables should have an initial value."
   }
 };
 
@@ -580,7 +585,8 @@ CodeGenerationState::DetermineIterationVariables
   for (i = mVariableList.begin(); i != mVariableList.end(); i++)
   {
     if ((*i)->GetArray() == VariableInformation::DEPENDENT &&
-        !(*i)->IsFlagged(VariableInformation::PRECOMPUTED))
+        !(*i)->IsFlagged(VariableInformation::PRECOMPUTED) &&
+        !(*i)->IsFlagged(VariableInformation::OTHER_BVAR))
       // dependent, non-precomputed variables are wanted...
       wantedVariables.insert(*i);
     else // everything else is already available...
