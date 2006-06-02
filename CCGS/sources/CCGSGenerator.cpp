@@ -261,6 +261,7 @@ CodeGenerationState::ProcessMathInComponent
     RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, aComp->math());
     RETURN_INTO_OBJREF(mei, iface::cellml_api::MathMLElementIterator,
                        ml->iterate());
+
     while (true)
     {
       RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement, mei->next());
@@ -637,6 +638,44 @@ bool IsPlainCI(iface::mathml_dom::MathMLElement* aSubExpr)
   return (aCISub != NULL);
 }
 
+iface::cellml_api::CellMLComponent*
+GetRealComponent(iface::cellml_api::CellMLElement* in)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(x, in, cellml_api::CellMLComponent);
+  if (x == NULL)
+    throw CodeGenerationError(L"\"in\" not a component (bug)");
+  while (true)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(imp, x, cellml_api::ImportComponent);
+    if (imp == NULL)
+    {
+      x->add_ref();
+      return x;
+    }
+    RETURN_INTO_OBJREF(cee, iface::cellml_api::CellMLElement,
+                       imp->parentElement());
+    DECLARE_QUERY_INTERFACE_OBJREF(cei, cee, cellml_api::CellMLImport);
+    if (cei == NULL)
+      throw CodeGenerationError(L"Parent of import component not import.");
+    RETURN_INTO_OBJREF(im, iface::cellml_api::Model, cei->importedModel());
+    RETURN_INTO_OBJREF(cs, iface::cellml_api::CellMLComponentSet,
+                       im->modelComponents());
+    RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
+                       cs->iterateComponents());
+    RETURN_INTO_WSTRING(tn, imp->componentRef());
+    while (true)
+    {
+      x = already_AddRefd<iface::cellml_api::CellMLComponent>
+        (ci->nextComponent());
+      if (x == NULL)
+        throw CodeGenerationError(L"Imported component missing");
+      RETURN_INTO_WSTRING(n, x->name());
+      if (n == tn)
+        break;
+    }
+  }
+}
+
 double
 CodeGenerationState::GetConversion
 (
@@ -645,15 +684,19 @@ CodeGenerationState::GetConversion
  double& offset
 )
 {
-  RETURN_INTO_OBJREF(fromcompe, iface::cellml_api::CellMLElement,
+  RETURN_INTO_OBJREF(fromcompei, iface::cellml_api::CellMLElement,
                      vfrom->parentElement());
+  RETURN_INTO_OBJREF(fromcompe, iface::cellml_api::CellMLElement,
+                     GetRealComponent(fromcompei));
   if (fromcompe == NULL)
     throw CodeGenerationError
       (
        L"Attempt to convert from a variable which isn't in any component."
       );
-  RETURN_INTO_OBJREF(tocompe, iface::cellml_api::CellMLElement,
+  RETURN_INTO_OBJREF(tocompei, iface::cellml_api::CellMLElement,
                      vto->parentElement());
+  RETURN_INTO_OBJREF(tocompe, iface::cellml_api::CellMLElement,
+                     GetRealComponent(tocompei));
   if (tocompe == NULL)
     throw CodeGenerationError
       (
@@ -715,8 +758,10 @@ bool
 CodeGenerationState::UnitsValid(iface::cellml_api::CellMLComponent* aComp,
                                 const std::wstring& aUnits)
 {
+  RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
+                     GetRealComponent(aComp));
   RETURN_INTO_OBJREF(scopeud, iface::cellml_api::UserData,
-                     aComp->getUserData(scopeKey.str().c_str()));
+                     rc->getUserData(scopeKey.str().c_str()));
   if (scopeud == NULL)
     throw CodeGenerationError
       (
