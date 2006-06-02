@@ -528,7 +528,7 @@ CodeGenerationState::SetupBuiltinUnits()
                 1.0);
   DERIVED_UNIT3(watt, ibu_metre, 2.0, ibu_kilogram, 1.0, ibu_second, -3.0,
                 1.0);
-  DERIVED_UNIT2(columb, ibu_second, 1.0, ibu_ampere, 1.0, 1.0);
+  DERIVED_UNIT2(coulomb, ibu_second, 1.0, ibu_ampere, 1.0, 1.0);
   DERIVED_UNIT4(volt, ibu_metre, 2.0, ibu_kilogram, 1.0, ibu_second, -3.0,
                 ibu_ampere, -1.0, 1.0);
   DERIVED_UNIT4(farad, ibu_metre, -2.0, ibu_kilogram, -1.0, ibu_second, 4.0,
@@ -597,6 +597,42 @@ CellMLImportUnitDefinition::FetchBacking()
   mBacking->release_ref();
 }
 
+iface::cellml_api::Units*
+GetRealUnits(iface::cellml_api::Units* in)
+{
+  ObjRef<iface::cellml_api::Units> x = in;
+  while (true)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(imp, x, cellml_api::ImportUnits);
+    if (imp == NULL)
+    {
+      x->add_ref();
+      return x;
+    }
+    RETURN_INTO_OBJREF(cee, iface::cellml_api::CellMLElement,
+                       imp->parentElement());
+    DECLARE_QUERY_INTERFACE_OBJREF(cei, cee, cellml_api::CellMLImport);
+    if (cei == NULL)
+      throw CodeGenerationError(L"Parent of import units not import.");
+    RETURN_INTO_OBJREF(im, iface::cellml_api::Model, cei->importedModel());
+    RETURN_INTO_OBJREF(cs, iface::cellml_api::UnitsSet,
+                       im->modelUnits());
+    RETURN_INTO_OBJREF(ci, iface::cellml_api::UnitsIterator,
+                       cs->iterateUnits());
+    RETURN_INTO_WSTRING(tn, imp->unitsRef());
+    while (true)
+    {
+      x = already_AddRefd<iface::cellml_api::Units>
+        (ci->nextUnits());
+      if (x == NULL)
+        throw CodeGenerationError(L"Imported component missing");
+      RETURN_INTO_WSTRING(n, x->name());
+      if (n == tn)
+        break;
+    }
+  }
+}
+
 void
 CodeGenerationState::PutUnitsIntoScope
 (
@@ -613,8 +649,18 @@ CodeGenerationState::PutUnitsIntoScope
     msg += L" creates a name conflict.";
     throw CodeGenerationError(msg);
   }
-  
+
+  // The units may be in a different scope to that which they are being put
+  // into, because of imports...
+  RETURN_INTO_OBJREF(u, iface::cellml_api::Units, GetRealUnits(aUnits));
+  RETURN_INTO_OBJREF(sh, iface::cellml_api::CellMLElement, u->parentElement());
+  // The parent of the units is either a component or a model, so it has a
+  // scope...
+  RETURN_INTO_OBJREF(scopeud, iface::cellml_api::UserData,
+                     sh->getUserData(scopeKey.str().c_str()));
+  CellMLScope* scope = dynamic_cast<CellMLScope*>(scopeud.getPointer());
+
   RETURN_INTO_OBJREF(ud, CellMLUnitDefinition,
-                     new CellMLUnitDefinition(aScope, aUnits));
+                     new CellMLUnitDefinition(scope, u));
   aScope->addUnit(name.c_str(), ud);
 }
