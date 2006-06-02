@@ -257,9 +257,18 @@ RecursivelyCountUnknown
 
     if (aWanted.count(vi))
     {
+      if (wantedCount)
+      {
+        // See if it is the same variable...
+        char* id1 = vi->GetSourceVariable()->objid();
+        char* id2 = aWantedVI->GetSourceVariable()->objid();
+        int cmp = strcmp(id1, id2);
+        free(id1);
+        free(id2);
+        if (cmp)
+          return false;
+      }
       wantedCount++;
-      if (wantedCount > 1)
-        return false;
       aWantedCi = ci;
       aWantedVI = vi;
     }
@@ -437,7 +446,8 @@ GenerateExpression
  iface::cellml_api::CellMLComponent* aComponent,
  iface::mathml_dom::MathMLElement* aExpr,
  std::stringstream& expression,
- std::stringstream& supplementaryFunctions
+ std::stringstream& supplementaryFunctions,
+ bool aHaveBound
 )
 {
   {
@@ -603,7 +613,7 @@ GenerateExpression
           RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                              apply->getArgument(2));
           GenerateExpression(aCGS, aComponent, arg, expression,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
         }
         break;
       case OpInfo::BINARY:
@@ -625,10 +635,10 @@ GenerateExpression
           RETURN_INTO_OBJREF(arg2, iface::mathml_dom::MathMLElement,
                              apply->getArgument(3));
           GenerateExpression(aCGS, aComponent, arg1, expression,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
           expression << opi->sepstring;
           GenerateExpression(aCGS, aComponent, arg2, expression,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
         }
         break;
       case OpInfo::N_ARY:
@@ -641,7 +651,7 @@ GenerateExpression
             RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                                apply->getArgument(curarg));
             GenerateExpression(aCGS, aComponent, arg, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
           }
         }
         break;
@@ -655,7 +665,7 @@ GenerateExpression
             RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                                apply->getArgument(curarg));
             GenerateExpression(aCGS, aComponent, arg, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
           }
         }
         break;
@@ -683,10 +693,10 @@ GenerateExpression
             RETURN_INTO_OBJREF(arg2, iface::mathml_dom::MathMLElement,
                                apply->getArgument(curarg + 1));
             GenerateExpression(aCGS, aComponent, arg1, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
             expression << opi->sepstring;
             GenerateExpression(aCGS, aComponent, arg2, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
           }
         }
         break;
@@ -698,7 +708,7 @@ GenerateExpression
                                apply->getArgument(2));
             expression << opi->sepstring;
             GenerateExpression(aCGS, aComponent, arg, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
           }
           else if (apply->nArguments() == 3)
           {
@@ -707,10 +717,10 @@ GenerateExpression
             RETURN_INTO_OBJREF(arg2, iface::mathml_dom::MathMLElement,
                                apply->getArgument(3));
             GenerateExpression(aCGS, aComponent, arg1, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
             expression << opi->sepstring;
             GenerateExpression(aCGS, aComponent, arg2, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
           }
           else
           {
@@ -764,14 +774,14 @@ GenerateExpression
           RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                              apply->getArgument(2));
           GenerateExpression(aCGS, aComponent, arg, expression,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
           expression << opi->sepstring;
           if (degree_expr == NULL)
             expression << opi->defaultValue;
           else
           {
             GenerateExpression(aCGS, aComponent, degree_expr, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
           }
         }
         break;
@@ -813,14 +823,14 @@ GenerateExpression
           RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                              apply->getArgument(2));
           GenerateExpression(aCGS, aComponent, arg, expression,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
           expression << opi->sepstring;
           if (logbase_expr == NULL)
             expression << opi->defaultValue;
           else
           {
             GenerateExpression(aCGS, aComponent, logbase_expr, expression,
-                               supplementaryFunctions);
+                               supplementaryFunctions, aHaveBound);
           }
         }
         break;
@@ -917,21 +927,26 @@ GenerateExpression
           std::stringstream func;
           uint32_t id;
           func << "double integrand_" << (id = aCGS->AssignFunctionId())
-               << "(double* BOUND, double* CONSTANTS, double* RATES, "
-            "double* VARIABLES)" << std::endl
+               << "(double* CONSTANTS, double* VARIABLES"
+               << ", double* BOUND"
+               << ")" << std::endl
                << "{" << std::endl
                << "  return (";
           GenerateExpression(aCGS, aComponent, arg, func,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
           func << ");" << std::endl << "}" << std::endl;
           supplementaryFunctions << func.str();
-          expression << "defint(integrand_" << id << ", BOUND, CONSTANTS, "
-            "RATES, VARIABLES, " << bvarId << ", ";
+          expression << "defint(integrand_" << id << ", CONSTANTS, VARIABLES, ";
+          if (aHaveBound)
+            expression << "BOUND, ";
+          else
+            expression << "NULL, ";
+          expression << bvarId << ", ";
           GenerateExpression(aCGS, aComponent, lowl, expression,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
           expression << ", ";
           GenerateExpression(aCGS, aComponent, upl, expression,
-                             supplementaryFunctions);
+                             supplementaryFunctions, aHaveBound);
           expression << ")";
         }
         break;
@@ -961,10 +976,10 @@ GenerateExpression
                            p->caseValue());
         expression << "(";
         GenerateExpression(aCGS, aComponent, cc, expression,
-                           supplementaryFunctions);
+                           supplementaryFunctions, aHaveBound);
         expression << ") ? (";
         GenerateExpression(aCGS, aComponent, cv, expression,
-                           supplementaryFunctions);
+                           supplementaryFunctions, aHaveBound);
         expression << ") : ";
       }
 
@@ -1325,7 +1340,8 @@ Equation::AttemptEvaluation
  CodeGenerationState* aCGS, std::set<VariableInformation*>& aAvailable,
  std::set<VariableInformation*>& aWanted,
  std::stringstream& aExpressions,
- std::stringstream& aSupplementary
+ std::stringstream& aSupplementary,
+ bool aHaveBound
 )
 {
   std::list<std::pair<iface::cellml_api::CellMLComponent*,
@@ -1336,22 +1352,23 @@ Equation::AttemptEvaluation
   iface::mathml_dom::MathMLCiElement* wantedCI = NULL;
   bool eligibleForDirectAssignment = true;
   VariableInformation* wantedVI;
+  uint32_t wantedCount = 0;
 
   if (equal.size() == 1)
     return false;
 
   for (i = equal.begin(); i != equal.end(); i++)
   {
-    uint32_t wantedCount = 0;
+    uint32_t xwantedCount = wantedCount;
     // If it returns false, it means that either the wanted count exceeded one,
     // or a variable neither known nor wanted was encountered.
-    iface::mathml_dom::MathMLCiElement* xCI;
-    VariableInformation* xVI;
+    iface::mathml_dom::MathMLCiElement* xCI = wantedCI;
+    VariableInformation* xVI = wantedVI;
     if (!RecursivelyCountUnknown(aCGS, (*i).first, (*i).second, aAvailable,
-                                 aWanted, wantedCount,
+                                 aWanted, xwantedCount,
                                  xCI, xVI, 0))
       continue;
-    if (wantedCount == 0)
+    if (singleWanted || xwantedCount == wantedCount)
     {
       if (completelyKnown != NULL)
       {
@@ -1368,12 +1385,15 @@ Equation::AttemptEvaluation
       }
       completelyKnown = (*i).second;
       comp = (*i).first;
+      if (xwantedCount != wantedCount)
+        eligibleForDirectAssignment = false;
     }
     else
     {
       singleWanted = (*i).second;
       wantedCI = xCI;
       wantedVI = xVI;
+      wantedCount = xwantedCount;
       er = i;
     }
 
@@ -1387,86 +1407,7 @@ Equation::AttemptEvaluation
     return false;
 
   if (!completelyKnown)
-  {
-    // No parts are completely known. However, we shouldn't give up just yet,
-    // because there could be two parts which a single common unknown variable.
-
-    // x = f(x, y) cannot be assigned.
-    eligibleForDirectAssignment = false;
-
-    completelyKnown = NULL;
-    singleWanted = NULL;
-
-    for (i = equal.begin(); i != equal.end(); i++)
-    {
-      if (completelyKnown != NULL)
-        break;
-      iface::mathml_dom::MathMLCiElement* xCI1, *xCI2;
-      // If it returns false, it means that either the wanted count exceeded
-      //  one, or a variable neither known nor wanted was encountered.
-      uint32_t wantedCount = 0;
-      VariableInformation* xVI1, * xVI2;
-      if (!RecursivelyCountUnknown(aCGS, (*i).first, (*i).second, aAvailable,
-                                   aWanted, wantedCount, xCI1, xVI1, 0))
-        continue;
-      RETURN_INTO_OBJREF(vloc1, iface::cellml_api::CellMLVariable,
-                         FindVariableForCI((*i).first, xCI1));
-      if (vloc1 == NULL)
-      {
-        std::wstring msg = L"Cannot find variable ";
-        wchar_t* tmp = vloc1->name();
-        msg += tmp;
-        free(tmp);
-        msg += L"; referenced in ci but not in component.";
-        throw CodeGenerationError(msg);
-      }
-      char* id1 = aCGS->FindOrAddVariableInformation(vloc1)
-        ->GetSourceVariable()->objid();
-
-      for (j = i; j != equal.end(); j++)
-      {
-        if (i == j)
-          continue;
-        wantedCount = 0;
-        if (!RecursivelyCountUnknown(aCGS, (*j).first, (*j).second, aAvailable,
-                                     aWanted, wantedCount, xCI2, xVI2, 0))
-          continue;
-        RETURN_INTO_OBJREF(vloc2, iface::cellml_api::CellMLVariable,
-                           FindVariableForCI((*i).first, xCI2));
-        if (vloc2 == NULL)
-        {
-          std::wstring msg = L"Cannot find variable ";
-          wchar_t* tmp = vloc2->name();
-          msg += tmp;
-          free(tmp);
-          msg += L"; referenced in ci but not in component.";
-          throw CodeGenerationError(msg);
-        }
-        
-        char* id2 = aCGS->FindOrAddVariableInformation(vloc2)
-          ->GetSourceVariable()->objid();
-        if (strcmp(id1, id2))
-        {
-          free(id2);
-          continue;
-        }
-        free(id2);
-
-        // This is not really completely known, but we set it so we can use the
-        // same Newton-Raphson code for this case...
-        completelyKnown = (*j).second;
-        singleWanted = (*i).second;
-        comp = (*i).first;
-        wantedCI = xCI1;
-        wantedVI = xVI1;
-        er = i;
-        break;
-      }
-      free(id1);
-    }
-    if (completelyKnown == NULL)
-      return false;
-  }
+    return false;
 
   RETURN_INTO_OBJREF(vloc, iface::cellml_api::CellMLVariable,
                      FindVariableForCI(comp, wantedCI));
@@ -1497,7 +1438,7 @@ Equation::AttemptEvaluation
     if (factor != 1.0)
       aExpressions << "(";
     GenerateExpression(aCGS, comp, completelyKnown, aExpressions,
-                       aSupplementary);
+                       aSupplementary, aHaveBound);
     if (factor != 1.0)
       aExpressions << ") * " << factor;
     if (offset != 0.0)
@@ -1510,21 +1451,26 @@ Equation::AttemptEvaluation
     std::stringstream func;
     uint32_t id;
     func << "double NR_minfunc_" << (id = aCGS->AssignFunctionId())
-         << "(double* BOUND, double* CONSTANTS, double* RATES, "
-         << "double* VARIABLES)" << std::endl
+         << "(double* CONSTANTS, double* VARIABLES"
+         << ", double* BOUND";
+    func << ")" << std::endl
          << "{" << std::endl
          << "  return ((";
     GenerateExpression(aCGS, comp, completelyKnown, func,
-                       aSupplementary);
+                       aSupplementary, aHaveBound);
     func << ") - (";
     GenerateExpression(aCGS, comp, singleWanted, func,
-                       aSupplementary);
+                       aSupplementary, aHaveBound);
     func << "));" << std::endl
          << "}" << std::endl;
     aSupplementary << func.str();
     aExpressions << "NR_MINIMIZE(NR_minfunc_" << id
-                 << ", BOUND, CONSTANTS, RATES, VARIABLES, "
-                 << aCGS->GetVariableIndex(vsource) << ");" << std::endl;
+                 << ", CONSTANTS, VARIABLES, ";
+    if (aHaveBound)
+      aExpressions << "BOUND, ";
+    else
+      aExpressions << "NULL, ";
+    aExpressions << aCGS->GetVariableIndex(vsource) << ");" << std::endl;
     mTriggersNewtonRaphson = true;
   }
 
@@ -1594,7 +1540,7 @@ Equation::AttemptRateEvaluation
   aRateStream << "RATES[" << (idx + deg - 1) << "] = ";
   if (fac != 1.0)
     aRateStream << "(";
-  GenerateExpression(aCGS, comp, rhs, aRateStream, aSupplementary);
+  GenerateExpression(aCGS, comp, rhs, aRateStream, aSupplementary, true);
   if (fac != 1.0)
     aRateStream << ") * " << fac;
   aRateStream << ";" << std::endl;

@@ -20,7 +20,8 @@ public:
                          std::set<VariableInformation*>& aAvailable,
                          std::set<VariableInformation*>& aWanted,
                          std::stringstream& aExpression,
-                         std::stringstream& aSupplementary);
+                         std::stringstream& aSupplementary,
+                         bool aHaveBound);
   bool AttemptRateEvaluation(CodeGenerationState* aCGS,
                              std::stringstream& aRateStream,
                              std::stringstream& aSupplementary);

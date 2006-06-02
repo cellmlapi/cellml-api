@@ -548,7 +548,7 @@ CodeGenerationState::DetermineComputedConstants
       i2++;
       lastRoundUseful |=
         (*itmp)->AttemptEvaluation(this, availableVariables, wantedVariables,
-                                 aCompConstStream, aSupplementary);
+                                 aCompConstStream, aSupplementary, false);
     }
   }
   while (lastRoundUseful);
@@ -607,7 +607,7 @@ CodeGenerationState::DetermineIterationVariables
       i2++;
       lastRoundUseful |=
         (*itmp)->AttemptEvaluation(this, availableVariables, wantedVariables,
-                                   aIterationStream, aSupplementary);
+                                   aIterationStream, aSupplementary, true);
     }
   }
   while (lastRoundUseful);
