@@ -281,15 +281,13 @@ public:
 
 class CDA_CellMLComponentGroupMixin
   : public virtual iface::cellml_api::CellMLComponent,
-    public CDA_NamedCellMLElement,
-    public CDA_MathContainer
+    public CDA_NamedCellMLElement
 {
 public:
   CDA_CellMLComponentGroupMixin(iface::XPCOM::IObject* parent,
                                 iface::dom::Element* compElement)
     : CDA_CellMLElement(parent, compElement),
-      CDA_NamedCellMLElement(parent, compElement),
-      CDA_MathContainer(parent, compElement)
+      CDA_NamedCellMLElement(parent, compElement)
   {}
 
   virtual ~CDA_CellMLComponentGroupMixin()
@@ -303,13 +301,15 @@ public:
 };
 
 class CDA_CellMLComponent
-  : public CDA_CellMLComponentGroupMixin
+  : public CDA_CellMLComponentGroupMixin,
+    public CDA_MathContainer
 {
 public:
   CDA_CellMLComponent(iface::XPCOM::IObject* parent,
                       iface::dom::Element* compElement)
     :CDA_CellMLElement(parent, compElement),
-     CDA_CellMLComponentGroupMixin(parent, compElement)
+     CDA_CellMLComponentGroupMixin(parent, compElement),
+     CDA_MathContainer(parent, compElement)
   {}
   virtual ~CDA_CellMLComponent() {}
 
@@ -417,7 +417,8 @@ public:
 
 class CDA_ImportComponent
   : public virtual iface::cellml_api::ImportComponent,
-    public CDA_CellMLComponentGroupMixin
+    public CDA_CellMLComponentGroupMixin,
+    public virtual iface::cellml_api::MathContainer
 {
 public:
   CDA_ImportComponent(iface::XPCOM::IObject* parent,
@@ -437,6 +438,12 @@ public:
   wchar_t* componentRef() throw(std::exception&);
   void componentRef(const wchar_t* attr) throw(std::exception&);
   iface::cellml_api::ReactionSet* reactions() throw(std::exception&);
+  iface::cellml_api::MathList* math() throw(std::exception&);
+  void addMath(iface::cellml_api::MathMLElement el) throw(std::exception&);
+  void removeMath(iface::cellml_api::MathMLElement el) throw(std::exception&);
+  void replaceMath(iface::cellml_api::MathMLElement x,
+                   iface::cellml_api::MathMLElement y) throw(std::exception&);
+  void clearMath() throw(std::exception&);
 
 private:
   // This is an internal API only, and *does not* increment the refcount on
@@ -1835,6 +1842,7 @@ private:
   {
     ObjRef<CDA_CellMLVariable> whichVariable;
     ObjRef<CDA_CellMLComponent> whichComponent;
+    ObjRef<iface::cellml_api::CellMLComponent> whichCompLevel;
     ObjRef<iface::cellml_api::ConnectionIterator> connectionIterator;
     ObjRef<iface::cellml_api::MapVariablesIterator> mapVariableIterator;
   };

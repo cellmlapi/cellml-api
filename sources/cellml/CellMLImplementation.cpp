@@ -3242,6 +3242,45 @@ CDA_ImportComponent::reactions()
   return fetchDefinition()->reactions();
 }
 
+iface::cellml_api::MathList*
+CDA_ImportComponent::math()
+  throw(std::exception&)
+{
+  return fetchDefinition()->math();
+}
+
+void
+CDA_ImportComponent::addMath(iface::cellml_api::MathMLElement el)
+  throw(std::exception&)
+{
+  fetchDefinition()->addMath(el);
+}
+
+void
+CDA_ImportComponent::removeMath(iface::cellml_api::MathMLElement el)
+  throw(std::exception&)
+{
+  fetchDefinition()->removeMath(el);
+}
+
+void
+CDA_ImportComponent::replaceMath
+(
+ iface::cellml_api::MathMLElement x,
+ iface::cellml_api::MathMLElement y
+)
+  throw(std::exception&)
+{
+  fetchDefinition()->replaceMath(x, y);
+}
+
+void
+CDA_ImportComponent::clearMath()
+  throw(std::exception&)
+{
+  fetchDefinition()->clearMath();
+}
+
 uint32_t
 CDA_ImportComponent::importNumber()
   throw(std::exception&)
@@ -3558,7 +3597,10 @@ CDA_CellMLVariable::sourceVariable()
   {
     RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable, cvi->nextVariable());
     if (v == NULL)
+    {
       return NULL;
+    }
+
     if ((v->publicInterface() != iface::cellml_api::INTERFACE_IN) &&
         (v->privateInterface() != iface::cellml_api::INTERFACE_IN))
     {
@@ -5639,6 +5681,7 @@ CDA_ConnectedCellMLVariableIterator::CDA_ConnectedCellMLVariableIterator
   VariableStackFrame* topFrame = new VariableStackFrame();
   topFrame->whichVariable = aConnectedToWhat;
   topFrame->whichComponent = comp;
+  topFrame->whichCompLevel = topFrame->whichComponent;
   topFrame->connectionIterator = ci;
   variableStack.push_front(topFrame);
 }
@@ -5729,6 +5772,58 @@ CDA_ConnectedCellMLVariableIterator::next()
                          topFrame->connectionIterator->nextConnection());
       if (conn == NULL)
       {
+        // No more connections in the current model. But, the model could be
+        // imported, and the connection may be at the next level up...
+        CDA_CellMLElement* el = dynamic_cast<CDA_CellMLElement*>
+          (topFrame->whichCompLevel.getPointer());
+        CDA_Model* m =
+          dynamic_cast<CDA_Model*>(el->mParent);
+        if (m == NULL)
+        {
+          CDA_CellMLImport* impold =
+          dynamic_cast<CDA_CellMLImport*>(el->mParent);
+          m = dynamic_cast<CDA_Model*>(impold->mParent);
+        }
+        if (m != NULL)
+        {
+          CDA_CellMLImport* imp =
+            dynamic_cast<CDA_CellMLImport*>(m->mParent);
+          if (imp != NULL)
+          {
+            // Check for our name in the import...
+            RETURN_INTO_OBJREF(c, iface::cellml_api::ImportComponentSet,
+                               imp->components());
+            RETURN_INTO_WSTRING(n, topFrame->whichCompLevel->name());
+            RETURN_INTO_OBJREF(ci, iface::cellml_api::ImportComponentIterator,
+                               c->iterateImportComponents());
+            ObjRef<iface::cellml_api::ImportComponent> comp;
+            while (true)
+            {
+              comp = already_AddRefd<iface::cellml_api::ImportComponent>
+                (ci->nextImportComponent());
+              if (comp == NULL)
+                break;
+              RETURN_INTO_WSTRING(cr, comp->componentRef());
+              if (cr == n)
+                break;
+            }
+            if (comp != NULL)
+            {
+              CDA_Model* m = dynamic_cast<CDA_Model*>(imp->mParent);
+              if (m != NULL)
+              {
+                RETURN_INTO_OBJREF(cs, iface::cellml_api::ConnectionSet,
+                                   m->connections());
+                RETURN_INTO_OBJREF(ci, iface::cellml_api::ConnectionIterator,
+                                   cs->iterateConnections());
+                topFrame->connectionIterator = ci;
+                topFrame->whichCompLevel = comp;
+                continue;
+              }
+            }
+          }
+        }
+
         // If there are no more connections, we have to go to the next frame in the
         // VariableStackFrame...
         variableStack.pop_front();
@@ -5742,21 +5837,27 @@ CDA_ConnectedCellMLVariableIterator::next()
       RETURN_INTO_OBJREF(c1, iface::cellml_api::CellMLComponent,
                          cm->firstComponent());
       if (c1 == NULL)
+      {
         continue;
+      }
       mConsider1 = (CompareComponentsImportAware
                     (c1, topFrame->whichComponent));
 
       RETURN_INTO_OBJREF(c2, iface::cellml_api::CellMLComponent,
                          cm->secondComponent());
       if (c2 == NULL)
+      {
         continue;
+      }
       mConsider2 = (CompareComponentsImportAware
                     (c2, topFrame->whichComponent));
 
       // There is no point even looking at this connection if neither component
       // matches.
       if (!mConsider1 && !mConsider2)
+      {
         continue;
+      }
 
       RETURN_INTO_OBJREF(vms, iface::cellml_api::MapVariablesSet,
                          conn->variableMappings());
@@ -5840,6 +5941,7 @@ CDA_ConnectedCellMLVariableIterator::next()
     newFrame->whichComponent = dynamic_cast<CDA_CellMLComponent*>
       (votherImpl->mParent);
     newFrame->connectionIterator = ci;
+    newFrame->whichCompLevel = newFrame->whichComponent;
     variableStack.push_front(newFrame);
 
     // Finally, return the variable we found...
