@@ -9,7 +9,10 @@ libccgs_la_SOURCES := \
 libccgs_la_CXXFLAGS := \
   -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces
 
-include_HEADERS += $(top_builddir)/interfaces/IfaceCCGS.hxx
+include_HEADERS += \
+  $(top_builddir)/interfaces/IfaceCCGS.hxx \
+  $(top_srcdir)/CCGS/sources/CCGSBootstrap.hpp
+
 BUILT_SOURCES += $(top_builddir)/interfaces/IfaceCCGS.hxx
 
 include $(top_srcdir)/CCGS/tests/build.mk
