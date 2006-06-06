@@ -2772,20 +2772,36 @@ CDA_MathMLPiecewiseElement::otherwise()
   throw(std::exception&)
 {
   // See if we can find an otherwise...
-  iface::dom::NodeList* nl = childNodes();
-  iface::dom::Node* n;
+  ObjRef<iface::dom::NodeList> nl = childNodes();
+  ObjRef<iface::dom::Node> n;
   uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
-    n = nl->item(i);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
     if (IsOtherwise(n))
     {
-      nl->release_ref();
-      return dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n);
+      nl = already_AddRefd<iface::dom::NodeList>
+        (n->childNodes());
+      l = nl->length();
+      for (i = 0; i < l; i++)
+      {
+        RETURN_INTO_OBJREF(nc, iface::dom::Node, nl->item(i));
+        iface::mathml_dom::MathMLContentElement* ce =
+          dynamic_cast<iface::mathml_dom::MathMLContentElement*>
+          (nc.getPointer());
+        if (ce == NULL)
+          continue;
+        else
+        {
+          ce->add_ref();
+          return ce;
+        }
+      }
+
+      // No content in the otherwise yet...
+      throw iface::dom::DOMException();
     }
-    n->release_ref();
   }
-  nl->release_ref();
 
   // There is no otherwise yet.
   throw iface::dom::DOMException();
@@ -2796,25 +2812,44 @@ CDA_MathMLPiecewiseElement::otherwise(iface::mathml_dom::MathMLContentElement* a
   throw(std::exception&)
 {
   // See if we can find an otherwise...
-  iface::dom::NodeList* nl = childNodes();
-  iface::dom::Node* n;
+  ObjRef<iface::dom::NodeList> nl = childNodes();
+  ObjRef<iface::dom::Node> n;
   uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
-    n = nl->item(i);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
     if (IsOtherwise(n))
     {
-      nl->release_ref();
-      replaceChild(attr, n);
-      n->release_ref();
+      nl = already_AddRefd<iface::dom::NodeList>
+        (n->childNodes());
+      l = nl->length();
+      for (i = 0; i < l; i++)
+      {
+        RETURN_INTO_OBJREF(nc, iface::dom::Node, nl->item(i));
+        iface::mathml_dom::MathMLContentElement* ce =
+          dynamic_cast<iface::mathml_dom::MathMLContentElement*>
+          (nc.getPointer());
+        if (ce == NULL)
+          continue;
+        else
+        {
+          n->replaceChild(attr, nc)->release_ref();
+          return;
+        }
+      }
+      n->appendChild(attr)->release_ref();
       return;
     }
-    n->release_ref();
   }
-  nl->release_ref();
 
-  // There is no otherwise yet.
-  appendChild(attr);
+  // There is no otherwise yet. Make one, and append attr as a child...
+  RETURN_INTO_OBJREF(od, iface::dom::Document, attr->ownerDocument());
+  if (od == NULL)
+    throw iface::dom::DOMException();
+  RETURN_INTO_OBJREF(el, iface::dom::Element,
+                     od->createElementNS(MATHML_NS, L"otherwise"));
+  el->appendChild(attr)->release_ref();
+  appendChild(el);
 }
 
 iface::mathml_dom::MathMLCaseElement*

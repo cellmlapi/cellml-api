@@ -1348,7 +1348,7 @@ MathMLTest::testMathMLPiecewise()
   iface::mathml_dom::MathMLContentElement* mce = mpw->otherwise();
   CPPUNIT_ASSERT(mce);
   wchar_t* str = mce->className();
-  CPPUNIT_ASSERT(!wcscmp(str, L"otherwiseel"));
+  CPPUNIT_ASSERT(!wcscmp(str, L"otherwisevalue"));
   free(str);
   mce->release_ref();
 

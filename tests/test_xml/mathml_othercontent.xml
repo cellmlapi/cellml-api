@@ -63,8 +63,8 @@
         <apply><neq/><ci> x </ci> <cn> 4 </cn></apply>
       </apply>
     </piece>
-    <otherwise class="otherwiseel">
-      <ci>1234</ci>
+    <otherwise>
+      <ci class="otherwisevalue">1234</ci>
     </otherwise>
   </piecewise>
 </math>
