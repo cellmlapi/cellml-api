@@ -2017,8 +2017,11 @@ CDA_CellMLComponentGroupMixin::encapsulationChildren()
         wchar_t* str = icomp->name();
         componentName = str;
         free(str);
-        model = dynamic_cast<CDA_Model*>
+        CDA_CellMLImport* imp = dynamic_cast<CDA_CellMLImport*>
           (dynamic_cast<CDA_ImportComponent*>(icomp.getPointer())->mParent);
+        if (imp == NULL)
+          throw iface::cellml_api::CellMLException();
+        model = dynamic_cast<CDA_Model*>(imp->mParent);
         if (model == NULL)
           throw iface::cellml_api::CellMLException();
         wentDown = true;
