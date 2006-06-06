@@ -980,18 +980,21 @@ GenerateExpression
         expression << ") ? (";
         GenerateExpression(aCGS, aComponent, cv, expression,
                            supplementaryFunctions, aHaveBound);
-        expression << ") : ";
+        expression << ") : (";
       }
 
       try
       {
         RETURN_INTO_OBJREF(otherwise, iface::mathml_dom::MathMLElement,
                            (piecewise->otherwise()));
+        GenerateExpression(aCGS, aComponent, otherwise, expression,
+                           supplementaryFunctions, aHaveBound);
+        expression << ")";
       }
       catch (iface::cellml_api::CellMLException&)
       {
         // Most portable way to get a nan...
-        expression << "(0.0/0.0)";
+        expression << "(0.0/0.0))";
       }
       return;
     }
