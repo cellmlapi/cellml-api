@@ -1,5 +1,5 @@
 # CellML CORBA Server...
-bin_PROGRAMS := cellml_corba_server
+bin_PROGRAMS += cellml_corba_server
 cellml_corba_server_SOURCES := $(top_srcdir)/sources/cellml_corba_server/Main.cpp
 cellml_corba_server_CXXFLAGS := \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/cellml \
@@ -14,3 +14,13 @@ cellml_corba_server_LDADD := \
   $(top_builddir)/libCORBASupport.la -lxml2
 
 cellml_corba_server_LDFLAGS := -static -lomniORB4
+
+lib_LTLIBRARIES += libcellml_corba_client.la
+libcellml_corba_client_la_SOURCES := \
+  $(top_srcdir)/sources/Utilities.cpp \
+  $(top_srcdir)/sources/cellml_corba_server/Client.cpp
+libcellml_corba_client_la_CXXFLAGS := \
+  -I $(top_srcdir) \
+  -I$(top_srcdir)/sources \
+  -I$(top_builddir)/interfaces \
+  -I$(top_srcdir)/simple_interface_generators/glue

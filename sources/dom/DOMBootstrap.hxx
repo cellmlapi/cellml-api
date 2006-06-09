@@ -20,6 +20,10 @@ public:
   virtual iface::dom::Document* loadDocument(const wchar_t* aURL,
                                              std::wstring& aErrorMessage)
     throw(std::exception&) = 0;
+
+  virtual iface::dom::Document* loadDocumentFromText(const wchar_t* aText,
+                                                     std::wstring& aErrorMessage)
+    throw(std::exception&) = 0;
 };
 
 // Get a DOM Implementation. This is a C++ specific method, not part of the

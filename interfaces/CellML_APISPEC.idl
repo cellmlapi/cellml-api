@@ -521,6 +521,11 @@ module cellml_api
      */
     dom::Element createExtensionElement(in dom::DOMString namespaceURI,
                                         in dom::DOMString qualifiedName);
+
+    /**
+     * Retrieves the entire model (excluding imports) as a serialised XML text.
+     */
+    readonly attribute dom::DOMString serialisedText;
   };
 
   interface MathContainer : XPCOM::IObject
@@ -721,10 +726,20 @@ module cellml_api
     void asyncInstantiate(in ImportInstantiationListener listener);
 
     /**
-     * Returns true if fullyInstantiate has previously been called on this
+     * Causes this import to be instantiated from text.
+     * @param xmlText The serialised XML document for the import.
+     * @raises CellMLException if xmlText is not valid.
+     */
+    void instantiateFromText(in dom::DOMString xmlText)
+      raises(CellMLException);
+
+    /**
+     * Returns true if instantiate has previously been called on this
      * import, or false otherwise. Note that a call to fullyInstantiateImports()
      * on a model which is an ancestor of this one in the import tree shall be
-     * treated as if it were a call to fullyInstantiate() on all imports.
+     * treated as if it were a call to instantiate() on all imports.
+     * A successful asyncInstantiate or instantiateFromText call also causes
+     * this to return true.
      */
     readonly attribute boolean wasInstantiated;
 
@@ -1785,6 +1800,15 @@ module cellml_api
                           in ModelLoadedListener listener);
 
     /**
+     * Creates a serialised XML document.
+     * @param xmlText A complete XML document, serialised into text.
+     * @return The loaded CellML model.
+     * @param CellMLException if the XML cannot be parsed into a model.
+     */
+    Model createFromText(in dom::DOMString xmlText)
+      raises(CellMLException);
+
+    /**
      * An error message describing the cause of the last CellMLException.
      * The error message is formatted code/param1/param2/.../paramn
      * Valid error codes are...
@@ -1819,6 +1843,15 @@ module cellml_api
       raises(CellMLException);
 
     /**
+     * Loads an XML formatted document from a given serialised for into a DOM.
+     * @param xmlText The serialised XML used to create the document.
+     * @return The loaded document.
+     * @raises CellMLException if the model cannot be loaded.
+     */
+    dom::Document loadDocumentFromText(in dom::DOMString xmlText)
+      raises(CellMLException);
+
+    /**
      * Asynchronously loads an XML formatted document from a given URL into a
      * DOM. This may be restricted to certain URLs due to security restrictions
      * on some remotely hosted URL loaders.
@@ -1826,7 +1859,8 @@ module cellml_api
      * @param listener The listener to notify when the load completes.
      * @raises CellMLException if the model cannot be loaded.
      */
-    void asyncLoadDocument(in dom::DOMString URL, in DocumentLoadedListener listener)
+    void asyncLoadDocument(in dom::DOMString URL,
+                           in DocumentLoadedListener listener)
       raises(CellMLException);
 
     /**

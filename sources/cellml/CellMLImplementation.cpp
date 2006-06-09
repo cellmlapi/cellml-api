@@ -1617,6 +1617,16 @@ CDA_Model::createExtensionElement
   return mDoc->createElementNS(namespaceURI, qualifiedName);
 }
 
+wchar_t*
+CDA_Model::serialisedText()
+  throw (std::exception&)
+{
+  DOMWriter dw;
+  std::wstring str;
+  dw.writeDocument(NULL, mDoc, str);
+  return CDA_wcsdup(str.c_str());
+}
+
 CDA_MathContainer::CDA_MathContainer(iface::XPCOM::IObject* parent,
                                      iface::dom::Element* modelElement)
   : CDA_CellMLElement(parent, modelElement)
@@ -2997,6 +3007,67 @@ CDA_CellMLImport::instantiate()
   {
     throw iface::cellml_api::CellMLException();
   }
+}
+
+void
+CDA_CellMLImport::instantiateFromText(const wchar_t* aText)
+  throw(std::exception&)
+{
+  // If this import has already been instantiated, throw an exception....
+  if (mImportedModel != NULL)
+    throw iface::cellml_api::CellMLException();
+
+  // We need to get hold of the top level CellML model...
+  CDA_CellMLElement *lastEl = NULL, *nextEl;
+
+  nextEl = dynamic_cast<CDA_CellMLElement*>(mParent);
+  while (nextEl != NULL)
+  {
+    lastEl = nextEl;
+    nextEl = dynamic_cast<CDA_CellMLElement*>(lastEl->mParent);
+  }
+  CDA_Model *rootModel = dynamic_cast<CDA_Model*>(lastEl);
+  if (rootModel == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  // We now have a root model, and so we also have a loader...
+  RETURN_INTO_OBJREF(dd, iface::dom::Document,
+                     rootModel->mLoader->loadDocumentFromText(aText));
+
+  try
+  {
+    RETURN_INTO_OBJREF(modelEl, iface::dom::Element, dd->documentElement());
+    if (modelEl == NULL)
+      throw iface::cellml_api::CellMLException();
+
+    // Check it is a CellML model...
+    RETURN_INTO_WSTRING(nsURI, modelEl->namespaceURI());
+    if (nsURI != CELLML_1_0_NS &&
+        nsURI != CELLML_1_1_NS)
+      throw iface::cellml_api::CellMLException();
+
+    RETURN_INTO_WSTRING(modName, modelEl->localName());
+    if (modName != L"model")
+      throw iface::cellml_api::CellMLException();
+
+    CDA_Model* cm = new CDA_Model(rootModel->mLoader, dd, modelEl);
+    mImportedModel = cm;
+
+    // Adjust the refcounts to leave the importedModel completely dependent on
+    // the rest of the tree...
+    cm->mParent = this;
+    // We increment our refcount(and our other ancestors') by one...
+    add_ref();
+    // This will decrement cm's(and its ancestors', which includes us, as we
+    // are cm's parent), refcount by 1. cm's refcount is now 0, and our/our
+    // ancestors' refcounts are back to what they were before the add_ref().
+    cm->release_ref();
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+  
 }
 
 class CDA_CellMLImport_DocumentLoadedListener

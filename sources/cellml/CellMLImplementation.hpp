@@ -242,6 +242,7 @@ public:
   iface::dom::Element* createExtensionElement(const wchar_t* namespaceURI,
                                               const wchar_t* qualifiedName)
     throw(std::exception&);
+  wchar_t* serialisedText() throw(std::exception&);
 
   ObjRef<iface::cellml_api::DOMURLLoader> mLoader;
 
@@ -402,6 +403,7 @@ public:
   void asyncInstantiate
   (iface::cellml_api::ImportInstantiationListener* listener)
     throw(std::exception&);
+  void instantiateFromText(const wchar_t* aText) throw(std::exception&);
   bool wasInstantiated() throw(std::exception&);
   uint32_t uniqueIdentifier() throw(std::exception&);
 

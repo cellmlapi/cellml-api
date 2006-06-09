@@ -18,6 +18,8 @@ public:
     throw(std::exception&);
   wchar_t* lastErrorMessage() throw(std::exception&);
 
+  iface::cellml_api::Model* createFromText(const wchar_t* xmlText) throw(std::exception&);
+
   iface::cellml_api::Model*
   createFromDOM(const wchar_t* url,
                 iface::cellml_api::DOMURLLoader* loader)
@@ -44,6 +46,8 @@ public:
   CDA_IMPL_ID;
 
   iface::dom::Document* loadDocument(const wchar_t* URL)
+    throw(std::exception&);
+  iface::dom::Document* loadDocumentFromText(const wchar_t* text)
     throw(std::exception&);
   void asyncLoadDocument(const wchar_t* URL,
                          iface::cellml_api::DocumentLoadedListener* listener)

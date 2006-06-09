@@ -2,6 +2,7 @@
 include_HEADERS :=
 lib_LTLIBRARIES :=
 noinst_LTLIBRARIES :=
+bin_PROGRAMS :=
 BUILT_SOURCES :=
 
 # Parts needed to build the interface generates...
@@ -33,4 +34,8 @@ endif
 
 if ENABLE_CCGS
 include $(top_srcdir)/CCGS/build.mk
+endif
+
+if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
+include $(top_srcdir)/CCGS/corba_build.mk
 endif

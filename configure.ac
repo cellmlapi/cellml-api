@@ -34,14 +34,7 @@ AC_ARG_ENABLE(context,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-context) ;;
 esac],[context=false])
 AM_CONDITIONAL(ENABLE_CONTEXT, test x$context = xtrue)
-# This is verbose but it should (I hope) be portable...
-contextandcorba=false
-if test x$context = xtrue; then
-  if test x$corba = xtrue; then
-    contextandcorba=true
-  fi
-fi
-AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
+
 AC_ARG_ENABLE(server,
 [  --enable-server    Build the CellML CORBA Server (requires CORBA and Context)],
 [case "${enableval}" in
@@ -64,6 +57,20 @@ AC_ARG_ENABLE(ccgs,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-ccgs) ;;
 esac],[ccgs=false])
 AM_CONDITIONAL(ENABLE_CCGS, test x$ccgs = xtrue)
+
+# This is verbose but it should (I hope) be portable...
+contextandcorba=false
+if test x$context = xtrue; then
+  if test x$corba = xtrue; then
+    contextandcorba=true
+    if test x$ccgs = xtrue; then
+      contextandcorbaandccgs=true
+    fi
+  fi
+fi
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CCGS,
+               test x$contextandcorbaandccgs = xtrue)
 
 # Checks for header files.
 AC_CHECK_HEADERS([strings.h wchar.h])
@@ -89,6 +96,8 @@ esac
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])
+
+AC_DEFINE(ENABLE_CONTEXT, $ENABLE_CONTEXT, [Is the CellML Context enabled?])
 
 AC_CONFIG_FILES([
                  Makefile

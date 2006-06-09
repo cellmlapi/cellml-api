@@ -2,6 +2,9 @@
 #include "CellMLBootstrapImpl.hpp"
 #include "CellMLBootstrap.hpp"
 
+#define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
+#define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
+
 CDA_CellMLBootstrap::CDA_CellMLBootstrap()
   : _cda_refcount(1), domimpl(CreateDOMImplementation())
 {
@@ -70,6 +73,18 @@ CDA_DOMURLLoader::loadDocument(const wchar_t* URL)
   return d;
 }
 
+iface::dom::Document*
+CDA_DOMURLLoader::loadDocumentFromText(const wchar_t* xmlText)
+  throw(std::exception&)
+{
+  iface::dom::Document* d = mDOMImpl->loadDocumentFromText(xmlText, mLastError);
+  if (d == NULL)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+  return d;
+}
+
 void
 CDA_DOMURLLoader::asyncLoadDocument
 (
@@ -122,8 +137,58 @@ CDA_ModelLoader::lastErrorMessage()
   return CDA_wcsdup(mLastError.c_str());
 }
 
-#define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
-#define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
+iface::cellml_api::Model*
+CDA_ModelLoader::createFromText(const wchar_t* xmlText)
+  throw (std::exception&)
+{
+  ObjRef<iface::dom::Document> modelDoc;
+  try
+  {
+    modelDoc = already_AddRefd<iface::dom::Document>
+      (mURLLoader->loadDocumentFromText(xmlText));
+  }
+  catch (...)
+  {
+    wchar_t* str = mURLLoader->lastErrorMessage();
+    mLastError = str;
+    free(str);
+    throw iface::cellml_api::CellMLException();
+  }
+
+  try
+  {
+    RETURN_INTO_OBJREF(modelEl, iface::dom::Element,
+                       modelDoc->documentElement());
+    if (modelEl == NULL)
+    {
+      mLastError = L"nodocumentelement";
+      throw iface::cellml_api::CellMLException();
+    }
+
+    // Check it is a CellML model...
+    RETURN_INTO_WSTRING(nsURI, modelEl->namespaceURI());
+    if (nsURI != CELLML_1_0_NS &&
+        nsURI != CELLML_1_1_NS)
+    {
+      mLastError = L"notcellml";
+      throw iface::cellml_api::CellMLException();
+    }
+
+    RETURN_INTO_WSTRING(modName, modelEl->localName());
+    if (modName != L"model")
+    {
+      mLastError = L"notcellml";
+      throw iface::cellml_api::CellMLException();
+    }
+
+    return new CDA_Model(mURLLoader, modelDoc, modelEl);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    mLastError = L"badxml/0/0/Missing document element";
+    throw iface::cellml_api::CellMLException();
+  }
+}
 
 iface::cellml_api::Model*
 CDA_ModelLoader::createFromDOM(const wchar_t* URL,

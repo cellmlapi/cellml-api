@@ -31,6 +31,8 @@ CDA_Document* CDA_NewDocument
  const wchar_t* nsURI
 );
 
+struct _xmlParserCtxt;
+
 class CDA_DOMImplementation
   : public CellML_DOMImplementationBase,
     public iface::mathml_dom::MathMLDOMImplementation
@@ -63,8 +65,16 @@ public:
                                      std::wstring& aErrorMessage)
     throw(std::exception&);
 
+  iface::dom::Document* loadDocumentFromText(const wchar_t* aText,
+                                             std::wstring& aErrorMessage)
+    throw(std::exception&);
+
   iface::mathml_dom::MathMLDocument* createMathMLDocument()
     throw(std::exception&);
+
+private:
+  void ProcessContextError(std::wstring& aErrorMessage,
+                           _xmlParserCtxt* ctxt);
 };
 
 class CDA_Document;
