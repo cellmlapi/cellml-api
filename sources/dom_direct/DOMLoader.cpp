@@ -1161,7 +1161,6 @@ CDA_DOMImplementation::loadDocumentFromText
   throw(std::exception&)
 {
   char* text = CDA_wchar_to_UTF8(aText);
-  free(text);
 
   xmlParserCtxtPtr ctxt =
     xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, NULL);
