@@ -57,7 +57,11 @@ GetCellMLContext(int argc, char** argv)
       cellml_context::CellMLContext_ptr cpp =
         cellml_context::CellMLContext::_narrow(obj);
       CORBA::Object_var rootPoaObj = orb->resolve_initial_references("RootPOA");
-      PortableServer::POA_var rootPoa = PortableServer::POA::_narrow(rootPoaObj);
+      PortableServer::POA_var rootPoa =
+        PortableServer::POA::_narrow(rootPoaObj);
+      PortableServer::POAManager_var poaMan = rootPoa->the_POAManager();
+      poaMan->activate();
+
       return new CCI::cellml_context::_final_CellMLContext(cpp, rootPoa);
     }
     catch (...)
