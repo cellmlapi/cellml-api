@@ -63,7 +63,7 @@ module XPCOM
      * preserved in memory. Care should be taken to ensure that a cycle of
      * objects waiting for each other to call release_ref is not created.
      */
-    oneway void add_ref();
+    void add_ref();
 
     /**
      * Removes a reference to an object which was created by some other means
