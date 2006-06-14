@@ -237,7 +237,6 @@ CodeGenerationState::ComponentHasMath
  iface::mathml_dom::MathMLApplyElement* aApply
 )
 {
-  printf("Found an apply element.\n");
   RETURN_INTO_OBJREF(eq, iface::mathml_dom::MathMLElement,
                      aApply->_cxx_operator());
   if (eq == NULL)
@@ -260,7 +259,6 @@ CodeGenerationState::ComponentHasMath
     eqn->AddPart(aComp, arg);
   }
 
-  printf("Equation is now listed.");
   mEquations.push_back(eqn);
   mUnusedEquations.push_back(eqn);
   eqn->add_ref();
@@ -272,7 +270,6 @@ CodeGenerationState::ProcessMathInComponent
  iface::cellml_api::CellMLComponent* aComp
 )
 {
-  printf("Processing math in a component...\n");
   {
     RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, aComp->math());
     RETURN_INTO_OBJREF(mei, iface::cellml_api::MathMLElementIterator,
@@ -283,13 +280,9 @@ CodeGenerationState::ProcessMathInComponent
       RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement, mei->next());
       if (me == NULL)
         break;
-      printf("Found a MathML element.\n");
       DECLARE_QUERY_INTERFACE_OBJREF(mme, me, mathml_dom::MathMLMathElement);
       if (mme == NULL)
-      {
-        printf("But it won't QI to a MathMLMathElement.\n");
         continue;
-      }
       // We assume each apply child is a single equation...
       uint32_t l = mme->nArguments(), i;
       // MathML is all 1 based...
@@ -980,7 +973,6 @@ CDA_CCodeInformation::CDA_CCodeInformation
   cgs.CreateComponentList(aSourceModel);
 
   // Build a list of the mathematics...
-  printf("Processing mathematics...\n");
   cgs.ProcessMath();
 
   // Build a list of all variables, and classify them...
