@@ -27,10 +27,12 @@ public:
                              std::stringstream& aSupplementary);
   void AddIfTriggersNR(std::vector<iface::dom::Element*>& aNRList);
 
+  void release_state();
+
 private:
   std::list<std::pair<iface::cellml_api::CellMLComponent*,
                       iface::mathml_dom::MathMLElement*> > equal;
-  iface::mathml_dom::MathMLCiElement* mDiffCI, * mBoundCI;
-  iface::mathml_dom::MathMLElement* mDiff;
+  ObjRef<iface::mathml_dom::MathMLCiElement> mDiffCI, mBoundCI;
+  ObjRef<iface::mathml_dom::MathMLElement> mDiff;
   bool mTriggersNewtonRaphson;
 };

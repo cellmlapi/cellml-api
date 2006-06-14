@@ -23,8 +23,7 @@ TrimString(std::wstring& aStr)
 }
 
 Equation::Equation()
-  : _cda_refcount(1), mDiffCI(NULL), mBoundCI(NULL), mDiff(NULL),
-    mTriggersNewtonRaphson(false)
+  : _cda_refcount(1), mTriggersNewtonRaphson(false)
 {
 }
 
@@ -79,7 +78,8 @@ Equation::AddPart(iface::cellml_api::CellMLComponent* aComp,
     }
   }
 
-  // Don't add_ref, instead assume that it will outlive us.
+  // aComp is on the component list, but need to add_ref aEl...
+  aEl->add_ref();
   equal.push_back(std::pair<iface::cellml_api::CellMLComponent*,
                             iface::mathml_dom::MathMLElement*>(aComp, aEl));
 }
@@ -243,7 +243,7 @@ RecursivelyCountUnknown
  std::set<VariableInformation*>& aAvailable,
  std::set<VariableInformation*>& aWanted,
  uint32_t& wantedCount,
- iface::mathml_dom::MathMLCiElement*& aWantedCi,
+ ObjRef<iface::mathml_dom::MathMLCiElement>& aWantedCi,
  VariableInformation*& aWantedVI,
  uint32_t contextFlags
 )
@@ -1350,9 +1350,8 @@ Equation::AttemptEvaluation
   std::list<std::pair<iface::cellml_api::CellMLComponent*,
                       iface::mathml_dom::MathMLElement*> >::iterator i, j, er;
   iface::cellml_api::CellMLComponent* comp = NULL;
-  iface::mathml_dom::MathMLElement* completelyKnown = NULL,
-    *singleWanted = NULL;
-  iface::mathml_dom::MathMLCiElement* wantedCI = NULL;
+  ObjRef<iface::mathml_dom::MathMLElement> completelyKnown, singleWanted;
+  ObjRef<iface::mathml_dom::MathMLCiElement> wantedCI;
   bool eligibleForDirectAssignment = true;
   VariableInformation* wantedVI;
   uint32_t wantedCount = 0;
@@ -1365,7 +1364,7 @@ Equation::AttemptEvaluation
     uint32_t xwantedCount = wantedCount;
     // If it returns false, it means that either the wanted count exceeded one,
     // or a variable neither known nor wanted was encountered.
-    iface::mathml_dom::MathMLCiElement* xCI = wantedCI;
+    ObjRef<iface::mathml_dom::MathMLCiElement> xCI = wantedCI;
     VariableInformation* xVI = wantedVI;
     if (!RecursivelyCountUnknown(aCGS, (*i).first, (*i).second, aAvailable,
                                  aWanted, xwantedCount,
@@ -1481,6 +1480,7 @@ Equation::AttemptEvaluation
   // part, in order to allow the compiler to better optimise. Of course, we
   // could probably do some logic to figure out which one is simplest, and
   // throw the more complex one away(later optimisation).
+  (*er).second->release_ref();
   equal.erase(er);
 
   // The variable is no longer wanted, instead its available...
@@ -1564,4 +1564,16 @@ Equation::AddIfTriggersNR(std::vector<iface::dom::Element*>& aNRList)
                      equal.front().second->parentNode());
   DECLARE_QUERY_INTERFACE(el, n, dom::Element);
   aNRList.push_back(el);
+}
+
+void
+Equation::release_state()
+{
+  std::pair<iface::cellml_api::CellMLComponent*,
+    iface::mathml_dom::MathMLElement*> p = equal.front();
+  equal.pop_front();
+  p.second->release_ref();
+  mDiffCI = NULL;
+  mBoundCI = NULL;
+  mDiff = NULL;
 }

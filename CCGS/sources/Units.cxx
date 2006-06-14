@@ -212,14 +212,10 @@ public:
   }
 private:
   double mFactor, mOffset;
-  // Not a strong reference, because the units element belongs to the same
-  // refcount pool as the variable element, which holds a strong reference
-  // to the scope user data, which in turn references this C.U.D. We instead
-  // assume that the model won't change, and since part of the model was passed
-  // in up the stack (so the caller holds a reference), we know the whole
-  // model won't disappear underneath us. Likewise, the scope is owned by the
-  // CellML element tree, so the same logic applies.
-  iface::cellml_api::Units* mCellML;
+  // This will eventually get released, despite the cycle, because the
+  // temporary annotation manager will explicitly remove the user data and
+  // break the cycle.
+  ObjRef<iface::cellml_api::Units> mCellML;
   CellMLScope* mScope;
   bool mIsBase, mIsReentrant;
   size_t mUnitsCapacity;
