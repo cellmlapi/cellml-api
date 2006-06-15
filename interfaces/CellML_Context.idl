@@ -210,6 +210,9 @@ module cellml_context
   interface ModelNodeMonitor : XPCOM::IObject
   {
     /**
+     * Called whenever the model is renamed. These events go out after the
+     * request to rename has been made, but before the name change actually
+     * takes effect.
      * @param renamedNode The node which was renamed. Fetching name from the
      *                    node will return the old name until after
      *                    modelRenamed has returned.
@@ -217,6 +220,15 @@ module cellml_context
      */
     void modelRenamed(in ModelNode renamedNode,
                       in wstring newName);
+
+    /**
+     * Called whenever the model associated with a node gets replaced (this
+     * usually happens following reserialisation from XML).
+     * @param changedNode The node which was changed.
+     * @param newModel The new model.
+     */
+    void modelReplaced(in ModelNode changedNode,
+                       in cellml_api::Model newModel);
   };
 
   /**
@@ -295,7 +307,7 @@ module cellml_context
     /**
      * The model this node points to...
      */
-    readonly attribute cellml_api::Model model;
+    attribute cellml_api::Model model;
 
     /**
      * The list of all derived models...

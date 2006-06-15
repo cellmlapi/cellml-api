@@ -495,6 +495,63 @@ CDA_ModelNode::model()
   return mModel;
 }
 
+void
+CDA_ModelNode::model(iface::cellml_api::Model* aModel)
+  throw(std::exception&)
+{
+  if (aModel == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  // Now notify the change...
+  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, j;
+  for (i = mModelMonitors.begin(); i != mModelMonitors.end();)
+  {
+    j = i;
+    i++;
+    try
+    {
+      (*j)->modelReplaced(this, aModel);
+    }
+    catch (...)
+    {
+      // Dead listeners get removed from the list...
+      (*j)->release_ref();
+      mModelMonitors.erase(j);
+    }
+  }
+  // Now inform the ancestor lists...
+  CDA_ModelList* curList = mParentList;
+  while (curList)
+  {
+    for (i = curList->mNodeMonitors.begin(); i != curList->mNodeMonitors.end();)
+    {
+      j = i;
+      i++;
+      try
+      {
+        (*j)->modelReplaced(this, aModel);
+      }
+      catch (...)
+      {
+        // Dead listeners get removed from the list...
+        (*j)->release_ref();
+        curList->mNodeMonitors.erase(j);
+      }
+    }
+    if (curList->mParentNode)
+      curList = curList->mParentNode->mParentList;
+    else
+      curList = NULL;
+  }
+
+  if (CDA_objcmp(mModel, aModel))
+  {
+    mModel->release_ref();
+    mModel = aModel;
+    mModel->add_ref();
+  }
+}
+
 iface::cellml_context::ModelList*
 CDA_ModelNode::derivedModels()
   throw(std::exception&)

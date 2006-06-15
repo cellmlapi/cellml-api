@@ -137,6 +137,7 @@ public:
   uint32_t modificationTimestamp() throw(std::exception&);
   void stampModifiedNow() throw(std::exception&);
   iface::cellml_api::Model* model() throw(std::exception&);
+  void model(iface::cellml_api::Model* aModel) throw (std::exception&);
   iface::cellml_context::ModelList* derivedModels() throw(std::exception&);
   void addModelMonitor(iface::cellml_context::ModelNodeMonitor* monitor)
     throw(std::exception&);
