@@ -170,6 +170,35 @@ CDA_ModuleManager::registerModule
   }
 }
 
+struct XPCOMEquator
+{
+  // Warning: does *not* add_ref ao2, instead you must keep reference.
+  XPCOMEquator(iface::XPCOM::IObject* ao2)
+  {
+    o2 = ao2;
+  }
+
+  bool
+  operator()(
+             iface::XPCOM::IObject* o1
+            ) const
+  {
+    /* NULL != x unless x == NULL. */
+    if (o1 == NULL)
+      return o2 ? false : true;
+    char *id1, *id2;
+    id1 = o1->objid();
+    id2 = o2->objid();
+    bool ret = (strcmp(id1, id2) == 0);
+    free(id1);
+    free(id2);
+    return ret;
+  }
+  
+private:
+  iface::XPCOM::IObject* o2;
+};
+
 void
 CDA_ModuleManager::deregisterModule
 (
@@ -189,6 +218,13 @@ CDA_ModuleManager::deregisterModule
   if (i == mRegisteredModules.end())
     return;
 
+  XPCOMEquator xe(aModule);
+  std::list<iface::cellml_context::CellMLModule*>::iterator i3
+    = std::find_if(mRegisteredModuleList.begin(), mRegisteredModuleList.end(),
+                   xe);
+  if (i3 == mRegisteredModuleList.end())
+    return;
+
   std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i2, j2;
   for (i2 = mMonitors.begin(); i2 != mMonitors.end(); i2++)
   {
@@ -205,12 +241,9 @@ CDA_ModuleManager::deregisterModule
     }
   }
 
-  std::list<iface::cellml_context::CellMLModule*>::iterator i3
-    = std::find(mRegisteredModuleList.begin(), mRegisteredModuleList.end(),
-                aModule);
-
   mRegisteredModules.erase(i);
   mRegisteredModuleList.erase(i3);
+
   // We might be removing a dead module, so ignore failures...
   (*i3)->release_ref();
 }
