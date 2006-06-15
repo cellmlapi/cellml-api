@@ -3,6 +3,9 @@
 #include "CORBA_Server_Client.hxx"
 #include <stdlib.h>
 #include "CCGSImplementation.hpp"
+#ifndef WIN32
+#include <signal.h>
+#endif
 
 iface::cellml_context::CellMLContext* gContext;
 iface::cellml_context::CellMLModuleManager* gModMan;
@@ -25,9 +28,26 @@ main(int argc, char** argv)
   gModMan->registerModule(cg);
   cg->release_ref();
 
+#ifdef WIN32
   while (true)
-    sleep(10);
+    sleep(100000);
+#else
+  sigset_t ss;
+  sigemptyset(&ss);
+  sigaddset(&ss, SIGTERM);
+  sigaddset(&ss, SIGINT);
+  printf("Blocking SIGTERM/SIGINT...\n");
+  sigprocmask(SIG_BLOCK, &ss, NULL);
+  siginfo_t si;
+  printf("Waiting for SIGTERM/SIGINT...\n");
+  sigwaitinfo(&ss, &si);
+  printf("Got SIGTERM/SIGINT, deregistering module...\n");
 
-  UnloadCCGS();
+  gModMan->deregisterModule(cg);
+  printf("Module deregistered; releasing manager...\n");
+
+  gModMan->release_ref();
+  printf("Manager released, ready to exit.\n");
   return 0;
+#endif
 }
