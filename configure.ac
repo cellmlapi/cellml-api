@@ -61,6 +61,7 @@ AM_CONDITIONAL(ENABLE_CCGS, test x$ccgs = xtrue)
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
 if test x$context = xtrue; then
+  AC_DEFINE(ENABLE_CONTEXT, 1, [Is the CellML Context enabled?])
   if test x$corba = xtrue; then
     contextandcorba=true
     if test x$ccgs = xtrue; then
@@ -96,8 +97,6 @@ esac
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])
-
-AC_DEFINE(ENABLE_CONTEXT, $ENABLE_CONTEXT, [Is the CellML Context enabled?])
 
 AC_CONFIG_FILES([
                  Makefile
