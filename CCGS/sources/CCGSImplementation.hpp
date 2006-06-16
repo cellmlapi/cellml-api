@@ -32,7 +32,11 @@ public:
   CDA_IMPL_QI1(cellml_services::CGenerator);
 #endif
 
-  CDA_CGenerator() : _cda_refcount(1), mUnload(NULL) {}
+  CDA_CGenerator() : _cda_refcount(1)
+#ifdef ENABLE_CONTEXT
+  , mUnload(NULL)
+#endif
+  {}
   ~CDA_CGenerator() {}
 
   iface::cellml_services::CCodeInformation*
