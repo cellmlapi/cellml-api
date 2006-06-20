@@ -214,6 +214,8 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
          "double* VARIABLES)\n"
          "{\n%s}\n", frag);
   free(frag);
+
+  
 }
 
 int

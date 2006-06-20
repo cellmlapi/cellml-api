@@ -56,10 +56,9 @@ module cellml_services
     readonly attribute boolean hasDifferential;
 
     /**
-     * Indicates whether or not this variable was added automatically to allow
-     * computation of second or higher order derivatives. For example, if we
-     * have something like:
-       <apply><equals>
+     * Indicates the number of derivatives associated with this variable.
+     * For example, if we have something like:
+       <apply><equals/>
          <apply><diff/>
            <bvar><ci>x_1</ci></bvar>
            <ci>x_2</ci>
@@ -67,11 +66,8 @@ module cellml_services
          </apply>
          <ci>x_3</ci>
        </apply>
-     * then we will automatically produce a new variable for the first degree
-     * differential of x_3 with respect to x_1, with derivative=1, as well as
-     * the standard variable for x_2, with derivative 0.
-     * When no higher differentials are involved, only derivative=0 variables
-     * will be created.
+     * then this gets expanded to take up two slots in the rate and variable
+     * arrays. The first slot represents the first derivative, and so on.
      */
     readonly attribute unsigned long derivative;
 

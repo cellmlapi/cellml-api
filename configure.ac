@@ -58,6 +58,21 @@ AC_ARG_ENABLE(ccgs,
 esac],[ccgs=false])
 AM_CONDITIONAL(ENABLE_CCGS, test x$ccgs = xtrue)
 
+AC_ARG_ENABLE(cis,
+[  --enable-cis    Build the CellML Integration Service],
+[case "${enableval}" in
+  yes)
+    if test x$ccgs = xfalse; then
+      AC_MSG_ERROR(You need --enable-ccgs to support --enable-cis)
+    fi
+    cis=true
+    ;;
+  no)
+    cis=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-cis) ;;
+esac],[cis=false])
+AM_CONDITIONAL(ENABLE_CIS, test x$cis = xtrue)
+
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
 if test x$context = xtrue; then

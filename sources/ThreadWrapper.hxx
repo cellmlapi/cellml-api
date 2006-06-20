@@ -1,39 +1,53 @@
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
 // A wrapper for a mutex...
 class CDAMutex
 {
 public:
   CDAMutex()
   {
-#ifdef ENABLE_THREADSAFETY
-    if (!g_thread_supported())
-      g_thread_init(NULL);
-    gmutex = g_mutex_new();
+#ifdef WIN32
+    mMutex = CreateMutex(NULL, FALSE, NULL);
+#else
+    pthread_mutex_init(&mMutex, NULL);
 #endif
   }
 
   ~CDAMutex()
   {
-#ifdef ENABLE_THREADSAFETY
-    g_mutex_free(gmutex);
+#ifdef WIN32
+    CloseHandle(mMutex);
+#else
+    pthread_mutex_destroy(&mMutex);
 #endif
   }
 
   void Lock()
   {
-#ifdef ENABLE_THREADSAFETY
-    g_mutex_lock(gmutex);
+#ifdef WIN32
+    WaitForSingleObject(mMutex, INFINITE);
+#else
+    pthread_mutex_lock(&mMutex);
 #endif
   }
 
   void Unlock()
   {
-#ifdef ENABLE_THREADSAFETY
-    g_mutex_unlock(gmutex);
+#ifdef WIN32
+    ReleaseMutex(mMutex);
+#else
+    pthread_mutex_unlock(&mMutex);
 #endif
   }
 private:
-#ifdef ENABLE_THREADSAFETY
-  GMutex* gmutex;
+#ifdef WIN32
+  HANDLE mMutex;
+#else
+  pthread_mutex_t mMutex;
 #endif
 };
 
@@ -53,4 +67,55 @@ public:
   }
 private:
   CDAMutex& mutex;
+};
+
+class CDAThread
+{
+public:
+  CDAThread()
+    : mRunning(false)
+  {
+  }
+
+  virtual ~CDAThread() {}
+
+  void startthread()
+  {
+    if (!mRunning)
+    {
+      mRunning = true;
+#ifdef WIN32
+      DWORD tid;
+      HANDLE* h = CreateThread(NULL, 0, ThreadProc,
+                               reinterpret_cast<void*>(this), 0, &tid);
+      CloseHandle(h);
+#else
+      pthread_t thread;
+      pthread_create(&thread, NULL, start_routine,
+                     reinterpret_cast<void*>(this));
+      pthread_detach(thread);
+#endif
+    }
+  }
+
+protected:
+  virtual void runthread()
+  {
+  }
+
+private:
+#ifdef WIN32
+  static DWORD WINAPI ThreadProc(LPVOID lpparam)
+  {
+    (reinterpret_cast<CDAThread*>(lpparam))->runthread();
+    return 0;
+  }
+#else
+  static void* start_routine(void* arg)
+  {
+    (reinterpret_cast<CDAThread*>(arg))->runthread();
+    return NULL;
+  }
+#endif
+  bool mRunning;
 };

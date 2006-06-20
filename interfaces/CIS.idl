@@ -1,0 +1,166 @@
+#include "xpcom.idl"
+#include "CCGS.idl"
+
+module cellml_services
+{
+  typedef sequence<double> DoubleSeq;
+
+  enum IntegrationStepType
+  {
+    RUNGE_KUTTA_2_3,
+    RUNGE_KUTTA_4,
+    RUNGE_KUTTA_FEHLBERG_4_5,
+    RUNGE_KUTTA_CASH_KARP_4_5,
+    RUNGE_KUTTA_PRINCE_DORMAND_8_9,
+    RUNGE_KUTTA_IMPLICIT_2,
+    RUNGE_KUTTA_IMPLICIT_2_SOLVE,
+    RUNGE_KUTTA_IMPLICIT_4,
+    BULIRSCH_STOER_IMPLICIT_BD,
+    GEAR_1,
+    GEAR_2
+  };
+
+  interface IntegrationProgressObserver
+    : XPCOM::IObject
+  {
+    /**
+     * Called once the computed constants have been evaluated.
+     * @param values A sequence of computed constant values. The indices into
+     * the sequence match those provided by the CCGS.
+     */
+    void computedConstants(in DoubleSeq values);
+
+    /**
+     * Called when integration results become available. The first results
+     * reproduce the initial conditions, with the second result being for the
+     * initial plus the bvar increment, and so on.
+     * @param state A sequence of results, for one or more bvar values. The
+     *              length of the sequence will always be an exact multiple of
+     *              the size of the variables array, and will contain those
+     *              variables in the same order.
+     */
+    void results(in DoubleSeq state);
+
+    /**
+     * Called after integration has sucessfully completed.
+     */
+    void done();
+
+    /**
+     * Called if integration has failed.
+     * @param msg An error message describing why it failed.
+     */
+    void failed(in string errorMessage);
+  };
+
+  interface CellMLIntegrationRun
+    : XPCOM::IObject
+  {
+    /**
+     * The algorithm used to advance steps. This may only be set once.
+     */
+    attribute IntegrationStepType stepType;
+
+    /**
+     * Sets a standard step size control function.
+     * @param epsAbs The absolute error control.
+     * @param epsRel The relative error control.
+     * @param scalVar The weighting of the variables in the error control
+     *                equation.
+     * @param scalRate The weighting of the rates in the error control
+     *                 equation.
+     */
+    void setStepSizeControl(in double epsAbs, in double epsRel,
+                            in double scalVar, in double scalRate);
+
+    /**
+     * Sets the range of results to be returned.
+     * @param startBvar The first value of the bound variable.
+     * @param stopBvar The final value of the bound variable.
+     * @param inrementBvar The distance between returned bound variable bounds.
+     * Note that startBvar <= stopBvar is required to get integration results.
+     * However, it is not an error otherwise, and so this can be used to get
+     * results when there are no ODEs involved (for example, to find the value
+     * of computed constants).
+     */
+    void setResultRange(in double startBvar, in double stopBvar,
+                        in double incrementBvar);
+
+    /**
+     * Sets the progress observer...
+     * @param ipo The progress observer to set. If this is null, the progress
+     *            observer is cleared. Note that there can only be a single
+     *            progress observer at any one time.
+     */
+    void setProgressObserver(in IntegrationProgressObserver ipo);
+
+    /**
+     * Sets an initial condition override. This is used to change parameters
+     * which have been modified since the model was compiled, without forcing
+     * a recompilation.
+     * @param type The type of variable to set. Can be CONSTANT (sets the
+     *   value of the constant) or DIFFERENTIAL (sets the initial value of the
+     *   the differential).
+     * @param variableIndex The index into the relevant array, as provided by
+     *                      the CCGS VariableInformation structures. When
+     *                      working with second or higher differentials, you
+     *                      can use this to specify which derivative.
+     * @param newValue The value to assign.
+     */
+    void setOverride(
+                     in cellml_services::VariableEvaluationType type,
+                     in unsigned long variableIndex,
+                     in double newValue
+                     ) raises(cellml_api::CellMLException);
+
+    /**
+     * Starts the integration running. Results will get notified to the
+     * progress observer.
+     */
+    void start();
+
+    /**
+     * Requests that the integration stop immediately.
+     */
+    void stop();
+  };
+
+  interface CellMLCompiledModel
+    : XPCOM::IObject
+  {
+    /**
+     * The corresponding CellML model.
+     */
+    readonly attribute cellml_api::Model model;
+
+    /**
+     * Information about the generated C-code which was compiled.
+     */
+    readonly attribute cellml_services::CCodeInformation codeInformation;
+  };
+
+  interface CellMLIntegrationService
+    : XPCOM::IObject
+  {
+    /**
+     * Called to compile the model.
+     * @param cg The C generator which should be used to generate code.
+     * @param aModel The model to compile.
+     */
+    CellMLCompiledModel compileModel(in cellml_services::CGenerator cg,
+                                     in cellml_api::Model aModel)
+      raises(cellml_api::CellMLException);
+
+    /**
+     * Creates an integration run object used to run integration.
+     * @param aModel A compiled model (which must have been created from the same
+     *               CellMLIntegrationService object.
+     */
+    CellMLIntegrationRun createIntegrationRun(in CellMLCompiledModel aModel);
+
+    /**
+     * Returns a description of the last error.
+     */
+    readonly attribute wstring lastError;
+  };
+};

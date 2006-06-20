@@ -2,6 +2,7 @@
 include_HEADERS :=
 lib_LTLIBRARIES :=
 noinst_LTLIBRARIES :=
+noinst_PROGRAMS :=
 bin_PROGRAMS :=
 BUILT_SOURCES :=
 
@@ -38,4 +39,8 @@ endif
 
 if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
 include $(top_srcdir)/CCGS/corba_build.mk
+endif
+
+if ENABLE_CIS
+include $(top_srcdir)/CIS/build.mk
 endif
