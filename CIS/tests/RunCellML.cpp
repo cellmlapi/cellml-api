@@ -14,6 +14,7 @@
 
 bool gFinished = false;
 double gStart = 0.0, gStop = 10.0, gIncrement = 1.0;
+uint32_t gSleepTime = 0;
 
 class TestProgressObserver
   : public iface::cellml_services::IntegrationProgressObserver
@@ -271,6 +272,11 @@ ProcessKeywords(int argc, char** argv,
       gStop = stop;
       gIncrement = increment;
     }
+    // A special undocumented debugging command...
+    else if (!strcasecmp(command, "sleep_time"))
+    {
+      gSleepTime = strtoul(value, NULL, 10);
+    }
     else
       printf("# Warning: Unrecognised command %s. Ignored.\n",
              command);
@@ -387,14 +393,18 @@ main(int argc, char** argv)
 
   TestProgressObserver* tpo = new TestProgressObserver(ccm);
   cir->setProgressObserver(tpo);
-  ProcessKeywords(argc, argv, cir);
   tpo->release_ref();
+
+  ProcessKeywords(argc, argv, cir);
   cir->start();
   cir->release_ref();
   ccm->release_ref();
 
   while (!gFinished)
     sleep(1);
+
+  if (gSleepTime)
+    sleep(gSleepTime);
 
   return 0;
 }

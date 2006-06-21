@@ -47,9 +47,11 @@ EvaluateJacobian
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
   
   // XXX This is very unfortunate. Change CCGS to split arrays?
-  memcpy(ei->variables, vars, ei->rateSizeBytes);
+  if (ei->variables != vars)
+    memcpy(ei->variables, vars, ei->rateSizeBytes);
 
-  double rate0[ei->rateSize], rate1[ei->rateSize];
+  double* rate0 = new double[ei->rateSize];
+  double* rate1 = new double[ei->rateSize];
   ei->ComputeVariables(&bound, rate0, ei->constants, ei->variables);
   ei->ComputeRates(&bound, rate0, ei->constants, ei->variables);
 
@@ -84,6 +86,9 @@ EvaluateJacobian
     rates[i] = (rate1[i] - rate0[i]) / perturb;
   }
 
+  delete [] rate0;
+  delete [] rate1;
+
   return GSL_SUCCESS;
 }
 
@@ -109,6 +114,7 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   sys.jacobian = EvaluateJacobian;
   ei.constants = constants;
   ei.variables = variables;
+  ei.rateSize = rateSize;
   ei.rateSizeBytes = rateSize * sizeof(double);
   ei.ComputeRates = f->ComputeRates;
   ei.ComputeVariables = f->ComputeVariables;
