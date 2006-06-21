@@ -82,11 +82,16 @@ if test x$context = xtrue; then
     if test x$ccgs = xtrue; then
       contextandcorbaandccgs=true
     fi
+    if test x$cis = xtrue; then
+      contextandcorbaandcis=true
+    fi
   fi
 fi
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CCGS,
                test x$contextandcorbaandccgs = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CIS,
+               test x$contextandcorbaandcis = xtrue)
 
 # Checks for header files.
 AC_CHECK_HEADERS([strings.h wchar.h])

@@ -2,6 +2,13 @@
 #include "IfaceCIS.hxx"
 #include "ThreadWrapper.hxx"
 #include <string>
+#include "config.h"
+
+#ifdef ENABLE_CONTEXT
+#include "IfaceCellML_Context.hxx"
+
+extern void UnloadCIS(void);
+#endif
 
 struct CompiledModelFunctions
 {
@@ -105,10 +112,16 @@ private:
 
 class CDA_CellMLIntegrationService
   : public iface::cellml_services::CellMLIntegrationService
+#ifdef ENABLE_CONTEXT
+    , public iface::cellml_context::CellMLModule
+#endif
 {
 public:
   CDA_CellMLIntegrationService()
     : _cda_refcount(1)
+#ifdef ENABLE_CONTEXT
+  , mUnload(NULL)
+#endif
   {
   }
 
@@ -118,8 +131,14 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
+
+#ifdef ENABLE_CONTEXT
+  CDA_IMPL_QI2(cellml_services::CellMLIntegrationService,
+               cellml_context::CellMLModule);
+#else
   CDA_IMPL_QI1(cellml_services::CellMLIntegrationService);
-  
+#endif
+
   iface::cellml_services::CellMLCompiledModel*
   compileModel(iface::cellml_services::CGenerator* aCG,
                iface::cellml_api::Model* aModel)
@@ -133,6 +152,49 @@ public:
   {
     return CDA_wcsdup(mLastError.c_str());
   }
+
+#ifdef ENABLE_CONTEXT
+  iface::cellml_context::CellMLModule::ModuleTypes moduleType()
+    throw(std::exception&)
+  {
+    return iface::cellml_context::CellMLModule::SERVICE;
+  }
+
+  wchar_t* moduleName() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"CIS");
+  }
+
+  wchar_t* moduleDescription() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"The CellML Integration Service");
+  }
+
+  wchar_t* moduleVersion() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"0.0");
+  }
+
+  wchar_t* moduleIconURL() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"");
+  }
+
+  void unload() throw (std::exception&)
+  {
+    if (mUnload != NULL)
+      mUnload();
+  }
+
+  void SetUnloadCIS(void (*unload)(void))
+  {
+    mUnload = unload;
+  }
+#endif
+
 private:
   std::wstring mLastError;
+#ifdef ENABLE_CONTEXT
+  void (*mUnload)();
+#endif
 };
