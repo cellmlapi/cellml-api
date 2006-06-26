@@ -452,6 +452,9 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
       // All ancestors of newChild now need a DOMNodeInsertedIntoDocument...
       newChild->dispatchInsertedIntoDocument(me);
     }
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
+    dispatchEvent(me);
   }
 
   newChild->add_ref();
@@ -503,9 +506,11 @@ iface::dom::Node*
 CDA_Node::removeChildPrivate(CDA_Node* oldChild)
   throw(std::exception&)
 {
+  bool oldTreeHadEffects = false;
   if (oldChild->eventsHaveEffects() &&
       oldChild->nodeType() != iface::dom::Node::ATTRIBUTE_NODE)
   {
+    oldTreeHadEffects = true;
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMNodeRemoved", true, false,
                           this, L"", L"", L"",
@@ -528,6 +533,15 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
 
   if (mDocumentIsAncestor)
     oldChild->updateDocumentAncestorStatus(false);
+
+  if (oldTreeHadEffects)
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMSubtreeModified", true, false,
+                          this, L"", L"", L"",
+                          iface::events::MutationEvent::MODIFICATION);
+    dispatchEvent(me);
+  }
 
   oldChild->add_ref();
   return oldChild;
@@ -1163,6 +1177,9 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
                           at, at->mNodeValue.c_str(), L"", name,
                           iface::events::MutationEvent::REMOVAL);
     mElement->dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
+    mElement->dispatchEvent(me);
   }
 
   at->add_ref();
@@ -1243,6 +1260,9 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           at, at->mNodeValue.c_str(), L"", localName,
                           iface::events::MutationEvent::REMOVAL);
+    mElement->dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     mElement->dispatchEvent(me);
   }
 
@@ -1488,6 +1508,9 @@ CDA_CharacterData::dispatchCharDataModified(const std::wstring& oldValue)
                         NULL, oldValue.c_str(), mNodeValue.c_str(), L"",
                         iface::events::MutationEvent::MODIFICATION);
   dispatchEvent(me);
+  me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                        L"", 0);
+  dispatchEvent(me);
 }
 
 CDA_Node*
@@ -1624,6 +1647,9 @@ CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
                             a, L"", value, name,
                             iface::events::MutationEvent::ADDITION);
       dispatchEvent(me);
+      me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                            L"", 0);
+      dispatchEvent(me);
     }
     return;
   }
@@ -1637,6 +1663,9 @@ CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           (*i).second, oldValue.c_str(), value, name,
                           iface::events::MutationEvent::MODIFICATION);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 }
@@ -1668,6 +1697,9 @@ CDA_Element::removeAttribute(const wchar_t* name)
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           (*i).second, at->mNodeValue.c_str(), L"", name,
                           iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 }
@@ -1711,6 +1743,9 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
                             newAttr, L"", newAttr->mNodeValue.c_str(),
                             name.c_str(), iface::events::MutationEvent::ADDITION);
       dispatchEvent(me);
+      me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                            L"", 0);
+      dispatchEvent(me);
     }
     return NULL;
   }
@@ -1734,6 +1769,9 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           newAttr, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
                           name.c_str(), iface::events::MutationEvent::ADDITION);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 
@@ -1766,6 +1804,9 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           at, at->mNodeValue.c_str(), L"",
                           name.c_str(), iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 
@@ -1830,6 +1871,9 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
                             a, L"", value, localName,
                             iface::events::MutationEvent::ADDITION);
       dispatchEvent(me);
+      me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                            L"", 0);
+      dispatchEvent(me);
     }
     return;
   }
@@ -1843,6 +1887,9 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           (*i).second, oldValue.c_str(), value, localName,
                           iface::events::MutationEvent::MODIFICATION);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 }
@@ -1874,6 +1921,9 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           (*i).second, at->mNodeValue.c_str(), L"", localName,
                           iface::events::MutationEvent::REMOVAL);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 }
@@ -1920,6 +1970,9 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
                             newAttr->mLocalName.c_str(),
                             iface::events::MutationEvent::ADDITION);
       dispatchEvent(me);
+      me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                            L"", 0);
+      dispatchEvent(me);
     }
 
     return NULL;
@@ -1945,6 +1998,9 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
                           newAttr, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
                           newAttr->mLocalName.c_str(),
                           iface::events::MutationEvent::ADDITION);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 
@@ -2241,6 +2297,9 @@ CDA_ProcessingInstruction::data(const wchar_t* attr)
     me->initMutationEvent(L"DOMCharacterData", true, false,
                           NULL, oldData.c_str(), mNodeValue.c_str(), L"",
                           iface::events::MutationEvent::MODIFICATION);
+    dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
     dispatchEvent(me);
   }
 }
