@@ -325,6 +325,19 @@ CDA_CellMLIntegrationService::compileModel
     throw iface::cellml_api::CellMLException();
   }
 
+  iface::cellml_services::ModelConstraintLevel mcl = cci->constraintLevel();
+  if (mcl != iface::cellml_services::CORRECTLY_CONSTRAINED)
+  {
+    if (mcl == iface::cellml_services::OVERCONSTRAINED)
+      mLastError = L"Model is overconstrained. Run CellML2C for more "
+        L"information.";
+    else
+      mLastError = L"Model is underconstrained. Run CellML2C for more "
+        L"information.";
+    throw iface::cellml_api::CellMLException();
+  }
+
+
   // Create a temporary directory...
   const char* tmpenvs[] = {"TMPDIR", "TEMP", "TMP", NULL};
   const char** p = tmpenvs;
