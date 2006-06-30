@@ -20,6 +20,39 @@ UnloadCCGS()
 int
 main(int argc, char** argv)
 {
+#ifndef WIN32
+  bool forked = false;
+  if (argc > 1)
+  {
+    char* command = argv[1];
+    while (command[0] == '-')
+      command++;
+    if (!strcasecmp(command, "fork"))
+    {
+      pid_t p = fork();
+      if (p < 0)
+      {
+        perror("fork");
+        return -1;
+      }
+      else if (p > 0)
+      {
+        return 0;
+      }
+      forked = true;
+      setsid();
+      signal(SIGHUP, SIG_IGN);
+    }
+    else if (!strcasecmp(command, "foreground"))
+      ;
+    else
+    {
+      printf("Usage: CCGSService [help|fork|foreground]\n");
+      return strcasecmp(command, "help");
+    }
+  }
+#endif
+
   gContext = GetCellMLContext(argc, argv);
   gModMan = gContext->moduleManager();
 
@@ -36,18 +69,17 @@ main(int argc, char** argv)
   sigemptyset(&ss);
   sigaddset(&ss, SIGTERM);
   sigaddset(&ss, SIGINT);
-  printf("Blocking SIGTERM/SIGINT...\n");
+  if (!forked)
+    printf("Blocking SIGTERM/SIGINT...\n");
   sigprocmask(SIG_BLOCK, &ss, NULL);
   siginfo_t si;
-  printf("Waiting for SIGTERM/SIGINT...\n");
+  if (!forked)
+    printf("Waiting for SIGTERM/SIGINT...\n");
   sigwaitinfo(&ss, &si);
-  printf("Got SIGTERM/SIGINT, deregistering module...\n");
 
   gModMan->deregisterModule(cg);
-  printf("Module deregistered; releasing manager...\n");
 
   gModMan->release_ref();
-  printf("Manager released, ready to exit.\n");
   return 0;
 #endif
 }

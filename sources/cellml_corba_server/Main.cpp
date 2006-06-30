@@ -10,6 +10,9 @@
 #include "IfaceCellML_APISPEC.hxx"
 #include "CellMLContextBootstrap.hxx"
 #include "SCICellML_Context.hxx"
+#ifndef WIN32
+#include <signal.h>
+#endif
 
 CORBA::ORB_var gBroker;
 
@@ -120,6 +123,37 @@ PrepareCellMLHome(void)
 int
 main(int argc, char** argv)
 {
+#ifndef WIN32
+  if (argc > 1)
+  {
+    char* command = argv[1];
+    while (command[0] == '-')
+      command++;
+    if (!strcasecmp(command, "fork"))
+    {
+      pid_t p = fork();
+      if (p < 0)
+      {
+        perror("fork");
+        return -1;
+      }
+      else if (p > 0)
+      {
+        return 0;
+      }
+      setsid();
+      signal(SIGHUP, SIG_IGN);
+    }
+    else if (!strcasecmp(command, "foreground"))
+      ;
+    else
+    {
+      printf("Usage: cellml_corba_server [help|fork|foreground]\n");
+      return strcasecmp(command, "help");
+    }
+  }
+#endif
+
   gBroker = CORBA::ORB_init(argc, argv);
 
   FILE* fIOR = PrepareCellMLHome();
