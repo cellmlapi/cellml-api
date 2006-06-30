@@ -15,10 +15,58 @@
 #define swprintf _snwprintf
 #endif
 
-static iface::cellml_api::CellMLElement*
+static CDA_CellMLElement*
 WrapCellMLElement(iface::XPCOM::IObject* newParent,
                   iface::dom::Element* el) throw(std::exception&);
 
+/*
+ * This next bit is a very pragmatic way of deciding when to throw away the
+ * caches. We need to know when the cache might be stale, while at the same
+ * time changes must be efficient. This problem is not as easy as checking the
+ * root, since we could easily be working with partial fragments, which get
+ * re-arranged. We could do this properly by visiting all elements connected to
+ * the element being changed, and invalidating the cache at that time, but that
+ * would be too slow. Instead, we have a single global serial number, which we
+ * touch every time a change is made. If the current serial number doesn't
+ * match the number on the cache, we throw the cache away and rebuild. This
+ * does, of course, have the downside that if you have two models open, changes
+ * to one model will wipe the cache of the other, completely separate model.
+ * The other issue is that serial numbers wrap, so we should make sure the type
+ * is big enough. At 1000 changes/second, it would take 49 days to get a
+ * conflict with 32 bits, or about 585 million years with 64 bits.
+ */
+cda_serial_t gCDAChangeSerial = 0;
+
+// Called to update the change serial when something changes...
+static void CDA_SomethingChanged()
+{
+  gCDAChangeSerial++;
+}
+
+// Returns true if a cache serial matches the global serial.
+static bool CDA_CompareSerial(cda_serial_t aSerial)
+{
+  return gCDAChangeSerial == aSerial;
+}
+
+// A global change listener...
+class CDAGlobalChangeListener
+  : public iface::events::EventListener
+{
+public:
+  CDA_IMPL_ID
+  CDA_IMPL_QI1(events::EventListener)
+  void add_ref() throw() {}
+  void release_ref() throw() {}
+
+  void handleEvent(iface::events::Event* aEvent)
+    throw()
+  {
+    CDA_SomethingChanged();
+  }
+};
+
+CDAGlobalChangeListener gCDAChangeListener;
 
 CDA_RDFXMLDOMRepresentation::CDA_RDFXMLDOMRepresentation(iface::dom::Element* idata)
   : _cda_refcount(1), datastore(idata)
@@ -121,6 +169,14 @@ CDA_CellMLElement::CDA_CellMLElement
 {
   if (parent != NULL)
     parent->add_ref();
+  else
+  {
+    // We have an unparented element, so changes to it are cache invalidating
+    // events...
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, datastore, events::EventTarget);
+    targ->addEventListener(L"DOMSubtreeModified",
+                           &gCDAChangeListener, false);
+  }
   datastore->add_ref();
 }
 
@@ -138,7 +194,12 @@ CDA_CellMLElement::~CDA_CellMLElement()
   cleanupEvents();
 
   if (datastore != NULL)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, datastore, events::EventTarget);
+    targ->removeEventListener(L"DOMSubtreeModified", &gCDAChangeListener,
+                              false);
     datastore->release_ref();
+  }
 
   // Reference counts are shared across all connected elements and sets, so
   // when the reference count goes to zero, it is each element's responsibility
@@ -560,13 +621,18 @@ CDA_CellMLElement::removeByName
 )
   throw(std::exception&)
 {
-  iface::cellml_api::CellMLElementSet* elS = childElements();
-  iface::cellml_api::CellMLElementIterator* it = elS->iterate();
-  iface::cellml_api::CellMLElement* n;
-  while ((n = it->next()) != NULL)
+  RETURN_INTO_OBJREF(elS, iface::cellml_api::CellMLElementSet, childElements());
+  RETURN_INTO_OBJREF(it, CDA_CellMLElementIterator,
+                     dynamic_cast<CDA_CellMLElementIterator*>(elS->iterate()));
+  while (true)
   {
-    bool removeThis = false;
-    CDA_NamedCellMLElement* el = dynamic_cast<CDA_NamedCellMLElement*>(n);
+    RETURN_INTO_OBJREF(n, iface::cellml_api::CellMLElement,
+                       it->next());
+    if (n == NULL)
+      break;
+
+    CDA_NamedCellMLElement* el =
+      dynamic_cast<CDA_NamedCellMLElement*>(n.getPointer());
     if (el != NULL)
     {
       RETURN_INTO_WSTRING(tn, el->datastore->localName());
@@ -574,17 +640,13 @@ CDA_CellMLElement::removeByName
       {
         RETURN_INTO_WSTRING(elname, el->name());
         if (elname == name)
-          removeThis = true;
+        {
+          removeElement(n);
+          break;
+        }
       }
     }
-    if (removeThis)
-      removeElement(n);
-    n->release_ref();
-    if (removeThis)
-      break;
   }
-  it->release_ref();
-  elS->release_ref();
 }
 
 iface::cellml_api::CellMLElement*
@@ -5326,6 +5388,80 @@ CDA_DOMElementIteratorBase::fetchNextElement()
   }
 }
 
+iface::dom::Element*
+CDA_DOMElementIteratorBase::fetchNextElement(const wchar_t* aWantEl)
+{
+  try
+  {
+    if (mPrevElement == NULL)
+    {
+      // Search for the first element...
+      uint32_t i;
+      uint32_t l = mNodeList->length();
+      for (i = 0; i < l; i++)
+      {
+        RETURN_INTO_OBJREF(nodeHit, iface::dom::Node, mNodeList->item(i));
+        RETURN_INTO_WSTRING(elN, nodeHit->localName());
+        if (elN != aWantEl)
+          continue;
+
+        QUERY_INTERFACE(mPrevElement, nodeHit, dom::Element);
+        if (mPrevElement != NULL)
+        {
+          DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
+          targ->addEventListener(L"DOMNodeRemoved", &icml, false);
+          break;
+        }
+      }
+      if (mPrevElement == NULL)
+      {
+        return NULL;
+      }
+    }
+    else
+    {
+      // Once mNextElement is NULL, we are at the end until more elements are
+      // inserted.
+      if (mNextElement == NULL)
+      {
+        return NULL;
+      }
+      DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
+      targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
+      mPrevElement->release_ref();
+      mPrevElement = mNextElement;
+      mNextElement = NULL;
+    }
+
+    // We now have a valid previous element, which will be our return value.
+    // However, to maintain our assumptions, we need to find mNextElement.
+    RETURN_INTO_OBJREF(nodeHit, iface::dom::Node, mPrevElement->nextSibling());
+
+    while (nodeHit != NULL)
+    {
+      RETURN_INTO_WSTRING(elN, nodeHit->localName());
+      if (elN == aWantEl)
+      {
+        QUERY_INTERFACE(mNextElement, nodeHit, dom::Element);
+        if (mNextElement != NULL)
+        {
+          DECLARE_QUERY_INTERFACE_OBJREF(targ, mNextElement,
+                                         events::EventTarget);
+          targ->addEventListener(L"DOMNodeRemoved", &icml, false);
+          break;
+        }
+      }
+      nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
+    }
+    
+    return mPrevElement;
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
 void
 CDA_DOMElementIteratorBase::IteratorChildrenModificationListener::
 handleEvent(iface::events::Event* evt)
@@ -6040,7 +6176,7 @@ CDA_CellMLElementIterator::~CDA_CellMLElementIterator()
   parentSet->release_ref();
 }
 
-static iface::cellml_api::CellMLElement*
+static CDA_CellMLElement*
 WrapCellMLElement(iface::XPCOM::IObject* newParent,
                   iface::dom::Element* el)
   throw(std::exception&)
@@ -6147,7 +6283,41 @@ CDA_CellMLElementIterator::next()
   }
 
   // We have an unwrapped element, so we need to wrap it...
-  iface::cellml_api::CellMLElement* cel =
+  CDA_CellMLElement* cel =
+    WrapCellMLElement(parentSet->mParent, el);
+  parentSet->addChildToWrapper(cel);
+
+  return cel;
+}
+
+iface::cellml_api::CellMLElement*
+CDA_CellMLElementIterator::next(const wchar_t* aWantEl)
+  throw(std::exception&)
+{
+  iface::dom::Element* el;
+  while (true)
+  {
+    el = fetchNextElement(aWantEl);
+    if (el == NULL)
+    {
+      return NULL;
+    }
+    RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
+    if (nsURI == CELLML_1_0_NS || nsURI == CELLML_1_1_NS)
+      break;
+  }
+
+  // We have an element. Now go back to the set, and look in the map...
+  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*, XPCOMComparator>
+     ::iterator i = parentSet->childMap.find(el);
+  if (i != parentSet->childMap.end())
+  {
+    (*i).second->add_ref();
+    return (*i).second;
+  }
+
+  // We have an unwrapped element, so we need to wrap it...
+  CDA_CellMLElement* cel =
     WrapCellMLElement(parentSet->mParent, el);
   parentSet->addChildToWrapper(cel);
 
@@ -6370,17 +6540,21 @@ CDA_CellMLElementSet::iterate()
 }
 
 void
-CDA_CellMLElementSet::addChildToWrapper(iface::cellml_api::CellMLElement* el)
+CDA_CellMLElementSet::addChildToWrapper(CDA_CellMLElement* el)
 {
+  DECLARE_QUERY_INTERFACE_OBJREF(targ, el->datastore, events::EventTarget);
+  targ->removeEventListener(L"DOMSubtreeModified", &gCDAChangeListener, false);
   childMap.insert(std::pair<iface::dom::Element*,
                             iface::cellml_api::CellMLElement*>
-                  (dynamic_cast<CDA_CellMLElement*>(el)->datastore, el));
+                  (el->datastore, el));
 }
 
 void
-CDA_CellMLElementSet::removeChildFromWrapper(iface::cellml_api::CellMLElement* el)
+CDA_CellMLElementSet::removeChildFromWrapper(CDA_CellMLElement* el)
 {
-  childMap.erase(dynamic_cast<CDA_CellMLElement*>(el)->datastore);
+  DECLARE_QUERY_INTERFACE_OBJREF(targ, el->datastore, events::EventTarget);
+  targ->addEventListener(L"DOMSubtreeModified", &gCDAChangeListener, false);
+  childMap.erase(el->datastore);
 }
 
 iface::cellml_api::NamedCellMLElement*
@@ -6578,14 +6752,14 @@ SIMPLE_SET_ITERATORFETCH
  iterateRoles
 );
 
-#define SIMPLE_ITERATOR_NEXT(itname, ifacename, nextname) \
+#define SIMPLE_ITERATOR_NEXT(itname, ifacename, nextname, restrict) \
 iface::cellml_api::CellMLElement* \
 itname::next() \
   throw(std::exception&) \
 { \
   while (true) \
   { \
-    RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement, mInner->next()); \
+    RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement, mInner->next restrict); \
     if (el == NULL) \
       return NULL; \
     iface::cellml_api::ifacename* targEl = \
@@ -6604,22 +6778,23 @@ itname::nextname() \
 }
 
 SIMPLE_ITERATOR_NEXT(CDA_CellMLComponentIteratorBase, CellMLComponent,
-                     nextComponent);
+                     nextComponent, (L"component"));
 SIMPLE_ITERATOR_NEXT(CDA_ImportComponentIterator, ImportComponent,
-                     nextImportComponent);
+                     nextImportComponent, (L"component"));
 SIMPLE_ITERATOR_NEXT(CDA_CellMLVariableIterator, CellMLVariable,
-                     nextVariable);
+                     nextVariable, (L"variable"));
 SIMPLE_ITERATOR_NEXT(CDA_UnitsIteratorBase, Units,
-                     nextUnits);
+                     nextUnits, (L"units"));
 SIMPLE_ITERATOR_NEXT(CDA_ImportUnitsIterator, ImportUnits,
-                     nextImportUnits);
+                     nextImportUnits, (L"units"));
 SIMPLE_ITERATOR_NEXT(CDA_CellMLImportIterator, CellMLImport,
-                     nextImport);
+                     nextImport, (L"import"));
 SIMPLE_ITERATOR_NEXT(CDA_UnitIterator, Unit,
-                     nextUnit);
+                     nextUnit, (L"unit"));
 SIMPLE_ITERATOR_NEXT(CDA_ConnectionIterator, Connection,
-                     nextConnection);
-SIMPLE_ITERATOR_NEXT(CDA_ReactionIterator, Reaction, nextReaction);
+                     nextConnection, (L"connection"));
+SIMPLE_ITERATOR_NEXT(CDA_ReactionIterator, Reaction, nextReaction,
+                     (L"reaction"));
 
 static bool
 DoesGroupHaveRelationshipRef(iface::dom::Element* el, const std::wstring& rrname)
@@ -6659,7 +6834,7 @@ CDA_GroupIterator::next()
 {
   while (true)
   {
-    RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement, mInner->next());
+    RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement, mInner->next(L"group"));
     if (el == NULL)
       return NULL;
     CDA_Group* targEl =
@@ -6684,15 +6859,15 @@ CDA_GroupIterator::nextGroup()
 }
 
 SIMPLE_ITERATOR_NEXT(CDA_RelationshipRefIterator, RelationshipRef,
-                     nextRelationshipRef);
+                     nextRelationshipRef, (L"relationship_ref"));
 SIMPLE_ITERATOR_NEXT(CDA_ComponentRefIterator, ComponentRef,
-                     nextComponentRef);
+                     nextComponentRef, (L"component_ref"));
 SIMPLE_ITERATOR_NEXT(CDA_MapVariablesIterator, MapVariables,
-                     nextMapVariable);
+                     nextMapVariable, (L"map_variables"));
 SIMPLE_ITERATOR_NEXT(CDA_VariableRefIterator, VariableRef,
-                     nextVariableRef);
+                     nextVariableRef, (L"variable_ref"));
 SIMPLE_ITERATOR_NEXT(CDA_RoleIterator, Role,
-                     nextRole);
+                     nextRole, (L"role"));
 
 iface::cellml_api::GroupSet*
 CDA_GroupSet::getSubsetInvolvingRelationship(const wchar_t* relName)

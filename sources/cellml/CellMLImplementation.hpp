@@ -11,6 +11,8 @@
 #include <typeinfo>
 #include <assert.h>
 
+typedef uint32_t cda_serial_t;
+
 class CDA_RDFXMLDOMRepresentation
   : public iface::cellml_api::RDFXMLDOMRepresentation
 {
@@ -723,6 +725,20 @@ public:
   virtual ~CDA_DOMElementIteratorBase();
 
   iface::dom::Element* fetchNextElement();
+  /*
+   * fetch next element, with a hint that anything without localName aWantEl
+   * can safely be skipped.
+   * Notes:
+   *  1) Don't call this if you ever want anything which doesn't match aWantEl
+   *     on this iterator, even on a subsequent call, as this sets up state for
+   *     the next call on the assumption it will be the same.
+   *  2) There is no guarantee that the returned value will be aWantEl.
+   *     Instead, this is a hint only, used for optimisation purposes. In
+   *     particular, previously computed values from past calls to
+   *     fetchNextElement() and newly inserted nodes can be returned which
+   *     don't match aWantEl.
+   */
+  iface::dom::Element* fetchNextElement(const wchar_t* aWantEl);
 
 private:
   iface::dom::Element *mPrevElement, *mNextElement, *mParentElement;
@@ -765,6 +781,10 @@ public:
   CDA_IMPL_ID;
 
   iface::cellml_api::CellMLElement* next() throw(std::exception&);
+  // Same as the previous, but uses aWantEl (see DOMElementIteratorBase for
+  // information on the aWantEl optimisation).
+  iface::cellml_api::CellMLElement* next(const wchar_t* aWantEl)
+    throw(std::exception&);
 
 private:
   CDA_CellMLElementSet* parentSet;
@@ -909,8 +929,8 @@ public:
   
 
   // This adds a child into the element set.
-  void addChildToWrapper(iface::cellml_api::CellMLElement*);
-  void removeChildFromWrapper(iface::cellml_api::CellMLElement*);
+  void addChildToWrapper(CDA_CellMLElement*);
+  void removeChildFromWrapper(CDA_CellMLElement*);
 
   iface::XPCOM::IObject* mParent;
 private:
