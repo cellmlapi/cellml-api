@@ -1,0 +1,47 @@
+#! /bin/sh
+# /etc/init.d/CellML: Start the CellML Context, and CellML Code Generation
+#                     Service.
+
+#CELLML_HOME=/var/run/cellml
+CELLML_HOME=/tmp
+#CELLML_BIN_DIR=/usr/sbin
+CELLML_BIN_DIR=/people/amil082/code/CellML_DOM_API
+CELLML_USER=cellml
+
+CELLML_CORBA_SERVER_BIN=$CELLML_BIN_DIR/cellml_corba_server
+CCGS_BIN=$CELLML_BIN_DIR/CCGSService
+CORBA_STARTUP_MARGIN=5
+
+# Only bind locally...
+ORBendPoint=giop:tcp:127.0.0.1:0
+
+. /lib/lsb/init-functions
+
+case "$1" in
+    start)
+        log_begin_msg "Starting CellML CORBA server..."
+        start-stop-daemon --start --exec $CELLML_CORBA_SERVER_BIN -- --fork
+        log_end_msg $?
+        sleep 1
+        log_begin_msg "Starting CellML Code Generation Service..."
+        start-stop-daemon --start --exec $CCGS_BIN -- --fork
+        log_end_msg $?
+        ;;
+    stop)
+        log_begin_msg "Stopping CellML Code Generation Service..."
+        start-stop-daemon --stop --exec $CCGS_BIN
+        log_end_msg $?
+        sleep 1
+        log_begin_msg "Stopping CellML CORBA server..."
+        start-stop-daemon --stop --exec $CELLML_CORBA_SERVER_BIN
+        log_end_msg $?
+        ;;
+    restart|force-reload)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    *)
+        log_success_msg "Usage: /etc/init.d/CellML {start|stop|restart|force-reload}"
+        exit 1
+esac
