@@ -1123,8 +1123,41 @@ CDA_DOMImplementation::loadDocument
   throw(std::exception&)
 {
   char* URL = CDA_wchar_to_UTF8(aURL);
+  char* protRestrict = getenv("CELLML_RESTRICT_PROTOCOL");
+  if (protRestrict != NULL)
+  {
+    bool isAllowed = false;
+    while (protRestrict)
+    {
+      char* pr = strchr(protRestrict, ',');
+      uint32_t l;
+      if (pr != NULL)
+      {
+        l = pr - protRestrict;
+        pr++;
+      }
+      else
+        l = strlen(protRestrict);
+      if (strlen(URL) > l &&
+          URL[l] == ':' &&
+          !strncmp(protRestrict, URL, l))
+      {
+        isAllowed = true;
+        break;
+      }
+      
+      protRestrict = pr;
+    }
+    if (!isAllowed)
+    {
+      aErrorMessage = L"noperm";
+      free(URL);
+      return NULL;
+    }
+  }
   std::string sURL = URL;
   free(URL);
+
 
   xmlParserCtxtPtr ctxt =
     xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, sURL.c_str());
