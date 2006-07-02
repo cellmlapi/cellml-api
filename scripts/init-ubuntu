@@ -2,8 +2,8 @@
 # /etc/init.d/CellML: Start the CellML Context, and CellML Code Generation
 #                     Service.
 
-#CELLML_HOME=/var/run/cellml
-CELLML_HOME=/tmp
+#export CELLML_HOME=/var/run/cellml
+export CELLML_HOME=/tmp
 #CELLML_BIN_DIR=/usr/sbin
 CELLML_BIN_DIR=/people/amil082/code/CellML_DOM_API
 CELLML_USER=cellml
@@ -13,7 +13,7 @@ CCGS_BIN=$CELLML_BIN_DIR/CCGSService
 CORBA_STARTUP_MARGIN=5
 
 # Only bind locally...
-ORBendPoint=giop:tcp:127.0.0.1:0
+export ORBendPoint=giop:tcp:127.0.0.1:0
 
 . /lib/lsb/init-functions
 
