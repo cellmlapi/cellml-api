@@ -19,6 +19,8 @@ UnloadCCGS()
 
 // This is a hack to force linking...
 #include "SCICCGS.hxx"
+#include "corba_support/WrapperRepository.hxx"
+#include "CCICCGS.hxx"
 
 int
 main(int argc, char** argv)
