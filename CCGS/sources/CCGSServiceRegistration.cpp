@@ -17,6 +17,9 @@ UnloadCCGS()
   exit(-1);
 }
 
+// This is a hack to force linking...
+#include "SCICCGS.hxx"
+
 int
 main(int argc, char** argv)
 {
@@ -75,11 +78,17 @@ main(int argc, char** argv)
   siginfo_t si;
   if (!forked)
     printf("Waiting for SIGTERM/SIGINT...\n");
-  sigwaitinfo(&ss, &si);
+  while (sigwaitinfo(&ss, &si) < 0)
+    ;
 
   gModMan->deregisterModule(cg);
 
   gModMan->release_ref();
+
+  // Ugly hack to force linking...
+  SCI::cellml_services::prodCCodeVariable();
+  CCI::cellml_services::prodCCodeVariable();
+  
   return 0;
 #endif
 }

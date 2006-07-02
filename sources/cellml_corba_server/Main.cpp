@@ -36,16 +36,15 @@ PrepareCellMLHome(void)
   const char* chome = getenv("CELLML_HOME");
   std::string cellml_home;
   if (chome == NULL)
+  {
     chome = getenv("HOME");
+    cellml_home = chome;
+    cellml_home += "/.cellml";
+  }
   else
     cellml_home = chome;
   if (chome == NULL)
     cellml_home = "/.cellml";
-  else
-  {
-    cellml_home = chome;
-    cellml_home += "/.cellml";
-  }
 
   // Grant everyone permission, umask will restrict if needed.
   int ret = mkdir(cellml_home.c_str(), 0777);
