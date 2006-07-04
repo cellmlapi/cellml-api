@@ -22,7 +22,7 @@ libcellml_corba_la_SOURCES := \
   $(top_builddir)/interfaces/CellML_eventsSK.cc
 
 libcellml_corba_la_CXXFLAGS := \
-  -I$(top_srcdir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
+  -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
 
 # Force correct order of compilation...
 $(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc
