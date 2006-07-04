@@ -2772,8 +2772,7 @@ CDA_MathMLPiecewiseElement::otherwise()
   throw(std::exception&)
 {
   // See if we can find an otherwise...
-  ObjRef<iface::dom::NodeList> nl = childNodes();
-  ObjRef<iface::dom::Node> n;
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList, childNodes());
   uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
@@ -2812,8 +2811,7 @@ CDA_MathMLPiecewiseElement::otherwise(iface::mathml_dom::MathMLContentElement* a
   throw(std::exception&)
 {
   // See if we can find an otherwise...
-  ObjRef<iface::dom::NodeList> nl = childNodes();
-  ObjRef<iface::dom::Node> n;
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList, childNodes());
   uint32_t i, l = nl->length();
   for (i = 0; i < l; i++)
   {
@@ -2849,7 +2847,7 @@ CDA_MathMLPiecewiseElement::otherwise(iface::mathml_dom::MathMLContentElement* a
   RETURN_INTO_OBJREF(el, iface::dom::Element,
                      od->createElementNS(MATHML_NS, L"otherwise"));
   el->appendChild(attr)->release_ref();
-  appendChild(el);
+  appendChild(el)->release_ref();
 }
 
 iface::mathml_dom::MathMLCaseElement*
