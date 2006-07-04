@@ -9,7 +9,6 @@ CELLML_BIN_DIR=/people/amil082/code/CellML_DOM_API
 CELLML_USER=cellml
 
 CELLML_CORBA_SERVER_BIN=$CELLML_BIN_DIR/cellml_corba_server
-CCGS_BIN=$CELLML_BIN_DIR/CCGSService
 
 # Only bind locally...
 export ORBendPoint=giop:tcp:127.0.0.1:0
@@ -21,16 +20,8 @@ case "$1" in
         log_begin_msg "Starting CellML CORBA server..."
         start-stop-daemon --start --user $CELLML_USER --chuid $CELLML_USER --exec $CELLML_CORBA_SERVER_BIN -- --fork
         log_end_msg $?
-        sleep 1
-        log_begin_msg "Starting CellML Code Generation Service..."
-        start-stop-daemon --start --user $CELLML_USER --chuid $CELLML_USER --exec $CCGS_BIN -- --fork
-        log_end_msg $?
         ;;
     stop)
-        log_begin_msg "Stopping CellML Code Generation Service..."
-        start-stop-daemon --stop --user $CELLML_USER --exec $CCGS_BIN
-        log_end_msg $?
-        sleep 1
         log_begin_msg "Stopping CellML CORBA server..."
         start-stop-daemon --stop --user $CELLML_USER --exec $CELLML_CORBA_SERVER_BIN
         log_end_msg $?
