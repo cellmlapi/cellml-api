@@ -3,8 +3,12 @@
 
 #include "config.h"
 
-#if SIZEOF_WCHAR_TP == 4
+#if SIZEOF_WCHAR_TP == 8
+#define WCHAR_T_IS_64BIT
+#define WCHAR_T_CONSTANT_WIDTH
+#elif SIZEOF_WCHAR_TP == 4
 #define WCHAR_T_IS_32BIT
+#define WCHAR_T_CONSTANT_WIDTH
 #elif SIZEOF_WCHAR_TP != 2
 #error "Only UTF16 and UCS4 wide characters are supported, but your "
 #error "compiler has a different length type."
@@ -237,6 +241,10 @@ private:
     }
 
 #ifdef USE_GDOME // Various code only used with GDOME...
+
+#ifdef WCHAR_T_IS_64BIT
+#error GDOME and 64 bit wont work together
+#endif
 
 #ifdef WCHAR_T_IS_32BIT
 #define g_wchar_to_char g_ucs4_to_utf8

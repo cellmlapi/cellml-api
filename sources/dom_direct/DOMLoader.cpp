@@ -64,7 +64,7 @@ operator+=(std::wstring& data, const char* str)
       np = buf;
     }
 
-#ifndef WCHAR_T_IS_32BIT
+#ifndef WCHAR_T_CONSTANT_WIDTH
     if (l == 4)
     {
       uint8_t c2 = (uint8_t)*p++;
@@ -83,7 +83,7 @@ operator+=(std::wstring& data, const char* str)
         *np <<= 6;
         *np |= ((*p++) & 0x3F);
       }
-#ifndef WCHAR_T_IS_32BIT
+#ifndef WCHAR_T_CONSTANT_WIDTH
     }
 #endif
 
@@ -123,7 +123,7 @@ CDA_wchar_to_UTF8(const wchar_t *str)
       *np++ = (char)(0xC0 | ((c >> 6) & 0x1F));
       *np++ = (char)(0x80 | (c & 0x3F));
     }
-#ifndef WCHAR_T_IS_32BIT
+#ifndef WCHAR_T_CONSTANT_WIDTH
     else if ((c & 0xFC00) == 0xD800)
     {
       uint16_t u = ((c >> 6) & 0xF) + 1;
@@ -135,7 +135,7 @@ CDA_wchar_to_UTF8(const wchar_t *str)
     }
 #endif
     else
-#ifdef WCHAR_T_IS_32BIT
+#ifdef WCHAR_T_CONSTANT_WIDTH
          if (c <= 0xFFFF)
 #endif
     {
@@ -143,7 +143,7 @@ CDA_wchar_to_UTF8(const wchar_t *str)
       *np++ = (char)(0x80 | ((c >> 6) & 0x3F));
       *np++ = (char)(0x80 | (c & 0x3F));
     }
-#ifdef WCHAR_T_IS_32BIT
+#ifdef WCHAR_T_CONSTANT_WIDTH
     else
     {
       *np++ = (char)(0xF0 | ((c >> 18) & 0x7));
