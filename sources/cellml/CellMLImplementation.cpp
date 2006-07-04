@@ -805,7 +805,10 @@ CDA_Model::CDA_Model(iface::cellml_api::DOMURLLoader* aLoader,
                      iface::dom::Element* modelElement)
   : CDA_CellMLElement(NULL, modelElement),
     CDA_NamedCellMLElement(NULL, modelElement),
-    mLoader(aLoader), mDoc(aDoc), mNextUniqueIdentifier(1)
+    mLoader(aLoader), mDoc(aDoc), mNextUniqueIdentifier(1),
+    mConnectionSet(NULL), mGroupSet(NULL), mImportSet(NULL),
+    mComponentSet(NULL), mAllComponents(NULL), mModelComponents(NULL),
+    mLocalUnits(NULL), mAllUnits(NULL), mModelUnits(NULL)
 {
   mDoc->add_ref();
 }
@@ -824,6 +827,33 @@ CDA_Model::~CDA_Model()
   //  delete children;
   //  children = NULL;
   //}
+
+  if (mConnectionSet != NULL)
+    delete mConnectionSet;
+
+  if (mGroupSet != NULL)
+    delete mGroupSet;
+
+  if (mImportSet != NULL)
+    delete mImportSet;
+
+  if (mComponentSet != NULL)
+    delete mComponentSet;
+
+  if (mAllComponents != NULL)
+    delete mAllComponents;
+
+  if (mModelComponents != NULL)
+    delete mModelComponents;
+
+  if (mLocalUnits != NULL)
+    delete mLocalUnits;
+
+  if (mAllUnits != NULL)
+    delete mAllUnits;
+
+  if (mModelUnits != NULL)
+    delete mModelUnits;
 
   mDoc->release_ref();
 }
@@ -969,6 +999,12 @@ iface::cellml_api::GroupSet*
 CDA_Model::groups()
   throw(std::exception&)
 {
+  if (mGroupSet != NULL)
+  {
+    mGroupSet->add_ref();
+    return mGroupSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -977,17 +1013,26 @@ CDA_Model::groups()
      )
     );
 
-  return new CDA_GroupSet(allChildren);
+  mGroupSet = new CDA_GroupSet(this, allChildren);
+  return mGroupSet;
 }
 
 iface::cellml_api::CellMLImportSet*
 CDA_Model::imports()
   throw(std::exception&)
 {
+  if (mImportSet != NULL)
+  {
+    mImportSet->add_ref();
+    return mImportSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
      (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
-  return new CDA_CellMLImportSet(allChildren);
+
+  mImportSet = new CDA_CellMLImportSet(this, allChildren);
+  return mImportSet;
 }
 
 iface::cellml_api::URI*
@@ -1027,83 +1072,134 @@ iface::cellml_api::UnitsSet*
 CDA_Model::localUnits()
   throw(std::exception&)
 {
+  if (mLocalUnits != NULL)
+  {
+    mLocalUnits->add_ref();
+    return mLocalUnits;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
      (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
 
-  return new CDA_UnitsSet(allChildren /*, false */);
+  mLocalUnits = new CDA_UnitsSet(this, allChildren /*, false */);
+  return mLocalUnits;
 }
 
 iface::cellml_api::UnitsSet*
 CDA_Model::modelUnits()
   throw(std::exception&)
 {
+  if (mModelUnits != NULL)
+  {
+    mModelUnits->add_ref();
+    return mModelUnits;
+  }
+
   // Call localUnits, as that is a subset of our work...
   RETURN_INTO_OBJREF(lu, iface::cellml_api::UnitsSet, localUnits());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
 
   // Next construct the special set...
-  return new CDA_AllUnitsSet(lu, imp, false);
+  mModelUnits = new CDA_AllUnitsSet(this, lu, imp, false);
+  return mModelUnits;
 }
 
 iface::cellml_api::UnitsSet*
 CDA_Model::allUnits()
   throw(std::exception&)
 {
+  if (mAllUnits != NULL)
+  {
+    mAllUnits->add_ref();
+    return mAllUnits;
+  }
+
   // Call localUnits, as that is a subset of our work...
   RETURN_INTO_OBJREF(lu, iface::cellml_api::UnitsSet, localUnits());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
 
   // Next construct the special set...
-  return new CDA_AllUnitsSet(lu, imp, true);
+  mAllUnits = new CDA_AllUnitsSet(this, lu, imp, true);
+  return mAllUnits;
 }
 
 iface::cellml_api::CellMLComponentSet*
 CDA_Model::localComponents()
   throw(std::exception&)
 {
+  if (mComponentSet != NULL)
+  {
+    mComponentSet->add_ref();
+    return mComponentSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
      (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
-  return new CDA_CellMLComponentSet(allChildren);
+
+  mComponentSet = new CDA_CellMLComponentSet(this, allChildren);
+  return mComponentSet;
 }
 
 iface::cellml_api::CellMLComponentSet*
 CDA_Model::modelComponents()
   throw(std::exception&)
 {
+  if (mModelComponents != NULL)
+  {
+    mModelComponents->add_ref();
+    return mModelComponents;
+  }
+
   // Call localComponents, as that is a subset of our work...
   RETURN_INTO_OBJREF(lc, iface::cellml_api::CellMLComponentSet, localComponents());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
 
   // Next construct the special set...
-  return new CDA_AllComponentSet(lc, imp, false);
+  mModelComponents = new CDA_AllComponentSet(this, lc, imp, false);
+  return mModelComponents;
 }
 
 iface::cellml_api::CellMLComponentSet*
 CDA_Model::allComponents()
   throw(std::exception&)
 {
+  if (mAllComponents != NULL)
+  {
+    mAllComponents->add_ref();
+    return mAllComponents;
+  }
+
+
   // Call localComponents, as that is a subset of our work...
   RETURN_INTO_OBJREF(lc, iface::cellml_api::CellMLComponentSet, localComponents());
   // Next fetch the list of imports...
   RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImportSet, imports());
 
   // Next construct the special set...
-  return new CDA_AllComponentSet(lc, imp, true);
+  mAllComponents = new CDA_AllComponentSet(this, lc, imp, true);
+  return mAllComponents;
 }
 
 iface::cellml_api::ConnectionSet*
 CDA_Model::connections()
   throw(std::exception&)
 {
+  if (mConnectionSet != NULL)
+  {
+    mConnectionSet->add_ref();
+    return mConnectionSet;
+  }
+  
   ObjRef<CDA_CellMLElementSet> allChildren
     (already_AddRefd<CDA_CellMLElementSet>
      (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
-  return new CDA_ConnectionSet(allChildren);
+  mConnectionSet = new CDA_ConnectionSet(this, allChildren);
+  return mConnectionSet;
 }
 
 iface::cellml_api::GroupSet*
@@ -1792,10 +1888,28 @@ CDA_MathContainer::clearMath()
   }
 }
 
+CDA_CellMLComponent::~CDA_CellMLComponent()
+{
+  if (mReactionSet != NULL)
+    delete mReactionSet;
+  if (mVariableSet != NULL)
+    delete mVariableSet;
+  if (mConnectionSet != NULL)
+    delete mConnectionSet;
+  if (mUnitsSet != NULL)
+    delete mUnitsSet;
+}
+
 iface::cellml_api::CellMLVariableSet*
 CDA_CellMLComponent::variables()
   throw(std::exception&)
 {
+  if (mVariableSet != NULL)
+  {
+    mVariableSet->add_ref();
+    return mVariableSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -1803,14 +1917,21 @@ CDA_CellMLComponent::variables()
       dynamic_cast<CDA_CellMLElementSet*>((childElements()))
      )
     );
-  return new CDA_CellMLVariableSet(allChildren);
-}
 
+  mVariableSet = new CDA_CellMLVariableSet(this, allChildren);
+  return mVariableSet;
+}
 
 iface::cellml_api::UnitsSet*
 CDA_CellMLComponent::units()
   throw(std::exception&)
 {
+  if (mUnitsSet != NULL)
+  {
+    mUnitsSet->add_ref();
+    return mUnitsSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -1818,14 +1939,22 @@ CDA_CellMLComponent::units()
       dynamic_cast<CDA_CellMLElementSet*>((childElements()))
      )
     );
-  return new CDA_UnitsSet(allChildren);
+
+  mUnitsSet = new CDA_UnitsSet(this, allChildren);
+  return mUnitsSet;
 }
 
 iface::cellml_api::ConnectionSet*
 CDA_CellMLComponent::connections()
   throw(std::exception&)
 {
-  return new CDA_ComponentConnectionSet(this);
+  if (mConnectionSet != NULL)
+  {
+    mConnectionSet->add_ref();
+    return mConnectionSet;
+  }
+  mConnectionSet = new CDA_ComponentConnectionSet(this, this);
+  return mConnectionSet;
 }
 
 static CDA_ComponentRef*
@@ -2528,6 +2657,12 @@ iface::cellml_api::ReactionSet*
 CDA_CellMLComponent::reactions()
   throw(std::exception&)
 {
+  if (mReactionSet != NULL)
+  {
+    mReactionSet->add_ref();
+    return mReactionSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -2535,7 +2670,9 @@ CDA_CellMLComponent::reactions()
       dynamic_cast<CDA_CellMLElementSet*>((childElements()))
      )
     );
-  return new CDA_ReactionSet(allChildren);
+
+  mReactionSet = new CDA_ReactionSet(this, allChildren);
+  return mReactionSet;
 }
 
 uint32_t
@@ -2552,6 +2689,12 @@ CDA_CellMLComponent::importNumber()
     return 0;
   
   return impEl->uniqueIdentifier();
+}
+
+CDA_UnitsBase::~CDA_UnitsBase()
+{
+  if (mUnitSet != NULL)
+    delete mUnitSet;
 }
 
 bool
@@ -2591,6 +2734,12 @@ iface::cellml_api::UnitSet*
 CDA_UnitsBase::unitCollection()
   throw(std::exception&)
 {
+  if (mUnitSet)
+  {
+    mUnitSet->add_ref();
+    return mUnitSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -2598,7 +2747,8 @@ CDA_UnitsBase::unitCollection()
       dynamic_cast<CDA_CellMLElementSet*>((childElements()))
      )
     );
-  return new CDA_UnitSet(allChildren);
+  mUnitSet = new CDA_UnitSet(this, allChildren);
+  return mUnitSet;
 }
 
 static struct
@@ -2949,6 +3099,18 @@ CDA_Unit::units(const wchar_t* attr)
   }
 }
 
+CDA_CellMLImport::~CDA_CellMLImport()
+{
+  if (mImportedModel)
+    delete mImportedModel;
+  if (mImportConnectionSet)
+    delete mImportConnectionSet;
+  if (mImportComponentSet)
+    delete mImportComponentSet;
+  if (mImportUnitsSet)
+    delete mImportUnitsSet;
+}
+
 iface::cellml_api::URI*
 CDA_CellMLImport::xlinkHref()
   throw(std::exception&)
@@ -2976,6 +3138,12 @@ iface::cellml_api::ImportComponentSet*
 CDA_CellMLImport::components()
   throw(std::exception&)
 {
+  if (mImportComponentSet != NULL)
+  {
+    mImportComponentSet->add_ref();
+    return mImportComponentSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -2983,13 +3151,20 @@ CDA_CellMLImport::components()
       dynamic_cast<CDA_CellMLElementSet*>((childElements()))
      )
     );
-  return new CDA_ImportComponentSet(allChildren);
+  mImportComponentSet = new CDA_ImportComponentSet(this, allChildren);
+  return mImportComponentSet;
 }
 
 iface::cellml_api::ImportUnitsSet*
 CDA_CellMLImport::units()
   throw(std::exception&)
 {
+  if (mImportUnitsSet != NULL)
+  {
+    mImportUnitsSet->add_ref();
+    return mImportUnitsSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -2997,14 +3172,22 @@ CDA_CellMLImport::units()
       dynamic_cast<CDA_CellMLElementSet*>((childElements()))
      )
     );
-  return new CDA_ImportUnitsSet(allChildren);
+
+  mImportUnitsSet = new CDA_ImportUnitsSet(this, allChildren);
+  return mImportUnitsSet;
 }
 
 iface::cellml_api::ConnectionSet*
 CDA_CellMLImport::importedConnections()
   throw(std::exception&)
 {
-  return new CDA_ImportConnectionSet(this);
+  if (mImportConnectionSet)
+  {
+    mImportConnectionSet->add_ref();
+    return mImportConnectionSet;
+  }
+  mImportConnectionSet = new CDA_ImportConnectionSet(this, this);
+  return mImportConnectionSet;
 }
 
 void
@@ -3555,6 +3738,12 @@ CDA_ImportUnits::unitCollection()
   return fetchDefinition()->unitCollection();
 }
 
+CDA_CellMLVariable::~CDA_CellMLVariable()
+{
+  if (mConnectedCellMLVariableSet != NULL)
+    delete mConnectedCellMLVariableSet;
+}
+
 wchar_t*
 CDA_CellMLVariable::initialValue()
   throw(std::exception&)
@@ -3709,7 +3898,13 @@ iface::cellml_api::CellMLVariableSet*
 CDA_CellMLVariable::connectedVariables()
   throw(std::exception&)
 {
-  return new CDA_ConnectedCellMLVariableSet(this);
+  if (mConnectedCellMLVariableSet != NULL)
+  {
+    mConnectedCellMLVariableSet->add_ref();
+    return mConnectedCellMLVariableSet;
+  }
+  mConnectedCellMLVariableSet = new CDA_ConnectedCellMLVariableSet(this, this);
+  return mConnectedCellMLVariableSet;
 }
 
 iface::cellml_api::CellMLVariable*
@@ -3882,6 +4077,12 @@ CDA_CellMLVariable::unitsElement(iface::cellml_api::Units* aUnits)
   }
 }
 
+CDA_ComponentRef::~CDA_ComponentRef()
+{
+  if (mCRSet != NULL)
+    delete mCRSet;
+}
+
 wchar_t*
 CDA_ComponentRef::componentName()
   throw(std::exception&)
@@ -3915,6 +4116,12 @@ iface::cellml_api::ComponentRefSet*
 CDA_ComponentRef::componentRefs()
   throw(std::exception&)
 {
+  if (mCRSet != NULL)
+  {
+    mCRSet->add_ref();
+    return mCRSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -3923,7 +4130,8 @@ CDA_ComponentRef::componentRefs()
      )
     );
 
-  return new CDA_ComponentRefSet(allChildren.getPointer());
+  mCRSet = new CDA_ComponentRefSet(this, allChildren.getPointer());
+  return mCRSet;
 }
 
 iface::cellml_api::ComponentRef*
@@ -4121,10 +4329,24 @@ CDA_RelationshipRef::setRelationshipName(const wchar_t* namespaceURI,
   }
 }
 
+CDA_Group::~CDA_Group()
+{
+  if (mRRSet != NULL)
+    delete mRRSet;
+  if (mCRSet != NULL)
+    delete mCRSet;
+}
+
 iface::cellml_api::RelationshipRefSet*
 CDA_Group::relationshipRefs()
   throw(std::exception&)
 {
+  if (mRRSet != NULL)
+  {
+    mRRSet->add_ref();
+    return mRRSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -4133,13 +4355,20 @@ CDA_Group::relationshipRefs()
      )
     );
 
-  return new CDA_RelationshipRefSet(allChildren);
+  mRRSet = new CDA_RelationshipRefSet(this, allChildren);
+  return mRRSet;
 }
 
 iface::cellml_api::ComponentRefSet*
 CDA_Group::componentRefs()
   throw(std::exception&)
 {
+  if (mCRSet != NULL)
+  {
+    mCRSet->add_ref();
+    return mCRSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -4148,7 +4377,8 @@ CDA_Group::componentRefs()
      )
     );
 
-  return new CDA_ComponentRefSet(allChildren);
+  mCRSet = new CDA_ComponentRefSet(this, allChildren);
+  return mCRSet;
 }
 
 bool
@@ -4195,6 +4425,12 @@ CDA_Group::isContainment()
   }
 }
 
+CDA_Connection::~CDA_Connection()
+{
+  if (mMVS != NULL)
+    delete mMVS;
+}
+
 iface::cellml_api::MapComponents*
 CDA_Connection::componentMapping()
   throw(std::exception&)
@@ -4234,6 +4470,12 @@ iface::cellml_api::MapVariablesSet*
 CDA_Connection::variableMappings()
   throw(std::exception&)
 {
+  if (mMVS != NULL)
+  {
+    mMVS->add_ref();
+    return mMVS;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -4242,7 +4484,8 @@ CDA_Connection::variableMappings()
      )
     );
 
-  return new CDA_MapVariablesSet(allChildren);
+  mMVS = new CDA_MapVariablesSet(this, allChildren);
+  return mMVS;
 }
 
 wchar_t*
@@ -4859,10 +5102,22 @@ CDA_MapVariables::secondVariable(iface::cellml_api::CellMLVariable* attr)
   secondVariableName(vname.c_str());
 }
 
+CDA_Reaction::~CDA_Reaction()
+{
+  if (mVariableRefSet != NULL)
+    delete mVariableRefSet;
+}
+
 iface::cellml_api::VariableRefSet*
 CDA_Reaction::variableReferences()
   throw(std::exception&)
 {
+  if (mVariableRefSet != NULL)
+  {
+    mVariableRefSet->add_ref();
+    return mVariableRefSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -4871,7 +5126,8 @@ CDA_Reaction::variableReferences()
      )
     );
 
-  return new CDA_VariableRefSet(allChildren);
+  mVariableRefSet = new CDA_VariableRefSet(this, allChildren);
+  return mVariableRefSet;
 }
 
 bool
@@ -4967,6 +5223,12 @@ CDA_Reaction::getRoleByDeltaVariable(const wchar_t* deltav)
   }
 }
 
+CDA_VariableRef::~CDA_VariableRef()
+{
+  if (mRoleSet != NULL)
+    delete mRoleSet;
+}
+
 iface::cellml_api::CellMLVariable*
 CDA_VariableRef::variable()
   throw(std::exception&)
@@ -5038,6 +5300,12 @@ iface::cellml_api::RoleSet*
 CDA_VariableRef::roles()
   throw(std::exception&)
 {
+  if (mRoleSet != NULL)
+  {
+    mRoleSet->add_ref();
+    return mRoleSet;
+  }
+
   ObjRef<CDA_CellMLElementSet> allChildren
     (
      already_AddRefd<CDA_CellMLElementSet>
@@ -5046,7 +5314,8 @@ CDA_VariableRef::roles()
      )
     );
 
-  return new CDA_RoleSet(allChildren);
+  mRoleSet = new CDA_RoleSet(this, allChildren);
+  return mRoleSet;
 }
 
 iface::cellml_api::Role::RoleType
@@ -6561,16 +6830,47 @@ iface::cellml_api::NamedCellMLElement*
 CDA_NamedCellMLElementSetBase::get(const wchar_t* name)
   throw(std::exception&)
 {
+  if (CDA_CompareSerial(mCacheSerial))
+  {
+    std::map<std::wstring, iface::cellml_api::NamedCellMLElement*>::iterator i
+      = mMap.find(name);
+    if (i != mMap.end())
+    {
+      (*i).second->add_ref();
+      return (*i).second;
+    }
+    if (mCacheComplete)
+      return NULL;
+  }
+  else
+  {
+    mCacheSerial = gCDAChangeSerial;
+    mCacheComplete = false;
+    mHighWaterMark = 0;
+    mMap.clear();
+  }
+
   RETURN_INTO_OBJREF(elIt, iface::cellml_api::CellMLElementIterator, iterate());
+  uint32_t count = 0;
   while (true)
   {
     RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement, elIt->next());
     if (el == NULL)
+    {
+      mCacheComplete = true;
       return NULL;
+    }
     iface::cellml_api::NamedCellMLElement* nel =
       dynamic_cast<iface::cellml_api::NamedCellMLElement*>(el.getPointer());
     wchar_t* n = nel->name();
     bool match = !wcscmp(name, n);
+    count++;
+    if (count > mHighWaterMark)
+    {
+      mMap.insert(std::pair<std::wstring,
+                            iface::cellml_api::NamedCellMLElement*>(n, nel));
+      mHighWaterMark = count;
+    }
     free(n);
 
     if (match)
