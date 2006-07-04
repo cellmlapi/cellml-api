@@ -868,6 +868,7 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_SCHEMAP_A_PROPS_CORRECT_2:
   case XML_SCHEMAP_C_PROPS_CORRECT:
   case XML_SCHEMAP_SRC_REDEFINE:
+#if XML_VERSION > 20621
   case XML_SCHEMAP_SRC_IMPORT:
   case XML_SCHEMAP_WARN_SKIP_SCHEMA:
   case XML_SCHEMAP_WARN_UNLOCATED_SCHEMA:
@@ -878,6 +879,7 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_SCHEMAP_AU_PROPS_CORRECT:
   case XML_SCHEMAP_A_PROPS_CORRECT_3:
   case XML_SCHEMAP_COS_ALL_LIMITED:
+#endif
   case XML_MODULE_OPEN:
   case XML_MODULE_CLOSE:
   case XML_CHECK_FOUND_ATTRIBUTE:
