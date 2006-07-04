@@ -1,26 +1,20 @@
-lib_LTLIBRARIES += libccgs_corba.la
-bin_PROGRAMS += CCGSService
+lib_LTLIBRARIES += libccgs_corba.la libCCGSService.la
 
 libccgs_corba_la_SOURCES := \
   $(top_builddir)/interfaces/CCICCGS.cxx \
   $(top_builddir)/interfaces/SCICCGS.cxx \
   $(top_builddir)/interfaces/CCGSSK.cc
 
-CCGSService_SOURCES := \
-  $(top_srcdir)/sources/StandaloneServiceRunner.cpp \
+libCCGSService_la_SOURCES := \
   $(top_srcdir)/CCGS/sources/CCGSServiceRegistration.cpp
 
-CCGSService_LDADD := \
+libCCGSService_la_LIBADD := \
   $(top_builddir)/libccgs.la \
-  $(top_builddir)/libccgs_corba.la \
-  $(top_builddir)/libcellml_corba_client.la \
-  $(top_builddir)/libcellml_context_corba.la \
-  $(top_builddir)/libcellml_corba.la \
-  $(top_builddir)/libCORBASupport.la
+  $(top_builddir)/libccgs_corba.la
+libccgs_corba_la_LDFLAGS := -static
+libCCGSService_la_LDFLAGS := -shared -module -lomniORB4
 
-CCGSService_LDFLAGS := -static -lomniORB4
-
-CCGSService_CXXFLAGS := \
+libCCGSService_la_CXXFLAGS := \
 	-I$(top_builddir)/interfaces \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/sources/cellml_corba_server \

@@ -57,7 +57,9 @@ main(int argc, char** argv)
   gContext = GetCellMLContext(argc, argv);
   gModMan = gContext->moduleManager();
 
-  do_registration(gContext, gModMan);
+  do_registration(reinterpret_cast<void*>(gContext),
+                  reinterpret_cast<void*>(gModMan),
+                  UnloadService);
 
 #ifdef WIN32
   while (true)
@@ -76,7 +78,7 @@ main(int argc, char** argv)
   while (sigwaitinfo(&ss, &si) < 0)
     ;
 
-  do_deregistration(gModMan);
+  do_deregistration(reinterpret_cast<void*>(gModMan));
 
   gModMan->release_ref();
 

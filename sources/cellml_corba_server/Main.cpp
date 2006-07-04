@@ -13,12 +13,76 @@
 #ifndef WIN32
 #include <signal.h>
 #endif
+#include <ltdl.h>
+#include "ServiceRegistration.hxx"
+#include <list>
 
 CORBA::ORB_var gBroker;
 
 bool gShutdownServer = false;
 
-FILE*
+struct DlopenService
+{
+  int (*do_registration)(void* aContext, void* aModuleManager,
+                         void (*UnloadService)());
+};
+
+std::list<DlopenService> gOpenServiceList;
+
+void
+UnloadService()
+{
+  // Silently ignore requests to unload linked in services.
+}
+
+static void
+ProcessConfiguration(FILE* aConf)
+{
+  char buf[1024];
+  while (fgets(buf, 1024, aConf))
+  {
+    char* end = strchr(buf, '\n');
+    if (end != NULL)
+      *end = 0;
+    end = strchr(buf, '\r');
+    if (end != NULL)
+      *end = 0;
+    if (buf[0] == '#')
+      continue;
+    char* cmd = strtok(buf, " ");
+    if (cmd == NULL)
+      continue;
+    if (!strcmp(cmd, "load_service"))
+    {
+      char* fn = strtok(NULL, " ");
+      if (fn == NULL)
+      {
+        printf("Warning: load_service command takes an argument.\n");
+        continue;
+      }
+      lt_dlhandle dlh = lt_dlopen(fn);
+      if (dlh == NULL)
+      {
+        printf("Warning: Can't dlopen %s for load_service command.\n",
+               fn);
+        continue;
+      }
+      DlopenService dos;
+      dos.do_registration =
+        (int (*)(void*, void*,void (*)()))
+        lt_dlsym(dlh, "do_registration");
+      if (dos.do_registration == NULL)
+      {
+        printf("Warning: load_service shared object %s lacks do_registration "
+               "symbol. Skipping. Check it is a service.\n", fn);
+      }
+      gOpenServiceList.push_back(dos);
+    }
+  }
+}
+
+
+static FILE*
 PrepareCellMLHome(void)
 {
   // This use of environment variables becomes a security risk if used with
@@ -52,6 +116,13 @@ PrepareCellMLHome(void)
   {
     perror("Creating CellML home directory");
     exit(-1);
+  }
+
+  std::string config_file = cellml_home + "/server_config";
+  FILE* cf = fopen(config_file.c_str(), "r");
+  if (cf != NULL)
+  {
+    ProcessConfiguration(cf);
   }
 
   std::string ior_file = cellml_home + "/corba_server";
@@ -122,6 +193,7 @@ PrepareCellMLHome(void)
 int
 main(int argc, char** argv)
 {
+  lt_dlinit();
 #ifndef WIN32
   if (argc > 1)
   {
@@ -186,6 +258,17 @@ main(int argc, char** argv)
   fprintf(fIOR, "%s", iorStr);
   CORBA::string_free(iorStr);
   fclose(fIOR);
+
+  // Next, start any configured link-in services...
+  std::list<DlopenService>::iterator i;
+  iface::cellml_context::CellMLModuleManager* mman =
+    cbs->moduleManager();
+  for (i = gOpenServiceList.begin(); i != gOpenServiceList.end(); i++)
+  {
+    (*i).do_registration(reinterpret_cast<void*>(cbs),
+                         reinterpret_cast<void*>(mman), UnloadService);
+  }
+  mman->release_ref();
 
   while (!gShutdownServer)
     sleep(1);

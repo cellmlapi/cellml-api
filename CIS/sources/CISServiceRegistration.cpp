@@ -5,17 +5,18 @@
 CDA_CellMLIntegrationService* gIntegrationService;
 
 int
-do_registration(iface::cellml_context::CellMLContext* aContext,
-                iface::cellml_context::CellMLModuleManager* aModuleManager)
+do_registration(void* aContext, void* aModuleManager, void (*UnloadService)())
 {
   gIntegrationService = new CDA_CellMLIntegrationService();
   gIntegrationService->SetUnloadCIS(UnloadService);
-  aModuleManager->registerModule(gIntegrationService);
+  reinterpret_cast<iface::cellml_context::CellMLModuleManager*>(aModuleManager)
+    ->registerModule(gIntegrationService);
 }
 
 void
-do_deregistration(iface::cellml_context::CellMLModuleManager* aModuleManager)
+do_deregistration(void* aModuleManager)
 {
-  aModuleManager->deregisterModule(gIntegrationService);
+  reinterpret_cast<iface::cellml_context::CellMLModuleManager*>(aModuleManager)
+    ->deregisterModule(gIntegrationService);
   gIntegrationService->release_ref();
 }

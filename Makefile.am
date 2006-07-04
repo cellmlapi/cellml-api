@@ -30,6 +30,7 @@ include $(top_srcdir)/sources/cellml_context/corba_build.mk
 endif
 
 if ENABLE_CELLML_CORBA_SERVER
+include $(top_srcdir)/libltdl/build.mk
 include $(top_srcdir)/sources/cellml_corba_server/build.mk
 endif
 

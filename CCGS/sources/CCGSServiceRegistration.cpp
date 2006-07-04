@@ -9,12 +9,12 @@
 CDA_CGenerator* gCodeGenerator;
 
 int
-do_registration(iface::cellml_context::CellMLContext* aContext,
-                iface::cellml_context::CellMLModuleManager* aModuleManager)
+do_registration(void* aContext, void* aModuleManager, void (*UnloadService)())
 {
   gCodeGenerator = new CDA_CGenerator();
   gCodeGenerator->SetUnloadCCGS(UnloadService);
-  aModuleManager->registerModule(gCodeGenerator);
+  reinterpret_cast<iface::cellml_context::CellMLModuleManager*>(aModuleManager)
+    ->registerModule(gCodeGenerator);
 
   // Ugly hack to force linking...
   SCI::cellml_services::prodCCodeVariable();
@@ -24,8 +24,9 @@ do_registration(iface::cellml_context::CellMLContext* aContext,
 }
 
 void
-do_deregistration(iface::cellml_context::CellMLModuleManager* aModuleManager)
+do_deregistration(void* aModuleManager)
 {
-  aModuleManager->deregisterModule(gCodeGenerator);
+  reinterpret_cast<iface::cellml_context::CellMLModuleManager*>(aModuleManager)
+    ->deregisterModule(gCodeGenerator);
   gCodeGenerator->release_ref();
 }

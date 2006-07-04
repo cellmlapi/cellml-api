@@ -4,15 +4,24 @@
 AC_INIT(CellMLAPI, 0.1, [[ak.miller@auckland.ac.nz]])
 AC_PREREQ(2.59)
 AC_CONFIG_SRCDIR([sources/cellml/CellMLBootstrap.cpp])
+AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_HEADER([config.h])
 
 AM_INIT_AUTOMAKE
 PKG_PROG_PKG_CONFIG
 
+# Set up libtool...
+AC_LIBTOOL_DLOPEN
+AC_LIBLTDL_CONVENIENCE
+
 # Checks for programs.
 AC_PROG_CXX
+AC_LANG(C)
 AC_LANG(C++)
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
+AC_LIB_LTDL
+AC_SUBST([LIBTOOL_DEPS])
 
 # Checks for libraries.
 # PKG_CHECK_MODULES([GLIB], [glib-2.0])
