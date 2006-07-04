@@ -7,6 +7,7 @@ libccgs_corba_la_SOURCES := \
   $(top_builddir)/interfaces/CCGSSK.cc
 
 CCGSService_SOURCES := \
+  $(top_srcdir)/sources/StandaloneServiceRunner.cpp \
   $(top_srcdir)/CCGS/sources/CCGSServiceRegistration.cpp
 
 CCGSService_LDADD := \

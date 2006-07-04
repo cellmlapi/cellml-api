@@ -1,96 +1,31 @@
-#include <inttypes.h>
-#include <exception>
-#include "CORBA_Server_Client.hxx"
-#include <stdlib.h>
+#include "ServiceRegistration.hxx"
 #include "CCGSImplementation.hpp"
-#ifndef WIN32
-#include <signal.h>
-#endif
-
-iface::cellml_context::CellMLContext* gContext;
-iface::cellml_context::CellMLModuleManager* gModMan;
-
-void
-UnloadCCGS()
-{
-  gModMan->release_ref();
-  exit(-1);
-}
 
 // This is a hack to force linking...
 #include "SCICCGS.hxx"
 #include "corba_support/WrapperRepository.hxx"
 #include "CCICCGS.hxx"
 
+CDA_CGenerator* gCodeGenerator;
+
 int
-main(int argc, char** argv)
+do_registration(iface::cellml_context::CellMLContext* aContext,
+                iface::cellml_context::CellMLModuleManager* aModuleManager)
 {
-#ifndef WIN32
-  bool forked = false;
-  if (argc > 1)
-  {
-    char* command = argv[1];
-    while (command[0] == '-')
-      command++;
-    if (!strcasecmp(command, "fork"))
-    {
-      pid_t p = fork();
-      if (p < 0)
-      {
-        perror("fork");
-        return -1;
-      }
-      else if (p > 0)
-      {
-        return 0;
-      }
-      forked = true;
-      setsid();
-      signal(SIGHUP, SIG_IGN);
-    }
-    else if (!strcasecmp(command, "foreground"))
-      ;
-    else
-    {
-      printf("Usage: CCGSService [help|fork|foreground]\n");
-      return strcasecmp(command, "help");
-    }
-  }
-#endif
-
-  gContext = GetCellMLContext(argc, argv);
-  gModMan = gContext->moduleManager();
-
-  CDA_CGenerator* cg = new CDA_CGenerator();
-  cg->SetUnloadCCGS(UnloadCCGS);
-  gModMan->registerModule(cg);
-  cg->release_ref();
-
-#ifdef WIN32
-  while (true)
-    sleep(100000);
-#else
-  sigset_t ss;
-  sigemptyset(&ss);
-  sigaddset(&ss, SIGTERM);
-  sigaddset(&ss, SIGINT);
-  if (!forked)
-    printf("Blocking SIGTERM/SIGINT...\n");
-  sigprocmask(SIG_BLOCK, &ss, NULL);
-  siginfo_t si;
-  if (!forked)
-    printf("Waiting for SIGTERM/SIGINT...\n");
-  while (sigwaitinfo(&ss, &si) < 0)
-    ;
-
-  gModMan->deregisterModule(cg);
-
-  gModMan->release_ref();
+  gCodeGenerator = new CDA_CGenerator();
+  gCodeGenerator->SetUnloadCCGS(UnloadService);
+  aModuleManager->registerModule(gCodeGenerator);
 
   // Ugly hack to force linking...
   SCI::cellml_services::prodCCodeVariable();
   CCI::cellml_services::prodCCodeVariable();
   
   return 0;
-#endif
+}
+
+void
+do_deregistration(iface::cellml_context::CellMLModuleManager* aModuleManager)
+{
+  aModuleManager->deregisterModule(gCodeGenerator);
+  gCodeGenerator->release_ref();
 }

@@ -1,6 +1,7 @@
 bin_PROGRAMS += CISService
 CISService_SOURCES := \
   $(top_srcdir)/CIS/sources/CISServiceRegistration.cpp \
+  $(top_srcdir)/sources/StandaloneServiceRunner.cpp \
   $(top_builddir)/interfaces/CCICIS.cxx \
   $(top_builddir)/interfaces/SCICIS.cxx \
   $(top_builddir)/interfaces/CISSK.cc
