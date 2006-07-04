@@ -11,7 +11,6 @@ libCCGSService_la_SOURCES := \
 libCCGSService_la_LIBADD := \
   $(top_builddir)/libccgs.la \
   $(top_builddir)/libccgs_corba.la
-libccgs_corba_la_LDFLAGS := -static
 libCCGSService_la_LDFLAGS := -shared -module -lomniORB4
 
 libCCGSService_la_CXXFLAGS := \
