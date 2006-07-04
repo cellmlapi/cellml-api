@@ -12,6 +12,8 @@ CELLML_CORBA_SERVER_BIN=$CELLML_BIN_DIR/cellml_corba_server
 
 # Only bind locally...
 export ORBendPoint=giop:tcp:127.0.0.1:0
+# http and ftp only.
+export CELLML_RESTRICT_PROTOCOL=http,ftp
 
 . /lib/lsb/init-functions
 
