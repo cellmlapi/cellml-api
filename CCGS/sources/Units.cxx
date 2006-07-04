@@ -58,7 +58,7 @@ int CompareSortData(const void* a1, const void* a2)
 {
   UnitSortData* s1 = (UnitSortData*)a1;
   UnitSortData* s2 = (UnitSortData*)a2;
-  return ((uint32_t)s1->mUnits[s1->idx]) - ((uint32_t)s2->mUnits[s2->idx]);
+  return ((unsigned long)s1->mUnits[s1->idx]) - ((unsigned long)s2->mUnits[s2->idx]);
 }
 
 /**
@@ -425,7 +425,7 @@ CellMLUnitDefinition::ComputeBaseUnits()
       if (*((*i).nextUnit) == NULL)
         continue;
       if (nextUnit == NULL ||
-          ((unsigned int)(*((*i).nextUnit))) < (unsigned int)nextUnit)
+          ((unsigned long)(*((*i).nextUnit))) < (unsigned long)nextUnit)
       {
         nextUnit = *((*i).nextUnit);
         nextExponent = *((*i).nextExponent) * (*i).commonExponent;
