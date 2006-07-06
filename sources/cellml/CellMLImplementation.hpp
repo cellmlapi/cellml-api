@@ -1321,7 +1321,7 @@ public:
   virtual ~CDA_AllComponentIterator() {};
 
   CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI2(cellml_api::UnitsIterator, cellml_api::CellMLElementIterator);
+  CDA_IMPL_QI2(cellml_api::CellMLComponentIterator, cellml_api::CellMLElementIterator);
 
   iface::cellml_api::CellMLElement* next() throw(std::exception&);
 
