@@ -4,6 +4,8 @@
 #include "CISImplementation.hxx"
 #include <gsl/gsl_odeiv.h>
 #include <gsl/gsl_errno.h>
+#include <math.h>
+#include <stdarg.h>
 
 struct EvaluationInformation
 {
@@ -227,4 +229,203 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   gsl_odeiv_evolve_free(e);
   gsl_odeiv_control_free(c);
   gsl_odeiv_step_free(s);
+}
+
+extern "C"
+{
+  double factorial(double x);
+  double arbitrary_log(double value, double logbase);
+  double gcd_pair(double a, double b);
+  double lcm_pair(double a, double b);
+  double gcd_multi(uint32_t size, ...);
+  double lcm_multi(uint32_t size, ...);
+  double multi_min(uint32_t size, ...);
+  double multi_max(uint32_t size, ...);
+}
+
+double
+factorial(double x)
+{
+  double ret = 1.0;
+  while (x > 0.0)
+  {
+    ret *= x;
+    x -= 1.0;
+  }
+  return ret;
+}
+
+double arbitrary_log(double value, double logbase)
+{
+  return log(value) / log(logbase);
+}
+
+double gcd_pair(double a, double b)
+{
+  uint32_t ai = (uint32_t)fabs(a), bi = (uint32_t)fabs(b);
+  unsigned int shift = 0;
+  if (ai == 0)
+    return bi;
+  if (bi == 0)
+    return ai;
+#define EVEN(x) ((x&1)==0)
+  while (EVEN(ai) && EVEN(bi))
+  {
+    shift++;
+    ai >>= 1;
+    bi >>= 1;
+  }
+  do
+  {
+    if (EVEN(ai))
+      ai >>= 1;
+    else if (EVEN(bi))
+      bi >>= 1;
+    else if (ai >= bi)
+      ai = (ai - bi) >> 1;
+    else
+      bi = (bi - ai) >> 1;
+  }
+  while (ai > 0);
+
+  return (bi << shift);
+}
+
+double lcm_pair(double a, double b)
+{
+  return (a * b) / gcd_pair(a, b);
+}
+
+double gcd_multi(uint32_t count, ...)
+{
+  va_list val;
+  double* storage1, *storage2, *t, ret;
+  uint32_t i, j = 0;
+
+  if (count == 0)
+    return 1.0;
+
+  storage1 = new double[count];
+  assert(storage1 != NULL /* Out of memory? */);
+  storage2 = new double[count >> 1];
+  assert(storage2 != NULL /* Out of memory? */);
+
+  va_start(val, count);
+  for (i = 0; i < count - 1; i += 2)
+  {
+    double a1, a2;
+    a1 = va_arg(val, double);
+    a2 = va_arg(val, double);
+    storage1[j++] = gcd_pair(a1, a2);
+  }
+  if (i < count)
+    storage1[j++] = va_arg(val, double);
+  va_end(val);
+
+  while (j != 1)
+  {
+    count = j;
+    j = 0;
+
+    for (i = 0; i < j - 1; i += 2)
+      storage2[j++] = gcd_pair(storage1[i], storage1[i + 1]);
+    if (i < j)
+      storage2[j++] = storage1[i];
+
+    t = storage1;
+    storage1 = storage2;
+    storage2 = t;
+  }
+
+  ret = storage1[0];
+  delete [] storage1;
+  delete [] storage2;
+
+  return ret;
+}
+
+double lcm_multi(uint32_t count, ...)
+{
+  va_list val;
+  double* storage1, *storage2, *t, ret;
+  uint32_t i, j = 0;
+
+  if (count == 0)
+    return 1.0;
+
+  storage1 = new double[count];
+  assert(storage1 != NULL /* Out of memory? */);
+  storage2 = new double[count >> 1];
+  assert(storage2 != NULL /* Out of memory? */);
+
+  va_start(val, count);
+  for (i = 0; i < count - 1; i += 2)
+  {
+    double a1, a2;
+    a1 = va_arg(val, double);
+    a2 = va_arg(val, double);
+    storage1[j++] = lcm_pair(a1, a2);
+  }
+  if (i < count)
+    storage1[j++] = va_arg(val, double);
+  va_end(val);
+
+  while (j != 1)
+  {
+    count = j;
+    j = 0;
+
+    for (i = 0; i < j - 1; i += 2)
+      storage2[j++] = lcm_pair(storage1[i], storage1[i + 1]);
+    if (i < j)
+      storage2[j++] = storage1[i];
+
+    t = storage1;
+    storage1 = storage2;
+    storage2 = t;
+  }
+
+  ret = storage1[0];
+  delete [] storage1;
+  delete [] storage2;
+
+  return ret;
+}
+
+double multi_min(uint32_t count, ...)
+{
+  va_list val;
+  double best, attempt;
+  if (count == 0)
+    return strtod("NAN", NULL);
+  va_start(val, count);
+  best = va_arg(val, double);
+  while (--count)
+  {
+    attempt = va_arg(val, double);
+    if (attempt < best)
+      best = attempt;
+  }
+  va_end(val);
+
+  return best;
+}
+
+double multi_max(uint32_t count, ...)
+{
+  va_list val;
+  double best, attempt;
+  if (count == 0)
+    return strtod("NAN", NULL);
+  va_start(val, count);
+  best = va_arg(val, double);
+  while (--count)
+  {
+    attempt = va_arg(val, double);
+    if (attempt > best)
+      best = attempt;
+  }
+  va_end(val);
+
+  return best;
 }
