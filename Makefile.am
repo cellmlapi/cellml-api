@@ -48,3 +48,5 @@ endif
 if ENABLE_CONTEXT_AND_CORBA_AND_CIS
 include $(top_srcdir)/CIS/corba_build.mk
 endif
+
+CLEANFILES=sources/dom/*.lo sources/dom_direct/*.lo sources/mathml/*.lo sources/cellml/*.lo source/dom_direct/*.lo sources/Utilities.lo simple_interface_generators/glue/corba_support/*.lo
