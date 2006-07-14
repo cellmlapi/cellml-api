@@ -531,7 +531,6 @@ CodeGenerationState::DetermineComputedConstants
           wantedVariables.erase((*iiatmp).destination);
           availableVariables.insert((*iiatmp).destination);
         }
-        mInitialAssignments.erase(iiatmp);
         lastRoundUseful = true;
         // Write out the assignment...
         aCompConstStream << GetVariableText((*iiatmp).destination)
@@ -545,6 +544,7 @@ CodeGenerationState::DetermineComputedConstants
           aCompConstStream << ") * " << (*iiatmp).factor;
         if ((*iiatmp).offset != 0.0)
           aCompConstStream << ") + " << (*iiatmp).offset;
+        mInitialAssignments.erase(iiatmp);
         aCompConstStream << ";" << std::endl;
       }
     }

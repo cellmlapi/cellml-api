@@ -6,6 +6,7 @@
 #include <gsl/gsl_errno.h>
 #include <math.h>
 #include <stdarg.h>
+#include <assert.h>
 
 struct EvaluationInformation
 {
