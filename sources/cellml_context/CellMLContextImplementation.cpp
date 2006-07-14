@@ -661,11 +661,13 @@ CDA_ModelList::removeListMonitor
 )
   throw(std::exception&)
 {
-  std::list<iface::cellml_context::ModelListMonitor*>::iterator i;
-  for (i = mListMonitors.begin(); i != mListMonitors.end(); i++)
+  std::list<iface::cellml_context::ModelListMonitor*>::iterator i, i2;
+  for (i = mListMonitors.begin(); i != mListMonitors.end();)
   {
-    (*i)->release_ref();
-    mListMonitors.erase(i);
+    i2 = i;
+    i++;
+    (*i2)->release_ref();
+    mListMonitors.erase(i2);
   }
 }
 
