@@ -226,7 +226,7 @@ CDA_ModuleManager::deregisterModule
     return;
 
   std::list<iface::cellml_context::CellMLModuleMonitor*>::iterator i2, j2;
-  for (i2 = mMonitors.begin(); i2 != mMonitors.end(); i2++)
+  for (i2 = mMonitors.begin(); i2 != mMonitors.end();)
   {
     j2 = i2;
     i2++;
@@ -242,10 +242,8 @@ CDA_ModuleManager::deregisterModule
   }
 
   mRegisteredModules.erase(i);
-  mRegisteredModuleList.erase(i3);
-
-  // We might be removing a dead module, so ignore failures...
   (*i3)->release_ref();
+  mRegisteredModuleList.erase(i3);
 }
 
 iface::cellml_context::CellMLModule*
@@ -578,11 +576,13 @@ CDA_ModelNode::removeModelMonitor
 )
   throw(std::exception&)
 {
-  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i;
-  for (i = mModelMonitors.begin(); i != mModelMonitors.end(); i++)
+  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, i2;
+  for (i = mModelMonitors.begin(); i != mModelMonitors.end();)
   {
-    (*i)->release_ref();
-    mModelMonitors.erase(i);
+    i2 = i;
+    i++;
+    (*i2)->release_ref();
+    mModelMonitors.erase(i2);
   }
 }
 
@@ -635,11 +635,13 @@ CDA_ModelList::removeModelMonitor
 )
   throw(std::exception&)
 {
-  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i;
-  for (i = mNodeMonitors.begin(); i != mNodeMonitors.end(); i++)
+  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, i2;
+  for (i = mNodeMonitors.begin(); i != mNodeMonitors.end();)
   {
-    (*i)->release_ref();
-    mNodeMonitors.erase(i);
+    i2 = i;
+    i++;
+    (*i2)->release_ref();
+    mNodeMonitors.erase(i2);
   }
 }
 
@@ -729,14 +731,16 @@ CDA_ModelList::removeModel(iface::cellml_context::ModelNode* node)
       curList = NULL;
   }
 
-  std::list<CDA_ModelNode*>::iterator i2;
-  for (i2 = mModels.begin(); i2 != mModels.end(); i2++)
+  std::list<CDA_ModelNode*>::iterator i2, i3;
+  for (i2 = mModels.begin(); i2 != mModels.end();)
   {
-    if ((*i2) != node)
+    i3 = i2;
+    i2++;
+    if ((*i3) != node)
       continue;
-    (*i2)->release_ref();
-    (*i2)->mParentList = NULL;
-    mModels.erase(i2);
+    (*i3)->release_ref();
+    (*i3)->mParentList = NULL;
+    mModels.erase(i3);
   }
 }
 
