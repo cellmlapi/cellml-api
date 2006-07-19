@@ -73,8 +73,6 @@ CDA_DOMImplementation::createDocument(const wchar_t* namespaceURI,
   }
 
   CDA_DocumentType* doctype = dynamic_cast<CDA_DocumentType*>(idoctype);
-  if (doctype == NULL)
-    throw iface::dom::DOMException();
 
   if (doctype && doctype->mDocument != NULL)
     throw iface::dom::DOMException();

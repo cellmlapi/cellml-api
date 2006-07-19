@@ -845,7 +845,59 @@ CellMLTest::testCellMLElement()
   ud->release_ref();
 
   newunit->release_ref();
-  newunits->release_ref();
+
+  //  /**
+  //   * Clones a CellMLElement, and optionally all children.
+  //   * This will not clone the contents of imported models.
+  //   * @param deep If false, only clones the element. It will then have no children.
+  //   *             If true, clones the element, and its children, which are added
+  //   *               into the new element.
+  //   */
+  //  CellMLElement clone(in boolean deep);
+  el = mAchCascade->clone(true);
+  iface::cellml_api::CellMLElement* el2 = el->modelElement();
+  CPPUNIT_ASSERT(el == el2);
+  CPPUNIT_ASSERT(el != mAchCascade);
+  el2->release_ref();
+
+  els = el->childElements();
+  CPPUNIT_ASSERT_EQUAL(112, (int)els->length());
+  els->release_ref();
+
+  str = el->cmetaId();
+  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade"));
+  free(str);
+  el->release_ref();
+
+  el = mAchCascade->clone(false);
+  el2 = el->modelElement();
+  CPPUNIT_ASSERT(el == el2);
+  CPPUNIT_ASSERT(el != mAchCascade);
+  el2->release_ref();
+
+  els = el->childElements();
+  CPPUNIT_ASSERT_EQUAL(0, (int)els->length());
+  els->release_ref();
+
+  str = el->cmetaId();
+  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade"));
+  free(str);
+  el->release_ref();
+
+  // There are two separate implementations of clone, one on Model and a base
+  // implementation on CellMLElement, so test that too...
+  el = newunits->clone(true);
+  els = el->childElements();
+  CPPUNIT_ASSERT_EQUAL(1, (int)els->length());
+  els->release_ref();
+  el->release_ref();
+  el = newunits->clone(false);
+  els = el->childElements();
+  CPPUNIT_ASSERT_EQUAL(0, (int)els->length());
+  els->release_ref();
+  el->release_ref();
+
+  newunits->release_ref();  
 }
 //   };
 
@@ -886,19 +938,19 @@ CellMLTest::testModel()
 {
   loadBeelerReuter();
   loadTenTusscher();
-//     Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
-  //iface::cellml_api::Model* m;
-  //CPPUNIT_ASSERT_NO_THROW(m = mBeelerReuter->getAlternateVersion(L"1.1"));
+  //  Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
+  iface::cellml_api::Model* m;
+  CPPUNIT_ASSERT_NO_THROW(m = mBeelerReuter->getAlternateVersion(L"1.1"));
   wchar_t* str;
-  //CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
-  //CPPUNIT_ASSERT(!wcscmp(str, L"1.1"));
-  //free(str);
-  //m->release_ref();
-  //CPPUNIT_ASSERT_NO_THROW(m = mTenTusscher->getAlternateVersion(L"1.0"));
-  //CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
-  //CPPUNIT_ASSERT(!wcscmp(str, L"1.0"));
-  //free(str);
-  //m->release_ref();
+  CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
+  CPPUNIT_ASSERT(!wcscmp(str, L"1.1"));
+  free(str);
+  m->release_ref();
+  CPPUNIT_ASSERT_NO_THROW(m = mTenTusscher->getAlternateVersion(L"1.0"));
+  CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
+  CPPUNIT_ASSERT(!wcscmp(str, L"1.0"));
+  free(str);
+  m->release_ref();
 
 //     /**
 //      * The collection of groups described in this model document.

@@ -268,6 +268,8 @@ public:
                                               const wchar_t* qualifiedName)
     throw(std::exception&);
   wchar_t* serialisedText() throw(std::exception&);
+  iface::cellml_api::CellMLElement* clone(bool aDeep)
+    throw(std::exception&);
 
   ObjRef<iface::cellml_api::DOMURLLoader> mLoader;
 

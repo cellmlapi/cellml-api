@@ -736,22 +736,10 @@ CDA_CellMLElement::clone(bool aDeep)
   throw(std::exception&)
 {
   // Clone the underlying node...
-  ObjRef<iface::dom::Node> cn = datastore->cloneNode(aDeep);
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, datastore->cloneNode(aDeep));
   DECLARE_QUERY_INTERFACE_OBJREF(cel, cn, dom::Element);
   if (cel == NULL)
     return NULL;
-
-  CDA_CellMLElement* el = this;
-  CDA_Model* m = NULL;
-  while (true)
-  {
-    m = dynamic_cast<CDA_Model*>(el);
-    if (m != NULL)
-      break;
-    el = dynamic_cast<CDA_CellMLElement*>(el->mParent);
-    if (el == NULL)
-      break;
-  }
 
   return WrapCellMLElement(NULL, cel);
 }
@@ -872,23 +860,17 @@ CDA_Model::getAlternateVersion(const wchar_t* cellmlVersion)
     else
       throw iface::cellml_api::CellMLException();
     
-    iface::dom::DOMImplementation* di = mDoc->implementation();
-    iface::dom::DocumentType* dt = mDoc->doctype();
-    iface::dom::Document* newDoc =
-      di->createDocument(new_namespace, L"model", dt);
-    if (dt != NULL)
-      dt->release_ref();
-    di->release_ref();
+    RETURN_INTO_OBJREF(di, iface::dom::DOMImplementation,
+                       mDoc->implementation());
+    RETURN_INTO_OBJREF(newDoc, iface::dom::Document,
+                       di->createDocument(new_namespace, L"model", NULL));
 
     // Now copy the current document into the old one...
     RecursivelyChangeVersionCopy(new_namespace, newDoc, mDoc, newDoc);
 
     // newDoc needs a CellML wrapper...
-    iface::dom::Element* de = newDoc->documentElement();
-    CDA_Model* cm = new CDA_Model(mLoader, newDoc, de);
-    de->release_ref();
-    newDoc->release_ref();
-    return cm;
+    RETURN_INTO_OBJREF(de, iface::dom::Element, newDoc->documentElement());
+    return new CDA_Model(mLoader, newDoc, de);
   }
   catch (iface::dom::DOMException& de)
   {
@@ -1262,6 +1244,31 @@ CDA_Model::fullyInstantiateImports()
       importQueue.push_back(imp);
     }
   }
+}
+
+iface::cellml_api::CellMLElement*
+CDA_Model::clone(bool aDeep)
+  throw(std::exception&)
+{
+  // Make a new document...
+  RETURN_INTO_OBJREF(di, iface::dom::DOMImplementation,
+                     mDoc->implementation());
+  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType,
+                     mDoc->doctype());
+  RETURN_INTO_WSTRING(new_namespace, datastore->namespaceURI());
+  RETURN_INTO_OBJREF(newDoc, iface::dom::Document,
+                     di->createDocument(new_namespace.c_str(), L"model", dt));
+
+  // Clone the underlying node...
+  RETURN_INTO_OBJREF(cn, iface::dom::Node,
+                     newDoc->importNode(datastore, aDeep));
+  newDoc->appendChild(cn)->release_ref();
+
+  DECLARE_QUERY_INTERFACE_OBJREF(cel, cn, dom::Element);
+  if (cel == NULL)
+    return NULL;
+
+  return new CDA_Model(mLoader, newDoc, cel);
 }
 
 class CDA_Model_AsyncInstantiate_CommonState
@@ -6452,7 +6459,13 @@ WrapCellMLElement(iface::XPCOM::IObject* newParent,
 {
   RETURN_INTO_WSTRING(ln, el->localName());
   RETURN_INTO_OBJREF(pn, iface::dom::Node, el->parentNode());
-  RETURN_INTO_WSTRING(pln, pn->localName());
+  std::wstring pln;
+  if (pn != NULL)
+  {
+    wchar_t* tln = pn->localName();
+    pln = tln;
+    free(tln);
+  }
 
   if (ln == L"component")
   {
