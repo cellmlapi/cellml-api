@@ -5,7 +5,8 @@ cellml_corba_server_CXXFLAGS := \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/cellml \
   -I $(top_srcdir)/sources/dom -I $(top_srcdir)/sources/dom_direct \
   -I $(top_srcdir)/sources/mathml -I$(top_builddir)/interfaces \
-  -I $(top_srcdir)/sources/cellml_context
+  -I $(top_srcdir)/sources/cellml_context \
+  -I$(top_srcdir)/libltdl
 cellml_corba_server_LDADD := \
   $(top_builddir)/libcellml_context.la \
   $(top_builddir)/libcellml_context_corba.la \
