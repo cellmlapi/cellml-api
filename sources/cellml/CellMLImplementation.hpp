@@ -1613,8 +1613,7 @@ public:
     : CDA_CellMLElementSetOuter(aParent, aInner) {}
   virtual ~CDA_UnitSet() {};
 
-  CDA_IMPL_QI2(cellml_api::CellMLUnitSet,
-               cellml_api::CellMLElementSet)
+  CDA_IMPL_QI2(cellml_api::UnitSet, cellml_api::CellMLElementSet)
 
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
   iface::cellml_api::UnitIterator* iterateUnits()
