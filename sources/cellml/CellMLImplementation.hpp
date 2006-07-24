@@ -603,7 +603,7 @@ public:
     : CDA_CellMLElement(parent, relationshipRef) {}
   virtual ~CDA_RelationshipRef() {}
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::ComponentRef,
+  CDA_IMPL_QI3(events::EventTarget, cellml_api::RelationshipRef,
                cellml_api::CellMLElement)
 
   wchar_t* name() throw(std::exception&);
