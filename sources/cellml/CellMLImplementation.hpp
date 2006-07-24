@@ -771,8 +771,8 @@ public:
     : CDA_CellMLElement(parent, role), CDA_MathContainer(parent, role) {}
   virtual ~CDA_Role() {}
 
-  CDA_IMPL_QI3(events::EventTarget, iface::cellml_api::Role,
-               iface::cellml_api::CellMLElement)
+  CDA_IMPL_QI3(events::EventTarget, cellml_api::Role,
+               cellml_api::CellMLElement)
 
   iface::cellml_api::Role::RoleType variableRole() throw(std::exception&);
   void variableRole(iface::cellml_api::Role::RoleType attr)
