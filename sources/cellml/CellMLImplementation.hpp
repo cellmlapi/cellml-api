@@ -1630,7 +1630,7 @@ public:
   virtual ~CDA_ConnectionIterator() {}
 
   CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI2(cellml_api::UnitIterator,
+  CDA_IMPL_QI2(cellml_api::ConnectionIterator,
                cellml_api::CellMLElementIterator)
 
   iface::cellml_api::CellMLElement* next() throw(std::exception&);
