@@ -401,6 +401,12 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
 
   xmlErrorPtr err = xmlCtxtGetLastError(ctxt);
   std::wstring fname, msg;
+  if (err == NULL)
+  {
+    xmlFreeParserCtxt(ctxt);
+    aErrorMessage = L"Could not fetch the error message.";
+    return;
+  }
   if (err->file)
   {
     std::wstring fname;
