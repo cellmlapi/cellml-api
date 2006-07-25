@@ -1223,7 +1223,8 @@ CDA_Model::fullyInstantiateImports()
                        importQueue.front());
     importQueue.pop_front();
 
-    imp->instantiate();
+    if (!imp->wasInstantiated())
+      imp->instantiate();
     // Now that the model is loaded, add its children to the importQueue...
     iface::cellml_api::Model* m =
       dynamic_cast<CDA_CellMLImport*>(imp.getPointer())->mImportedModel;
@@ -1434,7 +1435,9 @@ CDA_Model::asyncFullyInstantiateImports
       RETURN_INTO_OBJREF(aidl, iface::cellml_api::ImportInstantiationListener,
                          new CDA_Model_AsyncInstantiateDoneListener(aics, imp));
       aics->mActiveInstantiationCount++;
-      imp->asyncInstantiate(aidl);
+
+      if (!imp->wasInstantiated())
+        imp->asyncInstantiate(aidl);
     }
     catch (iface::cellml_api::CellMLException& ce)
     {
