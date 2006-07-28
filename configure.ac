@@ -119,9 +119,11 @@ AC_CHECK_SIZEOF(wchar_t*)
 
 case $srcdir in
   [\\/]* | ?:[\\/]* ) # Absolute
+     abssrcdir=$srcdir
      testdir=$srcdir/tests
      ;;
   *)
+     abssrcdir=`pwd`/$srcdir
      testdir=`pwd`/$srcdir/tests ;;
 esac
 
@@ -129,7 +131,7 @@ esac
 CYGWIN_WRAPPER=
 case "$host" in
 *cygwin*|*mks*|*msvc*|*wince)
-        CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
+        CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
         ;;
 esac
 AC_SUBST([CYGWIN_WRAPPER])
