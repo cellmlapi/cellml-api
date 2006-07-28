@@ -125,6 +125,15 @@ case $srcdir in
      testdir=`pwd`/$srcdir/tests ;;
 esac
 
+# Host specific peculiarities...
+CYGWIN_WRAPPER=
+case "$host" in
+*cygwin*|*mks*|*msvc*|*wince)
+        CYGWIN_WRAPPER="${srcdir}/build/cygwin-wrapper"
+        ;;
+esac
+AC_SUBST([CYGWIN_WRAPPER])
+
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])
 

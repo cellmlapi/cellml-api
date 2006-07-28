@@ -15,7 +15,7 @@ $(top_builddir)/interfaces/SCI%.cxx: $(top_srcdir)/interfaces/%.idl
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
-	omniidl -p $$SAVEDIR/$(top_srcdir)/simple_interface_generators/omniidl_be -bsimple_cpp $$SAVEDIR/$< && \
+	$(CYGWIN_WRAPPER) omniidl -p $$SAVEDIR/$(top_srcdir)/simple_interface_generators/omniidl_be -bsimple_cpp $$SAVEDIR/$< && \
 	cd $$SAVEDIR
 
 BUILT_SOURCES += $(top_builddir)/interfaces/IfaceDOM_APISPEC.hxx \

@@ -34,7 +34,7 @@ $(top_builddir)/interfaces/%SK.cc: \
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
-	omniidl -bcxx $$SAVEDIR/$< && \
+	$(CYGWIN_WRAPPER) omniidl -bcxx $$SAVEDIR/$< && \
 	cd $$SAVEDIR
 
 BUILT_SOURCES += \
