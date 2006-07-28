@@ -293,3 +293,78 @@ DOMTest::testLoadDocument()
   de->release_ref();
   d->release_ref();
 }
+
+void
+DOMTest::testGetElementByTagName()
+{
+  iface::cellml_api::CellMLBootstrap* cb = CreateCellMLBootstrap();
+  iface::cellml_api::DOMURLLoader* ul = cb->localURLLoader();
+  cb->release_ref();
+  iface::dom::Document* d =
+    ul->loadDocument(BASE_DIRECTORY L"simple_test.xml");
+  ul->release_ref();
+
+  iface::dom::NodeList* nl =
+    d->getElementsByTagName(L"baz");
+  CPPUNIT_ASSERT_EQUAL(0, (int)nl->length());
+  nl->release_ref();
+
+  nl = d->getElementsByTagName(L"bar");
+  CPPUNIT_ASSERT_EQUAL(1, (int)nl->length());
+  iface::dom::Node* n = nl->item(0);
+  CPPUNIT_ASSERT(n);
+  wchar_t* ln = n->nodeName();
+  CPPUNIT_ASSERT(!wcscmp(ln, L"bar"));
+  free(ln);
+  n->release_ref();
+  nl->release_ref();
+
+  nl = d->getElementsByTagName(L"boo");
+  CPPUNIT_ASSERT_EQUAL(2, (int)nl->length());
+  n = nl->item(0);
+  CPPUNIT_ASSERT(n);
+  wchar_t* nu = n->namespaceURI();
+  CPPUNIT_ASSERT(!wcscmp(nu, L"http://www.example.org/test/"));
+  free(nu);
+  n->release_ref();
+
+  n = nl->item(1);
+  CPPUNIT_ASSERT(n);
+  nu = n->namespaceURI();
+  CPPUNIT_ASSERT(!wcscmp(nu, L"http://www.example.org/bar/"));
+  free(nu);
+  n->release_ref();
+
+  nl->release_ref();
+
+  nl = d->getElementsByTagNameNS(L"http://www.example.org/bar/", L"baz");
+  CPPUNIT_ASSERT_EQUAL(0, (int)nl->length());
+  nl->release_ref();
+
+  nl = d->getElementsByTagNameNS(L"http://www.example.org/baz/", L"bar");
+  CPPUNIT_ASSERT_EQUAL(0, (int)nl->length());
+  nl->release_ref();
+
+  nl = d->getElementsByTagNameNS(L"http://www.example.org/bar/", L"bar");
+  CPPUNIT_ASSERT_EQUAL(1, (int)nl->length());
+  n = nl->item(0);
+  CPPUNIT_ASSERT(n);
+  ln = n->nodeName();
+  CPPUNIT_ASSERT(!wcscmp(ln, L"bar"));
+  free(ln);
+  n->release_ref();
+  nl->release_ref();
+
+  nl = d->getElementsByTagNameNS(L"http://www.example.org/test/", L"boo");
+  CPPUNIT_ASSERT_EQUAL(1, (int)nl->length());
+  n = nl->item(0);
+  CPPUNIT_ASSERT(n);
+  nu = n->namespaceURI();
+  CPPUNIT_ASSERT(!wcscmp(nu, L"http://www.example.org/test/"));
+  free(nu);
+  n->release_ref();
+
+  nl->release_ref();
+
+  d->release_ref();
+}

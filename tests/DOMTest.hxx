@@ -23,6 +23,7 @@ class DOMTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSerialiseChildElements);
   CPPUNIT_TEST(testSetAttributeNodeNS);
   CPPUNIT_TEST(testLoadDocument);
+  CPPUNIT_TEST(testGetElementByTagName);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -40,6 +41,8 @@ public:
   void testSerialiseChildElements();
 
   void testLoadDocument();
+
+  void testGetElementByTagName();
 private:
   iface::dom::DOMImplementation* di;
   iface::dom::DocumentType* dt;

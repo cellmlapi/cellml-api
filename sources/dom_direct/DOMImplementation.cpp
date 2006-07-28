@@ -1069,7 +1069,7 @@ CDA_NodeListDFSSearch::length()
   while (!iteratorStack.empty())
   {
     std::pair<std::list<CDA_Node*>::iterator,
-              std::list<CDA_Node*>::iterator> itp
+              std::list<CDA_Node*>::iterator>& itp
       = iteratorStack.front();
 
     if (itp.first == itp.second)
@@ -1105,10 +1105,12 @@ CDA_NodeListDFSSearch::length()
     }
 
     // Next, we need to recurse...
+    CDA_Node* n = *(itp.first);
+    itp.first++;
     iteratorStack.push_front(std::pair<std::list<CDA_Node*>::iterator,
                              std::list<CDA_Node*>::iterator>
-                             ((*(itp.first))->mNodeList.begin(),
-                              (*(itp.first))->mNodeList.end()));
+                             (n->mNodeList.begin(),
+                              n->mNodeList.end()));
   }
 
   return length;

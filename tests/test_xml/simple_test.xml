@@ -1,3 +1,6 @@
 <foo xmlns="http://www.example.org/bar/">
-  <bar/>
+  <bar>
+    <boo xmlns="http://www.example.org/test/" />
+    <boo />
+  </bar>
 </foo>
