@@ -133,7 +133,7 @@ OMNILINK="-lomniORB4 -lomnithread"
 case "$host" in
 *cygwin*|*mks*|*msvc*|*wince)
         CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
-        OMNILINK=-lomniORB407_rt -lomnithread32_rt
+        OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
         ;;
 esac
 AC_SUBST([CYGWIN_WRAPPER])
