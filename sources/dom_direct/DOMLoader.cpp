@@ -527,6 +527,7 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_WAR_NS_URI:
   case XML_WAR_NS_URI_RELATIVE:
   case XML_ERR_MISSING_ENCODING:
+#if LIBXML_VERSION > 20616
   case XML_WAR_SPACE_VALUE:
   case XML_ERR_NOT_STANDALONE:
   case XML_ERR_ENTITY_PROCESSING:
@@ -540,6 +541,7 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_NS_ERR_ATTRIBUTE_REDEFINED:
 #endif
   case XML_NS_ERR_EMPTY:
+#endif
     // case XML_DTD_ATTRIBUTE:
   case XML_DTD_ATTRIBUTE_REDEFINED:
   case XML_DTD_ATTRIBUTE_VALUE:
@@ -781,8 +783,10 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_SCHEMAV_CVC_AU:
   case XML_SCHEMAV_CVC_TYPE_1:
   case XML_SCHEMAV_CVC_TYPE_2:
+#if LIBXML_VERSION > 20616
   case XML_SCHEMAV_CVC_IDC:
   case XML_SCHEMAV_CVC_WILDCARD:
+#endif
     // case XML_XPTR_UNKNOWN:
   case XML_XPTR_CHILDSEQ_START:
   case XML_XPTR_EVAL_FAILED:
@@ -791,8 +795,10 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_C14N_REQUIRES_UTF8:
   case XML_C14N_CREATE_STACK:
   case XML_C14N_INVALID_NODE:
+#if LIBXML_VERSION > 20616
   case XML_C14N_UNKNOW_NODE:
   case XML_C14N_RELATIVE_NAMESPACE:
+#endif
   case XML_SCHEMAP_SRC_SIMPLE_TYPE_2:
   case XML_SCHEMAP_SRC_SIMPLE_TYPE_3:
   case XML_SCHEMAP_SRC_SIMPLE_TYPE_4:
@@ -872,6 +878,7 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_SCHEMAP_DERIVATION_OK_RESTRICTION_2_1_3:
   case XML_SCHEMAP_AU_PROPS_CORRECT_2:
   case XML_SCHEMAP_A_PROPS_CORRECT_2:
+#ifdef XML_VERSION > 20616
   case XML_SCHEMAP_C_PROPS_CORRECT:
   case XML_SCHEMAP_SRC_REDEFINE:
 #if XML_VERSION > 20621
@@ -888,6 +895,7 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
 #endif
   case XML_MODULE_OPEN:
   case XML_MODULE_CLOSE:
+#endif
   case XML_CHECK_FOUND_ATTRIBUTE:
   case XML_CHECK_FOUND_TEXT:
   case XML_CHECK_FOUND_CDATA:
@@ -925,10 +933,12 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   case XML_CHECK_OUTSIDE_DICT:
   case XML_CHECK_WRONG_NAME:
   case XML_CHECK_NAME_NOT_NULL:
+#if LIBXML_VERSION > 20616
   case XML_I18N_NO_HANDLER:
   case XML_I18N_EXCESS_HANDLER:
   case XML_I18N_CONV_FAILED:
   case XML_I18N_NO_OUTPUT:
+#endif
     aErrorMessage = L"badxml/";
     swprintf(buf, 20, L"%d", err->line);
     aErrorMessage += buf;
@@ -1108,7 +1118,9 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
 
   case XML_ERR_INVALID_URI:
   case XML_ERR_URI_FRAGMENT:
+#if LIBXML_VERSION > 20616
   case XML_FTP_URL_SYNTAX:
+#endif
     aErrorMessage = L"badurl";
     break;
 

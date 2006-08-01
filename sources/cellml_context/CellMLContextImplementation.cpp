@@ -395,7 +395,7 @@ wchar_t*
 CDA_ModelNode::name()
   throw(std::exception&)
 {
-  return wcsdup(mName.c_str());
+  return CDA_wcsdup(mName.c_str());
 }
 
 iface::cellml_context::ModelNode*
