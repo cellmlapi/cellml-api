@@ -12,7 +12,7 @@ libCISService_la_LIBADD := \
   $(top_builddir)/libcis.la \
   $(top_builddir)/libcis_corba.la
 
-libCISService_la_LDFLAGS := -shared -module -lomniORB4 -lgsl -lcblas
+libCISService_la_LDFLAGS := -shared -module -lomniORB4 -lgsl -lgslcblas
 
 libcis_corba_la_CXXFLAGS := \
 	-I$(top_builddir)/interfaces \
