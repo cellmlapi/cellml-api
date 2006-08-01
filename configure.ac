@@ -129,12 +129,15 @@ esac
 
 # Host specific peculiarities...
 CYGWIN_WRAPPER=
+OMNILINK="-lomniORB4 -lomnithread"
 case "$host" in
 *cygwin*|*mks*|*msvc*|*wince)
         CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
+        OMNILINK=-lomniORB407_rt -lomnithread32_rt
         ;;
 esac
 AC_SUBST([CYGWIN_WRAPPER])
+AC_SUBST([OMNILINK])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])

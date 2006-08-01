@@ -7,6 +7,7 @@ bin_PROGRAMS :=
 BUILT_SOURCES :=
 
 CYGWIN_WRAPPER ?= @CYGWIN_WRAPPER@
+OMNILINK ?= @OMNILINK@
 
 # Parts needed to build the interface generates...
 include $(top_srcdir)/simple_interface_generators/build.mk
