@@ -86,8 +86,8 @@ public:
       mRunning = true;
 #ifdef WIN32
       DWORD tid;
-      HANDLE* h = CreateThread(NULL, 0, ThreadProc,
-                               reinterpret_cast<void*>(this), 0, &tid);
+      HANDLE h = CreateThread(NULL, 0, ThreadProc,
+                              reinterpret_cast<LPVOID>(this), 0, &tid);
       CloseHandle(h);
 #else
       pthread_t thread;

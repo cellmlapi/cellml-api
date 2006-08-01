@@ -5,6 +5,11 @@
 #include "Utilities.hxx"
 #include "IfaceCellML_APISPEC.hxx"
 
+// Win32 hack...
+#ifdef _WIN32
+#define swprintf _snwprintf
+#endif
+
 /**
  * Temporary annotation manager is a utility class used to set annotations on
  * the model intended for internal use only, and keep track of them so they can

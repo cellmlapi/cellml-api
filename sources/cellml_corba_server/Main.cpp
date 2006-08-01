@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <sys/errno.h>
+#endif
 #include <inttypes.h>
 #include "CellML_APISPEC.hh"
 #include "IfaceCellML_APISPEC.hxx"
@@ -111,7 +113,11 @@ PrepareCellMLHome(void)
     cellml_home = "/.cellml";
 
   // Grant everyone permission, umask will restrict if needed.
-  int ret = mkdir(cellml_home.c_str(), 0777);
+  int ret = mkdir(cellml_home.c_str()
+#ifndef WIN32
+		  ,0777
+#endif
+                 );
   if (ret != 0 && errno != EEXIST)
   {
     perror("Creating CellML home directory");
@@ -271,7 +277,11 @@ main(int argc, char** argv)
   mman->release_ref();
 
   while (!gShutdownServer)
+#ifdef WIN32
+    Sleep(1000);
+#else
     sleep(1);
+#endif
 
   // Finally, clean up...
   fcb->release_ref();

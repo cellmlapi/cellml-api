@@ -10,11 +10,20 @@ static void
 StartServer(std::string& dir)
 {
   std::string bin = dir + "/cellml_corba_server";
+#ifdef WIN32
+  bin += ".exe";
+  STARTUPINFO startup;
+  memset(&startup, 0, sizeof(startup));
+  startup.cb = sizeof(startup);
+  PROCESS_INFORMATION procInfo;
+  CreateProcess(dir.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &procInfo);
+#else
   if (fork() == 0)
   {
     execl(bin.c_str(), bin.c_str(), NULL);
     exit(-1);
   }
+#endif
 }
 
 iface::cellml_context::CellMLContext*
@@ -40,7 +49,11 @@ GetCellMLContext(int argc, char** argv)
     if (f == NULL)
     {
       StartServer(chome);
+#ifdef WIN32
+      Sleep(500);
+#else
       usleep(500000);
+#endif
       continue;
     }
     char buf[1024];
@@ -67,7 +80,11 @@ GetCellMLContext(int argc, char** argv)
     catch (...)
     {
       StartServer(chome);
+#ifdef WIN32
+      Sleep(500);
+#else
       usleep(500000);
+#endif
       continue;
     }
   }

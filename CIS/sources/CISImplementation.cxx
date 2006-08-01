@@ -3,9 +3,11 @@
 #include "Utilities.hxx"
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/errno.h>
-#include "CISImplementation.hxx"
 #include <dlfcn.h>
+#endif
+#include "CISImplementation.hxx"
 #include <fstream>
 #include "CISBootstrap.hpp"
 #include <dirent.h>
@@ -29,7 +31,11 @@ attempt_make_tempdir(const char* parentDir)
       fn += DICT[(r >> 18) & 0x3F];
       fn += DICT[(r >> 24) & 0x3F];
     }
-    if (mkdir(fn.c_str(), 0700) == 0)
+    if (mkdir(fn.c_str()
+#ifndef WIN32
+        , 0700
+#endif
+       ) == 0)
       return strdup(fn.c_str());
     // If the error is EEXIST, we can try again with another name. If not, we
     // should fail.
@@ -42,14 +48,19 @@ CompiledModelFunctions*
 SetupCompiledModelFunctions(void* module)
 {
   CompiledModelFunctions* cmf = new CompiledModelFunctions;
+#ifdef WIN32
+#define getsym(m,s) GetProcAddress((HMODULE)m, s)
+#else
+#define getsym(m,s) dlsym(m,s)
+#endif
   cmf->SetupFixedConstants = (void (*)(double*))
-    dlsym(module, "SetupFixedConstants");
+    getsym(module, "SetupFixedConstants");
   cmf->SetupComputedConstants = (void (*)(double*,double*))
-    dlsym(module, "SetupComputedConstants");
+    getsym(module, "SetupComputedConstants");
   cmf->ComputeRates = (void (*)(double*,double*,double*,double*))
-    dlsym(module, "ComputeRates");
+    getsym(module, "ComputeRates");
   cmf->ComputeVariables = (void (*)(double*,double*,double*,double*))
-    dlsym(module, "ComputeVariables");
+    getsym(module, "ComputeVariables");
   return cmf;
 }
 
@@ -58,7 +69,11 @@ CompileSource(std::string& destDir, std::string& sourceFile,
               std::wstring& lastError)
 {
   std::string targ = destDir;
+#ifdef WIN32
+  targ += "/generated.dll";
+#else
   targ += "/generated.so";
+#endif
   std::string cmd = "gcc -O3 -shared -o";
   cmd += targ;
   cmd += " ";
@@ -70,7 +85,11 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     throw iface::cellml_api::CellMLException();
   }
 
+#ifdef WIN32
+  void* t = LoadLibrary(targ.c_str());
+#else
   void* t = dlopen(targ.c_str(), RTLD_NOW);
+#endif
   if (t == NULL)
   {
     lastError = L"Cannot load the model code module.";
@@ -96,7 +115,11 @@ CDA_CellMLCompiledModel::CDA_CellMLCompiledModel
 
 CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
 {
+#ifdef WIN32
+  FreeLibrary((HMODULE)mModule);
+#else
   dlclose(mModule);
+#endif
   delete mCMF;
   mModel->release_ref();
   mCCI->release_ref();
