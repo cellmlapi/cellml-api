@@ -12,10 +12,10 @@ cellml_corba_server_LDADD := \
   $(top_builddir)/libcellml_context_corba.la \
   $(top_builddir)/libcellml.la \
   $(top_builddir)/libcellml_corba.la \
-  $(top_builddir)/libCORBASupport.la -lxml2 \
+  $(top_builddir)/libCORBASupport.la \
   $(top_builddir)/libltdlc.la
 
-cellml_corba_server_LDFLAGS := $(OMNILINK)
+cellml_corba_server_LDFLAGS := -lxml2 $(OMNILINK) --whole-archive
 
 lib_LTLIBRARIES += libcellml_corba_client.la
 libcellml_corba_client_la_SOURCES := \
