@@ -5768,8 +5768,18 @@ handleEvent(iface::events::Event* evt)
       RETURN_INTO_OBJREF(targetET, iface::events::EventTarget,
                          evt->target());
       DECLARE_QUERY_INTERFACE_OBJREF(target, targetET, dom::Node);
-      int cmp1 = CDA_objcmp(target, mIterator->mPrevElement);
-      int cmp2 = CDA_objcmp(target, mIterator->mNextElement);
+      int cmp1;
+      if (mIterator->mPrevElement == NULL)
+        cmp1 = 1;
+      else
+        cmp1 = CDA_objcmp(target, mIterator->mPrevElement);
+
+      int cmp2;
+      if (mIterator->mNextElement == NULL)
+        cmp2 = 1;
+      else
+        cmp2 = CDA_objcmp(target, mIterator->mNextElement);
+
       if (cmp1 && cmp2)
       {
         printf("Warning: Unexpected event sent to handler.\n");
