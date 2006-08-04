@@ -402,7 +402,7 @@ CellMLUnitDefinition::ComputeBaseUnits()
 
     // Now multiply the prefix...
     mFactor /= u->multiplier() *
-      pow(ur->getOverallFactor() * pow(10.0, u->prefix()), u->exponent());
+      pow((1.0/ur->getOverallFactor()) * pow(10.0, u->prefix()), u->exponent());
 
     // Push the prefix onto the multiplexer...
     ExponentUnitQueue entry;
