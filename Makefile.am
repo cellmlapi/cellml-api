@@ -8,6 +8,7 @@ BUILT_SOURCES :=
 
 CYGWIN_WRAPPER ?= @CYGWIN_WRAPPER@
 OMNILINK ?= @OMNILINK@
+STLLINK ?= @STLLINK@
 
 # Parts needed to build the interface generates...
 include $(top_srcdir)/simple_interface_generators/build.mk
