@@ -2,6 +2,7 @@
 #include "DOMWriter.hxx"
 #include <memory>
 #include <assert.h>
+#include <stdio.h>
 
 #define NULL_NS L""
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
