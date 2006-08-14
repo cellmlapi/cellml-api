@@ -115,8 +115,8 @@ public:
   {
     if (_cda_refcount == 0)
     {
-      printf("Warning: release_ref called too many times on %s.\n",
-             typeid(this).name());
+      //printf("Warning: release_ref called too many times on %s.\n",
+      //       typeid(this).name());
       assert(0);
     }
     _cda_refcount--;
@@ -985,8 +985,8 @@ public:
   {
     if (_cda_refcount == 0)
     {
-      printf("Warning: release_ref called too many times on %s.\n",
-             typeid(this).name());
+      //printf("Warning: release_ref called too many times on %s.\n",
+      //       typeid(this).name());
     }
 
     _cda_refcount--;

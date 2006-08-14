@@ -1688,8 +1688,12 @@ CDA_Element::removeAttribute(const wchar_t* name)
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
-  attributeMapNS.erase(std::pair<std::wstring,std::wstring>
-                       (at->mNamespaceURI, at->mLocalName));
+  if (at->mLocalName != L"")
+    attributeMapNS.erase(std::pair<std::wstring,std::wstring>
+                         (at->mNamespaceURI, at->mLocalName));
+  else
+    attributeMapNS.erase(std::pair<std::wstring,std::wstring>
+                         (at->mNamespaceURI, at->mNodeName));
 
   if (eventsHaveEffects())
   {
@@ -1787,6 +1791,8 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   if (oldAttr == NULL)
     throw iface::dom::DOMException();
   RETURN_INTO_WSTRING(name, oldAttr->name());
+  RETURN_INTO_WSTRING(lname, oldAttr->localName());
+  RETURN_INTO_WSTRING(nsuri, oldAttr->namespaceURI());
   std::map<std::wstring, CDA_Attr*>::iterator
     i = attributeMap.find(name);
   if (i == attributeMap.end())
@@ -1796,7 +1802,7 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
-  attributeMapNS.erase(std::pair<std::wstring,std::wstring>(L"", name));
+  attributeMapNS.erase(std::pair<std::wstring,std::wstring>(nsuri, lname));
 
   if (eventsHaveEffects())
   {
