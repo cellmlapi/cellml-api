@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #  endif
 #endif
 
-#include <argz.h>
+#include <lt_argz.h>
 
 #include <assert.h>
 #include <stddef.h>
@@ -54,7 +54,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 #define EOS_CHAR '\0'
 
-error_t
+int
 argz_append (char **pargz, size_t *pargz_len, const char *buf, size_t buf_len)
 {
   size_t argz_len;
@@ -85,7 +85,7 @@ argz_append (char **pargz, size_t *pargz_len, const char *buf, size_t buf_len)
 }
 
 
-error_t
+int
 argz_create_sep (const char *str, int delim, char **pargz, size_t *pargz_len)
 {
   size_t argz_len;
@@ -137,7 +137,7 @@ argz_create_sep (const char *str, int delim, char **pargz, size_t *pargz_len)
 }
 
 
-error_t
+int
 argz_insert (char **pargz, size_t *pargz_len, char *before, const char *entry)
 {
   assert (pargz);

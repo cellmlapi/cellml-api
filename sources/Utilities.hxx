@@ -3,6 +3,14 @@
 
 #include "config.h"
 
+#ifdef WIN32
+#define DLLIMPORT __declspec(dllimport)
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLIMPORT
+#define DLLEXPORT
+#endif
+
 #if SIZEOF_WCHAR_TP == 8
 #define WCHAR_T_IS_64BIT
 #define WCHAR_T_CONSTANT_WIDTH

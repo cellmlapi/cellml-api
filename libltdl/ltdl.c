@@ -552,7 +552,7 @@ canonicalize_path (const char *path, char **pcanonical)
 static int
 argzize_path (const char *path, char **pargz, size_t *pargz_len)
 {
-  error_t error;
+  int error;
 
   assert (path);
   assert (pargz);
@@ -1450,7 +1450,7 @@ static int
 lt_argz_insert (char **pargz, size_t *pargz_len, char *before,
 		const char *entry)
 {
-  error_t error;
+  int error;
 
   /* Prior to Sep 8, 2005, newlib had a bug where argz_insert(pargz,
      pargz_len, NULL, entry) failed with EINVAL.  */

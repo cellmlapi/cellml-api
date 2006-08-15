@@ -39,7 +39,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 #endif
 
 #include <string.h>
-#include "lt_system.h"
+#include "libltdl/libltdl/lt_system.h"
 
 #if !defined(HAVE_STRLCAT)
 #  define strlcat(dst,src,dstsize) lt_strlcat(dst,src,dstsize)

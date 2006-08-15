@@ -7669,40 +7669,7 @@ m4_ifndef([AC_LIBTOOL_LANG_RC_CONFIG],	[AC_DEFUN([AC_LIBTOOL_LANG_RC_CONFIG])])
 m4_ifndef([_LT_AC_LANG_RC_CONFIG],	[AC_DEFUN([_LT_AC_LANG_RC_CONFIG])])
 m4_ifndef([AC_LIBTOOL_CONFIG],		[AC_DEFUN([AC_LIBTOOL_CONFIG])])
 m4_ifndef([_LT_AC_FILE_LTDLL_C],	[AC_DEFUN([_LT_AC_FILE_LTDLL_C])])
-# Portability macros for glibc argz.                    -*- Autoconf -*-
-# Written by Gary V. Vaughan <gary@gnu.org>
 
-# Copyright (C) 2004, 2005, 2006 Free Software Foundation, Inc.
-
-# This file is free software; the Free Software Foundation gives
-# unlimited permission to copy and/or distribute it, with or without
-# modifications, as long as this notice is preserved.
-
-# serial 4 argz.m4
-
-AC_DEFUN([gl_FUNC_ARGZ],
-[gl_PREREQ_ARGZ
-
-AC_CHECK_HEADERS([argz.h], [], [], [AC_INCLUDES_DEFAULT])
-
-AC_CHECK_TYPES([error_t],
-  [],
-  [AC_DEFINE([error_t], [int],
-   [Define to a type to use for `error_t' if it is not otherwise available.])
-   AC_DEFINE([__error_t_defined], [1], [Define so that glibc/gnulib argp.h
-    does not typedef error_t.])],
-  [#if defined(HAVE_ARGZ_H)
-#  include <argz.h>
-#endif])
-
-ARGZ_H=
-AC_CHECK_FUNCS([argz_append argz_create_sep argz_insert argz_next \
-	argz_stringify], [], [ARGZ_H=argz.h; AC_LIBOBJ([argz])])
-AC_SUBST([ARGZ_H])
-])
-
-# Prerequisites of lib/argz.c.
-AC_DEFUN([gl_PREREQ_ARGZ], [:])
 # ltdl.m4 - Configure ltdl for the target system. -*-Autoconf-*-
 # Copyright (C) 1999-2006 Free Software Foundation, Inc.
 #
@@ -7955,7 +7922,6 @@ AC_REQUIRE([LT_LIB_DLLOAD])dnl
 AC_REQUIRE([LT_SYS_SYMBOL_USCORE])dnl
 AC_REQUIRE([LT_FUNC_DLSYM_USCORE])dnl
 AC_REQUIRE([LT_SYS_DLOPEN_DEPLIBS])dnl
-AC_REQUIRE([gl_FUNC_ARGZ])dnl
 
 m4_require([_LT_CHECK_OBJDIR])dnl
 m4_require([_LT_HEADER_DLFCN])dnl

@@ -12,6 +12,7 @@ libltdlc_la_SOURCES := \
   libltdl/libltdl/slist.h \
   libltdl/loaders/preopen.c \
   libltdl/lt__alloc.c \
+  libltdl/lt_argz.c \
   libltdl/lt_dlloader.c \
   libltdl/lt_error.c \
   libltdl/ltdl.c \

@@ -5,12 +5,23 @@ libcis_corba_la_SOURCES := \
   $(top_builddir)/interfaces/SCICIS.cxx \
   $(top_builddir)/interfaces/CISSK.cc
 
+libcis_corba_la_LIDADD := \
+  $(top_builddir)/libcellml.la \
+  $(top_builddir)/libcellml_corba.la \
+  $(top_builddir)/libcis.la \
+  $(top_builddir)/libccgs.la \
+  $(top_builddir)/libccgs_corba.la
+
 libCISService_la_SOURCES := \
   $(top_srcdir)/CIS/sources/CISServiceRegistration.cpp
 
 libCISService_la_LIBADD := \
+  $(top_builddir)/libcellml.la \
+  $(top_builddir)/libcellml_corba.la \
   $(top_builddir)/libcis.la \
-  $(top_builddir)/libcis_corba.la
+  $(top_builddir)/libcis_corba.la \
+  $(top_builddir)/libccgs.la \
+  $(top_builddir)/libccgs_corba.la
 
 libCISService_la_LDFLAGS := -shared -module $(OMNILINK) -lgsl -lgslcblas
 
