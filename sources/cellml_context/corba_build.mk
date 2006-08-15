@@ -2,6 +2,10 @@
 
 lib_LTLIBRARIES += libcellml_context_corba.la
 
+libcellml_context_corba_la_LIBADD := \
+  libcellml.la \
+  libcellml_corba.la
+
 libcellml_context_corba_la_SOURCES := \
   $(top_builddir)/interfaces/CCICellML_Context.cxx \
   $(top_builddir)/interfaces/SCICellML_Context.cxx \
