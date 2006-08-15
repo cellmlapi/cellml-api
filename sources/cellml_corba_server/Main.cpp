@@ -65,8 +65,8 @@ ProcessConfiguration(FILE* aConf)
       lt_dlhandle dlh = lt_dlopen(fn);
       if (dlh == NULL)
       {
-        printf("Warning: Can't dlopen %s for load_service command.\n",
-               fn);
+        printf("Warning: Can't dlopen %s for load_service command: %s\n",
+               fn, lt_dlerror());
         continue;
       }
       DlopenService dos;
