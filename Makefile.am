@@ -5,6 +5,8 @@ noinst_LTLIBRARIES :=
 noinst_PROGRAMS :=
 bin_PROGRAMS :=
 BUILT_SOURCES :=
+CLEANFILES :=
+EXTRA_LTLIBRARIES :=
 
 CYGWIN_WRAPPER ?= @CYGWIN_WRAPPER@
 OMNILINK ?= @OMNILINK@
@@ -53,4 +55,4 @@ if ENABLE_CONTEXT_AND_CORBA_AND_CIS
 include $(top_srcdir)/CIS/corba_build.mk
 endif
 
-CLEANFILES=$(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh
+CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh
