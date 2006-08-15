@@ -5,6 +5,7 @@
 #include "Variables.hxx"
 #include "Equality.hxx"
 #include "CodeGenerationState.hxx"
+#include <stdio.h>
 
 // Win32 hack...
 #ifdef _WIN32
