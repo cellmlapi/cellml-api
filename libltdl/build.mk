@@ -19,7 +19,7 @@ libltdlc_la_SOURCES := \
   libltdl/ltdl.h \
   libltdl/slist.c
 
-libltdlc_la_CPPFLAGS		:= -DLTDL -DLTDLOPEN=libltdlc $(AM_CPPFLAGS) -I$(top_srcdir)/libltdl -I$(top_srcdir)/libltdl/libltdl
+libltdlc_la_CPPFLAGS		:= -DLTDL -DLTDLOPEN=@LTDLOPEN@ $(AM_CPPFLAGS) -I$(top_srcdir)/libltdl -I$(top_srcdir)/libltdl/libltdl
 libltdlc_la_LDFLAGS		:= $(AM_LDFLAGS) $(LTDL_VERSION_INFO) $(LT_DLPREOPEN)
 libltdlc_la_LIBADD		:= $(LTLIBOBJS)
 libltdlc_la_DEPENDENCIES	:= $(LT_DLLOADERS) $(LTLIBOBJS)
