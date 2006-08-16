@@ -1,5 +1,9 @@
 lib_LTLIBRARIES += libccgs.la
 
+libccgs_la_LIBADD := \
+  libcellml.la \
+  $(STLLINK)
+
 libccgs_la_SOURCES := \
   $(top_srcdir)/CCGS/sources/CCGSImplementation.cpp \
   $(top_srcdir)/CCGS/sources/CCGSGenerator.cpp \
