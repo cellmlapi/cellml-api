@@ -138,6 +138,7 @@ vl_exit (lt_user_data loader_data)
 static lt_module
 vm_open (lt_user_data loader_data, const char *filename)
 {
+  const char *p;
   symlist_chain *lists;
   lt_module	 module = 0;
 
@@ -156,12 +157,21 @@ vm_open (lt_user_data loader_data, const char *filename)
       filename = "@PROGRAM@";
     }
 
+  p = strrchr(filename, '/');
+  if (p != NULL)
+    filename = p + 1;
+
   for (lists = preloaded_symlists; lists; lists = lists->next)
     {
       const lt_dlsymlist *symbol;
       for (symbol= lists->symlist; symbol->name; ++symbol)
 	{
-	  if (!symbol->address && streq (symbol->name, filename))
+          p = strrchr(symbol->name, '/');
+          if (p == NULL)
+            p = symbol->name;
+          else
+            p++;
+	  if (!symbol->address && streq (p, filename))
 	    {
 	      /* If the next symbol's name and address is 0, it means
 		 the module just contains the originator and no symbols.
