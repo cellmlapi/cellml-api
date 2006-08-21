@@ -1,0 +1,32 @@
+#!/bin/sh
+
+BINDIR=`pwd`
+BASEDIR=`dirname $0`
+DIFF=diff
+CELLML2C=$BINDIR/CellML2C
+TEMPFILE=test_output
+
+if [ ! -f $CELLML2C ]; then
+        echo CellML2C not found. Not testing it.
+        exit 77
+fi
+
+function runtest()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $CELLML2C $BASEDIR/test_xml/$name.xml >$TEMPFILE
+  $DIFF $TEMPFILE $BASEDIR/test_expected/$name.c
+  if [[ $? -ne 0 ]]; then
+    echo FAIL: $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name generated correct output.
+  rm -f $TEMPFILE
+}
+
+runtest cellml_simple_test
+runtest modified_parabola
+
+exit 0

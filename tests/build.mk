@@ -1,6 +1,6 @@
 # Tests...
 check_PROGRAMS=tests/RunTestBin
-TESTS=tests/RunTestBin
+TESTS=tests/RunTestBin tests/CheckCodeGenerator
 tests_RunTestBin_SOURCES=\
 	tests/TestOutput.cpp \
 	tests/MathMLTest.cpp \
