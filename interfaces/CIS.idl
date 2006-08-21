@@ -52,6 +52,7 @@ module cellml_services
      */
     void failed(in string errorMessage);
   };
+#pragma terminal-interface
 
   interface CellMLIntegrationRun
     : XPCOM::IObject
@@ -124,6 +125,7 @@ module cellml_services
      */
     void stop();
   };
+#pragma terminal-interface
 
   interface CellMLCompiledModel
     : XPCOM::IObject
@@ -138,6 +140,7 @@ module cellml_services
      */
     readonly attribute cellml_services::CCodeInformation codeInformation;
   };
+#pragma terminal-interface
 
   interface CellMLIntegrationService
     : XPCOM::IObject
@@ -163,4 +166,5 @@ module cellml_services
      */
     readonly attribute wstring lastError;
   };
+#pragma terminal-interface
 };

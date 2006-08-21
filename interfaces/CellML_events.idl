@@ -54,4 +54,5 @@ interface MutationEvent : events::Event
    */
   readonly attribute unsigned short   attrChange;
 };
+#pragma terminal-interface
 };

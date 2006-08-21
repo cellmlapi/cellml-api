@@ -1,8 +1,11 @@
 lib_LTLIBRARIES += libccgs_corba.la libCCGSService.la
+noinst_LTLIBRARIES += libccgs_corba_sk.la
 
 libccgs_corba_la_SOURCES := \
   $(top_builddir)/interfaces/CCICCGS.cxx \
-  $(top_builddir)/interfaces/SCICCGS.cxx \
+  $(top_builddir)/interfaces/SCICCGS.cxx
+
+libccgs_corba_sk_la_SOURCES := \
   $(top_builddir)/interfaces/CCGSSK.cc
 
 libCCGSService_la_SOURCES := \
@@ -18,14 +21,21 @@ libCCGSService_la_CXXFLAGS := \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/sources/cellml_corba_server \
         -I$(top_srcdir)/sources/ \
-	-I$(top_srcdir)/simple_interface_generators/glue
+	-I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
 
 libccgs_corba_la_CXXFLAGS := \
 	-I$(top_builddir)/interfaces \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/sources/cellml_corba_server \
         -I$(top_srcdir)/sources/ \
+	-I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
+
+libccgs_corba_sk_la_CXXFLAGS := \
+	-I$(top_builddir)/interfaces \
 	-I$(top_srcdir)/simple_interface_generators/glue
+
+libccgs_corba_la_LIBADD := \
+  $(top_builddir)/libccgs_corba_sk.la
 
 BUILT_SOURCES += \
   $(top_builddir)/interfaces/CCICCGS.cxx \

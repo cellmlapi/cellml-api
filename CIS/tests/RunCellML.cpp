@@ -5,6 +5,7 @@
 #include "IfaceCIS.hxx"
 #include "CISBootstrap.hpp"
 #include "CCGSBootstrap.hpp"
+#include "cda_compiler_support.h"
 #include "CellMLBootstrap.hpp"
 #include <stdio.h>
 #include <stdlib.h>

@@ -61,6 +61,7 @@ module cellml_context
      */
     void unload();
   };
+#pragma cross-module-inheritance
 
   interface CellMLModuleIterator : XPCOM::IObject
   {
@@ -69,6 +70,7 @@ module cellml_context
      */
     CellMLModule nextModule();
   };
+#pragma terminal-interface
 
   interface ModelNode;
 
@@ -79,6 +81,7 @@ module cellml_context
      */
     ModelNode nextModelNode();
   };
+#pragma terminal-interface
 
   /**
    * A monitors which is notified when tools are loaded or unloaded.
@@ -97,6 +100,7 @@ module cellml_context
      */
     void moduleDeregistered(in CellMLModule mod);
   };
+#pragma terminal-interface
 
   /**
    * This interface is for a 'module manager': a way of managing the modules
@@ -158,6 +162,7 @@ module cellml_context
      */
     CellMLModuleIterator iterateModules();
   };
+#pragma terminal-interface
 
   /**
    * This provides per-interface annotations(as opposed to the per-object
@@ -200,6 +205,7 @@ module cellml_context
     XPCOM::IObject getUserData(in wstring type, in wstring key)
       raises(cellml_api::CellMLException);
   };
+#pragma terminal-interface
 
   interface ModelList;
   interface ModelNode;
@@ -230,6 +236,7 @@ module cellml_context
     void modelReplaced(in ModelNode changedNode,
                        in cellml_api::Model newModel);
   };
+#pragma terminal-interface
 
   /**
    * A monitor for changes to model lists.
@@ -256,6 +263,7 @@ module cellml_context
      */
     void modelRemoved(in ModelNode oldNode, in short depth);
   };
+#pragma terminal-interface
 
   /**
    * This represents a node in the tree containing all models available to the
@@ -333,6 +341,7 @@ module cellml_context
      */
     readonly attribute ModelList parentList;
   };
+#pragma terminal-interface
 
   interface ModelList : XPCOM::IObject
   {
@@ -397,6 +406,7 @@ module cellml_context
      */
     readonly attribute ModelNode parentNode;
   };
+#pragma terminal-interface
 
   /**
    * This is intended as the top-level object through which everything else
@@ -424,4 +434,5 @@ module cellml_context
      */
     readonly attribute ModelList loadedModels;
   };
+#pragma terminal-interface
 };

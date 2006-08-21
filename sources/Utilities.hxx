@@ -3,14 +3,6 @@
 
 #include "config.h"
 
-#ifdef WIN32
-#define DLLIMPORT __declspec(dllimport)
-#define DLLEXPORT __declspec(dllexport)
-#else
-#define DLLIMPORT
-#define DLLEXPORT
-#endif
-
 #if SIZEOF_WCHAR_TP == 8
 #define WCHAR_T_IS_64BIT
 #define WCHAR_T_CONSTANT_WIDTH
@@ -28,12 +20,13 @@
 #include <wchar.h>
 #include <inttypes.h>
 
-#include "Utilities.hxx"
 #ifndef WIN32
 #include <sys/time.h>
 #else
 #include <windows.h>
 #endif
+
+#include "cda_compiler_support.h"
 
 // wcsdup is non-standard, so use this instead...
 inline wchar_t*

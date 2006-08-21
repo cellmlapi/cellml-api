@@ -81,6 +81,7 @@ module cellml_services
      */
     readonly attribute cellml_api::CellMLVariable source;
   };
+#pragma terminal-interface
 
   interface CCodeVariableIterator
     : XPCOM::IObject
@@ -90,6 +91,7 @@ module cellml_services
      */
     CCodeVariable nextVariable();
   };
+#pragma terminal-interface
 
   enum ModelConstraintLevel
   {
@@ -214,6 +216,8 @@ module cellml_services
      */
     readonly attribute mathml_dom::MathMLNodeList flaggedEquations;
   };
+#pragma terminal-interface
+#pragma cross-module-argument
 
   interface CGenerator
     : XPCOM::IObject
@@ -237,4 +241,6 @@ module cellml_services
      */
     readonly attribute wstring lastError;
   };
+#pragma terminal-interface
+#pragma cross-module-argument
 };

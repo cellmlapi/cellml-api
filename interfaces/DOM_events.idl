@@ -36,11 +36,13 @@ module events
     boolean            dispatchEvent(in Event evt)
                                         raises(EventException);
   };
+#pragma terminal-interface
 
   // Introduced in DOM Level 2:
   interface EventListener : XPCOM::IObject {
     void               handleEvent(in Event evt);
   };
+#pragma terminal-interface
 
   // Introduced in DOM Level 2:
   interface Event : XPCOM::IObject {
@@ -69,6 +71,7 @@ module events
     Event              createEvent(in DOMString domEventType)
                                         raises(dom::DOMException);
   };
+#pragma terminal-interface
 
   // Introduced in DOM Level 2:
   interface MutationEvent : Event {
@@ -92,6 +95,7 @@ module events
                                          in DOMString attrNameArg, 
                                          in unsigned short attrChangeArg);
   };
+#pragma terminal-interface
 };
 
 #endif // _EVENTS_IDL_

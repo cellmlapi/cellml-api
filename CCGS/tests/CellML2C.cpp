@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <exception>
+#include "cda_compiler_support.h"
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCCGS.hxx"
 #include "CCGSBootstrap.hpp"

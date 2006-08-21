@@ -11,7 +11,7 @@ libccgs_la_SOURCES := \
   $(top_srcdir)/CCGS/sources/Equality.cxx
 
 libccgs_la_CXXFLAGS := \
-  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces
+  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
 
 include_HEADERS += \
   $(top_builddir)/interfaces/IfaceCCGS.hxx \

@@ -1,5 +1,6 @@
 #include "CellMLImplementation.hpp"
 #include "CellMLBootstrapImpl.hpp"
+#define IN_CELLML_MODULE
 #include "CellMLBootstrap.hpp"
 
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
@@ -348,7 +349,7 @@ CDA_ModelLoader::asyncCreateFromDOM
   loader->asyncLoadDocument(URL, cfddll);
 }
 
-iface::cellml_api::CellMLBootstrap*
+CDA_EXPORT iface::cellml_api::CellMLBootstrap*
 CreateCellMLBootstrap()
 {
   return new CDA_CellMLBootstrap();

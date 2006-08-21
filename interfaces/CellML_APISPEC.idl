@@ -82,6 +82,7 @@ module cellml_api
      */
     readonly attribute dom::Element data;
   };
+#pragma terminal-interface
 
   /**
    * The RDF representation for type="http://www.cellml.org/RDFXML/string"
@@ -93,6 +94,7 @@ module cellml_api
      */
     attribute wstring serialisedData;
   };
+#pragma terminal-interface
 
   /**
    * This interface can be inherited from by the user for use in annotations.
@@ -100,6 +102,7 @@ module cellml_api
   interface UserData : XPCOM::IObject
   {
   };
+#pragma cross-module-inheritance
 
   /**
    * This interface is implemented by the application to receive notification
@@ -114,6 +117,7 @@ module cellml_api
      */
     void loadCompleted(in boolean wasStale);
   };
+#pragma terminal-interface
 
   /**
    * Indicates that something went wrong. Implementations are free to add more
@@ -133,6 +137,7 @@ module cellml_api
      */
     attribute wstring asText;
   };
+#pragma terminal-interface
 
   /**
    * This is a general interface from which all CellML elements inherit.
@@ -527,6 +532,8 @@ module cellml_api
      */
     readonly attribute dom::DOMString serialisedText;
   };
+#pragma terminal-interface
+#pragma cross-module-argument
 
   interface MathContainer : XPCOM::IObject
   {
@@ -675,6 +682,7 @@ module cellml_api
      */
     attribute CellMLAttributeString units;
   };
+#pragma terminal-interface
 
   /**
    * This interface represents a CellML import element.
@@ -755,6 +763,7 @@ module cellml_api
      */
     readonly attribute Model importedModel;
   };
+#pragma terminal-interface
 
   /**
    * This interface represents a <component> element inside an <import>
@@ -768,6 +777,7 @@ module cellml_api
      */
     attribute CellMLAttributeString componentRef;
   };
+#pragma terminal-interface
 
   /**
    * This interface represents a <units> found in <import>
@@ -780,6 +790,7 @@ module cellml_api
      */
     attribute CellMLAttributeString unitsRef;
   };
+#pragma terminal-interface
 
   /**
    * An enumeration representing the direction of the variable interface.
@@ -859,6 +870,8 @@ module cellml_api
      */
     attribute Units unitsElement;
   };
+#pragma terminal-interface
+#pragma cross-module-argument
 
   /**
    * Represents a <component_ref> element in a group element or in another
@@ -890,6 +903,7 @@ module cellml_api
      */
     readonly attribute Group parentGroup;
   };
+#pragma terminal-interface
 
   /**
    * Represents a relationship_ref element in a group element.
@@ -922,6 +936,7 @@ module cellml_api
     void setRelationshipName(in CellMLAttributeString namespaceURI,
                              in CellMLAttributeString name);
   };
+#pragma terminal-interface
 
   /**
    * Represents a <group> element.
@@ -952,6 +967,7 @@ module cellml_api
      */
     readonly attribute boolean isContainment;
   };
+#pragma terminal-interface
 
   /**
    * Represents a <connection> element.
@@ -969,6 +985,7 @@ module cellml_api
      */
     readonly attribute MapVariablesSet variableMappings;
   };
+#pragma terminal-interface
 
   /**
    * An interface the map_components element.
@@ -1002,6 +1019,7 @@ module cellml_api
      */
     attribute CellMLComponent secondComponent;
   };
+#pragma terminal-interface
 
   /**
    * An interface the map_variables element.
@@ -1051,6 +1069,7 @@ module cellml_api
      */
     attribute CellMLVariable secondVariable;
   };
+#pragma terminal-interface
 
   interface VariableRef;
   interface Role;
@@ -1092,6 +1111,7 @@ module cellml_api
      */
     Role getRoleByDeltaVariable(in wstring varName);
   };
+#pragma terminal-interface
 
   /**
    * An interface to the <variable_ref> element.
@@ -1115,6 +1135,7 @@ module cellml_api
      */
     readonly attribute RoleSet roles;
   };
+#pragma terminal-interface
 
   /**
    * An interface to the <role> element.
@@ -1157,6 +1178,7 @@ module cellml_api
      */
     attribute wstring deltaVariableName;
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing CellMLElements to be iterated.
@@ -1215,6 +1237,7 @@ module cellml_api
      */
     ExtensionElement getAt(in unsigned long index);
   };
+#pragma terminal-interface
 
   /**
    * A collection of math.
@@ -1239,6 +1262,7 @@ module cellml_api
      */
     MathMLElementIterator iterate();
   };
+#pragma terminal-interface
 
   /**
    * An immutable collection of CellML elements.
@@ -1291,6 +1315,7 @@ module cellml_api
      */
     Model nextModel();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a collection of models.
@@ -1311,6 +1336,7 @@ module cellml_api
      */
     Model getModel(in CellMLAttributeString name);
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing CellMLComponents to be iterated.
@@ -1358,6 +1384,7 @@ module cellml_api
      */
     ImportComponent nextImportComponent();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of ImportComponents
@@ -1378,6 +1405,7 @@ module cellml_api
      */
     ImportComponent getImportComponent(in CellMLAttributeString name);
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing CellMLVariables to be iterated.
@@ -1391,6 +1419,7 @@ module cellml_api
      */
     CellMLVariable nextVariable();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of ImportComponents
@@ -1411,6 +1440,7 @@ module cellml_api
      */
     CellMLVariable getVariable(in CellMLAttributeString name);
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing Units to be iterated.
@@ -1457,6 +1487,7 @@ module cellml_api
      */
     ImportUnits nextImportUnits();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of ImportUnits
@@ -1477,6 +1508,7 @@ module cellml_api
      */
     ImportUnits getImportUnits(in CellMLAttributeString name);
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing Imports to be iterated.
@@ -1490,6 +1522,7 @@ module cellml_api
      */
     CellMLImport nextImport();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of Imports
@@ -1510,6 +1543,7 @@ module cellml_api
      */
     CellMLImport getImport(in CellMLAttributeString name);
   };
+#pragma terminal-interface
 
   interface UnitIterator : CellMLElementIterator
   {
@@ -1520,6 +1554,7 @@ module cellml_api
      */
     Unit nextUnit();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of Imports
@@ -1543,6 +1578,7 @@ module cellml_api
      */
     Connection nextConnection();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of Imports
@@ -1556,6 +1592,7 @@ module cellml_api
      */
     ConnectionIterator iterateConnections();
   };
+#pragma terminal-interface
 
   interface GroupIterator : CellMLElementIterator
   {
@@ -1566,6 +1603,7 @@ module cellml_api
      */
     Group nextGroup();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of Imports
@@ -1599,7 +1637,7 @@ module cellml_api
      */
     readonly attribute GroupSet subsetInvolvingContainment;
   };
-
+#pragma terminal-interface
   
   interface RelationshipRefIterator : CellMLElementIterator
   {
@@ -1610,6 +1648,7 @@ module cellml_api
      */
     RelationshipRef nextRelationshipRef();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of RelationshipRefs
@@ -1623,6 +1662,7 @@ module cellml_api
      */
     RelationshipRefIterator iterateRelationshipRefs();
   };
+#pragma terminal-interface
 
   interface ComponentRefIterator : CellMLElementIterator
   {
@@ -1633,6 +1673,7 @@ module cellml_api
      */
     ComponentRef nextComponentRef();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of RelationshipRefs
@@ -1646,6 +1687,7 @@ module cellml_api
      */
     ComponentRefIterator iterateComponentRefs();
   };
+#pragma terminal-interface
 
   interface MapVariablesIterator : CellMLElementIterator
   {
@@ -1656,6 +1698,7 @@ module cellml_api
      */
     MapVariables nextMapVariable();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of MapVariables
@@ -1669,6 +1712,7 @@ module cellml_api
      */
     MapVariablesIterator iterateMapVariables();
   };
+#pragma terminal-interface
 
   interface ReactionIterator
     : CellMLElementIterator
@@ -1680,6 +1724,7 @@ module cellml_api
      */
     Reaction nextReaction();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of Reactions
@@ -1693,6 +1738,7 @@ module cellml_api
      */
     ReactionIterator iterateReactions();
   };
+#pragma terminal-interface
 
   interface VariableRefIterator : CellMLElementIterator
   {
@@ -1703,6 +1749,7 @@ module cellml_api
      */
     VariableRef nextVariableRef();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of VariableRefs
@@ -1716,6 +1763,7 @@ module cellml_api
      */
     VariableRefIterator iterateVariableRefs();
   };
+#pragma terminal-interface
 
   interface RoleIterator : CellMLElementIterator
   {
@@ -1726,6 +1774,7 @@ module cellml_api
      */
     Role nextRole();
   };
+#pragma terminal-interface
 
   /**
    * An interface for accessing a set of VariableRefs
@@ -1739,6 +1788,7 @@ module cellml_api
      */
     RoleIterator iterateRoles();
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing notifications that model loading has completed to
@@ -1753,6 +1803,7 @@ module cellml_api
      */
     void loadCompleted(in Model m);
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing notifications that document loading has completed
@@ -1767,6 +1818,7 @@ module cellml_api
      */
     void loadCompleted(in dom::Document doc);
   };
+#pragma terminal-interface
 
   /**
    * An interface for loading a CellML model by URL.
@@ -1882,6 +1934,7 @@ module cellml_api
      */
     readonly attribute dom::DOMString lastErrorMessage;
   };
+#pragma terminal-interface
 
   /**
    * A DOM specific interface for loading a CellML model with more control.
@@ -1916,6 +1969,7 @@ module cellml_api
                        in ModelLoadedListener listener)
       raises(CellMLException);
   };
+#pragma terminal-interface
 
   /**
    * A DOM specific interface that provides everything an application needs to
@@ -1948,4 +2002,6 @@ module cellml_api
      */
     Model createModel(in wstring version);
   };
+#pragma terminal-interface
+#pragma cross-module-argument
 };

@@ -123,6 +123,7 @@ module dom
     Node               item(in unsigned long index);
     readonly attribute unsigned long    length;
   };
+#pragma cross-module-argument
 
   interface NamedNodeMap : XPCOM::IObject {
     Node               getNamedItem(in DOMString name);
@@ -143,6 +144,7 @@ module dom
                                          in DOMString localName)
                                         raises(DOMException);
   };
+#pragma terminal-interface
 
   interface CharacterData : Node {
              attribute DOMString        data;
@@ -176,6 +178,7 @@ module dom
     // Introduced in DOM Level 2:
     readonly attribute Element          ownerElement;
   };
+#pragma terminal-interface
 
   interface Element : Node {
     readonly attribute DOMString        tagName;
@@ -226,9 +229,11 @@ module dom
 
   interface Comment : CharacterData {
   };
+#pragma terminal-interface
 
   interface CDATASection : Text {
   };
+#pragma terminal-interface
 
   interface DocumentType : Node {
     readonly attribute DOMString        name;
@@ -241,30 +246,35 @@ module dom
     // Introduced in DOM Level 2:
     readonly attribute DOMString        internalSubset;
   };
+#pragma terminal-interface
 
   interface Notation : Node {
     readonly attribute DOMString        publicId;
     readonly attribute DOMString        systemId;
   };
+#pragma terminal-interface
 
   interface Entity : Node {
     readonly attribute DOMString        publicId;
     readonly attribute DOMString        systemId;
     readonly attribute DOMString        notationName;
   };
+#pragma terminal-interface
 
   interface EntityReference : Node {
   };
+#pragma terminal-interface
 
   interface ProcessingInstruction : Node {
     readonly attribute DOMString        target;
              attribute DOMString        data;
                                         // raises(DOMException) on setting
-
   };
+#pragma terminal-interface
 
   interface DocumentFragment : Node {
   };
+#pragma terminal-interface
 
   interface Document : Node {
     readonly attribute DocumentType     doctype;

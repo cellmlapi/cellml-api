@@ -1,11 +1,13 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
+AM_CXXFLAGS=
+
 AC_INIT(CellMLAPI, 0.1, [[ak.miller@auckland.ac.nz]])
 AC_PREREQ(2.59)
 AC_CONFIG_SRCDIR([sources/cellml/CellMLBootstrap.cpp])
 AC_CONFIG_AUX_DIR([.])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADER([cda_config.h])
 
 AM_INIT_AUTOMAKE
 PKG_PROG_PKG_CONFIG
@@ -127,6 +129,31 @@ case $srcdir in
      testdir=`pwd`/$srcdir/tests ;;
 esac
 
+VISIBILITY_FLAGS=
+dnl Borrowed from glibc configure.in
+dnl ===============================================================
+if test "$GCC" = "yes"; then
+  AC_CACHE_CHECK(for visibility(hidden) attribute,
+                 ac_cv_visibility_hidden,
+                 [cat > conftest.c <<EOF
+                  int foo __attribute__ ((visibility ("hidden"))) = 1;
+EOF
+                  ac_cv_visibility_hidden=no
+                  if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
+                    if grep '\.hidden.*foo' conftest.s >/dev/null; then
+                      ac_cv_visibility_hidden=yes
+                    fi
+                  fi
+                  rm -f conftest.[cs]
+                 ])
+  if test "$ac_cv_visibility_hidden" = "yes"; then
+    AC_DEFINE([HAVE_VISIBILITY_ATTRIBUTE], [], [Define if gcc visibility attributes supported])
+    VISIBILITY_FLAGS=-fvisibility=hidden
+  fi
+fi
+
+AM_CXXFLAGS="$AM_CXXFLAGS $VISIBILITY_FLAGS"
+
 # Host specific peculiarities...
 CYGWIN_WRAPPER=
 OMNILINK="-lomniORB4 -lomnithread"
@@ -141,6 +168,7 @@ esac
 AC_SUBST([CYGWIN_WRAPPER])
 AC_SUBST([OMNILINK])
 AC_SUBST([STLLINK])
+AC_SUBST([AM_CXXFLAGS])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])

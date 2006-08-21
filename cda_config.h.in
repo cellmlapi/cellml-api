@@ -1,4 +1,4 @@
-/* config.h.in.  Generated from configure.ac by autoheader.  */
+/* cda_config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Is the CellML Context enabled? */
 #undef ENABLE_CONTEXT
@@ -98,6 +98,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define if gcc visibility attributes supported */
+#undef HAVE_VISIBILITY_ATTRIBUTE
 
 /* Define to 1 if you have the <wchar.h> header file. */
 #undef HAVE_WCHAR_H

@@ -26,6 +26,7 @@ module cellml_services
     wstring validateElement(in cellml_api::CellMLElement el)
       raises(cellml_api::CellMLException);
   };
+#pragma cross-module-inheritance
 
   /**
    * This is the base interface for CellML services which transform models from
@@ -46,4 +47,5 @@ module cellml_services
     cellml_api::Model transformModel(in cellml_api::Model m)
       raises(cellml_api::CellMLException);
   };
+#pragma cross-module-inheritance
 };

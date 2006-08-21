@@ -1,3 +1,4 @@
+#define IN_CCGS_MODULE
 #include "CCGSImplementation.hpp"
 #include "CodeGenerationError.hxx"
 #include "CCGSBootstrap.hpp"

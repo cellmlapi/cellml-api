@@ -1,4 +1,6 @@
+#define IN_CELLMLCONTEXT_MODULE
 #include "CellMLContextImplementation.hxx"
+#include "CellMLContextBootstrap.hxx"
 #include "CellMLBootstrap.hpp"
 #include <locale>
 #include <sstream>
@@ -782,7 +784,7 @@ CDA_CellMLContext::~CDA_CellMLContext()
     mModelList->release_ref();
 }
 
-iface::cellml_context::CellMLContext*
+CDA_EXPORT iface::cellml_context::CellMLContext*
 CreateCellMLContext()
 {
   return new CDA_CellMLContext();

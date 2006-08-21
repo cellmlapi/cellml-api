@@ -103,6 +103,7 @@ module XPCOM
   };
 #pragma flat_name CORBA_IObject
 #pragma ID IObject "DCE:00000000-0000-0000-c000-000000000046:1"
+#pragma cross-module-inheritance
 };
 
 #endif

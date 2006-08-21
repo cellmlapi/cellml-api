@@ -7,7 +7,7 @@ libcis_la_LIBADD := \
   $(top_builddir)/libccgs.la $(STLLINK)
 
 libcis_la_CXXFLAGS := \
-  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces
+  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
 
 include_HEADERS += \
   $(top_builddir)/interfaces/IfaceCIS.hxx \
