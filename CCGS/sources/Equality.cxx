@@ -142,25 +142,25 @@ static struct OpInfo
 {
   {L"abs", OpInfo::UNARY, FUNC("fabs"), "", OpInfo::INSIGNIFICANT, 0},
   {L"and", OpInfo::N_ARY, INORDER("&&"), "", OpInfo::INSIGNIFICANT, 3},
-  {L"arccosh", OpInfo::UNARY, FUNC("acosh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"arccos", OpInfo::UNARY, FUNC("acos"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"arccoth", OpInfo::UNARY, FUNC_ARG_INV("atanh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"arccosh", OpInfo::UNARY, FUNC("acosh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"arccot", OpInfo::UNARY, FUNC_ARG_INV("atan"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"arccsch", OpInfo::UNARY, FUNC_ARG_INV("asinh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"arccoth", OpInfo::UNARY, FUNC_ARG_INV("atanh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"arccsc", OpInfo::UNARY, FUNC_ARG_INV("asin"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"arcsech", OpInfo::UNARY, FUNC_ARG_INV("acosh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"arccsch", OpInfo::UNARY, FUNC_ARG_INV("asinh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"arcsec", OpInfo::UNARY, FUNC_ARG_INV("acos"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"arcsinh", OpInfo::UNARY, FUNC("asinh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"arcsech", OpInfo::UNARY, FUNC_ARG_INV("acosh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"arcsin", OpInfo::UNARY, FUNC("asin"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"arctanh", OpInfo::UNARY, FUNC("atanh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"arcsinh", OpInfo::UNARY, FUNC("asinh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"arctan", OpInfo::UNARY, FUNC("atan"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"arctanh", OpInfo::UNARY, FUNC("atanh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"ceiling", OpInfo::UNARY, FUNC("ceil"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"cosh", OpInfo::UNARY, FUNC("cosh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"cos", OpInfo::UNARY, FUNC("cos"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"coth", OpInfo::UNARY, FUNC_INV("tanh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"cosh", OpInfo::UNARY, FUNC("cosh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"cot", OpInfo::UNARY, FUNC_INV("tan"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"csch", OpInfo::UNARY, FUNC_INV("sinh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"coth", OpInfo::UNARY, FUNC_INV("tanh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"csc", OpInfo::UNARY, FUNC_INV("sin"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"csch", OpInfo::UNARY, FUNC_INV("sinh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"divide",OpInfo::BINARY,INORDER("/"), "", OpInfo::SIGNIFICANT, 0},
   {L"eq", OpInfo::N_ARY_CHAIN, "((", "==", "))", ") && (", OpInfo::INSIGNIFICANT, 3},
   {L"exp", OpInfo::UNARY, FUNC("exp"), "", OpInfo::INSIGNIFICANT, 0},
@@ -188,12 +188,12 @@ static struct OpInfo
   {L"quotient", OpInfo::BINARY, "(((int)", ") / ((int)", "))", "", OpInfo::SIGNIFICANT, 0},
   {L"rem", OpInfo::BINARY, "(((int)", ") % ((int)", "))", "", OpInfo::SIGNIFICANT, 0},
   {L"root", OpInfo::UNARY_WITH_DEGREE, "pow(", ", 1.0 / (", "))", "2.0", OpInfo::SIGNIFICANT, 0},
-  {L"sech", OpInfo::UNARY, FUNC_INV("cosh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"sec", OpInfo::UNARY, FUNC_INV("cos"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"sinh", OpInfo::UNARY, FUNC("sinh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"sech", OpInfo::UNARY, FUNC_INV("cosh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"sin", OpInfo::UNARY, FUNC("sin"), "", OpInfo::INSIGNIFICANT, 0},
-  {L"tanh", OpInfo::UNARY, FUNC("tanh"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"sinh", OpInfo::UNARY, FUNC("sinh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"tan", OpInfo::UNARY, FUNC("tan"), "", OpInfo::INSIGNIFICANT, 0},
+  {L"tanh", OpInfo::UNARY, FUNC("tanh"), "", OpInfo::INSIGNIFICANT, 0},
   {L"times", OpInfo::N_ARY, INORDER("*"), "", OpInfo::INSIGNIFICANT, 3},
   {L"xor", OpInfo::N_ARY, INORDER("^"), "", OpInfo::INSIGNIFICANT, 3}
 };
@@ -980,13 +980,14 @@ GenerateExpression
         expression << ") ? (";
         GenerateExpression(aCGS, aComponent, cv, expression,
                            supplementaryFunctions, aHaveBound);
-        expression << ") : (";
+        expression << ") : ";
       }
 
       try
       {
         RETURN_INTO_OBJREF(otherwise, iface::mathml_dom::MathMLElement,
                            (piecewise->otherwise()));
+        expression << "(";
         GenerateExpression(aCGS, aComponent, otherwise, expression,
                            supplementaryFunctions, aHaveBound);
         expression << ")";
@@ -994,7 +995,7 @@ GenerateExpression
       catch (iface::cellml_api::CellMLException&)
       {
         // Most portable way to get a nan...
-        expression << "(0.0/0.0))";
+        expression << "(0.0/0.0)";
       }
       return;
     }
