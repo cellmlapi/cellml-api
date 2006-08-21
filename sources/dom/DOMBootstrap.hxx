@@ -1,6 +1,14 @@
 #include <inttypes.h>
 #include "IfaceDOM_APISPEC.hxx"
 
+#include "cda_compiler_support.h"
+
+#ifdef IN_DOM_MODULE
+#define DOM_PUBLIC CDA_EXPORT
+#else
+#define DOM_PUBLIC CDA_IMPORT
+#endif
+
 /*
  * Note: Everything in this file is specific to locally hosted C++(with no
  *   CORBA ORB involved). Use sparingly or the reusability of your code will be
@@ -29,4 +37,4 @@ public:
 // Get a DOM Implementation. This is a C++ specific method, not part of the
 // standard interface. Applications should only access methods on the base
 // class.
-CellML_DOMImplementationBase* CreateDOMImplementation();
+CellML_DOMImplementationBase* CreateDOMImplementation() DOM_PUBLIC;

@@ -1,3 +1,4 @@
+#define IN_DOMWRITER_MODULE
 #include "Utilities.hxx"
 #include <string>
 #include "DOMWriter.hxx"

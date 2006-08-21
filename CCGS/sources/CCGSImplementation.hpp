@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 #include <list>
-#include "config.h"
+#include "cda_config.h"
 
 #ifdef ENABLE_CONTEXT
 #include "IfaceCellML_Context.hxx"

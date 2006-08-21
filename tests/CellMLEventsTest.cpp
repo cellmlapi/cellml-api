@@ -1,7 +1,7 @@
 #include "CellMLEventsTest.hpp"
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
-#include "config.h"
+#include "cda_config.h"
 #define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"
 #include "IfaceCellML_events.hxx"
 

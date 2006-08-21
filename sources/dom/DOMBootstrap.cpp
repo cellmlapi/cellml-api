@@ -1,3 +1,5 @@
+#define IN_DOM_MODULE
+
 #include <inttypes.h>
 #include "DOMImplementation.hpp"
 

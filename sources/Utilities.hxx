@@ -1,7 +1,7 @@
 #ifndef _UTILITIES_HXX
 #define _UTILITIES_HXX
 
-#include "config.h"
+#include "cda_config.h"
 
 #if SIZEOF_WCHAR_TP == 8
 #define WCHAR_T_IS_64BIT

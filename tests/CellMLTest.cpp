@@ -2,7 +2,7 @@
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
 
-#include "config.h"
+#include "cda_config.h"
 #define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"
 
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
