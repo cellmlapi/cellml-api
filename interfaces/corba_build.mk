@@ -30,7 +30,7 @@ libcellml_corba_la_CXXFLAGS := \
 libcellml_corba_sk_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
 
-libcellml_corba_la_LIBADD := libcellml_corba_sk.la
+libcellml_corba_la_LIBADD := libcellml_corba_sk.la $(STLLINK)
 
 # Force correct order of compilation...
 $(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc
