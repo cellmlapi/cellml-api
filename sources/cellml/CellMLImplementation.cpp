@@ -1,3 +1,6 @@
+// CellML gets linked into the same module as DOMWriter...
+#define IN_DOMWRITER_MODULE
+
 #include "CellMLImplementation.hpp"
 #include "DOMWriter.hxx"
 #include <memory>
