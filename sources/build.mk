@@ -6,7 +6,7 @@ libcellml_la_LIBADD := \
   libcellmlonly.la \
   libmathmlonly.la \
   libdomonly.la \
-  libdomdirectonly.la $(STLLINK)
+  libdomdirectonly.la -lxml2 $(STLLINK)
 libcellml_la_CXXFLAGS := -I$(top_srcdir) -I$(top_srcdir)/sources \
   -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
 
