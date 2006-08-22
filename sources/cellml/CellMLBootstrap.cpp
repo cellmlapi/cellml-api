@@ -1,6 +1,8 @@
 #include "CellMLImplementation.hpp"
 #include "CellMLBootstrapImpl.hpp"
 #define IN_CELLML_MODULE
+// CellML and DOM are in the same module...
+#define IN_DOM_MODULE
 #include "CellMLBootstrap.hpp"
 
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
