@@ -5,6 +5,7 @@
 #include "corba_support/WrapperRepository.hxx"
 #include "CCICellML_Context.hxx"
 #include <omniORB4/CORBA.h>
+#include <stdio.h>
 
 static void
 StartServer(std::string& dir)
