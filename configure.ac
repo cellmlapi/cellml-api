@@ -160,7 +160,7 @@ OMNILINK="-lomniORB4 -lomnithread"
 STLLINK=
 case "$host" in
 *cygwin*|*mks*|*msvc*|*wince|*mingw*)
-        STLLINK=-lstlport.5.0 -no-undefined
+        STLLINK="-lstlport.5.0 -no-undefined"
         CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
         OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
         ;;
