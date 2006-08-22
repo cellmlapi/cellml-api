@@ -7,15 +7,14 @@ cellml_corba_server_CXXFLAGS := \
   -I $(top_srcdir)/sources/mathml -I$(top_builddir)/interfaces \
   -I $(top_srcdir)/sources/cellml_context \
   -I$(top_srcdir)/libltdl
-cellml_corba_server_LDADD := \
+cellml_corba_server_LIBADD := \
   $(top_builddir)/libcellml_context.la \
   $(top_builddir)/libcellml_context_corba.la \
   $(top_builddir)/libcellml.la \
   $(top_builddir)/libcellml_corba.la \
   $(top_builddir)/libCORBASupport.la \
-  $(top_builddir)/libltdlc.la
-
-cellml_corba_server_LDFLAGS := -lxml2 $(OMNILINK) $(STLLINK)
+  $(top_builddir)/libltdlc.la \
+  -lxml2 $(OMNILINK) $(STLLINK)
 
 lib_LTLIBRARIES += libcellml_corba_client.la
 libcellml_corba_client_la_SOURCES := \
@@ -26,4 +25,4 @@ libcellml_corba_client_la_CXXFLAGS := \
   -I$(top_srcdir)/sources \
   -I$(top_builddir)/interfaces \
   -I$(top_srcdir)/simple_interface_generators/glue
-libcellml_corba_client_la_LDFLAGS := $(OMNILINK) $(STLLINK)
+libcellml_corba_client_la_LIBADD := $(OMNILINK) $(STLLINK)

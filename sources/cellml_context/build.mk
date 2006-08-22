@@ -11,7 +11,8 @@ libcellml_context_la_SOURCES := \
 libcellml_context_la_CXXFLAGS = -I$(top_builddir)/interfaces/ -I$(top_srcdir)/sources -I$(top_srcdir)/include/CellMLBootstrap.hxx -I$(top_srcdir)/sources/cellml $(AM_CXXFLAGS)
 
 libcellml_context_la_LIBADD := \
-  libcellml.la
+  libcellml.la \
+  $(STLLINK)
 
 $(top_srcdir)/sources/cellml_context/CellMLContextImplementation.cpp: $(top_builddir)/interfaces/IfaceCellML_Context.hxx
 CellMLContextImplementation.lo: $(top_builddir)/interfaces/IfaceCellML_Context.hxx
