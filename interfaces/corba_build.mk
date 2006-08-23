@@ -24,13 +24,15 @@ libcellml_corba_stubs_la_SOURCES := \
   $(top_builddir)/interfaces/CellML_APISPECSK.cc \
   $(top_builddir)/interfaces/CellML_eventsSK.cc
 
+libcellml_corba_stubs_LIBADD := $(STLLINK) $(OMNILINK)
+
 libcellml_corba_bridge_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
 
 libcellml_corba_stubs_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue -no-undefined
 
-libcellml_corba_bridge_la_LIBADD := libcellml_corba_stubs.la $(STLLINK)
+libcellml_corba_bridge_la_LIBADD := libcellml_corba_stubs.la $(STLLINK) $(OMNILINK)
 
 # Force correct order of compilation...
 $(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc
