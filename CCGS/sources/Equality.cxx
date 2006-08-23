@@ -432,7 +432,11 @@ GetOperatorInformation(iface::mathml_dom::MathMLPredefinedSymbol* aSymbol)
     else if (cmp < 0)
       lower = mid + 1;
     else
+    {
+      if (mid == lower)
+        break;
       upper = mid - 1;
+    }
   }
   while (true);
   free(sn);
