@@ -622,7 +622,7 @@ DOMNamespaceContext::writeXMLNS(std::wstring& appendTo)
 
   for (i = URIfromPrefix.begin(); i != URIfromPrefix.end(); i++)
   {
-    appendTo += L" " + (*i).first + L":xmlns=\"" +
+    appendTo += L" xmlns:" + (*i).first + L"=\"" +
       TranslateEntities((*i).second, true) + L"\"";
   }
 }
