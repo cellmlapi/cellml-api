@@ -192,8 +192,8 @@ DOMTest::testSerialiseAttributes()
   // XXX this is ugly as attribute order isn't defined.
   CPPUNIT_ASSERT(str ==
                  L"<tests xmlns=\"http://www.physiome.org/testsuite/1\" "
-                 L"anotherns:xmlns=\"http://www.example.org/testsuite/attrns/2"
-                 L"\" ns:xmlns=\"http://www.example.org/testsuite/attrns/1\" "
+                 L"xmlns:anotherns=\"http://www.example.org/testsuite/attrns/2"
+                 L"\" xmlns:ns=\"http://www.example.org/testsuite/attrns/1\" "
                  L"foo=\"bar\" hello=\"world\" ns:baz=\"test\" "
                  L"anotherns:baz=\"test2\"/>");
 }
@@ -236,7 +236,7 @@ DOMTest::testSerialiseChildElements()
 
   CPPUNIT_ASSERT(str ==
                  L"<tests xmlns=\"http://www.physiome.org/testsuite/1\">"
-                 L"<foo:test foo:xmlns=\"http://www.example.org/testsuite"
+                 L"<foo:test xmlns:foo=\"http://www.example.org/testsuite"
                  L"/subelns\"><foo:bar/></foo:test><test2/></tests>");
 }
 
