@@ -7,7 +7,7 @@ libcis_corba_la_SOURCES := \
 
 libcis_corba_la_LIDADD := \
   $(top_builddir)/libcellml.la \
-  $(top_builddir)/libcellml_corba.la \
+  $(top_builddir)/libcellml_corba_bridge.la \
   $(top_builddir)/libcis.la \
   $(top_builddir)/libccgs.la \
   $(top_builddir)/libccgs_corba.la
@@ -17,7 +17,7 @@ libCISService_la_SOURCES := \
 
 libCISService_la_LIBADD := \
   $(top_builddir)/libcellml.la \
-  $(top_builddir)/libcellml_corba.la \
+  $(top_builddir)/libcellml_corba_bridge.la \
   $(top_builddir)/libcis.la \
   $(top_builddir)/libcis_corba.la \
   $(top_builddir)/libccgs.la \

@@ -5,7 +5,7 @@ noinst_LTLIBRARIES += libcellml_context_corba_sk.la
 
 libcellml_context_corba_la_LIBADD := \
   libcellml.la \
-  libcellml_corba.la \
+  libcellml_corba_bridge.la \
   libcellml_context_corba_sk.la $(STLLINK)
 
 libcellml_context_corba_la_SOURCES := \

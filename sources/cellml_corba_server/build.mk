@@ -11,7 +11,7 @@ cellml_corba_server_LDADD := \
   $(top_builddir)/libcellml_context.la \
   $(top_builddir)/libcellml_context_corba.la \
   $(top_builddir)/libcellml.la \
-  $(top_builddir)/libcellml_corba.la \
+  $(top_builddir)/libcellml_corba_bridge.la \
   $(top_builddir)/libCORBASupport.la \
   $(top_builddir)/libltdlc.la \
   -lxml2 $(OMNILINK) $(STLLINK)

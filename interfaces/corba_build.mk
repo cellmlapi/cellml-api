@@ -1,8 +1,8 @@
 # CORBA add-on to interfaces module...
 
-lib_LTLIBRARIES += libcellml_corba.la
-noinst_LTLIBRARIES += libcellml_corba_sk.la
-libcellml_corba_la_SOURCES := \
+lib_LTLIBRARIES += libcellml_corba_stubs.la libcellml_corba_bridge.la
+# noinst_LTLIBRARIES += libcellml_corba_sk.la
+libcellml_corba_bridge_la_SOURCES := \
   $(top_builddir)/interfaces/CCIDOM_APISPEC.cxx \
   $(top_builddir)/interfaces/CCIDOM_events.cxx \
   $(top_builddir)/interfaces/CCIxpcom.cxx \
@@ -16,7 +16,7 @@ libcellml_corba_la_SOURCES := \
   $(top_builddir)/interfaces/SCICellML_APISPEC.cxx \
   $(top_builddir)/interfaces/SCICellML_events.cxx
 
-libcellml_corba_sk_la_SOURCES := \
+libcellml_corba_stubs_la_SOURCES := \
   $(top_builddir)/interfaces/DOM_APISPECSK.cc \
   $(top_builddir)/interfaces/DOM_eventsSK.cc \
   $(top_builddir)/interfaces/xpcomSK.cc \
@@ -24,13 +24,13 @@ libcellml_corba_sk_la_SOURCES := \
   $(top_builddir)/interfaces/CellML_APISPECSK.cc \
   $(top_builddir)/interfaces/CellML_eventsSK.cc
 
-libcellml_corba_la_CXXFLAGS := \
+libcellml_corba_bridge_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
 
-libcellml_corba_sk_la_CXXFLAGS := \
+libcellml_corba_stubs_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
 
-libcellml_corba_la_LIBADD := libcellml_corba_sk.la $(STLLINK)
+libcellml_corba_bridge_la_LIBADD := libcellml_corba_stubs.la $(STLLINK)
 
 # Force correct order of compilation...
 $(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc
