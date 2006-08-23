@@ -24,7 +24,7 @@ libcellml_corba_stubs_la_SOURCES := \
   $(top_builddir)/interfaces/CellML_APISPECSK.cc \
   $(top_builddir)/interfaces/CellML_eventsSK.cc
 
-libcellml_corba_stubs_LIBADD := $(STLLINK) $(OMNILINK)
+libcellml_corba_stubs_la_LIBADD := $(STLLINK) $(OMNILINK)
 
 libcellml_corba_bridge_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
