@@ -30,7 +30,10 @@ libcellml_corba_bridge_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
 
 libcellml_corba_stubs_la_CXXFLAGS := \
-  -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue -no-undefined
+  -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
+
+libcellml_corba_stubs_la_LDFLAGS := \
+  -no-undefined
 
 libcellml_corba_bridge_la_LIBADD := libcellml_corba_stubs.la $(STLLINK) $(OMNILINK)
 
