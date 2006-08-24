@@ -2018,7 +2018,7 @@ cygwin* | mingw* | pw32*)
 
   case $withGCC,$host_os in
   yes,cygwin* | yes,mingw* | yes,pw32*)
-    library_names_spec='$libname.dll.a'
+    library_names_spec='$libname.dll'
     # DLL is installed to $(libdir)/../bin by postinstall_cmds
     postinstall_cmds='base_file=`basename \${file}`~
       dlpath=`$SHELL 2>&1 -c '\''. $dir/'\''\${base_file}'\''i; echo \$dlname'\''`~
