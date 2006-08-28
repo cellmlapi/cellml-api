@@ -29,14 +29,14 @@ libcis_corba_la_CXXFLAGS := \
 	-I$(top_builddir)/interfaces \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/sources/cellml_corba_server \
-        -I$(top_srcdir)/sources/ \
+        -I$(top_srcdir)/sources \
 	-I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
 
 libCISService_la_CXXFLAGS := \
 	-I$(top_builddir)/interfaces \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/sources/cellml_corba_server \
-        -I$(top_srcdir)/sources/ \
+        -I$(top_srcdir)/sources \
 	-I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
 
 BUILT_SOURCES += \
