@@ -20,6 +20,7 @@ libcellml_context_corba_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces \
   -I$(top_srcdir) -I$(top_srcdir)/sources \
    -I$(top_srcdir)/simple_interface_generators/glue \
+  -DMODULE_CONTAINS_CellMLContext
   $(AM_CXXFLAGS)
 
 libcellml_context_corba_sk_la_CXXFLAGS := \
