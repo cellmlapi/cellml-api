@@ -25,4 +25,4 @@ libcellml_corba_client_la_CXXFLAGS := \
   -I$(top_srcdir)/sources \
   -I$(top_builddir)/interfaces \
   -I$(top_srcdir)/simple_interface_generators/glue
-libcellml_corba_client_la_LIBADD := $(OMNILINK) $(STLLINK)
+libcellml_corba_client_la_LIBADD := libcellml_context_corba.la $(OMNILINK) $(STLLINK)
