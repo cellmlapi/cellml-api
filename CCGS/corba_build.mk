@@ -14,7 +14,7 @@ libCCGSService_la_SOURCES := \
 libCCGSService_la_LIBADD := \
   $(top_builddir)/libccgs.la \
   $(top_builddir)/libccgs_corba.la
-libCCGSService_la_LDFLAGS := -shared -module $(OMNILINK)
+libCCGSService_la_LDFLAGS := -no-undefined -shared -module $(OMNILINK)
 
 libCCGSService_la_CXXFLAGS := \
 	-I$(top_builddir)/interfaces \
@@ -36,6 +36,9 @@ libccgs_corba_sk_la_CXXFLAGS := \
 
 libccgs_corba_la_LIBADD := \
   $(top_builddir)/libccgs_corba_sk.la
+
+libccgs_corba_la_LDFLAGS := \
+  -no-undefined
 
 BUILT_SOURCES += \
   $(top_builddir)/interfaces/CCICCGS.cxx \
