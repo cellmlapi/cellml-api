@@ -35,7 +35,7 @@ libcellml_corba_stubs_la_CXXFLAGS := \
 libcellml_corba_stubs_la_LDFLAGS := \
   -no-undefined
 
-libcellml_corba_bridge_la_LIBADD := libcellml_corba_stubs.la $(STLLINK) $(OMNILINK)
+libcellml_corba_bridge_la_LIBADD := libcellml_corba_stubs.la libCORBASupport.la $(STLLINK) $(OMNILINK)
 
 # Force correct order of compilation...
 $(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc
