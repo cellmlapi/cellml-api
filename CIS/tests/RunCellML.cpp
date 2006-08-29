@@ -18,6 +18,7 @@ double gStart = 0.0, gStop = 10.0, gIncrement = 1.0;
 uint32_t gSleepTime = 0;
 
 #ifdef WIN32
+#include <windows.h>
 #define sleep(x) Sleep(x * 1000)
 #endif
 
