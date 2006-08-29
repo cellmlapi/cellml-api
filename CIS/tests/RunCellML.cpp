@@ -17,6 +17,10 @@ bool gFinished = false;
 double gStart = 0.0, gStop = 10.0, gIncrement = 1.0;
 uint32_t gSleepTime = 0;
 
+#ifdef WIN32
+#define sleep(x) Sleep(x * 1000)
+#endif
+
 class TestProgressObserver
   : public iface::cellml_services::IntegrationProgressObserver
 {
