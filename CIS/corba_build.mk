@@ -46,7 +46,7 @@ libcis_corba_bridge_la_LIBADD := \
   $(top_builddir)/libcis_corba_stubs.la \
   $(top_builddir)/libccgs_corba_bridge.la \
   $(top_builddir)/libcellml_corba_bridge.la \
-  $(top_builddir)/libCORBASupport.la
+  $(top_builddir)/libCORBASupport.la $(STLLINK)
 
 libcis_corba_stubs_la_LIBADD := \
   $(OMNILINK) \
