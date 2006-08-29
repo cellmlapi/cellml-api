@@ -108,6 +108,9 @@ AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CIS,
 # Checks for header files.
 AC_CHECK_HEADERS([strings.h wchar.h])
 
+THREADFLAGS=
+AC_CHECK_LIB([pthread], [pthread_create], [THREADFLAGS=-lpthread])
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_CONST
@@ -169,6 +172,7 @@ AC_SUBST([CYGWIN_WRAPPER])
 AC_SUBST([OMNILINK])
 AC_SUBST([STLLINK])
 AC_SUBST([AM_CXXFLAGS])
+AC_SUBST([THREADFLAGS])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])
