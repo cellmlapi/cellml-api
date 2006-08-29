@@ -37,6 +37,7 @@ libccgs_corba_stubs_la_CXXFLAGS := \
 
 libccgs_corba_bridge_la_LIBADD := \
   $(top_builddir)/libccgs_corba_stubs.la \
+  $(top_builddir)/libcellml_corba_bridge.la \
   $(top_builddir)/libCORBASupport.la
 
 libccgs_corba_stubs_la_LIBADD := \
