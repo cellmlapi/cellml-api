@@ -25,7 +25,8 @@ libcellml_context_corba_bridge_la_CXXFLAGS := \
 libcellml_context_corba_stubs_la_CXXFLAGS := \
   -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
 
-libcellml_context_corba_stubs_la_LIBADD := $(STLLINK)
+libcellml_context_corba_stubs_la_LIBADD := \
+  $(OMNILINK) $(STLLINK) libcellml_corba_stubs.la
 
 BUILT_SOURCES += \
   $(top_builddir)/interfaces/CCICellML_Context.cxx \
