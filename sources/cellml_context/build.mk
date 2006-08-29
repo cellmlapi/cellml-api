@@ -14,7 +14,4 @@ libcellml_context_la_LIBADD := \
   libcellml.la \
   $(STLLINK)
 
-$(top_srcdir)/sources/cellml_context/CellMLContextImplementation.cpp: $(top_builddir)/interfaces/IfaceCellML_Context.hxx
-CellMLContextImplementation.lo: $(top_builddir)/interfaces/IfaceCellML_Context.hxx
-
 BUILT_SOURCES += $(top_builddir)/interfaces/IfaceCellML_Context.hxx
