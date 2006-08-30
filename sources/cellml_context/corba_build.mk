@@ -3,7 +3,6 @@
 lib_LTLIBRARIES += libcellml_context_corba_bridge.la libcellml_context_corba_stubs.la
 
 libcellml_context_corba_bridge_la_LIBADD := \
-  libcellml.la \
   libcellml_corba_bridge.la \
   libcellml_context_corba_stubs.la $(STLLINK)
 
