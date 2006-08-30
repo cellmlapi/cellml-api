@@ -36,8 +36,11 @@ module cellml_services
      * initial plus the bvar increment, and so on.
      * @param state A sequence of results, for one or more bvar values. The
      *              length of the sequence will always be an exact multiple of
-     *              the size of the variables array, and will contain those
-     *              variables in the same order.
+     *              the size of the variables array + the size of the bound
+     *              variables array, and will contain the
+     *              variables in the same order, followed by the bound variables
+     *              in the same order (results from several timepoints may be
+     *              concatenated into a single results call).
      */
     void results(in DoubleSeq state);
 
@@ -78,14 +81,16 @@ module cellml_services
      * Sets the range of results to be returned.
      * @param startBvar The first value of the bound variable.
      * @param stopBvar The final value of the bound variable.
-     * @param inrementBvar The distance between returned bound variable bounds.
+     * @param maxPointDensity The maximum point density allowed across any bound
+     *        variable range containing two or more points. The density is
+     *        expressed in terms of points between stopBvar and startBvar.
      * Note that startBvar <= stopBvar is required to get integration results.
      * However, it is not an error otherwise, and so this can be used to get
      * results when there are no ODEs involved (for example, to find the value
      * of computed constants).
      */
     void setResultRange(in double startBvar, in double stopBvar,
-                        in double incrementBvar);
+                        in double maxPointDensity);
 
     /**
      * Sets the progress observer...

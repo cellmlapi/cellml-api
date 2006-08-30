@@ -172,41 +172,39 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   boundhigh = mStartBvar;
   double stepSize = 1E-6;
   
-  uint32_t storageCapacity = VARIABLE_STORAGE_LIMIT / (varSize * sizeof(double));
-  double* storage = new double[storageCapacity * varSize * sizeof(double)];
+  uint32_t storageCapacity = VARIABLE_STORAGE_LIMIT / ((varSize + 1) * sizeof(double));
+  double* storage = new double[storageCapacity * (varSize + 1) * sizeof(double)];
   uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
 
-  while (boundhigh < mStopBvar)
-  {
-    bound = boundhigh;
-    boundhigh += mIncrementBvar;
-    if (boundhigh >= mStopBvar)
-      boundhigh = mStopBvar;
+  double lastBound;
+  bool isFirst = true;
 
-    do
-    {
-      double bhl = boundhigh;
-      if (bhl - bound > mStepSizeMax)
-        bhl = bound + mStepSizeMax;
-      //printf("Entering step at X=%g, h=%g, v0=%g\n", bound,
-      //       stepSize, variables[0]);
-      gsl_odeiv_evolve_apply(e, c, s, &sys, &bound, bhl,
-                             &stepSize, variables);
-      //printf("Evolve applied with X=%g, h=%g, v0=%g\n", bound,
-      //       stepSize, variables[0]);
-      if (mCancelIntegration)
-        break;
-    }
-    while (bound < boundhigh);
+  double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
+
+  while (bound < mStopBvar)
+  {
+    double bhl = mStopBvar;
+    if (bhl - bound > mStepSizeMax)
+      bhl = bound + mStepSizeMax;
+    gsl_odeiv_evolve_apply(e, c, s, &sys, &bound, bhl,
+                           &stepSize, variables);
 
     if (mCancelIntegration)
       break;
 
+    if (isFirst)
+      isFirst = false;
+    else if (bound - lastBound < minReportForDensity)
+      continue;
+
+    lastBound = bound;
+
     // Add to storage...
     memcpy(storage + storageSize, variables, varSize * sizeof(double));
+    storage[storageSize + varSize] = bound;
     f->ComputeVariables(&bound, rates, constants, storage + storageSize);
-    storageSize += varSize;
+    storageSize += varSize + 1;
     // Are we ready to send?
     uint32_t timeNow = time(0);
     if (timeNow >= storageExpiry || storageSize == storageCapacity)

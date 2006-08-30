@@ -103,7 +103,7 @@ private:
   CDA_CellMLCompiledModel* mModel;
   iface::cellml_services::IntegrationStepType mStepType;
   double mEpsAbs, mEpsRel, mScalVar, mScalRate, mStepSizeMax;
-  double mStartBvar, mStopBvar, mIncrementBvar;
+  double mStartBvar, mStopBvar, mMaxPointDensity;
   iface::cellml_services::IntegrationProgressObserver* mObserver;
   typedef std::list<std::pair<uint32_t,double> > OverrideList;
   OverrideList mConstantOverrides, mIVOverrides;

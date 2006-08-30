@@ -143,7 +143,7 @@ CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
   : _cda_refcount(1),
     mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
     mEpsAbs(1E-6), mEpsRel(1E-6), mScalVar(1.0), mScalRate(0.0),
-    mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mIncrementBvar(1.0),
+    mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mMaxPointDensity(10000.0),
     mObserver(NULL), mCancelIntegration(false)
 {
   mModel = dynamic_cast<CDA_CellMLCompiledModel*>(aModel);
@@ -195,13 +195,13 @@ CDA_CellMLIntegrationRun::setStepSizeControl
 void
 CDA_CellMLIntegrationRun::setResultRange
 (
- double startBvar, double stopBvar, double incrementBvar
+ double startBvar, double stopBvar, double maxPointDensity
 )
   throw (std::exception&)
 {
   mStartBvar = startBvar;
   mStopBvar = stopBvar;
-  mIncrementBvar = incrementBvar;
+  mMaxPointDensity = maxPointDensity;
 }
 
 void
@@ -275,7 +275,7 @@ CDA_CellMLIntegrationRun::runthread()
       throw std::exception();
     }
     constants = new double[constSize];
-    variables = new double[varSize];
+    variables = new double[varSize + boundSize];
     rates = new double[rateSize];
     f->SetupFixedConstants(constants);
     // Now apply constant overrides...
@@ -292,13 +292,12 @@ CDA_CellMLIntegrationRun::runthread()
       if ((*oli).first < rateSize)
         variables[(*oli).first] = (*oli).second;
 
-    double bound = 0.0;
     if (boundSize == 1)
-      bound = mStartBvar;
-    f->ComputeVariables(&bound, rates, constants, variables);
+      variables[varSize] = mStartBvar;
+    f->ComputeVariables(variables + varSize, rates, constants, variables);
 
     if (mObserver != NULL)
-      mObserver->results(varSize, variables);
+      mObserver->results(varSize + boundSize, variables);
 
     if (boundSize == 1)
       SolveODEProblem(f, constSize, constants, varSize, variables, rateSize,
