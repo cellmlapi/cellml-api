@@ -133,7 +133,7 @@ case $srcdir in
 esac
 
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*|*w32*)
     testdir=`$srcdir/build/cygwin-wrapper $testdir`
     ;;
 esac
