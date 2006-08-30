@@ -4,7 +4,7 @@
 #include "IfaceCellML_APISPEC.hxx"
 #include "CellMLBootstrap.hpp"
 
-#define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"
+#define BASE_DIRECTORY TESTDIR L"/test_xml/"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( DOMTest );
 
