@@ -8,8 +8,7 @@ libcellml_context_corba_bridge_la_LIBADD := \
 
 libcellml_context_corba_bridge_la_SOURCES := \
   $(top_builddir)/interfaces/CCICellML_Context.cxx \
-  $(top_builddir)/interfaces/SCICellML_Context.cxx \
-  $(top_srcdir)/sources/cellml_corba_server/Client.cpp
+  $(top_builddir)/interfaces/SCICellML_Context.cxx
 
 libcellml_context_corba_stubs_la_SOURCES := \
   $(top_builddir)/interfaces/CellML_ContextSK.cc
