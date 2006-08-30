@@ -132,6 +132,12 @@ case $srcdir in
      testdir=`pwd`/$srcdir/tests ;;
 esac
 
+case "$target" in
+*-cygwin*|*-mingw*|*-msvc*|*-mks*)
+    testdir=`$srcdir/build/cygwin-wrapper $testdir`
+    ;;
+esac
+
 VISIBILITY_FLAGS=
 dnl Borrowed from glibc configure.in
 dnl ===============================================================
