@@ -132,7 +132,7 @@ case $srcdir in
      testdir=`pwd`/$srcdir/tests ;;
 esac
 
-case "$target" in
+case "$host" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*w32*)
     testdir=`$srcdir/build/cygwin-wrapper $testdir`
     ;;
