@@ -134,7 +134,7 @@ esac
 
 case "$host" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*w32*)
-    testdir=`$srcdir/build/cygwin-wrapper $testdir`
+    testdir=`$srcdir/build/cygwin-wrapper echo $testdir`
     ;;
 esac
 
