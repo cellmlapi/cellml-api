@@ -6252,6 +6252,7 @@ EOF
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <windows.h>
 
 #if defined(PATH_MAX)
 # define LT_PATHMAX PATH_MAX
@@ -6313,6 +6314,46 @@ int    check_executable(const char *path);
 char * strendzap(char *str, const char *pat);
 void lt_fatal (const char *message, ...);
 
+void
+win32_execv(const char* path, char const** args)
+{
+  char cmdline[1024];
+  int space = 1022;
+  STARTUPINFO sinfo;
+  PROCESS_INFORMATION pinfo;
+  DWORD exCode;
+
+  cmdline[0] = 0;
+  while (*args != NULL)
+  {
+    if (space < strlen(*args))
+      break;
+    if (space == 1022)
+    {
+      strcpy(cmdline + (1022-space), *args);
+      space -= strlen(*args);
+    }
+    else
+    {
+      cmdline[1022-space] = ' ';
+      strcpy(cmdline + (1023-space), *args);
+      space -= strlen(*args) + 1;
+    }
+    args++;
+  }
+
+  memset(&sinfo, 0, sizeof(sinfo));
+  sinfo.cb = sizeof(sinfo);
+
+  if (!CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL,
+                     &sinfo, &pinfo))
+    return;
+
+  WaitForSingleObject(pinfo.hProcess, INFINITE);
+  GetExitCodeProcess(pinfo.hProcess, &exCode);
+  ExitProcess(exCode);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -6352,12 +6393,12 @@ EOF
 	    case $host_os in
 	      mingw*)
 		cat >> $cwrappersource <<EOF
-  execv("$SHELL",(char const **)newargz);
+  win32_execv("$SHELL",(char const **)newargz);
 EOF
 	      ;;
 	      *)
 		cat >> $cwrappersource <<EOF
-  execv("$SHELL",newargz);
+  win32_execv("$SHELL",newargz);
 EOF
 	      ;;
 	    esac
