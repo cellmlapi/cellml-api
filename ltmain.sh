@@ -6357,7 +6357,7 @@ win32_execv(const char* path, char const** args)
 int
 main (int argc, char *argv[])
 {
-  char **newargz;
+  char **newargz, *p;
   int i;
 
   program_name = (char *) xstrdup (base_name (argv[0]));
@@ -6374,6 +6374,13 @@ EOF
   newargz[1] = find_executable(argv[0]);
   if (newargz[1] == NULL)
     lt_fatal("Couldn't find %s", argv[0]);
+  p = newargz[1];
+  while (*p)
+  {
+    if (*p == '\\')
+      *p = '/';
+    p++;
+  }
   DEBUG("(main) found exe at : %s\n",newargz[1]);
   /* we know the script has the same name, without the .exe */
   /* so make sure newargz[1] doesn't end in .exe */
