@@ -274,6 +274,7 @@ CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
 
   cmid = L"#" + cmid;
   uint32_t i, l = cnodes->length();
+  ObjRef<iface::dom::Element> lastRDF;
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, cnodes->item(i));
@@ -289,6 +290,8 @@ CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
     RETURN_INTO_WSTRING(ln, el->localName());
     if (ln != L"RDF")
       continue;
+
+    lastRDF = el;
 
     // Next we look for descriptions...
     uint32_t j, m = cnodes->length();
@@ -323,6 +326,29 @@ CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
         throw iface::cellml_api::CellMLException();
     }
   }
+
+  // No such element. Make one...
+  if (lastRDF == NULL)
+  {
+    lastRDF = already_AddRefd<iface::dom::Element>
+      (m->mDoc->createElementNS(RDF_NS, L"RDF"));
+    if (lastRDF == NULL)
+      throw iface::cellml_api::CellMLException();
+    m->datastore->appendChild(lastRDF);
+  }
+
+  RETURN_INTO_OBJREF(newDescription, iface::dom::Element,
+                     m->mDoc->createElementNS(RDF_NS, L"Description"));
+  if (newDescription == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  lastRDF->appendChild(newDescription);
+
+  if (!wcscmp(type, L"http://www.cellml.org/RDFXML/DOM"))
+    return new CDA_RDFXMLDOMRepresentation(newDescription);
+  else if (!wcscmp(type, L"http://www.cellml.org/RDFXML/string"))
+    return new CDA_RDFXMLStringRepresentation(newDescription);
+
   throw iface::cellml_api::CellMLException();
 }
 

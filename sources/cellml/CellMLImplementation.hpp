@@ -273,7 +273,7 @@ public:
 
   ObjRef<iface::cellml_api::DOMURLLoader> mLoader;
 
-protected:
+  // public within this module only...
   iface::dom::Document* mDoc;
   uint32_t mNextUniqueIdentifier;
 
