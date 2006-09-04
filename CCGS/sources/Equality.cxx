@@ -27,6 +27,16 @@ Equation::Equation()
 {
 }
 
+Equation::~Equation()
+{
+  while (!equal.empty())
+  {
+    equal.front().second->release_ref();
+    equal.pop_front();
+  }
+}
+
+
 void
 Equation::AddPart(iface::cellml_api::CellMLComponent* aComp,
                   iface::mathml_dom::MathMLElement* aEl)
@@ -399,15 +409,19 @@ RecursivelyCountUnknown
                                    aWantedVI, contextFlags))
         return false;
     }
-    RETURN_INTO_OBJREF(ow, iface::mathml_dom::MathMLElement,
-                       pw->otherwise());
-    if (ow != NULL)
+    try
     {
-      if (!RecursivelyCountUnknown(aCGS, aComponent, ow, aAvailable,
-                                   aWanted, wantedCount, aWantedCi,
-                                   aWantedVI, contextFlags))
-        return false;
+      RETURN_INTO_OBJREF(ow, iface::mathml_dom::MathMLElement,
+                         pw->otherwise());
+      if (ow != NULL)
+      {
+        if (!RecursivelyCountUnknown(aCGS, aComponent, ow, aAvailable,
+                                     aWanted, wantedCount, aWantedCi,
+                                     aWantedVI, contextFlags))
+          return false;
+      }
     }
+    catch (iface::dom::DOMException& de) {}
   }
   return true;
 }
@@ -1315,11 +1329,15 @@ RecursivelyFlagVariables
       RecursivelyFlagVariables(aCGS, aComponent, cv, aLocallyBound,
                                contextFlags, degree, aInitial);
     }
-    RETURN_INTO_OBJREF(ow, iface::mathml_dom::MathMLElement,
-                       pw->otherwise());
-    if (ow != NULL)
-      RecursivelyFlagVariables(aCGS, aComponent, ow, aLocallyBound,
-                               contextFlags, degree, aInitial);
+    try
+    {
+      RETURN_INTO_OBJREF(ow, iface::mathml_dom::MathMLElement,
+                         pw->otherwise());
+      if (ow != NULL)
+        RecursivelyFlagVariables(aCGS, aComponent, ow, aLocallyBound,
+                                 contextFlags, degree, aInitial);
+    }
+    catch (iface::dom::DOMException& de) {}
   }
 }
 

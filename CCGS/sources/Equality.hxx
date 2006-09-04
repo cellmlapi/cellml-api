@@ -10,6 +10,7 @@ public:
   CDA_IMPL_QI0;
 
   Equation();
+  ~Equation();
 
   void AddPart(iface::cellml_api::CellMLComponent* aComp,
                iface::mathml_dom::MathMLElement* aEl);
