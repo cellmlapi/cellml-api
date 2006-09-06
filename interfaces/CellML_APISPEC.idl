@@ -2001,6 +2001,14 @@ module cellml_api
      *                1.0 or 1.1.
      */
     Model createModel(in wstring version);
+
+    /**
+     * Serialises a DOM node into a string. The serialised node must have
+     * originated from the locally hosted DOM implementation.
+     * @param node The DOM node to serialise.
+     * @return The node, as a serialised string.
+     */
+    dom::DOMString serialiseNode(in dom::Node node);
   };
 #pragma terminal-interface
 #pragma cross-module-argument

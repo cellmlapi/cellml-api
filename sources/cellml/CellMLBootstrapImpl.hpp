@@ -74,6 +74,7 @@ public:
   iface::cellml_api::DOMURLLoader* localURLLoader() throw(std::exception&);
   iface::cellml_api::Model* createModel(const wchar_t* version)
     throw(std::exception&);
+  wchar_t* serialiseNode(iface::dom::Node* aNode) throw(std::exception&);
 private:
   CellML_DOMImplementationBase* domimpl;
 };

@@ -1,9 +1,11 @@
 #define IN_CELLML_MODULE
 // CellML and DOM are in the same module...
 #define IN_DOM_MODULE
+#define IN_DOMWRITER_MODULE
 #include "CellMLImplementation.hpp"
 #include "CellMLBootstrapImpl.hpp"
 #include "CellMLBootstrap.hpp"
+#include "DOMWriter.hxx"
 
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
 #define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
@@ -56,6 +58,16 @@ CDA_CellMLBootstrap::createModel(const wchar_t* version)
   RETURN_INTO_OBJREF(de, iface::dom::Element,
                      doc->documentElement());
   return new CDA_Model(ul, doc, de);
+}
+
+wchar_t*
+CDA_CellMLBootstrap::serialiseNode(iface::dom::Node* aNode)
+  throw(std::exception&)
+{
+  DOMWriter dw;
+  std::wstring str;
+  dw.writeNode(NULL, aNode, str);
+  return CDA_wcsdup(str.c_str());
 }
 
 CDA_DOMURLLoader::CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl)
