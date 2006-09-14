@@ -621,7 +621,7 @@ GetRealUnits(iface::cellml_api::Units* in)
       x = already_AddRefd<iface::cellml_api::Units>
         (ci->nextUnits());
       if (x == NULL)
-        throw CodeGenerationError(L"Imported component missing");
+        throw CodeGenerationError(L"Imported units missing");
       RETURN_INTO_WSTRING(n, x->name());
       if (n == tn)
         break;
