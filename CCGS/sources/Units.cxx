@@ -359,12 +359,25 @@ CellMLUnitDefinition::ComputeBaseUnits()
     if (u == NULL)
       break;
     RETURN_INTO_WSTRING(uname, u->units());
+    
+    if (uname.length() == 0)
+    {
+      RETURN_INTO_WSTRING(name, mCellML->name());
+      std::wstring em = L"Unit element in definition of ";
+      em += name;
+      em += L" has missing units value.";
+      throw CodeGenerationError(em);
+    }
+
     // Lookup in the scope...
     RETURN_INTO_OBJREF(ur, CanonicalUnitRepresentation,
                        mScope->findUnit(uname.c_str()));
     if (ur == NULL)
     {
-      std::wstring em = L"Unit element references units ";
+      RETURN_INTO_WSTRING(name, mCellML->name());
+      std::wstring em = L"Unit element in the definition of ";
+      em += name;
+      em += L" references units "; 
       em += uname;
       em += L", but no units with this name were found.";
       throw CodeGenerationError(em);
