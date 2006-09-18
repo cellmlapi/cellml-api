@@ -72,15 +72,13 @@ public:
 
 CDAGlobalChangeListener gCDAChangeListener;
 
-CDA_RDFXMLDOMRepresentation::CDA_RDFXMLDOMRepresentation(iface::dom::Element* idata)
-  : _cda_refcount(1), datastore(idata)
+CDA_RDFXMLDOMRepresentation::CDA_RDFXMLDOMRepresentation(CDA_Model* aModel)
+  : _cda_refcount(1), mModel(aModel)
 {
-  datastore->add_ref();
 }
 
 CDA_RDFXMLDOMRepresentation::~CDA_RDFXMLDOMRepresentation()
 {
-  datastore->release_ref();
 }
 
 wchar_t*
@@ -90,26 +88,81 @@ CDA_RDFXMLDOMRepresentation::type()
   return CDA_wcsdup(L"http://www.cellml.org/RDFXML/DOM");
 }
 
-iface::dom::Element*
+iface::dom::Document*
 CDA_RDFXMLDOMRepresentation::data()
   throw(std::exception&)
 {
-  datastore->add_ref();
-  return datastore;
+  // Create a brand new document to store the data...
+  RETURN_INTO_OBJREF(impl, iface::dom::DOMImplementation,
+                     mModel->mDoc->implementation());
+  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType, mModel->mDoc->doctype());
+  RETURN_INTO_OBJREF(rdoc, iface::dom::Document,
+                     impl->createDocument(RDF_NS, L"RDF", dt));
+  RETURN_INTO_OBJREF(rdocel, iface::dom::Element,
+                     rdoc->documentElement());
+
+  // Find our model's datastore...
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList,
+                     mModel->datastore->getElementsByTagNameNS(RDF_NS, L"RDF"));
+  uint32_t i, l = nl->length();
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
+    // Now go through each child of the RDF:rdf element, and import into the
+    // document.
+
+    RETURN_INTO_OBJREF(nl2, iface::dom::NodeList,
+                       n->childNodes());
+
+    uint32_t j, m = nl2->length();
+    for (j = 0; j < m; j++)
+    {
+      RETURN_INTO_OBJREF(n2, iface::dom::Node, nl2->item(j));
+      if (n2->nodeType() == iface::dom::Node::ELEMENT_NODE)
+      {
+        RETURN_INTO_OBJREF(ln, iface::dom::Node, rdoc->importNode(n2, true));
+        rdocel->appendChild(ln)->release_ref();
+      }
+    }
+  }
+
+  rdoc->add_ref();
+  return rdoc;
+}
+
+void
+CDA_RDFXMLDOMRepresentation::data(iface::dom::Document* aData)
+  throw(std::exception&)
+{
+  // Step one: Wipe out all RDF from the model...
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList,
+                     mModel->datastore->getElementsByTagNameNS(RDF_NS, L"RDF"));
+  uint32_t i, l = nl->length();
+  for (i = 0; i < l; i++)
+  {
+    // The item remains as 0, because we keep deleting the items after it...
+    RETURN_INTO_OBJREF(el, iface::dom::Node, nl->item(0));
+    RETURN_INTO_OBJREF(pel, iface::dom::Node, el->parentNode());
+    pel->removeChild(el)->release_ref();
+  }
+
+  // Step two: Add the supplied RDF into the model...
+  RETURN_INTO_OBJREF(de, iface::dom::Element, aData->documentElement());
+  RETURN_INTO_OBJREF(ide, iface::dom::Node,
+                     mModel->mDoc->importNode(de, true));
+  mModel->datastore->appendChild(ide)->release_ref();
 }
 
 CDA_RDFXMLStringRepresentation::CDA_RDFXMLStringRepresentation
 (
- iface::dom::Element* idata
+ CDA_Model* aModel
 )
-  : _cda_refcount(1), datastore(idata)
+  : _cda_refcount(1), mModel(aModel)
 {
-  datastore->add_ref();
 }
 
 CDA_RDFXMLStringRepresentation::~CDA_RDFXMLStringRepresentation()
 {
-  datastore->release_ref();
 }
 
 wchar_t*
@@ -123,10 +176,44 @@ wchar_t*
 CDA_RDFXMLStringRepresentation::serialisedData()
   throw(std::exception&)
 {
+  // Create a brand new document to store the data...
+  RETURN_INTO_OBJREF(impl, iface::dom::DOMImplementation,
+                     mModel->mDoc->implementation());
+  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType, mModel->mDoc->doctype());
+  RETURN_INTO_OBJREF(rdoc, iface::dom::Document,
+                     impl->createDocument(RDF_NS, L"RDF", dt));
+  RETURN_INTO_OBJREF(rdocel, iface::dom::Element,
+                     rdoc->documentElement());
+
+  // Find our model's datastore...
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList,
+                     mModel->datastore->getElementsByTagNameNS(RDF_NS, L"RDF"));
+  uint32_t i, l = nl->length();
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
+    // Now go through each child of the RDF:rdf element, and import into the
+    // document.
+
+    RETURN_INTO_OBJREF(nl2, iface::dom::NodeList,
+                       n->childNodes());
+
+    uint32_t j, m = nl2->length();
+    for (j = 0; j < m; j++)
+    {
+      RETURN_INTO_OBJREF(n2, iface::dom::Node, nl2->item(j));
+      if (n2->nodeType() == iface::dom::Node::ELEMENT_NODE)
+      {
+        RETURN_INTO_OBJREF(ln, iface::dom::Node, rdoc->importNode(n2, true));
+        rdocel->appendChild(ln)->release_ref();
+      }
+    }
+  }
+  
   // We need to serialise the element...
   DOMWriter dw;
   std::wstring str;
-  dw.writeElement(NULL, datastore, str);
+  dw.writeDocument(NULL, rdoc, str);
   return CDA_wcsdup(str.c_str());
 }
 
@@ -134,8 +221,26 @@ void
 CDA_RDFXMLStringRepresentation::serialisedData(const wchar_t* attr)
   throw(std::exception&)
 {
-  // This is not implemented in this API implementation.
-  throw iface::cellml_api::CellMLException();
+  RETURN_INTO_OBJREF(doc, iface::dom::Document,
+                     mModel->mLoader->loadDocumentFromText(attr));
+
+  // Step one: Wipe out all RDF from the model...
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList,
+                     mModel->datastore->getElementsByTagNameNS(RDF_NS, L"RDF"));
+  uint32_t i, l = nl->length();
+  for (i = 0; i < l; i++)
+  {
+    // The item remains as 0, because we keep deleting the items after it...
+    RETURN_INTO_OBJREF(el, iface::dom::Node, nl->item(0));
+    RETURN_INTO_OBJREF(pel, iface::dom::Node, el->parentNode());
+    pel->removeChild(el)->release_ref();
+  }
+
+  // Step two: Add the supplied RDF into the model...
+  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
+  RETURN_INTO_OBJREF(ide, iface::dom::Node,
+                     mModel->mDoc->importNode(de, true));
+  mModel->datastore->appendChild(ide)->release_ref();
 }
 
 CDA_URI::CDA_URI(iface::dom::Attr* idata)
@@ -247,107 +352,13 @@ CDA_CellMLElement::cmetaId(const wchar_t* attr)
 }
 
 iface::cellml_api::RDFRepresentation*
-CDA_CellMLElement::getRDFRepresentation(const wchar_t* type)
+CDA_Model::getRDFRepresentation(const wchar_t* type)
   throw(std::exception&)
 {
-  RETURN_INTO_WSTRING(cmid, datastore->getAttributeNS(CMETA_NS, L"id"));
-  if (cmid == L"")
-    throw iface::cellml_api::CellMLException();
-
-  // We now have to search all RDF elements...
-  CDA_CellMLElement* el = this;
-  CDA_Model* m = NULL;
-  while (true)
-  {
-    m = dynamic_cast<CDA_Model*>(el);
-    if (m != NULL)
-      break;
-    el = dynamic_cast<CDA_CellMLElement*>(el->mParent);
-    if (el == NULL)
-      break;
-  }
-  if (m == NULL)
-    throw iface::cellml_api::CellMLException();
-
-  RETURN_INTO_OBJREF(cnodes, iface::dom::NodeList,
-                     m->datastore->childNodes());
-
-  cmid = L"#" + cmid;
-  uint32_t i, l = cnodes->length();
-  ObjRef<iface::dom::Element> lastRDF;
-  for (i = 0; i < l; i++)
-  {
-    RETURN_INTO_OBJREF(n, iface::dom::Node, cnodes->item(i));
-
-    DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
-    if (el == NULL)
-      continue;
-
-    RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
-    if (nsURI != RDF_NS)
-      continue;
-
-    RETURN_INTO_WSTRING(ln, el->localName());
-    if (ln != L"RDF")
-      continue;
-
-    lastRDF = el;
-
-    // Next we look for descriptions...
-    uint32_t j, m = cnodes->length();
-    for (j = 0; j < m; j++)
-    {
-      RETURN_INTO_OBJREF(cnodes2, iface::dom::NodeList,
-                         el->childNodes());
-
-      RETURN_INTO_OBJREF(n2, iface::dom::Node, cnodes2->item(j));
-
-      DECLARE_QUERY_INTERFACE_OBJREF(el2, n2, dom::Element);
-      if (el2 == NULL)
-        continue;
-
-      RETURN_INTO_WSTRING(nsURI2, el2->namespaceURI());
-      if (nsURI2 != RDF_NS)
-        continue;
-
-      RETURN_INTO_WSTRING(ln2, el2->localName());
-
-      if (ln2 != L"Description")
-        continue;
-      RETURN_INTO_WSTRING(about, el2->getAttributeNS(RDF_NS, L"about"));
-      if (about != cmid)
-        continue;
-
-      if (!wcscmp(type, L"http://www.cellml.org/RDFXML/DOM"))
-        return new CDA_RDFXMLDOMRepresentation(el2);
-      else if (!wcscmp(type, L"http://www.cellml.org/RDFXML/string"))
-        return new CDA_RDFXMLStringRepresentation(el2);
-      else
-        throw iface::cellml_api::CellMLException();
-    }
-  }
-
-  // No such element. Make one...
-  if (lastRDF == NULL)
-  {
-    lastRDF = already_AddRefd<iface::dom::Element>
-      (m->mDoc->createElementNS(RDF_NS, L"RDF"));
-    if (lastRDF == NULL)
-      throw iface::cellml_api::CellMLException();
-    m->datastore->appendChild(lastRDF);
-  }
-
-  RETURN_INTO_OBJREF(newDescription, iface::dom::Element,
-                     m->mDoc->createElementNS(RDF_NS, L"Description"));
-  if (newDescription == NULL)
-    throw iface::cellml_api::CellMLException();
-
-  lastRDF->appendChild(newDescription);
-
   if (!wcscmp(type, L"http://www.cellml.org/RDFXML/DOM"))
-    return new CDA_RDFXMLDOMRepresentation(newDescription);
+    return new CDA_RDFXMLDOMRepresentation(this);
   else if (!wcscmp(type, L"http://www.cellml.org/RDFXML/string"))
-    return new CDA_RDFXMLStringRepresentation(newDescription);
+    return new CDA_RDFXMLStringRepresentation(this);
 
   throw iface::cellml_api::CellMLException();
 }
@@ -1284,11 +1295,9 @@ CDA_Model::clone(bool aDeep)
   // Make a new document...
   RETURN_INTO_OBJREF(di, iface::dom::DOMImplementation,
                      mDoc->implementation());
-  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType,
-                     mDoc->doctype());
   RETURN_INTO_WSTRING(new_namespace, datastore->namespaceURI());
   RETURN_INTO_OBJREF(newDoc, iface::dom::Document,
-                     di->createDocument(new_namespace.c_str(), L"model", dt));
+                     di->createDocument(new_namespace.c_str(), L"model", NULL));
 
   // Clone the underlying node...
   RETURN_INTO_OBJREF(cn, iface::dom::Node,

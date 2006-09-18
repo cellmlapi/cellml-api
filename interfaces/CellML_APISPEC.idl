@@ -78,9 +78,14 @@ module cellml_api
   interface RDFXMLDOMRepresentation : RDFRepresentation
   {
     /**
-     * The RDF/XML as a document object model element.
+     * A complete RDF/XML document (including a single top-level RDF:rdf
+     * element) as a DOM document. The document fetched is a copy of the RDF
+     * in the model (that is, it is not live). However, fetching the attribute
+     * again will update to the latest data. Assigning this attribute to
+     * a new document (or a changed version of the previous document) will
+     * replace all the RDF in the model with the contents of the new document.
      */
-    readonly attribute dom::Element data;
+    attribute dom::Document data;
   };
 #pragma terminal-interface
 
@@ -90,7 +95,12 @@ module cellml_api
   interface RDFXMLStringRepresentation : RDFRepresentation
   {
     /**
-     * The RDF/XML as a serialised string.
+     * A complete RDF/XML document (including a single top-level RDF:rdf
+     * element) as a serialised string. The document fetched is a copy of the RDF
+     * in the model (that is, it is not live). However, fetching the attribute
+     * again will update to the latest data. Assigning this attribute to
+     * a new document (or a changed version of the previous document) will
+     * replace all the RDF in the model with the contents of the new document.
      */
     attribute wstring serialisedData;
   };
@@ -155,24 +165,6 @@ module cellml_api
      * This element's cmeta id(which may be defined on any CellML element)
      */
     attribute CellMLAttributeString cmetaId;
-
-    /**
-     * The RDF metadata associated with this element. An element must have a
-     * cmeta:id for any RDF to be able to refer to it.
-     * @param type The URN describing the type of RDF metadata. Implementations
-     *             are free to add new types by creating new type names at URNs
-     *             under their jurisdiction. New URNs under http://www.cellml.org
-     *             are reserved for future versions of this specification.
-     * @return The object containing the RDF representation. If no arcs are
-     *         defined, an empty RDF representation is returned. The object may
-     *         be cast in an application defined manner depending on the type
-     *         returned.
-     * @raises CellMLException if type isn't supported.
-     * All implementations must implement the following types:
-     *             http://www.cellml.org/RDFXML/string
-     *             http://www.cellml.org/RDFXML/DOM
-     */
-    RDFRepresentation getRDFRepresentation(in wstring type) raises(CellMLException);
 
     /**
      * The collection of extension elements associated with this CellML
@@ -531,6 +523,23 @@ module cellml_api
      * Retrieves the entire model (excluding imports) as a serialised XML text.
      */
     readonly attribute dom::DOMString serialisedText;
+
+
+    /**
+     * The RDF metadata associated with all elements in this document.
+     * @param type The URN describing the type of RDF metadata. Implementations
+     *             are free to add new types by creating new type names at URNs
+     *             under their jurisdiction. New URNs under http://www.cellml.org
+     *             are reserved for future versions of this specification.
+     * @return The object containing the RDF representation. The object may
+     *         be cast in an application defined manner depending on the type
+     *         returned.
+     * @raises CellMLException if type isn't supported.
+     * All implementations must implement the following types:
+     *             http://www.cellml.org/RDFXML/string
+     *             http://www.cellml.org/RDFXML/DOM
+     */
+    RDFRepresentation getRDFRepresentation(in wstring type) raises(CellMLException);
   };
 #pragma terminal-interface
 #pragma cross-module-argument

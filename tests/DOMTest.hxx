@@ -18,6 +18,7 @@ class DOMTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testCreateDocumentType);
   CPPUNIT_TEST(testCreateDocument);
   CPPUNIT_TEST(testCloneNode);
+  CPPUNIT_TEST(testImportNode);
   CPPUNIT_TEST(testSerialiseBasicDocument);
   CPPUNIT_TEST(testSerialiseAttributes);
   CPPUNIT_TEST(testSerialiseChildElements);
@@ -34,6 +35,7 @@ public:
   void testCreateDocumentType();
   void testCreateDocument();
   void testCloneNode();
+  void testImportNode();
   void testSetAttributeNodeNS();
 
   void testSerialiseBasicDocument();

@@ -909,6 +909,10 @@ void
 CDA_Node::recursivelyChangeDocument(CDA_Document* aNewDocument)
 {
   assert(!mDocumentIsAncestor);
+
+  if (mDocument == aNewDocument)
+    return;
+
   if (mDocument != NULL)
     mDocument->release_ref();
   mDocument = aNewDocument;

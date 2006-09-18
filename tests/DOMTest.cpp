@@ -149,6 +149,29 @@ DOMTest::testCloneNode()
 }
 
 void
+DOMTest::testImportNode()
+{
+  iface::dom::Document* doc2;
+  iface::dom::DocumentType* dtype;
+  CPPUNIT_ASSERT_NO_THROW(doc2 = di->createDocument(L"http://www.physiome.org/testsuite/1",
+                                                    L"tests", NULL));
+
+  iface::dom::Element* de = doc->documentElement();
+  CPPUNIT_ASSERT(de);
+
+  iface::dom::Node* in;
+  CPPUNIT_ASSERT_NO_THROW(in = doc2->importNode(de, true));
+  iface::dom::Element* de2 = doc2->documentElement();
+  de2->appendChild(in)->release_ref();
+
+  in->release_ref();
+  de2->release_ref();
+  de->release_ref();
+  doc2->release_ref();
+}
+
+
+void
 DOMTest::testSerialiseBasicDocument()
 {
   DOMWriter dw;

@@ -3,8 +3,8 @@ check_PROGRAMS=tests/RunTestBin
 TESTS=tests/RunTestBin tests/CheckCodeGenerator
 tests_RunTestBin_SOURCES=\
 	tests/TestOutput.cpp \
-	tests/MathMLTest.cpp \
 	tests/DOMTest.cpp \
+	tests/MathMLTest.cpp \
 	tests/CellMLTest.cpp \
 	tests/CellMLEventsTest.cpp
 

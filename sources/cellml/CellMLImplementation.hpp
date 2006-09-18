@@ -35,12 +35,13 @@ class CDA_ComponentRefSet;
 class CDA_MapVariablesSet;
 class CDA_VariableRefSet;
 class CDA_RoleSet;
+class CDA_Model;
 
 class CDA_RDFXMLDOMRepresentation
   : public iface::cellml_api::RDFXMLDOMRepresentation
 {
 public:
-  CDA_RDFXMLDOMRepresentation(iface::dom::Element* idata);
+  CDA_RDFXMLDOMRepresentation(CDA_Model* aModel);
   virtual ~CDA_RDFXMLDOMRepresentation();
 
   CDA_IMPL_REFCOUNT;
@@ -48,16 +49,17 @@ public:
   CDA_IMPL_ID;
 
   wchar_t* type() throw(std::exception&);
-  iface::dom::Element* data() throw(std::exception&);
+  iface::dom::Document* data() throw(std::exception&);
+  void data(iface::dom::Document* aData) throw(std::exception&);
 private:
-  iface::dom::Element* datastore;
+  ObjRef<CDA_Model> mModel;
 };
 
 class CDA_RDFXMLStringRepresentation
   : public iface::cellml_api::RDFXMLStringRepresentation
 {
 public:
-  CDA_RDFXMLStringRepresentation(iface::dom::Element* idata);
+  CDA_RDFXMLStringRepresentation(CDA_Model* aModel);
   virtual ~CDA_RDFXMLStringRepresentation();
 
   CDA_IMPL_REFCOUNT
@@ -68,7 +70,7 @@ public:
   wchar_t* serialisedData() throw(std::exception&);
   void serialisedData(const wchar_t* attr) throw(std::exception&);
 private:
-  iface::dom::Element* datastore;
+  ObjRef<CDA_Model> mModel;
 };
 
 class CDA_URI
@@ -137,8 +139,6 @@ public:
     throw(std::exception&);
   void cmetaId(const wchar_t* attr)
     throw(std::exception&);
-  iface::cellml_api::RDFRepresentation*
-    getRDFRepresentation(const wchar_t* type) throw(std::exception&);
   iface::cellml_api::ExtensionElementList* extensionElements()
     throw(std::exception&);
   void insertExtensionElementAfter(const iface::cellml_api::ExtensionElement marker,
@@ -270,6 +270,8 @@ public:
   wchar_t* serialisedText() throw(std::exception&);
   iface::cellml_api::CellMLElement* clone(bool aDeep)
     throw(std::exception&);
+  iface::cellml_api::RDFRepresentation*
+    getRDFRepresentation(const wchar_t* type) throw(std::exception&);
 
   ObjRef<iface::cellml_api::DOMURLLoader> mLoader;
 
@@ -283,7 +285,6 @@ public:
                                     iface::dom::Node* aOriginal,
                                     iface::dom::Document* aNewDoc)
     throw(std::exception&);
-
 private:
   CDA_ConnectionSet* mConnectionSet;
   CDA_GroupSet* mGroupSet;

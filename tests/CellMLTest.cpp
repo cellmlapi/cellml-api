@@ -180,7 +180,8 @@ CellMLTest::testModelLoader()
 //      *   either the CellML 1.0 or CellML 1.1 namespace.
 //      */
 //     readonly attribute dom::DOMString lastErrorMessage;
-  CPPUNIT_ASSERT_THROW(mModelLoader->loadFromURL(BASE_DIRECTORY L"dont_create_this_file.xml"),
+  iface::cellml_api::Model* throwaway;
+  CPPUNIT_ASSERT_THROW(throwaway=mModelLoader->loadFromURL(BASE_DIRECTORY L"dont_create_this_file.xml"),
                        iface::cellml_api::CellMLException);
   str = mModelLoader->lastErrorMessage();
   CPPUNIT_ASSERT(!wcscmp(str, L"servererror"));
@@ -234,7 +235,8 @@ CellMLTest::testDOMURLLoader()
 //      *   from the processor stating what is wrong.
 //      */
 //     readonly attribute dom::DOMString lastErrorMessage;
-  CPPUNIT_ASSERT_THROW(mLocalURLLoader->loadDocument
+  iface::dom::Document* throwaway;
+  CPPUNIT_ASSERT_THROW(throwaway=mLocalURLLoader->loadDocument
                        (BASE_DIRECTORY L"dont_create_this_file.xml"),
                        iface::cellml_api::CellMLException);
   str = mLocalURLLoader->lastErrorMessage();
@@ -291,10 +293,16 @@ void
 CellMLTest::testRDFXMLDOMRepresentation()
 {
   loadAchCascade();
-//     /**
-//      * The RDF/XML as a document object model element.
-//      */
-//     readonly attribute dom::Element data;
+//    /**
+//     * A complete RDF/XML document (including a single top-level RDF:rdf
+//     * element) as a DOM document. The document fetched is a copy of the RDF
+//     * in the model (that is, it is not live). However, fetching the attribute
+//     * again will update to the latest data. Assigning this attribute to
+//     * a new document (or a changed version of the previous document) will
+//     * replace all the RDF in the model with the contents of the new document.
+//     */
+//    attribute dom::Document data;
+
   iface::cellml_api::RDFRepresentation* rr;
   CPPUNIT_ASSERT_NO_THROW
     (
@@ -304,15 +312,35 @@ CellMLTest::testRDFXMLDOMRepresentation()
 
   DECLARE_QUERY_INTERFACE_REPLACE(rrd, rr,
                                   cellml_api::RDFXMLDOMRepresentation);
-  iface::dom::Element* el = rrd->data();
-  wchar_t* str =
+  iface::dom::Document* doc = rrd->data();
+  rrd->release_ref();
+
+  iface::dom::Element* de = doc->documentElement();
+  doc->release_ref();
+
+  wchar_t* str = de->localName();
+  CPPUNIT_ASSERT(!wcscmp(str, L"RDF"));
+  free(str);
+
+  iface::dom::NodeList* nl = de->childNodes();
+  de->release_ref();
+  iface::dom::Node* n = nl->item(0);
+  nl->release_ref();
+  
+  CPPUNIT_ASSERT(n);
+  str = n->localName();
+  CPPUNIT_ASSERT(!wcscmp(str, L"Description"));
+  free(str);
+
+  DECLARE_QUERY_INTERFACE_REPLACE(el, n, dom::Element);
+
+  str =
     el->getAttributeNS(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                        L"about");
-  CPPUNIT_ASSERT(!wcscmp(str, L"#Ach_cascade"));
+  CPPUNIT_ASSERT(!wcscmp(str, L""));
   free(str);
-  el->release_ref();
 
-  rrd->release_ref();
+  el->release_ref();
 }
 //   };
 
@@ -339,7 +367,62 @@ CellMLTest::testRDFXMLStringRepresentation()
   DECLARE_QUERY_INTERFACE_REPLACE(rrs, rr,
                                   cellml_api::RDFXMLStringRepresentation);
   wchar_t* correctValue =
-L"<rdf:Description xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" rdf:about=\"#Ach_cascade\">\n"
+L"<?xml version=\"1.0\"?>\n"
+L"<RDF xmlns=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" rdf:about=\"\">\n"
+L"      <!--\n"
+L"        The Model Builder Metadata.  The Dublin Core \"creator\" element is used  \n"
+L"        to indicate the person who translated the model into CellML.\n"
+L"      -->\n"
+L"      <dc:creator xmlns:dc=\"http://purl.org/dc/elements/1.1/\" rdf:parseType=\"Resource\">\n"
+L"        <vCard:N xmlns:vCard=\"http://www.w3.org/2001/vcard-rdf/3.0#\" rdf:parseType=\"Resource\">\n"
+L"          <vCard:Family>Lloyd</vCard:Family>\n"
+L"          <vCard:Given>Catherine</vCard:Given>\n"
+L"          <vCard:Other>May</vCard:Other>\n"
+L"        </vCard:N>\n"
+L"        <vCard:EMAIL xmlns:vCard=\"http://www.w3.org/2001/vcard-rdf/3.0#\" rdf:parseType=\"Resource\">\n"
+L"          <rdf:value>c.lloyd@auckland.ac.nz</rdf:value>\n"
+L"          <rdf:type rdf:resource=\"http://imc.org/vCard/3.0#internet\"/>\n"
+L"        </vCard:EMAIL>\n"
+L"        <vCard:ORG xmlns:vCard=\"http://www.w3.org/2001/vcard-rdf/3.0#\" rdf:parseType=\"Resource\">\n"
+L"          <vCard:Orgname>The University of Auckland</vCard:Orgname>\n"
+L"          <vCard:Orgunit>The Bioengineering Institute</vCard:Orgunit>\n"
+L"        </vCard:ORG>\n"
+L"      </dc:creator>\n"
+L"      \n"
+L"      <!--\n"
+L"        The Creation Date metadata. This is the date on which the model\n"
+L"        was translated into CellML.\n"
+L"      -->\n"
+L"      <dcterms:created xmlns:dcterms=\"http://purl.org/dc/terms/\" rdf:parseType=\"Resource\">\n"
+L"        <dcterms:W3CDTF>2002-10-30</dcterms:W3CDTF>\n"
+L"      </dcterms:created>\n"
+L"      \n"
+L"      <!--\n"
+L"        The Modification History metadata. This lists the changes that have been\n"
+L"        made to the document, who made the changes, and when they were made.\n"
+L"      -->\n"
+L"      <cmeta:modification xmlns:cmeta=\"http://www.cellml.org/metadata/1.0#\" rdf:parseType=\"Resource\">\n"
+L"        <rdf:value>\n"
+L"          Changed the model name so the model loads in the database easier.\n"
+L"        </rdf:value>\n"
+L"        <cmeta:modifier rdf:parseType=\"Resource\">\n"
+L"          <vCard:N xmlns:vCard=\"http://www.w3.org/2001/vcard-rdf/3.0#\" rdf:parseType=\"Resource\">\n"
+L"            <vCard:Family>Cuellar</vCard:Family>\n"
+L"            <vCard:Given>Autumn</vCard:Given>\n"
+L"            <vCard:Other>A</vCard:Other>\n"
+L"          </vCard:N>\n"
+L"        </cmeta:modifier>\n"
+L"        <dcterms:modified xmlns:dcterms=\"http://purl.org/dc/terms/\" rdf:parseType=\"Resource\"> \n"
+L"          <dcterms:W3CDTF>2003-04-05</dcterms:W3CDTF>\n"
+L"        </dcterms:modified>\n"
+L"      </cmeta:modification>\n"
+L"      \n"
+L"      \n"
+L"      <!-- The Publisher metadata. -->\n"
+L"      <dc:publisher xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
+L"        The University of Auckland, Bioengineering Institute\n"
+L"      </dc:publisher>\n"
+L"    </rdf:Description><rdf:Description xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" rdf:about=\"#Ach_cascade\">\n"
 L"      <!-- A human readable name for the model. -->\n"
 L"      <dc:title xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
 L"        Wang and Lipsius's 1995 kinetic analysis of an acetylcholine induced \n"
@@ -415,10 +498,9 @@ L"          <bqs:first_page>565</bqs:first_page>\n"
 L"          <bqs:last_page>574</bqs:last_page>\n"
 L"        </bqs:JournalArticle>\n"
 L"      </bqs:reference>\n"
-L"    </rdf:Description>";
+L"    </rdf:Description></RDF>";
 
-  wchar_t* str = rrs->serialisedData();
-  
+  wchar_t* str = rrs->serialisedData();  
   CPPUNIT_ASSERT(!wcscmp(str, correctValue));
   free(str);
 
@@ -836,7 +918,8 @@ CellMLTest::testCellMLElement()
   CPPUNIT_ASSERT(ud);
 
   newunits->setUserData(L"CellMLTest::myUserData", NULL);
-  CPPUNIT_ASSERT_THROW(newunits->getUserData(L"CellMLTest::myUserData"),
+  iface::cellml_api::UserData* throwaway;
+  CPPUNIT_ASSERT_THROW(throwaway=newunits->getUserData(L"CellMLTest::myUserData"),
                        iface::cellml_api::CellMLException);
 
   // Set the data again, so we know that refcounting is right when userdata is
