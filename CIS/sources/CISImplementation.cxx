@@ -182,7 +182,7 @@ void
 CDA_CellMLIntegrationRun::setStepSizeControl
 (
  double epsAbs, double epsRel, double scalVar,
- double scalRate
+ double scalRate, double maxStep
 )
   throw (std::exception&)
 {
@@ -190,6 +190,7 @@ CDA_CellMLIntegrationRun::setStepSizeControl
   mEpsRel = epsRel;
   mScalVar = scalVar;
   mScalRate = scalRate;
+  mStepSizeMax = maxStep;
 }
 
 void

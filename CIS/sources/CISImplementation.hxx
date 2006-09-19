@@ -80,7 +80,7 @@ public:
     throw (std::exception&);
 
   void setStepSizeControl(double epsAbs, double epsRel, double scalVar,
-                          double scalRate) throw (std::exception&);
+                          double scalRate, double maxStep) throw (std::exception&);
   void setResultRange(double startBvar, double stopBvar, double incrementBvar)
     throw (std::exception&);
   void setProgressObserver(iface::cellml_services::IntegrationProgressObserver*

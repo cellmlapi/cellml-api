@@ -73,9 +73,11 @@ module cellml_services
      *                equation.
      * @param scalRate The weighting of the rates in the error control
      *                 equation.
+     * @param maxStep The maximum step size to ever take.
      */
     void setStepSizeControl(in double epsAbs, in double epsRel,
-                            in double scalVar, in double scalRate);
+                            in double scalVar, in double scalRate,
+                            in double maxStep);
 
     /**
      * Sets the range of results to be returned.
