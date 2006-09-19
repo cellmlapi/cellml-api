@@ -218,7 +218,7 @@ ProcessKeywords(int argc, char** argv,
     }
     else if (!strcasecmp(command, "step_size_control"))
     {
-      double epsAbs, epsRel, scalVar, scalRate;
+      double epsAbs, epsRel, scalVar, scalRate, maxStep;
       epsAbs = strtod(value, &value);
       if (*value != ',')
       {
@@ -239,11 +239,28 @@ ProcessKeywords(int argc, char** argv,
           continue;
         }
         scalRate = 1.0 - scalVar;
+        
+        if (*value == ',')
+        {
+          value++;
+          maxStep = strtod(value, &value);
+          if (maxStep <= 0.0)
+          {
+            printf("# Maximum step size should be in (0.0,infinity). "
+                   "step_size_control ignored.\n");
+            continue;
+          }
+        }
+        else
+        {
+          maxStep = 1.0;
+        }
       }
       else
       {
         scalVar = 1.0;
         scalRate = 0.0;
+        maxStep = 1.0;
       }
       if (epsRel <= 0.0 || epsAbs <= 0.0)
       {
@@ -251,7 +268,7 @@ ProcessKeywords(int argc, char** argv,
                "step_size_control ignored.\n");
         continue;
       }
-      run->setStepSizeControl(epsAbs, epsRel, scalVar, scalRate);
+      run->setStepSizeControl(epsAbs, epsRel, scalVar, scalRate, maxStep);
     }
     else if (!strcasecmp(command, "range"))
     {
@@ -311,11 +328,12 @@ main(int argc, char** argv)
            "      BSIMP   = Implicit Bulirsch-Stoer method of Bader and Deuflhard.\n"
            "      GEAR1   = Implict Gear method (M=1).\n"
            "      GEAR2   = Implict Gear method (M=2).\n"
-           "  step_size_control absolute_epsilon,relative_epsilon[,variable_weight]\n"
+           "  step_size_control absolute_epsilon,relative_epsilon[,variable_weight[,max_step]]\n"
            "    => Sets the step-size control parameters.\n"
            "      absolute_epsilon: A floating point absolute error tolerance value.\n"
            "      relative_epsilon: A floating point relative error tolerance value.\n"
            "      variable_weight: The weighting (default 1.0) for variables (vs rates).\n"
+           "      max_step: The maximum step size to ever take.\n"
            "  range start,stop,increment\n"
            "    => Sets the range to solve over.\n"
            "       start: A floating point start value.\n"

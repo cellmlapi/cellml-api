@@ -177,7 +177,7 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
 
-  double lastBound;
+  double lastBound = 0.0 /* initialised only to avoid extraneous warning. */;
   bool isFirst = true;
 
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
