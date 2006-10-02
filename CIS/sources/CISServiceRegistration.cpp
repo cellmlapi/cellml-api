@@ -18,6 +18,10 @@ do_registration(void* aContext, void* aModuleManager, void (*UnloadService)())
 
   reinterpret_cast<iface::cellml_context::CellMLModuleManager*>(aModuleManager)
     ->registerModule(gIntegrationService);
+
+  // Ugly hack to force linking...
+  SCI::cellml_services::prodCellMLIntegrationRun();
+  CCI::cellml_services::prodCellMLIntegrationRun();
 }
 
 void
