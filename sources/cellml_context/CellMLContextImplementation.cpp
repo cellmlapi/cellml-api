@@ -60,10 +60,12 @@ CDA_CellMLModuleIterator::CDA_CellMLModuleIterator
 {
   mMM->add_ref();
   mCurrent = mList.begin();
+  mItIt = mMM->registerIterator(this);
 }
 
 CDA_CellMLModuleIterator::~CDA_CellMLModuleIterator()
 {
+  mMM->deregisterIterator(mItIt);
   mMM->release_ref();
 }
 
@@ -91,10 +93,12 @@ CDA_ModelNodeIterator::CDA_ModelNodeIterator
 {
   mML->add_ref();
   mCurrent = mList.begin();
+  mItIt = mML->registerIterator(this);
 }
 
 CDA_ModelNodeIterator::~CDA_ModelNodeIterator()
 {
+  mML->deregisterIterator(mItIt);
   mML->release_ref();
 }
 
@@ -242,6 +246,10 @@ CDA_ModuleManager::deregisterModule
       mMonitors.erase(j2);
     }
   }
+
+  std::list<CDA_CellMLModuleIterator*>::iterator i4;
+  for (i4 = mIterators.begin(); i4 != mIterators.end(); i4++)
+    (*i4)->invalidate(i3);
 
   mRegisteredModules.erase(i);
   (*i3)->release_ref();
@@ -742,6 +750,11 @@ CDA_ModelList::removeModel(iface::cellml_context::ModelNode* node)
       continue;
     (*i3)->release_ref();
     (*i3)->mParentList = NULL;
+
+    std::list<CDA_ModelNodeIterator*>::iterator i4;
+    for (i4 = mIterators.begin(); i4 != mIterators.end(); i4++)
+      (*i4)->invalidate(i3);
+
     mModels.erase(i3);
   }
 }

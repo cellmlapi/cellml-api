@@ -23,11 +23,14 @@ public:
   iface::cellml_context::CellMLModule* nextModule()
     throw(std::exception&);
 
+  void invalidate(std::list<iface::cellml_context::CellMLModule*>::iterator&
+                  aInv) { if (aInv == mCurrent) mCurrent++; };
 private:
   CDA_ModuleManager* mMM;
   std::list<iface::cellml_context::CellMLModule*>& mList;
   std::list<iface::cellml_context::CellMLModule*>::iterator
     mCurrent;
+  std::list<CDA_CellMLModuleIterator*>::iterator mItIt;
 };
 
 class CDA_ModelNode;
@@ -49,11 +52,14 @@ public:
   iface::cellml_context::ModelNode* nextModelNode()
     throw(std::exception&);
 
+  void invalidate(std::list<CDA_ModelNode*>::iterator&
+                  aInv) { if (aInv == mCurrent) mCurrent++; };
 private:
   CDA_ModelList* mML;
   std::list<CDA_ModelNode*> mList;
   std::list<CDA_ModelNode*>::iterator
     mCurrent;
+  std::list<CDA_ModelNodeIterator*>::iterator mItIt;
 };
 
 class CDA_TypeAnnotationManager
@@ -107,11 +113,17 @@ public:
   iface::cellml_context::CellMLModuleIterator* iterateModules()
     throw(std::exception&);
 
+  std::list<CDA_CellMLModuleIterator*>::iterator& registerIterator(CDA_CellMLModuleIterator* aIt)
+    { mIterators.push_back(aIt); return --mIterators.end(); };
+  void deregisterIterator(std::list<CDA_CellMLModuleIterator*>::iterator& aItIt)
+    { mIterators.erase(aItIt); };
+
 private:
   std::map<std::pair<std::wstring,std::wstring>,
            iface::cellml_context::CellMLModule*> mRegisteredModules;
   std::list<iface::cellml_context::CellMLModule*> mRegisteredModuleList;
   std::list<iface::cellml_context::CellMLModuleMonitor*> mMonitors;
+  std::list<CDA_CellMLModuleIterator*> mIterators;
 };
 
 class CDA_ModelList;
@@ -187,9 +199,14 @@ public:
     throw(std::exception&);
   iface::cellml_context::ModelNode* parentNode()
     throw(std::exception&);
+  std::list<CDA_ModelNodeIterator*>::iterator& registerIterator(CDA_ModelNodeIterator* aIt)
+    { mIterators.push_back(aIt); return --mIterators.end(); }
+  void deregisterIterator(std::list<CDA_ModelNodeIterator*>::iterator& aItIt)
+    { mIterators.erase(aItIt); }
 
 private:
   std::list<CDA_ModelNode*> mModels;
+  std::list<CDA_ModelNodeIterator*> mIterators;
 public: // within CellMLContextImplementation only...
   // Not refcounted, but set/cleared automatically when added/removed.
   CDA_ModelNode* mParentNode;
