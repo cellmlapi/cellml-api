@@ -5,7 +5,7 @@
 
 // This is a hack to force linking...
 #include "SCICIS.hxx"
-#include "corba/support/WrapperRepository.hxx"
+#include "corba_support/WrapperRepository.hxx"
 #include "CCICIS.hxx"
 
 iface::cellml_context::CellMLModule* gIntegrationService;
