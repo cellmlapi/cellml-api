@@ -3240,6 +3240,97 @@ CDA_CellMLImport::importedConnections()
 }
 
 void
+CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
+  throw (std::exception&)
+{
+  // It may already be an absolute URL...
+  if (aURL.find(L"://") != std::wstring::npos)
+    return;
+
+  // See if we can get an xml:base...
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->base_uri());
+  RETURN_INTO_WSTRING(base, bu->asText());
+
+  // See if it is a '/' type URL...
+  if (aURL[0] == L'/')
+  {
+    size_t pos = base.find(L"://");
+    // Bail if we are trying to resolve relative to a relative URL...
+    if (pos == std::wstring::npos)
+      return;
+
+    // Assume protocol://host/path, where host may be zero length e.g. file:///
+    pos = base.find(L"/", pos + 3);
+    std::wstring absURL;
+    if (pos == std::wstring::npos)
+      absURL = base;
+    else
+      // Don't include the slash, only everything up to it...
+      absURL = base.substr(0, pos);
+    absURL += aURL;
+    aURL.assign(absURL);
+    return;
+  }
+
+  // It is a completely relative URL.
+  // See if base ends in a /...
+  if (base[base.length() - 1] != L'/')
+  {
+    // aURL last component needs to be removed...
+    size_t pos = base.rfind(L"/");
+    if (pos == std::wstring::npos)
+      base += L"/";
+    else
+      base = base.substr(0, pos + 1);
+  }
+  base += aURL;
+
+  // Substitute [^/]*/../ => / and /./ => /
+  size_t pos = base.find(L"://");
+  aURL.assign(base.substr(0, pos + 3));
+
+  std::list<std::wstring> pathComponents;
+  size_t pos2;
+  bool last = false;
+  do
+  {
+    pos2 = base.find(L"/", pos + 1);
+    if (pos2 == std::wstring::npos)
+    {
+      last = true;
+      pos2 = base.length();
+    }
+
+    // Don't bother putting an empty path component for //
+    if (pos2 != pos + 1)
+    {
+      std::wstring str = base.substr(pos + 1, pos2 - pos - 1);
+      if (str == L"..")
+      {
+        if (!pathComponents.empty())
+          pathComponents.pop_back();
+      }
+      else if (str == L".")
+        ;
+      else
+        pathComponents.push_back(str);
+    }
+    pos = pos2;
+  }
+  while (!last);
+
+  // Now go through the path components and make a path...
+  std::list<std::wstring>::iterator i;
+  for (i = pathComponents.begin(); i != pathComponents.end(); i++)
+  {
+    aURL += L'/';
+    aURL += *i;
+  }
+  if (base[base.length() - 1] == '/')
+    aURL += L'/';
+}
+
+void
 CDA_CellMLImport::instantiate()
   throw(std::exception&)
 {
@@ -3263,6 +3354,8 @@ CDA_CellMLImport::instantiate()
   // Get the URL...
   RETURN_INTO_OBJREF(url, iface::cellml_api::URI, xlinkHref());
   RETURN_INTO_WSTRING(urlStr, url->asText());
+
+  CDA_MakeURLAbsolute(rootModel, urlStr);
 
   // We now have a root model, and so we also have a loader...
   RETURN_INTO_OBJREF(dd, iface::dom::Document,
@@ -3486,6 +3579,8 @@ CDA_CellMLImport::asyncInstantiate
   // Get the URL...
   RETURN_INTO_OBJREF(url, iface::cellml_api::URI, xlinkHref());
   RETURN_INTO_WSTRING(urlStr, url->asText());
+
+  CDA_MakeURLAbsolute(rootModel, urlStr);
 
   // We now have a root model, and so we also have a loader...
   RETURN_INTO_OBJREF(cidll, iface::cellml_api::DocumentLoadedListener,
