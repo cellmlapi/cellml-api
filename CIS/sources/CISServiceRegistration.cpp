@@ -2,7 +2,10 @@
 #include "Utilities.hxx"
 #include "CISImplementation.hxx"
 #include "CISBootstrap.hpp"
+
+// This is a hack to force linking...
 #include "SCICIS.hxx"
+#include "corba/support/WrapperRepository.hxx"
 #include "CCICIS.hxx"
 
 iface::cellml_context::CellMLModule* gIntegrationService;
