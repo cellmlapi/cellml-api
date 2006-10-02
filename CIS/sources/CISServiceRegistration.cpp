@@ -2,6 +2,8 @@
 #include "Utilities.hxx"
 #include "CISImplementation.hxx"
 #include "CISBootstrap.hpp"
+#include "SCICIS.hxx"
+#include "CCICIS.hxx"
 
 iface::cellml_context::CellMLModule* gIntegrationService;
 
