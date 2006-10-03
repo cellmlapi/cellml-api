@@ -113,7 +113,7 @@ public:
   iface::cellml_context::CellMLModuleIterator* iterateModules()
     throw(std::exception&);
 
-  std::list<CDA_CellMLModuleIterator*>::iterator& registerIterator(CDA_CellMLModuleIterator* aIt)
+  std::list<CDA_CellMLModuleIterator*>::iterator registerIterator(CDA_CellMLModuleIterator* aIt)
     { mIterators.push_back(aIt); return --mIterators.end(); };
   void deregisterIterator(std::list<CDA_CellMLModuleIterator*>::iterator& aItIt)
     { mIterators.erase(aItIt); };
@@ -199,7 +199,7 @@ public:
     throw(std::exception&);
   iface::cellml_context::ModelNode* parentNode()
     throw(std::exception&);
-  std::list<CDA_ModelNodeIterator*>::iterator& registerIterator(CDA_ModelNodeIterator* aIt)
+  std::list<CDA_ModelNodeIterator*>::iterator registerIterator(CDA_ModelNodeIterator* aIt)
     { mIterators.push_back(aIt); return --mIterators.end(); }
   void deregisterIterator(std::list<CDA_ModelNodeIterator*>::iterator& aItIt)
     { mIterators.erase(aItIt); }
