@@ -22,6 +22,8 @@
 
 #ifndef WIN32
 #include <sys/time.h>
+#include <unistd.h>
+#include <sys/types.h>
 #else
 #include <windows.h>
 #endif

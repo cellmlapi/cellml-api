@@ -6,6 +6,10 @@
 #include "CCICellML_Context.hxx"
 #include <omniORB4/CORBA.h>
 #include <stdio.h>
+#ifndef WIN32
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 
 static void
 StartServer(std::string& dir)
