@@ -167,6 +167,7 @@ AM_CXXFLAGS="$AM_CXXFLAGS $VISIBILITY_FLAGS"
 CYGWIN_WRAPPER=
 OMNILINK="-lomniORB4 -lomnithread"
 STLLINK=
+LIBXML2_FLAGS=
 case "$host" in
 *cygwin*|*mks*|*msvc*|*wince|*mingw*)
         case "$build" in
@@ -181,12 +182,15 @@ case "$host" in
                 ;;
         esac
         ;;
+default)
+        LIBXML_FLAGS=`xml2-config --cflags`
 esac
 AC_SUBST([CYGWIN_WRAPPER])
 AC_SUBST([OMNILINK])
 AC_SUBST([STLLINK])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([THREADFLAGS])
+AC_SUBST([LIBXML_CFLAGS])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])

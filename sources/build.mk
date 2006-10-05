@@ -16,7 +16,7 @@ libdomdirectonly_la_SOURCES := \
 libdomdirectonly_la_CXXFLAGS := \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I $(top_srcdir)/sources/dom_direct \
   -I $(top_srcdir)/sources/dom -I$(top_builddir)/interfaces \
-  `xml2-config --cflags` $(AM_CXXFLAGS)
+  $(LIBXML_CFLAGS) $(AM_CXXFLAGS)
 
 libdomonly_la_SOURCES := \
   sources/dom/DOMBootstrap.cpp \

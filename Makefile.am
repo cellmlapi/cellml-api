@@ -13,6 +13,7 @@ OMNILINK ?= @OMNILINK@
 STLLINK ?= @STLLINK@
 LT_DLPREOPEN ?= @LT_DLPREOPEN@
 THREADFLAGS ?= @THREADFLAGS@
+LIBXML_CFLAGS ?= @LIBXML_CFLAGS@
 
 # Parts needed to build the interface generates...
 include $(top_srcdir)/simple_interface_generators/build.mk
