@@ -132,7 +132,7 @@ case $srcdir in
      testdir=`pwd`/$srcdir/tests ;;
 esac
 
-case "$host" in
+case "$build" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*w32*)
     testdir=`$srcdir/build/cygwin-wrapper echo $testdir`
     ;;
@@ -169,9 +169,17 @@ OMNILINK="-lomniORB4 -lomnithread"
 STLLINK=
 case "$host" in
 *cygwin*|*mks*|*msvc*|*wince|*mingw*)
-        STLLINK="-lstlport.5.0 -no-undefined"
-        CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
-        OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
+        case "$build" in
+        *cygwin*|*mks*|*msvc*|*wince|*mingw*)
+                STLLINK="-lstlport.5.0 -no-undefined"
+                CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
+                OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
+                ;;
+        default)
+                STLLINK=-no-undefined
+                OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
+                ;;
+        esac
         ;;
 esac
 AC_SUBST([CYGWIN_WRAPPER])
