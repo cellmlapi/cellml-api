@@ -2820,7 +2820,7 @@ cygwin*)
 mingw* | pw32*)
   case $build_os in
   linux*)
-        lt_cv_deplibs_check_method='PE executable for MS Windows \(DLL\).*'
+        lt_cv_deplibs_check_method='file_magic PE executable for MS Windows \(DLL\).*'
         lt_cv_file_magic_cmd='file'
         ;;
   *)
