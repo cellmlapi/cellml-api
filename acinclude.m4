@@ -2015,6 +2015,7 @@ cygwin* | mingw* | pw32*)
   shrext_cmds=".dll"
   need_version=no
   need_lib_prefix=no
+  libname_spec='$name'
 
   case $withGCC,$host_os in
   yes,cygwin* | yes,mingw* | yes,pw32*)
@@ -2382,10 +2383,6 @@ os2*)
   library_names_spec='$libname${shared_ext} $libname.a'
   dynamic_linker='OS/2 ld.exe'
   shlibpath_var=LIBPATH
-  ;;
-
-cygwin* | mingw* | pw32*)
-  libname_spec='$name'
   ;;
 
 osf3* | osf4* | osf5*)
