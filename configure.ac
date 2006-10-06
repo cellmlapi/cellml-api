@@ -167,7 +167,7 @@ AM_CXXFLAGS="$AM_CXXFLAGS $VISIBILITY_FLAGS"
 CYGWIN_WRAPPER=
 OMNILINK="-lomniORB4 -lomnithread"
 STLLINK=
-LIBXML2_FLAGS=
+LIBXML_CFLAGS=
 case "$host" in
 *cygwin*|*mks*|*msvc*|*wince|*mingw*)
         case "$build" in
@@ -183,7 +183,7 @@ case "$host" in
         esac
         ;;
 default)
-        LIBXML_FLAGS=`xml2-config --cflags`
+        LIBXML_CFLAGS=`xml2-config --cflags`
 esac
 AC_SUBST([CYGWIN_WRAPPER])
 AC_SUBST([OMNILINK])
