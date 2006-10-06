@@ -2384,6 +2384,10 @@ os2*)
   shlibpath_var=LIBPATH
   ;;
 
+cygwin* | mingw* | pw32*)
+  libname_spec='$name'
+  ;;
+
 osf3* | osf4* | osf5*)
   version_type=osf
   need_lib_prefix=no
