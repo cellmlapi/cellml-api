@@ -176,13 +176,13 @@ case "$host" in
                 CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
                 OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
                 ;;
-        default)
+        *)
                 STLLINK=-no-undefined
                 OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
                 ;;
         esac
         ;;
-default)
+*)
         LIBXML_CFLAGS=`xml2-config --cflags`
 esac
 AC_SUBST([CYGWIN_WRAPPER])
