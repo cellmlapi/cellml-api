@@ -2818,9 +2818,16 @@ cygwin*)
   # Base MSYS/MinGW do not provide the 'file' command needed by
   # func_win32_libid shell function, so use a weaker test based on 'objdump'.
 mingw* | pw32*)
-  lt_cv_deplibs_check_method='file_magic file format pei*-i386(.*architecture: i386)?'
-  lt_cv_file_magic_cmd='$OBJDUMP -f'
-  ;;
+  case $build_os in
+  linux*)
+        lt_cv_deplibs_check_method='PE executable for MS Windows \(DLL\).*'
+        lt_cv_file_magic_cmd='file'
+        ;;
+  *)
+        lt_cv_deplibs_check_method='file_magic file format pei*-i386(.*architecture: i386)?'
+        lt_cv_file_magic_cmd='$OBJDUMP -f'
+        ;;
+  esac
 
 darwin* | rhapsody*)
   lt_cv_deplibs_check_method=pass_all
