@@ -2828,6 +2828,7 @@ mingw* | pw32*)
         lt_cv_file_magic_cmd='$OBJDUMP -f'
         ;;
   esac
+  ;;
 
 darwin* | rhapsody*)
   lt_cv_deplibs_check_method=pass_all
