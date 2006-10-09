@@ -3,7 +3,7 @@
 BINDIR=`pwd`
 BASEDIR=`dirname $0`
 DIFF=diff
-CELLML2C=$BINDIR/CellML2C
+CELLML2C=$TESTS_ENVIRONMENT $BINDIR/CellML2C
 TEMPFILE=test_output
 
 if [ ! -f $CELLML2C ]; then

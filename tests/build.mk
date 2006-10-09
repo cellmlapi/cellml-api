@@ -1,5 +1,5 @@
 # Tests...
-check_PROGRAMS=tests/RunTestBin
+check_PROGRAMS=tests/RunTestBin$(EXEEXT)
 TESTS=tests/RunTestBin tests/CheckCodeGenerator
 tests_RunTestBin_SOURCES=\
 	tests/TestOutput.cpp \
