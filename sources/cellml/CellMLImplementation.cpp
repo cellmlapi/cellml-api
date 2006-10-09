@@ -3342,14 +3342,17 @@ CDA_CellMLImport::instantiate()
   CDA_CellMLElement *lastEl = NULL, *nextEl;
 
   nextEl = dynamic_cast<CDA_CellMLElement*>(mParent);
-  CDA_Model* rootModel = NULL;
-  while (nextEl != NULL)
+  CDA_Model* rootModel = dynamic_cast<CDA_Model*>(mParent);
+  if (rootModel == NULL)
   {
-    lastEl = nextEl;
-    nextEl = dynamic_cast<CDA_CellMLElement*>(lastEl->mParent);
-    rootModel = dynamic_cast<CDA_Model*>(lastEl);
-    if (rootModel != NULL)
-      break;
+    while (nextEl != NULL)
+    {
+      lastEl = nextEl;
+      rootModel = dynamic_cast<CDA_Model*>(lastEl->mParent);
+      if (rootModel != NULL)
+        break;
+      nextEl = dynamic_cast<CDA_CellMLElement*>(lastEl->mParent);
+    }
   }
   if (rootModel == NULL)
     throw iface::cellml_api::CellMLException();
