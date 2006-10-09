@@ -3,7 +3,7 @@
 #include "Utilities.hxx"
 
 #include "cda_config.h"
-#define BASE_DIRECTORY TESTDIR L"/test_xml/"
+#define BASE_DIRECTORY L"file://" TESTDIR L"/test_xml/"
 
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
 
@@ -16,6 +16,7 @@ CellMLTest::setUp()
   mBeelerReuter = NULL;
   mTenTusscher = NULL;
   mGlycolysis = NULL;
+  mRelativeURI = NULL;
   mBootstrap = CreateCellMLBootstrap();
   mModelLoader = mBootstrap->modelLoader();
   mDOMImplementation = mBootstrap->domImplementation();
@@ -37,6 +38,8 @@ CellMLTest::tearDown()
     mTenTusscher->release_ref();
   if (mGlycolysis)
     mGlycolysis->release_ref();
+  if (mRelativeURI)
+    mRelativeURI->release_ref();
 }
 
 void
@@ -68,6 +71,15 @@ CellMLTest::loadGlycolysis()
   mGlycolysis =
     mModelLoader->loadFromURL
     (BASE_DIRECTORY L"glycolysis_pathway_1997.xml");
+}
+
+void
+CellMLTest::loadRelativeURIModel()
+{
+  mRelativeURI =
+    mModelLoader->loadFromURL
+    (BASE_DIRECTORY L"subdir1/subdir2/toplevel.xml");
+  mRelativeURI->fullyInstantiateImports();
 }
 
 //   /**
@@ -3251,4 +3263,21 @@ CellMLTest::testIteratorLiveness()
   ui->release_ref();
   doc->release_ref();
   el->release_ref();
+}
+
+void
+CellMLTest::testRelativeImports()
+{
+  loadRelativeURIModel();
+  iface::cellml_api::CellMLComponentSet* ccs = mRelativeURI->allComponents();
+  CPPUNIT_ASSERT_EQUAL(1, (int)ccs->length());
+  iface::cellml_api::CellMLComponentIterator* cci = ccs->iterateComponents();
+  ccs->release_ref();
+  iface::cellml_api::CellMLComponent* c = cci->nextComponent();
+  cci->release_ref();
+
+  wchar_t* ret = c->cmetaId();
+  CPPUNIT_ASSERT(!wcscmp(ret, L"level2_component"));
+  free(ret);
+  c->release_ref();
 }

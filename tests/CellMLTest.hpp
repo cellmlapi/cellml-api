@@ -35,6 +35,7 @@ class CellMLTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testExtensionElementList);
   CPPUNIT_TEST(testCellMLElementSet);
   CPPUNIT_TEST(testIteratorLiveness);
+  CPPUNIT_TEST(testRelativeImports);
   CPPUNIT_TEST_SUITE_END();
 public:
   void setUp();
@@ -43,6 +44,7 @@ public:
   void loadBeelerReuter();
   void loadTenTusscher();
   void loadGlycolysis();
+  void loadRelativeURIModel();
 
   void testCellMLBootstrap();
   void testDOMModelLoader();
@@ -71,6 +73,7 @@ public:
   void testExtensionElementList();
   void testCellMLElementSet();
   void testIteratorLiveness();
+  void testRelativeImports();
 private:
   iface::cellml_api::CellMLBootstrap* mBootstrap;
   iface::cellml_api::DOMModelLoader* mModelLoader;
@@ -80,6 +83,7 @@ private:
   iface::cellml_api::Model* mBeelerReuter;
   iface::cellml_api::Model* mTenTusscher;
   iface::cellml_api::Model* mGlycolysis;
+  iface::cellml_api::Model* mRelativeURI;
 };
 
 #endif // CELLMLTEST_H

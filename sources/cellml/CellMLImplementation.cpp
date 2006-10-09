@@ -3384,6 +3384,10 @@ CDA_CellMLImport::instantiate()
       throw iface::cellml_api::CellMLException();
 
     CDA_Model* cm = new CDA_Model(rootModel->mLoader, dd, modelEl);
+    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->base_uri());
+    RETURN_INTO_WSTRING(base, bu->asText());
+    if (base == L"")
+      bu->asText(urlStr.c_str());
     mImportedModel = cm;
 
     // Adjust the refcounts to leave the importedModel completely dependent on

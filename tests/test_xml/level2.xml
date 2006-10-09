@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<model xmlns="http://www.cellml.org/cellml/1.1#"
+       xmlns:xlink="http://www.w3.org/1999/xlink"
+       xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
+  <component name="level2_component" cmeta:id="level2_component" />
+</model>
