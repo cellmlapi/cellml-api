@@ -3,7 +3,9 @@
 #include "Utilities.hxx"
 
 #include "cda_config.h"
+#ifndef BASE_DIRECTORY
 #define BASE_DIRECTORY L"file://" TESTDIR L"/test_xml/"
+#endif
 
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
 
