@@ -7,7 +7,7 @@ CELLML2C=$BINDIR/CellML2C
 TEMPFILE=test_output
 
 if [ -n $RUNNER ]; then
-    CELLML2C="$RUNNER $CELLML2C"
+    CELLML2C="$RUNNER $BINDIR/.libs/CellML2C.exe"
 fi
 
 if [ ! -f $CELLML2C ]; then
