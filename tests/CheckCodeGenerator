@@ -6,6 +6,10 @@ DIFF=diff
 CELLML2C=$BINDIR/CellML2C
 TEMPFILE=test_output
 
+if [ -n $RUNNER ]; then
+    CELLML2C="$RUNNER $CELLML2C"
+fi
+
 if [ ! -f $CELLML2C ]; then
         echo CellML2C not found. Not testing it.
         exit 77

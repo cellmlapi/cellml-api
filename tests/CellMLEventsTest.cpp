@@ -2,7 +2,11 @@
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
 #include "cda_config.h"
-#define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"
+
+
+#ifndef BASE_DIRECTORY
+#define BASE_DIRECTORY L"file://" TESTDIR L"/test_xml/"
+#endif
 #include "IfaceCellML_events.hxx"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( CellMLEventsTest );
