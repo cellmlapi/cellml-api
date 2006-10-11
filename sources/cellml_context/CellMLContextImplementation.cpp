@@ -5,6 +5,11 @@
 #include <locale>
 #include <sstream>
 
+// Win32 hack...
+#ifdef _WIN32
+#define swprintf _snwprintf
+#endif
+
 CDA_TypeAnnotationManager::~CDA_TypeAnnotationManager()
 {
   std::map<std::pair<std::wstring,std::wstring>, iface::XPCOM::IObject*>
@@ -330,16 +335,17 @@ CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
   mDerivedModels = new CDA_ModelList();
   mDerivedModels->mParentNode = this;
   mModel = aModel;
-  std::wstringstream wss;
-  std::ostreambuf_iterator<wchar_t> osbi(wss);
+
   // XXX threadsafety (but localtime_r isn't portable).
+  // It would be nice to use C++ standard library locales for this, but it
+  // doesn't work in enough places (e.g. not in Wine).
   time_t t = time(0);
   struct tm* lttm = localtime(&t);
-  const wchar_t* format = L"%H:%M:%S %Y-%m-%d";
-  const wchar_t* format_end = format + wcslen(format);
-  std::use_facet< std::time_put<wchar_t> >(wss.getloc())
-    .put(osbi, wss, wss.fill(), lttm, format, format_end);
-  mName = wss.str();
+  wchar_t buf[20];
+  swprintf(buf, 20, L"%02u:%02u:%02u %04u-%02u-%02u",
+           lttm->tm_hour, lttm->tm_min, lttm->tm_sec,
+           lttm->tm_year + 1900, lttm->tm_mon + 1, lttm->tm_mday);
+  mName = buf;
   stampModifiedNow();
 }
 
