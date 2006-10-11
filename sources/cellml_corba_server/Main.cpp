@@ -103,7 +103,15 @@ PrepareCellMLHome(void)
   std::string cellml_home;
   if (chome == NULL)
   {
+#ifdef _WIN32
+    char path[MAX_PATH];
+    SHGetSpecialFolderPath(NULL, path, CSIDL_LOCAL_APPDATA, true);
+    chome = path
+#else
     chome = getenv("HOME");
+#endif
+    if (chome == NULL)
+      chome = "";
     cellml_home = chome;
     cellml_home += "/.cellml";
   }
