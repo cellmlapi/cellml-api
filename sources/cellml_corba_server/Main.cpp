@@ -4,7 +4,10 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#ifndef WIN32
+#ifdef WIN32
+#define _WIN32_IE 0x400
+#include <shlobj.h>
+#else
 #include <sys/errno.h>
 #endif
 #include <inttypes.h>
@@ -106,7 +109,7 @@ PrepareCellMLHome(void)
 #ifdef _WIN32
     char path[MAX_PATH];
     SHGetSpecialFolderPath(NULL, path, CSIDL_LOCAL_APPDATA, true);
-    chome = path
+    chome = path;
 #else
     chome = getenv("HOME");
 #endif
