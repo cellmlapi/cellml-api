@@ -39,14 +39,20 @@ GetCellMLContext(int argc, char** argv)
     std::string chome;
     if (getenv("CELLML_HOME"))
       chome = getenv("CELLML_HOME");
-    else if (getenv("HOME"))
-    {
-      chome = getenv("HOME");
-      chome += "/.cellml";
-    }
     else
     {
-      chome = "/.cellml";
+      char* chomec;
+#ifdef _WIN32
+      char path[MAX_PATH];
+      SHGetSpecialFolderPath(NULL, path, CSIDL_LOCAL_APPDATA, true);
+      chomec = path;
+#else
+      chomec = getenv("HOME");
+#endif
+      if (chomec == NULL)
+        chomec = "";
+      chome = chomec;
+      chome += "/.cellml";
     }
 
     std::string iorfilename = chome + "/corba_server";
