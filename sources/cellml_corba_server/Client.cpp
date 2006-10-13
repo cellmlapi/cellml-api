@@ -6,7 +6,10 @@
 #include "CCICellML_Context.hxx"
 #include <omniORB4/CORBA.h>
 #include <stdio.h>
-#ifndef WIN32
+#ifdef WIN32
+#define _WIN32_IE 0x400
+#include <shlobj.h>
+#else
 #include <sys/types.h>
 #include <unistd.h>
 #endif
