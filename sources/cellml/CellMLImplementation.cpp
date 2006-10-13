@@ -95,9 +95,8 @@ CDA_RDFXMLDOMRepresentation::data()
   // Create a brand new document to store the data...
   RETURN_INTO_OBJREF(impl, iface::dom::DOMImplementation,
                      mModel->mDoc->implementation());
-  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType, mModel->mDoc->doctype());
   RETURN_INTO_OBJREF(rdoc, iface::dom::Document,
-                     impl->createDocument(RDF_NS, L"RDF", dt));
+                     impl->createDocument(RDF_NS, L"RDF", NULL));
   RETURN_INTO_OBJREF(rdocel, iface::dom::Element,
                      rdoc->documentElement());
 
@@ -179,9 +178,8 @@ CDA_RDFXMLStringRepresentation::serialisedData()
   // Create a brand new document to store the data...
   RETURN_INTO_OBJREF(impl, iface::dom::DOMImplementation,
                      mModel->mDoc->implementation());
-  RETURN_INTO_OBJREF(dt, iface::dom::DocumentType, mModel->mDoc->doctype());
   RETURN_INTO_OBJREF(rdoc, iface::dom::Document,
-                     impl->createDocument(RDF_NS, L"RDF", dt));
+                     impl->createDocument(RDF_NS, L"RDF", NULL));
   RETURN_INTO_OBJREF(rdocel, iface::dom::Element,
                      rdoc->documentElement());
 
