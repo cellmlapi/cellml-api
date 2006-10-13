@@ -361,6 +361,26 @@ CDA_ModelNode::~CDA_ModelNode()
 }
 
 void
+CDA_ModelNode::add_ref()
+  throw()
+{
+  _cda_refcount++;
+  if (mParentList)
+    mParentList->add_ref();
+}
+
+void
+CDA_ModelNode::release_ref()
+  throw()
+{
+  _cda_refcount--;
+  if (mParentList)
+    mParentList->release_ref();
+  else if (_cda_refcount == 0)
+    delete this;
+}
+
+void
 CDA_ModelNode::name(const wchar_t* name)
   throw(std::exception&)
 {
@@ -621,10 +641,7 @@ CDA_ModelList::~CDA_ModelList()
 {
   std::list<CDA_ModelNode*>::iterator i;
   for (i = mModels.begin(); i != mModels.end(); i++)
-  {
-    (*i)->mParentList = NULL;
-    (*i)->release_ref();
-  }
+    delete (*i);
   std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i2;
   for (i2 = mNodeMonitors.begin(); i2 != mNodeMonitors.end(); i2++)
     (*i2)->release_ref();
@@ -707,8 +724,8 @@ CDA_ModelList::addModel(iface::cellml_context::ModelNode* node)
   if (cnode->mParentList != NULL)
     throw iface::cellml_api::CellMLException();
 
+  cnode->setParentList(this);
   mModels.push_back(cnode);
-  cnode->mParentList = this;
 
   // Call the monitors back...
   std::list<iface::cellml_context::ModelListMonitor*>::iterator i;
@@ -755,7 +772,7 @@ CDA_ModelList::removeModel(iface::cellml_context::ModelNode* node)
     if ((*i3) != node)
       continue;
     (*i3)->release_ref();
-    (*i3)->mParentList = NULL;
+    (*i3)->setParentList(NULL);
 
     std::list<CDA_ModelNodeIterator*>::iterator i4;
     for (i4 = mIterators.begin(); i4 != mIterators.end(); i4++)
@@ -780,6 +797,30 @@ CDA_ModelList::parentNode()
     return NULL;
   mParentNode->add_ref();
   return mParentNode;
+}
+
+void
+CDA_ModelNode::setParentList(CDA_ModelList* aParentList)
+{
+  if (mParentList == aParentList)
+    return;
+
+  if (mParentList != NULL)
+  {
+    uint32_t i;
+    for (i = 0; i < _cda_refcount; i++)
+      mParentList->release_ref();
+  }
+  mParentList = aParentList;
+
+  if (mParentList != NULL)
+  {
+    uint32_t i;
+    for (i = 0; i < _cda_refcount; i++)
+      mParentList->add_ref();
+  }
+  else if (_cda_refcount == 0)
+    delete this;
 }
 
 CDA_CellMLContext::CDA_CellMLContext()

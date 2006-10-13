@@ -135,7 +135,9 @@ public:
   CDA_ModelNode(iface::cellml_api::Model* aModel);
   ~CDA_ModelNode();
   
-  CDA_IMPL_REFCOUNT;
+  void add_ref() throw();
+  void release_ref() throw();
+
   CDA_IMPL_QI1(cellml_context::ModelNode);
   CDA_IMPL_ID;
 
@@ -158,6 +160,8 @@ public:
   iface::cellml_context::ModelList* parentList()
     throw(std::exception&);
 
+  void setParentList(CDA_ModelList* aParentList);
+
 private:
   std::wstring mName;
   uint32_t mTimestamp;
@@ -165,6 +169,7 @@ private:
   CDA_ModelList* mDerivedModels;
   bool mIsFrozen;
   std::list<iface::cellml_context::ModelNodeMonitor*> mModelMonitors;
+  uint32_t _cda_refcount;
 public: // within CellMLContextImplementation only...
   // Not refcounted, but set/cleared automatically when added/removed.
   CDA_ModelList* mParentList;
