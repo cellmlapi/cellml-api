@@ -360,7 +360,6 @@ CDA_CellMLIntegrationService::compileModel
     throw iface::cellml_api::CellMLException();
   }
 
-
   // Create a temporary directory...
   const char* tmpenvs[] = {"TMPDIR", "TEMP", "TMP", NULL};
   const char** p = tmpenvs;
@@ -370,6 +369,7 @@ CDA_CellMLIntegrationService::compileModel
     char* env = getenv(*p);
     if (env != NULL)
       fn = attempt_make_tempdir(env);
+    p++;
   }
   if (fn == NULL)
   {
@@ -380,7 +380,10 @@ CDA_CellMLIntegrationService::compileModel
 #endif
     p = tmpdirs;
     while (!fn && *p)
+    {
       fn = attempt_make_tempdir(*p);
+      p++;
+    }
   }
   if (fn == NULL)
     throw iface::cellml_api::CellMLException();
