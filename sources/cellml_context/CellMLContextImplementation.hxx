@@ -182,7 +182,8 @@ public:
   CDA_ModelList();
   ~CDA_ModelList();
 
-  CDA_IMPL_REFCOUNT;
+  void add_ref() throw();
+  void release_ref() throw();
   CDA_IMPL_QI1(cellml_context::ModelList);
   CDA_IMPL_ID;
 
@@ -217,6 +218,9 @@ public: // within CellMLContextImplementation only...
   CDA_ModelNode* mParentNode;
   std::list<iface::cellml_context::ModelNodeMonitor*> mNodeMonitors;
   std::list<iface::cellml_context::ModelListMonitor*> mListMonitors;
+
+private:
+  uint32_t _cda_refcount;
 };
 
 class CDA_CellMLContext

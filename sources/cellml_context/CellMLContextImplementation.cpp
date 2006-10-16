@@ -358,6 +358,7 @@ CDA_ModelNode::~CDA_ModelNode()
   {
     (*i)->release_ref();
   }
+  delete mDerivedModels;
 }
 
 void
@@ -651,6 +652,26 @@ CDA_ModelList::~CDA_ModelList()
 }
 
 void
+CDA_ModelList::add_ref()
+  throw()
+{
+  _cda_refcount++;
+  if (mParentNode)
+    mParentNode->add_ref();
+}
+
+void
+CDA_ModelList::release_ref()
+  throw()
+{
+  _cda_refcount--;
+  if (mParentNode)
+    mParentNode->release_ref();
+  else if (_cda_refcount == 0)
+    delete this;
+}
+
+void
 CDA_ModelList::addModelMonitor
 (
  iface::cellml_context::ModelNodeMonitor* monitor
@@ -769,10 +790,10 @@ CDA_ModelList::removeModel(iface::cellml_context::ModelNode* node)
   {
     i3 = i2;
     i2++;
-    if ((*i3) != node)
+    CDA_ModelNode* targ = *i3;
+    if (targ != node)
       continue;
-    (*i3)->release_ref();
-    (*i3)->setParentList(NULL);
+    targ->setParentList(NULL);
 
     std::list<CDA_ModelNodeIterator*>::iterator i4;
     for (i4 = mIterators.begin(); i4 != mIterators.end(); i4++)
