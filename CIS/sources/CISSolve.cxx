@@ -168,12 +168,11 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   s = gsl_odeiv_step_alloc(T, rateSize);
   
   // Start the main loop...
-  double boundhigh, bound;
-  boundhigh = mStartBvar;
+  double bound = mStartBvar;
   double stepSize = 1E-6;
   
-  uint32_t storageCapacity = VARIABLE_STORAGE_LIMIT / ((varSize + 1) * sizeof(double));
-  double* storage = new double[storageCapacity * (varSize + 1) * sizeof(double)];
+  uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / (varSize + 1)) * (varSize + 1);
+  double* storage = new double[storageCapacity];
   uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
 

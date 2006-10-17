@@ -705,7 +705,7 @@ CHANGES:
     <!-- These variables are defined here and only used internally. -->
     <variable name="g_s" initial_value="0.09" units="milliS_per_cm2"/>
     <variable name="E_s" units="millivolt"/>
-    <variable name="Cai" units="concentration_units"/>
+    <variable name="Cai" initial_value="1" units="concentration_units"/>
     
     <!-- These variables are imported from parent and sibling components. -->
     <variable name="time" public_interface="in" private_interface="out" units="millisecond"/>

@@ -119,7 +119,7 @@ public:
   void results(uint32_t length, double* values)
     throw (std::exception&)
   {
-    uint32_t i, vc = mCI->variableCount();
+    uint32_t i, vc = mCI->variableCount() + 1;
     if (vc == 0)
       return;
     for (i = 0; i < length; i += vc)
