@@ -34,7 +34,8 @@ public:
     HAS_INITIAL_VALUE = 0x0008, /* Compatible with SUBJECT_OF_DIFF. */
     NONBVAR_USE       = 0x0010,
     PRECOMPUTED       = 0x0020, /* Set on constants and computed constants. */
-    SEEN_INITIAL_VALUE= 0x0040  /* Initial value tested. */
+    SEEN_INITIAL_VALUE= 0x0040, /* Initial value tested. */
+    HAS_INITIAL_ASSIGNMENT = 0x0080 /* Initial value by name. */
   };
 
   enum

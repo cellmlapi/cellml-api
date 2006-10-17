@@ -1113,6 +1113,7 @@ ProcessInitialValue(
     }
     else
     {
+      vi->SetFlag(VariableInformation::HAS_INITIAL_ASSIGNMENT);
       InitialAssignment ia;
       ia.destination = vi;
       // Find the component...

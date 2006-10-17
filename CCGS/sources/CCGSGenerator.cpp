@@ -36,7 +36,12 @@ static struct
   {
     VariableInformation::OTHER_BVAR |
     VariableInformation::HAS_INITIAL_VALUE,
-    L"Integration bound variables should have an initial value."
+    L"Only integration bound variables should have an initial value."
+  },
+  {
+    VariableInformation::OTHER_BVAR |
+    VariableInformation::HAS_INITIAL_ASSIGNMENT,
+    L"Only integration bound variables should have an initial value."
   }
 };
 
@@ -577,7 +582,7 @@ CodeGenerationState::DetermineComputedConstants
       aCompConstStream << GetVariableText((*i)) << " = "
                        << (*i)->GetInitialValue() << ";" << std::endl;
     }
-    else if (!(*i)->IsFlagged(VariableInformation::SEEN_INITIAL_VALUE))
+    else if (!(*i)->IsFlagged(VariableInformation::HAS_INITIAL_ASSIGNMENT))
       // Better not just leave it undefined...
       aCompConstStream << GetVariableText((*i)) << " = 0;" << std::endl;
   }
