@@ -577,6 +577,9 @@ CodeGenerationState::DetermineComputedConstants
       aCompConstStream << GetVariableText((*i)) << " = "
                        << (*i)->GetInitialValue() << ";" << std::endl;
     }
+    else
+      // Better not just leave it undefined...
+      aCompConstStream << GetVariableText((*i)) << " = 0;" << std::endl;
   }
 }
 
