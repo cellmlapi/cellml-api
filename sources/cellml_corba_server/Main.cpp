@@ -59,7 +59,7 @@ ProcessConfiguration(FILE* aConf)
       continue;
     if (!strcmp(cmd, "load_service"))
     {
-      char* fn = strtok(NULL, " ");
+      char* fn = strtok(NULL, "");
       if (fn == NULL)
       {
         printf("Warning: load_service command takes an argument.\n");
