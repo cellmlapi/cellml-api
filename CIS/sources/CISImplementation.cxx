@@ -74,7 +74,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #else
   targ += "/generated.so";
 #endif
-  std::string cmd = "gcc -O3 -shared -o";
+  std::string cmd = "gcc -O3 -nodefaultlibs -shared -o";
   cmd += targ;
   cmd += " ";
   cmd += sourceFile;
