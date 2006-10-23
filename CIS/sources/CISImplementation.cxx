@@ -68,21 +68,27 @@ void*
 CompileSource(std::string& destDir, std::string& sourceFile,
               std::wstring& lastError)
 {
+  setvbuf(stdout, NULL, _IONBF, 0);
+  printf("Entering CompileSource.\n");
   std::string targ = destDir;
 #ifdef WIN32
   targ += "/generated.dll";
 #else
   targ += "/generated.so";
 #endif
-  std::string cmd = "gcc -O3 "
-#ifndef WIN32
-"-nodefaultlibs "
+  std::string cmd = "gcc "
+#ifdef WIN32
+    "-mno-cygwin -mthreads "
+#else
+    "-nodefaultlibs "
 #endif
-    "-shared -o";
+    "-O3 -shared -o";
   cmd += targ;
   cmd += " ";
   cmd += sourceFile;
+  printf("Running the compiler: %s\n", cmd.c_str());
   int ret = system(cmd.c_str());
+  printf("Compiler exited with code %u\n", ret);
   if (ret != 0)
   {
     lastError = L"Could not compile the model code.";
@@ -90,15 +96,19 @@ CompileSource(std::string& destDir, std::string& sourceFile,
   }
 
 #ifdef WIN32
+  printf("Calling LoadLibrary(%s)\n", targ.c_str());
   void* t = LoadLibrary(targ.c_str());
 #else
   void* t = dlopen(targ.c_str(), RTLD_NOW);
 #endif
   if (t == NULL)
   {
+    printf("Load returned null.\n");
     lastError = L"Cannot load the model code module.";
     throw iface::cellml_api::CellMLException();
   }
+
+  printf("Library was loaded.\n");
 
   return t;
 }
