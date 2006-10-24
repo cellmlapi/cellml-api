@@ -502,9 +502,9 @@ GenerateExpression
       }
 
       if (factor != 1.0)
-        expression << ") * " << factor;
+        expression << ") * " << std::setiosflags(std::ios_base::showpoint) << factor;
       if (offset != 0.0)
-        expression << ") + " << offset;
+        expression << ") + " << std::setiosflags(std::ios_base::showpoint) << offset;
       return;
     }
   }
@@ -1467,9 +1467,9 @@ Equation::AttemptEvaluation
     GenerateExpression(aCGS, comp, completelyKnown, aExpressions,
                        aSupplementary, aHaveBound);
     if (factor != 1.0)
-      aExpressions << ") * " << factor;
+      aExpressions << ") * " << std::setiosflags(std::ios_base::showpoint) << factor;
     if (offset != 0.0)
-      aExpressions << ") + " << offset;
+      aExpressions << ") + " << std::setiosflags(std::ios_base::showpoint) << offset;
     aExpressions << ";" << std::endl;
   }
   else
