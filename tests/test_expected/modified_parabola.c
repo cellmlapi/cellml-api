@@ -34,13 +34,13 @@ CONSTANTS[0] = 3;
 void SetupComputedConstants(double* CONSTANTS, double* VARIABLES)
 {
 VARIABLES[0] = CONSTANTS[0];
-VARIABLES[2] = ((((CONSTANTS[0]>1))&&((CONSTANTS[0]<=3)))) ? (sin(CONSTANTS[0])) : (((CONSTANTS[0]>3))) ? (3) : (1);
+VARIABLES[2] = ((((CONSTANTS[0]>1.00000))&&((CONSTANTS[0]<=3.00000)))) ? (sin(CONSTANTS[0])) : (((CONSTANTS[0]>3.00000))) ? (3.00000) : (1.00000);
 }
 void ComputeRates(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
 {
-RATES[0] = (2*BOUND[0]);
+RATES[0] = (2.00000*BOUND[0]);
 }
 void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
 {
-VARIABLES[1] = (pow(BOUND[0],2)+CONSTANTS[0]);
+VARIABLES[1] = (pow(BOUND[0],2.00000)+CONSTANTS[0]);
 }
