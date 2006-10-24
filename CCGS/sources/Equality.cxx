@@ -2,6 +2,7 @@
 #include "CodeGenerationState.hxx"
 #include <set>
 #include <sstream>
+#include <iomanip>
 
 void
 TrimString(std::wstring& aStr)
@@ -577,7 +578,7 @@ GenerateExpression
         aMsg += L".";
         throw CodeGenerationError(aMsg);
       }
-      expression << val;
+      expression << std::setiosflags(std::ios_base::showpoint) << val;
       return;
     }
   }
