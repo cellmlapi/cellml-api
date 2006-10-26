@@ -115,6 +115,8 @@ public:
     else
       return mSource;
   }
+
+  const wchar_t* GetName() { return mName.c_str(); }
 private:
   iface::cellml_api::CellMLVariable* mSource;
   double mInitialValue;

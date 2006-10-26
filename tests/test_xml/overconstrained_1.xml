@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <model
-    name="parabola"
-    cmeta:id="parabola"
+    name="overconstrained_parabola"
+    cmeta:id="overconstrained_parabola"
     xmlns="http://www.cellml.org/cellml/1.1#"
     xmlns:cellml="http://www.cellml.org/cellml/1.1#"
     xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
@@ -24,6 +24,7 @@
         </apply>
       </apply>
     </math>
+
     <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="eq2">
       <apply><eq/>
         <ci>x</ci>
@@ -36,6 +37,20 @@
         </apply>
       </apply>
     </math>
+
+    <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="eq2_dup">
+      <apply><eq/>
+        <ci>x</ci>
+        <apply><plus/>
+          <apply><power/>
+            <ci>time</ci>
+            <cn cellml:units="dimensionless">2.0</cn>
+          </apply>
+          <ci>offset</ci>
+        </apply>
+      </apply>
+    </math>
+
     <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="eq3">
       <apply><eq/>
         <ci>z</ci>

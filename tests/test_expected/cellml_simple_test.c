@@ -17,4 +17,6 @@ void ComputeRates(double* BOUND, double* RATES, double* CONSTANTS, double* VARIA
 }
 void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
 {
+#ifndef VARIABLES_FOR_RATES_ONLY
+#endif
 }

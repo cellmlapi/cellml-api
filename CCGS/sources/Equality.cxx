@@ -23,6 +23,32 @@ TrimString(std::wstring& aStr)
   aStr = aStr.substr(0, l + 1);
 }
 
+ProceduralStep::ProceduralStep()
+  : stepSeen(false), stepDone(false)
+{
+}
+
+void
+ProceduralStep::RecursivelyGenerateCode
+(
+ CodeGenerationState* aCGS,
+ std::stringstream& aMainCode,
+ std::stringstream& aSupplementary
+)
+{
+  if (stepSeen)
+    return;
+  stepSeen = true;
+
+  std::set<ProceduralStep*>::iterator psi;
+  for (psi = mDependencies.begin(); psi != mDependencies.end(); psi++)
+    (*psi)->RecursivelyGenerateCode(aCGS, aMainCode, aSupplementary);
+
+  GenerateCode(aCGS, aMainCode, aSupplementary);
+
+  stepDone = true;
+}
+
 Equation::Equation()
   : _cda_refcount(1), mTriggersNewtonRaphson(false)
 {
@@ -93,12 +119,6 @@ Equation::AddPart(iface::cellml_api::CellMLComponent* aComp,
   aEl->add_ref();
   equal.push_back(std::pair<iface::cellml_api::CellMLComponent*,
                             iface::mathml_dom::MathMLElement*>(aComp, aEl));
-}
-
-bool
-Equation::AllowsComputationFrom(std::list<VariableInformation*>& vi)
-{
-  return true;
 }
 
 static struct OpInfo
@@ -245,188 +265,6 @@ FindVariableForCI(iface::cellml_api::CellMLComponent* aComp,
   return var;
 }
 
-bool
-RecursivelyCountUnknown
-(
- CodeGenerationState* aCGS,
- iface::cellml_api::CellMLComponent* aComponent,
- iface::mathml_dom::MathMLElement* aElement,
- std::set<VariableInformation*>& aAvailable,
- std::set<VariableInformation*>& aWanted,
- uint32_t& wantedCount,
- ObjRef<iface::mathml_dom::MathMLCiElement>& aWantedCi,
- VariableInformation*& aWantedVI,
- uint32_t contextFlags
-)
-{
-  DECLARE_QUERY_INTERFACE_OBJREF(ci, aElement, mathml_dom::MathMLCiElement);
-  if (ci != NULL)
-  {
-    RETURN_INTO_OBJREF(var, iface::cellml_api::CellMLVariable,
-                       FindVariableForCI(aComponent, ci));
-    VariableInformation* vi = aCGS->FindOrAddVariableInformation(var);
-
-    if (aWanted.count(vi))
-    {
-      if (wantedCount)
-      {
-        // See if it is the same variable...
-        char* id1 = vi->GetSourceVariable()->objid();
-        char* id2 = aWantedVI->GetSourceVariable()->objid();
-        int cmp = strcmp(id1, id2);
-        free(id1);
-        free(id2);
-        if (cmp)
-          return false;
-      }
-      wantedCount++;
-      aWantedCi = ci;
-      aWantedVI = vi;
-    }
-    else if (aAvailable.count(vi) == 0)
-      return false;
-    return true;
-  }
-
-  DECLARE_QUERY_INTERFACE_OBJREF(apply, aElement,
-                                 mathml_dom::MathMLApplyElement);
-  if (apply != NULL)
-  {
-    uint32_t n = apply->nArguments();
-    if (n <= 1)
-      throw CodeGenerationError(L"Don't know how to deal with apply with one "
-                                L"or fewer arguments only.");
-    RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement,
-                       apply->_cxx_operator());
-    DECLARE_QUERY_INTERFACE_OBJREF(oppd, op,
-                                   mathml_dom::MathMLPredefinedSymbol);
-    if (oppd == NULL)
-      throw CodeGenerationError(L"You can only apply a built-in function.");
-    RETURN_INTO_WSTRING(sn, oppd->symbolName());
-    // See if it is a diff or int...
-    if (sn == L"diff")
-      contextFlags |= CONTEXT_DIFF;
-    else if (sn == L"int")
-      contextFlags |= CONTEXT_INT;
-    uint32_t nb = apply->nBoundVariables(), i;
-    for (i = 1; i <= nb; i++)
-    {
-      RETURN_INTO_OBJREF(bve, iface::mathml_dom::MathMLBvarElement,
-                         apply->getBoundVariable(i));
-      if (!RecursivelyCountUnknown(aCGS, aComponent, bve, aAvailable,
-                                   aWanted, wantedCount, aWantedCi,
-                                   aWantedVI, contextFlags))
-        return false;
-    }
-
-    for (i = 1; i <= n; i++)
-    {
-      RETURN_INTO_OBJREF(a, iface::mathml_dom::MathMLElement,
-                         apply->getArgument(i));
-      if (!RecursivelyCountUnknown(aCGS, aComponent, a, aAvailable,
-                                   aWanted, wantedCount, aWantedCi,
-                                   aWantedVI, contextFlags))
-        return false;
-    }
-
-    // Also, need to go into uplimit, lowlimit, degree, and logbase...
-    RETURN_INTO_OBJREF(nl, iface::dom::NodeList, apply->childNodes());
-    n = nl->length();
-    for (i = 0; i < n; i++)
-    {
-      RETURN_INTO_OBJREF(it, iface::dom::Node, nl->item(i));
-      if (it == NULL)
-        break;
-      RETURN_INTO_WSTRING(nsuri, it->namespaceURI());
-      RETURN_INTO_WSTRING(ln, it->localName());
-      if (nsuri != L"http://www.w3.org/1998/Math/MathML")
-        continue;
-      if (ln != L"uplimit" && ln != L"lowlimit" && ln != L"degree" &&
-          ln != L"logbase")
-        continue;
-      RETURN_INTO_OBJREF(nl2, iface::dom::NodeList, it->childNodes());
-      uint32_t j, m = nl2->length();
-      for (j = 0; j < m; j++)
-      {
-        RETURN_INTO_OBJREF(it2, iface::dom::Node, nl2->item(j));
-        if (it2 == NULL)
-          break;
-        DECLARE_QUERY_INTERFACE_OBJREF(it2el, it2, mathml_dom::MathMLElement);
-        if (it2el == NULL)
-          continue;
-        if (!RecursivelyCountUnknown(aCGS, aComponent, it2el, aAvailable,
-                                     aWanted, wantedCount, aWantedCi,
-                                     aWantedVI, contextFlags))
-          return false;
-      }
-    }
-
-    return true;
-  }
-
-  // It could also be a bvar...
-  DECLARE_QUERY_INTERFACE_OBJREF(bv, aElement,
-                                 mathml_dom::MathMLBvarElement);
-  if (bv != NULL)
-  {
-    uint32_t n = bv->nArguments();
-    if (n != 1)
-      throw CodeGenerationError(L"Don't know how to deal with bvar with "
-                                L"anything other than one argument.");
-    RETURN_INTO_OBJREF(bvc, iface::mathml_dom::MathMLElement,
-                       bv->getArgument(1));
-    DECLARE_QUERY_INTERFACE_OBJREF(bvci, bvc, mathml_dom::MathMLCiElement);
-    if (bvci == NULL)
-      throw CodeGenerationError(L"Cannot cope with bvar children which are "
-                                L"not ci elements.");
-    if (!RecursivelyCountUnknown(aCGS, aComponent, bvci, aAvailable,
-                                 aWanted, wantedCount, aWantedCi,
-                                 aWantedVI, contextFlags | CONTEXT_BVAR))
-      return false;
-    return true;
-  }
-
-  DECLARE_QUERY_INTERFACE_OBJREF(pw, aElement,
-                                 mathml_dom::MathMLPiecewiseElement);
-  if (pw != NULL)
-  {
-    RETURN_INTO_OBJREF(pl, iface::mathml_dom::MathMLNodeList,
-                       pw->pieces());
-    uint32_t i, l = pl->length();
-    for (i = 1; i <= l; i++)
-    {
-      RETURN_INTO_OBJREF(p, iface::mathml_dom::MathMLCaseElement,
-                         pw->getCase(i));
-      RETURN_INTO_OBJREF(cc, iface::mathml_dom::MathMLElement,
-                         p->caseCondition());
-      RETURN_INTO_OBJREF(cv, iface::mathml_dom::MathMLElement,
-                         p->caseValue());
-      if (!RecursivelyCountUnknown(aCGS, aComponent, cc, aAvailable,
-                                   aWanted, wantedCount, aWantedCi,
-                                   aWantedVI, contextFlags))
-        return false;
-      if (!RecursivelyCountUnknown(aCGS, aComponent, cv, aAvailable,
-                                   aWanted, wantedCount, aWantedCi,
-                                   aWantedVI, contextFlags))
-        return false;
-    }
-    try
-    {
-      RETURN_INTO_OBJREF(ow, iface::mathml_dom::MathMLElement,
-                         pw->otherwise());
-      if (ow != NULL)
-      {
-        if (!RecursivelyCountUnknown(aCGS, aComponent, ow, aAvailable,
-                                     aWanted, wantedCount, aWantedCi,
-                                     aWantedVI, contextFlags))
-          return false;
-      }
-    }
-    catch (iface::dom::DOMException& de) {}
-  }
-  return true;
-}
-
 OpInfo*
 GetOperatorInformation(iface::mathml_dom::MathMLPredefinedSymbol* aSymbol)
 {
@@ -479,8 +317,7 @@ GenerateExpression
       VariableInformation* svi = aCGS->FindOrAddVariableInformation(vloc);
       // Get conversion factor information...
       double offset;
-      double factor = aCGS->GetConversion(svi->GetSourceVariable(), vloc,
-                                          offset);
+      double factor = aCGS->GetConversion(svi->GetSourceVariable(), vloc, offset);
 
       if (offset != 0.0)
         expression << "(";
@@ -1159,7 +996,8 @@ RecursivelyFlagVariables
  std::set<VariableInformation*>& aLocallyBound,
  uint32_t contextFlags,
  uint32_t degree,
- std::list<InitialAssignment>& aInitial
+ std::list<InitialAssignment>& aInitial,
+ std::set<VariableInformation*>& aInvolvedVariables
 )
 {
   DECLARE_QUERY_INTERFACE_OBJREF(ci, aElement, mathml_dom::MathMLCiElement);
@@ -1184,6 +1022,7 @@ RecursivelyFlagVariables
     }
     if (aLocallyBound.count(vi) == 0)
       vi->SetFlag(VariableInformation::NONBVAR_USE);
+    aInvolvedVariables.insert(vi);
     return;
   }
 
@@ -1248,7 +1087,8 @@ RecursivelyFlagVariables
       RETURN_INTO_OBJREF(bve, iface::mathml_dom::MathMLBvarElement,
                          apply->getBoundVariable(i));
       RecursivelyFlagVariables(aCGS, aComponent, bve, mLocallyBound,
-                               contextFlags, degree, aInitial);
+                               contextFlags, degree, aInitial,
+                               aInvolvedVariables);
     }
 
     for (i = 1; i <= n; i++)
@@ -1256,7 +1096,8 @@ RecursivelyFlagVariables
       RETURN_INTO_OBJREF(a, iface::mathml_dom::MathMLElement,
                          apply->getArgument(i));
       RecursivelyFlagVariables(aCGS, aComponent, a, mLocallyBound,
-                               contextFlags, degree, aInitial);
+                               contextFlags, degree, aInitial,
+                               aInvolvedVariables);
     }
 
     // Also, need to go into uplimit, lowlimit, degree, and logbase...
@@ -1285,7 +1126,8 @@ RecursivelyFlagVariables
         if (it2el == NULL)
           continue;
         RecursivelyFlagVariables(aCGS, aComponent, it2el, mLocallyBound,
-                                 contextFlags, degree, aInitial);
+                                 contextFlags, degree, aInitial,
+                                 aInvolvedVariables);
       }
     }
     return;
@@ -1306,8 +1148,10 @@ RecursivelyFlagVariables
     if (bvci == NULL)
       throw CodeGenerationError(L"Cannot cope with bvar children which are "
                                 L"not ci elements.");
+    
     RecursivelyFlagVariables(aCGS, aComponent, bvci, aLocallyBound,
-                             contextFlags | CONTEXT_BVAR, degree, aInitial);
+                             contextFlags | CONTEXT_BVAR, degree, aInitial,
+                             aInvolvedVariables);
     return;
   }
 
@@ -1327,9 +1171,11 @@ RecursivelyFlagVariables
       RETURN_INTO_OBJREF(cv, iface::mathml_dom::MathMLElement,
                          p->caseValue());
       RecursivelyFlagVariables(aCGS, aComponent, cc, aLocallyBound,
-                               contextFlags, degree, aInitial);
+                               contextFlags, degree, aInitial,
+                               aInvolvedVariables);
       RecursivelyFlagVariables(aCGS, aComponent, cv, aLocallyBound,
-                               contextFlags, degree, aInitial);
+                               contextFlags, degree, aInitial,
+                               aInvolvedVariables);
     }
     try
     {
@@ -1337,10 +1183,97 @@ RecursivelyFlagVariables
                          pw->otherwise());
       if (ow != NULL)
         RecursivelyFlagVariables(aCGS, aComponent, ow, aLocallyBound,
-                                 contextFlags, degree, aInitial);
+                                 contextFlags, degree, aInitial,
+                                 aInvolvedVariables);
     }
     catch (iface::dom::DOMException& de) {}
   }
+}
+
+void
+AssignmentProceduralStep::GenerateCode
+(
+ CodeGenerationState* aCGS,
+ std::stringstream& aMainCode,
+ std::stringstream& aSupplementary
+)
+{
+  aMainCode << aCGS->GetVariableText(mAssignInto) << " = ";
+  if (mOffset != 0.0)
+    aMainCode << "(";
+  if (mFactor != 1.0)
+    aMainCode << "(";
+
+  GenerateExpression(aCGS, mComponent, mRHSMaths, aMainCode, aSupplementary,
+                     mHaveBound);
+  if (mFactor != 1.0)
+    aMainCode << ") * " << std::setiosflags(std::ios_base::showpoint) << mFactor;
+  if (mOffset != 0.0)
+    aMainCode << ") + " << std::setiosflags(std::ios_base::showpoint) << mOffset;
+  aMainCode << ";" << std::endl;
+}
+
+void
+InitialValueCopyProceduralStep::GenerateCode
+(
+ CodeGenerationState* aCGS,
+ std::stringstream& aMainCode,
+ std::stringstream& aSupplementary
+)
+{
+  aMainCode << aCGS->GetVariableText(IA.destination) << " = ";
+
+  if (IA.offset != 0.0)
+    aMainCode << "(";
+  if (IA.factor != 1.0)
+    aMainCode << "(";
+
+  aMainCode << aCGS->GetVariableText(IA.source);
+
+  if (IA.factor != 1.0)
+    aMainCode << ") * " << std::setiosflags(std::ios_base::showpoint)
+              << IA.factor;
+
+  if (IA.offset != 0.0)
+    aMainCode << ") + " << std::setiosflags(std::ios_base::showpoint)
+              << IA.offset;
+
+  aMainCode << ";" << std::endl;
+}
+
+void
+NewtonRaphsonProceduralStep::GenerateCode
+(
+ CodeGenerationState* aCGS,
+ std::stringstream& aMainCode,
+ std::stringstream& aSupplementary
+)
+{
+  std::stringstream func;
+  uint32_t id;
+  func << "double NR_minfunc_" << (id = aCGS->AssignFunctionId())
+       << "(double* CONSTANTS, double* VARIABLES"
+       << ", double* BOUND";
+  func << ")" << std::endl
+       << "{" << std::endl
+       << "  return ((";
+  GenerateExpression(aCGS, mComp, mEl1, func,
+                     aSupplementary, mHaveBound);
+
+  func << ") - (";
+  GenerateExpression(aCGS, mComp, mEl2, func,
+                     aSupplementary, mHaveBound);
+  func << "));" << std::endl
+       << "}" << std::endl;
+  aSupplementary << func.str();
+
+  aMainCode << "NR_MINIMIZE(NR_minfunc_" << id
+            << ", CONSTANTS, VARIABLES, ";
+  if (mHaveBound)
+    aMainCode << "BOUND, ";
+  else
+    aMainCode << "NULL, ";
+  aMainCode << aCGS->GetVariableIndex(mVar) << ");" << std::endl;
 }
 
 void
@@ -1353,56 +1286,107 @@ Equation::FlagVariables(CodeGenerationState* aCGS,
   iface::cellml_api::CellMLComponent* comp = NULL;
   for (i = equal.begin(); i != equal.end(); i++)
   {
+    mEquationVariables.push_back(std::set<VariableInformation*>());
     RecursivelyFlagVariables(aCGS, (*i).first, (*i).second, emptySet, 0, 0,
-                             aInitial);
+                             aInitial, mEquationVariables.back());
     comp = (*i).first;
   }
   if (mDiff != NULL)
+  {
+    std::set<VariableInformation*> involvedVariables;
     RecursivelyFlagVariables(aCGS, comp, mDiff, emptySet, 0, 0,
-                             aInitial);
+                             aInitial, involvedVariables);
+  }
 }
 
+struct EquationPartInformation
+{
+public:
+  EquationPartInformation() {}
+  EquationPartInformation
+  (
+   VariableInformation* aVariable,
+   iface::cellml_api::CellMLComponent* aComponent,
+   iface::mathml_dom::MathMLElement* aElement,
+   std::set<VariableInformation*>& aAllvariables,
+   std::list<std::set<VariableInformation*> >::iterator& aItVarSets,
+   std::list<std::pair<iface::cellml_api::CellMLComponent*,
+                       iface::mathml_dom::MathMLElement*> >::iterator& aItEquals
+  )
+    : variable(aVariable), component(aComponent), element(aElement),
+      allvariables(&aAllvariables), itVarSets(aItVarSets),
+      itEquals(aItEquals)
+  {
+  }
+
+  void
+  operator= (const EquationPartInformation& aFrom)
+  {
+    variable = aFrom.variable;
+    component = aFrom.component;
+    element = aFrom.element;
+    allvariables = aFrom.allvariables;
+    itVarSets = aFrom.itVarSets;
+    itEquals = aFrom.itEquals;
+  }
+
+  VariableInformation* variable;
+  iface::cellml_api::CellMLComponent* component;
+  iface::mathml_dom::MathMLElement* element;
+  std::set<VariableInformation*>* allvariables;
+  std::list<std::set<VariableInformation*> >::iterator itVarSets;
+  std::list<std::pair<iface::cellml_api::CellMLComponent*,
+                      iface::mathml_dom::MathMLElement*> >::iterator itEquals;
+};
+
 bool
-Equation::AttemptEvaluation
+Equation::ComputeProceduralSteps
 (
  CodeGenerationState* aCGS, std::set<VariableInformation*>& aAvailable,
  std::set<VariableInformation*>& aWanted,
- std::stringstream& aExpressions,
- std::stringstream& aSupplementary,
+ std::map<VariableInformation*,ProceduralStep*>& stepsForVariable,
  bool aHaveBound
 )
 {
-  std::list<std::pair<iface::cellml_api::CellMLComponent*,
-                      iface::mathml_dom::MathMLElement*> >::iterator i, j, er;
-  iface::cellml_api::CellMLComponent* comp = NULL;
-  ObjRef<iface::mathml_dom::MathMLElement> completelyKnown, singleWanted;
-  ObjRef<iface::mathml_dom::MathMLCiElement> wantedCI;
-  bool eligibleForDirectAssignment = true;
-  VariableInformation* wantedVI;
-  uint32_t wantedCount = 0;
-
+  // If there is only one expression, it isn't an equation...
   if (equal.size() == 1)
     return false;
 
-  for (i = equal.begin(); i != equal.end(); i++)
+  std::list<std::set<VariableInformation*> >::iterator i;
+  std::list<std::pair<iface::cellml_api::CellMLComponent*,
+                      iface::mathml_dom::MathMLElement*> >::iterator j;
+  std::vector<EquationPartInformation> completelyKnown;
+  std::vector<EquationPartInformation> oneUnknown;
+
+  // Go through each expression that is being equated...
+  for (i = mEquationVariables.begin(), j = equal.begin();
+       i != mEquationVariables.end(); i++, j++)
   {
-    uint32_t xwantedCount = wantedCount;
-    // If it returns false, it means that either the wanted count exceeded one,
-    // or a variable neither known nor wanted was encountered.
-    ObjRef<iface::mathml_dom::MathMLCiElement> xCI = wantedCI;
-    VariableInformation* xVI = wantedVI;
-    if (!RecursivelyCountUnknown(aCGS, (*i).first, (*i).second, aAvailable,
-                                 aWanted, xwantedCount,
-                                 xCI, xVI, 0))
+    // Find the set of variables which are used in the expression, but are not
+    // computed yet...
+    std::set<VariableInformation*> neededVariables;
+    std::insert_iterator<std::set<VariableInformation*> > neededVariables_ins
+      (neededVariables, neededVariables.begin());
+    std::set_difference((*i).begin(), (*i).end(),
+                        aAvailable.begin(), aAvailable.end(),
+                        neededVariables_ins);
+
+    int c = neededVariables.size();
+    // If there is more than one unknown, we will need to try again when more
+    // variables are available
+    if (c > 1)
       continue;
-    if (singleWanted || xwantedCount == wantedCount)
+
+    if (c == 0)
     {
-      if (completelyKnown != NULL)
+      // c==0 means that all variables in the expression have been computed.
+
+      if (completelyKnown.size())
       {
-        // We already know two expressions in the equality. That means it is
-        // overconstrained.
+        // We are equating two expressions, both of which are completely known.
+        // This means that the equation is overconstrained.
         RETURN_INTO_OBJREF(n, iface::dom::Node,
-                           (*i).second->parentNode());
+                           (*j).second->parentNode());
         DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
         OverconstrainedError oce(el);
         std::set<VariableInformation*>::iterator si;
@@ -1410,120 +1394,129 @@ Equation::AttemptEvaluation
           oce.addKnownVariable((*si)->GetSourceVariable());
         throw oce;
       }
-      completelyKnown = (*i).second;
-      comp = (*i).first;
-      if (xwantedCount != wantedCount)
-        eligibleForDirectAssignment = false;
+      completelyKnown.push_back(EquationPartInformation(NULL, (*j).first,
+                                                        (*j).second, (*i),
+                                                        i, j));
     }
     else
     {
-      singleWanted = (*i).second;
-      wantedCI = xCI;
-      wantedVI = xVI;
-      wantedCount = xwantedCount;
-      er = i;
+      // Make sure it is wanted...
+      if (aWanted.find(*(neededVariables.begin())) == aWanted.end())
+        continue;
+
+      // There is exactly one unknown variable in this expression...
+      oneUnknown.push_back(EquationPartInformation(*(neededVariables.begin()),
+                                                   (*j).first, (*j).second, (*i),
+                                                   i, j));
     }
-
-    if (completelyKnown && singleWanted)
-      break;
   }
 
-  // This equation is extraneous, so is no use. We will be giving an error
-  // about this later.
-  if (!singleWanted)
+  // If we have no parts with only one unknown yet, try again later...
+  if (oneUnknown.empty())
     return false;
 
-  if (!completelyKnown)
-    return false;
-
-  RETURN_INTO_OBJREF(vloc, iface::cellml_api::CellMLVariable,
-                     FindVariableForCI(comp, wantedCI));
-  if (vloc == NULL)
+  ProceduralStep* procStep = NULL;
+  EquationPartInformation equate1, equate2;
+  if (!completelyKnown.empty())
   {
-    std::wstring msg = L"Cannot find variable ";
-    wchar_t* tmp = vloc->name();
-    msg += tmp;
-    free(tmp);
-    msg += L"; referenced in ci but not in component.";
-    throw CodeGenerationError(msg);
-  }
-  iface::cellml_api::CellMLVariable* vsource = 
-    aCGS->FindOrAddVariableInformation(vloc)->GetSourceVariable();
+    DECLARE_QUERY_INTERFACE_OBJREF(ci, oneUnknown[0].element,
+                                   mathml_dom::MathMLCiElement);
 
-  // See if singleWanted is a bare CI...
-  DECLARE_QUERY_INTERFACE_OBJREF(swci, singleWanted,
-                                 mathml_dom::MathMLCiElement);
-  std::string evaluation;
-  if (eligibleForDirectAssignment && swci != NULL)
-  {
-    // Next, find the overall conversion factor...
-    double offset;
-    double factor = aCGS->GetConversion(vloc, vsource, offset);
-    aExpressions << aCGS->GetVariableText(vsource) << " = ";
-    if (offset != 0.0)
-      aExpressions << "(";
-    if (factor != 1.0)
-      aExpressions << "(";
-    GenerateExpression(aCGS, comp, completelyKnown, aExpressions,
-                       aSupplementary, aHaveBound);
-    if (factor != 1.0)
-      aExpressions << ") * " << std::setiosflags(std::ios_base::showpoint) << factor;
-    if (offset != 0.0)
-      aExpressions << ") + " << std::setiosflags(std::ios_base::showpoint) << offset;
-    aExpressions << ";" << std::endl;
+    equate1 = oneUnknown[0];
+    equate2 = completelyKnown[0];
+    if (ci != NULL)
+    {
+      RETURN_INTO_OBJREF(assignToLocal, iface::cellml_api::CellMLVariable,
+                         FindVariableForCI(oneUnknown[0].component,
+                                           ci));
+      iface::cellml_api::CellMLVariable* assignToSource =
+        aCGS->FindOrAddVariableInformation(assignToLocal)->GetSourceVariable();
+      double offset;
+      double factor = aCGS->GetConversion(assignToLocal, assignToSource,
+                                          offset);
+      procStep = new AssignmentProceduralStep(assignToSource,
+                                              oneUnknown[0].component,
+                                              completelyKnown[0].element,
+                                              aHaveBound,
+                                              factor, offset);
+      
+    }
   }
   else
   {
-    // We have a variable that needs computing, but it isn't in a ci by itself.
-    std::stringstream func;
-    uint32_t id;
-    func << "double NR_minfunc_" << (id = aCGS->AssignFunctionId())
-         << "(double* CONSTANTS, double* VARIABLES"
-         << ", double* BOUND";
-    func << ")" << std::endl
-         << "{" << std::endl
-         << "  return ((";
-    GenerateExpression(aCGS, comp, completelyKnown, func,
-                       aSupplementary, aHaveBound);
-    func << ") - (";
-    GenerateExpression(aCGS, comp, singleWanted, func,
-                       aSupplementary, aHaveBound);
-    func << "));" << std::endl
-         << "}" << std::endl;
-    aSupplementary << func.str();
-    aExpressions << "NR_MINIMIZE(NR_minfunc_" << id
-                 << ", CONSTANTS, VARIABLES, ";
-    if (aHaveBound)
-      aExpressions << "BOUND, ";
-    else
-      aExpressions << "NULL, ";
-    aExpressions << aCGS->GetVariableIndex(vsource) << ");" << std::endl;
+    // We have no completely known parts, so we need to find two parts with
+    // the same unknown variable...
+    std::map<VariableInformation*,size_t> varMap;
+    size_t i;
+    bool success = false;
+    for (i = 0; i < oneUnknown.size(); i++)
+    {
+      std::map<VariableInformation*,size_t>::iterator vmi =
+        varMap.find(oneUnknown[i].variable);
+      if (vmi == varMap.end())
+        varMap.insert(std::pair<VariableInformation*,size_t>
+                      (oneUnknown[i].variable, i));
+      else
+      {
+        equate1 = oneUnknown[i];
+        equate2 = oneUnknown[(*vmi).second];
+        success = true;
+        break;
+      }
+    }
+    if (!success)
+      return false;
+  }
+
+  if (!procStep)
+  {
+    // The code above ensures that if this is reached, equate1 and equate2
+    // contain two equated parts, the difference between the two must be
+    // minimised to solve for the variable.
+    procStep = new NewtonRaphsonProceduralStep
+      (equate1.component, equate1.element, equate2.element,
+       equate1.variable->GetSourceVariable(), aHaveBound);
     mTriggersNewtonRaphson = true;
   }
 
-  // We remove the newly known part, rather than the previous completely known
-  // part, in order to allow the compiler to better optimise. Of course, we
-  // could probably do some logic to figure out which one is simplest, and
-  // throw the more complex one away(later optimisation).
-  (*er).second->release_ref();
-  equal.erase(er);
+  stepsForVariable.insert(std::pair<VariableInformation*,ProceduralStep*>
+                          (equate1.variable, procStep));
 
-  // The variable is no longer wanted, instead its available...
-  {
-    RETURN_INTO_WSTRING(sn, wantedVI->GetSourceVariable()->name());
-    RETURN_INTO_OBJREF(topapply, iface::dom::Node, singleWanted->parentNode());
-    RETURN_INTO_OBJREF(math, iface::dom::Node, topapply->parentNode());
-    DECLARE_QUERY_INTERFACE_OBJREF(mathel, math, dom::Element);
-    RETURN_INTO_WSTRING(cm, mathel->getAttributeNS
-                        (L"http://www.cellml.org/metadata/1.0#", L"id"));
-  }
+  std::set<VariableInformation*>::iterator cki;
+  for (cki = (*(equate1.allvariables)).begin();
+       cki != (*(equate1.allvariables)).end();
+       cki++)
+    if ((*cki) != equate1.variable)
+    {
+      std::map<VariableInformation*,ProceduralStep*>::iterator stepi =
+        stepsForVariable.find(*cki);
+      if (stepi != stepsForVariable.end())
+        procStep->AddDependency((*stepi).second);
+    }
+  for (cki = (*(equate2.allvariables)).begin();
+       cki != (*(equate2.allvariables)).end();
+       cki++)
+    if ((*cki) != equate2.variable)
+    {
+      std::map<VariableInformation*,ProceduralStep*>::iterator stepi =
+        stepsForVariable.find(*cki);
+      if (stepi != stepsForVariable.end())
+        procStep->AddDependency((*stepi).second);
+    }
 
-  aWanted.erase(wantedVI);
-  aAvailable.insert(wantedVI);
+  // The choice to remove equate1 rather than equate2 is arbitrary for
+  // the Newton-Raphson case. For the assignment case, it makes it easier
+  // for the compiler to optimise away the common subexpression.
+  mEquationVariables.erase(equate1.itVarSets);
+  equate1.element->release_ref();
+  equal.erase(equate1.itEquals);
 
-  // If we only have one equal left, it isn't an equation any more, so we
-  // should request that the CGS delete us...
-  if (equal.size() == 1)
+  // The new variable is no longer wanted...
+  aWanted.erase(equate1.variable);
+  aAvailable.insert(equate1.variable);
+
+  // If this equation can't constrain the model further, get rid of it...
+  if (equal.size() < 2)
     aCGS->EquationFullyUsed(this);
 
   return true;
@@ -1534,7 +1527,8 @@ Equation::AttemptRateEvaluation
 (
  CodeGenerationState* aCGS,
  std::stringstream& aRateStream,
- std::stringstream& aSupplementary
+ std::stringstream& aSupplementary,
+ std::set<VariableInformation*>& aTouchedVariables
 )
 {
   if (equal.size() == 0 || mDiffCI == NULL)

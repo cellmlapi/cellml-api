@@ -491,6 +491,24 @@ CodeGenerationState::DetermineConstants(std::stringstream& aConstStream)
   }
 }
 
+class ProceduralStepCleaner
+{
+public:
+  ProceduralStepCleaner(std::map<VariableInformation*, ProceduralStep*>& aPCM)
+    : mPCM(aPCM)
+  {
+  }
+
+  ~ProceduralStepCleaner()
+  {
+    std::map<VariableInformation*, ProceduralStep*>::iterator i;
+    for (i = mPCM.begin(); i != mPCM.end(); i++)
+      delete (*i).second;
+  }
+private:
+  std::map<VariableInformation*, ProceduralStep*>& mPCM;
+};
+
 void
 CodeGenerationState::DetermineComputedConstants
 (
@@ -500,6 +518,10 @@ CodeGenerationState::DetermineComputedConstants
 {
   std::set<VariableInformation*> availableVariables;
   std::set<VariableInformation*> wantedVariables;
+  std::map<VariableInformation*, ProceduralStep*> stepsForVariable;
+
+  ProceduralStepCleaner stepCleaner(stepsForVariable);
+
   // All constants are available, all non-differentials are wanted...
   std::list<VariableInformation*>::iterator i;
   for (i = mVariableList.begin(); i != mVariableList.end(); i++)
@@ -511,6 +533,7 @@ CodeGenerationState::DetermineComputedConstants
   }
   
   bool lastRoundUseful;
+
   // Now we keep cycling through the equations until we stop finding anything
   // new. Also check initial value copies...
   do
@@ -538,20 +561,17 @@ CodeGenerationState::DetermineComputedConstants
           availableVariables.insert((*iiatmp).destination);
         }
         lastRoundUseful = true;
-        // Write out the assignment...
-        aCompConstStream << GetVariableText((*iiatmp).destination)
-                         << " = ";
-        if ((*iiatmp).offset != 0.0)
-          aCompConstStream << "(";
-        if ((*iiatmp).factor != 1.0)
-          aCompConstStream << "(";
-        aCompConstStream << GetVariableText((*iiatmp).source);
-        if ((*iiatmp).factor != 1.0)
-          aCompConstStream << ") * " << (*iiatmp).factor;
-        if ((*iiatmp).offset != 0.0)
-          aCompConstStream << ") + " << (*iiatmp).offset;
+
+        // Add a step to compute this...
+
+        ProceduralStep* procSet = new InitialValueCopyProceduralStep(*(iiatmp));
+        stepsForVariable.insert(std::pair<VariableInformation*, ProceduralStep*>
+                                ((*iiatmp).destination, procSet));
+        std::map<VariableInformation*,ProceduralStep*>::iterator stepi =
+          stepsForVariable.find((*iiatmp).source);
+        if (stepi != stepsForVariable.end())
+          procSet->AddDependency((*stepi).second);
         mInitialAssignments.erase(iiatmp);
-        aCompConstStream << ";" << std::endl;
       }
     }
 
@@ -561,11 +581,17 @@ CodeGenerationState::DetermineComputedConstants
       itmp = i2;
       i2++;
       lastRoundUseful |=
-        (*itmp)->AttemptEvaluation(this, availableVariables, wantedVariables,
-                                 aCompConstStream, aSupplementary, false);
+        (*itmp)->ComputeProceduralSteps(this, availableVariables,
+                                        wantedVariables, stepsForVariable,
+                                        false);
     }
   }
   while (lastRoundUseful);
+
+  // Now we go through the procedural steps...
+  std::map<VariableInformation*,ProceduralStep*>::iterator psi;
+  for (psi = stepsForVariable.begin(); psi != stepsForVariable.end(); psi++)
+    (*psi).second->RecursivelyGenerateCode(this, aCompConstStream, aSupplementary);
 
   // Now flag everything available...
   std::set<VariableInformation*>::iterator i2;
@@ -588,6 +614,24 @@ CodeGenerationState::DetermineComputedConstants
   }
 }
 
+struct EquationStackFrame
+{
+public:
+  EquationStackFrame
+  (
+   std::set<Equation*>::iterator aBegin,
+   std::set<Equation*>::iterator aEnd,
+   Equation* aEquation
+  )
+    : begin(aBegin), end(aEnd), equation(aEquation)
+  {
+  }
+
+  std::set<Equation*>::iterator begin;
+  std::set<Equation*>::iterator end;
+  Equation* equation;
+};
+
 void
 CodeGenerationState::DetermineIterationVariables
 (
@@ -597,6 +641,9 @@ CodeGenerationState::DetermineIterationVariables
 {
   std::set<VariableInformation*> availableVariables;
   std::set<VariableInformation*> wantedVariables;
+  std::map<VariableInformation*,ProceduralStep*> stepsForVariable;
+
+  ProceduralStepCleaner stepCleaner(stepsForVariable);
 
   std::list<VariableInformation*>::iterator i;
   for (i = mVariableList.begin(); i != mVariableList.end(); i++)
@@ -611,8 +658,9 @@ CodeGenerationState::DetermineIterationVariables
   }
 
   bool lastRoundUseful;
+
   // Now we keep cycling through the equations until we stop finding anything
-  // new. Also check initial value copies...
+  // new.
   do
   {
     lastRoundUseful = false;
@@ -622,16 +670,47 @@ CodeGenerationState::DetermineIterationVariables
     {
       itmp = i2;
       i2++;
+      Equation* eq = (*itmp);
       lastRoundUseful |=
-        (*itmp)->AttemptEvaluation(this, availableVariables, wantedVariables,
-                                   aIterationStream, aSupplementary, true);
+        eq->ComputeProceduralSteps(this, availableVariables, wantedVariables,
+                                   stepsForVariable, true);
     }
   }
   while (lastRoundUseful);
 
   // wantedVariables should be the empty set, unless we are underconstrained...
   if (wantedVariables.size() == 0)
+  {
+    // Figure out which variables get touched to compute rates...
+    std::set<VariableInformation*> rateTouch;
+    std::list<Equation*>::iterator ieq;
+    std::stringstream throwaway;
+    for (ieq = mEquations.begin(); ieq != mEquations.end(); ieq++)
+      (*ieq)->AttemptRateEvaluation(this, throwaway, throwaway,
+                                    rateTouch);
+
+    // Now find the equation for each variable, and put it on the list...
+    std::set<Equation*> eqlist;
+    std::set<Equation*> seenEquation;
+    std::set<VariableInformation*>::iterator varIt;
+    for (varIt = rateTouch.begin(); varIt != rateTouch.end(); varIt++)
+    {
+      std::map<VariableInformation*,ProceduralStep*>::iterator step =
+        stepsForVariable.find(*varIt);
+      if (step != stepsForVariable.end())
+        (*step).second->RecursivelyGenerateCode(this, aIterationStream, aSupplementary);
+    }
+
+    aIterationStream << "#ifndef VARIABLES_FOR_RATES_ONLY" << std::endl;
+
+    std::map<VariableInformation*,ProceduralStep*>::iterator step;
+    for (step = stepsForVariable.begin(); step != stepsForVariable.end(); step++)
+      (*step).second->RecursivelyGenerateCode(this, aIterationStream, aSupplementary);
+
+    aIterationStream << "#endif" << std::endl;
+
     return;
+  }
 
   // We are underconstrained...
   UnderconstrainedError uce;
@@ -650,8 +729,10 @@ CodeGenerationState::DetermineRateVariables
 )
 {
   std::list<Equation*>::iterator i;
+  std::set<VariableInformation*> touchedVariables;
   for (i = mEquations.begin(); i != mEquations.end(); i++)
-    (*i)->AttemptRateEvaluation(this, aRateStream, aSupplementary);
+    (*i)->AttemptRateEvaluation(this, aRateStream, aSupplementary,
+                                touchedVariables);
 }
 
 bool IsPlainCI(iface::mathml_dom::MathMLElement* aSubExpr)

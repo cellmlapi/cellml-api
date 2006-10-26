@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <model
-    name="parabola"
-    cmeta:id="parabola"
+    name="newton_raphson_parabola"
+    cmeta:id="newton_raphson_parabola"
     xmlns="http://www.cellml.org/cellml/1.1#"
     xmlns:cellml="http://www.cellml.org/cellml/1.1#"
     xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
@@ -26,13 +26,13 @@
     </math>
     <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="eq2">
       <apply><eq/>
-        <ci>x</ci>
-        <apply><plus/>
-          <apply><power/>
-            <ci>time</ci>
-            <cn cellml:units="dimensionless">2.0</cn>
-          </apply>
+        <apply><minus/>
+          <ci>x</ci>
           <ci>offset</ci>
+        </apply>
+        <apply><power/>
+          <ci>time</ci>
+          <cn cellml:units="dimensionless">2.0</cn>
         </apply>
       </apply>
     </math>

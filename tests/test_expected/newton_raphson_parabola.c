@@ -1,5 +1,7 @@
 /* Model is correctly constrained.
- * No equations needed Newton-Raphson evaluation.
+ * The following equations needed Newton-Raphson evaluation:
+ *   <equation with no cmeta ID>
+ *   in math with cmeta:id eq2
  * The main variable array needs 3 entries.
  * The rate array needs 1 entries.
  * The constant array needs 1 entries.
@@ -27,6 +29,10 @@
  * * * Variable index: 2
  * * * Has differential: false
  */
+double NR_minfunc_1(double* CONSTANTS, double* VARIABLES, double* BOUND)
+{
+  return (((VARIABLES[1]-CONSTANTS[0])) - (pow(BOUND[0],2.00000)));
+}
 void SetupFixedConstants(double* CONSTANTS)
 {
 CONSTANTS[0] = 3;
@@ -43,6 +49,6 @@ RATES[0] = (2.00000*BOUND[0]);
 void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
 {
 #ifndef VARIABLES_FOR_RATES_ONLY
-VARIABLES[1] = (pow(BOUND[0],2.00000)+CONSTANTS[0]);
+NR_MINIMIZE(NR_minfunc_1, CONSTANTS, VARIABLES, BOUND, 1);
 #endif
 }
