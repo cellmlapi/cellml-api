@@ -993,11 +993,11 @@ RecursivelyFlagVariables
  CodeGenerationState* aCGS,
  iface::cellml_api::CellMLComponent* aComponent,
  iface::mathml_dom::MathMLElement* aElement,
- std::set<VariableInformation*>& aLocallyBound,
+ std::set<VariableInformation*,VarinfoPointerComparator>& aLocallyBound,
  uint32_t contextFlags,
  uint32_t degree,
  std::list<InitialAssignment>& aInitial,
- std::set<VariableInformation*>& aInvolvedVariables
+ std::set<VariableInformation*,VarinfoPointerComparator>& aInvolvedVariables
 )
 {
   DECLARE_QUERY_INTERFACE_OBJREF(ci, aElement, mathml_dom::MathMLCiElement);
@@ -1080,7 +1080,7 @@ RecursivelyFlagVariables
     }
     else if (sn == L"int")
       contextFlags |= CONTEXT_INT;
-    std::set<VariableInformation*> mLocallyBound = aLocallyBound;
+    std::set<VariableInformation*,VarinfoPointerComparator> mLocallyBound = aLocallyBound;
     uint32_t nb = apply->nBoundVariables(), i;
     for (i = 1; i <= nb; i++)
     {
@@ -1282,20 +1282,20 @@ Equation::FlagVariables(CodeGenerationState* aCGS,
 {
   std::list<std::pair<iface::cellml_api::CellMLComponent*,
                       iface::mathml_dom::MathMLElement*> >::iterator i;
-  std::set<VariableInformation*> emptySet;
+  std::set<VariableInformation*,VarinfoPointerComparator> emptySet;
   iface::cellml_api::CellMLComponent* comp = NULL;
   for (i = equal.begin(); i != equal.end(); i++)
   {
-    mEquationVariables.push_back(std::set<VariableInformation*>());
+    mEquationVariables.push_back(std::set<VariableInformation*,VarinfoPointerComparator>());
     RecursivelyFlagVariables(aCGS, (*i).first, (*i).second, emptySet, 0, 0,
                              aInitial, mEquationVariables.back());
     comp = (*i).first;
   }
   if (mDiff != NULL)
   {
-    std::set<VariableInformation*> involvedVariables;
+    std::set<VariableInformation*,VarinfoPointerComparator> involved;
     RecursivelyFlagVariables(aCGS, comp, mDiff, emptySet, 0, 0,
-                             aInitial, involvedVariables);
+                             aInitial, involved);
   }
 }
 
@@ -1308,8 +1308,8 @@ public:
    VariableInformation* aVariable,
    iface::cellml_api::CellMLComponent* aComponent,
    iface::mathml_dom::MathMLElement* aElement,
-   std::set<VariableInformation*>& aAllvariables,
-   std::list<std::set<VariableInformation*> >::iterator& aItVarSets,
+   std::set<VariableInformation*,VarinfoPointerComparator>& aAllvariables,
+   std::list<std::set<VariableInformation*,VarinfoPointerComparator> >::iterator& aItVarSets,
    std::list<std::pair<iface::cellml_api::CellMLComponent*,
                        iface::mathml_dom::MathMLElement*> >::iterator& aItEquals
   )
@@ -1333,8 +1333,8 @@ public:
   VariableInformation* variable;
   iface::cellml_api::CellMLComponent* component;
   iface::mathml_dom::MathMLElement* element;
-  std::set<VariableInformation*>* allvariables;
-  std::list<std::set<VariableInformation*> >::iterator itVarSets;
+  std::set<VariableInformation*,VarinfoPointerComparator>* allvariables;
+  std::list<std::set<VariableInformation*,VarinfoPointerComparator> >::iterator itVarSets;
   std::list<std::pair<iface::cellml_api::CellMLComponent*,
                       iface::mathml_dom::MathMLElement*> >::iterator itEquals;
 };
@@ -1342,9 +1342,9 @@ public:
 bool
 Equation::ComputeProceduralSteps
 (
- CodeGenerationState* aCGS, std::set<VariableInformation*>& aAvailable,
- std::set<VariableInformation*>& aWanted,
- std::map<VariableInformation*,ProceduralStep*>& stepsForVariable,
+ CodeGenerationState* aCGS, std::set<VariableInformation*,VarinfoPointerComparator>& aAvailable,
+ std::set<VariableInformation*,VarinfoPointerComparator>& aWanted,
+ std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>& stepsForVariable,
  bool aHaveBound
 )
 {
@@ -1352,7 +1352,7 @@ Equation::ComputeProceduralSteps
   if (equal.size() == 1)
     return false;
 
-  std::list<std::set<VariableInformation*> >::iterator i;
+  std::list<std::set<VariableInformation*,VarinfoPointerComparator> >::iterator i;
   std::list<std::pair<iface::cellml_api::CellMLComponent*,
                       iface::mathml_dom::MathMLElement*> >::iterator j;
   std::vector<EquationPartInformation> completelyKnown;
@@ -1364,8 +1364,8 @@ Equation::ComputeProceduralSteps
   {
     // Find the set of variables which are used in the expression, but are not
     // computed yet...
-    std::set<VariableInformation*> neededVariables;
-    std::insert_iterator<std::set<VariableInformation*> > neededVariables_ins
+    std::set<VariableInformation*,VarinfoPointerComparator> neededVariables;
+    std::insert_iterator<std::set<VariableInformation*,VarinfoPointerComparator> > neededVariables_ins
       (neededVariables, neededVariables.begin());
     std::set_difference((*i).begin(), (*i).end(),
                         aAvailable.begin(), aAvailable.end(),
@@ -1389,7 +1389,7 @@ Equation::ComputeProceduralSteps
                            (*j).second->parentNode());
         DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
         OverconstrainedError oce(el);
-        std::set<VariableInformation*>::iterator si;
+        std::set<VariableInformation*,VarinfoPointerComparator>::iterator si;
         for (si = aAvailable.begin(); si != aAvailable.end(); si++)
           oce.addKnownVariable((*si)->GetSourceVariable());
         throw oce;
@@ -1482,7 +1482,7 @@ Equation::ComputeProceduralSteps
   stepsForVariable.insert(std::pair<VariableInformation*,ProceduralStep*>
                           (equate1.variable, procStep));
 
-  std::set<VariableInformation*>::iterator cki;
+  std::set<VariableInformation*,VarinfoPointerComparator>::iterator cki;
   for (cki = (*(equate1.allvariables)).begin();
        cki != (*(equate1.allvariables)).end();
        cki++)
@@ -1528,7 +1528,7 @@ Equation::AttemptRateEvaluation
  CodeGenerationState* aCGS,
  std::stringstream& aRateStream,
  std::stringstream& aSupplementary,
- std::set<VariableInformation*>& aTouchedVariables
+ std::set<VariableInformation*,VarinfoPointerComparator>& aTouchedVariables
 )
 {
   if (equal.size() == 0 || mDiffCI == NULL)

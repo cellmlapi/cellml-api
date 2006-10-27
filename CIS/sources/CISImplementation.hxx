@@ -18,6 +18,8 @@ struct CompiledModelFunctions
                        double* VARIABLES);
   void (*ComputeVariables)(double* BOUND, double* RATES, double* CONSTANTS,
                            double* VARIABLES);
+  void (*ComputeVariablesForRates)(double* BOUND, double* RATES, double* CONSTANTS,
+                                   double* VARIABLES);
 };
 
 class CDA_CellMLCompiledModel

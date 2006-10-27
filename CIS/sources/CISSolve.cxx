@@ -17,6 +17,8 @@ struct EvaluationInformation
                        double* VARIABLES);
   void (*ComputeVariables)(double* BOUND, double* RATES, double* CONSTANTS,
                            double* VARIABLES);
+  void (*ComputeVariablesForRates)(double* BOUND, double* RATES,
+                                   double* CONSTANTS, double* VARIABLES);
 };
 
 int
@@ -30,7 +32,7 @@ EvaluateRates(double bound, const double vars[],
     memcpy(ei->variables, vars, ei->rateSizeBytes);
 
   // Update variables that change based on bound/other vars...
-  ei->ComputeVariables(&bound, rates, ei->constants, ei->variables);
+  ei->ComputeVariablesForRates(&bound, rates, ei->constants, ei->variables);
 
   // Compute the rates...
   ei->ComputeRates(&bound, rates, ei->constants, ei->variables);
@@ -55,7 +57,7 @@ EvaluateJacobian
 
   double* rate0 = new double[ei->rateSize];
   double* rate1 = new double[ei->rateSize];
-  ei->ComputeVariables(&bound, rate0, ei->constants, ei->variables);
+  ei->ComputeVariablesForRates(&bound, rate0, ei->constants, ei->variables);
   ei->ComputeRates(&bound, rate0, ei->constants, ei->variables);
 
   uint32_t i, j;
@@ -66,7 +68,7 @@ EvaluateJacobian
       perturb = 1E-90;
 
     ei->variables[i] = vars[i] + perturb;
-    ei->ComputeVariables(&bound, rate1, ei->constants, ei->variables);
+    ei->ComputeVariablesForRates(&bound, rate1, ei->constants, ei->variables);
     ei->ComputeRates(&bound, rate1, ei->constants, ei->variables);
 
     for (j = 0; j < ei->rateSize; j++)
@@ -82,7 +84,7 @@ EvaluateJacobian
   if (perturb == 0)
     perturb = 1E-90;
   double newbound = bound + perturb;
-  ei->ComputeVariables(&newbound, rates, ei->constants, ei->variables);
+  ei->ComputeVariablesForRates(&newbound, rates, ei->constants, ei->variables);
   ei->ComputeRates(&newbound, rate1, ei->constants, ei->variables);
   for (i = 0; i < ei->rateSize; i++)
   {
@@ -121,6 +123,7 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   ei.rateSizeBytes = rateSize * sizeof(double);
   ei.ComputeRates = f->ComputeRates;
   ei.ComputeVariables = f->ComputeVariables;
+  ei.ComputeVariablesForRates = f->ComputeVariablesForRates;
 
   gsl_odeiv_step* s;
   gsl_odeiv_evolve* e = gsl_odeiv_evolve_alloc(rateSize);

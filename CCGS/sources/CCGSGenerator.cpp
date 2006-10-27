@@ -494,19 +494,19 @@ CodeGenerationState::DetermineConstants(std::stringstream& aConstStream)
 class ProceduralStepCleaner
 {
 public:
-  ProceduralStepCleaner(std::map<VariableInformation*, ProceduralStep*>& aPCM)
+  ProceduralStepCleaner(std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator>& aPCM)
     : mPCM(aPCM)
   {
   }
 
   ~ProceduralStepCleaner()
   {
-    std::map<VariableInformation*, ProceduralStep*>::iterator i;
+    std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator>::iterator i;
     for (i = mPCM.begin(); i != mPCM.end(); i++)
       delete (*i).second;
   }
 private:
-  std::map<VariableInformation*, ProceduralStep*>& mPCM;
+  std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator>& mPCM;
 };
 
 void
@@ -516,9 +516,9 @@ CodeGenerationState::DetermineComputedConstants
  std::stringstream& aSupplementary
 )
 {
-  std::set<VariableInformation*> availableVariables;
-  std::set<VariableInformation*> wantedVariables;
-  std::map<VariableInformation*, ProceduralStep*> stepsForVariable;
+  std::set<VariableInformation*,VarinfoPointerComparator> availableVariables;
+  std::set<VariableInformation*,VarinfoPointerComparator> wantedVariables;
+  std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator> stepsForVariable;
 
   ProceduralStepCleaner stepCleaner(stepsForVariable);
 
@@ -567,7 +567,7 @@ CodeGenerationState::DetermineComputedConstants
         ProceduralStep* procSet = new InitialValueCopyProceduralStep(*(iiatmp));
         stepsForVariable.insert(std::pair<VariableInformation*, ProceduralStep*>
                                 ((*iiatmp).destination, procSet));
-        std::map<VariableInformation*,ProceduralStep*>::iterator stepi =
+        std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator stepi =
           stepsForVariable.find((*iiatmp).source);
         if (stepi != stepsForVariable.end())
           procSet->AddDependency((*stepi).second);
@@ -594,7 +594,7 @@ CodeGenerationState::DetermineComputedConstants
     (*psi).second->RecursivelyGenerateCode(this, aCompConstStream, aSupplementary);
 
   // Now flag everything available...
-  std::set<VariableInformation*>::iterator i2;
+  std::set<VariableInformation*,VarinfoPointerComparator>::iterator i2;
   for (i2 = availableVariables.begin(); i2 != availableVariables.end(); i2++)
     (*i2)->SetFlag(VariableInformation::PRECOMPUTED);
 
@@ -639,9 +639,9 @@ CodeGenerationState::DetermineIterationVariables
  std::stringstream& aSupplementary
 )
 {
-  std::set<VariableInformation*> availableVariables;
-  std::set<VariableInformation*> wantedVariables;
-  std::map<VariableInformation*,ProceduralStep*> stepsForVariable;
+  std::set<VariableInformation*,VarinfoPointerComparator> availableVariables;
+  std::set<VariableInformation*,VarinfoPointerComparator> wantedVariables;
+  std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator> stepsForVariable;
 
   ProceduralStepCleaner stepCleaner(stepsForVariable);
 
@@ -682,17 +682,19 @@ CodeGenerationState::DetermineIterationVariables
   if (wantedVariables.size() == 0)
   {
     // Figure out which variables get touched to compute rates...
-    std::set<VariableInformation*> rateTouch;
+    std::set<VariableInformation*,VarinfoPointerComparator> rateTouch;
     std::list<Equation*>::iterator ieq;
-    std::stringstream throwaway;
     for (ieq = mEquations.begin(); ieq != mEquations.end(); ieq++)
-      (*ieq)->AttemptRateEvaluation(this, throwaway, throwaway,
-                                    rateTouch);
+    {
+      std::set<VariableInformation*,VarinfoPointerComparator>& s =
+        (*ieq)->GetDiffInvolvedVariables();
+      rateTouch.insert(s.begin(), s.end());
+    }
 
     // Now find the equation for each variable, and put it on the list...
     std::set<Equation*> eqlist;
     std::set<Equation*> seenEquation;
-    std::set<VariableInformation*>::iterator varIt;
+    std::set<VariableInformation*,VarinfoPointerComparator>::iterator varIt;
     for (varIt = rateTouch.begin(); varIt != rateTouch.end(); varIt++)
     {
       std::map<VariableInformation*,ProceduralStep*>::iterator step =
@@ -714,7 +716,7 @@ CodeGenerationState::DetermineIterationVariables
 
   // We are underconstrained...
   UnderconstrainedError uce;
-  std::set<VariableInformation*>::iterator si;
+  std::set<VariableInformation*,VarinfoPointerComparator>::iterator si;
   for (si = wantedVariables.begin(); si != wantedVariables.end(); si++)
     uce.addUnresolvedWanted((*si)->GetSourceVariable());
 
@@ -729,7 +731,7 @@ CodeGenerationState::DetermineRateVariables
 )
 {
   std::list<Equation*>::iterator i;
-  std::set<VariableInformation*> touchedVariables;
+  std::set<VariableInformation*,VarinfoPointerComparator> touchedVariables;
   for (i = mEquations.begin(); i != mEquations.end(); i++)
     (*i)->AttemptRateEvaluation(this, aRateStream, aSupplementary,
                                 touchedVariables);

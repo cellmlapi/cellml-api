@@ -149,16 +149,20 @@ public:
    * @param aHaveBound True if the BOUND array will be defined.
    */
   bool ComputeProceduralSteps(CodeGenerationState* aCGS,
-                              std::set<VariableInformation*>& aAvailable,
-                              std::set<VariableInformation*>& aWanted,
-                              std::map<VariableInformation*,ProceduralStep*>&
+                              std::set<VariableInformation*,VarinfoPointerComparator>& aAvailable,
+                              std::set<VariableInformation*,VarinfoPointerComparator>& aWanted,
+                              std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>&
                                 stepsForVariable,
                               bool aHaveBound);
   bool AttemptRateEvaluation(CodeGenerationState* aCGS,
                              std::stringstream& aRateStream,
                              std::stringstream& aSupplementary,
-                             std::set<VariableInformation*>& aTouchedVariables);
+                             std::set<VariableInformation*,VarinfoPointerComparator>& aTouchedVariables);
   void AddIfTriggersNR(std::vector<iface::dom::Element*>& aNRList);
+  std::set<VariableInformation*,VarinfoPointerComparator>& GetDiffInvolvedVariables()
+  {
+    return mEquationVariables.front();
+  }
 
   void release_state();
 
@@ -167,6 +171,6 @@ private:
                       iface::mathml_dom::MathMLElement*> > equal;
   ObjRef<iface::mathml_dom::MathMLCiElement> mDiffCI, mBoundCI;
   ObjRef<iface::mathml_dom::MathMLElement> mDiff;
-  std::list<std::set<VariableInformation*> > mEquationVariables;
+  std::list<std::set<VariableInformation*,VarinfoPointerComparator> > mEquationVariables;
   bool mTriggersNewtonRaphson;
 };

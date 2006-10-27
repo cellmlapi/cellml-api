@@ -61,6 +61,8 @@ SetupCompiledModelFunctions(void* module)
     getsym(module, "ComputeRates");
   cmf->ComputeVariables = (void (*)(double*,double*,double*,double*))
     getsym(module, "ComputeVariables");
+  cmf->ComputeVariablesForRates = (void (*)(double*,double*,double*,double*))
+    getsym(module, "ComputeVariablesForRates");
   return cmf;
 }
 
@@ -69,7 +71,6 @@ CompileSource(std::string& destDir, std::string& sourceFile,
               std::wstring& lastError)
 {
   setvbuf(stdout, NULL, _IONBF, 0);
-  printf("Entering CompileSource.\n");
   std::string targ = destDir;
 #ifdef WIN32
   targ += "/generated.dll";
@@ -82,13 +83,11 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #else
     "-nodefaultlibs "
 #endif
-    "-O3 -shared -o";
+    "-O3 -ffast-math -shared -o";
   cmd += targ;
   cmd += " ";
   cmd += sourceFile;
-  printf("Running the compiler: %s\n", cmd.c_str());
   int ret = system(cmd.c_str());
-  printf("Compiler exited with code %u\n", ret);
   if (ret != 0)
   {
     lastError = L"Could not compile the model code.";
@@ -96,19 +95,15 @@ CompileSource(std::string& destDir, std::string& sourceFile,
   }
 
 #ifdef WIN32
-  printf("Calling LoadLibrary(%s)\n", targ.c_str());
   void* t = LoadLibrary(targ.c_str());
 #else
   void* t = dlopen(targ.c_str(), RTLD_NOW);
 #endif
   if (t == NULL)
   {
-    printf("Load returned null.\n");
     lastError = L"Cannot load the model code module.";
     throw iface::cellml_api::CellMLException();
   }
-
-  printf("Library was loaded.\n");
 
   return t;
 }
@@ -430,6 +425,10 @@ CDA_CellMLIntegrationService::compileModel
   ss << "void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, "
     "double* VARIABLES)" << std::endl;
   frag = cci->variableCodeFragment();
+  ss << "{" << std::endl << frag << std::endl << "}" << std::endl;
+  ss << "void ComputeVariablesForRates(double* BOUND, double* RATES, double* CONSTANTS, "
+    "double* VARIABLES)" << std::endl;
+  ss << "#define VARIABLES_FOR_RATES_ONLY" << std::endl;
   ss << "{" << std::endl << frag << std::endl << "}" << std::endl;
   free(frag);
   ss.close();

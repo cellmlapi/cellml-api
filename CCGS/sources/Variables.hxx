@@ -26,6 +26,13 @@ public:
   {
   }
 
+  const VariableInformation* GetSource() const
+  {
+    if (!mSourceInformation)
+      return this;
+    return mSourceInformation;
+  }
+
   enum
   {
     SUBJECT_OF_DIFF   = 0x0001,
@@ -125,5 +132,16 @@ private:
   uint32_t mArrayType;
   VariableInformation* mSourceInformation;
 };
+
+struct VarinfoPointerComparator
+{
+  bool
+  operator()(const VariableInformation* aCmp1, const VariableInformation* aCmp2) const
+  {
+    return (aCmp1->GetSource() < aCmp2->GetSource());
+  }
+};
+
+
 
 #endif // _Variables_hxx
