@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 bool gFinished = false;
-double gStart = 0.0, gStop = 10.0, gIncrement = 1.0;
+double gStart = 0.0, gStop = 10.0, gDensity = 1000.0;
 uint32_t gSleepTime = 0;
 
 #ifdef WIN32
@@ -140,14 +140,13 @@ public:
         }
         if (cv->type() == iface::cellml_services::BOUND)
         {
-          printf(first ? "\"%g\"" : ",\"%g\"", gStart);
+          printf(first ? "\"%g\"" : ",\"%g\"", values[mCI->variableCount()]);
           first = false;
         }
         cv->release_ref();
       }
       printf("\n");
       vi->release_ref();
-      gStart += gIncrement;
     }
   }
 
@@ -208,6 +207,10 @@ ProcessKeywords(int argc, char** argv,
         ist = iface::cellml_services::GEAR_1;
       else if (!strcasecmp(value, "GEAR2"))
         ist = iface::cellml_services::GEAR_2;
+      else if (!strcasecmp(value, "AM_1_12"))
+        ist = iface::cellml_services::ADAMS_MOULTON_1_12;
+      else if (!strcasecmp(value, "BDF15SIMP"))
+        ist = iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE;
       else
       {
         printf("# Warning: Unsupported step_type value %s (ignored)\n",
@@ -272,7 +275,7 @@ ProcessKeywords(int argc, char** argv,
     }
     else if (!strcasecmp(command, "range"))
     {
-      double start, stop, increment;
+      double start, stop, density;
       start = strtod(value, &value);
       if (*value != ',')
       {
@@ -289,11 +292,11 @@ ProcessKeywords(int argc, char** argv,
         continue;
       }
       value++;
-      increment = strtod(value, &value);
-      run->setResultRange(start, stop, increment);
+      density = strtod(value, &value);
+      run->setResultRange(start, stop, density);
       gStart = start;
       gStop = stop;
-      gIncrement = increment;
+      gDensity = density;
     }
     // A special undocumented debugging command...
     else if (!strcasecmp(command, "sleep_time"))
@@ -315,7 +318,7 @@ main(int argc, char** argv)
     printf("Usage: RunCellML modelURL (options)*\n"
            "Available options:\n"
            "  step_type RK2|RK4|RKF45|RKCK|RKPD|"
-           "RK2IMP|RK2SIMP|RK4IMP|BSIMP|GEAR1|GEAR2\n"
+           "RK2IMP|RK2SIMP|RK4IMP|BSIMP|GEAR1|GEAR2|AM_1_12|BDF15SIMP\n"
            "    => Sets the stepping algorithm to use:\n"
            "      RK2     = 2nd order Runge-Kutta.\n"
            "      RK4     = 4th order Runge-Kutta.\n"
@@ -328,18 +331,20 @@ main(int argc, char** argv)
            "      BSIMP   = Implicit Bulirsch-Stoer method of Bader and Deuflhard.\n"
            "      GEAR1   = Implict Gear method (M=1).\n"
            "      GEAR2   = Implict Gear method (M=2).\n"
+           "    AM_1_12   = Adams-Moulton (1-12)\n"
+           "  BDF15SIMP   = BDF(1-5) with non-linear solve.\n"
            "  step_size_control absolute_epsilon,relative_epsilon[,variable_weight[,max_step]]\n"
            "    => Sets the step-size control parameters.\n"
            "      absolute_epsilon: A floating point absolute error tolerance value.\n"
            "      relative_epsilon: A floating point relative error tolerance value.\n"
            "      variable_weight: The weighting (default 1.0) for variables (vs rates).\n"
            "      max_step: The maximum step size to ever take.\n"
-           "  range start,stop,increment\n"
+           "  range start,stop,density\n"
            "    => Sets the range to solve over.\n"
            "       start: A floating point start value.\n"
            "       stop: A floating point stop value.\n"
-           "       increment: A floating point value specifying how often to "
-           "report results (this isn't the step size).\n"
+           "       density: A floating point value specifying the maximum "
+           "density of points (as a number of points for the whole run).\n"
           );
     return -1;
   }

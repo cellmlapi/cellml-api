@@ -17,7 +17,9 @@ module cellml_services
     RUNGE_KUTTA_IMPLICIT_4,
     BULIRSCH_STOER_IMPLICIT_BD,
     GEAR_1,
-    GEAR_2
+    GEAR_2,
+    ADAMS_MOULTON_1_12,
+    BDF_IMPLICIT_1_5_SOLVE
   };
 
   interface IntegrationProgressObserver

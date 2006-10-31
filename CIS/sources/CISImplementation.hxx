@@ -101,6 +101,12 @@ private:
   void SolveODEProblem(CompiledModelFunctions* f, uint32_t constSize,
                        double* constants, uint32_t varSize, double* variables,
                        uint32_t rateSize, double* rates);
+  void SolveODEProblemGSL(CompiledModelFunctions* f, uint32_t constSize,
+                          double* constants, uint32_t varSize, double* variables,
+                          uint32_t rateSize, double* rates);
+  void SolveODEProblemCVODE(CompiledModelFunctions* f, uint32_t constSize,
+                            double* constants, uint32_t varSize, double* variables,
+                            uint32_t rateSize, double* rates);
 
   CDA_CellMLCompiledModel* mModel;
   iface::cellml_services::IntegrationStepType mStepType;

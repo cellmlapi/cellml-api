@@ -8,6 +8,12 @@
 #include <stdarg.h>
 #include <assert.h>
 
+#undef N
+#include <cvode.h>
+#include <nvector_serial.h>
+#include <sundials_types.h>
+#include <cvode_dense.h>
+
 struct EvaluationInformation
 {
   double* constants;
@@ -22,8 +28,8 @@ struct EvaluationInformation
 };
 
 int
-EvaluateRates(double bound, const double vars[],
-              double rates[], void* params)
+EvaluateRatesGSL(double bound, const double vars[],
+                 double rates[], void* params)
 {
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
   
@@ -42,8 +48,8 @@ EvaluateRates(double bound, const double vars[],
   return GSL_SUCCESS;
 }
 
-int
-EvaluateJacobian
+inline int
+EvaluateJacobianGSL
 (
  double bound, const double vars[],
  double jac[], double rates[], void* params
@@ -97,13 +103,21 @@ EvaluateJacobian
   return GSL_SUCCESS;
 }
 
+int
+EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
+{
+  EvaluateRatesGSL(bound, N_VGetArrayPointer_Serial(varsV),
+                   N_VGetArrayPointer_Serial(ratesV), params);
+  return 0;
+}
+
 // Don't cache more than 1MB of variables...
 #define VARIABLE_STORAGE_LIMIT 1048576
 // Don't cache for more than 1 second...
 #define VARIABLE_TIME_LIMIT 1
 
 void
-CDA_CellMLIntegrationRun::SolveODEProblem
+CDA_CellMLIntegrationRun::SolveODEProblemGSL
 (
  CompiledModelFunctions* f, uint32_t constSize, double* constants,
  uint32_t varSize, double* variables, uint32_t rateSize, double* rates
@@ -115,8 +129,8 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   sys.dimension = rateSize;
   sys.params = reinterpret_cast<void*>(&ei);
 
-  sys.function = EvaluateRates;
-  sys.jacobian = EvaluateJacobian;
+  sys.function = EvaluateRatesGSL;
+  sys.jacobian = EvaluateJacobianGSL;
   ei.constants = constants;
   ei.variables = variables;
   ei.rateSize = rateSize;
@@ -165,6 +179,7 @@ CDA_CellMLIntegrationRun::SolveODEProblem
     T = gsl_odeiv_step_gear1;
     break;
   case iface::cellml_services::GEAR_2:
+  default:
     T = gsl_odeiv_step_gear2;
     break;
   }
@@ -230,6 +245,117 @@ CDA_CellMLIntegrationRun::SolveODEProblem
   gsl_odeiv_evolve_free(e);
   gsl_odeiv_control_free(c);
   gsl_odeiv_step_free(s);
+}
+
+void
+CDA_CellMLIntegrationRun::SolveODEProblemCVODE
+(
+ CompiledModelFunctions* f, uint32_t constSize, double* constants,
+ uint32_t varSize, double* variables, uint32_t rateSize, double* rates
+)
+{
+  N_Vector y = N_VMake_Serial(rateSize, variables);
+  void* solver;
+  
+  switch (mStepType)
+  {
+  case iface::cellml_services::ADAMS_MOULTON_1_12:
+    solver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
+    break;
+  case iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE:
+  default:
+    solver = CVodeCreate(CV_BDF, CV_NEWTON);
+    break;
+  }
+
+  EvaluationInformation ei;
+
+  CVodeMalloc(solver, EvaluateRatesCVODE, mStartBvar, y, CV_SS, mEpsRel,
+              &mEpsAbs);
+  if (mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
+    CVDense(solver, rateSize);
+  CVodeSetFdata(solver, &ei);
+
+  ei.constants = constants;
+  ei.variables = variables;
+  ei.rateSize = rateSize;
+  ei.rateSizeBytes = rateSize * sizeof(double);
+  ei.ComputeRates = f->ComputeRates;
+  ei.ComputeVariables = f->ComputeVariables;
+  ei.ComputeVariablesForRates = f->ComputeVariablesForRates;
+  
+  double bound = mStartBvar;
+  
+  uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / (varSize + 1)) * (varSize + 1);
+  double* storage = new double[storageCapacity];
+  uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
+  uint32_t storageSize = 0;
+
+  double lastBound = 0.0 /* initialised only to avoid extraneous warning. */;
+  bool isFirst = true;
+
+  double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
+
+  while (bound < mStopBvar)
+  {
+    double bhl = mStopBvar;
+    if (bhl - bound > mStepSizeMax)
+      bhl = bound + mStepSizeMax;
+    CVodeSetStopTime(solver, bhl);
+    CVode(solver, bhl, y, &bound, CV_ONE_STEP_TSTOP);
+
+    if (mCancelIntegration)
+      break;
+
+    if (isFirst)
+      isFirst = false;
+    else if (bound - lastBound < minReportForDensity)
+      continue;
+
+    lastBound = bound;
+
+    // Add to storage...
+    memcpy(storage + storageSize, variables, varSize * sizeof(double));
+    storage[storageSize + varSize] = bound;
+    f->ComputeVariables(&bound, rates, constants, storage + storageSize);
+    storageSize += varSize + 1;
+    // Are we ready to send?
+    uint32_t timeNow = time(0);
+    if (timeNow >= storageExpiry || storageSize == storageCapacity)
+    {
+      if (mObserver != NULL)
+        mObserver->results(storageSize, storage);
+      storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
+      storageSize = 0;
+    }    
+  }
+  if (storageSize != 0 && mObserver != NULL)
+  {
+    mObserver->results(storageSize, storage);
+  }
+  if (mObserver != NULL)
+    mObserver->done();
+
+  delete [] storage;
+
+  CVodeFree(&solver);
+  N_VDestroy_Serial(y);
+}
+
+void
+CDA_CellMLIntegrationRun::SolveODEProblem
+(
+ CompiledModelFunctions* f, uint32_t constSize, double* constants,
+ uint32_t varSize, double* variables, uint32_t rateSize, double* rates
+)
+{
+  if (mStepType == iface::cellml_services::ADAMS_MOULTON_1_12 ||
+      mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
+    SolveODEProblemCVODE(f, constSize, constants, varSize, variables, rateSize,
+                         rates);
+  else
+    SolveODEProblemGSL(f, constSize, constants, varSize, variables, rateSize,
+                       rates);
 }
 
 extern "C"
