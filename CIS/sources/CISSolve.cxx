@@ -327,7 +327,7 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
         mObserver->results(storageSize, storage);
       storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
       storageSize = 0;
-    }    
+    }
   }
   if (storageSize != 0 && mObserver != NULL)
   {
