@@ -139,6 +139,7 @@ case "$build" in
 esac
 
 VISIBILITY_FLAGS=
+EXTRA_OPTIMISATION=
 dnl Borrowed from glibc configure.in
 dnl ===============================================================
 if test "$GCC" = "yes"; then
@@ -159,9 +160,13 @@ EOF
     AC_DEFINE([HAVE_VISIBILITY_ATTRIBUTE], [], [Define if gcc visibility attributes supported])
     VISIBILITY_FLAGS=-fvisibility=hidden
   fi
+  EXTRA_OPTIMISATION="-O2 -ffast-math"
 fi
 
 AM_CXXFLAGS="$AM_CXXFLAGS $VISIBILITY_FLAGS"
+
+CXXFLAGS="$CXXFLAGS $EXTRA_OPTIMISATION"
+CFLAGS="$CFLAGS $EXTRA_OPTIMISATION"
 
 # Host specific peculiarities...
 CYGWIN_WRAPPER=
