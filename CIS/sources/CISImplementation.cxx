@@ -264,6 +264,7 @@ void
 CDA_CellMLIntegrationRun::stop()
   throw (std::exception&)
 {
+  mCancelIntegration = true;
 }
 
 void
