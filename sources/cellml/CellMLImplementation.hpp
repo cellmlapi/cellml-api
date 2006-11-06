@@ -660,6 +660,8 @@ public:
 
 private:
   CDA_MapVariablesSet* mMVS;
+  cda_serial_t mCacheSerial;
+  iface::cellml_api::MapComponents* mMapComponents;
 };
 
 class CDA_MapComponents
@@ -669,7 +671,7 @@ class CDA_MapComponents
 public:
   CDA_MapComponents(iface::XPCOM::IObject* parent,
                  iface::dom::Element* mapComponents)
-    : CDA_CellMLElement(parent, mapComponents) {};
+    : CDA_CellMLElement(parent, mapComponents), mCacheSerial(0) {};
   virtual ~CDA_MapComponents() {}
   CDA_IMPL_QI3(events::EventTarget, cellml_api::MapComponents,
                cellml_api::CellMLElement)
@@ -682,6 +684,9 @@ public:
   void firstComponent(iface::cellml_api::CellMLComponent* attr) throw(std::exception&);
   iface::cellml_api::CellMLComponent* secondComponent() throw(std::exception&);
   void secondComponent(iface::cellml_api::CellMLComponent* attr) throw(std::exception&);
+
+private:
+  cda_serial_t mCacheSerial;
 };
 
 class CDA_MapVariables

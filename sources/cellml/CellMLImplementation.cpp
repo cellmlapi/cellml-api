@@ -4587,6 +4587,12 @@ iface::cellml_api::MapComponents*
 CDA_Connection::componentMapping()
   throw(std::exception&)
 {
+  if (CDA_CompareSerial(mCacheSerial))
+  {
+    mMapComponents->add_ref();
+    return mMapComponents;
+  }
+
   RETURN_INTO_OBJREFD(allChildren, iface::cellml_api::CellMLElementSet,
                       childElements());
   RETURN_INTO_OBJREF(allChildrenIt, iface::cellml_api::CellMLElementIterator,
@@ -4606,6 +4612,8 @@ CDA_Connection::componentMapping()
       addElement(mc);
       iface::cellml_api::MapComponents* rmc = mc;
       rmc->add_ref();
+      mMapComponents = rmc;
+      mCacheSerial = gCDAChangeSerial;
       return rmc;
     }
     iface::cellml_api::MapComponents* mc =
@@ -4613,6 +4621,8 @@ CDA_Connection::componentMapping()
     if (mc != NULL)
     {
       mc->add_ref();
+      mMapComponents = mc;
+      mCacheSerial = gCDAChangeSerial;
       return mc;
     }
   }
