@@ -49,6 +49,11 @@ void
 VariableInformation::SetFlag(uint32_t flag)
   throw (CodeGenerationError&)
 {
+  if (mSourceInformation)
+  {
+    mSourceInformation->SetFlag(flag);
+    return;
+  }
   mFlags |= flag;
   // Now check the flags for errors...
   uint32_t i;
@@ -389,54 +394,7 @@ CodeGenerationState::FindOrAddVariableInformation
   std::map<std::string,VariableInformation*>::iterator i;
 
   i = mVariableByObjid.find(id);
-  if (i == mVariableByObjid.end())
-  {
-    RETURN_INTO_OBJREF(svar, iface::cellml_api::CellMLVariable,
-                       var->sourceVariable());
-    if (svar == NULL)
-    {
-      std::wstring aMsg = L"Cannot find source for variable ";
-      RETURN_INTO_WSTRING(vn, var->name());
-      aMsg += vn;
-      throw CodeGenerationError(aMsg);
-    }
-    RETURN_INTO_OBJREF(vi, VariableInformation,
-                       new VariableInformation(svar, varinfoKey));
-    // Set the annotation...
-    annot.addAnnotation(vi);
-    xId = svar->objid();
-    id = xId;
-    free(xId);
-    mVariableByObjid.insert(std::pair<std::string,VariableInformation*>
-                            (id, vi));
-    mVariableList.push_back(vi);
-
-    // Now we iterate all connected variables, and set them up too...
-    RETURN_INTO_OBJREF(cvs, iface::cellml_api::CellMLVariableSet,
-                       svar->connectedVariables());
-    RETURN_INTO_OBJREF(cvi, iface::cellml_api::CellMLVariableIterator,
-                       cvs->iterateVariables());
-    while (true)
-    {
-      RETURN_INTO_OBJREF(cvar, iface::cellml_api::CellMLVariable,
-                         cvi->nextVariable());
-      if (cvar == NULL)
-        break;
-      RETURN_INTO_OBJREF(vic, VariableInformation,
-                         new VariableInformation(cvar, varinfoKey, vi));
-      RETURN_INTO_WSTRING(svn, svar->name());
-      RETURN_INTO_WSTRING(cvn, cvar->name());
-      annot.addAnnotation(vic);
-      xId = cvar->objid();
-      id = xId;
-      free(xId);
-      mVariableByObjid.insert(std::pair<std::string,VariableInformation*>
-                              (id, vi));
-    }
-
-    return vi;
-  }
-  return (*i).second;
+  return (*i).second->GetSource();
 }
 
 void
@@ -1063,6 +1021,9 @@ CDA_CCodeInformation::CDA_CCodeInformation
   // Build a list of all components which are required by this particular
   // model.
   cgs.CreateComponentList(aSourceModel);
+
+  // Create information about variable connections...
+  cgs.BuildVariableInformationMap(aSourceModel);
 
   // Build a list of the mathematics...
   cgs.ProcessMath();

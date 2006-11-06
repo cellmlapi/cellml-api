@@ -11,11 +11,6 @@
  * * * Variable type: bound variable
  * * * Variable index: 0
  * * * Has differential: false
- * * Variable y in component main
- * * * Variable type: differential
- * * * Variable index: 0
- * * * Has differential: true
- * * * Highest derivative: 1
  * * Variable offset in component main
  * * * Variable type: constant
  * * * Variable index: 0
@@ -24,6 +19,11 @@
  * * * Variable type: computed for every bound variable
  * * * Variable index: 1
  * * * Has differential: false
+ * * Variable y in component main
+ * * * Variable type: differential
+ * * * Variable index: 0
+ * * * Has differential: true
+ * * * Highest derivative: 1
  * * Variable z in component main
  * * * Variable type: computed once
  * * * Variable index: 2

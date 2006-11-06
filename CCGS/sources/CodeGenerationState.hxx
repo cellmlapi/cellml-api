@@ -80,6 +80,16 @@ public:
   (std::list<iface::cellml_services::CCodeVariable*>& aVarList);
   void ListFlaggedEquations(std::vector<iface::dom::Element*>& aFlaggedEqns);
 
+  /**
+   * Builds a map between variable object IDs and the corresponding
+   * VariableInformation for the source variable. Because
+   * this function does all variables at the same time, it only needs to be
+   * called once, and can run in O(n log(m) + m) time, for n connections and m
+   * variables. This is much more efficient than calling sourceVariable for each
+   * variable.
+   */
+  void
+  BuildVariableInformationMap(iface::cellml_api::Model* aModel);
 private:
   TemporaryAnnotationManager annot;
   TemporaryAnnotationKey scopeKey, varinfoKey;
@@ -94,6 +104,7 @@ private:
   std::list<VariableInformation*> mVariableList;
   std::list<InitialAssignment> mInitialAssignments;
   uint32_t mLastFunctionId;
+
 };
 
 #endif // _CodeGenerationState_hxx

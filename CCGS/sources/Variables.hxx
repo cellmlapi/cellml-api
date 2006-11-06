@@ -3,6 +3,7 @@
 
 #include "TemporaryAnnotation.hxx"
 #include "CodeGenerationError.hxx"
+#include <map>
 
 class VariableInformation
   : public TemporaryAnnotation
@@ -27,6 +28,13 @@ public:
   }
 
   const VariableInformation* GetSource() const
+  {
+    if (!mSourceInformation)
+      return this;
+    return mSourceInformation;
+  }
+
+  VariableInformation* GetSource()
   {
     if (!mSourceInformation)
       return this;
@@ -141,7 +149,5 @@ struct VarinfoPointerComparator
     return (aCmp1->GetSource() < aCmp2->GetSource());
   }
 };
-
-
 
 #endif // _Variables_hxx
