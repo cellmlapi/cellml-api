@@ -48,8 +48,10 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
         break;
       iface::cellml_api::CellMLVariable* sv = v->source();
       wchar_t* n = sv->name();
-      printf(" * * %S\n", n);
+      wchar_t* c = sv->componentName();
+      printf(" * * %S (in %S)\n", n, c);
       free(n);
+      free(c);
       sv->release_ref();
       v->release_ref();
     }
