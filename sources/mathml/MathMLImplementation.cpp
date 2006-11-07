@@ -52,31 +52,79 @@ CDA_MathMLDocument::URI() throw(std::exception&)
 }
 
 static bool
+IsQualifierName(const wchar_t* str)
+{
+  if (str[0] < 'i')
+  {
+    if (str[0] == 'd')
+    {
+      if (str[1] == 'e')
+      {
+        if (!wcscmp(L"gree", str + 2))
+          return true;
+      }
+      else if (str[1] == 'o')
+      {
+        if (!wcscmp(L"mainofapplication", str + 2))
+          return true;
+      }
+    }
+    else if (str[0] == 'b')
+    {
+      if (!wcscmp(L"var", str + 1))
+        return true;
+    }
+    else if (str[0] == 'c')
+    {
+      if (!wcscmp(L"ondition", str + 1))
+        return true;
+    }
+  }
+  else if (str[0] <= 'l')
+  {
+    if (str[0] == 'l')
+    {
+      if (str[1] == 'o')
+      {
+        if (str[2] == 'g')
+        {
+          if (!wcscmp(L"base", str + 3))
+            return true;
+        }
+        else if (str[2] == 'w')
+        {
+          if (!wcscmp(L"limit", str + 3))
+            return true;
+        }
+      }
+    }
+    else if (!wcscmp(L"interval", str))
+      return true;      
+  }
+  else if (str[0] == 'm')
+  {
+    if (!wcscmp(L"omentabout", str + 1))
+      return true;
+  }
+  else if (!wcscmp(L"uplimit", str))
+    return true;
+
+  return false;
+}
+
+static bool
 IsQualifier(iface::dom::Node* n)
 {
-  static wchar_t* qualifiers[] =
-    {L"lowlimit", L"uplimit", L"bvar", L"degree", L"logbase", L"interval",
-     L"condition", L"domainofapplication", L"momentabout"};
-#if 0
-  wchar_t* str = n->namespaceURI();
-  if (wcscmp(str, MATHML_NS))
-  {
-    free(str);
-    return false;
-  }
-  free(str);
-#endif
+  //static wchar_t* qualifiers[] =
+  //  {L"lowlimit", L"uplimit", L"bvar", L"degree", L"logbase", L"interval",
+  //   L"condition", L"domainofapplication", L"momentabout"};
 
   wchar_t* str = n->localName();
-  uint32_t i;
-  for (i = 0; i < (sizeof(qualifiers)/sizeof(*qualifiers)); i++)
-    if (!wcscmp(qualifiers[i], str))
-    {
-      free(str);
-      return true;
-    }
+  bool result = IsQualifierName(str);
+
   free(str);
-  return false;
+
+  return result;
 }
 
 static bool
@@ -96,9 +144,11 @@ IsArgument(iface::dom::Node* n)
     free(str);
     return false;
   }
+
+  bool result = !IsQualifierName(str);
   free(str);
 
-  return !IsQualifier(n);
+  return result;
 }
 
 static bool
