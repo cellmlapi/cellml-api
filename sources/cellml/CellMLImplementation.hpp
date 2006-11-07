@@ -649,7 +649,7 @@ class CDA_Connection
 public:
   CDA_Connection(iface::XPCOM::IObject* parent,
                  iface::dom::Element* connection)
-    : CDA_CellMLElement(parent, connection), mMVS(NULL) {};
+    : CDA_CellMLElement(parent, connection), mMVS(NULL), mCacheSerial(0) {};
   virtual ~CDA_Connection();
 
   CDA_IMPL_QI3(events::EventTarget, cellml_api::Connection,

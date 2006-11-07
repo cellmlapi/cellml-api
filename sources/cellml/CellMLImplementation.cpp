@@ -39,7 +39,7 @@ WrapCellMLElement(iface::XPCOM::IObject* newParent,
  * is big enough. At 1000 changes/second, it would take 49 days to get a
  * conflict with 32 bits, or about 585 million years with 64 bits.
  */
-cda_serial_t gCDAChangeSerial = 0;
+cda_serial_t gCDAChangeSerial = 1;
 
 // Called to update the change serial when something changes...
 static void CDA_SomethingChanged()
@@ -5832,8 +5832,10 @@ CDA_DOMElementIteratorBase::fetchNextElement(const wchar_t* aWantEl)
       for (i = 0; i < l; i++)
       {
         RETURN_INTO_OBJREF(nodeHit, iface::dom::Node, mNodeList->item(i));
-        RETURN_INTO_WSTRING(elN, nodeHit->localName());
-        if (elN != aWantEl)
+        wchar_t* ln = nodeHit->localName();
+        int match = wcscmp(ln, aWantEl);
+        free(ln);
+        if (match != 0)
           continue;
 
         QUERY_INTERFACE(mPrevElement, nodeHit, dom::Element);
