@@ -16,6 +16,8 @@ struct InitialAssignment
   double factor, offset;
 };
 
+class VariableDisjointSet;
+
 class CodeGenerationState
 {
 public:
@@ -91,6 +93,10 @@ public:
   void
   BuildVariableInformationMap(iface::cellml_api::Model* aModel);
 private:
+  void BuildVIMForConnections(iface::cellml_api::Model* aModel,
+                              std::map<iface::cellml_api::CellMLVariable*,
+                              VariableDisjointSet*>& vsMap);
+
   TemporaryAnnotationManager annot;
   TemporaryAnnotationKey scopeKey, varinfoKey;
   CellMLScope mGlobalScope;
