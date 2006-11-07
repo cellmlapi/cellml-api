@@ -13,6 +13,8 @@
 #include <time.h>
 #include "DOMBootstrap.hxx"
 
+typedef uint32_t cda_serial_t;
+
 class CDA_Element;
 class CDA_Document;
 
@@ -210,7 +212,7 @@ class CDA_NodeList
 {
 public:
   CDA_NodeList(CDA_Node* parent)
-    : _cda_refcount(1), mParent(parent)
+    : _cda_refcount(1), mParent(parent), hintSerial(0)
   {
     mParent->add_ref();
   }
@@ -229,6 +231,11 @@ public:
   uint32_t length() throw(std::exception&);
 
   CDA_Node* mParent;
+
+private:
+  cda_serial_t hintSerial;
+  std::list<CDA_Node*>::iterator hintIterator;
+  uint32_t hintIndex;
 };
 
 class CDA_NodeListDFSSearch

@@ -3,6 +3,35 @@
 #include "DOMImplementation.hpp"
 #include <stdexcept>
 
+/*
+ * This next bit is a very pragmatic way of deciding when to throw away the
+ * caches. We need to know when the cache might be stale, while at the same
+ * time changes must be efficient. This problem is not as easy as checking the
+ * root, since we could easily be working with partial fragments, which get
+ * re-arranged. We could do this properly by visiting all elements connected to
+ * the element being changed, and invalidating the cache at that time, but that
+ * would be too slow. Instead, we have a single global serial number, which we
+ * touch every time a change is made. If the current serial number doesn't
+ * match the number on the cache, we throw the cache away and rebuild. This
+ * does, of course, have the downside that if you have two models open, changes
+ * to one model will wipe the cache of the other, completely separate model.
+ * The other issue is that serial numbers wrap, so we should make sure the type
+ * is big enough. At 1000 changes/second, it would take 49 days to get a
+ * conflict with 32 bits, or about 585 million years with 64 bits.
+ */
+cda_serial_t gCDADOMChangeSerial = 1;
+
+static void CDA_DOM_SomethingChanged()
+{
+  gCDADOMChangeSerial++;
+}
+
+// Returns true if a cache serial matches the global serial.
+static bool CDA_DOMCompareSerial(cda_serial_t aSerial)
+{
+  return gCDADOMChangeSerial == aSerial;
+}
+
 CDA_DOMImplementation* CDA_DOMImplementation::sDOMImplementation = 
   new CDA_DOMImplementation();
 
@@ -435,6 +464,8 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
   for (i = 0; i < newChild->_cda_refcount; i++)
     add_ref();
 
+  CDA_DOM_SomethingChanged();
+
   // Fire off a DOMNodeInserted(unless it is an attribute)...
   if (newChild->eventsHaveEffects() &&
       newChild->nodeType() != iface::dom::Node::ATTRIBUTE_NODE)
@@ -505,6 +536,9 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
   throw(std::exception&)
 {
   bool oldTreeHadEffects = false;
+
+  CDA_DOM_SomethingChanged();
+
   if (oldChild->eventsHaveEffects() &&
       oldChild->nodeType() != iface::dom::Node::ATTRIBUTE_NODE)
   {
@@ -942,10 +976,20 @@ iface::dom::Node*
 CDA_NodeList::item(uint32_t index)
   throw(std::exception&)
 {
+  uint32_t saveIndex = index;
   if (mParent == NULL)
     return NULL;
 
-  std::list<CDA_Node*>::iterator i = mParent->mNodeList.begin();
+  std::list<CDA_Node*>::iterator i;
+  // Can we use a hint saved from last time?
+  if (CDA_DOMCompareSerial(hintSerial) && hintIndex <= index)
+  {
+    i = hintIterator;
+    index -= hintIndex;
+  }
+  else
+    i = mParent->mNodeList.begin();
+
   for (; i != mParent->mNodeList.end(); i++)
   {
     // See if it is a type we ignore...
@@ -956,6 +1000,11 @@ CDA_NodeList::item(uint32_t index)
     if (index == 0)
     {
       (*i)->add_ref();
+
+      hintSerial = gCDADOMChangeSerial;
+      hintIterator = i;
+      hintIndex = saveIndex;
+
       return (*i);
       break;
     }
@@ -1174,6 +1223,8 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
                                           at->mLocalName)
     );
 
+  CDA_DOM_SomethingChanged();
+
   if (mElement->eventsHaveEffects())
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
@@ -1257,6 +1308,8 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
   mElement->attributeMapNS.erase(i);
   mElement->attributeMap.erase(at->mNodeName);
   at->add_ref();
+
+  CDA_DOM_SomethingChanged();
 
   if (mElement->eventsHaveEffects())
   {
@@ -1632,6 +1685,8 @@ CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
   std::map<std::wstring, CDA_Attr*>::iterator
     i = attributeMap.find(name);
 
+  CDA_DOM_SomethingChanged();
+
   if (i == attributeMap.end())
   {
     RETURN_INTO_OBJREF(a, CDA_Attr, new CDA_Attr(mDocument));
@@ -1699,6 +1754,8 @@ CDA_Element::removeAttribute(const wchar_t* name)
     attributeMapNS.erase(std::pair<std::wstring,std::wstring>
                          (at->mNamespaceURI, at->mNodeName));
 
+  CDA_DOM_SomethingChanged();
+
   if (eventsHaveEffects())
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
@@ -1735,6 +1792,9 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   RETURN_INTO_WSTRING(name, newAttr->name());
   std::map<std::wstring, CDA_Attr*>::iterator
     i = attributeMap.find(name);
+
+  CDA_DOM_SomethingChanged();
+
   if (i == attributeMap.end())
   {
     insertBeforePrivate(newAttr, NULL)->release_ref();
@@ -1807,6 +1867,8 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
   attributeMapNS.erase(std::pair<std::wstring,std::wstring>(nsuri, lname));
+  
+  CDA_DOM_SomethingChanged();
 
   if (eventsHaveEffects())
   {
@@ -1861,6 +1923,8 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
     i = attributeMapNS.find(p);
+
+  CDA_DOM_SomethingChanged();
 
   if (i == attributeMapNS.end())
   {
@@ -1919,6 +1983,8 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
     return;
   }
 
+  CDA_DOM_SomethingChanged();
+
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
@@ -1964,6 +2030,9 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
     (newAttr->mNamespaceURI, newAttr->mLocalName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
     i = attributeMapNS.find(p);
+
+  CDA_DOM_SomethingChanged();
+
   if (i == attributeMapNS.end())
   {
     insertBeforePrivate(newAttr, NULL)->release_ref();
@@ -2300,6 +2369,8 @@ CDA_ProcessingInstruction::data(const wchar_t* attr)
 {
   std::wstring oldData = mNodeValue;
   mNodeValue = attr;
+
+  CDA_DOM_SomethingChanged();
 
   if (eventsHaveEffects())
   {
