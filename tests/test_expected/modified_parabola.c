@@ -5,12 +5,12 @@
  * The constant array needs 1 entries.
  * The bound array needs 1 entries.
  * Variable storage is as follows:
- * * Variable time in component main
- * * * Variable type: bound variable
- * * * Variable index: 0
- * * * Has differential: false
  * * Variable offset in component main
  * * * Variable type: constant
+ * * * Variable index: 0
+ * * * Has differential: false
+ * * Variable time in component main
+ * * * Variable type: bound variable
  * * * Variable index: 0
  * * * Has differential: false
  * * Variable x in component main

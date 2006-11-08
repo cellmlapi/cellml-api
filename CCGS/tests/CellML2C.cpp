@@ -9,25 +9,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <vector>
+#include <algorithm>
+#include <string>
 
-char*
+wchar_t*
 TypeToString(iface::cellml_services::VariableEvaluationType vet)
 {
   switch (vet)
   {
   case iface::cellml_services::BOUND:
-    return "bound variable";
+    return L"bound variable";
   case iface::cellml_services::CONSTANT:
-    return "constant";
+    return L"constant";
   case iface::cellml_services::COMPUTED_CONSTANT:
-    return "computed once";
+    return L"computed once";
   case iface::cellml_services::DIFFERENTIAL:
-    return "differential";
+    return L"differential";
   case iface::cellml_services::COMPUTED:
-    return "computed for every bound variable";
+    return L"computed for every bound variable";
   }
 
-  return "invalid type";
+  return L"invalid type";
 }
 
 void
@@ -41,6 +44,7 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
            " * List of undefined variables follows...\n");
     iface::cellml_services::CCodeVariableIterator* ccvi = cci->iterateVariables();
     iface::cellml_services::CCodeVariable* v;
+    std::vector<std::wstring> messages;
     while (true)
     {
       v = ccvi->nextVariable();
@@ -49,13 +53,23 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
       iface::cellml_api::CellMLVariable* sv = v->source();
       wchar_t* n = sv->name();
       wchar_t* c = sv->componentName();
-      printf(" * * %S (in %S)\n", n, c);
+      std::wstring str = L" * * ";
+      str += n;
+      str += L" (in ";
+      str += c;
+      str += L")\n";
       free(n);
       free(c);
+      messages.push_back(str);
       sv->release_ref();
       v->release_ref();
     }
     ccvi->release_ref();
+    // Sort the messages...
+    std::sort(messages.begin(), messages.end());
+    std::vector<std::wstring>::iterator msgi;
+    for (msgi = messages.begin(); msgi != messages.end(); msgi++)
+      printf("%S", (*msgi).c_str());
     printf(" */\n");
     return;
   }
@@ -65,6 +79,7 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
            " * List variables defined at time of error follows...\n");
     iface::cellml_services::CCodeVariableIterator* ccvi = cci->iterateVariables();
     iface::cellml_services::CCodeVariable* v;
+    std::vector<std::wstring> messages;
     while (true)
     {
       v = ccvi->nextVariable();
@@ -72,12 +87,22 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
         break;
       iface::cellml_api::CellMLVariable* sv = v->source();
       wchar_t* n = sv->name();
-      printf(" * * %S\n", n);
+      std::wstring str = L" * * ";
+      str += n;
       free(n);
+      str += L"\n";
+      messages.push_back(str);
       sv->release_ref();
       v->release_ref();
     }
     ccvi->release_ref();
+
+    // Sort the messages...
+    std::sort(messages.begin(), messages.end());
+    std::vector<std::wstring>::iterator msgi;
+    for (msgi = messages.begin(); msgi != messages.end(); msgi++)
+      printf("%S", (*msgi).c_str());
+
     // Get flagged equations...
     iface::mathml_dom::MathMLNodeList* mnl = cci->flaggedEquations();
     printf(" * Extraneous equation was:\n");
@@ -120,6 +145,8 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
     printf(" * No equations needed Newton-Raphson evaluation.\n");
   else
     printf(" * The following equations needed Newton-Raphson evaluation:\n");
+
+  std::vector<std::wstring> messages;
   for (i = 0; i < l; i++)
   {
     iface::dom::Node* n = mnl->item(i);
@@ -129,10 +156,15 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
 
     wchar_t* cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#",
                                         L"id");
+    std::wstring str;
     if (!wcscmp(cmeta, L""))
-      printf(" *   <equation with no cmeta ID>\n");
+      str += L" *   <equation with no cmeta ID>\n";
     else
-      printf(" *   %S\n", cmeta);
+    {
+      str += L" *   ";
+      str += cmeta;
+      str += L"\n";
+    }
     free(cmeta);
 
     n = el->parentNode();
@@ -144,19 +176,33 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
 
     cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#", L"id");
     if (!wcscmp(cmeta, L""))
-      printf(" *   in <math with no cmeta ID>\n");
+      str += L" *   in <math with no cmeta ID>\n";
     else
-      printf(" *   in math with cmeta:id %S\n", cmeta);
+    {
+      str += L" *   in math with cmeta:id ";
+      str += cmeta;
+      str += L"\n";
+    }
     free(cmeta);
     el->release_ref();
+
+    messages.push_back(str);
   }
   mnl->release_ref();
+
+  // Sort the messages...
+  std::sort(messages.begin(), messages.end());
+  std::vector<std::wstring>::iterator msgi;
+  for (msgi = messages.begin(); msgi != messages.end(); msgi++)
+    printf("%S", (*msgi).c_str());
+  
   printf(" * The main variable array needs %u entries.\n", cci->variableCount());
-  printf(" * The rate array needs %u entries.\n", cci->rateVariableCount());  
+  printf(" * The rate array needs %u entries.\n", cci->rateVariableCount());
   printf(" * The constant array needs %u entries.\n", cci->constantCount());
   printf(" * The bound array needs %u entries.\n", cci->boundCount());
   printf(" * Variable storage is as follows:\n");
   
+  messages.clear();
   iface::cellml_services::CCodeVariableIterator* cvi = cci->iterateVariables();
   while (true)
   {
@@ -170,25 +216,45 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
       (el->query_interface("cellml_api::CellMLComponent"));
     el->release_ref();
 
+    std::wstring str;
     wchar_t* vn = s->name(), * cn = c->name();
-    printf(" * * Variable %S in component %S\n",
-           vn, cn);
+    str += L" * * Variable ";
+    str += vn;
+    str += L" in component ";
+    str += cn;
+    str += L"\n";
     free(vn);
     free(cn);
 
     c->release_ref();
     s->release_ref();
 
-    printf(" * * * Variable type: %s\n", TypeToString(v->type()));
-    printf(" * * * Variable index: %u\n", v->variableIndex());
-    printf(" * * * Has differential: %s\n",
-           (v->hasDifferential() ? "true" : "false"));
+    str += L" * * * Variable type: ";
+    str += TypeToString(v->type());
+    str += L"\n * * * Variable index: ";
+    wchar_t buf[40];
+    swprintf(buf, 40, L"%u\n", v->variableIndex());
+    str += buf;
+    str += L" * * * Has differential: ";
     if (v->hasDifferential())
-      printf(" * * * Highest derivative: %u\n", v->derivative());
+    {
+      str += L"true\n * * * Highest derivative: ";
+      swprintf(buf, 40, L"%u\n", v->derivative());
+      str += buf;
+    }
+    else
+      str += L"false\n";
 
     v->release_ref();
+
+    messages.push_back(str);
   }
   cvi->release_ref();
+
+  // Sort the messages...
+  std::sort(messages.begin(), messages.end());
+  for (msgi = messages.begin(); msgi != messages.end(); msgi++)
+    printf("%S", (*msgi).c_str());
 
   printf(" */\n");
 
