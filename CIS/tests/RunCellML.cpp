@@ -13,6 +13,10 @@
 #include <wchar.h>
 #include <unistd.h>
 
+#ifdef ENABLE_FIND_NUMERIC_ERRORS
+#include <fenv.h>
+#endif
+
 bool gFinished = false;
 double gStart = 0.0, gStop = 10.0, gDensity = 1000.0;
 uint32_t gSleepTime = 0;
@@ -425,6 +429,11 @@ main(int argc, char** argv)
   tpo->release_ref();
 
   ProcessKeywords(argc, argv, cir);
+
+#ifdef ENABLE_FIND_NUMERIC_ERRORS
+  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
+#endif
+
   cir->start();
   cir->release_ref();
   ccm->release_ref();
