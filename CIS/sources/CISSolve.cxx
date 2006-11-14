@@ -111,8 +111,9 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
   return 0;
 }
 
-// Don't cache more than 1MB of variables...
-#define VARIABLE_STORAGE_LIMIT 1048576
+// Don't cache more than 2MB of variables (assuming 8 bytes per variable). This
+// leaves a little bit of room in the 2MB for CORBA overhead.
+#define VARIABLE_STORAGE_LIMIT 262016
 // Don't cache for more than 1 second...
 #define VARIABLE_TIME_LIMIT 1
 
