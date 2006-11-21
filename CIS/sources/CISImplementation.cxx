@@ -83,7 +83,12 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #else
     "-nodefaultlibs "
 #endif
-    "-O3 -ffast-math -shared -o";
+    "-O3 -ffast-math "
+#ifdef __MACH__
+    "-lm -dynamiclib -o ";
+#else
+    "-shared -o";
+#endif
   cmd += targ;
   cmd += " ";
   cmd += sourceFile;
