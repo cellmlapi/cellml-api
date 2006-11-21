@@ -1,9 +1,9 @@
 /* Model is overconstrained.
  * List variables defined at time of error follows...
- * * time
- * * y
  * * offset
+ * * time
  * * x
+ * * y
  * * z
  * Extraneous equation was:
  *   <equation with no cmeta ID>
