@@ -114,7 +114,7 @@ CodeGenerationState::BuildVIMForConnections
       std::map<iface::cellml_api::CellMLVariable*, VariableDisjointSet*>::
         iterator i;
       i = vsMap.find(v1);
-      if (i != vsMap.end())
+      if (i == vsMap.end())
       {
         std::wstring emsg = L"Variable ";
         RETURN_INTO_WSTRING(v, v1->name());
@@ -135,7 +135,7 @@ CodeGenerationState::BuildVIMForConnections
       VariableDisjointSet* vds1 = (*i).second;
       i = vsMap.find(v2);
       
-      if (i != vsMap.end())
+      if (i == vsMap.end())
       {
         std::wstring emsg = L"Variable ";
         RETURN_INTO_WSTRING(v, v1->name());
