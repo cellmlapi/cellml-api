@@ -114,8 +114,45 @@ CodeGenerationState::BuildVIMForConnections
       std::map<iface::cellml_api::CellMLVariable*, VariableDisjointSet*>::
         iterator i;
       i = vsMap.find(v1);
+      if (i != vsMap.end())
+      {
+        std::wstring emsg = L"Variable ";
+        RETURN_INTO_WSTRING(v, v1->name());
+        emsg += v;
+        emsg += L" in component ";
+        RETURN_INTO_WSTRING(c, v1->componentName());
+        emsg += c;
+        emsg += L" is connected to variable ";
+        RETURN_INTO_WSTRING(vs2, v2->name());
+        emsg += vs2;
+        emsg += L" in component ";
+        RETURN_INTO_WSTRING(cs2, v2->componentName());
+        emsg += cs2;
+        emsg += L" but the former component was never imported.";
+        throw CodeGenerationError(emsg);
+      }
+
       VariableDisjointSet* vds1 = (*i).second;
       i = vsMap.find(v2);
+      
+      if (i != vsMap.end())
+      {
+        std::wstring emsg = L"Variable ";
+        RETURN_INTO_WSTRING(v, v1->name());
+        emsg += v;
+        emsg += L" in component ";
+        RETURN_INTO_WSTRING(c, v1->componentName());
+        emsg += c;
+        emsg += L" is connected to variable ";
+        RETURN_INTO_WSTRING(vs2, v2->name());
+        emsg += vs2;
+        emsg += L" in component ";
+        RETURN_INTO_WSTRING(cs2, v2->componentName());
+        emsg += cs2;
+        emsg += L" but the latter component was never imported.";
+        throw CodeGenerationError(emsg);
+      }
+
       VariableDisjointSet* vds2 = (*i).second;
       vds1->unionWith(vds2);
     }
