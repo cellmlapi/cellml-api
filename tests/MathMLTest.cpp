@@ -1389,7 +1389,7 @@ MathMLTest::testMathMLPiecewise()
                                   mathml_dom::MathMLContentElement);
   mcenew->className(L"newpwpvalue1");
   mce = mpw->setCaseValue(1, mcenew);
-  mcenew->release_ref();  
+  mcenew->release_ref();
   str = mce->className();
   CPPUNIT_ASSERT(!wcscmp(str, L"newpwpvalue1"));
   free(str);
@@ -1434,6 +1434,21 @@ MathMLTest::testMathMLPiecewise()
   DECLARE_QUERY_INTERFACE_REPLACE(newpiece, pwel,
                                   mathml_dom::MathMLCaseElement);
   newpiece->className(L"newpiece");
+
+  
+  pwel = d->createElementNS(MATHML_NS, L"apply");
+  DECLARE_QUERY_INTERFACE_REPLACE(el1, pwel,
+                                  mathml_dom::MathMLContentElement);
+  el1->className(L"newcaseval");
+  pwel = d->createElementNS(MATHML_NS, L"apply");
+  DECLARE_QUERY_INTERFACE_REPLACE(el2, pwel,
+                                  mathml_dom::MathMLContentElement);
+  el2->className(L"newcasecond");
+  CPPUNIT_ASSERT_NO_THROW(newpiece->caseValue(el1));
+  CPPUNIT_ASSERT_NO_THROW(newpiece->caseCondition(el2));
+  el1->release_ref();
+  el2->release_ref();
+
   mcase = mpw->insertCase(1, newpiece);
   CPPUNIT_ASSERT_EQUAL(4, (int)mnl->length());
   str = mcase->className();
@@ -1451,6 +1466,16 @@ MathMLTest::testMathMLPiecewise()
   str = mcase->className();
   CPPUNIT_ASSERT(!wcscmp(str, L"newpiece"));
   free(str);
+  el1 = mcase->caseCondition();
+  str = el1->className();
+  CPPUNIT_ASSERT(!wcscmp(str, L"newcasecond"));
+  free(str);
+  el1->release_ref();
+  el1 = mcase->caseValue();
+  str = el1->className();
+  CPPUNIT_ASSERT(!wcscmp(str, L"newcaseval"));
+  free(str);
+  el1->release_ref();
   mcase->release_ref();
   mcase = mpw->getCase(1);
   str = mcase->className();

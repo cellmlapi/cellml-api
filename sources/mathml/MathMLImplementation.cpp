@@ -3140,43 +3140,33 @@ void
 CDA_MathMLCaseElement::caseCondition(iface::mathml_dom::MathMLContentElement* attr)
   throw(std::exception&)
 {
-  iface::dom::NodeList *cn = static_cast<CDA_Element*>(this)->childNodes();
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList, static_cast<CDA_Element*>(this)->childNodes());
   bool got_condition = false;
-  try
+  uint32_t l = cn->length();
+  uint32_t i = 0;
+  for (i = 0; i < l; i++)
   {
-    uint32_t l = cn->length();
-    uint32_t i = 0;
-    for (i = 0; i < l; i++)
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
+    iface::mathml_dom::MathMLContentElement* ce =
+      dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n.getPointer());
+    if (ce == NULL)
+      continue;
+    else if (!got_condition)
     {
-      iface::dom::Node* n = cn->item(i);
-      iface::mathml_dom::MathMLContentElement* ce =
-        dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n);
-      if (ce == NULL)
-      {
-        n->release_ref();
-        continue;
-      }
-      else if (!got_condition)
-      {
-        n->release_ref();
-        got_condition = true;
-        continue;
-      }
-      else
-      {
-        cn->release_ref();
-        replaceChild(attr, n)->release_ref();
-        n->release_ref();
-        return;
-      }
+      got_condition = true;
+      continue;
+    }
+    else
+    {
+      replaceChild(attr, n)->release_ref();
+      return;
     }
   }
-  catch (std::exception& e)
+  if (got_condition)
   {
-    cn->release_ref();
-    throw e;
+    appendChild(attr)->release_ref();
+    return;
   }
-  cn->release_ref();
   throw iface::dom::DOMException();
 }
 
