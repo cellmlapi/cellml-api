@@ -144,7 +144,7 @@ public:
         }
         if (cv->type() == iface::cellml_services::BOUND)
         {
-          printf(first ? "\"%g\"" : ",\"%g\"", values[mCI->variableCount()]);
+          printf(first ? "\"%g\"" : ",\"%g\"", values[i + vc - 1]);
           first = false;
         }
         cv->release_ref();
