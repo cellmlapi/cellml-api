@@ -2026,6 +2026,8 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
   CDA_Attr* newAttr = dynamic_cast<CDA_Attr*>(inewAttr);
   if (newAttr == NULL)
     throw iface::dom::DOMException();
+  if (newAttr->mLocalName == L"")
+    newAttr->mLocalName = newAttr->mNodeName;
   std::pair<std::wstring,std::wstring> p
     (newAttr->mNamespaceURI, newAttr->mLocalName);
   std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
