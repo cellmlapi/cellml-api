@@ -40,9 +40,17 @@ for (idx, name) in enumerate(args):
       output = args[idx + 1]
       skipnext = 1
   elif name[0:2] == "-I":
-    newargs.append("-I" + CygwinToNative(name[2:]))
+    path = name[2:]
+    if path == '':
+	skipnext = 1
+	path = args[idx + 1]
+    newargs.append("-I" + CygwinToNative(path))
   elif name[0:2] == "-L":
-    newargs.append("-L" + CygwinToNative(name[2:]))
+    path = name[2:]
+    if path == '':
+	skipnext = 1
+	path = args[idx + 1]
+    newargs.append("-L" + CygwinToNative(path))
   else:
     newargs.append(name)
 args = newargs
