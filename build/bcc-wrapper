@@ -1,0 +1,85 @@
+#!/usr/bin/python
+from sys import exit, argv
+from os import environ
+import string, os
+
+def CygwinToNative(cpath):
+  if cpath[0] != '/':
+    return cpath
+  if cpath[0:10] == '/cygdrive/':
+    return cpath[10] + ':/' + cpath[12:]
+  return 'c:/cygwin' + cpath
+
+try:
+  bcc = environ['BCCPATH']
+except KeyError:
+  exit('You must define BCCPATH to point to your Borland compiler tools.')
+
+args = argv[1:]
+mode = 0
+output = 0
+newargs = []
+skipnext = 0
+for (idx, name) in enumerate(args):
+  if skipnext:
+    skipnext = 0
+    continue
+  if name == "-E":
+    if mode != 0:
+      exit('Only one -E/-c option allowed.')
+    mode = "preprocess"
+  elif name == "-c":
+    if mode != 0:
+      exit('Only one -E/-c option allowed.')
+    mode = "compileonly"
+  elif name[0:2] == "-o":
+    if output != 0:
+      exit('More than one output file specified.')
+    output = name[2:]
+    if output == "":
+      output = args[idx + 1]
+      skipnext = 1
+  elif name[0:2] == "-I":
+    newargs.append("-I" + CygwinToNative(name[2:]))
+  elif name[0:2] == "-L":
+    newargs.append("-L" + CygwinToNative(name[2:]))
+  else:
+    newargs.append(name)
+args = newargs
+
+if mode == 0:
+  mode = "compile_link"
+if output == 0 and mode == "compile_link":
+  output = "a.exe"
+
+if output == 0 and mode == "preprocess":
+  output = "tmpout"
+
+outargs = []
+
+if mode == "preprocess":
+  outargs.append(bcc + "/bin/cpp32")
+elif mode == "compileonly":
+  outargs.append(bcc + "/bin/bcc32")
+  outargs.append("-c")
+elif mode == "compile_link":
+  outargs.append(bcc + "/bin/bcc32")
+
+outargs.append('-I' + CygwinToNative(bcc + '/Include'))
+outargs.append('-L' + CygwinToNative(bcc + '/Lib'))
+
+if output != 0:
+  if mode == "compile_link":
+    outargs.append('-e' + output)
+  else:
+    outargs.append('-o' + output)
+
+outargs += args
+
+print 'Calling: ' + string.join(outargs)
+environ['PATH'] = environ['PATH'] + ':' + bcc + '/Bin'
+os.spawnv(os.P_WAIT, outargs[0], outargs)
+if output == 'tmpout':
+  for i in file('tmpout.i'):
+    print i,
+  os.unlink('tmpout.i')
