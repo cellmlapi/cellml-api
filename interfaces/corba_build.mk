@@ -2,7 +2,7 @@
 
 lib_LTLIBRARIES += libcellml_corba_stubs.la libcellml_corba_bridge.la
 # noinst_LTLIBRARIES += libcellml_corba_sk.la
-libcellml_corba_bridge_la_SOURCES := \
+libcellml_corba_bridge_la_SOURCES = \
   $(top_builddir)/interfaces/CCIDOM_APISPEC.cxx \
   $(top_builddir)/interfaces/CCIDOM_events.cxx \
   $(top_builddir)/interfaces/CCIxpcom.cxx \
@@ -16,7 +16,7 @@ libcellml_corba_bridge_la_SOURCES := \
   $(top_builddir)/interfaces/SCICellML_APISPEC.cxx \
   $(top_builddir)/interfaces/SCICellML_events.cxx
 
-libcellml_corba_stubs_la_SOURCES := \
+libcellml_corba_stubs_la_SOURCES = \
   $(top_builddir)/interfaces/DOM_APISPECSK.cc \
   $(top_builddir)/interfaces/DOM_eventsSK.cc \
   $(top_builddir)/interfaces/xpcomSK.cc \
@@ -24,18 +24,18 @@ libcellml_corba_stubs_la_SOURCES := \
   $(top_builddir)/interfaces/CellML_APISPECSK.cc \
   $(top_builddir)/interfaces/CellML_eventsSK.cc
 
-libcellml_corba_stubs_la_LIBADD := $(STLLINK) $(OMNILINK)
+libcellml_corba_stubs_la_LIBADD = $(STLLINK) $(OMNILINK)
 
-libcellml_corba_bridge_la_CXXFLAGS := \
+libcellml_corba_bridge_la_CXXFLAGS = \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS) -DMODULE_CONTAINS_xpcom -DMODULE_CONTAINS_DOMAPISPEC -DMODULE_CONTAINS_MathMLcontentAPISPEC -DMODULE_CONTAINS_CellMLAPISPEC -DMODULE_CONTAINS_CellMLevents
 
-libcellml_corba_stubs_la_CXXFLAGS := \
+libcellml_corba_stubs_la_CXXFLAGS = \
   -I$(top_builddir)/interfaces -I$(top_srcdir)/simple_interface_generators/glue
 
-libcellml_corba_stubs_la_LDFLAGS := \
+libcellml_corba_stubs_la_LDFLAGS = \
   -no-undefined
 
-libcellml_corba_bridge_la_LIBADD := libcellml_corba_stubs.la libCORBASupport.la $(STLLINK) $(OMNILINK)
+libcellml_corba_bridge_la_LIBADD = libcellml_corba_stubs.la libCORBASupport.la $(STLLINK) $(OMNILINK)
 
 # Force correct order of compilation...
 $(top_builddir)/interfaces/CCI%.cxx: $(top_builddir)/interfaces/%SK.cc

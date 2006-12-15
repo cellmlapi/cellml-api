@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES += libltdlc.la $(LT_DLLOADERS)
 
-libltdlc_la_SOURCES := \
+libltdlc_la_SOURCES = \
   libltdl/libltdl/lt__alloc.h \
   libltdl/libltdl/lt__dirent.h \
   libltdl/libltdl/lt__glibc.h \
@@ -19,10 +19,10 @@ libltdlc_la_SOURCES := \
   libltdl/ltdl.h \
   libltdl/slist.c
 
-libltdlc_la_CPPFLAGS		:= -DLTDL -DLTDLOPEN=$(LTDLOPEN)c $(AM_CPPFLAGS) -I$(top_srcdir)/libltdl -I$(top_srcdir)/libltdl/libltdl
-libltdlc_la_LDFLAGS		:= $(AM_LDFLAGS) $(LTDL_VERSION_INFO) $(LT_DLPREOPEN)
-libltdlc_la_LIBADD		:= $(LTLIBOBJS)
-libltdlc_la_DEPENDENCIES	:= $(LT_DLLOADERS) $(LTLIBOBJS)
+libltdlc_la_CPPFLAGS		= -DLTDL -DLTDLOPEN=$(LTDLOPEN)c $(AM_CPPFLAGS) -I$(top_srcdir)/libltdl -I$(top_srcdir)/libltdl/libltdl
+libltdlc_la_LDFLAGS		= $(AM_LDFLAGS) $(LTDL_VERSION_INFO) $(LT_DLPREOPEN)
+libltdlc_la_LIBADD		= $(LTLIBOBJS)
+libltdlc_la_DEPENDENCIES	= $(LT_DLLOADERS) $(LTLIBOBJS)
 
 EXTRA_LTLIBRARIES	       += dlopen.la \
 				  dld_link.la \
@@ -31,32 +31,32 @@ EXTRA_LTLIBRARIES	       += dlopen.la \
 				  loadlibrary.la \
 				  shl_load.la
 
-dlopen_la_SOURCES	:= libltdl/loaders/dlopen.c
-dlopen_la_LDFLAGS	:= -module -avoid-version
-dlopen_la_LIBADD 	:= $(LIBADD_DLOPEN)
-dlopen_la_CPPFLAGS      := $(libltdlc_la_CPPFLAGS)
+dlopen_la_SOURCES	= libltdl/loaders/dlopen.c
+dlopen_la_LDFLAGS	= -module -avoid-version
+dlopen_la_LIBADD 	= $(LIBADD_DLOPEN)
+dlopen_la_CPPFLAGS      = $(libltdlc_la_CPPFLAGS)
 
-dld_link_la_SOURCES	:= libltdl/loaders/dld_link.c
-dld_link_la_LDFLAGS	:= -module -avoid-version
-dld_link_la_LIBADD	:= -ldld
-dld_link_la_CPPFLAGS      := $(libltdlc_la_CPPFLAGS)
+dld_link_la_SOURCES	= libltdl/loaders/dld_link.c
+dld_link_la_LDFLAGS	= -module -avoid-version
+dld_link_la_LIBADD	= -ldld
+dld_link_la_CPPFLAGS    = $(libltdlc_la_CPPFLAGS)
 
-dyld_la_SOURCES		:= libltdl/loaders/dyld.c
-dyld_la_LDFLAGS		:= -module -avoid-version
-dyld_la_CPPFLAGS      := $(libltdlc_la_CPPFLAGS)
+dyld_la_SOURCES		= libltdl/loaders/dyld.c
+dyld_la_LDFLAGS		= -module -avoid-version
+dyld_la_CPPFLAGS      = $(libltdlc_la_CPPFLAGS)
 
-load_add_on_la_SOURCES	:= libltdl/loaders/load_add_on.c
-load_add_on_la_LDFLAGS	:= -module -avoid-version
-load_add_on_la_CPPFLAGS := $(libltdlc_la_CPPFLAGS)
+load_add_on_la_SOURCES	= libltdl/loaders/load_add_on.c
+load_add_on_la_LDFLAGS	= -module -avoid-version
+load_add_on_la_CPPFLAGS = $(libltdlc_la_CPPFLAGS)
 
-loadlibrary_la_SOURCES	:= libltdl/loaders/loadlibrary.c
-loadlibrary_la_LDFLAGS	:= -module -avoid-version
-loadlibrary_la_CPPFLAGS := $(libltdlc_la_CPPFLAGS)
+loadlibrary_la_SOURCES	= libltdl/loaders/loadlibrary.c
+loadlibrary_la_LDFLAGS	= -module -avoid-version
+loadlibrary_la_CPPFLAGS = $(libltdlc_la_CPPFLAGS)
 
-shl_load_la_SOURCES	:= libltdl/loaders/shl_load.c
-shl_load_la_LDFLAGS	:= -module -avoid-version
-shl_load_la_LIBADD	:= $(LIBADD_SHL_LOAD)
-shl_load_la_CPPFLAGS    := $(libltdlc_la_CPPFLAGS)
+shl_load_la_SOURCES	= libltdl/loaders/shl_load.c
+shl_load_la_LDFLAGS	= -module -avoid-version
+shl_load_la_LIBADD	= $(LIBADD_SHL_LOAD)
+shl_load_la_CPPFLAGS    = $(libltdlc_la_CPPFLAGS)
 
 ## Make sure these will be cleaned even when they're not built by default:
 CLEANFILES += \

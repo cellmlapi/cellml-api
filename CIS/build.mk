@@ -1,6 +1,6 @@
 lib_LTLIBRARIES += libcis.la
 
-CVODE_SOURCES := \
+CVODE_SOURCES = \
   $(top_srcdir)/CIS/sources/sundials/cvode_band.c \
   $(top_srcdir)/CIS/sources/sundials/cvode_bandpre.c \
   $(top_srcdir)/CIS/sources/sundials/cvode_bbdpre.c \
@@ -23,15 +23,15 @@ CVODE_SOURCES := \
   $(top_srcdir)/CIS/sources/sundials/sundials_spgmr.c \
   $(top_srcdir)/CIS/sources/sundials/sundials_sptfqmr.c
 
-libcis_la_SOURCES := \
+libcis_la_SOURCES = \
   $(top_srcdir)/CIS/sources/CISImplementation.cxx \
   $(top_srcdir)/CIS/sources/CISSolve.cxx \
   $(CVODE_SOURCES)
 
-libcis_la_LIBADD := \
+libcis_la_LIBADD = \
   $(top_builddir)/libccgs.la -lgsl $(STLLINK)
 
-libcis_la_CXXFLAGS := \
+libcis_la_CXXFLAGS = \
   -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces \
   -I$(top_srcdir)/CIS/sources/sundials $(AM_CXXFLAGS)
 
