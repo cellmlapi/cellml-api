@@ -7084,7 +7084,7 @@ _LT_EOF
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
 
-# serial 3 ltoptions.m4
+# serial-old 3 ltoptions.m4
 
 # This is to help aclocal find these macros, as it can't see m4_define.
 AC_DEFUN([LTOPTIONS_VERSION], [m4_if([1])])
@@ -7466,7 +7466,7 @@ dnl AC_DEFUN([AC_LIBTOOL_PICMODE], [])
 
 # Generated from ltversion.in; do not edit by hand
 
-# serial 2317 ltversion.m4
+# serial-old 2317 ltversion.m4
 # This file is part of GNU Libtool
 
 m4_define([LT_PACKAGE_VERSION], [2.1a])
@@ -7487,7 +7487,7 @@ _LT_DECL(, macro_revision, 0)
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
 
-# serial 3 ltsugar.m4
+# serial-old 3 ltsugar.m4
 
 # This is to help aclocal find these macros, as it can't see m4_define.
 AC_DEFUN([LTSUGAR_VERSION], [m4_if([0.1])])
@@ -7598,7 +7598,7 @@ m4_define([lt_dict_filter],
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
 
-# serial 2
+# serial-old 2
 
 # These exist entirely to fool aclocal when bootstrapping libtool.
 #
@@ -7686,7 +7686,7 @@ m4_ifndef([_LT_AC_FILE_LTDLL_C],	[AC_DEFUN([_LT_AC_FILE_LTDLL_C])])
 # unlimited permission to copy and/or distribute it, with or without
 # modifications, as long as this notice is preserved.
 
-# serial 10 LTDL_INIT
+# serial-old 10 LTDL_INIT
 
 # LT_CONFIG_LTDL_DIR(DIRECTORY, [LTDL-MODE])
 # ------------------------------------------
