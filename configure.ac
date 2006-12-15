@@ -9,7 +9,7 @@ AC_CONFIG_SRCDIR([sources/cellml/CellMLBootstrap.cpp])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_HEADER([cda_config.h])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wno-portability])
 PKG_PROG_PKG_CONFIG
 
 # Set up libtool...
