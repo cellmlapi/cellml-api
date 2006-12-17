@@ -2,6 +2,14 @@
 #define compiler_support_h
 
 #include "cda_config.h"
+
+#ifdef __BORLANDC__
+#define WIN32
+#define HEADER_INLINE
+#else
+#define HEADER_INLINE inline
+#endif
+
 #ifdef HAVE_VISIBILITY_ATTRIBUTE
 #define CDA_EXPORT __attribute__((visibility("default")))
 #define WARN_IF_RETURN_UNUSED __attribute__((warn_unused_result))

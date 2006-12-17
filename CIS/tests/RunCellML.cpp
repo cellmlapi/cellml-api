@@ -1,4 +1,7 @@
+#include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include <exception>
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCCGS.hxx"

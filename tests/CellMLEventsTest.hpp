@@ -1,7 +1,10 @@
 #ifndef CELLMLEVENTSTEST_H
 #define CELLMLEVENTSTEST_H
 #include <cppunit/extensions/HelperMacros.h>
+#include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include "IfaceCellML_events.hxx"
 
 class CellMLEventsTest : public CppUnit::TestFixture

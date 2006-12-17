@@ -1,5 +1,8 @@
 #include <exception>
+#include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include <map>
 #include <string>
 #include "CellMLContextBootstrap.hxx"

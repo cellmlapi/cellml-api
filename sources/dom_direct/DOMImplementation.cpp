@@ -1,5 +1,8 @@
 #include <algorithm>
+#include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include "DOMImplementation.hpp"
 #include <stdexcept>
 

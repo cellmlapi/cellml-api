@@ -1,5 +1,8 @@
 #include <exception>
+#include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include "IfaceMathML_content_APISPEC.hxx"
 #include "DOMImplementation.hpp"
 #include <map>

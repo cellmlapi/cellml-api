@@ -10,7 +10,10 @@
 #else
 #include <sys/errno.h>
 #endif
+#include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include "CellML_APISPEC.hh"
 #include "IfaceCellML_APISPEC.hxx"
 #include "CellMLContextBootstrap.hxx"

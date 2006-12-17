@@ -1,6 +1,9 @@
 #ifndef _CCGSImplementation_hpp
 #define _CCGSImplementation_hpp
+#include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include <exception>
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceMathML_content_APISPEC.hxx"
@@ -9,7 +12,6 @@
 #include <sstream>
 #include <vector>
 #include <list>
-#include "cda_config.h"
 
 #ifdef ENABLE_CONTEXT
 #include "IfaceCellML_Context.hxx"

@@ -1,8 +1,9 @@
 #ifndef _UTILITIES_HXX
 #define _UTILITIES_HXX
 
-#ifdef HAVE_INTTYPES_H
 #include "cda_config.h"
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 
 #if SIZEOF_WCHAR_TP == 8
@@ -20,7 +21,6 @@
 #include <exception>
 #include <Ifacexpcom.hxx>
 #include <wchar.h>
-#include <inttypes.h>
 
 #ifndef WIN32
 #include <sys/time.h>
@@ -33,7 +33,7 @@
 #include "cda_compiler_support.h"
 
 // wcsdup is non-standard, so use this instead...
-inline wchar_t*
+HEADER_INLINE wchar_t*
 CDA_wcsdup(const wchar_t* str)
 {
   size_t l = (wcslen(str) + 1) * sizeof(wchar_t);
@@ -167,7 +167,7 @@ mersenne_autoseed(void)
 }
 
 /* generates a random number on [0,0xffffffff]-interval */
-inline unsigned long mersenne_genrand_int32(void)
+HEADER_INLINE unsigned long mersenne_genrand_int32(void)
 {
     unsigned long y;
     static unsigned long mag01[2]={0x0UL, MATRIX_A};
@@ -208,7 +208,7 @@ inline unsigned long mersenne_genrand_int32(void)
     return y;
 }
 
-inline int
+HEADER_INLINE int
 CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
   throw()
 {
@@ -833,7 +833,7 @@ private:
   ObjRef<iface::type> lhs; \
   QUERY_INTERFACE(lhs, rhs, type)
 
-inline bool hasInterface(iface::XPCOM::IObject* obj, const char* iface)
+HEADER_INLINE bool hasInterface(iface::XPCOM::IObject* obj, const char* iface)
 {
   if (obj == NULL)
     return false;
@@ -844,7 +844,7 @@ inline bool hasInterface(iface::XPCOM::IObject* obj, const char* iface)
   return true;
 }
 
-inline bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
+HEADER_INLINE bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
                                const iface::XPCOM::IObject* rhs,
                                const char* type)
 {

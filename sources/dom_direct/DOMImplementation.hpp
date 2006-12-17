@@ -6,7 +6,9 @@
 #include <string>
 #include <list>
 #include <map>
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 #include <typeinfo>
 #include <assert.h>
 #include <sys/time.h>
