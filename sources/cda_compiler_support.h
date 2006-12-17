@@ -11,16 +11,16 @@
 #endif
 
 #ifdef HAVE_VISIBILITY_ATTRIBUTE
-#define CDA_EXPORT __attribute__((visibility("default")))
+#define CDA_EXPORT(x) x __attribute__((visibility("default")))
 #define WARN_IF_RETURN_UNUSED __attribute__((warn_unused_result))
-#define CDA_IMPORT __attribute__((visibility("default")))
+#define CDA_IMPORT(x) x __attribute__((visibility("default")))
 #elif defined(WIN32)
-#define CDA_EXPORT __declspec(dllexport)
-#define CDA_IMPORT __declspec(dllimport)
+#define CDA_EXPORT(x) __declspec(dllexport) x
+#define CDA_IMPORT(x) __declspec(dllimport) x
 #define WARN_IF_RETURN_UNUSED
 #else
-#define CDA_EXPORT
-#define CDA_IMPORT
+#define CDA_EXPORT(x)
+#define CDA_IMPORT(x)
 #define WARN_IF_RETURN_UNUSED
 #endif
 

@@ -82,12 +82,16 @@ if output != 0:
   else:
     outargs.append('-o' + output)
 
+outargs.append('-w-8026')
+outargs.append('-w-8027')
+outargs.append('-w-8078')
 outargs += args
 
 print 'Calling: ' + string.join(outargs)
 environ['PATH'] = environ['PATH'] + ':' + bcc + '/Bin'
-os.spawnv(os.P_WAIT, outargs[0], outargs)
+ret = os.spawnv(os.P_WAIT, outargs[0], outargs)
 if output == 'tmpout':
   for i in file('tmpout.i'):
     print i,
   os.unlink('tmpout.i')
+exit(ret)

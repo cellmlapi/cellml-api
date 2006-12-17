@@ -7,9 +7,9 @@
 #include "cda_compiler_support.h"
 
 #ifdef IN_DOM_MODULE
-#define DOM_PUBLIC CDA_EXPORT
+#define DOM_PUBLIC(x) CDA_EXPORT(x)
 #else
-#define DOM_PUBLIC CDA_IMPORT
+#define DOM_PUBLIC(x) CDA_IMPORT(x)
 #endif
 
 /*
@@ -40,4 +40,4 @@ public:
 // Get a DOM Implementation. This is a C++ specific method, not part of the
 // standard interface. Applications should only access methods on the base
 // class.
-CellML_DOMImplementationBase* CreateDOMImplementation() DOM_PUBLIC;
+DOM_PUBLIC(CellML_DOMImplementationBase* CreateDOMImplementation());
