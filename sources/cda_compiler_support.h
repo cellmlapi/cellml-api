@@ -17,10 +17,17 @@
 #define CDA_IMPORT_PRE
 #define CDA_IMPORT_POST __attribute__((visibility("default")))
 #elif defined(WIN32)
+#ifdef __BORLANDC__
 #define CDA_EXPORT_PRE __declspec(dllexport)
 #define CDA_EXPORT_POST
 #define CDA_IMPORT_PRE __declspec(dllimport)
 #define CDA_IMPORT_POST
+#else
+#define CDA_EXPORT_PRE
+#define CDA_EXPORT_POST __declspec(dllexport)
+#define CDA_IMPORT_PRE
+#define CDA_IMPORT_POST __declspec(dllimport)
+#endif
 #define WARN_IF_RETURN_UNUSED
 #else
 #define CDA_EXPORT_PRE
