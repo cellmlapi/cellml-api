@@ -1,3 +1,4 @@
+#include "cda_compiler_support.h"
 #define IN_CELLML_MODULE
 // CellML and DOM are in the same module...
 #define IN_DOM_MODULE
@@ -370,8 +371,10 @@ CDA_ModelLoader::asyncCreateFromDOM
   loader->asyncLoadDocument(URL, cfddll);
 }
 
-CDA_EXPORT_PRE iface::cellml_api::CellMLBootstrap*
+int myfunc() { return 0; }
+
+CDA_EXPORT_PRE CDA_EXPORT_POST iface::cellml_api::CellMLBootstrap*
 CreateCellMLBootstrap()
 {
   return new CDA_CellMLBootstrap();
-} CDA_EXPORT_POST
+} 

@@ -865,7 +865,7 @@ CDA_CellMLContext::~CDA_CellMLContext()
     mModelList->release_ref();
 }
 
-CDA_EXPORT iface::cellml_context::CellMLContext*
+CDA_EXPORT_PRE CDA_EXPORT_POST iface::cellml_context::CellMLContext*
 CreateCellMLContext()
 {
   return new CDA_CellMLContext();
