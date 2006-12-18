@@ -54,6 +54,7 @@ static TranslateEntities(const std::wstring& inp, bool isAttribute = false)
   return o;
 }
 
+CDA_EXPORT_PRE CDA_EXPORT_POST
 DOMWriter::DOMWriter()
 {
 }
