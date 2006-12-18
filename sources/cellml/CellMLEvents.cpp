@@ -86,7 +86,7 @@ private:
 
   void handlePossibleMathModified(iface::events::Event* aEvent,
                                   iface::dom::Node* mathEl) 
-    throw(std::exception&);;
+    throw(std::exception&);
   void handleCellMLIntoCellML(iface::events::Event* aEvent,
                               iface::dom::Node* aParentEl,
                               iface::dom::Node* aChildEl)

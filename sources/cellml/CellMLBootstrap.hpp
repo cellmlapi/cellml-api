@@ -1,7 +1,10 @@
 #ifdef IN_CELLML_MODULE
-#define CELLML_PUBLIC CDA_EXPORT
+#define CELLML_PUBLIC_PRE CDA_EXPORT_PRE
+#define CELLML_PUBLIC_POST CDA_EXPORT_POST
 #else
-#define CELLML_PUBLIC CDA_IMPORT
+#define CELLML_PUBLIC_PRE CDA_IMPORT_PRE
+#define CELLML_PUBLIC_POST CDA_IMPORT_POST
 #endif
 
-iface::cellml_api::CellMLBootstrap* CreateCellMLBootstrap() CELLML_PUBLIC;
+CELLML_PUBLIC_PRE iface::cellml_api::CellMLBootstrap* CreateCellMLBootstrap()
+  CELLML_PUBLIC_POST;

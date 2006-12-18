@@ -370,8 +370,8 @@ CDA_ModelLoader::asyncCreateFromDOM
   loader->asyncLoadDocument(URL, cfddll);
 }
 
-CDA_EXPORT iface::cellml_api::CellMLBootstrap*
+CDA_EXPORT_PRE iface::cellml_api::CellMLBootstrap*
 CreateCellMLBootstrap()
 {
   return new CDA_CellMLBootstrap();
-}
+} CDA_EXPORT_POST

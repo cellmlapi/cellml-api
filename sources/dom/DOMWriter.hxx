@@ -11,11 +11,14 @@
 class DOMNamespaceContext;
 
 #ifdef IN_DOMWRITER_MODULE
-#define DOMWRITER_PUBLIC CDA_EXPORT
+#define DOMWRITER_PUBLIC_PRE CDA_EXPORT_PRE
+#define DOMWRITER_PUBLIC_POST CDA_EXPORT_POST
 #else
-#define DOMWRITER_PUBLIC CDA_IMPORT
+#define DOMWRITER_PUBLIC_PRE CDA_IMPORT_PRE
+#define DOMWRITER_PUBLIC_POST CDA_IMPORT_POST
 #endif
 
+DOMWRITER_PUBLIC_PRE
 class DOMWriter
 {
 public:
@@ -53,7 +56,7 @@ public:
     throw(std::exception);
   void writeNotation(DOMNamespaceContext* dnc, iface::dom::Notation* nt, std::wstring& appendTo)
     throw(std::exception);
-} DOMWRITER_PUBLIC;
+} DOMWRITER_PUBLIC_POST;
 
 class DOMNamespaceContext
 {

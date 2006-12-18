@@ -1,8 +1,10 @@
 #include "cda_compiler_support.h"
 #ifdef IN_CCGS_MODULE
-#define CCGS_PUBLIC CDA_EXPORT
+#define CCGS_PUBLIC_PRE CDA_EXPORT_PRE
+#define CCGS_PUBLIC_POST CDA_EXPORT_POST
 #else
-#define CCGS_PUBLIC CDA_IMPORT
+#define CCGS_PUBLIC_PRE CDA_IMPORT_PRE
+#define CCGS_PUBLIC_POST CDA_IMPORT_POST
 #endif
 
 /**
@@ -10,4 +12,6 @@
  * This code is the external C++ interface which allows you to fetch the
  * implementation.
  */
-iface::cellml_services::CGenerator* CreateCGenerator(void) CCGS_PUBLIC;
+CCGS_PUBLIC_PRE
+  iface::cellml_services::CGenerator* CreateCGenerator(void)
+CCGS_PUBLIC_POST;

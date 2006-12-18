@@ -85,6 +85,8 @@ if output != 0:
 outargs.append('-w-8026')
 outargs.append('-w-8027')
 outargs.append('-w-8078')
+# This warning (arguments not used) doesn't make much sense in our design, turn it off...
+outargs.append('-w-8057')
 outargs += args
 
 print 'Calling: ' + string.join(outargs)
