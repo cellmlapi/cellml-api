@@ -1,7 +1,9 @@
 #include "Utilities.hxx"
 #include "MathMLImplementation.hxx"
 
-#ifdef _WIN32
+#if defined(_WIN32)
+#undef __STDC__
+#include <stdio.h>
 #define swprintf _snwprintf
 #endif
 

@@ -16,8 +16,8 @@
 
 struct CDA_utf8_data_t
 {
-  uint8_t len;
-  uint8_t mask;
+  unsigned char len;
+  unsigned char mask;
 };
 
 CDA_utf8_data_t CDA_utf8_data[] =
@@ -48,7 +48,7 @@ CDA_utf8_data_t CDA_utf8_data[] =
 static void
 operator+=(std::wstring& data, const char* str)
 {
-  uint8_t c;
+  unsigned char c;
   wchar_t buf[512];
   const char* p = str;
   wchar_t* np = buf;
@@ -58,7 +58,7 @@ operator+=(std::wstring& data, const char* str)
 
   while ((c = *p++))
   {
-    uint8_t l = CDA_utf8_data[c].len;
+    unsigned char l = CDA_utf8_data[c].len;
 
     if (((uint32_t)(np - buf)) > ((sizeof(buf)/sizeof(wchar_t)) - 4))
     {
@@ -70,11 +70,11 @@ operator+=(std::wstring& data, const char* str)
 #ifndef WCHAR_T_CONSTANT_WIDTH
     if (l == 4)
     {
-      uint8_t c2 = (uint8_t)*p++;
-      uint8_t c3 = (uint8_t)*p++;
-      uint8_t w = ((c << 2) | ((c2 >> 4) & 3)) - 1;
+      unsigned char c2 = (unsigned char)*p++;
+      unsigned char c3 = (unsigned char)*p++;
+      unsigned char w = ((c << 2) | ((c2 >> 4) & 3)) - 1;
       *np++ = (0xD800 | (w << 6) | ((c2 << 2) & 0x3A) | ((c3 >> 4) & 0x3));
-      uint8_t c4 = (uint8_t)*p++;
+      unsigned char c4 = (unsigned char)*p++;
       *np = (0xDC00 | ((c3 << 6) & 0x3A0) | (c4 & 0x3F));
     }
     else

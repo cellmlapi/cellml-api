@@ -11,7 +11,9 @@
 #endif
 #include <typeinfo>
 #include <assert.h>
+#ifndef __BORLANDC__
 #include <sys/time.h>
+#endif
 #include <time.h>
 #include "DOMBootstrap.hxx"
 

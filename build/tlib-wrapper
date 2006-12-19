@@ -1,0 +1,126 @@
+#!/usr/bin/python
+from sys import exit, argv
+from os import environ
+import string, os
+import shutil
+
+def CygwinToNative(cpath):
+  if cpath[0] != '/':
+    return cpath
+  if cpath[0:10] == '/cygdrive/':
+    return cpath[10] + ':/' + cpath[12:]
+  return 'c:/cygwin' + cpath
+
+def GetFileNames(archive):
+  temps = ['archive.tmp']
+  arctmp = os.path.basename(archive)
+  if arctmp != archive:
+    temps.append(arctmp)
+    shutil.copy(archive, arctmp)
+  args = [binary, arctmp, ',', 'archive.tmp']
+  stream = os.popen(string.join(args))
+  output = stream.readlines()
+  ret = stream.close()
+  if ret != None:
+    for o in output:
+      print o,
+    print 'Failure during list phase.'
+    exit(ret)
+  f = file('archive.tmp', 'r')
+  lines = f.readlines()
+  files = [];
+  for v in lines[:]:
+    try:
+      files.append(v[0:v.rindex("\tsize =")])
+    except ValueError:
+      pass
+  for n in temps:
+    os.unlink(n)
+  return files
+
+try:
+  bcc = environ['BCCPATH']
+except KeyError:
+  exit('You must define BCCPATH to point to your Borland compiler tools.')
+
+binary = bcc + '/Bin/TLIB.EXE'
+
+args = argv[1:]
+mode = 0
+output = 0
+newargs = []
+skipnext = 0
+ofile = ''
+names = []
+temps = []
+
+if args[0] == 't':
+  archive = args[1]
+  for f in GetFileNames(archive):
+    print f
+  exit(0)
+elif args[0] == 'x':
+  archive = args[1]
+  names = GetFileNames(archive)
+  temps = []
+  arctmp = os.path.basename(archive)
+  if arctmp != archive:
+    temps.append(arctmp)
+    shutil.copy(archive, arctmp)
+  args = [binary, arctmp]
+  for n in names:
+    args.append("*" + n)
+  os.spawnv(os.P_WAIT, '/bin/echo.exe', args)
+  ret = os.spawnv(os.P_WAIT, binary, args)
+  for t in temps:
+    os.unlink(t)
+  if ret != 0:
+    print 'Failure during extraction phase.'
+  else:
+    for n in names:
+      n = n + ".OBJ"
+      os.rename(n, n.replace(".OBJ", ".obj"))
+  exit(ret)
+
+for (idx, name) in enumerate(args):
+  if name[0] == "/":
+    if name[1:5] == "OUT:":
+      ofile = name[5:]
+    else:
+      print "Unrecognised option " + name
+  else:
+    name = name.replace("\\", "/")
+    name2 = os.path.basename(name.replace("-", "_"))
+    name2 = name2.replace("+", "_")
+    if name != name2:
+      shutil.copy(name, name2)
+      names.append(name2.replace("/", "\\"))
+      temps = names
+    else:
+      names.append(name.replace("/", "\\"))
+
+args = [binary]
+if ofile == '':
+  exit('Please specify an output filename.')
+
+otmp = os.path.basename(ofile)
+needMove = 0
+if otmp != ofile:
+  needMove = 1
+
+args.append(otmp.replace("/", "\\"))
+
+for n in names:
+  args.append("+-" + n)
+
+environ['PATH'] = environ['PATH'] + ':' + bcc + '/Bin'
+os.spawnv(os.P_WAIT, '/bin/echo', args)
+ret = os.spawnv(os.P_WAIT, binary, args)
+
+for n in temps:
+  os.unlink(n)
+
+if needMove == 1:
+  shutil.move(otmp, ofile)
+
+exit(ret)

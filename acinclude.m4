@@ -4439,7 +4439,16 @@ _LT_EOF
       # The linker will automatically build a .lib file if we build a DLL.
       _LT_TAGVAR(old_archive_from_new_cmds, $1)='true'
       # FIXME: Should let the user specify the lib program.
-      _LT_TAGVAR(old_archive_cmds, $1)='lib /OUT:$oldlib$oldobjs$old_deplibs'
+      case $CXX in
+        *bcc-wrapper*)
+	  ac_top_srcdir=`dirname $CXX`
+          _LT_TAGVAR(old_archive_cmds, $1)="$ac_top_srcdir/tlib-wrapper /OUT:\$oldlib\$oldobjs\$old_deplibs"
+          AR="$ac_top_srcdir/tlib-wrapper"
+          ;;
+        *)
+         _LT_TAGVAR(old_archive_cmds, $1)='lib /OUT:$oldlib$oldobjs$old_deplibs'
+         ;;
+      esac
       _LT_TAGVAR(fix_srcfile_path, $1)='`cygpath -w "$srcfile"`'
       _LT_TAGVAR(enable_shared_with_static_runtimes, $1)=yes
       ;;
