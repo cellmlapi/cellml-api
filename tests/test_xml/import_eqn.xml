@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<model
+    name="sin_approximations_import"
+    cmeta:id="sin_approximations_import"
+    xmlns="http://www.cellml.org/cellml/1.1#"
+    xmlns:cellml="http://www.cellml.org/cellml/1.1#"
+    xmlns:cmeta="http://www.cellml.org/metadata/1.0#"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <import xlink:href="imported_eqn.xml">
+    <component name="actual_sin" component_ref="actual_sin"/>
+  </import>
+
+  <component name="main" cmeta:id="main">
+    <variable cmeta:id="x" name="x" initial_value="0" units="dimensionless" public_interface="out" private_interface="out"/>
+    <variable cmeta:id="sin" name="sin1" units="dimensionless" public_interface="out" private_interface="in"/>
+  </component>
+  
+  <group>
+    <relationship_ref relationship="encapsulation"/>
+    <component_ref component="main">
+      <component_ref component="actual_sin"/>
+    </component_ref>
+  </group>
+  
+  <connection>
+    <map_components component_1="actual_sin" component_2="main"/>
+    <map_variables variable_1="sin" variable_2="sin1"/>
+    <map_variables variable_1="x" variable_2="x"/>
+  </connection>
+
+</model>

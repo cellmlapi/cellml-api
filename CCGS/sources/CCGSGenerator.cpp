@@ -15,6 +15,44 @@
 #include "CodeGenerationError.hxx"
 #include "TemporaryAnnotation.hxx"
 
+iface::cellml_api::CellMLComponent*
+GetRealComponent(iface::cellml_api::CellMLElement* in)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(x, in, cellml_api::CellMLComponent);
+  if (x == NULL)
+    throw CodeGenerationError(L"\"in\" not a component (bug)");
+  while (true)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(imp, x, cellml_api::ImportComponent);
+    if (imp == NULL)
+    {
+      x->add_ref();
+      return x;
+    }
+    RETURN_INTO_OBJREF(cee, iface::cellml_api::CellMLElement,
+                       imp->parentElement());
+    DECLARE_QUERY_INTERFACE_OBJREF(cei, cee, cellml_api::CellMLImport);
+    if (cei == NULL)
+      throw CodeGenerationError(L"Parent of import component not import.");
+    RETURN_INTO_OBJREF(im, iface::cellml_api::Model, cei->importedModel());
+    RETURN_INTO_OBJREF(cs, iface::cellml_api::CellMLComponentSet,
+                       im->modelComponents());
+    RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
+                       cs->iterateComponents());
+    RETURN_INTO_WSTRING(tn, imp->componentRef());
+    while (true)
+    {
+      x = already_AddRefd<iface::cellml_api::CellMLComponent>
+        (ci->nextComponent());
+      if (x == NULL)
+        throw CodeGenerationError(L"Imported component missing");
+      RETURN_INTO_WSTRING(n, x->name());
+      if (n == tn)
+        break;
+    }
+  }
+}
+
 static struct
 {
   uint32_t badmask;
@@ -194,14 +232,16 @@ CodeGenerationState::CreateComponentList(iface::cellml_api::Model* aModel)
                        ci->nextComponent());
     if (c == NULL)
       break;
+    RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
+                       GetRealComponent(c));
     // Append the component to the component list...
-    if (compset.count(c) != 0)
+    if (compset.count(rc) != 0)
       continue;
-    c->add_ref();
-    mComponentList.push_back(c);
-    compset.insert(c);
+    rc->add_ref();
+    mComponentList.push_back(rc);
+    compset.insert(rc);
     // Also, any encapsulation descendents go on the list...
-    AddEncapsulationDescendentComponents(compset, c);
+    AddEncapsulationDescendentComponents(compset, rc);
   }
 }
 
@@ -222,14 +262,17 @@ CodeGenerationState::AddEncapsulationDescendentComponents
                        ci->nextComponent());
     if (c == NULL)
       break;
-    
-    if (compset.count(c) != 0)
+
+    RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
+                       GetRealComponent(c));
+
+    if (compset.count(rc) != 0)
       continue;
 
-    c->add_ref();
-    mComponentList.push_back(c);
-    compset.insert(c);
-    AddEncapsulationDescendentComponents(compset, c);
+    rc->add_ref();
+    mComponentList.push_back(rc);
+    compset.insert(rc);
+    AddEncapsulationDescendentComponents(compset, rc);
   }
 }
 
@@ -700,44 +743,6 @@ bool IsPlainCI(iface::mathml_dom::MathMLElement* aSubExpr)
   DECLARE_QUERY_INTERFACE_OBJREF(aCISub, aSubExpr,
                                  mathml_dom::MathMLCiElement);
   return (aCISub != NULL);
-}
-
-iface::cellml_api::CellMLComponent*
-GetRealComponent(iface::cellml_api::CellMLElement* in)
-{
-  DECLARE_QUERY_INTERFACE_OBJREF(x, in, cellml_api::CellMLComponent);
-  if (x == NULL)
-    throw CodeGenerationError(L"\"in\" not a component (bug)");
-  while (true)
-  {
-    DECLARE_QUERY_INTERFACE_OBJREF(imp, x, cellml_api::ImportComponent);
-    if (imp == NULL)
-    {
-      x->add_ref();
-      return x;
-    }
-    RETURN_INTO_OBJREF(cee, iface::cellml_api::CellMLElement,
-                       imp->parentElement());
-    DECLARE_QUERY_INTERFACE_OBJREF(cei, cee, cellml_api::CellMLImport);
-    if (cei == NULL)
-      throw CodeGenerationError(L"Parent of import component not import.");
-    RETURN_INTO_OBJREF(im, iface::cellml_api::Model, cei->importedModel());
-    RETURN_INTO_OBJREF(cs, iface::cellml_api::CellMLComponentSet,
-                       im->modelComponents());
-    RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
-                       cs->iterateComponents());
-    RETURN_INTO_WSTRING(tn, imp->componentRef());
-    while (true)
-    {
-      x = already_AddRefd<iface::cellml_api::CellMLComponent>
-        (ci->nextComponent());
-      if (x == NULL)
-        throw CodeGenerationError(L"Imported component missing");
-      RETURN_INTO_WSTRING(n, x->name());
-      if (n == tn)
-        break;
-    }
-  }
 }
 
 double
