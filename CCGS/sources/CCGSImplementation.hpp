@@ -1,6 +1,6 @@
 #ifndef _CCGSImplementation_hpp
 #define _CCGSImplementation_hpp
-#include "cda_config.h"
+#include "cda_compiler_support.h"
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif

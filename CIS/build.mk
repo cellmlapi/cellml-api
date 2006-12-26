@@ -32,7 +32,7 @@ libcis_la_LIBADD = \
   $(top_builddir)/libccgs.la -lgsl $(STLLINK)
 
 libcis_la_CXXFLAGS = \
-  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces \
+  -Wall -I$(top_srcdir)/sources -I$(top_builddir)/interfaces \
   -I$(top_srcdir)/CIS/sources/sundials $(AM_CXXFLAGS)
 
 include_HEADERS += \

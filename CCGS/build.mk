@@ -12,7 +12,7 @@ libccgs_la_SOURCES = \
   $(top_srcdir)/CCGS/sources/VariableConnections.cpp
 
 libccgs_la_CXXFLAGS = \
-  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
+  -Wall -I$(top_srcdir)/sources -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
 
 include_HEADERS += \
   $(top_builddir)/interfaces/IfaceCCGS.hxx \

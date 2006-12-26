@@ -4,6 +4,7 @@
 #include "CellMLBootstrap.hpp"
 #include <locale>
 #include <sstream>
+#include <algorithm>
 
 // Win32 hack...
 #ifdef _WIN32
