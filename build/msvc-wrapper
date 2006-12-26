@@ -1,0 +1,175 @@
+#!/usr/bin/python
+
+from sys import exit, argv
+from os import environ
+import string, os, tempfile, sys, re
+
+def CygwinToNative(cpath):
+  if cpath[0] != '/':
+    return cpath
+  if cpath[0:10] == '/cygdrive/':
+    return cpath[10] + ':/' + cpath[12:]
+  return 'c:/cygwin' + cpath
+
+def CompileSource(input, output, supArgs):
+  args = ['cl.exe']
+  args.append('/c')
+  args.append('/Fo' + CygwinToNative(output))
+  args += supArgs
+  args.append(CygwinToNative(input))
+  return os.spawnvp(os.P_WAIT, args[0], args)
+
+args = argv[1:]
+output = ''
+debug = 0
+skipnext = 0
+target = 'executable'
+ccSupArgs = ['/EHsc','/nologo', '/wd4091']
+linkSupArgs = ['/NOLOGO', '/NODEFAULTLIB']
+inputs = []
+autobase = 0
+debug = 0
+
+for (idx, name) in enumerate(args):
+  if skipnext:
+    skipnext = 0
+    continue
+  if name=='-g' or name=='-ggdb':
+    ccSupArgs.append('/Zi')
+    linkSupArgs.append('/DEBUG')
+    debug = 1
+  elif name[0:2] == '-o':
+    output = name[2:]
+    if output == '':
+      output = args[idx + 1]
+      skipnext = 1
+  elif name == '-c':
+    target = 'object'
+  elif name == '-E':
+    target = 'preprocessed'
+  elif name == '-shared':
+    target = 'dll'
+  elif name == '-Wall':
+    ccSupArgs.append('/Wall')
+  elif name == '-O1':
+    ccSupArgs.append('/O1')
+  elif name == '-O2':
+    ccSupArgs.append('/O2')
+  elif name == '-O3':
+    ccSupArgs.append('/Ox')
+  elif name[0:2] == '-I':
+    dir = name[2:]
+    if dir == '':
+      skipnext = 1
+      dir = args[idx + 1]
+    ccSupArgs.append('/I' + dir)
+  elif name[0:2] == '-L':
+    dir = name[2:]
+    if dir == '':
+      skipnext = 1
+      dir = args[idx + 1]
+    linkSupArgs.append('/LIBPATH:' + CygwinToNative(dir))
+  elif name[0:2] == '-l':
+    inputs.append(name[2:] + '.lib')
+  elif name[0:2] == '-D':
+    defn = name[2:]
+    if defn == '':
+      skipnext = 1
+      defn = args[idx + 1]
+    ccSupArgs.append('/D' + defn)
+  elif name == '--enable-auto-image-base':
+    autobase = 1
+  elif name == '-nostdlib':
+    pass
+  elif name[0] == '-':
+    print "Warning: Unrecognised option %s" % name
+  else:
+    inputs.append(name)
+
+if debug:
+  ccSupArgs.append('/MDd')
+  if target == 'dll' or target == 'executable':
+    inputs.append('msvcrtd.lib')
+    inputs.append('msvcprtd.lib')
+else:
+  ccSupArgs.append('/MD')
+  if target == 'dll' or target == 'executable':
+    inputs.append('msvcrt.lib')
+    inputs.append('msvcprt.lib')
+
+if target == 'preprocessed':
+  if len(inputs) != 1:
+    exit("Can only pre-process a single input file, not %u files" % len(inputs))
+  args = ['cl.exe']
+  args += ccSupArgs
+  args.append('/E')
+  args.append(CygwinToNative(inputs[0]))
+  d = tempfile.mkdtemp()
+  stdout = os.path.join(d, 'stdout')
+  stderr = os.path.join(d, 'stderr')
+  ret = os.system(string.join(args) + '>' + stdout + ' 2>' + stderr)
+  if ret != 0:
+    fs = file(stderr, 'r')
+    for l in fs:
+      sys.stderr.write(l)
+    fs.close()
+  fs = file(stdout, 'r')
+  for l in fs:
+    print l,
+  fs.close()
+  os.unlink(stdout)
+  os.unlink(stderr)
+  os.rmdir(d)
+  exit(ret)
+
+if len(inputs) == 0:
+  exit('No input files specified.')
+
+if output == '':
+  if target == 'executable':
+    output = 'a.exe'
+  elif target == 'dll':
+    output = 'a.dll'
+  elif target == 'object':
+    output = os.path.basename(inputs[0][0:inputs[0].rindex('.')] + '.obj')
+
+if target == 'executable' or target == 'dll':
+  inputs.append('kernel32.lib')
+  inputs.append('oldnames.lib')
+
+  newInputs = []
+  for t in inputs:
+    if t[-4:] == '.obj' or t[-2:] == '.o' or t[-4:] == '.lib':
+      newInputs.append(t)
+    elif t[-4:] == '.dll':
+      newInputs.append(re.sub('\-[0-9|\.]+\.dll', '.lib', t))
+    else:
+      dot = t.rindex('.')
+      tout = t[0:dot] + '.obj'
+      newInputs.append(tout)
+      ret = CompileSource(t, tout, ccSupArgs)
+      if ret != 0:
+        exit(ret)
+  inputs = newInputs
+elif target == 'object':
+  if len(inputs) != 1:
+    exit("Can only compile a single input file to an object, not %u files" % len(inputs))
+  exit(CompileSource(inputs[0], output, ccSupArgs))
+
+if target == 'dll':
+  linkSupArgs.append('/DLL')
+  linkSupArgs.append('/IMPLIB:' + re.sub('\-[0-9|\.]+\.dll', '.lib', output))
+
+if autobase == 1:
+  base = 0x60000000 | ((output.__hash__() << 16) & 0xFFC0000)
+  linkSupArgs.append('/BASE:%u'%base)
+
+args = ['link.exe']
+args.append('/OUT:' + CygwinToNative(output))
+args += linkSupArgs
+
+for i in inputs:
+  args.append(CygwinToNative(i))
+
+print "Calling: " + string.join(args)
+exit(os.spawnvp(os.P_WAIT, args[0], args))

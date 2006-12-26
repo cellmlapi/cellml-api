@@ -5,7 +5,11 @@
 #include "CellMLBootstrap.hpp"
 
 #ifndef BASE_DIRECTORY
+#ifdef WIN32
+#define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"
+#else
 #define BASE_DIRECTORY L"file://" TESTDIR L"/test_xml/"
+#endif
 #endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( DOMTest );

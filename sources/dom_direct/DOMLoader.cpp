@@ -5,7 +5,7 @@
 #include "DOMImplementation.hpp"
 #include <stdexcept>
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_MSC_VER)
 #define LIBXML_STATIC
 #endif
 #include <libxml/tree.h>

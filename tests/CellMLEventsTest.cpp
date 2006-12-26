@@ -5,7 +5,11 @@
 
 
 #ifndef BASE_DIRECTORY
+#ifdef WIN32
+#define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"
+#else
 #define BASE_DIRECTORY L"file://" TESTDIR L"/test_xml/"
+#endif
 #endif
 #include "IfaceCellML_events.hxx"
 

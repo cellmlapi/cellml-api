@@ -4,6 +4,7 @@
 #ifndef _WIN32
 #include <sys/time.h>
 #endif
+#include <time.h>
 
 #define DEVENT_DOMAttrModified 0
 #define DEVENT_DOMCharacterDataModified 1

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Stupid wrapper to avoid win32 dospath/cygdrive issues
 # Try not to spawn programs from within this file. If the stuff in here looks royally 
@@ -71,5 +71,9 @@ do
         fi
     fi
 done
+
+if test x$prog = xcl; then
+  args=${args/\-o /\/Fo}
+fi
 
 exec $prog $args

@@ -22,11 +22,11 @@ DOMWRITER_PUBLIC_PRE
 class DOMWriter
 {
 public:
-  DOMWriter();
+  DOMWRITER_PUBLIC_PRE DOMWriter() DOMWRITER_PUBLIC_POST;
 
-  void writeNode(DOMNamespaceContext* dnc,
+  DOMWRITER_PUBLIC_PRE void writeNode(DOMNamespaceContext* dnc,
                  iface::dom::Node* n, std::wstring& appendTo)
-    throw(std::exception&);
+    throw(std::exception&) DOMWRITER_PUBLIC_POST;
 
   void writeElement(DOMNamespaceContext* dnc,
                     iface::dom::Element* el, std::wstring& appendTo)
@@ -48,8 +48,9 @@ public:
   void writeComment(DOMNamespaceContext* dnc, iface::dom::Comment* comment,
                     std::wstring& appendTo)
     throw(std::exception&);
-  void writeDocument(DOMNamespaceContext* dnc, iface::dom::Document* doc, std::wstring& appendTo)
-    throw(std::exception&);
+  DOMWRITER_PUBLIC_PRE void writeDocument(DOMNamespaceContext* dnc,
+					  iface::dom::Document* doc, std::wstring& appendTo)
+    throw(std::exception&) DOMWRITER_PUBLIC_POST;
   void writeDocumentType(DOMNamespaceContext* dnc, iface::dom::DocumentType* dt, std::wstring& appendTo)
     throw(std::exception&);
   void writeDocumentFragment(DOMNamespaceContext* dnc, iface::dom::DocumentFragment* df, std::wstring& appendTo)

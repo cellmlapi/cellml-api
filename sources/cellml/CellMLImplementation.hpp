@@ -144,13 +144,13 @@ public:
     throw(std::exception&);
   iface::cellml_api::ExtensionElementList* extensionElements()
     throw(std::exception&);
-  void insertExtensionElementAfter(const iface::cellml_api::ExtensionElement marker,
-                                   const iface::cellml_api::ExtensionElement newEl)
+  void insertExtensionElementAfter(iface::dom::Element* marker,
+                                   iface::dom::Element* newEl)
     throw(std::exception&);
-  void appendExtensionElement(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
-  void prependExtensionElement(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
-  void removeExtensionElement(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
-  void replaceExtensionElement(const iface::cellml_api::ExtensionElement x, const iface::cellml_api::ExtensionElement y) throw(std::exception&);
+  void appendExtensionElement(iface::dom::Element* x) throw(std::exception&);
+  void prependExtensionElement(iface::dom::Element* x) throw(std::exception&);
+  void removeExtensionElement(iface::dom::Element* x) throw(std::exception&);
+  void replaceExtensionElement(iface::dom::Element* x, iface::dom::Element* y) throw(std::exception&);
   void clearExtensionElements() throw(std::exception&);
   iface::cellml_api::CellMLElementSet* childElements() throw(std::exception&);
   void addElement(iface::cellml_api::CellMLElement* x) throw(std::exception&);
@@ -308,12 +308,12 @@ public:
   virtual ~CDA_MathContainer() {};
 
   iface::cellml_api::MathList* math() throw(std::exception&);
-  void addMath(const iface::cellml_api::MathMLElement x)
+  void addMath(iface::mathml_dom::MathMLElement* x)
     throw(std::exception&);
-  void removeMath(const iface::cellml_api::MathMLElement x)
+  void removeMath(iface::mathml_dom::MathMLElement* x)
     throw(std::exception&);
-  void replaceMath(const iface::cellml_api::MathMLElement x,
-                   const iface::cellml_api::MathMLElement y)
+  void replaceMath(iface::mathml_dom::MathMLElement* x,
+                   iface::mathml_dom::MathMLElement* y)
     throw(std::exception&);
   void clearMath() throw(std::exception&);
 };
@@ -933,8 +933,8 @@ public:
   CDA_IMPL_ID;
 
   uint32_t length() throw(std::exception&);
-  bool contains(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
-  int32_t getIndexOf(const iface::cellml_api::ExtensionElement x) throw(std::exception&);
+  bool contains(iface::dom::Element* x) throw(std::exception&);
+  int32_t getIndexOf(iface::dom::Element* x) throw(std::exception&);
   iface::cellml_api::ExtensionElement getAt(uint32_t index) throw(std::exception&);
 
 private:
@@ -952,7 +952,7 @@ public:
   CDA_IMPL_ID;
 
   uint32_t length() throw(std::exception&);
-  bool contains(const iface::cellml_api::MathMLElement x) throw(std::exception&);
+  bool contains(iface::mathml_dom::MathMLElement* x) throw(std::exception&);
   iface::cellml_api::MathMLElementIterator* iterate() throw(std::exception&);
 
 private:

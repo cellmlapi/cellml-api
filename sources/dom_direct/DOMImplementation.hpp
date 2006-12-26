@@ -11,7 +11,7 @@
 #endif
 #include <typeinfo>
 #include <assert.h>
-#ifndef __BORLANDC__
+#if !defined(__BORLANDC__) && !defined(_MSC_VER)
 #include <sys/time.h>
 #endif
 #include <time.h>

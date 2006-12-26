@@ -2065,7 +2065,7 @@ cygwin* | mingw* | pw32*)
     ;;
 
   *)
-    library_names_spec='${libname}`echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext} $libname.lib'
+    library_names_spec='${libname}`echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext}'
     ;;
   esac
   dynamic_linker='Win32 ld.exe'
@@ -4446,7 +4446,7 @@ _LT_EOF
           AR="$ac_top_srcdir/tlib-wrapper"
           ;;
         *)
-         _LT_TAGVAR(old_archive_cmds, $1)='lib /OUT:$oldlib$oldobjs$old_deplibs'
+         _LT_TAGVAR(old_archive_cmds, $1)='lib /OUT:$oldlib$oldobjs$old_deplibs && ranlib $oldlib'
          ;;
       esac
       _LT_TAGVAR(fix_srcfile_path, $1)='`cygpath -w "$srcfile"`'

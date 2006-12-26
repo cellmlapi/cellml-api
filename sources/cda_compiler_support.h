@@ -3,6 +3,9 @@
 
 #include "cda_config.h"
 
+#ifdef _MSC_VER
+#define WIN32
+#endif
 #ifdef __BORLANDC__
 #define WIN32
 #define HEADER_INLINE
@@ -17,7 +20,7 @@
 #define CDA_IMPORT_PRE
 #define CDA_IMPORT_POST __attribute__((visibility("default")))
 #elif defined(WIN32)
-#ifdef __BORLANDC__
+#if defined(__BORLANDC__) || defined(_MSC_VER)
 #define CDA_EXPORT_PRE __declspec(dllexport)
 #define CDA_EXPORT_POST
 #define CDA_IMPORT_PRE __declspec(dllimport)

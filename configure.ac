@@ -180,8 +180,14 @@ CYGWIN_WRAPPER=
 OMNILINK="-lomniORB4 -lomnithread"
 STLLINK=
 LIBXML_CFLAGS=
-case "$host" in
-*cygwin*|*mks*|*msvc*|*wince|*mingw*)
+
+case "$host-$CXX" in
+*msvc*|*wince*)
+	STLLINK=-no-undefined
+	OMNILINK="-lomniORB410_rt -lomnithread32_rt -lws2_32"
+        CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
+	;;
+*cygwin*|*mks*|*mingw*)
         case "$build" in
         *cygwin*|*mks*|*msvc*|*wince|*mingw*)
                 STLLINK="-lstlport.5.0 -no-undefined"

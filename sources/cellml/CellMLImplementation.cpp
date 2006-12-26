@@ -371,8 +371,8 @@ CDA_CellMLElement::extensionElements()
 void
 CDA_CellMLElement::insertExtensionElementAfter
 (
- const iface::cellml_api::ExtensionElement marker,
- const iface::cellml_api::ExtensionElement newEl
+ iface::dom::Element* marker,
+ iface::dom::Element* newEl
 )
   throw(std::exception&)
 {
@@ -397,7 +397,7 @@ CDA_CellMLElement::insertExtensionElementAfter
 }
 
 void
-CDA_CellMLElement::appendExtensionElement(const iface::cellml_api::ExtensionElement x)
+CDA_CellMLElement::appendExtensionElement(iface::dom::Element* x)
   throw(std::exception&)
 {
   try
@@ -412,7 +412,7 @@ CDA_CellMLElement::appendExtensionElement(const iface::cellml_api::ExtensionElem
 }
 
 void
-CDA_CellMLElement::prependExtensionElement(const iface::cellml_api::ExtensionElement x)
+CDA_CellMLElement::prependExtensionElement(iface::dom::Element* x)
   throw(std::exception&)
 {
   try
@@ -434,7 +434,7 @@ CDA_CellMLElement::prependExtensionElement(const iface::cellml_api::ExtensionEle
 }
 
 void
-CDA_CellMLElement::removeExtensionElement(const iface::cellml_api::ExtensionElement x)
+CDA_CellMLElement::removeExtensionElement(iface::dom::Element* x)
   throw(std::exception&)
 {
   try
@@ -451,8 +451,8 @@ CDA_CellMLElement::removeExtensionElement(const iface::cellml_api::ExtensionElem
 void
 CDA_CellMLElement::replaceExtensionElement
 (
- const iface::cellml_api::ExtensionElement x,
- const iface::cellml_api::ExtensionElement y
+ iface::dom::Element* x,
+ iface::dom::Element* y
 )
   throw(std::exception&)
 {
@@ -1855,7 +1855,7 @@ CDA_MathContainer::math()
 void
 CDA_MathContainer::addMath
 (
- const iface::cellml_api::MathMLElement x
+ iface::mathml_dom::MathMLElement* x
 )
   throw(std::exception&)
 {
@@ -1873,7 +1873,7 @@ CDA_MathContainer::addMath
 void
 CDA_MathContainer::removeMath
 (
- const iface::cellml_api::MathMLElement x
+ iface::mathml_dom::MathMLElement* x
 )
   throw(std::exception&)
 {
@@ -1891,8 +1891,8 @@ CDA_MathContainer::removeMath
 void
 CDA_MathContainer::replaceMath
 (
- const iface::cellml_api::MathMLElement x,
- const iface::cellml_api::MathMLElement y
+ iface::mathml_dom::MathMLElement* x,
+ iface::mathml_dom::MathMLElement* y
 )
   throw(std::exception&)
 {
@@ -6828,7 +6828,7 @@ CDA_ExtensionElementList::length()
 }
 
 bool
-CDA_ExtensionElementList::contains(const iface::cellml_api::ExtensionElement x)
+CDA_ExtensionElementList::contains(iface::dom::Element* x)
   throw(std::exception&)
 {
   // Anything except CellML 1.0 / CellML 1.1 / RDF elements...
@@ -6848,7 +6848,7 @@ CDA_ExtensionElementList::contains(const iface::cellml_api::ExtensionElement x)
 }
 
 int32_t
-CDA_ExtensionElementList::getIndexOf(const iface::cellml_api::ExtensionElement x)
+CDA_ExtensionElementList::getIndexOf(iface::dom::Element* x)
   throw(std::exception&)
 {
   // Anything except CellML 1.0 / CellML 1.1 / RDF elements...
