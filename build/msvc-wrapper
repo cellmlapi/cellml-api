@@ -43,6 +43,11 @@ for (idx, name) in enumerate(args):
     if output == '':
       output = args[idx + 1]
       skipnext = 1
+  elif name == '--help':
+    print 'Please read the source code for help.'
+    print 'Magic words needed to make libtool do the right thing follow:'
+    print 'auto-import'
+    exit(0)
   elif name == '-c':
     target = 'object'
   elif name == '-E':
@@ -50,7 +55,9 @@ for (idx, name) in enumerate(args):
   elif name == '-shared':
     target = 'dll'
   elif name == '-Wall':
-    ccSupArgs.append('/Wall')
+    ccSupArgs.append('/W4')
+  elif name == '-O0':
+    pass
   elif name == '-O1':
     ccSupArgs.append('/O1')
   elif name == '-O2':

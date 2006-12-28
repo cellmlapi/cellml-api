@@ -1,3 +1,4 @@
+#define GSL_DLL
 #include <exception>
 #include "cda_config.h"
 #ifdef HAVE_INTTYPES_H
@@ -10,6 +11,9 @@
 #include <math.h>
 #include <stdarg.h>
 #include <assert.h>
+#ifdef _MSC_VER
+#include <time.h>
+#endif
 
 #undef N
 #include <cvode.h>

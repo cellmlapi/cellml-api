@@ -14,7 +14,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#else
+#define strcasecmp _stricmp
+#endif
 
 #ifdef ENABLE_FIND_NUMERIC_ERRORS
 #include <fenv.h>

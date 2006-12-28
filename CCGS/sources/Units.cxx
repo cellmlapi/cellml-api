@@ -83,7 +83,7 @@ public:
     for (unitEnd = aUnits; *unitEnd != NULL; unitEnd++)
       ;
     uint32_t unitCount = unitEnd - aUnits;
-    UnitSortData sortData[unitCount];
+    UnitSortData* sortData = new UnitSortData[unitCount];
     uint32_t i;
     for (i = 0; i < unitCount; i++)
     {
@@ -106,6 +106,8 @@ public:
       mUnits[i] = aUnits[sortData[i].idx];
     }
     mUnits[unitCount] = NULL;
+
+    delete [] sortData;
   }
 
   ~ImplicitDerivedUnit()
@@ -491,7 +493,7 @@ CodeGenerationState::SetupBuiltinUnits()
   BASE_UNIT(second);
 #define DERIVED_UNIT0(n, f) \
   CanonicalUnitRepresentation* ibuarr_##n[] = {NULL}; \
-  const double exparr_##n[] = {}; \
+  const double exparr_##n[1] = {NULL}; /* Size 0 array not allowed. */ \
   ImplicitDerivedUnit* idu_##n = new ImplicitDerivedUnit(exparr_##n, \
                                                          ibuarr_##n, f); \
   mGlobalScope.addUnit(L## #n, idu_##n);\

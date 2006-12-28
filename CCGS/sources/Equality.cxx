@@ -3,6 +3,7 @@
 #include <set>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 void
 TrimString(std::wstring& aStr)
@@ -1415,7 +1416,7 @@ Equation::ComputeProceduralSteps
        cki++)
     if ((*cki) != equate1.variable)
     {
-      std::map<VariableInformation*,ProceduralStep*>::iterator stepi =
+      std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator stepi =
         stepsForVariable.find(*cki);
       if (stepi != stepsForVariable.end())
         procStep->AddDependency((*stepi).second);
@@ -1425,7 +1426,7 @@ Equation::ComputeProceduralSteps
        cki++)
     if ((*cki) != equate2.variable)
     {
-      std::map<VariableInformation*,ProceduralStep*>::iterator stepi =
+      std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator stepi =
         stepsForVariable.find(*cki);
       if (stepi != stepsForVariable.end())
         procStep->AddDependency((*stepi).second);

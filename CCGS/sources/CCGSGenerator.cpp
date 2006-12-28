@@ -590,7 +590,7 @@ CodeGenerationState::DetermineComputedConstants
   while (lastRoundUseful);
 
   // Now we go through the procedural steps...
-  std::map<VariableInformation*,ProceduralStep*>::iterator psi;
+  std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator >::iterator psi;
   for (psi = stepsForVariable.begin(); psi != stepsForVariable.end(); psi++)
     (*psi).second->RecursivelyGenerateCode(this, aCompConstStream, aSupplementary);
 
@@ -698,7 +698,7 @@ CodeGenerationState::DetermineIterationVariables
     std::set<VariableInformation*,VarinfoPointerComparator>::iterator varIt;
     for (varIt = rateTouch.begin(); varIt != rateTouch.end(); varIt++)
     {
-      std::map<VariableInformation*,ProceduralStep*>::iterator step =
+      std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator step =
         stepsForVariable.find(*varIt);
       if (step != stepsForVariable.end())
         (*step).second->RecursivelyGenerateCode(this, aIterationStream, aSupplementary);
@@ -706,7 +706,7 @@ CodeGenerationState::DetermineIterationVariables
 
     aIterationStream << "#ifndef VARIABLES_FOR_RATES_ONLY" << std::endl;
 
-    std::map<VariableInformation*,ProceduralStep*>::iterator step;
+    std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator step;
     for (step = stepsForVariable.begin(); step != stepsForVariable.end(); step++)
       (*step).second->RecursivelyGenerateCode(this, aIterationStream, aSupplementary);
 

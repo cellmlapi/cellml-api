@@ -1,3 +1,4 @@
+#define IN_CIS_MODULE
 #include <stdlib.h>
 #include <string>
 #include "Utilities.hxx"
@@ -7,10 +8,18 @@
 #include <sys/errno.h>
 #include <dlfcn.h>
 #endif
+#ifdef _MSC_VER
+#include <errno.h>
+#endif
 #include "CISImplementation.hxx"
 #include <fstream>
 #include "CISBootstrap.hpp"
+#ifdef _MSC_VER
+#include <direct.h>
+#include <io.h>
+#else
 #include <dirent.h>
+#endif
 
 char*
 attempt_make_tempdir(const char* parentDir)
@@ -137,6 +146,22 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
   delete mCMF;
   mModel->release_ref();
   mCCI->release_ref();
+#ifdef WIN32
+  struct _finddata_t d;
+  intptr_t hd;
+  std::string pat = mDirname;
+  pat += "\*.*";
+  hd = _findfirst(pat.c_str(), &d);
+  if (hd != -1)
+  {
+    do
+    {
+      unlink(d.name);
+    }
+    while (_findnext(hd, &d) == 0);
+    _findclose(hd);
+  }
+#else
   DIR* d = opendir(mDirname.c_str());
   struct dirent* de;
   while ((de = readdir(d)))
@@ -147,6 +172,7 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
     unlink(n.c_str());
   }
   closedir(d);
+#endif
   rmdir(mDirname.c_str());
 }
 
