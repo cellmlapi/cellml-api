@@ -14,6 +14,7 @@ STLLINK ?= @STLLINK@
 LT_DLPREOPEN ?= @LT_DLPREOPEN@
 THREADFLAGS ?= @THREADFLAGS@
 LIBXML_CFLAGS ?= @LIBXML_CFLAGS@
+MOZILLA_DIR ?= @XPCOM@
 
 # Parts needed to build the interface generates...
 include $(top_srcdir)/simple_interface_generators/build.mk

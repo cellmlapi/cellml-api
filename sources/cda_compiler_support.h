@@ -3,6 +3,9 @@
 
 #include "cda_config.h"
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
 #ifdef _MSC_VER
 #define WIN32
 #endif

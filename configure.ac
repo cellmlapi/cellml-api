@@ -46,6 +46,15 @@ AC_ARG_ENABLE(corba,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-corba) ;;
 esac],[corba=false])
 AM_CONDITIONAL(ENABLE_CORBA, test x$corba = xtrue)
+
+AC_ARG_ENABLE(xpcom,
+[  --enable-xpcom=path/to/mozilla/dist  Build XPCOM glue],
+[case "${enableval}" in
+  no) xpcom=false ;;
+  *) xpcom=$enableval ;;
+esac], [xpcom=false])
+AM_CONDITIONAL(ENABLE_XPCOM, test x$xpcom != xfalse)
+
 AC_ARG_ENABLE(context,
 [  --enable-context    Build the CellML Context],
 [case "${enableval}" in
@@ -204,6 +213,8 @@ case "$host-$CXX" in
 *)
         LIBXML_CFLAGS=`xml2-config --cflags`
 esac
+XPCOM="$xpcom"
+AC_SUBST([XPCOM])
 AC_SUBST([CYGWIN_WRAPPER])
 AC_SUBST([OMNILINK])
 AC_SUBST([STLLINK])
