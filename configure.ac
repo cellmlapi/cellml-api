@@ -104,6 +104,7 @@ AM_CONDITIONAL(ENABLE_CIS, test x$cis = xtrue)
 
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
+contextandxpcom=false
 if test x$context = xtrue; then
   AC_DEFINE(ENABLE_CONTEXT, 1, [Is the CellML Context enabled?])
   if test x$corba = xtrue; then
@@ -115,12 +116,30 @@ if test x$context = xtrue; then
       contextandcorbaandcis=true
     fi
   fi
+  if test x$xpcom = xtrue; then
+    contextandxpcom=true
+  fi
 fi
+
+ccgsandxpcom=false
+cisandxpcom=false
+if test x$xpcom = xtrue; then
+   if test x$ccgs = xtrue; then
+      ccgsandxpcom=true
+   fi
+   if test x$cis = xtrue; then
+      cisandxpcom=true
+   fi
+fi
+
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_XPCOM, test x$contextandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CCGS,
                test x$contextandcorbaandccgs = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CIS,
                test x$contextandcorbaandcis = xtrue)
+AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
 
 # Checks for header files.
 AC_CHECK_HEADERS([strings.h wchar.h])

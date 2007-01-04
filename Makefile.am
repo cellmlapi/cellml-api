@@ -29,6 +29,10 @@ if ENABLE_CORBA
 include $(top_srcdir)/interfaces/corba_build.mk
 endif
 
+if ENABLE_XPCOM
+include $(top_srcdir)/interfaces/xpcom_build.mk
+endif
+
 # These parts relate to the CellML Context...
 if ENABLE_CONTEXT
 include $(top_srcdir)/sources/cellml_context/build.mk
