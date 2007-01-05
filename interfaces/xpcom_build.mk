@@ -32,7 +32,8 @@ $(top_builddir)/interfaces/p2x%.cpp \
 $(top_builddir)/interfaces/p2x%.hxx \
 $(top_builddir)/interfaces/x2p%.cpp \
 $(top_builddir)/interfaces/x2p%.hxx \
-$(top_builddir)/interfaces/I%.h: \
+$(top_builddir)/interfaces/I%.h \
+$(top_builddir)/interfaces/I%.xpt: \
 $(top_srcdir)/interfaces/%.idl
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
@@ -40,6 +41,9 @@ $(top_srcdir)/interfaces/%.idl
 	$(CYGWIN_WRAPPER) omniidl -p$$SAVEDIR/simple_interface_generators/omniidl_be \
          -bxpcom $$SAVEDIR/$< && \
         $(MOZILLA_DIR)/bin/xpidl -m header \
+          -I$(MOZILLA_DIR)/idl \
+          $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
+        $(MOZILLA_DIR)/bin/xpidl -m typelib \
           -I$(MOZILLA_DIR)/idl \
           $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
 	cd $$SAVEDIR
