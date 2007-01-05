@@ -43,6 +43,10 @@ if ENABLE_CONTEXT_AND_CORBA
 include $(top_srcdir)/sources/cellml_context/corba_build.mk
 endif
 
+if ENABLE_CONTEXT_AND_XPCOM
+include $(top_srcdir)/sources/cellml_context/xpcom_build.mk
+endif
+
 if ENABLE_CELLML_CORBA_SERVER
 include $(top_srcdir)/libltdl/build.mk
 include $(top_srcdir)/sources/cellml_corba_server/build.mk
@@ -56,11 +60,19 @@ if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
 include $(top_srcdir)/CCGS/corba_build.mk
 endif
 
+if ENABLE_CCGS_AND_XPCOM
+include $(top_srcdir)/CCGS/xpcom_build.mk
+endif
+
 if ENABLE_CIS
 include $(top_srcdir)/CIS/build.mk
 endif
 if ENABLE_CONTEXT_AND_CORBA_AND_CIS
 include $(top_srcdir)/CIS/corba_build.mk
+endif
+
+if ENABLE_CIS_AND_XPCOM
+include $(top_srcdir)/CIS/xpcom_build.mk
 endif
 
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh

@@ -19,6 +19,7 @@ CellMLBootstrapConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return NS_ERROR_NO_AGGREGATION;
   iface::cellml_api::CellMLBootstrap* bs = CreateCellMLBootstrap();
   nsCOMPtr<cellml_apiICellMLBootstrap> xbs = new ::x2p::cellml_api::CellMLBootstrap(bs);
+  bs->release_ref();
   return xbs->QueryInterface(aIID, aResult);
 }
 

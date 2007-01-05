@@ -116,14 +116,14 @@ if test x$context = xtrue; then
       contextandcorbaandcis=true
     fi
   fi
-  if test x$xpcom = xtrue; then
+  if test x$xpcom != xfalse; then
     contextandxpcom=true
   fi
 fi
 
 ccgsandxpcom=false
 cisandxpcom=false
-if test x$xpcom = xtrue; then
+if test x$xpcom != xfalse; then
    if test x$ccgs = xtrue; then
       ccgsandxpcom=true
    fi
