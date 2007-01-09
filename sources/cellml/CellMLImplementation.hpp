@@ -975,7 +975,7 @@ public:
   CDA_CellMLElementSet(CDA_CellMLElement* parent, iface::dom::Element* parentEl);
   virtual ~CDA_CellMLElementSet();
 
-  CDA_IMPL_QI1(dom::CellMLElementSet)
+  CDA_IMPL_QI1(cellml_api::CellMLElementSet)
   CDA_IMPL_ID;
 
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);

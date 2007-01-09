@@ -54,8 +54,13 @@ MathMLTest::testCreateMathMLDocument()
   free(ln);
 
   // Check it has the correct type...
-  CPPUNIT_ASSERT(hasInterface(docel, "mathml_dom::MathMLElement"));
-  CPPUNIT_ASSERT(hasInterface(docel, "mathml_dom::MathMLMathElement"));
+  DECLARE_QUERY_INTERFACE(mel, docel, mathml_dom::MathMLElement);
+  CPPUNIT_ASSERT(mel);
+  mel->release_ref();
+
+  DECLARE_QUERY_INTERFACE(mmel, docel, mathml_dom::MathMLMathElement);
+  CPPUNIT_ASSERT(mmel);
+  mmel->release_ref();
 
   docel->release_ref();
   mdoc->release_ref();

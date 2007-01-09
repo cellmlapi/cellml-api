@@ -65,7 +65,7 @@ public:
   ~CDA_CellMLElementEventAdaptor();
   
   CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI1(iface::events::EventListener);
+  CDA_IMPL_QI1(events::EventListener);
   CDA_IMPL_ID;
 
   void newEventType(int32_t aType) throw(std::exception&);

@@ -116,7 +116,7 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
     iface::dom::Node* n = mnl->item(0);
     mnl->release_ref();
     iface::dom::Element* el =
-      dynamic_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
+      reinterpret_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
     n->release_ref();
 
     wchar_t* cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#",
@@ -130,7 +130,7 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
     n = el->parentNode();
     el->release_ref();
 
-    el = dynamic_cast<iface::dom::Element*>
+    el = reinterpret_cast<iface::dom::Element*>
       (n->query_interface("dom::Element"));
     n->release_ref();
 
@@ -158,7 +158,7 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
   {
     iface::dom::Node* n = mnl->item(i);
     iface::dom::Element* el =
-      dynamic_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
+      reinterpret_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
     n->release_ref();
 
     wchar_t* cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#",
@@ -177,7 +177,7 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
     n = el->parentNode();
     el->release_ref();
 
-    el = dynamic_cast<iface::dom::Element*>
+    el = reinterpret_cast<iface::dom::Element*>
       (n->query_interface("dom::Element"));
     n->release_ref();
 
@@ -219,7 +219,7 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
     iface::cellml_api::CellMLVariable* s = v->source();
     iface::cellml_api::CellMLElement* el = s->parentElement();
     iface::cellml_api::CellMLComponent* c =
-      dynamic_cast<iface::cellml_api::CellMLComponent*>
+      reinterpret_cast<iface::cellml_api::CellMLComponent*>
       (el->query_interface("cellml_api::CellMLComponent"));
     el->release_ref();
 

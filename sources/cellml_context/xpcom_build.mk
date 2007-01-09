@@ -8,7 +8,10 @@ libcellml_context_xpcom_bridge_la_SOURCES = \
   $(top_srcdir)/sources/cellml_context/CellMLContextBootstrapXPCOM.cpp
 
 libcellml_context_xpcom_bridge_la_LIBADD = \
-  $(STLLINK)
+  $(STLLINK) \
+  $(top_builddir)/libcellml_context.la \
+  $(top_builddir)/libcellml_xpcom_bridge.la \
+  $(top_builddir)/libXPCOMSupport.la
 
 libcellml_context_xpcom_bridge_la_LDFLAGS = \
   -no-undefined

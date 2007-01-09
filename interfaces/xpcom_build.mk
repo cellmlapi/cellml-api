@@ -15,7 +15,10 @@ libcellml_xpcom_bridge_la_SOURCES = \
   $(top_builddir)/interfaces/x2pCellML_events.cpp \
   $(top_srcdir)/sources/cellml/CellMLBootstrapXPCOM.cpp
 
-libcellml_xpcom_bridge_la_LIBADD = $(STLLINK)
+libcellml_xpcom_bridge_la_LIBADD = \
+  $(STLLINK) \
+  $(top_builddir)/libcellml.la \
+  $(top_builddir)/libXPCOMSupport.la
 libcellml_xpcom_bridge_la_LDFLAGS = \
   -no-undefined
 

@@ -592,13 +592,14 @@ public:
     return strdup("4d77f9ec-22b6-4329-a427-76e52de494da");
   }
 
-  iface::XPCOM::IObject*
+  void*
   query_interface(const char* className)
     throw(std::exception&)
   {
-    if (!strcmp(className, "xpcom::IObject") ||
-        !strcmp(className, "cellml_api::UserData"))
-      return this;
+    if (!strcmp(className, "xpcom::Object"))
+      return static_cast<iface::XPCOM::IObject*>(this);
+    else if (!strcmp(className, "cellml_api::UserData"))
+      return static_cast<iface::cellml_api::UserData*>(this);
     return NULL;
   }
 private:

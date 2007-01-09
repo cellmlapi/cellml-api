@@ -1360,7 +1360,7 @@ public:
   }
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(iface::cellml_api::ImportInstantiationListener);
+  CDA_IMPL_QI1(cellml_api::ImportInstantiationListener);
   CDA_IMPL_ID;
 
   void loadCompleted(bool aWasStale)
@@ -3492,7 +3492,7 @@ public:
   }
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(iface::cellml_api::DocumentLoadedListener);
+  CDA_IMPL_QI1(cellml_api::DocumentLoadedListener);
   CDA_IMPL_ID;
 
   void loadCompleted(iface::dom::Document* dd)
@@ -6013,7 +6013,8 @@ handleEvent(iface::events::Event* evt)
       DECLARE_QUERY_INTERFACE_OBJREF(mevt, evt, events::MutationEvent);
 
       RETURN_INTO_OBJREF(rn, iface::dom::Node, mevt->relatedNode());
-      if (!isEqualAfterLeftQI(rn, mIterator->mParentElement, "dom::Element"))
+      if (dynamic_cast<void*>(rn.getPointer()) !=
+          dynamic_cast<void*>(mIterator->mParentElement))
         return;
       
       RETURN_INTO_OBJREF(tn, iface::events::EventTarget, mevt->target());

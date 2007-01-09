@@ -95,12 +95,15 @@ public:
     return strdup("singletonTestProgressObserver");
   }
 
-  iface::XPCOM::IObject* query_interface(const char* iface)
+  void* query_interface(const char* iface)
     throw (std::exception&)
   {
-    if (!strcmp(iface, "XPCOM::IObject") ||
-        !strcmp(iface, "cellml_services::IntegrationProgressObserver"))
-      return this;
+    if (!strcmp(iface, "xpcom::Object"))
+      return static_cast< ::iface::XPCOM::IObject* >(this);
+    else if (!strcmp(iface, "cellml_services::IntegrationProgressObserver"))
+      return
+        static_cast< ::iface::cellml_services::IntegrationProgressObserver*>
+        (this);
     return NULL;
   }
 

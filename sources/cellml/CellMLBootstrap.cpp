@@ -293,7 +293,7 @@ public:
   }
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(iface::cellml_api::DocumentLoadedListener);
+  CDA_IMPL_QI1(cellml_api::DocumentLoadedListener);
   CDA_IMPL_ID;
 
   void loadCompleted(iface::dom::Document* doc)

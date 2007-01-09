@@ -38,6 +38,23 @@ AC_TYPE_UINT64_T
 # PKG_CHECK_MODULES([GLIB], [glib-2.0])
 # PKG_CHECK_MODULES([GDOME], [gdome2])
 
+# Checks for header files.
+AC_CHECK_HEADERS([strings.h wchar.h])
+
+THREADFLAGS=
+AC_CHECK_LIB([pthread], [pthread_create], [THREADFLAGS=-lpthread])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+
+# Checks for library functions.
+AC_HEADER_STDC
+
+# Check for size of wchar_t...
+AC_CHECK_SIZEOF(wchar_t*)
+
 AC_ARG_ENABLE(corba,
 [  --enable-corba    Build CORBA glue],
 [case "${enableval}" in
@@ -51,7 +68,10 @@ AC_ARG_ENABLE(xpcom,
 [  --enable-xpcom=path/to/mozilla/dist  Build XPCOM glue],
 [case "${enableval}" in
   no) xpcom=false ;;
-  *) xpcom=$enableval ;;
+  *)
+  xpcom=$enableval
+  AC_DEFINE(ENABLE_XPCOM, 1, [Is XPCOM enabled?])
+  ;;
 esac], [xpcom=false])
 AM_CONDITIONAL(ENABLE_XPCOM, test x$xpcom != xfalse)
 
@@ -140,23 +160,6 @@ AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CIS,
                test x$contextandcorbaandcis = xtrue)
 AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
-
-# Checks for header files.
-AC_CHECK_HEADERS([strings.h wchar.h])
-
-THREADFLAGS=
-AC_CHECK_LIB([pthread], [pthread_create], [THREADFLAGS=-lpthread])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_C_INLINE
-
-# Checks for library functions.
-AC_HEADER_STDC
-
-# Check for size of wchar_t...
-AC_CHECK_SIZEOF(wchar_t*)
 
 case $srcdir in
   [\\/]* | ?:[\\/]* ) # Absolute

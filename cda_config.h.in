@@ -3,6 +3,9 @@
 /* Is the CellML Context enabled? */
 #undef ENABLE_CONTEXT
 
+/* Is XPCOM enabled? */
+#undef ENABLE_XPCOM
+
 /* Define to 1 if you have the `closedir' function. */
 #undef HAVE_CLOSEDIR
 

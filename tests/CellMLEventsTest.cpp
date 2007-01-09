@@ -79,7 +79,7 @@ public:
   }
 
   CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI1(iface::events::EventListener)
+  CDA_IMPL_QI1(events::EventListener)
   CDA_IMPL_ID
 private:
   uint32_t mEventCount;

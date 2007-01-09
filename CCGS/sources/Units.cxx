@@ -493,7 +493,7 @@ CodeGenerationState::SetupBuiltinUnits()
   BASE_UNIT(second);
 #define DERIVED_UNIT0(n, f) \
   CanonicalUnitRepresentation* ibuarr_##n[] = {NULL}; \
-  const double exparr_##n[1] = {NULL}; /* Size 0 array not allowed. */ \
+  const double exparr_##n[1] = {0.0}; /* Size 0 array not allowed. */ \
   ImplicitDerivedUnit* idu_##n = new ImplicitDerivedUnit(exparr_##n, \
                                                          ibuarr_##n, f); \
   mGlobalScope.addUnit(L## #n, idu_##n);\

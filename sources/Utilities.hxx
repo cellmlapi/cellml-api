@@ -330,145 +330,289 @@ private:
     }
 
 #define CDA_IMPL_QI0 \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
       if (!strcmp(id, "xpcom::Object")) \
       { \
         add_ref(); \
-        return this; \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI1(c1) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
         add_ref(); \
-        return this; \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI2(c1, c2) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1) || \
-          !strcmp(id, #c2)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
-         add_ref(); \
-         return this; \
+        add_ref(); \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
+      } \
+      else if (!strcmp(id, #c2)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c2* >(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI3(c1, c2, c3) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1) || \
-          !strcmp(id, #c2) || \
-          !strcmp(id, #c3)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
-         add_ref(); \
-         return this; \
+        add_ref(); \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
+      } \
+      else if (!strcmp(id, #c2)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c2* >(this); \
+      } \
+      else if (!strcmp(id, #c3)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c3* >(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI4(c1, c2, c3, c4) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1) || \
-          !strcmp(id, #c2) || \
-          !strcmp(id, #c3) || \
-          !strcmp(id, #c4)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
-         add_ref(); \
-         return this; \
+        add_ref(); \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
+      } \
+      else if (!strcmp(id, #c2)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c2* >(this); \
+      } \
+      else if (!strcmp(id, #c3)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c3* >(this); \
+      } \
+      else if (!strcmp(id, #c4)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c4* >(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI5(c1, c2, c3, c4, c5) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1) || \
-          !strcmp(id, #c2) || \
-          !strcmp(id, #c3) || \
-          !strcmp(id, #c4) || \
-          !strcmp(id, #c5)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
         add_ref(); \
-        return this; \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
+      } \
+      else if (!strcmp(id, #c2)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c2* >(this); \
+      } \
+      else if (!strcmp(id, #c3)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c3* >(this); \
+      } \
+      else if (!strcmp(id, #c4)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c4* >(this); \
+      } \
+      else if (!strcmp(id, #c5)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c5* >(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI6(c1, c2, c3, c4, c5, c6) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1) || \
-          !strcmp(id, #c2) || \
-          !strcmp(id, #c3) || \
-          !strcmp(id, #c4) || \
-          !strcmp(id, #c5) || \
-          !strcmp(id, #c6)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
         add_ref(); \
-        return this; \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
+      } \
+      else if (!strcmp(id, #c2)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c2* >(this); \
+      } \
+      else if (!strcmp(id, #c3)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c3* >(this); \
+      } \
+      else if (!strcmp(id, #c4)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c4* >(this); \
+      } \
+      else if (!strcmp(id, #c5)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c5* >(this); \
+      } \
+      else if (!strcmp(id, #c6)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c6* >(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI7(c1, c2, c3, c4, c5, c6, c7) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1) || \
-          !strcmp(id, #c2) || \
-          !strcmp(id, #c3) || \
-          !strcmp(id, #c4) || \
-          !strcmp(id, #c5) || \
-          !strcmp(id, #c6) || \
-          !strcmp(id, #c7)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
         add_ref(); \
-        return this; \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
+      } \
+      else if (!strcmp(id, #c2)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c2* >(this); \
+      } \
+      else if (!strcmp(id, #c3)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c3* >(this); \
+      } \
+      else if (!strcmp(id, #c4)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c4* >(this); \
+      } \
+      else if (!strcmp(id, #c5)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c5* >(this); \
+      } \
+      else if (!strcmp(id, #c6)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c6* >(this); \
+      } \
+      else if (!strcmp(id, #c7)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c7* >(this); \
       } \
       return NULL; \
     }
 
 #define CDA_IMPL_QI8(c1, c2, c3, c4, c5, c6, c7, c8) \
-    iface::XPCOM::IObject* query_interface(const char* id) \
+    void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object") || \
-          !strcmp(id, #c1) || \
-          !strcmp(id, #c2) || \
-          !strcmp(id, #c3) || \
-          !strcmp(id, #c4) || \
-          !strcmp(id, #c5) || \
-          !strcmp(id, #c6) || \
-          !strcmp(id, #c7) || \
-          !strcmp(id, #c8)) \
+      if (!strcmp(id, "xpcom::Object")) \
       { \
         add_ref(); \
-        return this; \
+        return static_cast< iface::XPCOM::IObject* >(this); \
+      } \
+      else if (!strcmp(id, #c1)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c1* >(this); \
+      } \
+      else if (!strcmp(id, #c2)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c2* >(this); \
+      } \
+      else if (!strcmp(id, #c3)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c3* >(this); \
+      } \
+      else if (!strcmp(id, #c4)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c4* >(this); \
+      } \
+      else if (!strcmp(id, #c5)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c5* >(this); \
+      } \
+      else if (!strcmp(id, #c6)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c6* >(this); \
+      } \
+      else if (!strcmp(id, #c7)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c7* >(this); \
+      } \
+      else if (!strcmp(id, #c8)) \
+      { \
+        add_ref(); \
+        return static_cast< iface::c8* >(this); \
       } \
       return NULL; \
     }
@@ -798,14 +942,10 @@ private:
 #define QUERY_INTERFACE(lhs, rhs, type) \
   if (rhs != NULL) \
   { \
-    iface::XPCOM::IObject* _qicast_obj = rhs->query_interface(#type); \
+    void* _qicast_obj = rhs->query_interface(#type); \
     if (_qicast_obj != NULL) \
     { \
-      lhs = already_AddRefd<iface::type>(dynamic_cast<iface::type*>(_qicast_obj)); \
-      if (lhs == NULL) \
-      { \
-        _qicast_obj->release_ref(); \
-      } \
+      lhs = already_AddRefd<iface::type>(reinterpret_cast<iface::type*>(_qicast_obj)); \
     } \
     else \
       lhs = NULL; \
@@ -832,33 +972,6 @@ private:
 #define DECLARE_QUERY_INTERFACE_OBJREF(lhs, rhs, type) \
   ObjRef<iface::type> lhs; \
   QUERY_INTERFACE(lhs, rhs, type)
-
-HEADER_INLINE bool hasInterface(iface::XPCOM::IObject* obj, const char* iface)
-{
-  if (obj == NULL)
-    return false;
-  iface::XPCOM::IObject* ret = obj->query_interface(iface);
-  if (ret == NULL)
-    return false;
-  ret->release_ref();
-  return true;
-}
-
-HEADER_INLINE bool isEqualAfterLeftQI(iface::XPCOM::IObject* lhs,
-                               const iface::XPCOM::IObject* rhs,
-                               const char* type)
-{
-  iface::XPCOM::IObject* lhsQI = NULL;
-  if (lhs != NULL)
-    lhsQI = lhs->query_interface(type);
-
-  bool eq = (lhsQI == rhs);
-
-  if (lhsQI != NULL)
-    lhsQI->release_ref();
-
-  return eq;
-}
 
 /**
  * Compares two objects, o1 and o2.
