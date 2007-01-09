@@ -92,7 +92,10 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #else
     "-nodefaultlibs "
 #endif
-    "-O3 -ffast-math "
+    "-O3 "
+#ifdef ENABLE_FAST_MATH
+    "-ffast-math "
+#endif
 #ifdef __MACH__
     "-lm -dynamiclib -o ";
 #else
