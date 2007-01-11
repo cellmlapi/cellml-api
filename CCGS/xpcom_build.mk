@@ -22,6 +22,7 @@ libccgs_xpcom_bridge_la_CXXFLAGS = \
   -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
   -I$(top_srcdir) -I$(top_srcdir)/sources \
   -I$(top_srcdir)/simple_interface_generators/glue/xpcom \
+  -I$(top_builddir)/simple_interface_generators/glue/xpcom \
   $(AM_CXXFLAGS) -DMODULE_CONTAINS_CCGS
 
 BUILT_SOURCES += \

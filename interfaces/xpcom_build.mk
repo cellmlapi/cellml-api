@@ -27,6 +27,7 @@ libcellml_xpcom_bridge_la_CXXFLAGS = \
   -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
   -I$(top_srcdir) -I$(top_srcdir)/sources \
   -I$(top_srcdir)/simple_interface_generators/glue/xpcom \
+  -I$(top_builddir)/simple_interface_generators/glue/xpcom \
   $(AM_CXXFLAGS) -DMODULE_CONTAINS_xpcom -DMODULE_CONTAINS_DOMAPISPEC \
   -DMODULE_CONTAINS_MathMLcontentAPISPEC -DMODULE_CONTAINS_CellMLAPISPEC \
   -DMODULE_CONTAINS_CellMLevents
@@ -41,12 +42,12 @@ $(top_srcdir)/interfaces/%.idl
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
-	$(CYGWIN_WRAPPER) omniidl -p$$SAVEDIR/simple_interface_generators/omniidl_be \
+	$(CYGWIN_WRAPPER) omniidl -p$$SAVEDIR/$(top_srcdir)/simple_interface_generators/omniidl_be \
          -bxpcom $$SAVEDIR/$< && \
-        $(MOZILLA_DIR)/bin/xpidl -m header \
+        $(CYGWIN_WRAPPER) $(MOZILLA_DIR)/bin/xpidl -m header \
           -I$(MOZILLA_DIR)/idl \
           $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
-        $(MOZILLA_DIR)/bin/xpidl -m typelib \
+        $(CYGWIN_WRAPPER) $(MOZILLA_DIR)/bin/xpidl -m typelib \
           -I$(MOZILLA_DIR)/idl \
           $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
 	cd $$SAVEDIR

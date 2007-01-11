@@ -24,7 +24,7 @@ output = ''
 debug = 0
 skipnext = 0
 target = 'executable'
-ccSupArgs = ['/EHsc','/nologo', '/wd4091', '/wd4290', '/wd4710', '/Zc:wchar_t-']
+ccSupArgs = ['/EHsc','/nologo', '/wd4091', '/wd4290', '/wd4710', '/Zc:wchar_t-','/DXP_WIN','/DXP_WIN32']
 linkSupArgs = ['/NOLOGO', '/NODEFAULTLIB']
 inputs = []
 autobase = 0
@@ -69,7 +69,7 @@ for (idx, name) in enumerate(args):
     if dir == '':
       skipnext = 1
       dir = args[idx + 1]
-    ccSupArgs.append('/I' + dir)
+    ccSupArgs.append('/I' + CygwinToNative(dir))
   elif name[0:2] == '-L':
     dir = name[2:]
     if dir == '':

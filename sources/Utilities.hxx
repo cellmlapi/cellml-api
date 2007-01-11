@@ -28,6 +28,10 @@
 #include <sys/types.h>
 #else
 #include <windows.h>
+#undef CreateEvent
+#undef GetObject
+#undef GetClassName
+#undef AddMonitor
 #endif
 
 #include "cda_compiler_support.h"

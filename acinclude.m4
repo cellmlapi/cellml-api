@@ -2811,7 +2811,7 @@ bsdi[[45]]*)
 
 cygwin*)
   # func_win32_libid is a shell function defined in ltmain.sh
-  lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
+  lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL|^x86 archive static'
   lt_cv_file_magic_cmd='func_win32_libid'
   ;;
 
