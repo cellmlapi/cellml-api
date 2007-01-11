@@ -238,6 +238,11 @@ case "$host-$CXX" in
                 ;;
         esac
         ;;
+*Darwin*)
+        LIBXML_CFLAGS=`xml2-config --cflags`
+        if [[ test x$xpcom != xfalse ]]; then
+                STLLINK="$STLLINK -Wl,-executable_path,$xpcom/bin"
+        fi
 *linux*)
         LIBXML_CFLAGS=`xml2-config --cflags`
         STLLINK="$STLLINK -lpthread"
