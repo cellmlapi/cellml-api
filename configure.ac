@@ -213,6 +213,12 @@ OMNILINK="-lomniORB4 -lomnithread"
 STLLINK=
 LIBXML_CFLAGS=
 
+if test "$with_gnu_ld" = yes; then
+  # Catch unresolved symbols on all platforms, because they will break the
+  # build when we try on Win32.
+  STLLINK="$STLLINK -Wl,--unresolved-symbols=ignore-in-shared-libs"
+fi
+
 case "$host-$CXX" in
 *msvc*|*wince*)
 	STLLINK=-no-undefined
@@ -231,6 +237,10 @@ case "$host-$CXX" in
                 OMNILINK="-lomniORB407_rt -lomnithread32_rt -lws2_32"
                 ;;
         esac
+        ;;
+*linux*)
+        LIBXML_CFLAGS=`xml2-config --cflags`
+        STLLINK="$STLLINK -lpthread"
         ;;
 *)
         LIBXML_CFLAGS=`xml2-config --cflags`
