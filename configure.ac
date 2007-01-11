@@ -240,7 +240,7 @@ case "$host-$CXX" in
         ;;
 *darwin*)
         LIBXML_CFLAGS=`xml2-config --cflags`
-        if [[ test x$xpcom != xfalse ]]; then
+        if [[ x$xpcom != xfalse ]]; then
                 STLLINK="$STLLINK -Wl,-executable_path,$xpcom/bin"
         fi
         ;;
