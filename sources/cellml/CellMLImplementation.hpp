@@ -553,8 +553,8 @@ public:
       CDA_NamedCellMLElement(parent, cellmlVar),
       mConnectedCellMLVariableSet(NULL) {}
   virtual ~CDA_CellMLVariable();
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::CellMLVariable,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::CellMLVariable,
+               cellml_api::NamedCellMLElement, cellml_api::CellMLElement)
 
   wchar_t* initialValue() throw(std::exception&);
   void initialValue(const wchar_t* attr) throw(std::exception&);
