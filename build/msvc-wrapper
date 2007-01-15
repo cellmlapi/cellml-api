@@ -181,6 +181,6 @@ for i in inputs:
 print "Calling: " + string.join(args)
 ret = os.spawnvp(os.P_WAIT, args[0], args)
 if ret == 0:
-  args = ['mt.exe', '-MANIFEST', output + '.manifest', '-OUTPUTRESOURCE', output + ';1']
+  args = ['mt.exe', '-MANIFEST', output + '.manifest', '-OUTPUTRESOURCE:' + output + ';1']
   ret = os.spawnvp(os.P_WAIT, args[0], args)
 exit(ret)
