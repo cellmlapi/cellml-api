@@ -485,6 +485,9 @@ CDA_ModelNode::getWritable()
   ObjRef<iface::cellml_api::Model> modclone =
     already_AddRefd<iface::cellml_api::Model>(mModel->getAlternateVersion(cv));
 
+  if (modclone == NULL)
+    throw iface::cellml_api::CellMLException();
+
   ObjRef<iface::cellml_context::ModelNode> cmn =
     already_AddRefd<iface::cellml_context::ModelNode>(new CDA_ModelNode
                                                       (modclone));
@@ -774,6 +777,8 @@ iface::cellml_context::ModelNode*
 CDA_ModelList::makeNode(iface::cellml_api::Model* mod)
   throw(std::exception&)
 {
+  if (mod == NULL)
+    throw iface::cellml_api::CellMLException();
   return new CDA_ModelNode(mod);
 }
 
