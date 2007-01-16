@@ -235,6 +235,14 @@ module cellml_context
      */
     void modelReplaced(in ModelNode changedNode,
                        in cellml_api::Model newModel);
+
+    /**
+     * Called whenever the frozen state of a model is toggled.
+     * @param changedNode The node on which the frozen state has changed.
+     * @param newState The new frozen state of the model.
+     */
+    void modelFrozenStateChanged(in ModelNode changedNode,
+                                 in boolean newState);
   };
 #pragma terminal-interface
 
@@ -292,14 +300,11 @@ module cellml_context
     ModelNode getWritable();
 
     /**
-     * Returns true if freeze has been called, or false otherwise.
+     * If the model is frozen, the user should be prevented from making changes
+     * to it, because it will not make semantic sense. Individual tools need
+     * to enforce the frozen model restrictions themselves.
      */
-    readonly attribute boolean isFrozen;
-
-    /**
-     * Called to freeze the model.
-     */
-    void freeze();
+    attribute boolean isFrozen;
 
     /**
      * A timestamp representing when stampModifiedNow was last called.

@@ -503,10 +503,52 @@ CDA_ModelNode::isFrozen()
 }
 
 void
-CDA_ModelNode::freeze()
+CDA_ModelNode::isFrozen(bool newState)
   throw(std::exception&)
 {
-  mIsFrozen = true;
+  if (mIsFrozen == newState)
+    return;
+  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, j;
+  for (i = mModelMonitors.begin(); i != mModelMonitors.end();)
+  {
+    j = i;
+    i++;
+    try
+    {
+      (*j)->modelFrozenStateChanged(this, newState);
+    }
+    catch (...)
+    {
+      // Dead listeners get removed from the list...
+      (*j)->release_ref();
+      mModelMonitors.erase(j);
+    }
+  }
+  // Now inform the ancestor lists...
+  CDA_ModelList* curList = mParentList;
+  while (curList)
+  {
+    for (i = curList->mNodeMonitors.begin(); i != curList->mNodeMonitors.end();)
+    {
+      j = i;
+      i++;
+      try
+      {
+        (*j)->modelFrozenStateChanged(this, newState);
+      }
+      catch (...)
+      {
+        // Dead listeners get removed from the list...
+        (*j)->release_ref();
+        curList->mNodeMonitors.erase(j);
+      }
+    }
+    if (curList->mParentNode)
+      curList = curList->mParentNode->mParentList;
+    else
+      curList = NULL;
+  }
+  mIsFrozen = newState;
 }
 
 uint32_t

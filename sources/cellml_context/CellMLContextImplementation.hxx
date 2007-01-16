@@ -150,7 +150,7 @@ public:
     throw(std::exception&);
   iface::cellml_context::ModelNode* getWritable() throw(std::exception&);
   bool isFrozen() throw(std::exception&);
-  void freeze() throw(std::exception&);
+  void isFrozen(bool) throw(std::exception&);
   uint32_t modificationTimestamp() throw(std::exception&);
   void stampModifiedNow() throw(std::exception&);
   iface::cellml_api::Model* model() throw(std::exception&);
