@@ -6,10 +6,10 @@ import string, os, tempfile, sys, re
 
 def CygwinToNative(cpath):
   if cpath[0] != '/':
-    return cpath
+    return cpath.replace('/', '\\')
   if cpath[0:10] == '/cygdrive/':
-    return cpath[10] + ':/' + cpath[12:]
-  return 'c:/cygwin' + cpath
+    return cpath[10] + ':\\' + cpath[12:].replace('/', '\\')
+  return 'c:\\cygwin' + cpath.replace('/', '\\')
 
 def CompileSource(input, output, supArgs):
   args = ['cl.exe']
@@ -17,6 +17,7 @@ def CompileSource(input, output, supArgs):
   args.append('/Fo' + CygwinToNative(output))
   args += supArgs
   args.append(CygwinToNative(input))
+  print "Calling: " + string.join(args)
   return os.spawnvp(os.P_WAIT, args[0], args)
 
 args = argv[1:]
@@ -24,7 +25,7 @@ output = ''
 debug = 0
 skipnext = 0
 target = 'executable'
-ccSupArgs = ['/EHsc','/nologo', '/wd4091', '/wd4290', '/wd4710', '/Zc:wchar_t-','/DXP_WIN','/DXP_WIN32']
+ccSupArgs = ['/EHsc','/nologo', '/wd4091', '/wd4290', '/wd4710', '/Zc:wchar_t-','/DXP_WIN','/DXP_WIN32', '/Gy']
 linkSupArgs = ['/NOLOGO', '/NODEFAULTLIB']
 inputs = []
 autobase = 0
