@@ -59,7 +59,7 @@ public:
                   aInv) { if (aInv == mCurrent) mCurrent++; };
 private:
   CDA_ModelList* mML;
-  std::list<CDA_ModelNode*> mList;
+  std::list<CDA_ModelNode*>& mList;
   std::list<CDA_ModelNode*>::iterator
     mCurrent;
   std::list<CDA_ModelNodeIterator*>::iterator mItIt;
