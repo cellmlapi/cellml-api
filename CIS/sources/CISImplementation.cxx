@@ -88,9 +88,9 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #endif
   std::string cmd = "gcc "
 #ifdef WIN32
-    "-mno-cygwin -mthreads "
+    "-mno-cygwin -mthreads -Llib -lcis-0 "
 #else
-    "-nodefaultlibs "
+    "-nodefaultlibs -Llib -lcis "
 #endif
     "-O3 "
 #ifdef ENABLE_FAST_MATH

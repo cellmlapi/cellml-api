@@ -368,14 +368,14 @@ CDA_CellMLIntegrationRun::SolveODEProblem
 
 extern "C"
 {
-  double factorial(double x);
-  double arbitrary_log(double value, double logbase);
-  double gcd_pair(double a, double b);
-  double lcm_pair(double a, double b);
-  double gcd_multi(uint32_t size, ...);
-  double lcm_multi(uint32_t size, ...);
-  double multi_min(uint32_t size, ...);
-  double multi_max(uint32_t size, ...);
+  CDA_EXPORT_PRE double factorial(double x) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double arbitrary_log(double value, double logbase) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double gcd_pair(double a, double b) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double lcm_pair(double a, double b) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double gcd_multi(uint32_t size, ...) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double lcm_multi(uint32_t size, ...) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double multi_min(uint32_t size, ...) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double multi_max(uint32_t size, ...) CDA_EXPORT_POST;
 }
 
 double
