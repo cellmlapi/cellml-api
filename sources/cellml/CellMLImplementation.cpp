@@ -1298,6 +1298,8 @@ CDA_Model::clone(bool aDeep)
                      di->createDocument(new_namespace.c_str(), L"model", NULL));
 
   // Clone the underlying node...
+  RETURN_INTO_OBJREF(jde, iface::dom::Element, newDoc->documentElement());
+  newDoc->removeChild(jde)->release_ref();
   RETURN_INTO_OBJREF(cn, iface::dom::Node,
                      newDoc->importNode(datastore, aDeep));
   newDoc->appendChild(cn)->release_ref();
