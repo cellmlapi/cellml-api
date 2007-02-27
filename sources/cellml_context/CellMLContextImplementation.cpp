@@ -352,7 +352,6 @@ CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
 
 CDA_ModelNode::~CDA_ModelNode()
 {
-  mDerivedModels->release_ref();
   mModel->release_ref();
   std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i;
   for (i = mModelMonitors.begin(); i != mModelMonitors.end(); i++)

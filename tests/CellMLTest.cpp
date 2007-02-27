@@ -204,6 +204,23 @@ CellMLTest::testModelLoader()
   str = mModelLoader->lastErrorMessage();
   CPPUNIT_ASSERT(!wcscmp(str, L"servererror"));
   free(str);
+
+
+//    /**
+//     * Creates a serialised XML document.
+//     * @param xmlText A complete XML document, serialised into text.
+//     * @return The loaded CellML model.
+//     * @param CellMLException if the XML cannot be parsed into a model.
+//     */
+//    Model createFromText(in dom::DOMString xmlText)
+//      raises(CellMLException);
+  iface::cellml_api::Model* model = mModelLoader->createFromText
+    (
+L"<?xml version=\"1.0\"?>\n"
+L"<model xmlns=\"http://www.cellml.org/cellml/1.0#\" />"
+    );
+  CPPUNIT_ASSERT(model);
+  model->release_ref();
 }
 //   };
 //   /**
