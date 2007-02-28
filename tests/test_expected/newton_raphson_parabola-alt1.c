@@ -49,6 +49,6 @@ RATES[0] = (2.00000*BOUND[0]);
 void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
 {
 #ifndef VARIABLES_FOR_RATES_ONLY
-NR_MINIMIZE(NR_minfunc_1, CONSTANTS, VARIABLES, BOUND, 1);
+NR_MINIMISE(NR_minfunc_1, CONSTANTS, VARIABLES, BOUND, 1);
 #endif
 }

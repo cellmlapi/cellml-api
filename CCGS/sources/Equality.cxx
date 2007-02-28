@@ -1195,7 +1195,7 @@ NewtonRaphsonProceduralStep::GenerateCode
        << "}" << std::endl;
   aSupplementary << func.str();
 
-  aMainCode << "NR_MINIMIZE(NR_minfunc_" << id
+  aMainCode << "NR_MINIMISE(NR_minfunc_" << id
             << ", CONSTANTS, VARIABLES, ";
   if (mHaveBound)
     aMainCode << "BOUND, ";
