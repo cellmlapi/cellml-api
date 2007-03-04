@@ -470,7 +470,9 @@ CDA_CellMLIntegrationService::compileModel
      << "extern double gcd_multi(unsigned int size, ...);" << std::endl
      << "extern double lcm_multi(unsigned int size, ...);" << std::endl
      << "extern double multi_min(unsigned int size, ...);" << std::endl
-     << "extern double multi_max(unsigned int size, ...);" << std::endl;
+     << "extern double multi_max(unsigned int size, ...);" << std::endl
+     << "extern void NR_MINIMISE(double(*func)(double*C, double*V, double*B),"
+        "double*C,double*V,double*B,int idx);" << std::endl;
   char* frag = cci->functionsFragment();
   ss << frag << std::endl;
   free(frag);

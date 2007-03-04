@@ -625,7 +625,10 @@ DOMNamespaceContext::writeXMLNS(std::wstring& appendTo)
 
   for (i = URIfromPrefix.begin(); i != URIfromPrefix.end(); i++)
   {
-    appendTo += L" xmlns:" + (*i).first + L"=\"" +
+    const std::wstring& prefix = (*i).first;
+    if (prefix[0] == L'x' && prefix[1] == L'm' && prefix[2] == L'l')
+      continue;
+    appendTo += L" xmlns:" + prefix + L"=\"" +
       TranslateEntities((*i).second, true) + L"\"";
   }
 }

@@ -350,6 +350,10 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
   N_VDestroy_Serial(y);
 }
 
+#ifdef DEBUG_MODE
+#include <fenv.h>
+#endif
+
 void
 CDA_CellMLIntegrationRun::SolveODEProblem
 (
@@ -357,6 +361,10 @@ CDA_CellMLIntegrationRun::SolveODEProblem
  uint32_t varSize, double* variables, uint32_t rateSize, double* rates
 )
 {
+#ifdef DEBUG_MODE
+  feenableexcept(FE_DIVBYZERO);
+#endif
+
   if (mStepType == iface::cellml_services::ADAMS_MOULTON_1_12 ||
       mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
     SolveODEProblemCVODE(f, constSize, constants, varSize, variables, rateSize,
@@ -376,6 +384,10 @@ extern "C"
   CDA_EXPORT_PRE double lcm_multi(uint32_t size, ...) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double multi_min(uint32_t size, ...) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double multi_max(uint32_t size, ...) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE void NR_MINIMISE(double(*func)(double *C, double *V, double *B),
+                                  double *C,double *V,double *B,int idx)
+    CDA_EXPORT_POST;
+
 }
 
 double
@@ -563,4 +575,168 @@ double multi_max(uint32_t count, ...)
   va_end(val);
 
   return best;
+}
+
+#define NR_RANDOM_STARTS 100
+#define NR_MAX_STEPS 1000
+#define NR_MAX_STEPS_INITIAL 10
+
+static double
+random_double_logUniform()
+{
+  union
+  {
+    double asDouble;
+#ifdef WIN32
+    uint16_t asIntegers[4];
+#else
+    uint32_t asIntegers[2];
+#endif
+  } X;
+
+#ifdef WIN32
+  uint16_t spareRand;
+#else
+  uint32_t spareRand;
+#endif
+
+  do
+  {
+    spareRand = rand();
+#ifdef WIN32
+    X.asIntegers[0] = rand() | ((spareRand & 0x1) << 15);
+    X.asIntegers[1] = rand() | ((spareRand & 0x2) << 14);
+    X.asIntegers[2] = rand() | ((spareRand & 0x4) << 13);
+    X.asIntegers[3] = rand() | ((spareRand & 0x8) << 12);
+#else
+    X.asIntegers[0] = rand() | ((spareRand & 0x1) << 31);
+    X.asIntegers[1] = rand() | ((spareRand & 0x2) << 30);
+#endif
+  }
+  while (!finite(X.asDouble));
+
+  return X.asDouble;
+}
+
+static double
+take_numeric_derivative
+(
+ double(*func)(double *C, double *V, double *B),
+ double *C,
+ double *V,
+ double *B,
+ int idx
+)
+{
+  double saved_x, value0, value1, value2, delta, slope1, slope2, ratio;
+  saved_x = V[idx];
+  /*
+   * Since we have only 52 bits of mantissa, we need delta to flip only the
+   * last couple of bits.
+   */
+  delta = saved_x * 1E-10;
+  value0 = func(C, V, B);
+  V[idx] -= delta;
+  value1 = func(C, V, B);
+  V[idx] = saved_x + delta;
+  value2 = func(C, V, B);
+  V[idx] = saved_x;
+  /* We take two numeric derivatives, so we can compare them. This stops us
+   * from getting trapped at around discontinuities(which otherwise produce
+   * very steep trapping slopes).
+   */
+  slope1 = (value0 - value1) / delta;
+  slope2 = (value2 - value0) / delta;
+
+  /* If one slope is zero, return the other... */
+  if (slope1 == 0.0 || !isfinite(slope1))
+    return slope2;
+  if (slope2 == 0.0 || !isfinite(slope2))
+    return slope1;
+
+  ratio = slope1 / slope2;
+  /* If the slopes are similar, return the average... */
+  if (ratio > 0.5 && ratio < 2)
+    return (slope1 + slope2) / 2.0;
+  /* Otherwise, return the least steep of the two... */
+  if (fabs(slope1) < fabs(slope2))
+    return slope1;
+  return slope2;
+}
+
+void
+NR_MINIMISE
+(
+ double(*func)(double *C, double *V, double *B),
+ double *C,
+ double *V,
+ double *B,
+ int idx
+)
+{
+  double* x = V + idx;
+
+  double best_X, best_fX = INFINITY;
+  double current_X, current_fX, current_dfX_dX;
+  uint32_t steps, maxsteps;
+  uint32_t i;
+
+  current_X = *x;
+
+  /* We use a 100 random start Newton-Raphson algorithm... */
+  for (i = 0; i < NR_RANDOM_STARTS; i++)
+  {
+    /* Choose a random X as a starting point, except for the first run. */
+    if (i > 0 || !isfinite(current_X))
+      current_X = random_double_logUniform();
+
+    maxsteps = NR_MAX_STEPS_INITIAL;
+    for (steps = 0; steps < maxsteps; steps++)
+    {
+      *x = current_X;
+      current_fX = func(C, V, B);
+      if (!finite(current_fX))
+      {
+        break;
+      }
+
+      if (best_fX > current_fX)
+      {
+        /* We can go past NR_MAX_STEPS_INITIAL steps up to NR_MAX_STEPS steps,
+         * but only if we keep improving on our previous answer.
+         */
+        maxsteps += 2;
+        if (maxsteps > NR_MAX_STEPS)
+          maxsteps = NR_MAX_STEPS;
+        best_fX = current_fX;
+        best_X = current_X;
+        /* This is quite far from 0(relatively speaking for a double) to avoid
+         * numerical instability issues when the minimum doesn't exist but the
+         * limit at a point from a particular direction would otherwise be the
+         * minimum.
+         */
+        if (best_fX <= 1E-250)
+	{
+          break;
+	}
+      }
+
+      current_dfX_dX = take_numeric_derivative(func, C, V, B, idx);
+      /* If it is completely flat, or infinite, we are done with this round. */
+      if (!isfinite(current_dfX_dX) || current_dfX_dX == 0.0)
+      {
+        break;
+      }
+
+      current_X -= current_fX / current_dfX_dX;
+      if (!finite(current_X))
+      {
+        break;
+      }
+    }
+    if (best_fX <= 1E-250)
+      break;
+  }
+
+  *x = best_X;
 }
