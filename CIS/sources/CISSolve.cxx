@@ -581,6 +581,12 @@ double multi_max(uint32_t count, ...)
 #define NR_MAX_STEPS 1000
 #define NR_MAX_STEPS_INITIAL 10
 
+#ifdef _MSC_VER
+#include <float.h>
+#define isfinite _finite
+#define INFINITY (double)(0x7FF0000000000000L)
+#endif
+
 static double
 random_double_logUniform()
 {
@@ -613,7 +619,7 @@ random_double_logUniform()
     X.asIntegers[1] = rand() | ((spareRand & 0x2) << 30);
 #endif
   }
-  while (!finite(X.asDouble));
+  while (!isfinite(X.asDouble));
 
   return X.asDouble;
 }
@@ -729,7 +735,7 @@ NR_MINIMISE
       }
 
       current_X -= current_fX / current_dfX_dX;
-      if (!finite(current_X))
+      if (!isfinite(current_X))
       {
         break;
       }
