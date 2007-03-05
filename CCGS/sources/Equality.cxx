@@ -849,7 +849,7 @@ GenerateExpression
                            supplementaryFunctions, aHaveBound);
         expression << ")";
       }
-      catch (iface::cellml_api::CellMLException&)
+      catch (iface::dom::DOMException&)
       {
         // Most portable way to get a nan...
         expression << "(0.0/0.0)";
