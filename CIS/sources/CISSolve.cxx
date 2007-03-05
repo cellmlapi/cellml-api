@@ -701,7 +701,7 @@ NR_MINIMISE
     {
       *x = current_X;
       current_fX = func(C, V, B);
-      if (!finite(current_fX))
+      if (!isfinite(current_fX))
       {
         break;
       }
