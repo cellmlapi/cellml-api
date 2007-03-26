@@ -270,7 +270,7 @@ CodeGenerationState::AddEncapsulationDescendentComponents
       RETURN_INTO_WSTRING(name, aComponent->name());
       msg += name;
       msg += L". This can occur if you have a component_ref which "
-             "refers to a component that doesn't exist.";
+             L"refers to a component that doesn't exist.";
       throw CodeGenerationError(msg);
     }
     
