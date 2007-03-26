@@ -258,17 +258,31 @@ CodeGenerationState::AddEncapsulationDescendentComponents
                      cs->iterateComponents());
   while (true)
   {
-    RETURN_INTO_OBJREF(c, iface::cellml_api::CellMLComponent,
-                       ci->nextComponent());
+    ObjRef<iface::cellml_api::CellMLComponent> c;
+    try
+    {
+      c = already_AddRefd<iface::cellml_api::CellMLComponent>
+        (ci->nextComponent());
+    }
+    catch (iface::cellml_api::CellMLException& e)
+    {
+      std::wstring msg(L"Error finding encapsulation children of component ");
+      RETURN_INTO_WSTRING(name, aComponent->name());
+      msg += name;
+      msg += L". This can occur if you have a component_ref which "
+             "refers to a component that doesn't exist.";
+      throw CodeGenerationError(msg);
+    }
+    
     if (c == NULL)
       break;
-
+    
     RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
                        GetRealComponent(c));
-
+    
     if (compset.count(rc) != 0)
       continue;
-
+    
     rc->add_ref();
     mComponentList.push_back(rc);
     compset.insert(rc);

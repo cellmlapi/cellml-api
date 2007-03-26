@@ -106,10 +106,44 @@ CodeGenerationState::BuildVIMForConnections
                          mvi->nextMapVariable());
       if (mv == NULL)
         break;
-      RETURN_INTO_OBJREF(v1, iface::cellml_api::CellMLVariable,
-                         mv->firstVariable());
-      RETURN_INTO_OBJREF(v2, iface::cellml_api::CellMLVariable,
-                         mv->secondVariable());
+      ObjRef<iface::cellml_api::CellMLVariable> v1, v2;
+      try
+      {
+        v1 = already_AddRefd<iface::cellml_api::CellMLVariable>
+          (mv->firstVariable());
+      }
+      catch (iface::cellml_api::CellMLException&)
+      {
+        std::wstring msg(L"Cannot find variable ");
+        RETURN_INTO_WSTRING(name, mv->firstVariableName());
+        msg += name;
+        msg += L" (or the component it is in, ";
+        RETURN_INTO_OBJREF(cm, iface::cellml_api::MapComponents,
+                           conn->componentMapping());
+        RETURN_INTO_WSTRING(cname, cm->firstComponentName());
+        msg += cname;
+        msg += L"), referenced from a connection.";
+        throw CodeGenerationError(msg);
+      }
+
+      try
+      {
+        v2 = already_AddRefd<iface::cellml_api::CellMLVariable>
+          (mv->secondVariable());
+      }
+      catch (iface::cellml_api::CellMLException&)
+      {
+        std::wstring msg(L"Cannot find variable ");
+        RETURN_INTO_WSTRING(name, mv->secondVariableName());
+        msg += name;
+        msg += L" (or the component it is in, ";
+        RETURN_INTO_OBJREF(cm, iface::cellml_api::MapComponents,
+                           conn->componentMapping());
+        RETURN_INTO_WSTRING(cname, cm->secondComponentName());
+        msg += cname;
+        msg += L"), referenced from a connection.";
+        throw CodeGenerationError(msg);
+      }
 
       std::map<iface::cellml_api::CellMLVariable*, VariableDisjointSet*>::
         iterator i;
