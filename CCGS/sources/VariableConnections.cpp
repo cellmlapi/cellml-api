@@ -336,6 +336,9 @@ CodeGenerationState::BuildVariableInformationMap
       std::wstring aMsg = L"Cannot find source for variable ";
       RETURN_INTO_WSTRING(vn, var->name());
       aMsg += vn;
+      aMsg += L" in component ";
+      RETURN_INTO_WSTRING(cn, var->componentName());
+      aMsg += cn;
       throw CodeGenerationError(aMsg);
     }
 
