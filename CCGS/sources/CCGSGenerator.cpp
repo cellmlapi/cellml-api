@@ -793,12 +793,12 @@ CodeGenerationState::GetConversion
   if (toscopeud == NULL)
     throw CodeGenerationError
       (
-       L"To variable component in conversion doesn't have scope."
+       L"To variable component in conversion doesn't have scope (bug)."
       );
   if (fromscopeud == NULL)
     throw CodeGenerationError
       (
-       L"From variable component in conversion doesn't have scope."
+       L"From variable component in conversion doesn't have scope (bug)."
       );
 
   CellMLScope* toscope = dynamic_cast<CellMLScope*>(toscopeud.getPointer());
@@ -807,7 +807,7 @@ CodeGenerationState::GetConversion
   if (toscope == NULL || fromscope == NULL)
     throw CodeGenerationError
       (
-       L"Found scope user data with wrong type."
+       L"Found scope user data with wrong type (bug)."
       );
 
   RETURN_INTO_WSTRING(tounitsname, vto->unitsName());
@@ -817,7 +817,13 @@ CodeGenerationState::GetConversion
                      toscope->findUnit(tounitsname.c_str()));
   if (tounits == NULL)
   {
-    std::wstring emsg = L"Variable references unknown units ";
+    std::wstring emsg = L"Variable ";
+    RETURN_INTO_WSTRING(vn, vto->name());
+    emsg += vn;
+    emsg += L" in component ";
+    RETURN_INTO_WSTRING(cn, vto->componentName());
+    emsg += cn;
+    emsg += L"references unknown units ";
     emsg += tounitsname;
     throw CodeGenerationError(emsg);
   }
@@ -825,12 +831,15 @@ CodeGenerationState::GetConversion
                      fromscope->findUnit(fromunitsname.c_str()));
   if (fromunits == NULL)
   {
-    std::wstring emsg  = L"Variable references unknown units ";
+    std::wstring emsg = L"Variable ";
+    RETURN_INTO_WSTRING(vn, vfrom->name());
+    emsg += vn;
+    emsg += L" in component ";
+    RETURN_INTO_WSTRING(cn, vfrom->componentName());
+    emsg += cn;
+    emsg += L"references unknown units ";
     emsg += fromunitsname;
-    throw CodeGenerationError
-      (
-       L"From units is not defined in the from units name."
-      );
+    throw CodeGenerationError(emsg);
   }
 
   offset = tounits->getOffset() - fromunits->getOffset();
