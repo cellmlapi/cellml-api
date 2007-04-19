@@ -49,6 +49,9 @@ main(int argc, char** argv)
   {
     // We now have a DOMModelLoader, stored in ml. DOMModelLoader inherits from
     // ModelLoader, which defines a loadFromURL operation (check in the IDL).
+    // Be warned that is a synchronous (blocking) load. In a real application,
+    // you are probably better to download the file using another asynchronous
+    // http library, and then creating the model from the serialised text.
     RETURN_INTO_OBJREF(model, iface::cellml_api::Model,
                        ml->loadFromURL(L"http://www.cellml.org/models/beeler_reuter_1977_version04/download"));
 
