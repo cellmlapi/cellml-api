@@ -5033,6 +5033,8 @@ CDA_MapVariables::firstVariable()
                      c->componentMapping());
   RETURN_INTO_OBJREF(comp, iface::cellml_api::CellMLComponent,
                      mc->firstComponent());
+  if (comp == NULL)
+    throw iface::cellml_api::CellMLException();
 
   // and look in the component for the variable...
   RETURN_INTO_OBJREF(cvs, iface::cellml_api::CellMLVariableSet,
