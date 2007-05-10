@@ -4,6 +4,12 @@
 #include <math.h>
 #include <sstream>
 
+#ifdef _WIN32
+#undef __STDC__
+#include <stdio.h>
+#define swprintf _snwprintf
+#endif
+
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
 
 class MaLaESError
