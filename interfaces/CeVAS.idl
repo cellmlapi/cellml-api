@@ -1,0 +1,74 @@
+#include "CellML_APISPEC.idl"
+
+module cellml_services
+{
+  interface ConnectedVariableSet
+    : XPCOM::IObject
+  {
+    /**
+     * The source variable (that is, the variable with no public or private
+     * interfaces).
+     */
+    readonly attribute cellml_api::CellMLVariable sourceVariable;
+
+    /**
+     * Returns the number of variables in this set.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Fetches the variable by a zero-based index. Order is not important.
+     */
+    cellml_api::CellMLVariable getVariable(in unsigned long index);
+  };
+
+  interface CeVAS
+    : XPCOM::IObject
+  {
+    /**
+     * A description of any connection or interface errors found in the model.
+     * If no error is found, this will be the empty string. The results of any
+     * other operation on this object is undefined if there is an error, and so
+     * should not be called.
+     */
+    readonly attribute wstring modelError;
+
+    /**
+     * Creates a (non-live) iterator of components which are relevant to this
+     * model. This includes imported components, but not components which are
+     * not directly imported and are not included by encapsulation.
+     */
+    cellml_api::CellMLComponentIterator iterateRelevantComponents();
+
+    /**
+     * Fetches the ConnectedVariableSet that a given variable belongs to.
+     * @param aVariable The variable to look for. This variable must be
+     *                  in the model this CeVAS object was created for.
+     * @returns The corresponding ConnectedVariableSet.
+     */
+    ConnectedVariableSet findVariableSet(in cellml_api::CellMLVariable aVariable);
+
+    /**
+     * Fetches a count of the number of disjoint sets of variables.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Fetches a variable set by index (order isn't important).
+     * @param index The zero-based index of the variable set.
+     */
+    ConnectedVariableSet getVariableSet(in unsigned long index);
+  };
+
+  interface CeVASBootstrap
+    : XPCOM::IObject
+  {
+    /**
+     * Creates a CeVAS object for a given model. The CeVAS object is not live,
+     * and the model should not be changed while the CeVAS object is in use.
+     * @param aModel The top-level model on which CeVAS should operate.
+     * @returns A CeVAS object.
+     */
+    CeVAS createCeVASForModel(in cellml_api::Model aModel);
+  };
+};

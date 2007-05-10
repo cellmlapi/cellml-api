@@ -192,14 +192,33 @@ CHANGES:
     We start the model definition with a definition of some named
     sets of units for use throughout the model.
   -->
+  <units name="millisecond">
+    <unit prefix="milli" units="second" />
+  </units>
+
   <units name="millimolar">
     <unit prefix="milli" units="mole" />
+    <unit units="litre" exponent="-1" />
+  </units>
+
+  <units name="molar">
+    <unit units="mole" />
     <unit units="litre" exponent="-1" />
   </units>
 
   <units name="flux">
     <unit units="millimolar" />
     <unit units="second" exponent="-1" />
+  </units>
+
+  <units name="molarflux">
+    <unit units="molar" />
+    <unit units="second" exponent="-1" />
+  </units>
+
+  <units name="millimolar_per_molar">
+    <unit units="millimolar"/>
+    <unit units="molar" exponent="-1"/>
   </units>
 
   <units name="first_order_rate_constant_units">
@@ -255,9 +274,9 @@ CHANGES:
       </rdf:Description>
     </rdf:RDF>
     <variable name="Glc_C" public_interface="out" units="millimolar" />
-    <variable name="delta_Glc_C_rxn1" public_interface="in" units="flux" />
+    <variable name="delta_Glc_C_rxn1" public_interface="in" units="molarflux" />
     <variable name="delta_Glc_C_rxn2" public_interface="in" units="flux" />
-    <variable name="time" public_interface="in" units="second" />
+    <variable name="time" public_interface="in" units="millisecond" />
     <math xmlns="http://www.w3.org/1998/Math/MathML">
       <apply><eq />
         <apply><diff />
@@ -266,9 +285,15 @@ CHANGES:
           </bvar>
           <ci>Glc_C</ci>
         </apply>
-        <apply><plus />
-          <ci>delta_Glc_C_rxn1</ci>
-          <ci>delta_Glc_C_rxn2</ci>
+        <apply><times/>
+          <cn cellml:units="dimensionless">1000</cn>
+          <apply><plus />
+            <apply><times/>
+              <cn cellml:units="millimolar_per_molar">1000</cn>
+              <ci>delta_Glc_C_rxn1</ci>
+            </apply>
+            <ci>delta_Glc_C_rxn2</ci>
+          </apply>
         </apply>
       </apply>
     </math>

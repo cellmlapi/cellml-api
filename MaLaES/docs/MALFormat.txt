@@ -1,0 +1,133 @@
+MAL Format is intended as a succinct but complete description of how to
+translate expressions from MathML into the syntax of another programming
+language. It is intended to be both simpler but more powerful (within the
+problem domain it is trying to address) than more generic approaches such as
+XSLT.
+
+Format:
+The format consists of a series of tags. Each tag has a series of alphanumeric
+characters(the tag name), followed by a collon and a space (": "), followed by a
+series of characters (the tag value). The tag is terminated by a carriage return
+or line-feed character, and the next tag starts at the first character which
+isn't a carriage return or line feed. However, if, following the carriage
+return or line feed, the next line starts with two or more spaces, the next
+line is a continuation of the previous tag. The two spaces (but not the
+carriage return or line feed, or any additional spaces) are removed from the text
+of the continuation, prior to concatenation to the tag.
+
+In addition, if the first character of a line is #, the line is a comment.
+Comments are valid between tags, but they may not intervene between a tag
+and a continuation.
+
+Where line-length formatting transforms (such as for FORTRAN 77), a
+post-processing stage must be used to achieve this. The reason for this design
+decision is that expressions alone do not determine line length.
+
+The following tags are defined:
+
+Name: opengroup
+Value: A string which can be appended before another string to force that
+  string to have the highest precedence.
+Examples:
+  opengroup: (
+  Sets the open group string to be (, which is the open group character in
+  languages like C.
+
+Name: closegroup
+Value: A string which can be appended after another string to force that
+  string to have the highest precedence.
+Examples:
+  closegroup: )
+  Sets the close group string to be ), which is the close group character in
+  languages like C.
+
+Name: locally_annotated
+Value: Anything, it is the presence and not the value that matters. If present,
+  annotations will be looked up on the variable in the component, instead of
+  finding the source variable from CeVAS and looking it up there. Units
+  conversions as still applied based on the source, but you would usually
+  just set the unit conversion pseudo-operators to be #expr1.
+
+Name: The name of any MathML operator.
+Value: A string describing the format. This string shall start with a
+  description of operator precedence in the target language, and then describe
+  a pattern for generating the target language expression.
+
+  A precedence description is specified between #prec[ and ]. The following
+  precedence descriptions can be used:
+
+  #prec[n(m)] where n and m are integers between 0 and 1000. Sets the outer
+  precedence to n (this is a precedence score for the resulting expression),
+  and the inner precedence to m (this is a precedence score below which
+  operands must be if they are not to require opengroup / closegroup strings
+  around them.
+
+  #prec[n] where n is an integer is a shorthand for #prec[n(n)]
+
+  #prec[H] is a shorthand for #prec[1000(0)].
+
+  In an operator description, character sequences which are not matched below
+  are written directly out to the output mathematics.
+
+  #expri reference the recursive expansion (according to the rules
+  in the MAL file) of the ith operand, where i is a positive integer. The
+  highest i value present also acts as the number of operands which must be
+  present in the MathML to avoid an error.
+
+  #exprs[text] expands to the concatenation of each consecutive operand after
+  expansion according to the rules. The string text intervenes between operands,
+  but is not added before the first operand or after the last.
+
+  #logbase expands to the expansion of the logbase element contents. This is
+  only valid for log. If no logbase element is found, the string 10 will be
+  inserted.
+
+  #degree expands to the expansion of the degree element contents. It is only
+  valid for root. If no degree element is found, the string 2 will be inserted.
+
+  #bvarIndex expands to the text of the bvarIndex annotation (as retrieved by
+  the AnnotationSet supplied to MaLaES) on the source of the bound variable
+  referenced.
+
+  #uniquen (where n is an integer) expands to a globally unique integer. If uniquei
+  (for the same i) is used more than once in the same line, it refers to the
+  same number. However, a different number is generated each time a rule is
+  processed.
+
+  #lookupDiffVariable (only valid on diff) finds the ci associated with the
+  diff (differentiation of something other than a variable is not supported by
+  this form, and will result in an error), and then finds the source variable
+  associated with that ci. It then asks the supplied AnnotationSet for the
+  degreeiname, where i is the degree of the diff.
+
+  #supplement causes all subsequent output to be put into the supplementary
+  stream, instead of the main output stream.
+
+Name: unary_minus
+Value: unary_minus works just like the MathML operator elements described above.
+  However, the MathML operator minus is only processed according to the minus
+  rule if it has two children. If it has one child, it is processed according
+  to the unary_minus rule. If it has any other number of children, an error is
+  raised.
+
+Name: units_conversion
+Value: units_conversion is a pseudo-operator which is not present in the
+  MathML, but is implicitly added around every CellML variable which is not in
+  the same units as the base unit, and needs both a factor and an offset applied.
+  In a units_conversion, #expr1 is the value of the variable, #expr2 is the
+  value by which the expression must be multiplied, and #expr3 is the value
+  which must be added to the expression.
+
+Name: units_conversion_factor
+Value: units_conversion is a pseudo-operator which is not present in the
+  MathML, but is implicitly added around every CellML variable which is not in
+  the same units as the base unit, and needs a factor but not an offset applied.
+  In a units_conversion, #expr1 is the value of the variable, and #expr2 is the
+  value by which the expression must be multiplied.
+
+Name: units_conversion_offset
+Value: units_conversion is a pseudo-operator which is not present in the
+  MathML, but is implicitly added around every CellML variable which is not in
+  the same units as the base unit, and needs an offset but not a factor applied.
+  In a units_conversion, #expr1 is the value of the variable, and #expr2 is the
+  value which which must be added to the expression.

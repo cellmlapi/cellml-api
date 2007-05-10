@@ -1,0 +1,100 @@
+#include "xpcom.idl"
+#include "CellML_APISPEC.idl"
+
+module cellml_services
+{
+  /**
+   * A string annotation.
+   */
+  interface StringAnnotation
+    : cellml_api::UserData
+  {
+    /**
+     * The value of the string.
+     */
+    attribute wstring value;
+  };
+#pragma terminal-interface
+
+  /**
+   * An object annotation.
+   */
+  interface ObjectAnnotation
+    : cellml_api::UserData
+  {
+    /**
+     * The object associated with the annotation. Can be null.
+     */
+    attribute XPCOM::IObject value;
+  };
+#pragma terminal-interface
+
+  /**
+   * A set of finite-lifetime annotations. The purpose of this interface is to
+   * allow annotations to be set throughout the life of a tool invocation or
+   * operation, but then to be all removed at the end (a similar concept to
+   * pooled memory management).
+   * The service also allocates a unique prefix, allowing annotations to be
+   * done on a per-AnnotationSet basis.
+   */
+  interface AnnotationSet
+    : XPCOM::IObject
+  {
+    /**
+     * Retrieves the unique URI used as a prefix for this annotation set.
+     */
+    readonly attribute wstring prefixURI;
+
+    /**
+     * Saves a string on an object. The annotation is specific to this
+     *   AnnotationSet, and will be removed when then annotation set is
+     *   destroyed.
+     * @param element The element to annotate.
+     * @param key The key to set.
+     * @param value The value to set.
+     * Will replace any existing annotation with the same key.
+     */
+    void setStringAnnotation(in cellml_api::CellMLElement element,
+                             in wstring key,
+                             in wstring value);
+
+    /**
+     * Retrieves a string annotation.
+     * @param element The element to get the annotation from.
+     * @param key The key to get.
+     */
+    wstring getStringAnnotation(in cellml_api::CellMLElement element,
+                                in wstring key);
+
+    /**
+     * Saves an object on an object. The annotation is specific to this
+     *   AnnotationSet, and will be removed when then annotation set is
+     *   destroyed.
+     * @param element The element to annotate.
+     * @param key The key to set.
+     * @param value The value to set.
+     * Will replace any existing annotation with the same key.
+     */
+    void setObjectAnnotation(in cellml_api::CellMLElement element,
+                             in wstring key,
+                             in XPCOM::IObject value);
+
+    /**
+     * Retrieves an object annotation.
+     * @param element The element to get the annotation from.
+     * @param key The key to get.
+     */
+    XPCOM::IObject getObjectAnnotation(in cellml_api::CellMLElement element,
+                                       in wstring key);
+  };
+
+  /**
+   * A service which allows other types of annotation utlility objects to be
+   * created.
+   */
+  interface AnnotationToolService
+    : XPCOM::IObject
+  {
+    AnnotationSet createAnnotationSet();
+  };
+};

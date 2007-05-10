@@ -3302,6 +3302,9 @@ WrapMathMLElement
     {L"list", ConstructMathMLListElement},
     {L"ln", ConstructMathMLPredefinedSymbol},
     {L"log", ConstructMathMLPredefinedSymbol},
+    // This one seems to have been missed in the MathML specification, but it
+    // should definitely be a content container.
+    {L"logbase", ConstructMathMLContentContainer},
     {L"lowlimit", ConstructMathMLContentContainer},
     {L"lt", ConstructMathMLPredefinedSymbol},
 #ifdef IMPL_PRESMATHML

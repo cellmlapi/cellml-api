@@ -1,3 +1,6 @@
+#ifndef INCLUDED_CELLML_APISPEC
+#define INCLUDED_CELLML_APISPEC
+
 #include "xpcom.idl"
 #include "DOM_APISPEC.idl"
 #include "MathML_content_APISPEC.idl"
@@ -2022,3 +2025,6 @@ module cellml_api
 #pragma terminal-interface
 #pragma cross-module-argument
 };
+
+#endif // INCLUDED_CELLML_APISPEC
+

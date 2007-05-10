@@ -1,0 +1,138 @@
+#include "CellML_APISPEC.idl"
+
+module cellml_services
+{
+  interface BaseUnit
+    : XPCOM::IObject
+  {
+    /**
+     * The name of the base units.
+     */
+    readonly attribute wstring name;
+  };
+
+  interface UserBaseUnit
+    : BaseUnit
+  {
+    /**
+     * The actual units on the base unit.
+     */
+    readonly attribute cellml_api::Units cellmlUnits;
+  };
+
+  interface BaseUnitInstance
+    : XPCOM::IObject
+  {
+    /**
+     * The unit being referenced.
+     */
+    readonly attribute BaseUnit unit;
+
+    /**
+     * The multiplier (including prefix derived multiplier) on the unit.
+     * Note: This already takes into account the exponent, no need to
+     * raise it to the power of the exponent.
+     */
+    readonly attribute double prefix;
+
+    /**
+     * The offset on the unit.
+     */
+    readonly attribute double offset;
+
+    /**
+     * The exponent on the unit.
+     */
+    readonly attribute double exponent;
+  };
+
+  interface CanonicalUnitRepresentation
+    : XPCOM::IObject
+  {
+    /**
+     * Returns the number of base unit instances.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Fetches the nth base unit (0 for the first).
+     * @param index The index of the base unit.
+     * @returns The base unit instance at the specified index.
+     * @raises CellMLException on error.
+     */
+    BaseUnitInstance fetchBaseUnit(in unsigned long index)
+      raises(cellml_api::CellMLException);
+
+    /**
+     * Compares one unit representation with another.
+     * @param aCompareWith the unit representation to compare with.
+     * @returns True if the units are equivalent.
+     */
+    boolean compatibleWith(in CanonicalUnitRepresentation aCompareWith);
+
+    /**
+     * Computes the conversion needed if you have a value in the units of this
+     * object, and you want to convert it to another. If x is the value in the
+     * units of this object, and y is the desired value, the equation is:
+     *   y = A * x + b.
+     * @param convertTo The units representation to convert to.
+     * @output offset The value b in the equation above.
+     * @returns The multiplier, i.e. the value A in the equation above.
+     */
+    double convertUnits(in CanonicalUnitRepresentation aConvertTo,
+                        out double offset);
+
+    /**
+     * Computes the conversion needed to convert to the SI base units
+     * representation. The equation is:
+     *  y = A * x + b
+     * Where y is the SI base units, and x is the current units.
+     * @output offset the value b in the equation above.
+     * @returns The multiplier, i.e. the value A in the equation above.
+     */
+    double siConversion(out double offset);
+  };
+
+  interface CUSES
+    : XPCOM::IObject
+  {
+    /**
+     * A description of any units errors found in the model (CUSES does not
+     * perform a complete validation, but can incidentally find some errors as
+     * it performs its normal operations).
+     * If no error is found, this will be the empty string. The results of any
+     * other operation on this object is undefined if there is an error, and so
+     * should not be called.
+     */
+    readonly attribute wstring modelError;
+
+    /**
+     * Gets a units representation for a string in a given context.
+     * @param context The context. This must be part of the model
+     *                (or an import) for which this object was created.
+     *                It must be either a component or a units element.
+     * @param name The units name to look up. This can be a built-in unit, or
+     *             a defined unit.
+     * @returns The units representation, or null if the name is invalid.
+     */
+    CanonicalUnitRepresentation getUnitsByName(in cellml_api::CellMLElement aContext,
+                                               in wstring aName);
+  };
+
+  interface CUSESBootstrap
+    : XPCOM::IObject
+  {
+    /**
+     * Creates a CUSES object for a given model. The CUSES object is not live,
+     * and the model should not be changed while the CUSES object is in use.
+     * @param aModel The top-level model on which the CUSES should operate.
+     * @param aStrict If true, then multipliers must be identical and
+     *                present in exactly the same place (units
+     *                consistency, as could be used on, e.g.
+     *                mathematics). Otherwise, check for dimensional consistency
+     *                (as is used to check connection consistency).
+     * @returns A CUSES object.
+     */
+    CUSES createCUSESForModel(in cellml_api::Model aModel, in boolean aStrict);
+  };
+};

@@ -98,6 +98,46 @@ AC_ARG_ENABLE(server,
 esac],[server=false])
 AM_CONDITIONAL(ENABLE_CELLML_CORBA_SERVER, test x$server = xtrue)
 
+AC_ARG_ENABLE(annotools,
+[  --enable-annotools  Build the annotation tools],
+[case "${enableval}" in
+  yes) annotools=true ;;
+  no)  annotools=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-annotools) ;;
+esac], [annotools=false])
+AM_CONDITIONAL(ENABLE_ANNOTOOLS, test x$annotools = xtrue)
+
+AC_ARG_ENABLE(cuses,
+[  --enable-cuses     Build the CellML Units Simplification / Expansion Service],
+[case "${enableval}" in
+  yes) cuses=true ;;
+  no)  cuses=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-cuses) ;;
+esac], [cuses=false])
+AM_CONDITIONAL(ENABLE_CUSES, test x$cuses = xtrue)
+
+if test x$annotools = xfalse -a x$cuses = xtrue; then
+   AC_MSG_ERROR(You must enable AnnoTools if you want CUSES)
+fi
+
+AC_ARG_ENABLE(cevas,
+[  --enable-cevas     Build the CellML Variable Association Service],
+[case "${enableval}" in
+  yes) cevas=true ;;
+  no)  cevas=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-cevas) ;;
+esac], [cevas=false])
+AM_CONDITIONAL(ENABLE_CEVAS, test x$cevas = xtrue)
+
+AC_ARG_ENABLE(malaes,
+[  --enable-malaes   Build the MathML to Language Expression Service],
+[case "${enableval}" in
+  yes) malaes=true ;;
+  no) malaes=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-malaes) ;;
+esac], [malaes=false])
+AM_CONDITIONAL(ENABLE_MALAES, test x$malaes = xtrue)
+
 AC_ARG_ENABLE(ccgs,
 [  --enable-ccgs    Build the CellML C Code Generation Service],
 [case "${enableval}" in

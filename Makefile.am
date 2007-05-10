@@ -52,6 +52,22 @@ include $(top_srcdir)/libltdl/build.mk
 include $(top_srcdir)/sources/cellml_corba_server/build.mk
 endif
 
+if ENABLE_ANNOTOOLS
+include $(top_srcdir)/AnnoTools/build.mk
+endif
+
+if ENABLE_CUSES
+include $(top_srcdir)/CUSES/build.mk
+endif
+
+if ENABLE_CEVAS
+include $(top_srcdir)/CeVAS/build.mk
+endif
+
+if ENABLE_MALAES
+include $(top_srcdir)/MaLaES/build.mk
+endif
+
 if ENABLE_CCGS
 include $(top_srcdir)/CCGS/build.mk
 endif
