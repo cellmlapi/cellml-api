@@ -1221,6 +1221,12 @@ CDAMaLaESTransform::ExecuteTransform
   if (aOpName == L"minus" && args.size() == 1)
     opName = L"unary_minus";
 
+  size_t idx;
+  if ((idx = aOpName.find(L'#')) != std::wstring::npos)
+  {
+    opName = aOpName.substr(0, idx);
+  }
+
   // Look up the operator...
   std::map<std::wstring, Operator>::iterator omi = operMap.find(opName);
   if (omi == operMap.end())

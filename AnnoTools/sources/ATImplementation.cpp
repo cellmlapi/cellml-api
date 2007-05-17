@@ -111,7 +111,7 @@ CDAAnnotationSetImpl::getStringAnnotation
   }
   catch (iface::cellml_api::CellMLException& e)
   {
-    return NULL;
+    return CDA_wcsdup(L"");
   }
 }
 
