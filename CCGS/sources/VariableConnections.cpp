@@ -112,7 +112,7 @@ CodeGenerationState::BuildVIMForConnections
         v1 = already_AddRefd<iface::cellml_api::CellMLVariable>
           (mv->firstVariable());
       }
-      catch (iface::cellml_api::CellMLException&)
+      catch (...)
       {
         std::wstring msg(L"Cannot find variable ");
         RETURN_INTO_WSTRING(name, mv->firstVariableName());
@@ -131,7 +131,7 @@ CodeGenerationState::BuildVIMForConnections
         v2 = already_AddRefd<iface::cellml_api::CellMLVariable>
           (mv->secondVariable());
       }
-      catch (iface::cellml_api::CellMLException&)
+      catch (...)
       {
         std::wstring msg(L"Cannot find variable ");
         RETURN_INTO_WSTRING(name, mv->secondVariableName());
