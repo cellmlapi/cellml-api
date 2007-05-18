@@ -188,6 +188,13 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
                        mContext->variables());
     RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable,
                        vs->getVariable(txt.c_str()));
+    if (v == NULL)
+    {
+      std::wstring msg = L"Cannot find variable ";
+      msg += txt;
+      msg += L" named in ci element.";
+      throw MaLaESError(msg);
+    }
     RETURN_INTO_OBJREF(cvs, iface::cellml_services::ConnectedVariableSet,
                        mCeVAS->findVariableSet(v));
     RETURN_INTO_OBJREF(sv, iface::cellml_api::CellMLVariable,
@@ -324,6 +331,21 @@ CDAMaLaESResult::appendString
 )
 {
   mActive += aArg;
+}
+
+void
+CDAMaLaESResult::appendCount
+(
+ const std::wstring& aArg,
+ std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
+ std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
+ iface::mathml_dom::MathMLElement* degree,
+ iface::mathml_dom::MathMLElement* logbase
+)
+{
+  wchar_t buf[30];
+  swprintf(buf, 30, L"%lu", aArgs.size());
+  mActive += buf;
 }
 
 void
@@ -679,12 +701,20 @@ CDAMaLaESTransform::AddOperator
     {
       precOuter = 0;
       precInner = 1000;
+      p++;
     }
     else
     {
       precOuter = wcstoul(p, &p, 10);
       if (*p == L'(')
+      {
         precInner = wcstoul(p + 1, &p, 10);
+        if (*p++ != L')')
+        {
+          OpError(L"Expected ) after #prec definition.", aOpName);
+          return;
+        }
+      }
       else
         precInner = precOuter;
     }
@@ -808,6 +838,14 @@ CDAMaLaESTransform::AppendCommandToProgram
         return;
       }
     }
+    else if (c == L'c')
+    {
+      if (aCmd == L"count")
+      {
+        aProgram.push_back(command(&CDAMaLaESResult::appendCount, aArg));
+        return;
+      }
+    }
     else if (c == L'b')
     {
       if (aCmd == L"bvarIndex")
@@ -833,7 +871,7 @@ CDAMaLaESTransform::AppendCommandToProgram
   }
   else if (c == L'p')
   {
-    if (aCmd.substr(0, 6) == L"popsupplement")
+    if (aCmd == L"popsupplement")
     {
       aProgram.push_back(command(&CDAMaLaESResult::popSupplement, aArg));
       return;
@@ -841,7 +879,7 @@ CDAMaLaESTransform::AppendCommandToProgram
   }
   else if (c == L's')
   {
-    if (aCmd.substr(0, 6) == L"supplement")
+    if (aCmd == L"supplement")
     {
       aProgram.push_back(command(&CDAMaLaESResult::pushSupplement, aArg));
       return;
@@ -990,8 +1028,7 @@ CDAMaLaESTransform::GetTagsForSpec(const wchar_t* aSpec, stringpairlist& aTags)
   switch (state)
   {
   case EXPECT_TAG:
-    ParseError(L"Empty format specification.", lineno);
-    return;
+    break;
   case IN_COMMENT:
     break;
   case IN_TAG:

@@ -116,6 +116,11 @@ public:
                     std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
                     iface::mathml_dom::MathMLElement* degree,
                     iface::mathml_dom::MathMLElement* logbase);
+  void appendCount(const std::wstring& aArg,
+                   std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
+                   std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
+                   iface::mathml_dom::MathMLElement* degree,
+                   iface::mathml_dom::MathMLElement* logbase);
   
   double parseConstant(iface::mathml_dom::MathMLCnElement* cnEl);
   void appendConstant(iface::mathml_dom::MathMLCnElement* cnEl);

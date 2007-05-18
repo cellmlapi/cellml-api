@@ -612,6 +612,8 @@ CDACeVAS::findVariableSet
 )
   throw(std::exception&)
 {
+  if (aVariable == NULL)
+    throw iface::cellml_api::CellMLException();
   maptype::iterator i = mVariableSets.find(aVariable);
   if (i == mVariableSets.end())
     return NULL;
