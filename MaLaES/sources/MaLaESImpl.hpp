@@ -174,7 +174,8 @@ public:
             iface::cellml_services::CUSES* aCUSES,
             iface::cellml_services::AnnotationSet* aAnnos,
             iface::mathml_dom::MathMLElement* aMathML,
-            iface::cellml_api::CellMLElement* aContext)
+            iface::cellml_api::CellMLElement* aContext,
+            iface::cellml_api::CellMLVariable* aUnitsOf)
     throw(std::exception&);
 
   void RunTransformOnOperator(CDAMaLaESResult* aResult,

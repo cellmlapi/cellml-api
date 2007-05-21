@@ -85,13 +85,20 @@ module cellml_services
      * @param aMathML The MathML element tree to use.
      * @param aContext The CellML element (component or reaction) to use as
      *                 context for resolving variables.
+     * @param aUnitsOf A variable into which the value is being stored.
+     *                 Providing this allows MaLaES to apply an appropriate
+     *                 units conversion to the expression. This may be set to
+     *                 null in which case no units conversion will occur on the
+     *                 result.
      */
     MaLaESResult transform(
                            in cellml_services::CeVAS aCeVAS,
                            in cellml_services::CUSES aCUSES,
                            in cellml_services::AnnotationSet aAnnos,
                            in mathml_dom::MathMLElement aMathML,
-                           in cellml_api::CellMLElement aContext);
+                           in cellml_api::CellMLElement aContext,
+                           in cellml_api::CellMLVariable aUnitsOf
+                          );
   };
 
   /**

@@ -170,7 +170,7 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
   mmel->release_ref();
 
   iface::cellml_services::MaLaESResult* mr =
-    mt->transform(cev, cu, as, expr, glcC);
+    mt->transform(cev, cu, as, expr, glcC, NULL);
 
   CPPUNIT_ASSERT(mr);
 

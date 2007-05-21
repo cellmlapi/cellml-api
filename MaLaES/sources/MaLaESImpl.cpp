@@ -661,17 +661,88 @@ CDAMaLaESTransform::transform
  iface::cellml_services::CUSES* aCUSES,
  iface::cellml_services::AnnotationSet* aAnnos,
  iface::mathml_dom::MathMLElement* aMathML,
- iface::cellml_api::CellMLElement* aContext 
+ iface::cellml_api::CellMLElement* aContext,
+ iface::cellml_api::CellMLVariable* aUnitsOf
 )
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(r, CDAMaLaESResult,
                      new CDAMaLaESResult(this, aCeVAS, aCUSES, aAnnos,
                                          aContext, mVariablesFromSource));
-
   try
   {
-    RunTransformOnOperator(r, aMathML); 
+    double mup = 1.0;
+    double offset = 0.0;
+
+    if (aUnitsOf != NULL)
+    {
+      RETURN_INTO_WSTRING(unLocal, aUnitsOf->unitsName());
+      RETURN_INTO_OBJREF(compLocal, iface::cellml_api::CellMLElement,
+                         aUnitsOf->parentElement());
+      RETURN_INTO_OBJREF(curLocal,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         aCUSES->getUnitsByName(compLocal, unLocal.c_str()));
+      RETURN_INTO_OBJREF(cvs, iface::cellml_services::ConnectedVariableSet,
+                         aCeVAS->findVariableSet(aUnitsOf));
+      RETURN_INTO_OBJREF(sv, iface::cellml_api::CellMLVariable,
+                         cvs->sourceVariable());
+      if (sv == NULL)
+        throw MaLaESError(L"Can't find source variable of units conversion target");
+
+      RETURN_INTO_WSTRING(unTarg, sv->unitsName());
+      RETURN_INTO_OBJREF(compTarg, iface::cellml_api::CellMLElement,
+                         sv->parentElement());
+      RETURN_INTO_OBJREF(curTarg,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         aCUSES->getUnitsByName(compTarg, unTarg.c_str()));
+      mup = curLocal->convertUnits(curTarg, &offset);
+    }
+
+    if (mup == 1.0 && offset == 0.0)
+      RunTransformOnOperator(r, aMathML);
+    else
+    {
+      CleanupVector<iface::mathml_dom::MathMLElement*> args;
+      CleanupVector<iface::mathml_dom::MathMLBvarElement*> bvars;
+      aMathML->add_ref();
+      args.push_back(aMathML);
+      RETURN_INTO_OBJREF(doc, iface::dom::Document, aMathML->ownerDocument());
+      if (mup != 1.0)
+      {
+        RETURN_INTO_OBJREF(cn, iface::dom::Element,
+                           doc->createElementNS(MATHML_NS, L"cn"));
+        wchar_t buf[30];
+        swprintf(buf, 30, L"%g", mup);
+        RETURN_INTO_OBJREF(t, iface::dom::Text,
+                           doc->createTextNode(buf));
+        cn->appendChild(t)->release_ref();
+        DECLARE_QUERY_INTERFACE(mcn, cn,
+                                mathml_dom::MathMLCnElement);
+        args.push_back(mcn);
+      }
+      if (offset != 0.0)
+      {
+        RETURN_INTO_OBJREF(cn, iface::dom::Element,
+                           doc->createElementNS(MATHML_NS, L"cn"));
+        wchar_t buf[30];
+        swprintf(buf, 30, L"%g", offset);
+        RETURN_INTO_OBJREF(t, iface::dom::Text,
+                           doc->createTextNode(buf));
+        cn->appendChild(t)->release_ref();
+        DECLARE_QUERY_INTERFACE(mcn, cn,
+                                mathml_dom::MathMLCnElement);
+        args.push_back(mcn);
+      }
+      const wchar_t* pseudo;
+      if (mup == 1.0)
+        pseudo = L"units_conversion_offset";
+      else if (offset == 0.0)
+        pseudo = L"units_conversion_factor";
+      else
+        pseudo = L"units_conversion";
+      // Apply the pseudo-operator...
+      ExecuteTransform(r, pseudo, args, bvars, NULL, NULL);
+    }
   }
   catch (MaLaESError& mError)
   {
