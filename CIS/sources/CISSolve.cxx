@@ -21,6 +21,12 @@
 #include <sundials_types.h>
 #include <cvode_dense.h>
 
+#ifdef _MSC_VER
+#include <float.h>
+#define isfinite _finite
+#define INFINITY (double)(0x7FF0000000000000L)
+#endif
+
 struct EvaluationInformation
 {
   double* constants;
@@ -619,12 +625,6 @@ safe_factorof(double num, double den)
 #define NR_RANDOM_STARTS 100
 #define NR_MAX_STEPS 1000
 #define NR_MAX_STEPS_INITIAL 10
-
-#ifdef _MSC_VER
-#include <float.h>
-#define isfinite _finite
-#define INFINITY (double)(0x7FF0000000000000L)
-#endif
 
 static double
 random_double_logUniform()
