@@ -384,6 +384,9 @@ extern "C"
   CDA_EXPORT_PRE double lcm_multi(uint32_t size, ...) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double multi_min(uint32_t size, ...) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double multi_max(uint32_t size, ...) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double safe_quotient(double num, double den) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double safe_remainder(double num, double den) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double safe_factorof(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE void NR_MINIMISE(double(*func)(double *C, double *V, double *B),
                                   double *C,double *V,double *B,int idx)
     CDA_EXPORT_POST;
@@ -577,6 +580,42 @@ double multi_max(uint32_t count, ...)
   return best;
 }
 
+double
+safe_quotient(double num, double den)
+{
+  if (!isfinite(num) || !isfinite(den))
+    return strtod("NAN", NULL);
+  int inum = (int)num, iden = (int)den;
+  if (iden == 0)
+    return strtod("NAN", NULL);
+
+  return inum / iden;
+}
+
+double
+safe_remainder(double num, double den)
+{
+  if (!isfinite(num) || !isfinite(den))
+    return strtod("NAN", NULL);
+  int inum = (int)num, iden = (int)den;
+  if (iden == 0)
+    return strtod("NAN", NULL);
+
+  return inum % iden;
+}
+
+double
+safe_factorof(double num, double den)
+{
+  if (!isfinite(num) || !isfinite(den))
+    return strtod("NAN", NULL);
+  int inum = (int)num, iden = (int)den;
+  if (iden == 0)
+    return strtod("NAN", NULL);
+
+  return ((inum % iden) == 0) ? 1.0 : 0.0;
+}
+
 #define NR_RANDOM_STARTS 100
 #define NR_MAX_STEPS 1000
 #define NR_MAX_STEPS_INITIAL 10
@@ -682,7 +721,7 @@ NR_MINIMISE
 {
   double* x = V + idx;
 
-  double best_X, best_fX = INFINITY;
+  double best_X = 0.0, best_fX = INFINITY;
   double current_X, current_fX, current_dfX_dX;
   uint32_t steps, maxsteps;
   uint32_t i;
