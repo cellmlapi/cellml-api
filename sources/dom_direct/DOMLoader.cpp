@@ -48,52 +48,72 @@ CDA_utf8_data_t CDA_utf8_data[] =
 static void
 operator+=(std::wstring& data, const char* str)
 {
-  unsigned char c;
-  wchar_t buf[512];
-  const char* p = str;
-  wchar_t* np = buf;
+  char c;
+  uint32_t l;
 
-  if (str == NULL)
+  if (CDA_UNLIKELY(str == NULL))
     return;
 
-  while ((c = *p++))
+  wchar_t buf[64];
+  wchar_t* ne = buf + 63;
+
+  while (CDA_LIKELY((c = *str++) != 0))
   {
-    unsigned char l = CDA_utf8_data[c].len;
+    wchar_t* np = buf;
 
-    if (((uint32_t)(np - buf)) > ((sizeof(buf)/sizeof(wchar_t)) - 4))
+    // Handle the most common case efficiently...
+    while (CDA_LIKELY(((uint8_t)c) < 128))
     {
-      *np = 0;
-      data += buf;
-      np = buf;
-    }
+      *np++ = ((wchar_t)c);
+      if (CDA_UNLIKELY(np == ne))
+        break;
 
-#ifndef WCHAR_T_CONSTANT_WIDTH
-    if (l == 4)
-    {
-      unsigned char c2 = (unsigned char)*p++;
-      unsigned char c3 = (unsigned char)*p++;
-      unsigned char w = ((c << 2) | ((c2 >> 4) & 3)) - 1;
-      *np++ = (0xD800 | (w << 6) | ((c2 << 2) & 0x3A) | ((c3 >> 4) & 0x3));
-      unsigned char c4 = (unsigned char)*p++;
-      *np = (0xDC00 | ((c3 << 6) & 0x3A0) | (c4 & 0x3F));
-    }
-    else
-    {
-#endif
-      *np = CDA_utf8_data[c].mask & c;
-      while (--l)
+      if (CDA_UNLIKELY(c == 0))
       {
-        *np <<= 6;
-        *np |= ((*p++) & 0x3F);
+        data.append(buf, np - buf - 1);
+        return;
       }
-#ifndef WCHAR_T_CONSTANT_WIDTH
+
+      c = *str++;
     }
+
+    while (np < ne)
+    {
+      unsigned char l = CDA_utf8_data[c].len;
+#ifndef WCHAR_T_CONSTANT_WIDTH
+      if (l == 4)
+      {
+        unsigned char c2 = (unsigned char)*str++;
+        unsigned char c3 = (unsigned char)*str++;
+        unsigned char w = ((c << 2) | ((c2 >> 4) & 3)) - 1;
+        *np++ = (0xD800 | (w << 6) | ((c2 << 2) & 0x3A) | ((c3 >> 4) & 0x3));
+        unsigned char c4 = (unsigned char)*str++;
+        *np = (0xDC00 | ((c3 << 6) & 0x3A0) | (c4 & 0x3F));
+      }
+      else
+      {
+#endif
+        *np = CDA_utf8_data[c].mask & c;
+        while (--l)
+        {
+          *np <<= 6;
+          *np |= ((*str++) & 0x3F);
+        }
+#ifndef WCHAR_T_CONSTANT_WIDTH
+      }
 #endif
 
-    np++;
+      c = *str;
+      if (CDA_UNLIKELY(c == 0))
+      {
+        data.append(buf, np - buf);
+        return;
+      }
+      str++;
+    }
+
+    data.append(buf, np - buf);
   }
-  *np = 0;
-  data += buf;
 }
 
 char*

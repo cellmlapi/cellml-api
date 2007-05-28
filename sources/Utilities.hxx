@@ -1003,4 +1003,13 @@ struct XPCOMComparator
 
 wchar_t* CDA_wcsdup(const wchar_t* str);
 
+
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#define CDA_LIKELY(x) (__builtin_expect(!!(x), 1))
+#define CDA_UNLIKELY(x) (__builtin_expect(x, 0))
+#else
+#define CDA_LIKELY(x) (x)
+#define CDA_UNLIKELY(x) (x)
+#endif
+
 #endif // _UTILITIES_HXX
