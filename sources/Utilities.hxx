@@ -17,6 +17,16 @@
 #error "compiler has a different length type."
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#define CDA_LIKELY(x) (__builtin_expect(!!(x), 1))
+#define CDA_UNLIKELY(x) (__builtin_expect(x, 0))
+#define CDA_PURE __attribute__((pure))
+#else
+#define CDA_LIKELY(x) (x)
+#define CDA_UNLIKELY(x) (x)
+#define CDA_PURE
+#endif
+
 #include <list>
 #include <exception>
 #include <Ifacexpcom.hxx>
@@ -35,6 +45,39 @@
 #endif
 
 #include "cda_compiler_support.h"
+
+// A dynamic_cast which can efficiently convert to the most derived type, but
+// gives undefined results if T isn't the most derived type of the input.
+template<class T>
+class unsafe_dynamic_cast
+{
+public:
+  template<class I>
+  unsafe_dynamic_cast(I* aInput)
+  {
+    if (aInput == NULL)
+      mTmp = NULL;
+    else
+      mTmp = reinterpret_cast<T>(dynamic_cast<void*>(aInput));
+  }
+
+  operator T()
+  {
+    return mTmp;
+  }
+
+  T get()
+  {
+    return mTmp;
+  }
+
+  T operator->()
+  {
+    return mTmp;
+  }
+private:
+  T mTmp;
+};
 
 // wcsdup is non-standard, so use this instead...
 HEADER_INLINE wchar_t*
@@ -300,10 +343,12 @@ public:
 
   char* cloneID()
   {
-    return strdup(mIDString);
+    char* ret = (char*)malloc(20);
+    memcpy(ret, mIDString, 20);
+    return ret;
   }
 private:
-  char mIDString[38];
+  char mIDString[20];
 };
 
 #define CDA_IMPL_ID \
@@ -621,68 +666,6 @@ private:
       return NULL; \
     }
 
-#ifdef USE_GDOME // Various code only used with GDOME...
-
-#ifdef WCHAR_T_IS_64BIT
-#error GDOME and 64 bit wont work together
-#endif
-
-#ifdef WCHAR_T_IS_32BIT
-#define g_wchar_to_char g_ucs4_to_utf8
-#define g_char_to_wchar g_utf8_to_ucs4_fast
-#define gwchar_t gunichar
-#define POSSIBLE_EXTRA_NULLS
-#else
-#define g_wchar_to_char g_utf16_to_utf8
-#define g_char_to_wchar g_utf8_to_utf16
-#define gwchar_t gunichar2
-#define POSSIBLE_EXTRA_NULLS ,NULL, NULL
-#endif
-
-#define TRDOMSTRING(x) \
-  GdomeDOMString *gd##x = gdome_str_mkref_own(g_wchar_to_char((const gwchar_t*)x, -1, NULL, NULL, NULL))
-
-#define TRDOMSTRING_EMPTYNULL(x) \
-  GdomeDOMString *gd##x; \
-  if (!wcscmp(x, L"")) \
-    gd##x = NULL; \
-  else \
-    gd##x = gdome_str_mkref_own(g_wchar_to_char((const gwchar_t*)x, -1, NULL, NULL, NULL))
-
-#define DDOMSTRING(x) \
-  if (gd##x != NULL) \
-    gdome_str_unref(gd##x)
-
-#define TRGDOMSTRING(x) \
-  iface::dom::DOMString cxx##x = ((x) && (x)->str) ? ((wchar_t*)g_char_to_wchar(x->str, -1, NULL POSSIBLE_EXTRA_NULLS)) : CDA_wcsdup(L""); \
-  if (x) \
-    gdome_str_unref(x);
-
-#define EXCEPTION_TRY \
-  GdomeException exc;  
-
-#define EXCEPTION_CATCH \
-  if (GDOME_EXCEPTION_CODE(exc) != GDOME_NOEXCEPTION_ERR) \
-    throw iface::dom::DOMException();
-
-#define LOCALCONVERT(x, t) \
-  const CDA_##t* l##x = dynamic_cast<const CDA_##t*>(x); \
-  if (l##x == NULL) \
-    throw iface::dom::DOMException();
-
-#define LOCALCONVERT_NULLOK(x, t) \
-  const CDA_##t* l##x; \
-  if (x == NULL) \
-    l##x = NULL; \
-  else \
-  { \
-    l##x = dynamic_cast<const CDA_##t*>(x); \
-  if (l##x == NULL) \
-    throw iface::dom::DOMException(); \
-  }
-
-#endif // USE_GDOME
-
 template<class T>
 class already_AddRefd
 {
@@ -696,12 +679,12 @@ public:
   {
   }
 
-  operator T*() const
+  operator T*() const CDA_PURE
   {
     return mPtr;
   }
 
-  T* getPointer() const
+  T* getPointer() const CDA_PURE
   {
     return mPtr;
   }
@@ -742,17 +725,17 @@ public:
       mPtr->release_ref();
   }
 
-  T* operator-> () const
+  T* operator-> () const CDA_PURE
   {
     return mPtr;
   }
 
-  T* getPointer() const
+  T* getPointer() const CDA_PURE
   {
     return mPtr;
   }
 
-  operator T* () const
+  operator T* () const CDA_PURE
   {
     return mPtr;
   }
@@ -831,10 +814,59 @@ operator!=(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
   return (lhs.getPointer() != rhs.getPointer());
 }
 
+class thinstring
+{
+public:
+  thinstring(wchar_t* aData)
+    : mData(aData)
+  {
+  }
+
+  ~thinstring()
+  {
+    if (CDA_LIKELY(mData != NULL))
+      free(mData);
+  }
+
+  wchar_t* takeOwnership()
+  {
+    wchar_t* ret = mData;
+    mData = NULL;
+    return ret;
+  }
+
+  bool
+  operator==(const wchar_t* aCmpWith)
+  {
+    // Mainly for the both NULL case...
+    if (CDA_UNLIKELY(aCmpWith == mData))
+      return true;
+    if (CDA_UNLIKELY(mData == NULL || aCmpWith == NULL))
+      return false;
+    return !wcscmp(mData, aCmpWith);
+  }
+
+  operator const wchar_t*() const
+  {
+    return mData;
+  }
+
+  const wchar_t* getPointer() const
+  {
+    return mData;
+  }
+
+private:
+  wchar_t* mData;
+};
+
 #define RETURN_INTO_WSTRING(lhs, rhs) \
   wchar_t* tmp_##lhs = rhs; \
   std::wstring lhs(tmp_##lhs); \
   free(tmp_##lhs);
+
+#define RETURN_INTO_THINSTRING(lhs, rhs) \
+  thinstring lhs(rhs);
 
 #define RETURN_INTO_OBJREF(lhs, type, rhs) \
   ObjRef<type> lhs \
@@ -860,6 +892,17 @@ operator!=(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
     )\
   )
 
+#define RETURN_INTO_OBJREFUD(lhs, type, rhs) \
+  ObjRef<type> lhs \
+  ( \
+    already_AddRefd<type> \
+    ( \
+      unsafe_dynamic_cast<type*> \
+      ( \
+        rhs \
+      ).get() \
+    )\
+  )
 
 template<class T> class WeakReference;
 
@@ -1002,14 +1045,5 @@ struct XPCOMComparator
 };
 
 wchar_t* CDA_wcsdup(const wchar_t* str);
-
-
-#if defined(__GNUC__) && (__GNUC__ > 2)
-#define CDA_LIKELY(x) (__builtin_expect(!!(x), 1))
-#define CDA_UNLIKELY(x) (__builtin_expect(x, 0))
-#else
-#define CDA_LIKELY(x) (x)
-#define CDA_UNLIKELY(x) (x)
-#endif
 
 #endif // _UTILITIES_HXX

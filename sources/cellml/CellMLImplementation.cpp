@@ -662,7 +662,7 @@ CDA_CellMLElement::removeByName
 {
   RETURN_INTO_OBJREF(elS, iface::cellml_api::CellMLElementSet, childElements());
   RETURN_INTO_OBJREF(it, CDA_CellMLElementIterator,
-                     dynamic_cast<CDA_CellMLElementIterator*>(elS->iterate()));
+                     unsafe_dynamic_cast<CDA_CellMLElementIterator*>(elS->iterate()));
   while (true)
   {
     RETURN_INTO_OBJREF(n, iface::cellml_api::CellMLElement,
@@ -718,17 +718,15 @@ CDA_CellMLElement::modelElement()
       return m;
     }
 
-    CDA_CellMLElement* el =
-      dynamic_cast<CDA_CellMLElement*>(cand->mParent);
-
-    if (el == NULL)
+    if (cand->mParent == NULL)
     {
       // We have reached a point where no parent can be found, and we did not
       // hit a model on the way. Therefore, we are looking at a fragment which
       // does not have a modelElement.
       return NULL;
     }
-    cand = el;
+
+    cand = unsafe_dynamic_cast<CDA_CellMLElement*>(cand->mParent);
   }
 }
 
@@ -1026,13 +1024,7 @@ CDA_Model::groups()
     return mGroupSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mGroupSet = new CDA_GroupSet(this, allChildren);
   return mGroupSet;
@@ -1048,9 +1040,7 @@ CDA_Model::imports()
     return mImportSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (already_AddRefd<CDA_CellMLElementSet>
-     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mImportSet = new CDA_CellMLImportSet(this, allChildren);
   return mImportSet;
@@ -1099,9 +1089,7 @@ CDA_Model::localUnits()
     return mLocalUnits;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (already_AddRefd<CDA_CellMLElementSet>
-     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mLocalUnits = new CDA_UnitsSet(this, allChildren /*, false */);
   return mLocalUnits;
@@ -1157,9 +1145,7 @@ CDA_Model::localComponents()
     return mComponentSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (already_AddRefd<CDA_CellMLElementSet>
-     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mComponentSet = new CDA_CellMLComponentSet(this, allChildren);
   return mComponentSet;
@@ -1216,9 +1202,8 @@ CDA_Model::connections()
     return mConnectionSet;
   }
   
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (already_AddRefd<CDA_CellMLElementSet>
-     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
+
   mConnectionSet = new CDA_ConnectionSet(this, allChildren);
   return mConnectionSet;
 }
@@ -1230,9 +1215,8 @@ CDA_Model::findGroupsWithRelationshipRefName
 )
   throw(std::exception&)
 {
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (already_AddRefd<CDA_CellMLElementSet>
-     (dynamic_cast<CDA_CellMLElementSet*>(childElements())));
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
+
   return new CDA_GroupSet(allChildren, name);
 }
 
@@ -1264,9 +1248,11 @@ CDA_Model::fullyInstantiateImports()
 
     if (!imp->wasInstantiated())
       imp->instantiate();
+
     // Now that the model is loaded, add its children to the importQueue...
-    iface::cellml_api::Model* m =
-      dynamic_cast<CDA_CellMLImport*>(imp.getPointer())->mImportedModel;
+    CDA_Model* m =
+      unsafe_dynamic_cast<CDA_Model*>(unsafe_dynamic_cast<CDA_CellMLImport*>
+                                      (imp.getPointer())->mImportedModel);
     if (m == NULL)
       continue;
     
@@ -1959,13 +1945,7 @@ CDA_CellMLComponent::variables()
     return mVariableSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mVariableSet = new CDA_CellMLVariableSet(this, allChildren);
   return mVariableSet;
@@ -1981,13 +1961,7 @@ CDA_CellMLComponent::units()
     return mUnitsSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mUnitsSet = new CDA_UnitsSet(this, allChildren);
   return mUnitsSet;
@@ -2166,16 +2140,15 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
           }
           // We now have an ImportComponent, but we want the real one if we can
           // get it.
-          model =
-            dynamic_cast<CDA_Model*>(
-            dynamic_cast<CDA_CellMLImport*>(ic->mParent)->mImportedModel);
-          // If the real component isn't instantiated yet, return the
-          // ImportComponent...
-          if (model == NULL)
+          CDA_CellMLImport* ci = dynamic_cast<CDA_CellMLImport*>(ic->mParent);
+          if (ci->mImportedModel == NULL)
           {
             ic->add_ref();
             return ic;
           }
+          model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
+          // If the real component isn't instantiated yet, return the
+          // ImportComponent...
           wchar_t *cr = ic->componentRef();
           parname = cr;
           free(cr);
@@ -2200,9 +2173,9 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
     if (ci == NULL)
       throw iface::cellml_api::CellMLException();
 
-    model = dynamic_cast<CDA_Model*>(ci->mImportedModel);
-    if (model == NULL)
+    if (ci->mImportedModel == NULL)
       throw iface::cellml_api::CellMLException();
+    model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
 
     RETURN_INTO_WSTRING(cr, ic->componentRef());
 
@@ -2268,7 +2241,7 @@ CDA_CellMLComponentGroupMixin::encapsulationChildren()
         componentName = str;
         free(str);
         CDA_CellMLImport* imp = dynamic_cast<CDA_CellMLImport*>
-          (dynamic_cast<CDA_ImportComponent*>(icomp.getPointer())->mParent);
+          (unsafe_dynamic_cast<CDA_ImportComponent*>(icomp.getPointer())->mParent);
         if (imp == NULL)
           throw iface::cellml_api::CellMLException();
         model = dynamic_cast<CDA_Model*>(imp->mParent);
@@ -2349,9 +2322,9 @@ CDA_CellMLComponentGroupMixin::encapsulationChildren()
     if (ci == NULL)
       throw iface::cellml_api::CellMLException();
 
-    model = dynamic_cast<CDA_Model*>(ci->mImportedModel);
-    if (model == NULL)
+    if (ci->mImportedModel == NULL)
       throw iface::cellml_api::CellMLException();
+    model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
 
     RETURN_INTO_WSTRING(cr, ic->componentRef());
 
@@ -2501,16 +2474,18 @@ CDA_CellMLComponentGroupMixin::containmentParent()
           }
           // We now have an ImportComponent, but we want the real one if we can
           // get it.
-          model =
-            dynamic_cast<CDA_Model*>(
-            dynamic_cast<CDA_CellMLImport*>(ic->mParent)->mImportedModel);
+          CDA_CellMLImport* ci = dynamic_cast<CDA_CellMLImport*>(ic->mParent);
+
           // If the real component isn't instantiated yet, return the
           // ImportComponent...
-          if (model == NULL)
+          if (ci->mImportedModel == NULL)
           {
             ic->add_ref();
             return ic;
           }
+          model =
+            unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
+
           wchar_t *cr = ic->componentRef();
           parname = cr;
           free(cr);
@@ -2535,9 +2510,10 @@ CDA_CellMLComponentGroupMixin::containmentParent()
     if (ci == NULL)
       throw iface::cellml_api::CellMLException();
 
-    model = dynamic_cast<CDA_Model*>(ci->mImportedModel);
-    if (model == NULL)
+    if (ci->mImportedModel == NULL)
       throw iface::cellml_api::CellMLException();
+
+    model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
 
     RETURN_INTO_WSTRING(cr, ic->componentRef());
 
@@ -2680,9 +2656,10 @@ CDA_CellMLComponentGroupMixin::containmentChildren()
     if (ci == NULL)
       throw iface::cellml_api::CellMLException();
 
-    model = dynamic_cast<CDA_Model*>(ci->mImportedModel);
-    if (model == NULL)
+    if (ci->mImportedModel == NULL)
       throw iface::cellml_api::CellMLException();
+
+    model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
 
     RETURN_INTO_WSTRING(cr, ic->componentRef());
 
@@ -2712,13 +2689,7 @@ CDA_CellMLComponent::reactions()
     return mReactionSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mReactionSet = new CDA_ReactionSet(this, allChildren);
   return mReactionSet;
@@ -2729,8 +2700,7 @@ CDA_CellMLComponent::importNumber()
   throw(std::exception&)
 {
   // Get our model...
-  ObjRef<CDA_Model> modelEl(already_AddRefd<CDA_Model>
-                            (dynamic_cast<CDA_Model*>(modelElement())));
+  RETURN_INTO_OBJREFUD(modelEl, CDA_Model, modelElement());
   if (modelEl == NULL)
     return 0;
   CDA_CellMLImport* impEl = dynamic_cast<CDA_CellMLImport*>(modelEl->mParent);
@@ -2789,13 +2759,8 @@ CDA_UnitsBase::unitCollection()
     return mUnitSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
+
   mUnitSet = new CDA_UnitSet(this, allChildren);
   return mUnitSet;
 }
@@ -3193,13 +3158,8 @@ CDA_CellMLImport::components()
     return mImportComponentSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
+
   mImportComponentSet = new CDA_ImportComponentSet(this, allChildren);
   return mImportComponentSet;
 }
@@ -3214,13 +3174,7 @@ CDA_CellMLImport::units()
     return mImportUnitsSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mImportUnitsSet = new CDA_ImportUnitsSet(this, allChildren);
   return mImportUnitsSet;
@@ -3665,7 +3619,7 @@ CDA_ImportComponent::fetchDefinition()
   RETURN_INTO_WSTRING(compName, componentRef());
 
   // Now search for it in the imported model...
-  CDA_Model* m = dynamic_cast<CDA_Model*>(cmi->mImportedModel);
+  CDA_Model* m = unsafe_dynamic_cast<CDA_Model*>(cmi->mImportedModel);
 
   RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet,
                      m->modelComponents());
@@ -3819,7 +3773,7 @@ CDA_ImportUnits::fetchDefinition()
   RETURN_INTO_WSTRING(unitsName, unitsRef());
 
   // Now search for it in the imported model...
-  CDA_Model* m = dynamic_cast<CDA_Model*>(cmi->mImportedModel);
+  CDA_Model* m = unsafe_dynamic_cast<CDA_Model*>(cmi->mImportedModel);
 
   RETURN_INTO_OBJREF(mu, iface::cellml_api::UnitsSet,
                      m->modelUnits());
@@ -3838,7 +3792,7 @@ CDA_ImportUnits::fetchDefinition()
 
   // We are documented as not calling add_ref. This design might need to be
   // changed for threadsafety later.
-  return dynamic_cast<CDA_Units*>(u.getPointer());
+  return unsafe_dynamic_cast<CDA_Units*>(u.getPointer());
 }
 
 
@@ -4276,13 +4230,7 @@ CDA_ComponentRef::componentRefs()
     return mCRSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mCRSet = new CDA_ComponentRefSet(this, allChildren.getPointer());
   return mCRSet;
@@ -4501,13 +4449,7 @@ CDA_Group::relationshipRefs()
     return mRRSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mRRSet = new CDA_RelationshipRefSet(this, allChildren);
   return mRRSet;
@@ -4523,13 +4465,7 @@ CDA_Group::componentRefs()
     return mCRSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mCRSet = new CDA_ComponentRefSet(this, allChildren);
   return mCRSet;
@@ -4595,18 +4531,18 @@ CDA_Connection::componentMapping()
     return mMapComponents;
   }
 
-  RETURN_INTO_OBJREFD(allChildren, iface::cellml_api::CellMLElementSet,
-                      childElements());
+  RETURN_INTO_OBJREFUD(allChildren, iface::cellml_api::CellMLElementSet,
+                       childElements());
   RETURN_INTO_OBJREF(allChildrenIt, iface::cellml_api::CellMLElementIterator,
                      allChildren->iterate());
   while (true)
   {
-    RETURN_INTO_OBJREFD(child, iface::cellml_api::CellMLElement,
+    RETURN_INTO_OBJREF(child, iface::cellml_api::CellMLElement,
                        allChildrenIt->next());
     if (child == NULL)
     {
       // No MapComponents. Make one...
-      RETURN_INTO_OBJREFD(me, CDA_Model, modelElement());
+      RETURN_INTO_OBJREFUD(me, CDA_Model, modelElement());
       if (me == NULL)
         throw iface::cellml_api::CellMLException();
       RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents,
@@ -4640,13 +4576,7 @@ CDA_Connection::variableMappings()
     return mMVS;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mMVS = new CDA_MapVariablesSet(this, allChildren);
   return mMVS;
@@ -4728,7 +4658,7 @@ CDA_MapComponents::firstComponent()
       return cc;
     }
 
-    m = dynamic_cast<CDA_Model*>(ci->mImportedModel);
+    m = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
     wchar_t* icrn = ic->componentRef();
     cn = icrn;
     free(icrn);
@@ -4766,7 +4696,7 @@ CDA_MapComponents::firstComponent(iface::cellml_api::CellMLComponent* attr)
     mOrig = m;
     while (m != thisModel)
     {
-      m = dynamic_cast<CDA_Model*>(import->mImportedModel);
+      m = unsafe_dynamic_cast<CDA_Model*>(import->mImportedModel);
       if (m == NULL)
         // Don't return yet, we might find the model up the import chain.
         break;
@@ -4818,7 +4748,7 @@ CDA_MapComponents::firstComponent(iface::cellml_api::CellMLComponent* attr)
         RETURN_INTO_WSTRING(compR, impc->componentRef());
         if (compR == compName)
         {
-          comp = dynamic_cast<iface::cellml_api::CellMLComponent*>
+          comp = static_cast<iface::cellml_api::CellMLComponent*>
             (impc.getPointer());
           compName = impc->name();
           m = dynamic_cast<CDA_Model*>(ci->mParent);
@@ -4883,7 +4813,7 @@ CDA_MapComponents::secondComponent()
       return cc;
     }
 
-    m = dynamic_cast<CDA_Model*>(ci->mImportedModel);
+    m = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
     wchar_t* icrn = ic->componentRef();
     cn = icrn;
     free(icrn);
@@ -4921,7 +4851,7 @@ CDA_MapComponents::secondComponent(iface::cellml_api::CellMLComponent* attr)
     mOrig = m;
     while (m != thisModel)
     {
-      m = dynamic_cast<CDA_Model*>(import->mImportedModel);
+      m = unsafe_dynamic_cast<CDA_Model*>(import->mImportedModel);
       if (m == NULL)
         // Don't return yet, we might find the model up the import chain.
         break;
@@ -4973,7 +4903,7 @@ CDA_MapComponents::secondComponent(iface::cellml_api::CellMLComponent* attr)
         RETURN_INTO_WSTRING(compR, impc->componentRef());
         if (compR == compName)
         {
-          comp = dynamic_cast<iface::cellml_api::CellMLComponent*>
+          comp = static_cast<iface::cellml_api::CellMLComponent*>
             (impc.getPointer());
           compName = impc->name();
           m = dynamic_cast<CDA_Model*>(ci->mParent);
@@ -5040,8 +4970,8 @@ CDA_MapVariables::firstVariable()
   RETURN_INTO_OBJREF(cvs, iface::cellml_api::CellMLVariableSet,
                      comp->variables());
   RETURN_INTO_WSTRING(fvn, firstVariableName())
-  iface::cellml_api::CellMLVariable* v =
-    dynamic_cast<iface::cellml_api::CellMLVariable*>(cvs->get(fvn.c_str()));
+  CDA_CellMLVariable* v =
+    unsafe_dynamic_cast<CDA_CellMLVariable*>(cvs->get(fvn.c_str()));
 
   // The CellML is malformed if the referenced variable doesn't exist.
   if (v == NULL)
@@ -5083,7 +5013,7 @@ CDA_MapVariables::firstVariable(iface::cellml_api::CellMLVariable* attr)
   // have variables. But the component we are looking for could be this one, or
   // it could be up the import chain.
   CDA_Model* compModel = dynamic_cast<CDA_Model*>
-    (dynamic_cast<CDA_CellMLComponent*>(comp.getPointer())->mParent);
+    (unsafe_dynamic_cast<CDA_CellMLComponent*>(comp.getPointer())->mParent);
   if (compModel == NULL)
     throw iface::cellml_api::CellMLException();
 
@@ -5284,13 +5214,7 @@ CDA_Reaction::variableReferences()
     return mVariableRefSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mVariableRefSet = new CDA_VariableRefSet(this, allChildren);
   return mVariableRefSet;
@@ -5472,13 +5396,7 @@ CDA_VariableRef::roles()
     return mRoleSet;
   }
 
-  ObjRef<CDA_CellMLElementSet> allChildren
-    (
-     already_AddRefd<CDA_CellMLElementSet>
-     (
-      dynamic_cast<CDA_CellMLElementSet*>((childElements()))
-     )
-    );
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet, childElements());
 
   mRoleSet = new CDA_RoleSet(this, allChildren);
   return mRoleSet;
@@ -5876,7 +5794,7 @@ CDA_DOMElementIteratorBase::fetchNextElement(const wchar_t* aWantEl)
 
     while (nodeHit != NULL)
     {
-      RETURN_INTO_WSTRING(elN, nodeHit->localName());
+      RETURN_INTO_THINSTRING(elN, nodeHit->localName());
       if (elN == aWantEl)
       {
         QUERY_INTERFACE(mNextElement, nodeHit, dom::Element);
@@ -6154,7 +6072,7 @@ CDA_AllUnitsIterator::next()
       return NULL;
 
     CDA_CellMLImport* impintern =
-      dynamic_cast<CDA_CellMLImport*>(imp.getPointer());
+      unsafe_dynamic_cast<CDA_CellMLImport*>(imp.getPointer());
     // If the import hasn't been instantiated, iterate its ImportUnits
     if (!mRecurseIntoImports || impintern->mImportedModel == NULL)
     {
@@ -6229,7 +6147,7 @@ CDA_AllComponentIterator::next()
       return NULL;
 
     CDA_CellMLImport* impintern =
-      dynamic_cast<CDA_CellMLImport*>(imp.getPointer());
+      unsafe_dynamic_cast<CDA_CellMLImport*>(imp.getPointer());
     // If the import hasn't been instantiated, iterate the ImportComponents.
     if (!mRecurseIntoImports || impintern->mImportedModel == NULL)
     {
@@ -6411,8 +6329,8 @@ CompareComponentsImportAware(iface::cellml_api::CellMLComponent* aComp1,
 
   // We now have the two real components. Dynamic cast to the implementation
   // class and see if they are identical.
-  return (dynamic_cast<CDA_CellMLComponent*>(comp1.getPointer()) ==
-          dynamic_cast<CDA_CellMLComponent*>(comp2.getPointer()));
+  return (dynamic_cast<void*>(comp1.getPointer()) ==
+          dynamic_cast<void*>(comp2.getPointer()));
 }
 
 iface::cellml_api::CellMLElement*
@@ -6566,7 +6484,7 @@ CDA_ConnectedCellMLVariableIterator::next()
       continue;
 
     CDA_CellMLVariable *votherImpl =
-      dynamic_cast<CDA_CellMLVariable*>(vother.getPointer());
+      unsafe_dynamic_cast<CDA_CellMLVariable*>(vother.getPointer());
     // Now go down the variableStack and look for matching variables.
     std::list<VariableStackFrame*>::iterator vsi;
     for (vsi = variableStack.begin(); vsi != variableStack.end(); vsi++)
@@ -7045,8 +6963,7 @@ CDA_NamedCellMLElementSetBase::get(const wchar_t* name)
       mCacheComplete = true;
       return NULL;
     }
-    iface::cellml_api::NamedCellMLElement* nel =
-      dynamic_cast<iface::cellml_api::NamedCellMLElement*>(el.getPointer());
+    DECLARE_QUERY_INTERFACE_OBJREF(nel, el, cellml_api::NamedCellMLElement);
     wchar_t* n = nel->name();
     bool match = !wcscmp(name, n);
     count++;
@@ -7080,10 +6997,10 @@ ifacename* \
 setname::funcname() \
   throw(std::exception&) \
 { \
-  return dynamic_cast<ifacename*>(iterate()); \
+  return unsafe_dynamic_cast<iteratorname*>(iterate()); \
 }
 
-#define SIMPLE_SET_ITERATORFETCH_GET(setname, iteratorname, ifacename, funcname, basename, getname) \
+#define SIMPLE_SET_ITERATORFETCH_GET_B(setname, iteratorname, ifacename, funcname, basename, getname) \
 SIMPLE_SET_ITERATORFETCH(setname, iteratorname, ifacename, funcname) \
 basename* \
 setname::getname(const wchar_t* name) \
@@ -7092,7 +7009,16 @@ setname::getname(const wchar_t* name) \
   return dynamic_cast<basename*>(get(name)); \
 }
 
-SIMPLE_SET_ITERATORFETCH_GET
+#define SIMPLE_SET_ITERATORFETCH_GET(setname, iteratorname, ifacename, funcname, classname, basename, getname) \
+SIMPLE_SET_ITERATORFETCH(setname, iteratorname, ifacename, funcname) \
+basename* \
+setname::getname(const wchar_t* name) \
+  throw(std::exception&) \
+{ \
+  return unsafe_dynamic_cast<classname*>(get(name)); \
+}
+
+SIMPLE_SET_ITERATORFETCH_GET_B
 (
  CDA_CellMLComponentSetBase,
  CDA_CellMLComponentIterator,
@@ -7108,6 +7034,7 @@ SIMPLE_SET_ITERATORFETCH_GET
  CDA_ImportComponentIterator,
  iface::cellml_api::ImportComponentIterator,
  iterateImportComponents,
+ CDA_ImportComponent,
  iface::cellml_api::ImportComponent,
  getImportComponent
 );
@@ -7118,11 +7045,12 @@ SIMPLE_SET_ITERATORFETCH_GET
  CDA_CellMLVariableIterator,
  iface::cellml_api::CellMLVariableIterator,
  iterateVariables,
+ CDA_CellMLVariable,
  iface::cellml_api::CellMLVariable,
  getVariable
 );
 
-SIMPLE_SET_ITERATORFETCH_GET
+SIMPLE_SET_ITERATORFETCH_GET_B
 (
  CDA_UnitsSetBase,
  CDA_UnitsIterator,
@@ -7138,6 +7066,7 @@ SIMPLE_SET_ITERATORFETCH_GET
  CDA_ImportUnitsIterator,
  iface::cellml_api::ImportUnitsIterator,
  iterateImportUnits,
+ CDA_ImportUnits,
  iface::cellml_api::ImportUnits,
  getImportUnits
 );
@@ -7148,6 +7077,7 @@ SIMPLE_SET_ITERATORFETCH_GET
  CDA_CellMLImportIterator,
  iface::cellml_api::CellMLImportIterator,
  iterateImports,
+ CDA_CellMLImport,
  iface::cellml_api::CellMLImport,
  getImport
 );
@@ -7181,7 +7111,7 @@ CDA_GroupSet::iterate()
   throw(std::exception&)
 {
   CDA_CellMLElementIterator* ei =
-    dynamic_cast<CDA_CellMLElementIterator*>
+    unsafe_dynamic_cast<CDA_CellMLElementIterator*>
     (mInner->iterate());
   iface::cellml_api::CellMLElementIterator* it = 
     new CDA_GroupIterator(ei, filterByRRName,
@@ -7194,7 +7124,7 @@ iface::cellml_api::GroupIterator*
 CDA_GroupSet::iterateGroups()
   throw(std::exception&)
 {
-  return dynamic_cast<iface::cellml_api::GroupIterator*>(iterate());
+  return unsafe_dynamic_cast<CDA_GroupIterator*>(iterate());
 }
 
 SIMPLE_SET_ITERATORFETCH
@@ -7237,7 +7167,7 @@ SIMPLE_SET_ITERATORFETCH
  iterateRoles
 );
 
-#define SIMPLE_ITERATOR_NEXT(itname, ifacename, nextname, restrict) \
+#define SIMPLE_ITERATOR_NEXTONLY(itname, ifacename, nextname, restrict) \
 iface::cellml_api::CellMLElement* \
 itname::next() \
   throw(std::exception&) \
@@ -7247,14 +7177,16 @@ itname::next() \
     RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement, mInner->next restrict); \
     if (el == NULL) \
       return NULL; \
-    iface::cellml_api::ifacename* targEl = \
-      dynamic_cast<iface::cellml_api::ifacename*>(el.getPointer()); \
+    iface::cellml_api::ifacename* targEl; \
+    QUERY_INTERFACE(targEl, el, cellml_api::ifacename); \
     if (targEl == NULL) \
       continue; \
-    targEl->add_ref(); \
     return targEl; \
   } \
 } \
+
+#define SIMPLE_ITERATOR_NEXT_B(itname, ifacename, nextname, restrict) \
+SIMPLE_ITERATOR_NEXTONLY(itname, ifacename, nextname, restrict) \
 iface::cellml_api::ifacename*\
 itname::nextname() \
   throw(std::exception&) \
@@ -7262,14 +7194,23 @@ itname::nextname() \
   return dynamic_cast<iface::cellml_api::ifacename*>(next()); \
 }
 
-SIMPLE_ITERATOR_NEXT(CDA_CellMLComponentIteratorBase, CellMLComponent,
-                     nextComponent, (L"component"));
+#define SIMPLE_ITERATOR_NEXT(itname, ifacename, nextname, restrict) \
+SIMPLE_ITERATOR_NEXTONLY(itname, ifacename, nextname, restrict) \
+iface::cellml_api::ifacename*\
+itname::nextname() \
+  throw(std::exception&) \
+{ \
+  return unsafe_dynamic_cast<CDA_##ifacename*>(next()); \
+}
+
+SIMPLE_ITERATOR_NEXT_B(CDA_CellMLComponentIteratorBase, CellMLComponent,
+                       nextComponent, (L"component"));
 SIMPLE_ITERATOR_NEXT(CDA_ImportComponentIterator, ImportComponent,
                      nextImportComponent, (L"component"));
 SIMPLE_ITERATOR_NEXT(CDA_CellMLVariableIterator, CellMLVariable,
                      nextVariable, (L"variable"));
-SIMPLE_ITERATOR_NEXT(CDA_UnitsIteratorBase, Units,
-                     nextUnits, (L"units"));
+SIMPLE_ITERATOR_NEXT_B(CDA_UnitsIteratorBase, Units,
+                       nextUnits, (L"units"));
 SIMPLE_ITERATOR_NEXT(CDA_ImportUnitsIterator, ImportUnits,
                      nextImportUnits, (L"units"));
 SIMPLE_ITERATOR_NEXT(CDA_CellMLImportIterator, CellMLImport,
@@ -7313,7 +7254,7 @@ DoesGroupHaveRelationshipRef(iface::dom::Element* el, const std::wstring& rrname
   return false;
 }
 
-iface::cellml_api::CellMLElement* \
+iface::cellml_api::CellMLElement*
 CDA_GroupIterator::next()
   throw(std::exception&)
 {
@@ -7322,13 +7263,14 @@ CDA_GroupIterator::next()
     RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement, mInner->next(L"group"));
     if (el == NULL)
       return NULL;
-    CDA_Group* targEl =
-      dynamic_cast<CDA_Group*>(el.getPointer());
+    DECLARE_QUERY_INTERFACE_OBJREF(targEl, el, cellml_api::Group);
     if (targEl == NULL)
       continue;
 
+    CDA_Group* g = unsafe_dynamic_cast<CDA_Group*>(targEl.getPointer());
+
     if (filterByRRName && 
-        !DoesGroupHaveRelationshipRef(targEl->datastore, mFilterRRName))
+        !DoesGroupHaveRelationshipRef(g->datastore, mFilterRRName))
       continue;
 
     targEl->add_ref();
@@ -7340,7 +7282,7 @@ iface::cellml_api::Group*
 CDA_GroupIterator::nextGroup()
   throw(std::exception&)
 {
-  return dynamic_cast<iface::cellml_api::Group*>(next());
+  return unsafe_dynamic_cast<CDA_Group*>(next());
 }
 
 SIMPLE_ITERATOR_NEXT(CDA_RelationshipRefIterator, RelationshipRef,

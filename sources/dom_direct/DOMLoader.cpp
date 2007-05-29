@@ -256,11 +256,13 @@ WrapXML2Node
 
         el->attributeMapNS.insert
           (
-           std::pair<std::pair<std::wstring, std::wstring>, CDA_Attr*>
-           (std::pair<std::wstring, std::wstring>(nsURI, name), cattr)
+           std::pair<CDA_Element::QualifiedName, CDA_Attr*>
+           (CDA_Element::QualifiedName(CDA_wcsdup(nsURI.c_str()),
+                                       CDA_wcsdup(name.c_str())), cattr)
           );
-        el->attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
-                                (cattr->mNodeName, cattr));
+        el->attributeMap.insert(std::pair<CDA_Element::LocalName, CDA_Attr*>
+                                (CDA_Element::LocalName
+                                 (CDA_wcsdup(cattr->mNodeName.c_str())), cattr));
         el->insertBeforePrivate(cattr, NULL)->release_ref();
       }
     }

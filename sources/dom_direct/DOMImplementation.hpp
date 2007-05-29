@@ -206,7 +206,53 @@ public:
   std::wstring mNodeName, mLocalName, mNodeValue, mNamespaceURI;
 
   std::list<CDA_Node*> mNodeList;
-  std::multimap<std::pair<std::wstring,bool>, iface::events::EventListener*>
+private:
+  struct eventid
+  {
+  public:
+    eventid(wchar_t* aName, bool aUseCapture)
+      : name(aName), useCapture(aUseCapture)
+    {
+    }
+
+    eventid(const eventid& aCopy)
+      : name(aCopy.name), useCapture(aCopy.useCapture)
+    {
+    }
+
+    void release()
+    {
+      free(name);
+    }
+
+    void clone()
+    {
+      const wchar_t* tmp = name;
+      name = CDA_wcsdup(tmp);
+    }
+
+    bool
+    operator==(const eventid& aCompWith) const
+    {
+      if (useCapture != aCompWith.useCapture)
+        return false;
+      return !wcscmp(name, aCompWith.name);
+    }
+
+    bool
+    operator<(const eventid& aCompWith) const
+    {
+      if (useCapture != aCompWith.useCapture)
+        return useCapture;
+      return wcscmp(name, aCompWith.name) < 0;
+    }
+
+    wchar_t* name;
+    bool useCapture;
+  };
+
+public:
+  std::multimap<eventid, iface::events::EventListener*>
     mListeners;
   uint32_t _cda_refcount;
 };
@@ -467,7 +513,7 @@ class CDA_Element
 {
 public:
   CDA_Element(CDA_Document* aDocument) : CDA_Node(aDocument) {}
-  virtual ~CDA_Element() {}
+  virtual ~CDA_Element();
 
   CDA_IMPL_QI3(events::EventTarget, dom::Node, dom::Element);
   CDA_IMPL_ID;
@@ -508,8 +554,79 @@ public:
   bool hasAttributes() throw(std::exception&);
   iface::dom::Element* searchForElementById(const wchar_t* elementId);
 
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*> attributeMapNS;
-  std::map<std::wstring, CDA_Attr*> attributeMap;
+  class LocalName
+  {
+  public:
+    LocalName(wchar_t* aName)
+      : name(aName)
+    {
+    }
+
+    LocalName(const LocalName& ln)
+      : name(ln.name)
+    {
+    }
+
+    bool
+    operator==(const LocalName& aCompareWith) const
+    {
+      return !wcscmp(name, aCompareWith.name);
+    }
+
+    bool
+    operator<(const LocalName& aCompareWith) const
+    {
+      return wcscmp(name, aCompareWith.name) < 0;
+    }
+
+    void release()
+    {
+      free(name);
+    }
+
+    wchar_t* name;
+  };
+
+  class QualifiedName
+  {
+  public:
+    QualifiedName(wchar_t* aNamespace, wchar_t* aName)
+      : ns(aNamespace), name(aName)
+    {
+    }
+
+    QualifiedName(const QualifiedName& ln)
+      : ns(ln.ns), name(ln.name)
+    {
+    }
+
+    bool
+    operator==(const QualifiedName& aCompareWith) const
+    {
+      return (!wcscmp(name, aCompareWith.name)) &&
+             (!wcscmp(ns, aCompareWith.ns));
+    }
+
+    bool
+    operator<(const QualifiedName& aCompareWith) const
+    {
+      int ret = wcscmp(name, aCompareWith.name);
+      if (ret != 0)
+        return ret < 0;
+      return wcscmp(ns, aCompareWith.ns) < 0;
+    }
+
+    void release()
+    {
+      free(name);
+      free(ns);
+    }
+
+    wchar_t * name, * ns;
+  };
+
+  std::map<QualifiedName, CDA_Attr*> attributeMapNS;
+  std::map<LocalName, CDA_Attr*> attributeMap;
 };
 
 class CDA_TextBase

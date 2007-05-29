@@ -148,10 +148,14 @@ CDA_Node::~CDA_Node()
 {
   if (!mDocumentIsAncestor && mDocument)
     mDocument->release_ref();
-  std::multimap<std::pair<std::wstring,bool>, iface::events::EventListener*>
+  std::multimap<eventid, iface::events::EventListener*>
      ::iterator i(mListeners.begin());
   for (; i != mListeners.end(); i++)
+  {
+    eventid e((*i).first);
+    e.release();
     (*i).second->release_ref();
+  }
   std::list<CDA_Node*>::iterator i2(mNodeList.begin());
   // Now start deleting the children...
   for (; i2 != mNodeList.end(); i2++)
@@ -742,18 +746,18 @@ CDA_Node::addEventListener(const wchar_t* type,
 {
   if (listener == NULL)
     throw iface::dom::DOMException();
-  mListeners.find(std::pair<std::wstring,bool>(type, useCapture));
-  std::pair<std::wstring,bool> p(type, useCapture);
-  std::multimap<std::pair<std::wstring,bool>, iface::events::EventListener*>
+  eventid p(const_cast<wchar_t*>(type), useCapture);
+  std::multimap<eventid, iface::events::EventListener*>
     ::iterator i = mListeners.find(p);
 
   // Silently ignore a request to add a duplicate, as per spec...
-  for (;i != mListeners.end() && (*i).first == p; i++)
+  for (; i != mListeners.end(); i++)
     if (CDA_objcmp((*i).second, listener) == 0)
       return;
 
   listener->add_ref();
-  mListeners.insert(std::pair<std::pair<std::wstring,bool>,
+  p.clone();
+  mListeners.insert(std::pair<eventid,
                     iface::events::EventListener*>
                     (p, listener));
 }
@@ -766,14 +770,16 @@ CDA_Node::removeEventListener(const wchar_t* type,
 {
   if (listener == NULL)
     throw iface::dom::DOMException();
-  std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
+  std::multimap<eventid,iface::events::EventListener*>
      ::iterator i =
-    mListeners.find(std::pair<std::wstring,bool>(type, useCapture));
+    mListeners.find(eventid(const_cast<wchar_t*>(type), useCapture));
   for (; i != mListeners.end(); i++)
     if (CDA_objcmp((*i).second, listener) == 0)
     {
+      eventid e((*i).first);
+      e.release();
+      (*i).second->release_ref();
       mListeners.erase(i);
-      listener->release_ref();
       return;
     }
 }
@@ -899,10 +905,10 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
 
   if (wantCapturing)
   {
-    std::pair<std::wstring,bool> p(me->mType, true);
-    std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
+    eventid p(const_cast<wchar_t*>(me->mType.c_str()), true);
+    std::multimap<eventid,iface::events::EventListener*>
        ::iterator i(mListeners.find(p)), i2;
-    while (i != mListeners.end() && (*i).first == p)
+    while (i != mListeners.end())
     {
       i2 = i;
       i++;
@@ -921,10 +927,10 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
   }
   if (wantBubbling)
   {
-    std::pair<std::wstring,bool> p(me->mType, false);
-    std::multimap<std::pair<std::wstring,bool>,iface::events::EventListener*>
+    eventid p(const_cast<wchar_t*>(me->mType.c_str()), false);
+    std::multimap<eventid,iface::events::EventListener*>
        ::iterator i(mListeners.find(p)), i2;
-    while (i != mListeners.end() && (*i).first == p)
+    while (i != mListeners.end())
     {
       i2 = i;
       i++;
@@ -1187,8 +1193,8 @@ iface::dom::Node*
 CDA_NamedNodeMap::getNamedItem(const wchar_t* name)
   throw(std::exception&)
 {
-  std::map<std::wstring, CDA_Attr*>::iterator i =
-    mElement->attributeMap.find(name);
+  std::map<CDA_Element::LocalName, CDA_Attr*>::iterator i =
+    mElement->attributeMap.find(CDA_Element::LocalName(const_cast<wchar_t*>(name)));
   if (i == mElement->attributeMap.end())
     return NULL;
   (*i).second->add_ref();
@@ -1209,8 +1215,8 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
   throw(std::exception&)
 {
   // std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::wstring, CDA_Attr*>::iterator
-    i = mElement->attributeMap.find(name);
+  std::map<CDA_Element::LocalName, CDA_Attr*>::iterator
+    i = mElement->attributeMap.find(CDA_Element::LocalName(const_cast<wchar_t*>(name)));
 
   if (i == mElement->attributeMap.end())
     throw iface::dom::DOMException();
@@ -1219,12 +1225,17 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
   ObjRef<CDA_Attr> at = (*i).second;
   mElement->removeChildPrivate(at)->release_ref();
 
+  CDA_Element::LocalName ln((*i).first);
+  ln.release();
+
   mElement->attributeMap.erase(i);
-  mElement->attributeMapNS.erase
-    (
-     std::pair<std::wstring,std::wstring>(at->mNamespaceURI,
-                                          at->mLocalName)
-    );
+  std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator j =
+    mElement->attributeMapNS.find(CDA_Element::QualifiedName
+                                  (const_cast<wchar_t*>(at->mNamespaceURI.c_str()),
+                                   const_cast<wchar_t*>(at->mLocalName.c_str())));
+  CDA_Element::QualifiedName qn((*j).first);
+  qn.release();
+  mElement->attributeMapNS.erase(j);
 
   CDA_DOM_SomethingChanged();
 
@@ -1248,7 +1259,7 @@ iface::dom::Node*
 CDA_NamedNodeMap::item(uint32_t index)
   throw(std::exception&)
 {
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator i =
+  std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator i =
     mElement->attributeMapNS.begin();
   for (; i != mElement->attributeMapNS.end(); i++)
   {
@@ -1274,10 +1285,10 @@ CDA_NamedNodeMap::getNamedItemNS(const wchar_t* namespaceURI,
                                  const wchar_t* localName)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p =
-    std::pair<std::wstring,std::wstring>(namespaceURI, localName);
-  std::map<std::pair<std::wstring,std::wstring>, CDA_Attr*>::iterator i =
-    mElement->attributeMapNS.find(p);
+  std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator i =
+    mElement->attributeMapNS.find(CDA_Element::QualifiedName
+                                  (const_cast<wchar_t*>(namespaceURI),
+                                   const_cast<wchar_t*>(localName)));
   if (i == mElement->attributeMapNS.end())
     return NULL;
   (*i).second->add_ref();
@@ -1298,9 +1309,10 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
                                     const wchar_t* localName)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = mElement->attributeMapNS.find(p);
+  std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator
+    i = mElement->attributeMapNS.find
+    (CDA_Element::QualifiedName(const_cast<wchar_t*>(namespaceURI),
+                                const_cast<wchar_t*>(localName)));
 
   if (i == mElement->attributeMapNS.end())
     throw iface::dom::DOMException();
@@ -1308,8 +1320,19 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   mElement->removeChildPrivate(at)->release_ref();
+
+  CDA_Element::QualifiedName qn((*i).first);
+  qn.release();
+
+  std::map<CDA_Element::LocalName, CDA_Attr*>::iterator j =
+    mElement->attributeMap.find(CDA_Element::LocalName
+                                (const_cast<wchar_t*>(at->mNodeName.c_str())));
+
+  CDA_Element::LocalName ln((*j).first);
+  ln.release();
+
   mElement->attributeMapNS.erase(i);
-  mElement->attributeMap.erase(at->mNodeName);
+  mElement->attributeMap.erase(j);
   at->add_ref();
 
   CDA_DOM_SomethingChanged();
@@ -1625,6 +1648,22 @@ CDA_Attr::ownerElement()
   return el;
 }
 
+CDA_Element::~CDA_Element()
+{
+  std::map<QualifiedName, CDA_Attr*>::iterator i = attributeMapNS.begin();
+  for (; i != attributeMapNS.end(); i++)
+  {
+    QualifiedName qn((*i).first);
+    qn.release();
+  }
+  std::map<LocalName, CDA_Attr*>::iterator j = attributeMap.begin();
+  for (; j != attributeMap.end(); j++)
+  {
+    LocalName ln((*j).first);
+    ln.release();
+  }
+}
+
 CDA_Node*
 CDA_Element::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
@@ -1636,7 +1675,7 @@ CDA_Element::shallowCloneNode(CDA_Document* aDoc)
   ca->mNodeName = mNodeName;
   ca->mNodeValue = mNodeValue;
   // Attributes get cloned too...
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator i
+  std::map<QualifiedName, CDA_Attr*>::iterator i
     = attributeMapNS.begin();
   for (; i != attributeMapNS.end(); i++)
   {
@@ -1673,8 +1712,8 @@ wchar_t*
 CDA_Element::getAttribute(const wchar_t* name)
   throw(std::exception&)
 {
-  std::map<std::wstring, CDA_Attr*>::iterator
-    i = attributeMap.find(name);
+  std::map<LocalName, CDA_Attr*>::iterator
+    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
   if (i == attributeMap.end())
     return CDA_wcsdup(L"");
 
@@ -1685,8 +1724,8 @@ void
 CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
   throw(std::exception&)
 {
-  std::map<std::wstring, CDA_Attr*>::iterator
-    i = attributeMap.find(name);
+  std::map<LocalName, CDA_Attr*>::iterator
+    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
 
   CDA_DOM_SomethingChanged();
 
@@ -1696,11 +1735,12 @@ CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
     a->mNodeValue = value;
     a->mNodeName = name;
     insertBeforePrivate(a, NULL)->release_ref();
-    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                          CDA_Attr*>
-                          (std::pair<std::wstring,std::wstring>(L"", name),
+    attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
+                          (QualifiedName(CDA_wcsdup(L""),
+                                         CDA_wcsdup(name)),
                            a));
-    attributeMap.insert(std::pair<std::wstring,CDA_Attr*>(name, a));
+    attributeMap.insert(std::pair<LocalName,CDA_Attr*>
+                        (LocalName(CDA_wcsdup(name)), a));
 
     if (eventsHaveEffects())
     {
@@ -1736,9 +1776,8 @@ void
 CDA_Element::removeAttribute(const wchar_t* name)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(L"", name);
-  std::map<std::wstring, CDA_Attr*>::iterator
-    i = attributeMap.find(name);
+  std::map<LocalName, CDA_Attr*>::iterator
+    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
 
   if (i == attributeMap.end())
   {
@@ -1749,13 +1788,27 @@ CDA_Element::removeAttribute(const wchar_t* name)
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
+  LocalName ln((*i).first);
   attributeMap.erase(i);
+  ln.release();
+
+  std::map<QualifiedName, CDA_Attr*>::iterator j;
   if (at->mLocalName != L"")
-    attributeMapNS.erase(std::pair<std::wstring,std::wstring>
-                         (at->mNamespaceURI, at->mLocalName));
+    j = attributeMapNS.find
+      (
+       QualifiedName(const_cast<wchar_t*>(at->mNamespaceURI.c_str()),
+                     const_cast<wchar_t*>(at->mLocalName.c_str()))
+      );
   else
-    attributeMapNS.erase(std::pair<std::wstring,std::wstring>
-                         (at->mNamespaceURI, at->mNodeName));
+    j = attributeMapNS.find
+      (
+       QualifiedName(const_cast<wchar_t*>(at->mNamespaceURI.c_str()),
+                     const_cast<wchar_t*>(at->mNodeName.c_str()))
+      );
+
+  QualifiedName qn((*j).first);
+  attributeMapNS.erase(j);
+  qn.release();
 
   CDA_DOM_SomethingChanged();
 
@@ -1776,8 +1829,8 @@ iface::dom::Attr*
 CDA_Element::getAttributeNode(const wchar_t* name)
   throw(std::exception&)
 {
-  std::map<std::wstring, CDA_Attr*>::iterator
-    i = attributeMap.find(name);
+  std::map<LocalName, CDA_Attr*>::iterator
+    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
   if (i == attributeMap.end())
     return NULL;
 
@@ -1792,27 +1845,27 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   CDA_Attr* newAttr = dynamic_cast<CDA_Attr*>(inewAttr);
   if (newAttr == NULL)
     throw iface::dom::DOMException();
-  RETURN_INTO_WSTRING(name, newAttr->name());
-  std::map<std::wstring, CDA_Attr*>::iterator
-    i = attributeMap.find(name);
+  RETURN_INTO_THINSTRING(name, newAttr->name());
+  std::map<LocalName, CDA_Attr*>::iterator
+    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name.getPointer())));
 
   CDA_DOM_SomethingChanged();
 
   if (i == attributeMap.end())
   {
     insertBeforePrivate(newAttr, NULL)->release_ref();
-    attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
-                        (name, newAttr));
-    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                          CDA_Attr*>(std::pair<std::wstring,std::wstring>
-                                     (L"", name), newAttr));
+    attributeMap.insert(std::pair<LocalName, CDA_Attr*>
+                        (CDA_wcsdup(name), newAttr));
+    attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
+                          (QualifiedName(CDA_wcsdup(L""), CDA_wcsdup(name)),
+                           newAttr));
 
     if (eventsHaveEffects())
     {
       RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
       me->initMutationEvent(L"DOMAttrModified", true, false,
                             newAttr, L"", newAttr->mNodeValue.c_str(),
-                            name.c_str(), iface::events::MutationEvent::ADDITION);
+                            name, iface::events::MutationEvent::ADDITION);
       dispatchEvent(me);
       me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
                             L"", 0);
@@ -1824,22 +1877,22 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
   insertBeforePrivate(newAttr, NULL)->release_ref();
-  attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
-                      (name, newAttr));
-  attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                        CDA_Attr*>(std::pair<std::wstring,std::wstring>
-                                   (L"", name), newAttr));
+  attributeMap.insert(std::pair<LocalName, CDA_Attr*>
+                      (LocalName(CDA_wcsdup(name)), newAttr));
+  attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
+                        (QualifiedName(CDA_wcsdup(L""), CDA_wcsdup(name)),
+                         newAttr));
 
   if (eventsHaveEffects())
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           at, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
-                          name.c_str(), iface::events::MutationEvent::REMOVAL);
+                          name, iface::events::MutationEvent::REMOVAL);
     dispatchEvent(me);
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           newAttr, at->mNodeValue.c_str(), newAttr->mNodeValue.c_str(),
-                          name.c_str(), iface::events::MutationEvent::ADDITION);
+                          name, iface::events::MutationEvent::ADDITION);
     dispatchEvent(me);
     me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
                           L"", 0);
@@ -1857,19 +1910,30 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   CDA_Attr* oldAttr = dynamic_cast<CDA_Attr*>(ioldAttr);
   if (oldAttr == NULL)
     throw iface::dom::DOMException();
-  RETURN_INTO_WSTRING(name, oldAttr->name());
-  RETURN_INTO_WSTRING(lname, oldAttr->localName());
-  RETURN_INTO_WSTRING(nsuri, oldAttr->namespaceURI());
-  std::map<std::wstring, CDA_Attr*>::iterator
-    i = attributeMap.find(name);
+  RETURN_INTO_THINSTRING(name, oldAttr->name());
+  RETURN_INTO_THINSTRING(lname, oldAttr->localName());
+  RETURN_INTO_THINSTRING(nsuri, oldAttr->namespaceURI());
+  std::map<LocalName, CDA_Attr*>::iterator
+    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name.getPointer())));
   if (i == attributeMap.end())
   {
     throw iface::dom::DOMException();
   }
   ObjRef<CDA_Attr> at = (*i).second;
+  LocalName ln((*i).first);
+  ln.release();
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
-  attributeMapNS.erase(std::pair<std::wstring,std::wstring>(nsuri, lname));
+
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    j = attributeMapNS.find
+    (
+     QualifiedName(const_cast<wchar_t*>(nsuri.getPointer()),
+                   const_cast<wchar_t*>(lname.getPointer()))
+    );
+  QualifiedName qn((*j).first);
+  qn.release();
+  attributeMapNS.erase(j);
   
   CDA_DOM_SomethingChanged();
 
@@ -1878,7 +1942,7 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMAttrModified", true, false,
                           at, at->mNodeValue.c_str(), L"",
-                          name.c_str(), iface::events::MutationEvent::REMOVAL);
+                          name, iface::events::MutationEvent::REMOVAL);
     dispatchEvent(me);
     me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
                           L"", 0);
@@ -1902,8 +1966,10 @@ CDA_Element::getAttributeNS(const wchar_t* namespaceURI,
   throw(std::exception&)
 {
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMapNS.find(p);
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    i = attributeMapNS.find(QualifiedName
+                            (const_cast<wchar_t*>(namespaceURI),
+                             const_cast<wchar_t*>(localName)));
   if (i == attributeMapNS.end())
     return CDA_wcsdup(L"");
 
@@ -1923,9 +1989,9 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
   else
     localName = pos + 1;
 
-  std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMapNS.find(p);
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    i = attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(namespaceURI),
+                                          const_cast<wchar_t*>(localName)));
 
   CDA_DOM_SomethingChanged();
 
@@ -1937,9 +2003,14 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
     a->mLocalName = localName;
     a->mNamespaceURI = namespaceURI;
     insertBeforePrivate(a, NULL)->release_ref();
-    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                          CDA_Attr*>(p, a));
-    attributeMap.insert(std::pair<std::wstring,CDA_Attr*>(qualifiedName, a));
+    attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
+                          (
+                           QualifiedName(CDA_wcsdup(namespaceURI),
+                                         CDA_wcsdup(localName)), a
+                          )
+                         );
+    attributeMap.insert(std::pair<LocalName,CDA_Attr*>
+                        (LocalName(CDA_wcsdup(qualifiedName)), a));
 
     if (eventsHaveEffects())
     {
@@ -1976,9 +2047,10 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
                                const wchar_t* localName)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMapNS.find(p);
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    i = attributeMapNS.find
+    (QualifiedName(const_cast<wchar_t*>(namespaceURI),
+                   const_cast<wchar_t*>(localName)));
 
   if (i == attributeMapNS.end())
   {
@@ -1991,8 +2063,16 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
+  QualifiedName qn((*i).first);
+  qn.release();
+  
+  std::map<LocalName, CDA_Attr*>::iterator  
+    j = attributeMap.find(LocalName(const_cast<wchar_t*>
+                                    ((*i).second->mNodeName.c_str())));
   attributeMapNS.erase(i);
-  attributeMap.erase((*i).second->mNodeName);
+  LocalName ln((*j).first);
+  ln.release();
+  attributeMap.erase(j);
 
   if (eventsHaveEffects())
   {
@@ -2012,9 +2092,9 @@ CDA_Element::getAttributeNodeNS(const wchar_t* namespaceURI,
                                 const wchar_t* localName)
   throw(std::exception&)
 {
-  std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMapNS.find(p);
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    i = attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(namespaceURI),
+                                          const_cast<wchar_t*>(localName)));
   if (i == attributeMapNS.end())
     return NULL;
 
@@ -2033,18 +2113,25 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
     newAttr->mLocalName = newAttr->mNodeName;
   std::pair<std::wstring,std::wstring> p
     (newAttr->mNamespaceURI, newAttr->mLocalName);
-  std::map<std::pair<std::wstring, std::wstring>, CDA_Attr*>::iterator
-    i = attributeMapNS.find(p);
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    i = attributeMapNS.find
+    (QualifiedName(const_cast<wchar_t*>(newAttr->mNamespaceURI.c_str()),
+                   const_cast<wchar_t*>(newAttr->mLocalName.c_str())));
 
   CDA_DOM_SomethingChanged();
 
   if (i == attributeMapNS.end())
   {
     insertBeforePrivate(newAttr, NULL)->release_ref();
-    attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                          CDA_Attr*>(p, newAttr));
-    attributeMap.insert(std::pair<std::wstring,CDA_Attr*>
-                        (newAttr->mNodeName, newAttr));
+    attributeMapNS.insert
+      (
+       std::pair<QualifiedName, CDA_Attr*>
+       (QualifiedName(CDA_wcsdup(newAttr->mNamespaceURI.c_str()),
+                      CDA_wcsdup(newAttr->mLocalName.c_str())), newAttr)
+      );
+    attributeMap.insert(std::pair<LocalName,CDA_Attr*>
+                        (LocalName(CDA_wcsdup(newAttr->mNodeName.c_str())),
+                                   newAttr));
 
     if (eventsHaveEffects())
     {
@@ -2062,14 +2149,24 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
     return NULL;
   }
   ObjRef<CDA_Attr> at = (*i).second;
+  QualifiedName qn((*i).first);
+  qn.release();
   removeChildPrivate(at)->release_ref();
   attributeMapNS.erase(i);
-  attributeMap.erase(at->mNodeName);
+
+  std::map<LocalName, CDA_Attr*>::iterator j =
+    attributeMap.find(LocalName(const_cast<wchar_t*>(at->mNodeName.c_str())));
+  LocalName ln((*j).first);
+  ln.release();
+  attributeMap.erase(j);
+
   insertBeforePrivate(newAttr, NULL)->release_ref();
-  attributeMapNS.insert(std::pair<std::pair<std::wstring, std::wstring>,
-                      CDA_Attr*>(p, newAttr));
-  attributeMap.insert(std::pair<std::wstring, CDA_Attr*>
-                      (at->mNodeName, newAttr));
+  attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
+                        (QualifiedName(CDA_wcsdup(newAttr->mNamespaceURI.c_str()),
+                                       CDA_wcsdup(newAttr->mLocalName.c_str())),
+                         newAttr));
+  attributeMap.insert(std::pair<LocalName, CDA_Attr*>
+                      (LocalName(CDA_wcsdup(at->mNodeName.c_str())), newAttr));
 
   if (eventsHaveEffects())
   {
@@ -2104,15 +2201,16 @@ bool
 CDA_Element::hasAttribute(const wchar_t* name)
   throw(std::exception&)
 {
-  return attributeMap.find(name) != attributeMap.end();
+  return attributeMap.find(LocalName(const_cast<wchar_t*>(name))) !=
+    attributeMap.end();
 }
 
 bool CDA_Element::hasAttributeNS(const wchar_t* namespaceURI,
                                  const wchar_t* localName)
   throw(std::exception&)
 {
-  return attributeMapNS.find(std::pair<std::wstring, std::wstring>
-                             (namespaceURI, localName))
+  return attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(namespaceURI),
+                                           const_cast<wchar_t*>(localName)))
     != attributeMapNS.end();
 }
 
