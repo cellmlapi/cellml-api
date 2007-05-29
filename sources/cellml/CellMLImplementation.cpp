@@ -6933,6 +6933,7 @@ iface::cellml_api::NamedCellMLElement*
 CDA_NamedCellMLElementSetBase::get(const wchar_t* name)
   throw(std::exception&)
 {
+  bool multipleCalls = false;
   if (CDA_CompareSerial(mCacheSerial))
   {
     std::map<std::wstring, iface::cellml_api::NamedCellMLElement*>::iterator i
@@ -6944,6 +6945,7 @@ CDA_NamedCellMLElementSetBase::get(const wchar_t* name)
     }
     if (mCacheComplete)
       return NULL;
+    multipleCalls = true;
   }
   else
   {
@@ -6977,6 +6979,32 @@ CDA_NamedCellMLElementSetBase::get(const wchar_t* name)
 
     if (match)
     {
+      // If we have had more than one call, then as a heuristic assume we will
+      // have more, and finish the cache just so we don't have to keep going
+      // back to the start...
+      if (multipleCalls)
+      {
+        while (true)
+        {
+          RETURN_INTO_OBJREF(tel, iface::cellml_api::CellMLElement,
+                             elIt->next());
+          if (tel == NULL)
+            break;
+          count++;
+          if (count > mHighWaterMark)
+          {
+            DECLARE_QUERY_INTERFACE_OBJREF(tnel, tel,
+                                           cellml_api::NamedCellMLElement);
+            wchar_t* tn = tnel->name();
+            mMap.insert(std::pair<std::wstring,
+                        iface::cellml_api::NamedCellMLElement*>(tn, tnel));
+            free(tn);
+            mHighWaterMark = count;
+          }
+        }
+        mCacheComplete = true;
+      }
+
       nel->add_ref();
       return nel;
     }

@@ -679,12 +679,12 @@ public:
   {
   }
 
-  operator T*() const CDA_PURE
+  operator T*() const
   {
     return mPtr;
   }
 
-  T* getPointer() const CDA_PURE
+  T* getPointer() const
   {
     return mPtr;
   }
@@ -725,17 +725,17 @@ public:
       mPtr->release_ref();
   }
 
-  T* operator-> () const CDA_PURE
+  T* operator-> () const
   {
     return mPtr;
   }
 
-  T* getPointer() const CDA_PURE
+  T* getPointer() const
   {
     return mPtr;
   }
 
-  operator T* () const CDA_PURE
+  operator T* () const
   {
     return mPtr;
   }
