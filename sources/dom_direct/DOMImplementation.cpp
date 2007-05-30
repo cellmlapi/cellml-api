@@ -751,7 +751,7 @@ CDA_Node::addEventListener(const wchar_t* type,
     ::iterator i = mListeners.find(p);
 
   // Silently ignore a request to add a duplicate, as per spec...
-  for (; i != mListeners.end(); i++)
+  for (; i != mListeners.end() && (*i).first == p; i++)
     if (CDA_objcmp((*i).second, listener) == 0)
       return;
 
@@ -770,10 +770,11 @@ CDA_Node::removeEventListener(const wchar_t* type,
 {
   if (listener == NULL)
     throw iface::dom::DOMException();
+  eventid p(const_cast<wchar_t*>(type), useCapture);
   std::multimap<eventid,iface::events::EventListener*>
      ::iterator i =
-    mListeners.find(eventid(const_cast<wchar_t*>(type), useCapture));
-  for (; i != mListeners.end(); i++)
+    mListeners.find(p);
+  for (; i != mListeners.end() && (*i).first == p; i++)
     if (CDA_objcmp((*i).second, listener) == 0)
     {
       eventid e((*i).first);
@@ -908,7 +909,7 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
     eventid p(const_cast<wchar_t*>(me->mType.c_str()), true);
     std::multimap<eventid,iface::events::EventListener*>
        ::iterator i(mListeners.find(p)), i2;
-    while (i != mListeners.end())
+    while (i != mListeners.end() && (*i).first == p)
     {
       i2 = i;
       i++;
@@ -930,7 +931,7 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
     eventid p(const_cast<wchar_t*>(me->mType.c_str()), false);
     std::multimap<eventid,iface::events::EventListener*>
        ::iterator i(mListeners.find(p)), i2;
-    while (i != mListeners.end())
+    while (i != mListeners.end() && (*i).first == p)
     {
       i2 = i;
       i++;

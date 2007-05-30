@@ -57,28 +57,37 @@ operator+=(std::wstring& data, const char* str)
   wchar_t buf[64];
   wchar_t* ne = buf + 63;
 
-  while (CDA_LIKELY((c = *str++) != 0))
+  while (CDA_LIKELY((c = *str) != 0))
   {
     wchar_t* np = buf;
 
     // Handle the most common case efficiently...
     while (CDA_LIKELY(((uint8_t)c) < 128))
     {
-      *np++ = ((wchar_t)c);
       if (CDA_UNLIKELY(np == ne))
         break;
 
       if (CDA_UNLIKELY(c == 0))
       {
-        data.append(buf, np - buf - 1);
+        data.append(buf, np - buf);
         return;
       }
+      str++;
 
-      c = *str++;
+      *np++ = ((wchar_t)c);
+
+      c = *str;
     }
 
     while (np < ne)
     {
+      if (CDA_UNLIKELY(c == 0))
+      {
+        data.append(buf, np - buf);
+        return;
+      }
+      str++;
+
       unsigned char l = CDA_utf8_data[c].len;
 #ifndef WCHAR_T_CONSTANT_WIDTH
       if (l == 4)
@@ -104,12 +113,6 @@ operator+=(std::wstring& data, const char* str)
 #endif
 
       c = *str;
-      if (CDA_UNLIKELY(c == 0))
-      {
-        data.append(buf, np - buf);
-        return;
-      }
-      str++;
     }
 
     data.append(buf, np - buf);

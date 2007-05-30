@@ -520,8 +520,8 @@ public:
       CDA_UnitsBase(parent, importUnits) {}
   virtual ~CDA_ImportUnits() {}
 
-  CDA_IMPL_QI4(events::EventTarget, cellml_api::ImportUnits, cellml_api::Units,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI5(events::EventTarget, cellml_api::ImportUnits, cellml_api::Units,
+               cellml_api::NamedCellMLElement, cellml_api::CellMLElement)
 
   wchar_t* unitsRef() throw(std::exception&);
   void unitsRef(const wchar_t* attr) throw(std::exception&);

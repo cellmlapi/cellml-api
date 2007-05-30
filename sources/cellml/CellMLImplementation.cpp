@@ -726,7 +726,7 @@ CDA_CellMLElement::modelElement()
       return NULL;
     }
 
-    cand = unsafe_dynamic_cast<CDA_CellMLElement*>(cand->mParent);
+    cand = dynamic_cast<CDA_CellMLElement*>(cand->mParent);
   }
 }
 
@@ -6966,6 +6966,10 @@ CDA_NamedCellMLElementSetBase::get(const wchar_t* name)
       return NULL;
     }
     DECLARE_QUERY_INTERFACE_OBJREF(nel, el, cellml_api::NamedCellMLElement);
+
+    // If nel == null, you are missing a NamedCellMLElement QI item on your
+    // implementation.
+
     wchar_t* n = nel->name();
     bool match = !wcscmp(name, n);
     count++;
@@ -6995,6 +6999,8 @@ CDA_NamedCellMLElementSetBase::get(const wchar_t* name)
           {
             DECLARE_QUERY_INTERFACE_OBJREF(tnel, tel,
                                            cellml_api::NamedCellMLElement);
+            // If tnel == null, you are missing a NamedCellMLElement QI item on your
+            // implementation.
             wchar_t* tn = tnel->name();
             mMap.insert(std::pair<std::wstring,
                         iface::cellml_api::NamedCellMLElement*>(tn, tnel));
