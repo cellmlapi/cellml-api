@@ -4531,7 +4531,7 @@ CDA_Connection::componentMapping()
     return mMapComponents;
   }
 
-  RETURN_INTO_OBJREFUD(allChildren, iface::cellml_api::CellMLElementSet,
+  RETURN_INTO_OBJREFUD(allChildren, CDA_CellMLElementSet,
                        childElements());
   RETURN_INTO_OBJREF(allChildrenIt, iface::cellml_api::CellMLElementIterator,
                      allChildren->iterate());
