@@ -3139,6 +3139,8 @@ CDA_CellMLImport::xlinkHref()
       RETURN_INTO_OBJREF(doc, iface::dom::Document, datastore->ownerDocument());
       attrNode = already_AddRefd<iface::dom::Attr>
         (doc->createAttributeNS(XLINK_NS, L"href"));
+      RETURN_INTO_OBJREF(n, iface::dom::Attr,
+                         datastore->setAttributeNodeNS(attrNode));
     }
     return new CDA_URI(attrNode);
   }

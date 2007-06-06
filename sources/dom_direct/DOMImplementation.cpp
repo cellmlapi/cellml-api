@@ -1637,6 +1637,23 @@ CDA_Attr::value(const wchar_t* attr)
 {
   mNodeValue = attr;
   mSpecified = true;
+
+  if (eventsHaveEffects())
+  {
+    RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
+    me->initMutationEvent(L"DOMAttrModified", true, false,
+                          this, L"", mNodeValue.c_str(), mNodeName.c_str(),
+                          iface::events::MutationEvent::MODIFICATION);
+
+    CDA_Element* el = dynamic_cast<CDA_Element*>(mParent);
+    if (el == NULL)
+      return;
+
+    el->dispatchEvent(me);
+    me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
+                          L"", 0);
+    el->dispatchEvent(me);
+  }
 }
 
 iface::dom::Element*
