@@ -34,33 +34,15 @@ public:
   UnderconstrainedError()
   {
   }
+};
 
-  UnderconstrainedError(const UnderconstrainedError& aCopy)
+class UnsuitablyConstrainedError
+  : public std::exception
+{
+public:
+  UnsuitablyConstrainedError()
   {
-    std::list<iface::cellml_api::CellMLVariable*>::const_iterator i =
-      aCopy.mUnresolvedWanted.begin();
-    for (; i != aCopy.mUnresolvedWanted.end(); i++)
-    {
-      (*i)->add_ref();
-      mUnresolvedWanted.push_back(*i);
-    }
   }
-
-  ~UnderconstrainedError()
-    throw()
-  {
-    std::list<iface::cellml_api::CellMLVariable*>::iterator i;
-    for (i = mUnresolvedWanted.begin(); i != mUnresolvedWanted.end(); i++)
-      (*i)->release_ref();
-  }
-
-  void addUnresolvedWanted(iface::cellml_api::CellMLVariable* aSource)
-  {
-    aSource->add_ref();
-    mUnresolvedWanted.push_back(aSource);
-  }
-
-  std::list<iface::cellml_api::CellMLVariable*> mUnresolvedWanted;
 };
 
 class OverconstrainedError
@@ -73,35 +55,18 @@ public:
     mEqn->add_ref();
   }
 
-  OverconstrainedError(const OverconstrainedError& aCopy)
+ OverconstrainedError(const OverconstrainedError& aCopy)
+   : mEqn(aCopy.mEqn)
   {
-    mEqn = aCopy.mEqn;
     mEqn->add_ref();
-    std::list<iface::cellml_api::CellMLVariable*>::const_iterator i;
-    for (i = aCopy.mKnownVariables.begin();
-         i != aCopy.mKnownVariables.end(); i++)
-    {
-      (*i)->add_ref();
-      mKnownVariables.push_back(*i);
-    }
   }
 
   ~OverconstrainedError()
     throw()
   {
     mEqn->release_ref();
-    std::list<iface::cellml_api::CellMLVariable*>::iterator i;
-    for (i = mKnownVariables.begin(); i != mKnownVariables.end(); i++)
-      (*i)->release_ref();
-  }
-
-  void addKnownVariable(iface::cellml_api::CellMLVariable* aSource)
-  {
-    aSource->add_ref();
-    mKnownVariables.push_back(aSource);
   }
 
   iface::dom::Element* mEqn;
-  std::list<iface::cellml_api::CellMLVariable*> mKnownVariables;
 };
 #endif // _CodeGenerationError_hxx

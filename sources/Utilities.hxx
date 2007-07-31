@@ -711,7 +711,8 @@ public:
   ObjRef(T* aPtr)
     : mPtr(aPtr)
   {
-    mPtr->add_ref();
+    if (mPtr != NULL)
+      mPtr->add_ref();
   }
 
   ObjRef(const already_AddRefd<T> aar)

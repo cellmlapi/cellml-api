@@ -1,116 +1,150 @@
 #ifndef _CodeGenerationState_hxx
 #define _CodeGenerationState_hxx
 
-#include "Units.hxx"
-#include "Variables.hxx"
 #include "IfaceCCGS.hxx"
 #include <vector>
 #include <set>
+#include <map>
+#include "IfaceCellML_APISPEC.hxx"
 
-class Equation;
-
-struct InitialAssignment
+// A variable edge is an equation which allows one or more
+// variables to be found from another variable.
+struct VariableEdge
 {
-  VariableInformation* source;
-  VariableInformation* destination;
-  double factor, offset;
-};
+public:
+  VariableEdge() {}
+  ~VariableEdge() {}
+  
+  std::list<CDA_ComputationTarget*> mTargets;
+  // If mMaths == null, this is a special variable edge which is created when
+  // an initial_value="name" construct is found. It can only be used to compute
+  // the first target from the second (must have exactly two targets).
+  ObjRef<iface::mathml_dom::MathMLApplyElement> mMaths;
+  ObjRef<iface::cellml_api::CellMLComponent> mContext;
 
-class VariableDisjointSet;
+  // The target which is actually computed (determined by connectivity
+  // analysis).
+  CDA_ComputationTarget* mComputedTarget;
+  // The left-hand side. NULL if mRHS has to be minimised.
+  ObjRef<iface::mathml_dom::MathMLElement> mLHS;
+  // The right-hand side.
+  ObjRef<iface::mathml_dom::MathMLElement> mRHS;
+};
 
 class CodeGenerationState
 {
 public:
-  CodeGenerationState();
+  CodeGenerationState(iface::cellml_api::Model* aModel,
+                      std::wstring& aConstantPattern,
+                      std::wstring& aStateVariableNamePattern,
+                      std::wstring& aAlgebraicVariableNamePattern,
+                      std::wstring& aRateNamePattern,
+                      std::wstring& aVOIPattern,
+                      std::wstring& aAssignPattern,
+                      std::wstring& aSolvePattern,
+                      uint32_t aArrayOffset,
+                      iface::cellml_services::MaLaESTransform* aTransform,
+                      iface::cellml_services::CeVAS* aCeVAS,
+                      iface::cellml_services::CUSES* aCUSES,
+                      iface::cellml_services::AnnotationSet* aAnnoSet)
+    : mModel(aModel), mConstantPattern(aConstantPattern),
+      mStateVariableNamePattern(aStateVariableNamePattern),
+      mAlgebraicVariableNamePattern(aAlgebraicVariableNamePattern),
+      mRateNamePattern(aRateNamePattern),
+      mVOIPattern(aVOIPattern),
+      mAssignPattern(aAssignPattern),
+      mSolvePattern(aSolvePattern),
+      mArrayOffset(aArrayOffset),
+      mTransform(aTransform),
+      mCeVAS(aCeVAS),
+      mCUSES(aCUSES),
+      mAnnoSet(aAnnoSet),
+      mNextConstantIndex(aArrayOffset),
+      mNextStateVariableIndex(aArrayOffset),
+      mNextAlgebraicVariableIndex(aArrayOffset),
+      mNextVOI(aArrayOffset),
+      mNextSolveId(0)
+  {
+  }
+
   ~CodeGenerationState();
 
-  void SetupBuiltinUnits();
-  void CreateModelScopes(iface::cellml_api::Model* aModel);
-  void PutUnitsIntoScope(CellMLScope* aScope,
-                         iface::cellml_api::Units* aUnits);
-  void CreateComponentScope(CellMLScope* aModelScope,
-                            iface::cellml_api::CellMLComponent* aComp);
-  void CreateComponentList(iface::cellml_api::Model* aModel);
-  void AddEncapsulationDescendentComponents(
-                                            std::set<iface::cellml_api::CellMLComponent*,
-                                                     XPCOMComparator>&
-                                            aCompSet,
-                                            iface::cellml_api::CellMLComponent*
-                                            aComponent);
-  void ProcessMath();
-  void ComponentHasMath(iface::cellml_api::CellMLComponent* aComp,
-                        iface::mathml_dom::MathMLApplyElement* aApply);
-  void ProcessMathInComponent(iface::cellml_api::CellMLComponent* aComp);
-  void ProcessVariables();
-  void AssignVariableIndices();
-  void DetermineConstants(std::stringstream& aConstStream);
-  void DetermineComputedConstants(std::stringstream& aCompConstStream,
-                                  std::stringstream& aSupplementary);
-  void DetermineIterationVariables(std::stringstream& aIterationStream,
-                                   std::stringstream& aSupplementary);
-  void DetermineRateVariables(std::stringstream& aRateStream,
-                              std::stringstream& aSupplementary);
-  /**
-   * Gets the conversion between vfrom and vto.
-   * @param in vfrom The first ("from") variable.
-   * @param in vto The second ("to") variable.
-   * @return A number by which units in vfrom should be multiplied to convert
-   *         into the right units to store in the to variable.
-   * @param out offset A number which should be added to the number multiplied
-   *                   by the return value before storing into the to variable.
-   */
-  double GetConversion(iface::cellml_api::CellMLVariable* vfrom,
-                       iface::cellml_api::CellMLVariable* vto, double& offset);
-  std::string GetVariableText(iface::cellml_api::CellMLVariable* var);
-  std::string GetVariableText(VariableInformation* vi);
-  uint32_t GetVariableIndex(iface::cellml_api::CellMLVariable* var);
-  void EquationFullyUsed(Equation* aUsedEquation);
+  iface::cellml_services::CodeInformation* GenerateCode();
+  void CreateBaseComputationTargets();
+  CDA_ComputationTarget* GetTargetOfDegree(CDA_ComputationTarget* aBase,
+                                           uint32_t aDegree);
+  void CreateVariableEdges();
+  void ContextError(const std::wstring& details,
+                    iface::mathml_dom::MathMLElement* context1,
+                    iface::cellml_api::CellMLElement* context2);
+  void FirstPassTargetClassification();
+  void AllocateVariable(CDA_ComputationTarget* aCT, std::wstring& aStr,
+                        std::wstring& aPattern, uint32_t& aNextIndex);
+  void GenerateVariableName(CDA_ComputationTarget* aCT, std::wstring& aStr,
+                            std::wstring& aPattern, uint32_t index);
+  void AllocateVariablesInSet(std::set<CDA_ComputationTarget*>& aSet,
+                              iface::cellml_services::VariableEvaluationType aET,
+                              std::wstring& aPattern,
+                              uint32_t& aNextIndex,
+                              uint32_t& aCountVar);
+  void AllocateConstant(CDA_ComputationTarget* aCT, std::wstring& aStr);
+  void AllocateStateVariable(CDA_ComputationTarget* aCT, std::wstring& aStr);
+  void AllocateAlgebraicVariable(CDA_ComputationTarget* aCT, std::wstring& aStr);
+  void AllocateVOI(CDA_ComputationTarget* aCT, std::wstring& aStr);
+  void AppendAssign(std::wstring& aAppendTo,
+                    std::wstring& aLHS,
+                    std::wstring& aRHS);
+  void BuildFloatingAndConstantLists();
+  void BuildFloatingAndKnownLists();
+  void BuildStateAndConstantLists();
+  uint32_t BuildTargetSet(std::list<CDA_ComputationTarget*>& aStart,
+                          std::list<CDA_ComputationTarget*>& aCandidates,
+                          std::set<CDA_ComputationTarget*>& aTargetSet);
+  bool ConsiderEdgeInTargetSet(VariableEdge* aVarEdge,
+                               std::set<CDA_ComputationTarget*>& aStart,
+                               std::set<CDA_ComputationTarget*>& aCandidates,
+                               std::set<CDA_ComputationTarget*>& aTargetSet);
+  void GenerateCodeForSet(std::wstring& aCodeTo,
+                          std::set<CDA_ComputationTarget*>& aTargets);
+  void GenerateCodeForSetByType(std::set<CDA_ComputationTarget*>& aTargets);
+  void GenerateStateToRateCascades();
+  void GenerateCodeForEdge(std::wstring& aCodeTo, VariableEdge* aVE);
+  iface::cellml_api::CellMLVariable* GetVariableInComponent
+  (
+   iface::cellml_api::CellMLComponent* aComp,
+   iface::cellml_api::CellMLVariable* aVar
+  );
+  void GenerateAssignmentMaLaESResult
+  (
+   std::wstring& aCodeTo,
+   CDA_ComputationTarget* aTarget,
+   iface::cellml_services::MaLaESResult* aMR
+  );
+  void GenerateSolveCode
+  (
+   std::wstring& aCodeTo,
+   VariableEdge* aVE
+  );
 
-  VariableInformation*
-  FindOrAddVariableInformation(iface::cellml_api::CellMLVariable* var);
-
-  uint32_t AssignFunctionId();
-
-  bool UnitsValid(iface::cellml_api::CellMLComponent* aComponent,
-                  const std::wstring& aUnits);
-
-  void CountVariablesAndRates(uint32_t& aVariableCount,
-                              uint32_t& aConstantCount,
-                              uint32_t& aBoundCount,
-                              uint32_t& aRateCount);
-  void VariablesToCCodeVariables
-  (std::list<iface::cellml_services::CCodeVariable*>& aVarList);
-  void ListFlaggedEquations(std::vector<iface::dom::Element*>& aFlaggedEqns);
-
-  /**
-   * Builds a map between variable object IDs and the corresponding
-   * VariableInformation for the source variable. Because
-   * this function does all variables at the same time, it only needs to be
-   * called once, and can run in O(n log(m) + m) time, for n connections and m
-   * variables. This is much more efficient than calling sourceVariable for each
-   * variable.
-   */
-  void
-  BuildVariableInformationMap(iface::cellml_api::Model* aModel);
-private:
-  void BuildVIMForConnections(iface::cellml_api::Model* aModel,
-                              std::map<iface::cellml_api::CellMLVariable*,
-                              VariableDisjointSet*>& vsMap);
-
-  TemporaryAnnotationManager annot;
-  TemporaryAnnotationKey scopeKey, varinfoKey;
-  CellMLScope mGlobalScope;
-  std::list<Equation*> mEquations, mUnusedEquations;
-  std::list<CellMLScope*> mModelScopes, mComponentScopes;
-  // Note that we don't hold references to these components, because we
-  // will always be destroyed before the components...
-  std::list<iface::cellml_api::CellMLComponent*> mComponentList;
-  // A map between the ID of the variable and the VariableInformation...
-  std::map<std::string,VariableInformation*> mVariableByObjid;
-  std::list<VariableInformation*> mVariableList;
-  std::list<InitialAssignment> mInitialAssignments;
-  uint32_t mLastFunctionId;
-
+  ObjRef<iface::cellml_api::Model> mModel;
+  std::wstring & mConstantPattern, & mStateVariableNamePattern,
+    & mAlgebraicVariableNamePattern, & mRateNamePattern,
+    & mVOIPattern, & mAssignPattern, & mSolvePattern;
+  uint32_t mArrayOffset;
+  ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
+  ObjRef<iface::cellml_services::CeVAS> mCeVAS;
+  ObjRef<iface::cellml_services::CUSES> mCUSES;
+  ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
+  ObjRef<CDA_CodeInformation> mCodeInfo;
+  std::list<CDA_ComputationTarget*> mBaseTargets, mKnown, mFloating;
+  std::list<VariableEdge*> mVariableEdges;
+  std::list<VariableEdge*> mUnusedEdges;
+  std::map<CDA_ComputationTarget*, VariableEdge*> mEdgesInto;
+  std::map<iface::cellml_api::CellMLVariable*, CDA_ComputationTarget*>
+    mTargetsBySource;
+  std::set<CDA_ComputationTarget*> mBoundTargs;
+  uint32_t mNextConstantIndex, mNextStateVariableIndex,
+    mNextAlgebraicVariableIndex, mNextVOI, mNextSolveId;
 };
 
 #endif // _CodeGenerationState_hxx

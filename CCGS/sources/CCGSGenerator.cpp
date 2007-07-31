@@ -2,424 +2,430 @@
 #include <map>
 #include <set>
 #include <math.h>
-#include "Variables.hxx"
-#include "Equality.hxx"
 #include "CodeGenerationState.hxx"
 #include <stdio.h>
+#include "CodeGenerationError.hxx"
+#include "IfaceMathML_content_APISPEC.hxx"
+#include "DOMBootstrap.hxx"
 
 // Win32 hack...
 #ifdef _WIN32
 #define swprintf _snwprintf
 #endif
 
-#include "CodeGenerationError.hxx"
-#include "TemporaryAnnotation.hxx"
-
-iface::cellml_api::CellMLComponent*
-GetRealComponent(iface::cellml_api::CellMLElement* in)
-{
-  DECLARE_QUERY_INTERFACE_OBJREF(x, in, cellml_api::CellMLComponent);
-  if (x == NULL)
-    throw CodeGenerationError(L"\"in\" not a component (bug)");
-  while (true)
-  {
-    DECLARE_QUERY_INTERFACE_OBJREF(imp, x, cellml_api::ImportComponent);
-    if (imp == NULL)
-    {
-      x->add_ref();
-      return x;
-    }
-    RETURN_INTO_OBJREF(cee, iface::cellml_api::CellMLElement,
-                       imp->parentElement());
-    DECLARE_QUERY_INTERFACE_OBJREF(cei, cee, cellml_api::CellMLImport);
-    if (cei == NULL)
-      throw CodeGenerationError(L"Parent of import component not import.");
-    RETURN_INTO_OBJREF(im, iface::cellml_api::Model, cei->importedModel());
-    RETURN_INTO_OBJREF(cs, iface::cellml_api::CellMLComponentSet,
-                       im->modelComponents());
-    RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
-                       cs->iterateComponents());
-    RETURN_INTO_WSTRING(tn, imp->componentRef());
-    while (true)
-    {
-      x = already_AddRefd<iface::cellml_api::CellMLComponent>
-        (ci->nextComponent());
-      if (x == NULL)
-        throw CodeGenerationError(L"Imported component missing");
-      RETURN_INTO_WSTRING(n, x->name());
-      if (n == tn)
-        break;
-    }
-  }
-}
-
-static struct
-{
-  uint32_t badmask;
-  const wchar_t* errMsg;
-}  IncompatibleFlagSet[] =
-{
-  {
-    VariableInformation::SUBJECT_OF_DIFF |
-    VariableInformation::BVAR_OF_DIFF,
-    L"The same variable cannot be both the subject of differentiation and the "
-    L"bound variable of a differentiation."
-  },
-  {
-    VariableInformation::OTHER_BVAR |
-    VariableInformation::NONBVAR_USE,
-    L"You cannot use a variable as a bound variable (other than for "
-    L"differentiation) and then later as a free variable."
-  },
-  {
-    VariableInformation::OTHER_BVAR |
-    VariableInformation::HAS_INITIAL_VALUE,
-    L"Only integration bound variables should have an initial value."
-  },
-  {
-    VariableInformation::OTHER_BVAR |
-    VariableInformation::HAS_INITIAL_ASSIGNMENT,
-    L"Only integration bound variables should have an initial value."
-  }
-};
-
-void
-VariableInformation::SetFlag(uint32_t flag)
-  throw (CodeGenerationError&)
-{
-  if (mSourceInformation)
-  {
-    mSourceInformation->SetFlag(flag);
-    return;
-  }
-  mFlags |= flag;
-  // Now check the flags for errors...
-  uint32_t i;
-  for (i = 0; i < sizeof(IncompatibleFlagSet)/sizeof(IncompatibleFlagSet[0]);
-       i++)
-    if ((mFlags & IncompatibleFlagSet[i].badmask) ==
-        IncompatibleFlagSet[i].badmask)
-    {
-      std::wstring msg = L"Error in variable ";
-      msg += mName;
-      msg += L": ";
-      msg += IncompatibleFlagSet[i].errMsg;
-      throw CodeGenerationError(msg);
-    }
-}
-
-CodeGenerationState::CodeGenerationState()
-  : mLastFunctionId(0)
-{
-  SetupBuiltinUnits();
-}
-
 CodeGenerationState::~CodeGenerationState()
 {
-  std::list<Equation*>::iterator i;
-  for (i = mEquations.begin(); i != mEquations.end(); i++)
-  {
-    (*i)->release_state();
-    (*i)->release_ref();
-  }
-
-  std::list<CellMLScope*>::iterator i2;
-  for (i2 = mModelScopes.begin(); i2 != mModelScopes.end(); i2++)
-    (*i2)->release_ref();
-  for (i2 = mComponentScopes.begin(); i2 != mComponentScopes.end(); i2++)
-    (*i2)->release_ref();
-
-  std::list<iface::cellml_api::CellMLComponent*>::iterator i3;
-  for (i3 = mComponentList.begin(); i3 != mComponentList.end(); i3++)
-    (*i3)->release_ref();
+  std::list<VariableEdge*>::iterator i;
+  for (i = mVariableEdges.begin(); i != mVariableEdges.end(); i++)
+    delete *i;
 }
 
-void
-CodeGenerationState::CreateModelScopes(iface::cellml_api::Model* aModel)
+iface::cellml_services::CodeInformation*
+CodeGenerationState::GenerateCode()
 {
-  // Go through each model and create a scope...
-  RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet,
-                     aModel->imports());
-  RETURN_INTO_OBJREF(it, iface::cellml_api::CellMLImportIterator,
-                     cis->iterateImports());
-  while (true)
+  // Create a new code information object...
+  mCodeInfo = already_AddRefd<CDA_CodeInformation>
+    (new CDA_CodeInformation());
+  mCodeInfo->mConstraintLevel = iface::cellml_services::CORRECTLY_CONSTRAINED;
+  mCodeInfo->mRateIndexCount = 0;
+  mCodeInfo->mConstantIndexCount = 0;
+  mCodeInfo->mAlgebraicIndexCount = 0;
+
+  try
   {
-    RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImport,
-                       it->nextImport());
-    if (imp == NULL)
-      break;
-    RETURN_INTO_OBJREF(m, iface::cellml_api::Model, imp->importedModel());
-    CreateModelScopes(m);
+    // Create all computation targets...
+    CreateBaseComputationTargets();
+    
+    // Create all variable edges (this creates derived computation targets as a
+    //   side-effect)...
+    CreateVariableEdges();
+
+    // Next, set starting classification for all targets...
+    FirstPassTargetClassification();
+
+    mUnusedEdges = mVariableEdges;
+
+    // Put all targets into lists based on their classification...
+    BuildFloatingAndConstantLists();
+
+    // Now, determine all constants computable from the current constants...
+    std::set<CDA_ComputationTarget*> reachabletargets;
+    BuildTargetSet(mKnown, mFloating, reachabletargets);
+
+    // Assign constant variables for set...
+    AllocateVariablesInSet(reachabletargets, iface::cellml_services::CONSTANT,
+                           mConstantPattern, mNextConstantIndex,
+                           mCodeInfo->mConstantIndexCount);
+
+    // Write evaluations for all constants we just worked out how to compute...
+    GenerateCodeForSet(mCodeInfo->mInitConstsStr, reachabletargets);
+
+    // Also we need to initialise state variable IVs...
+    reachabletargets.clear();
+    BuildStateAndConstantLists();
+    BuildTargetSet(mKnown, mFloating, reachabletargets);
+    GenerateCodeForSet(mCodeInfo->mInitConstsStr, reachabletargets);
+
+    // Put all targets into lists based on their classification...
+    BuildFloatingAndKnownLists();
+
+    // Now, determine all algebraic variables / rates computable from the
+    // known variables (constants, state variables, and bound variable)...
+    reachabletargets.clear();
+
+    if (BuildTargetSet(mKnown, mFloating, reachabletargets) != 0)
+    {
+      if (mUnusedEdges.size() != 0)
+        throw UnsuitablyConstrainedError();
+      else
+        throw UnderconstrainedError();
+    }
+
+    // Assign algebraic variables for set...
+    AllocateVariablesInSet(reachabletargets, iface::cellml_services::ALGEBRAIC,
+                           mAlgebraicVariableNamePattern,
+                           mNextAlgebraicVariableIndex,
+                           mCodeInfo->mAlgebraicIndexCount);
+
+    // Write evaluations for all rates & algebraic variables in reachabletargets
+    GenerateCodeForSetByType(reachabletargets);
+
+    // Also cascade state variables to rate variables where they are the same
+    // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
+    //  above equation, but also it is a rate for y).
+    GenerateStateToRateCascades();
   }
-  // Now actually create the scope...
-  RETURN_INTO_OBJREF(cs, CellMLScope,
-                     new CellMLScope(&mGlobalScope, aModel, scopeKey));
-  annot.addAnnotation(cs);
-  cs->add_ref();
-  mModelScopes.push_back(cs);
-  
-  // Next, create the component scopes for this model. We only include local
-  // components here, because imported components exist in the scope of the
-  // imported model.
-  RETURN_INTO_OBJREF(lc, iface::cellml_api::CellMLComponentSet,
-                     aModel->localComponents());
-  RETURN_INTO_OBJREF(cci, iface::cellml_api::CellMLComponentIterator,
-                     lc->iterateComponents());
-  
-  // Now add the units to the scope, so we can find them...
-  RETURN_INTO_OBJREF(us, iface::cellml_api::UnitsSet,
-                     aModel->modelUnits());
-  RETURN_INTO_OBJREF(ui, iface::cellml_api::UnitsIterator,
-                     us->iterateUnits());
-  while (true)
+  catch (UnderconstrainedError uce)
   {
-    RETURN_INTO_OBJREF(u, iface::cellml_api::Units,
-                       ui->nextUnits());
-    if (u == NULL)
-      break;
-    PutUnitsIntoScope(cs, u);
+    mCodeInfo->mConstraintLevel = iface::cellml_services::UNDERCONSTRAINED;
   }
-  
+  catch (OverconstrainedError oce)
+  {
+    std::vector<iface::dom::Element*>::iterator fei;
+    for (fei = mCodeInfo->mFlaggedEquations.begin();
+         fei != mCodeInfo->mFlaggedEquations.end();
+         fei++)
+      (*fei)->release_ref();
+    mCodeInfo->mFlaggedEquations.clear();
+    oce.mEqn->add_ref();
+    mCodeInfo->mFlaggedEquations.push_back(oce.mEqn);
+    mCodeInfo->mConstraintLevel = iface::cellml_services::OVERCONSTRAINED;
+  }
+  catch (UnsuitablyConstrainedError uce)
+  {
+    mCodeInfo->mConstraintLevel = iface::cellml_services::UNSUITABLY_CONSTRAINED;
+  }
+  catch (CodeGenerationError cge)
+  {
+    mCodeInfo->mErrorMessage = cge.str();
+  }
+
+  mCodeInfo->add_ref();
+  return mCodeInfo;
+}
+
+CDA_ComputationTarget*
+CodeGenerationState::GetTargetOfDegree(CDA_ComputationTarget* aBase,
+                                       uint32_t aDegree)
+{
+  CDA_ComputationTarget* t = aBase;
+
   while (true)
   {
-    RETURN_INTO_OBJREF(comp, iface::cellml_api::CellMLComponent,
-                       cci->nextComponent());
-    if (comp == NULL)
-      break;
-    CreateComponentScope(cs, comp);
+    if (aDegree-- == 0)
+      return t;
+
+    if (t->mUpDegree == NULL)
+    {
+      aBase->mHighestDegree++;
+      t->mUpDegree = new CDA_ComputationTarget();
+      t = t->mUpDegree;
+      mCodeInfo->mTargets.push_back(t);
+      t->mVariable = aBase->mVariable;
+      t->mAnnoSet = aBase->mAnnoSet;
+      t->mDegree = aBase->mHighestDegree;
+      t->mUpDegree = NULL;
+    }
+    else
+      t = t->mUpDegree;
   }
 }
 
 void
-CodeGenerationState::CreateComponentScope
+CodeGenerationState::CreateBaseComputationTargets()
+{
+  uint32_t i, l = mCeVAS->length();
+
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(cvs, iface::cellml_services::ConnectedVariableSet,
+                       mCeVAS->getVariableSet(i));
+    RETURN_INTO_OBJREF(sv, iface::cellml_api::CellMLVariable,
+                       cvs->sourceVariable());
+    if (sv == NULL)
+      ContextError(L"Found a variable set with no source.", NULL, NULL);
+
+    RETURN_INTO_OBJREF(basect, CDA_ComputationTarget,
+                       new CDA_ComputationTarget());
+
+    basect->mVariable = sv;
+    basect->mAnnoSet = mAnnoSet;
+    basect->mDegree = 0;
+    basect->mUpDegree = NULL;
+    basect->mHighestDegree = 0;
+
+    basect->add_ref();
+    mCodeInfo->mTargets.push_back(basect);
+    mBaseTargets.push_back(basect);
+    mTargetsBySource.insert
+      (std::pair<iface::cellml_api::CellMLVariable*,CDA_ComputationTarget*>
+       (sv, basect));
+  }
+}
+
+void
+CodeGenerationState::ContextError
 (
- CellMLScope* aModelScope, iface::cellml_api::CellMLComponent* aComp
+ const std::wstring& details,
+ iface::mathml_dom::MathMLElement* context1,
+ iface::cellml_api::CellMLElement* context2
 )
 {
-  RETURN_INTO_OBJREF(cs, CellMLScope,
-                     new CellMLScope(aModelScope, aComp, scopeKey));
-  annot.addAnnotation(cs);
-  cs->add_ref();
-  mComponentScopes.push_back(cs);
+  std::wstring msg(details);
   
-  // Now add the units to the scope, so we can find them...
-  RETURN_INTO_OBJREF(us, iface::cellml_api::UnitsSet,
-                     aComp->units());
-  RETURN_INTO_OBJREF(ui, iface::cellml_api::UnitsIterator,
-                     us->iterateUnits());
-  while (true)
+  DECLARE_QUERY_INTERFACE_OBJREF(el, context1, dom::Element);
+
+  while (el != NULL)
   {
-    RETURN_INTO_OBJREF(u, iface::cellml_api::Units,
-                       ui->nextUnits());
-    if (u == NULL)
+    RETURN_INTO_WSTRING(uri, el->namespaceURI());
+    if (uri != L"http://www.w3.org/1998/Math/MathML")
       break;
-    PutUnitsIntoScope(cs, u);
+
+    msg += L"\r\n  In MathML ";
+    RETURN_INTO_WSTRING(ln, el->localName());
+    msg += ln;
+    msg += L" element";
+    RETURN_INTO_WSTRING(id, el->getAttribute(L"id"));
+    if (id != L"")
+    {
+      msg += L" with ID ";
+      msg += id;
+    }
+    msg += L".";
+
+    RETURN_INTO_OBJREF(n, iface::dom::Node, el->parentNode());
+    QUERY_INTERFACE(el, n, dom::Element);
   }
+
+  ObjRef<iface::cellml_api::CellMLElement> cel(context2);
+
+  while (cel != NULL)
+  {
+    wchar_t* typen;
+
+    // This is very ugly, we need a better way at the API level!
+#define TYPECHECK_QI_CASE(type) \
+  DECLARE_QUERY_INTERFACE_OBJREF(tmp##type, cel, cellml_api::type); \
+  if (tmp##type != NULL) \
+    typen = L## #type; \
+  else
+
+    TYPECHECK_QI_CASE(Model)
+    {
+      TYPECHECK_QI_CASE(Units)
+      {
+        TYPECHECK_QI_CASE(Group)
+        {
+          TYPECHECK_QI_CASE(MapComponents)
+          {
+            TYPECHECK_QI_CASE(CellMLComponent)
+            {
+              TYPECHECK_QI_CASE(Unit)
+              {
+                TYPECHECK_QI_CASE(CellMLImport)
+                {
+                  TYPECHECK_QI_CASE(CellMLVariable)
+                  {
+                    TYPECHECK_QI_CASE(ComponentRef)
+                    {
+                      TYPECHECK_QI_CASE(RelationshipRef)
+                      {
+                        TYPECHECK_QI_CASE(Connection)
+                        {
+                          TYPECHECK_QI_CASE(MapVariables)
+                          {
+                            TYPECHECK_QI_CASE(Reaction)
+                            {
+                              TYPECHECK_QI_CASE(VariableRef)
+                              {
+                                TYPECHECK_QI_CASE(Role)
+                                {
+                                  typen = L"non-standard";
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    msg += L"\r\n  In ";
+    msg += typen;
+    msg += L" element";
+
+    RETURN_INTO_WSTRING(cm, cel->cmetaId());
+    if (cm != L"")
+    {
+      msg += L" with cmeta:id ";
+      msg += cm;
+    }
+
+    DECLARE_QUERY_INTERFACE_OBJREF(nce, cel, cellml_api::NamedCellMLElement);
+    if (nce != NULL)
+    {
+      RETURN_INTO_WSTRING(name, nce->name());
+      if (name != L"")
+      {
+        msg += L" with name ";
+        msg += name;
+      }
+    }
+
+    msg += L".";
+
+    cel = already_AddRefd<iface::cellml_api::CellMLElement>
+      (cel->parentElement());
+  }
+
+  throw CodeGenerationError(msg);
 }
 
 void
-CodeGenerationState::CreateComponentList(iface::cellml_api::Model* aModel)
+CodeGenerationState::CreateVariableEdges()
 {
-  std::set<iface::cellml_api::CellMLComponent*, XPCOMComparator> compset;
-  // Go through each local or directly imported component...
-  RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet,
-                     aModel->modelComponents());
-  RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
-                     mc->iterateComponents());
+  RETURN_INTO_OBJREF(cci, iface::cellml_api::CellMLComponentIterator,
+                     mCeVAS->iterateRelevantComponents());
+
   while (true)
   {
     RETURN_INTO_OBJREF(c, iface::cellml_api::CellMLComponent,
-                       ci->nextComponent());
+                       cci->nextComponent());
     if (c == NULL)
       break;
-    RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
-                       GetRealComponent(c));
-    // Append the component to the component list...
-    if (compset.count(rc) != 0)
-      continue;
-    rc->add_ref();
-    mComponentList.push_back(rc);
-    compset.insert(rc);
-    // Also, any encapsulation descendents go on the list...
-    AddEncapsulationDescendentComponents(compset, rc);
-  }
-}
 
-void
-CodeGenerationState::AddEncapsulationDescendentComponents
-(
- std::set<iface::cellml_api::CellMLComponent*,XPCOMComparator>& compset,
- iface::cellml_api::CellMLComponent* aComponent
-)
-{
-  RETURN_INTO_OBJREF(cs, iface::cellml_api::CellMLComponentSet,
-                     aComponent->encapsulationChildren());
-  RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
-                     cs->iterateComponents());
-  while (true)
-  {
-    ObjRef<iface::cellml_api::CellMLComponent> c;
-    try
-    {
-      c = already_AddRefd<iface::cellml_api::CellMLComponent>
-        (ci->nextComponent());
-    }
-    catch (iface::cellml_api::CellMLException& e)
-    {
-      std::wstring msg(L"Error finding encapsulation children of component ");
-      RETURN_INTO_WSTRING(name, aComponent->name());
-      msg += name;
-      msg += L". This can occur if you have a component_ref which "
-             L"refers to a component that doesn't exist.";
-      throw CodeGenerationError(msg);
-    }
-    
-    if (c == NULL)
-      break;
-    
-    RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
-                       GetRealComponent(c));
-    
-    if (compset.count(rc) != 0)
-      continue;
-    
-    rc->add_ref();
-    mComponentList.push_back(rc);
-    compset.insert(rc);
-    AddEncapsulationDescendentComponents(compset, rc);
-  }
-}
-
-void
-CodeGenerationState::ProcessMath()
-{
-  std::list<iface::cellml_api::CellMLComponent*>::iterator i;
-  for (i = mComponentList.begin(); i != mComponentList.end(); i++)
-    ProcessMathInComponent(*i);
-}
-
-void
-CodeGenerationState::ComponentHasMath
-(
- iface::cellml_api::CellMLComponent* aComp,
- iface::mathml_dom::MathMLApplyElement* aApply
-)
-{
-  RETURN_INTO_OBJREF(eq, iface::mathml_dom::MathMLElement,
-                     aApply->_cxx_operator());
-  if (eq == NULL)
-    throw CodeGenerationError(L"Apply with no operator");
-  DECLARE_QUERY_INTERFACE_OBJREF(eqps, eq, mathml_dom::MathMLPredefinedSymbol);
-  if (eqps == NULL)
-    throw CodeGenerationError(L"Apply operator is not a predefined symbol.");
-  RETURN_INTO_WSTRING(sn, eqps->symbolName());
-  if (sn != L"eq")
-    throw CodeGenerationError(L"Equals is the only supported top-level "
-                              L"operator.");
-  uint32_t narg = aApply->nArguments();
-
-  uint32_t i;
-  RETURN_INTO_OBJREF(eqn, Equation, new Equation());
-  for (i = 2; i <= narg; i++)
-  {
-    RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
-                       aApply->getArgument(i));
-    eqn->AddPart(aComp, arg);
-  }
-
-  mEquations.push_back(eqn);
-  mUnusedEquations.push_back(eqn);
-  eqn->add_ref();
-}
-
-void
-CodeGenerationState::ProcessMathInComponent
-(
- iface::cellml_api::CellMLComponent* aComp
-)
-{
-  {
-    RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, aComp->math());
+    RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, c->math());
     RETURN_INTO_OBJREF(mei, iface::cellml_api::MathMLElementIterator,
                        ml->iterate());
-
+    
     while (true)
     {
-      RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement, mei->next());
+      RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement,
+                         mei->next());
       if (me == NULL)
         break;
-      DECLARE_QUERY_INTERFACE_OBJREF(mme, me, mathml_dom::MathMLMathElement);
+
+      DECLARE_QUERY_INTERFACE_OBJREF(mme, me,
+                                     mathml_dom::MathMLMathElement);
+      
       if (mme == NULL)
-        continue;
-      // We assume each apply child is a single equation...
-      uint32_t l = mme->nArguments(), i;
-      // MathML is all 1 based...
-      for (i = 1; i <= l; i++)
+        ContextError(L"Unexpected MathML element; was expecting a math element",
+                     me, c);
+      
+      RETURN_INTO_OBJREF(nl, iface::dom::NodeList, mme->childNodes());
+      uint32_t l = nl->length(), i;
+      for (i = 0; i < l; i++)
       {
-        RETURN_INTO_OBJREF(eqme, iface::mathml_dom::MathMLElement,
-                           mme->getArgument(i));
-        DECLARE_QUERY_INTERFACE_OBJREF(eqmae, eqme,
-                                       mathml_dom::MathMLApplyElement);
-        if (eqmae == NULL)
-          continue;
-        ComponentHasMath(aComp, eqmae);
-      }
-    }
-  }
-  // Now go through all reactions...
-  RETURN_INTO_OBJREF(rs, iface::cellml_api::ReactionSet, aComp->reactions());
-  RETURN_INTO_OBJREF(ri, iface::cellml_api::ReactionIterator,
-                     rs->iterateReactions());
-  while (true)
-  {
-    RETURN_INTO_OBJREF(r, iface::cellml_api::Reaction, ri->nextReaction());
-    if (r == NULL)
-      break;
-    RETURN_INTO_OBJREF(vrs, iface::cellml_api::VariableRefSet,
-                       r->variableReferences());
-    RETURN_INTO_OBJREF(vri, iface::cellml_api::VariableRefIterator,
-                       vrs->iterateVariableRefs());
-    while (true)
-    {
-      RETURN_INTO_OBJREF(vr, iface::cellml_api::VariableRef,
-                         vri->nextVariableRef());
-      if (vr == NULL)
-        break;
-      RETURN_INTO_OBJREF(roles, iface::cellml_api::RoleSet,
-                         vr->roles());
-      RETURN_INTO_OBJREF(rolei, iface::cellml_api::RoleIterator,
-                         roles->iterateRoles());
-      while (true)
-      {
-        RETURN_INTO_OBJREF(role, iface::cellml_api::Role,
-                           rolei->nextRole());
-        if (role == NULL)
+        RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
+        
+        if (n == NULL)
           break;
-        RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, role->math());
-        RETURN_INTO_OBJREF(mei, iface::cellml_api::MathMLElementIterator,
-                           ml->iterate());
+        
+        // If it isn't even MathML, just ignore it...
+        DECLARE_QUERY_INTERFACE_OBJREF(mn, n, mathml_dom::MathMLElement);
+        if (mn == NULL)
+          continue;
+        
+        // If it is MathML, it had better be an apply...
+        DECLARE_QUERY_INTERFACE_OBJREF(mae, n, mathml_dom::MathMLApplyElement);
+        if (mae == NULL)
+          ContextError(L"Unexpected MathML element; was expecting an apply",
+                       mn, c);
+        
+        RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement,
+                           mae->_cxx_operator());
+        RETURN_INTO_WSTRING(opn, op->localName());
+        if (opn != L"eq")
+          ContextError(L"Unexpected MathML element; was expecting an eq",
+                       op, c);
+
+        RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                           mTransform->transform(mCeVAS, mCUSES, mAnnoSet, mae, c,
+                                                 NULL, NULL, 0));
+
+        RETURN_INTO_WSTRING(compErr, mr->compileErrors());
+        if (compErr != L"")
+          ContextError(compErr.c_str(), op, c);
+
+        RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                           mr->iterateInvolvedVariablesByDegree());
+        
+        VariableEdge* ve = new VariableEdge();
+        mVariableEdges.push_back(ve);
+        
+        ve->mContext = c;
+        ve->mMaths = mae;
+
+        if (mae->nArguments() != 3)
+          ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
+                       mae, c);
+        
+        ve->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+          (mae->getArgument(2));
+        ve->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+          (mae->getArgument(3));
+        
         while (true)
         {
-          RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement,
-                             mei->next());
-          if (me == NULL)
+          RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
+                             dvi->nextDegreeVariable());
+          if (dv == NULL)
             break;
-          DECLARE_QUERY_INTERFACE_OBJREF(mme, me,
-                                         mathml_dom::MathMLMathElement);
-          if (mme == NULL)
-            continue;
-          // We assume each apply child is a single equation...
-          uint32_t l = mme->nArguments(), i;
-          // MathML is all 1 based...
-          for (i = 1; i <= l; i++)
+          
+          RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                             dv->variable());
+          
+          std::map<iface::cellml_api::CellMLVariable*, CDA_ComputationTarget*>
+            ::iterator  mi = mTargetsBySource.find(cv);
+          if (mi != mTargetsBySource.end())
           {
-            RETURN_INTO_OBJREF(eqme, iface::mathml_dom::MathMLElement,
-                               mme->getArgument(i));
-            DECLARE_QUERY_INTERFACE_OBJREF(eqmae, eqme,
-                                           mathml_dom::MathMLApplyElement);
-            if (eqmae == NULL)
-              continue;
-            ComponentHasMath(aComp, eqmae);
+            ve->mTargets.push_back(GetTargetOfDegree((*mi).second, dv->degree()));
+          }
+        }
+
+        RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
+                           mr->iterateBoundVariables());
+
+        while (true)
+        {
+          RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
+                             bvi->nextVariable());
+          if (bv == NULL)
+            break;
+
+          std::map<iface::cellml_api::CellMLVariable*, CDA_ComputationTarget*>
+            ::iterator  mi = mTargetsBySource.find(bv);
+          if (mi != mTargetsBySource.end())
+          {
+            if (mBoundTargs.count((*mi).second) == 0)
+              mBoundTargs.insert((*mi).second);
           }
         }
       }
@@ -427,682 +433,970 @@ CodeGenerationState::ProcessMathInComponent
   }
 }
 
-void
-CodeGenerationState::ProcessVariables()
-{
-  // Go through each equation looking for variables. This will also find all
-  // variables which are used and have initial_value="variable" on them, and
-  // add them to the separate initial assignments list...
-  std::list<Equation*>::iterator i;
-  for (i = mEquations.begin(); i != mEquations.end(); i++)
-    (*i)->FlagVariables(this, mInitialAssignments);
-}
-
-// Note: Internal only. Does not call add_ref.
-VariableInformation*
-CodeGenerationState::FindOrAddVariableInformation
-(
- iface::cellml_api::CellMLVariable* var
-)
-{
-  char* xId = var->objid();
-  std::string id = xId;
-  free(xId);
-  std::map<std::string,VariableInformation*>::iterator i;
-
-  i = mVariableByObjid.find(id);
-  return (*i).second->GetSource();
-}
 
 void
-CodeGenerationState::AssignVariableIndices()
+CodeGenerationState::FirstPassTargetClassification()
 {
-  std::list<VariableInformation*>::iterator i;
-  uint32_t diffcount = 0;
-  // Firstly count differentials (including higher diffs)...
-  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
-    if ((*i)->IsFlagged(VariableInformation::SUBJECT_OF_DIFF))
-    {
-      diffcount += (*i)->GetDegree();
-    }
-  uint32_t diffIndex = 0, mainIndex = diffcount, boundIndex = 0,
-           constIndex = 0;
-  // Now, we assign indices to each variable.
-  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
+  std::list<CDA_ComputationTarget*>::iterator i;
+  for (i =  mBaseTargets.begin();
+       i != mBaseTargets.end();
+       i++)
   {
-    if ((*i)->IsFlagged(VariableInformation::BVAR_OF_DIFF))
+    CDA_ComputationTarget* ct = *i;
+
+    RETURN_INTO_WSTRING(iv, ct->mVariable->initialValue());
+    bool hasImmedIV = false;
+    if (iv != L"")
     {
-      (*i)->SetIndex(boundIndex++);
-      (*i)->SetArray(VariableInformation::INDEPENDENT);
-    }
-    else if ((*i)->IsFlagged(VariableInformation::SUBJECT_OF_DIFF))
-    {
-      (*i)->SetIndex(diffIndex);
-      diffIndex += (*i)->GetDegree();
-      (*i)->SetArray(VariableInformation::DEPENDENT_AND_RATE);
-    }
-    else if ((*i)->IsFlagged(VariableInformation::HAS_INITIAL_VALUE))
-    {
-      (*i)->SetIndex(constIndex++);
-      (*i)->SetArray(VariableInformation::CONSTANT);
-    }
-    else
-    {
-      (*i)->SetIndex(mainIndex++);
-      (*i)->SetArray(VariableInformation::DEPENDENT);
-    }
-  }
-}
-
-void
-CodeGenerationState::DetermineConstants(std::stringstream& aConstStream)
-{
-  std::list<VariableInformation*>::iterator i;
-  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
-  {
-    if ((*i)->GetArray() == VariableInformation::CONSTANT)
-      aConstStream << "CONSTANTS[" << (*i)->GetIndex() << "] = "
-                   << (*i)->GetInitialValue() << ";" << std::endl;;
-  }
-}
-
-class ProceduralStepCleaner
-{
-public:
-  ProceduralStepCleaner(std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator>& aPCM)
-    : mPCM(aPCM)
-  {
-  }
-
-  ~ProceduralStepCleaner()
-  {
-    std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator>::iterator i;
-    for (i = mPCM.begin(); i != mPCM.end(); i++)
-      delete (*i).second;
-  }
-private:
-  std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator>& mPCM;
-};
-
-void
-CodeGenerationState::DetermineComputedConstants
-(
- std::stringstream& aCompConstStream,
- std::stringstream& aSupplementary
-)
-{
-  std::set<VariableInformation*,VarinfoPointerComparator> availableVariables;
-  std::set<VariableInformation*,VarinfoPointerComparator> wantedVariables;
-  std::map<VariableInformation*, ProceduralStep*,VarinfoPointerComparator> stepsForVariable;
-
-  ProceduralStepCleaner stepCleaner(stepsForVariable);
-
-  // All constants are available, all non-differentials are wanted...
-  std::list<VariableInformation*>::iterator i;
-  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
-  {
-    if ((*i)->GetArray() == VariableInformation::CONSTANT)
-      availableVariables.insert(*i);
-    else if ((*i)->GetArray() == VariableInformation::DEPENDENT)
-      wantedVariables.insert(*i);
-  }
-  
-  bool lastRoundUseful;
-
-  // Now we keep cycling through the equations until we stop finding anything
-  // new. Also check initial value copies...
-  do
-  {
-    lastRoundUseful = false;
-    
-    // Go through all initial values...
-    std::list<InitialAssignment>::iterator iia, iiatmp;
-    for (iia = mInitialAssignments.begin(); iia != mInitialAssignments.end();)
-    {
-      iiatmp = iia;
-      iia++;
-
-      // If the source is available, and the destination wanted, do the
-      // assignment...
-      if (availableVariables.count((*iiatmp).source) &&
-          (wantedVariables.count((*iiatmp).destination) ||
-           ((*iiatmp).destination->GetArray() ==
-            VariableInformation::DEPENDENT_AND_RATE)))
+      wchar_t* end;
+      wcstod(iv.c_str(), &end);
+      if (end == NULL || *end != 0)
       {
-        if ((*iiatmp).destination->GetArray() !=
-            VariableInformation::DEPENDENT_AND_RATE)
-        {
-          wantedVariables.erase((*iiatmp).destination);
-          availableVariables.insert((*iiatmp).destination);
-        }
-        lastRoundUseful = true;
+        VariableEdge* ve = new VariableEdge();
+        mVariableEdges.push_back(ve);
+        ve->mMaths = NULL;
+        ve->mTargets.push_back(ct);
+        RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement,
+                           ct->mVariable->parentElement());
+        DECLARE_QUERY_INTERFACE_OBJREF(comp, el, cellml_api::CellMLComponent);
+        ve->mContext = comp;
+        RETURN_INTO_OBJREF(cvs, iface::cellml_api::CellMLVariableSet,
+                           comp->variables());
+        RETURN_INTO_OBJREF(var, iface::cellml_api::CellMLVariable,
+                           cvs->getVariable(iv.c_str()));
+        if (var == NULL)
+          ContextError(L"Invalid initial_value attribute", NULL,
+                       ct->mVariable);
 
-        // Add a step to compute this...
+        RETURN_INTO_OBJREF(covs, iface::cellml_services::ConnectedVariableSet,
+                           mCeVAS->findVariableSet(var));
+        RETURN_INTO_OBJREF(sv, iface::cellml_api::CellMLVariable,
+                           covs->sourceVariable());
+        if (sv == NULL)
+          ContextError(L"Variable not connected to non-in variable", NULL,
+                       var);
 
-        ProceduralStep* procSet = new InitialValueCopyProceduralStep(*(iiatmp));
-        stepsForVariable.insert(std::pair<VariableInformation*, ProceduralStep*>
-                                ((*iiatmp).destination, procSet));
-        std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator stepi =
-          stepsForVariable.find((*iiatmp).source);
-        if (stepi != stepsForVariable.end())
-          procSet->AddDependency((*stepi).second);
-        mInitialAssignments.erase(iiatmp);
+        std::map<iface::cellml_api::CellMLVariable*, CDA_ComputationTarget*>::
+          iterator j = mTargetsBySource.find(sv);
+        if (j == mTargetsBySource.end())
+          ContextError(L"Invalid initial_value attribute", NULL, var);
+
+        ve->mTargets.push_back((*j).second);
+      }
+      else
+      {
+        hasImmedIV = true;
       }
     }
 
-    std::list<Equation*>::iterator i2, itmp;
-    for (i2 = mUnusedEquations.begin(); i2 != mUnusedEquations.end();)
+    // See if we have a VOI...
+    if (mBoundTargs.count(ct))
     {
-      itmp = i2;
-      i2++;
-      lastRoundUseful |=
-        (*itmp)->ComputeProceduralSteps(this, availableVariables,
-                                        wantedVariables, stepsForVariable,
-                                        false);
+      ct->mEvaluationType = iface::cellml_services::VARIABLE_OF_INTEGRATION;
+      std::wstring ignore;
+      AllocateVOI(ct, ignore);
     }
-  }
-  while (lastRoundUseful);
-
-  // Now we go through the procedural steps...
-  std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator >::iterator psi;
-  for (psi = stepsForVariable.begin(); psi != stepsForVariable.end(); psi++)
-    (*psi).second->RecursivelyGenerateCode(this, aCompConstStream, aSupplementary);
-
-  // Now flag everything available...
-  std::set<VariableInformation*,VarinfoPointerComparator>::iterator i2;
-  for (i2 = availableVariables.begin(); i2 != availableVariables.end(); i2++)
-    (*i2)->SetFlag(VariableInformation::PRECOMPUTED);
-
-  // Initial values can now be computed...
-  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
-  {
-    if ((*i)->GetArray() != VariableInformation::DEPENDENT_AND_RATE)
-      continue;
-    if ((*i)->IsFlagged(VariableInformation::HAS_INITIAL_VALUE))
+    else
     {
-      aCompConstStream << GetVariableText((*i)) << " = "
-                       << (*i)->GetInitialValue() << ";" << std::endl;
+      if (hasImmedIV)
+        ct->mEvaluationType = iface::cellml_services::CONSTANT;
+      else
+        ct->mEvaluationType = iface::cellml_services::FLOATING;
+
+      CDA_ComputationTarget* tct = ct;
+
+      std::wstring cname;
+      while (tct->mUpDegree)
+      {
+        tct->mEvaluationType = iface::cellml_services::STATE_VARIABLE;
+        AllocateStateVariable(tct, cname);
+        if (tct == ct && hasImmedIV)
+        {
+          AppendAssign(mCodeInfo->mInitConstsStr, cname, iv);
+        }
+        tct = tct->mUpDegree;
+        tct->mEvaluationType = iface::cellml_services::FLOATING;
+      }
+      if (ct->mUpDegree)
+      {
+        uint32_t mrvi = mNextStateVariableIndex - 1;
+        AllocateVariable(tct, cname, mRateNamePattern, mrvi);
+      }
+      else if (ct->mEvaluationType == iface::cellml_services::CONSTANT)
+      {
+        AllocateConstant(ct, cname);
+        AppendAssign(mCodeInfo->mInitConstsStr, cname, iv);
+      }
     }
-    else if (!(*i)->IsFlagged(VariableInformation::HAS_INITIAL_ASSIGNMENT))
-      // Better not just leave it undefined...
-      aCompConstStream << GetVariableText((*i)) << " = 0;" << std::endl;
   }
 }
 
-struct EquationStackFrame
-{
-public:
-  EquationStackFrame
-  (
-   std::set<Equation*>::iterator aBegin,
-   std::set<Equation*>::iterator aEnd,
-   Equation* aEquation
-  )
-    : begin(aBegin), end(aEnd), equation(aEquation)
-  {
-  }
-
-  std::set<Equation*>::iterator begin;
-  std::set<Equation*>::iterator end;
-  Equation* equation;
-};
-
 void
-CodeGenerationState::DetermineIterationVariables
+CodeGenerationState::GenerateVariableName
 (
- std::stringstream& aIterationStream,
- std::stringstream& aSupplementary
+ CDA_ComputationTarget* aCT,
+ std::wstring& aStr,
+ std::wstring& aPattern,
+ uint32_t index
 )
 {
-  std::set<VariableInformation*,VarinfoPointerComparator> availableVariables;
-  std::set<VariableInformation*,VarinfoPointerComparator> wantedVariables;
-  std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator> stepsForVariable;
-
-  ProceduralStepCleaner stepCleaner(stepsForVariable);
-
-  std::list<VariableInformation*>::iterator i;
-  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
+  uint32_t cursor = aPattern.find(L'%');
+  if (cursor == std::wstring::npos)
   {
-    if ((*i)->GetArray() == VariableInformation::DEPENDENT &&
-        !(*i)->IsFlagged(VariableInformation::PRECOMPUTED) &&
-        !(*i)->IsFlagged(VariableInformation::OTHER_BVAR))
-      // dependent, non-precomputed variables are wanted...
-      wantedVariables.insert(*i);
-    else // everything else is already available...
-      availableVariables.insert(*i);
-  }
-
-  bool lastRoundUseful;
-
-  // Now we keep cycling through the equations until we stop finding anything
-  // new.
-  do
-  {
-    lastRoundUseful = false;
-    
-    std::list<Equation*>::iterator i2, itmp;
-    for (i2 = mUnusedEquations.begin(); i2 != mUnusedEquations.end();)
-    {
-      itmp = i2;
-      i2++;
-      Equation* eq = (*itmp);
-      lastRoundUseful |=
-        eq->ComputeProceduralSteps(this, availableVariables, wantedVariables,
-                                   stepsForVariable, true);
-    }
-  }
-  while (lastRoundUseful);
-
-  // wantedVariables should be the empty set, unless we are underconstrained...
-  if (wantedVariables.size() == 0)
-  {
-    // Figure out which variables get touched to compute rates...
-    std::set<VariableInformation*,VarinfoPointerComparator> rateTouch;
-    std::list<Equation*>::iterator ieq;
-    for (ieq = mEquations.begin(); ieq != mEquations.end(); ieq++)
-    {
-      std::set<VariableInformation*,VarinfoPointerComparator>& s =
-        (*ieq)->GetDiffInvolvedVariables();
-      rateTouch.insert(s.begin(), s.end());
-    }
-
-    // Now find the equation for each variable, and put it on the list...
-    std::set<Equation*> eqlist;
-    std::set<Equation*> seenEquation;
-    std::set<VariableInformation*,VarinfoPointerComparator>::iterator varIt;
-    for (varIt = rateTouch.begin(); varIt != rateTouch.end(); varIt++)
-    {
-      std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator step =
-        stepsForVariable.find(*varIt);
-      if (step != stepsForVariable.end())
-        (*step).second->RecursivelyGenerateCode(this, aIterationStream, aSupplementary);
-    }
-
-    aIterationStream << "#ifndef VARIABLES_FOR_RATES_ONLY" << std::endl;
-
-    std::map<VariableInformation*,ProceduralStep*,VarinfoPointerComparator>::iterator step;
-    for (step = stepsForVariable.begin(); step != stepsForVariable.end(); step++)
-      (*step).second->RecursivelyGenerateCode(this, aIterationStream, aSupplementary);
-
-    aIterationStream << "#endif" << std::endl;
-
+    aStr.assign(aPattern);
     return;
   }
 
-  // We are underconstrained...
-  UnderconstrainedError uce;
-  std::set<VariableInformation*,VarinfoPointerComparator>::iterator si;
-  for (si = wantedVariables.begin(); si != wantedVariables.end(); si++)
-    uce.addUnresolvedWanted((*si)->GetSourceVariable());
-
-  throw uce;
+  aStr.assign(aPattern.substr(0, cursor));
+  wchar_t buf[30];
+  swprintf(buf, 30, L"%lu", index);
+  aStr.append(buf);
+  aStr.append(aPattern.substr(cursor + 1));
 }
 
 void
-CodeGenerationState::DetermineRateVariables
-(
- std::stringstream& aRateStream,
- std::stringstream& aSupplementary
-)
+CodeGenerationState::AllocateVariable(CDA_ComputationTarget* aCT,
+                                      std::wstring& aStr,
+                                      std::wstring& aPattern,
+                                      uint32_t& aNextIndex)
 {
-  std::list<Equation*>::iterator i;
-  std::set<VariableInformation*,VarinfoPointerComparator> touchedVariables;
-  for (i = mEquations.begin(); i != mEquations.end(); i++)
-    (*i)->AttemptRateEvaluation(this, aRateStream, aSupplementary,
-                                touchedVariables);
+  uint32_t index = aNextIndex++;
+  GenerateVariableName(aCT, aStr, aPattern, index);
+  aCT->setNameAndIndex(index, aStr.c_str());
 }
 
-bool IsPlainCI(iface::mathml_dom::MathMLElement* aSubExpr)
-{
-  DECLARE_QUERY_INTERFACE_OBJREF(aCISub, aSubExpr,
-                                 mathml_dom::MathMLCiElement);
-  return (aCISub != NULL);
-}
-
-double
-CodeGenerationState::GetConversion
+void
+CodeGenerationState::AllocateVariablesInSet
 (
- iface::cellml_api::CellMLVariable* vfrom,
- iface::cellml_api::CellMLVariable* vto,
- double& offset
+ std::set<CDA_ComputationTarget*>& aCT,
+ iface::cellml_services::VariableEvaluationType aET,
+ std::wstring& aPattern,
+ uint32_t& aNextIndex,
+ uint32_t& aCountVar
 )
 {
-  RETURN_INTO_OBJREF(fromcompei, iface::cellml_api::CellMLElement,
-                     vfrom->parentElement());
-  RETURN_INTO_OBJREF(fromcompe, iface::cellml_api::CellMLElement,
-                     GetRealComponent(fromcompei));
-  if (fromcompe == NULL)
-    throw CodeGenerationError
-      (
-       L"Attempt to convert from a variable which isn't in any component."
-      );
-  RETURN_INTO_OBJREF(tocompei, iface::cellml_api::CellMLElement,
-                     vto->parentElement());
-  RETURN_INTO_OBJREF(tocompe, iface::cellml_api::CellMLElement,
-                     GetRealComponent(tocompei));
-  if (tocompe == NULL)
-    throw CodeGenerationError
-      (
-       L"Attempt to convert to a variable which isn't in any component."
-      );
-
-  RETURN_INTO_OBJREF(toscopeud, iface::cellml_api::UserData,
-                     tocompe->getUserData(scopeKey.str().c_str()));
-  RETURN_INTO_OBJREF(fromscopeud, iface::cellml_api::UserData,
-                     fromcompe->getUserData(scopeKey.str().c_str()));
-  if (toscopeud == NULL)
-    throw CodeGenerationError
-      (
-       L"To variable component in conversion doesn't have scope (bug)."
-      );
-  if (fromscopeud == NULL)
-    throw CodeGenerationError
-      (
-       L"From variable component in conversion doesn't have scope (bug)."
-      );
-
-  CellMLScope* toscope = dynamic_cast<CellMLScope*>(toscopeud.getPointer());
-  CellMLScope* fromscope = dynamic_cast<CellMLScope*>
-    (fromscopeud.getPointer());
-  if (toscope == NULL || fromscope == NULL)
-    throw CodeGenerationError
-      (
-       L"Found scope user data with wrong type (bug)."
-      );
-
-  RETURN_INTO_WSTRING(tounitsname, vto->unitsName());
-  RETURN_INTO_WSTRING(fromunitsname, vfrom->unitsName());
-
-  RETURN_INTO_OBJREF(tounits, CanonicalUnitRepresentation,
-                     toscope->findUnit(tounitsname.c_str()));
-  if (tounits == NULL)
+  std::wstring str;
+  
+  std::set<CDA_ComputationTarget*>::iterator i;
+  for (i = aCT.begin(); i != aCT.end(); i++)
   {
-    std::wstring emsg = L"Variable ";
-    RETURN_INTO_WSTRING(vn, vto->name());
-    emsg += vn;
-    emsg += L" in component ";
-    RETURN_INTO_WSTRING(cn, vto->componentName());
-    emsg += cn;
-    emsg += L"references unknown units ";
-    emsg += tounitsname;
-    throw CodeGenerationError(emsg);
+    (*i)->mEvaluationType = aET;
+
+    // Don't rename it if it is already assigned...
+    RETURN_INTO_WSTRING(n, (*i)->name());
+    if (n == L"")
+    {
+      AllocateVariable(*i, str, aPattern, aNextIndex);
+      aCountVar++;
+    }
   }
-  RETURN_INTO_OBJREF(fromunits, CanonicalUnitRepresentation,
-                     fromscope->findUnit(fromunitsname.c_str()));
-  if (fromunits == NULL)
+}
+
+void
+CodeGenerationState::AllocateConstant(CDA_ComputationTarget* aCT,
+                                      std::wstring& aStr)
+{
+  mCodeInfo->mConstantIndexCount++;
+  AllocateVariable(aCT, aStr, mConstantPattern, mNextConstantIndex);
+}
+
+void
+CodeGenerationState::AllocateStateVariable(CDA_ComputationTarget* aCT,
+                                           std::wstring& aStr)
+{
+  mCodeInfo->mRateIndexCount++;
+  AllocateVariable(aCT, aStr, mStateVariableNamePattern, mNextStateVariableIndex);
+}
+
+void
+CodeGenerationState::AllocateAlgebraicVariable(CDA_ComputationTarget* aCT,
+                                               std::wstring& aStr)
+{
+  mCodeInfo->mAlgebraicIndexCount++;
+  AllocateVariable(aCT, aStr, mAlgebraicVariableNamePattern, mNextAlgebraicVariableIndex);
+}
+
+void
+CodeGenerationState::AllocateVOI(CDA_ComputationTarget* aCT,
+                                 std::wstring& aStr)
+{
+  AllocateVariable(aCT, aStr, mVOIPattern, mNextVOI);
+}
+
+void
+CodeGenerationState::AppendAssign
+(
+ std::wstring& aAppendTo,
+ std::wstring& aLHS,
+ std::wstring& aRHS
+)
+{
+  uint32_t idx1 = mAssignPattern.find(L"<LHS>");
+  uint32_t idx2 = mAssignPattern.find(L"<RHS>");
+  if (idx1 == std::wstring::npos && idx2 == std::wstring::npos)
   {
-    std::wstring emsg = L"Variable ";
-    RETURN_INTO_WSTRING(vn, vfrom->name());
-    emsg += vn;
-    emsg += L" in component ";
-    RETURN_INTO_WSTRING(cn, vfrom->componentName());
-    emsg += cn;
-    emsg += L"references unknown units ";
-    emsg += fromunitsname;
-    throw CodeGenerationError(emsg);
+    aAppendTo.append(mAssignPattern);
+    return;
   }
 
-  offset = tounits->getOffset() - fromunits->getOffset();
-  return tounits->getOverallFactor() / fromunits->getOverallFactor();
+  if (idx1 == std::wstring::npos)
+  {
+    aAppendTo.append(mAssignPattern.substr(0, idx2));
+    aAppendTo.append(aRHS);
+    aAppendTo.append(mAssignPattern.substr(idx2 + 5));
+    return;
+  }
+
+  if (idx2 == std::wstring::npos)
+  {
+    aAppendTo.append(mAssignPattern.substr(0, idx1));
+    aAppendTo.append(aLHS);
+    aAppendTo.append(mAssignPattern.substr(idx1 + 5));
+    return;
+  }
+
+  if (idx1 < idx2)
+  {
+    aAppendTo.append(mAssignPattern.substr(0, idx1));
+    aAppendTo.append(aLHS);
+    aAppendTo.append(mAssignPattern.substr(idx1 + 5, idx2 - idx1 - 5));
+    aAppendTo.append(aRHS);
+    aAppendTo.append(mAssignPattern.substr(idx2 + 5));
+    return;
+  }
+
+  aAppendTo.append(mAssignPattern.substr(0, idx2));
+  aAppendTo.append(aRHS);
+  aAppendTo.append(mAssignPattern.substr(idx2 + 5, idx1 - idx2 - 5));
+  aAppendTo.append(aLHS);
+  aAppendTo.append(mAssignPattern.substr(idx1 + 5));
+}
+
+void
+CodeGenerationState::BuildFloatingAndConstantLists()
+{
+  std::list<CDA_ComputationTarget*>::iterator i = mCodeInfo->mTargets.begin();
+  mFloating.clear();
+  mKnown.clear();
+  for (; i != mCodeInfo->mTargets.end(); i++)
+    switch ((*i)->mEvaluationType)
+    {
+    case iface::cellml_services::CONSTANT:
+      mKnown.push_back(*i);
+      break;
+    case iface::cellml_services::FLOATING:
+      mFloating.push_back(*i);
+      break;
+    default:
+      ;
+    }
+}
+
+void
+CodeGenerationState::BuildStateAndConstantLists()
+{
+  std::list<CDA_ComputationTarget*>::iterator i = mCodeInfo->mTargets.begin();
+  mFloating.clear();
+  mKnown.clear();
+  for (; i != mCodeInfo->mTargets.end(); i++)
+    switch ((*i)->mEvaluationType)
+    {
+    case iface::cellml_services::STATE_VARIABLE:
+      mFloating.push_back(*i);
+      break;
+    case iface::cellml_services::CONSTANT:
+      mKnown.push_back(*i);
+      break;
+    default:
+      break;
+    }
+}
+
+void
+CodeGenerationState::BuildFloatingAndKnownLists()
+{
+  std::list<CDA_ComputationTarget*>::iterator i = mCodeInfo->mTargets.begin();
+  mFloating.clear();
+  mKnown.clear();
+  for (; i != mCodeInfo->mTargets.end(); i++)
+    switch ((*i)->mEvaluationType)
+    {
+    case iface::cellml_services::FLOATING:
+      mFloating.push_back(*i);
+      break;
+    default:
+      mKnown.push_back(*i);
+      break;
+    }
+}
+
+uint32_t
+CodeGenerationState::BuildTargetSet
+(
+ std::list<CDA_ComputationTarget*>& aStart,
+ std::list<CDA_ComputationTarget*>& aCandidates,
+ std::set<CDA_ComputationTarget*>& aTargetSet
+)
+{
+  bool didWork = false;
+
+  std::set<CDA_ComputationTarget*> start(aStart.begin(), aStart.end());
+  std::set<CDA_ComputationTarget*> candidates(aCandidates.begin(), aCandidates.end());
+
+  do
+  {
+    didWork = false;
+
+    // Go through all unused edges looking for a suitable candidate...
+    std::list<VariableEdge*>::iterator i, j;
+    for (i = mUnusedEdges.begin(); i != mUnusedEdges.end();)
+    {
+      j = i;
+      i++;
+
+      bool usedEdge(ConsiderEdgeInTargetSet(*j, start, candidates,
+                                            aTargetSet));
+      if (usedEdge)
+      {
+        didWork = true;
+        mUnusedEdges.erase(j);
+      }
+    }
+  }
+  while (didWork);
+
+  return candidates.size();
 }
 
 bool
-CodeGenerationState::UnitsValid(iface::cellml_api::CellMLComponent* aComp,
-                                const std::wstring& aUnits)
-{
-  RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
-                     GetRealComponent(aComp));
-  RETURN_INTO_OBJREF(scopeud, iface::cellml_api::UserData,
-                     rc->getUserData(scopeKey.str().c_str()));
-  if (scopeud == NULL)
-    throw CodeGenerationError
-      (
-       L"Component doesn't have scope (bug)."
-      );
-  CellMLScope* scope = dynamic_cast<CellMLScope*>(scopeud.getPointer());
-  if (scope == NULL)
-    throw CodeGenerationError
-      (
-       L"Scope user data is of wrong type (bug)."
-      );
-  RETURN_INTO_OBJREF(un, CanonicalUnitRepresentation,
-                     scope->findUnit(aUnits.c_str()));
-  return (un != NULL);
-}
-
-uint32_t
-CodeGenerationState::AssignFunctionId()
-{
-  return ++mLastFunctionId;
-}
-
-uint32_t
-CodeGenerationState::GetVariableIndex
+CodeGenerationState::ConsiderEdgeInTargetSet
 (
- iface::cellml_api::CellMLVariable* aVar
+ VariableEdge* aVarEdge,
+ std::set<CDA_ComputationTarget*>& aStart,
+ std::set<CDA_ComputationTarget*>& aCandidates,
+ std::set<CDA_ComputationTarget*>& aTargetSet
 )
 {
-  // Find the variable information...
-  RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
-                     aVar->getUserData(varinfoKey.str().c_str()));
-  VariableInformation* vi = dynamic_cast<VariableInformation*>(ud.getPointer());
-  if (vi == NULL)
-    throw CodeGenerationError(L"Could not convert the user data to variable "
-                              L"information");
-  return vi->GetIndex();
-}
+  std::list<CDA_ComputationTarget*>::iterator i = aVarEdge->mTargets.begin();
+  CDA_ComputationTarget* unknown;
 
-std::string
-CodeGenerationState::GetVariableText
-(
- iface::cellml_api::CellMLVariable* aVar
-)
-{
-  // Find the variable information...
-  RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
-                     aVar->getUserData(varinfoKey.str().c_str()));
-  VariableInformation* vi = dynamic_cast<VariableInformation*>(ud.getPointer());
-  if (vi == NULL)
-    throw CodeGenerationError(L"Could not convert the user data to variable "
-                              L"information");
-  std::string text;
-  switch (vi->GetArray())
+  int unknownCount = 0;
+  int idx = 0;
+
+  for (; i != aVarEdge->mTargets.end(); i++)
   {
-  case VariableInformation::INDEPENDENT:
-    text = "BOUND[";
-    break;
-  case VariableInformation::DEPENDENT_AND_RATE:
-  case VariableInformation::DEPENDENT:
-    text = "VARIABLES[";
-    break;
-  case VariableInformation::CONSTANT:
-    text = "CONSTANTS[";
-  }
-  char buf[30];
-  sprintf(buf, "%u]", vi->GetIndex());
-  text += buf;
+    // Ignore edges that involve completely unknown targets...
+    if (aStart.count(*i) == 0 &&
+        aCandidates.count(*i) == 0)
+    {
+      return false;
+    }
 
-  return text;
+    // Can't use initial_value="foo" if we don't know foo...
+    if (aVarEdge->mMaths == NULL && idx++ != 0 &&
+        aStart.count(*i) == 0)
+    {
+      return false;
+    }
+
+    if (aStart.count(*i) == 0)
+    {
+      // Either mMaths is non-null (i.e. it is a normal MathML equation, not
+      // an initial value assignment) or this is the LHS of the initial value
+      // assignment.
+      unknown = *i;
+      unknownCount++;
+
+      if (unknownCount > 1)
+      {
+        return false;
+      }
+
+      continue;
+    }
+  }
+
+  if (unknownCount == 0)
+    throw OverconstrainedError(aVarEdge->mMaths);
+
+  aVarEdge->mComputedTarget = unknown;
+
+  aCandidates.erase(unknown);
+  aStart.insert(unknown);
+  aTargetSet.insert(unknown);
+
+  mEdgesInto.insert(std::pair<CDA_ComputationTarget*, VariableEdge*>
+                    (unknown, aVarEdge));
+
+  return true;
 }
 
-std::string
-CodeGenerationState::GetVariableText
+#include <assert.h>
+
+void
+CodeGenerationState::GenerateCodeForSet
 (
- VariableInformation* vi
+ std::wstring& aCodeTo,
+ std::set<CDA_ComputationTarget*>& aTargets
 )
 {
-  std::string text;
-  switch (vi->GetArray())
+  while (!aTargets.empty())
   {
-  case VariableInformation::INDEPENDENT:
-    text = "BOUND[";
-    break;
-  case VariableInformation::DEPENDENT_AND_RATE:
-  case VariableInformation::DEPENDENT:
-    text = "VARIABLES[";
-    break;
-  case VariableInformation::CONSTANT:
-    text = "CONSTANTS[";
-  }
-  char buf[30];
-  sprintf(buf, "%u]", vi->GetIndex());
-  text += buf;
+    CDA_ComputationTarget* t = *(aTargets.begin());
+    aTargets.erase(aTargets.begin());
 
-  return text;
+    std::map<CDA_ComputationTarget*, VariableEdge*>::iterator it =
+      mEdgesInto.find(t);
+    assert(it != mEdgesInto.end());
+    VariableEdge* ve = (*it).second;
+
+    std::list<CDA_ComputationTarget*>::iterator i;
+    for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
+      if (aTargets.count(*i) != 0)
+        GenerateCodeForSet(aCodeTo, aTargets);
+
+    GenerateCodeForEdge(aCodeTo, ve);
+  }
+}
+
+/*
+ * Note: This function takes a set of variables which be either rates or
+ * algebraic variables. It generates code in the correct place for both.
+ */
+void
+CodeGenerationState::GenerateCodeForSetByType(std::set<CDA_ComputationTarget*>& aTargets)
+{
+  std::set<CDA_ComputationTarget*> finalTargets;
+  std::set<CDA_ComputationTarget*>::iterator ati, fti;
+  for (ati = aTargets.begin(); ati != aTargets.end(); ati++)
+  {
+    if ((*ati)->mDegree != 0)
+      finalTargets.insert(*ati);
+  }
+
+  for (fti = finalTargets.begin(); fti != finalTargets.end(); fti++)
+  {
+    CDA_ComputationTarget* t = *fti;
+
+    ati = aTargets.find(t);
+    if (ati == aTargets.end())
+      continue;
+
+    aTargets.erase(ati);
+
+    VariableEdge* ve = mEdgesInto[t];
+
+    std::list<CDA_ComputationTarget*>::iterator i;
+    for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
+      if (aTargets.count(*i) != 0)
+        GenerateCodeForSet(mCodeInfo->mRatesStr, aTargets);
+
+    GenerateCodeForEdge(mCodeInfo->mRatesStr, ve);
+  }
+
+  GenerateCodeForSet(mCodeInfo->mVarsStr, aTargets);
 }
 
 void
-CodeGenerationState::EquationFullyUsed(Equation* aUsedEquation)
+CodeGenerationState::GenerateCodeForEdge
+(
+ std::wstring& aCodeTo,
+ VariableEdge* aVE
+)
 {
-  std::list<Equation*>::iterator i;
-  for (i = mUnusedEquations.begin(); i != mUnusedEquations.end(); i++)
-    if ((*i) == aUsedEquation)
+  if (aVE->mMaths == NULL)
+  {
+    // No maths, it is a simple LHS = RHS initial_value assignment.
+    std::list<CDA_ComputationTarget*>::iterator i = aVE->mTargets.begin();
+    CDA_ComputationTarget* t1 = *i;
+    i++;
+    CDA_ComputationTarget* t2 = *i;
+
+    RETURN_INTO_OBJREF(localVarLHS, iface::cellml_api::CellMLVariable,
+                       GetVariableInComponent(aVE->mContext, t1->mVariable));
+    RETURN_INTO_OBJREF(localVarRHS, iface::cellml_api::CellMLVariable,
+                       GetVariableInComponent(aVE->mContext, t2->mVariable));
+
+    RETURN_INTO_OBJREF(di, iface::dom::DOMImplementation,
+                       CreateDOMImplementation());
+    RETURN_INTO_OBJREF(doc, iface::dom::Document,
+                       di->createDocument(L"http://www.w3.org/1998/Math/MathML",
+                                          L"ci", NULL));
+    RETURN_INTO_OBJREF(dci, iface::dom::Element, doc->documentElement());
+    RETURN_INTO_WSTRING(lvrhsname, localVarRHS->name());
+    RETURN_INTO_OBJREF(tn, iface::dom::Text,
+                       doc->createTextNode(lvrhsname.c_str()));
+    dci->appendChild(tn)->release_ref();
+    DECLARE_QUERY_INTERFACE_OBJREF(ci, dci, mathml_dom::MathMLElement);
+    RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, ci,
+                                             aVE->mContext, localVarLHS,
+                                             NULL, 0));
+    GenerateAssignmentMaLaESResult(aCodeTo, t1, mr);
+    return;
+  }
+
+  // If we get here, we do have an equation. However, we are not yet sure
+  // if we need to do a non-linear solve to evaluate it.
+
+  bool swapOk = false;
+
+  if (aVE->mComputedTarget->mDegree == 0)
+  {
+    // It isn't a derivative we are after, so see if one side or the other is a
+    // CI...
+    DECLARE_QUERY_INTERFACE_OBJREF(rhsci, aVE->mRHS, mathml_dom::MathMLCiElement);
+    DECLARE_QUERY_INTERFACE_OBJREF(lhsci, aVE->mLHS, mathml_dom::MathMLCiElement);
+    if (lhsci == NULL && rhsci == NULL)
     {
-      // delete (*i);
-      mUnusedEquations.erase(i);
+      GenerateSolveCode(aCodeTo, aVE);
       return;
     }
+
+    if (lhsci == NULL)
+    {
+      aVE->mRHS = aVE->mLHS;
+      aVE->mLHS = rhsci;
+    }
+
+    if (lhsci != NULL && rhsci != NULL)
+      swapOk = true;
+  }
+  else
+  {
+    // We want to evaluate a derivative, so see if there is a derivative by
+    // itself on either side of the equation...
+    DECLARE_QUERY_INTERFACE_OBJREF(rhsapply, aVE->mRHS,
+                                   mathml_dom::MathMLApplyElement);
+    DECLARE_QUERY_INTERFACE_OBJREF(lhsapply, aVE->mLHS,
+                                   mathml_dom::MathMLApplyElement);
+    bool lhsIsDiff = false, rhsIsDiff = false;
+    if (rhsapply)
+    {
+      RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement,
+                         rhsapply->_cxx_operator());
+      RETURN_INTO_WSTRING(ln, op->localName());
+      if (ln == L"diff")
+        rhsIsDiff = true;
+    }
+    if (lhsapply)
+    {
+      RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement,
+                         lhsapply->_cxx_operator());
+      RETURN_INTO_WSTRING(ln, op->localName());
+      if (ln == L"diff")
+        lhsIsDiff = true;
+    }
+
+    if (lhsIsDiff == false && rhsIsDiff == false)
+    {
+      GenerateSolveCode(aCodeTo, aVE);
+      return;
+    }
+
+    if (!lhsIsDiff)
+    {
+      aVE->mRHS = aVE->mLHS;
+      aVE->mLHS = rhsapply;
+    }
+    else
+      swapOk = true;
+  }
+
+  do
+  {
+    // If the LHS doesn't involve the target we want, we have to swap...
+    RETURN_INTO_OBJREF(mr,
+                       iface::cellml_services::MaLaESResult,
+                       mTransform->transform
+                       (mCeVAS, mCUSES, mAnnoSet, aVE->mLHS, aVE->mContext,
+                        NULL, NULL, 0));
+    RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                       mr->iterateInvolvedVariablesByDegree());
+    RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
+                       dvi->nextDegreeVariable());
+    if (dv == NULL)
+      ContextError(L"Couldn't find variable in ci",
+                   NULL, aVE->mContext);
+
+    RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable, dv->variable());
+    if (dv->degree() != aVE->mComputedTarget->mDegree ||
+        CDA_objcmp(cv, aVE->mComputedTarget->mVariable))
+    {
+      if (!swapOk)
+        break;
+
+      // It didn't work out that way around, but swapping is allowed...
+      swapOk = false;
+      ObjRef<iface::mathml_dom::MathMLElement> tmp(aVE->mRHS);
+      aVE->mRHS = aVE->mLHS;
+      aVE->mLHS = tmp;
+      continue;
+    }
+
+    // The LHS has the variable we want by itself. However, the RHS might also
+    // have the variable (e.g. x = x^2), so we start off as if it doesn't but
+    // check that assumption and bail to the NR solver if it doesn't hold.
+
+    RETURN_INTO_OBJREF(
+                       localVar,
+                       iface::cellml_api::CellMLVariable,
+                       GetVariableInComponent(
+                                              aVE->mContext,
+                                              aVE->mComputedTarget->mVariable
+                                             )
+                      );
+
+    ObjRef<iface::cellml_api::CellMLVariable> localBound;
+
+    if (mBoundTargs.begin() != mBoundTargs.end())
+    {
+      localBound = already_AddRefd<iface::cellml_api::CellMLVariable>
+        (
+         GetVariableInComponent(
+                                aVE->mContext,
+                                (*mBoundTargs.begin())->mVariable
+                               )
+        );
+    }
+
+    mr = already_AddRefd<iface::cellml_services::MaLaESResult>
+      (
+       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aVE->mRHS,
+                             aVE->mContext, localVar, localBound,
+                             aVE->mComputedTarget->mDegree)
+      );
+
+    dvi = already_AddRefd<iface::cellml_services::DegreeVariableIterator>
+      (
+       mr->iterateInvolvedVariablesByDegree()
+      );
+    
+    bool match = false;
+    while (true)
+    {
+      dv = already_AddRefd<iface::cellml_services::DegreeVariable>
+        (dvi->nextDegreeVariable());
+      if (dv == NULL)
+        break;
+      if (dv->degree() != aVE->mComputedTarget->mDegree)
+        continue;
+      RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                         dv->variable());
+      if (CDA_objcmp(cv, aVE->mComputedTarget->mVariable))
+        continue;
+
+      match = true;
+      break;
+    }
+    if (match)
+      break;
+
+    // We have the variable we want by itself on one side of the equation. A
+    // straight assignment will suffice.
+    GenerateAssignmentMaLaESResult(aCodeTo, aVE->mComputedTarget, mr);
+    return;
+  }
+  while (true);
+
+  GenerateSolveCode(aCodeTo, aVE);
 }
 
 void
-CodeGenerationState::CountVariablesAndRates
-(
- uint32_t& aVariableCount,
- uint32_t& aConstantCount,
- uint32_t& aBoundCount,
- uint32_t& aRateCount
-)
+CodeGenerationState::GenerateStateToRateCascades()
 {
-  std::list<VariableInformation*>::iterator vii;
-  aVariableCount = 0;
-  aConstantCount = 0;
-  aBoundCount = 0;
-  aRateCount = 0;
-  for (vii = mVariableList.begin(); vii != mVariableList.end(); vii++)
+  std::list<CDA_ComputationTarget*>::iterator i;
+  for (i = mBaseTargets.begin(); i != mBaseTargets.end(); i++)
   {
-    if ((*vii)->GetArray() == VariableInformation::INDEPENDENT)
-      aBoundCount++;
-    else if ((*vii)->GetArray() == VariableInformation::CONSTANT)
-      aConstantCount++;
-    else
+    CDA_ComputationTarget* ct = (*i)->mUpDegree;
+    if (ct == NULL)
+      continue;
+
+    while (ct->mUpDegree != NULL)
     {
-      aVariableCount += (*vii)->GetDegree();
-      if ((*vii)->GetArray() == VariableInformation::DEPENDENT_AND_RATE)
-        aRateCount += (*vii)->GetDegree();
+      RETURN_INTO_WSTRING(stateN, ct->name());
+      std::wstring rateN;
+      GenerateVariableName(ct, rateN, mRateNamePattern,
+                           ct->mAssignedIndex - 1);
+
+      AppendAssign(mCodeInfo->mRatesStr, rateN, stateN);
+      ct = ct->mUpDegree;
     }
   }
 }
 
-void
-CodeGenerationState::VariablesToCCodeVariables
-(std::list<iface::cellml_services::CCodeVariable*>& aVarList)
-{
-  std::list<VariableInformation*>::iterator i;
-  for (i = mVariableList.begin(); i != mVariableList.end(); i++)
-  {
-    iface::cellml_services::VariableEvaluationType type;
-    if ((*i)->IsFlagged(VariableInformation::BVAR_OF_DIFF))
-      type = iface::cellml_services::BOUND;
-    else if ((*i)->IsFlagged(VariableInformation::SUBJECT_OF_DIFF))
-      type = iface::cellml_services::DIFFERENTIAL;
-    else if ((*i)->IsFlagged(VariableInformation::HAS_INITIAL_VALUE))
-      type = iface::cellml_services::CONSTANT;
-    else if ((*i)->IsFlagged(VariableInformation::PRECOMPUTED))
-      type = iface::cellml_services::COMPUTED_CONSTANT;
-    else
-      type = iface::cellml_services::COMPUTED;
-
-    aVarList.push_back
-      (new CDA_CCodeVariable
-       ((*i)->GetSourceVariable(), (*i)->GetIndex(),
-        ((*i)->GetArray() == VariableInformation::DEPENDENT_AND_RATE),
-        (*i)->GetDegree(), type
-        ));
-  }
-}
-
-void
-CodeGenerationState::ListFlaggedEquations
-(std::vector<iface::dom::Element*>& aFlaggedEqns)
-{
-  std::list<Equation*>::iterator i;
-  for (i = mEquations.begin(); i != mEquations.end(); i++)
-    (*i)->AddIfTriggersNR(aFlaggedEqns);
-}
-
-CDA_CCodeInformation::CDA_CCodeInformation
+iface::cellml_api::CellMLVariable*
+CodeGenerationState::GetVariableInComponent
 (
- iface::cellml_api::Model* aSourceModel
+ iface::cellml_api::CellMLComponent* aComp,
+ iface::cellml_api::CellMLVariable* aVar
 )
-  : _cda_refcount(1)
 {
-  CodeGenerationState cgs;
-  
-  // If you don't want this to block, simply instantiate first.
-  aSourceModel->fullyInstantiateImports();
-  
-  // Build the set of all scopes (this will build model scopes, and as a
-  // side-effect, also build component scopes). The scopes will contain the
-  // appropriate units.
-  cgs.CreateModelScopes(aSourceModel);
-  
-  // Build a list of all components which are required by this particular
-  // model.
-  cgs.CreateComponentList(aSourceModel);
-
-  // Create information about variable connections...
-  cgs.BuildVariableInformationMap(aSourceModel);
-
-  // Build a list of the mathematics...
-  cgs.ProcessMath();
-
-  // Build a list of all variables, and classify them...
-  cgs.ProcessVariables();
-
-  // Assign indices (and arrays) to variables...
-  cgs.AssignVariableIndices();
-
-  cgs.CountVariablesAndRates(mVariableCount, mConstantCount, mBoundCount,
-                             mRateVariableCount);
-
-  // Generate the constant assignment code...
-  cgs.DetermineConstants(mFixedConstantFragment);
-
-  try
+  RETURN_INTO_OBJREF(cvs, iface::cellml_services::ConnectedVariableSet,
+                     mCeVAS->findVariableSet(aVar));
+  uint32_t l = cvs->length(), i = 0;
+  for (; i < l; i++)
   {
-    // Work out what can be computed without resorting known differentials or
-    // bound variables...
-    cgs.DetermineComputedConstants(mComputedConstantFragment,
-                                   mFunctionsFragment);
-    
-    // Now write the code to compute the remaining variables...
-    cgs.DetermineIterationVariables(mVariableCodeFragment, mFunctionsFragment);
-    cgs.DetermineRateVariables(mRateCodeFragment, mFunctionsFragment);
-
-    mConstraintLevel = iface::cellml_services::CORRECTLY_CONSTRAINED;
-
-    // Convert the variables into CCodeVariables...
-    cgs.VariablesToCCodeVariables(mVariables);
-
-    // Populate the flagged variables list...
-    cgs.ListFlaggedEquations(mFlaggedEquations);
+    RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable,
+                       cvs->getVariable(i));
+    RETURN_INTO_OBJREF(cel, iface::cellml_api::CellMLElement,
+                       v->parentElement());
+    if (!CDA_objcmp(cel, aComp))
+    {
+      v->add_ref();
+      return v;
+    }
   }
-  catch (UnderconstrainedError& uce)
+
+  return NULL;
+}
+
+void
+CodeGenerationState::GenerateAssignmentMaLaESResult
+(
+ std::wstring& aCodeTo,
+ CDA_ComputationTarget* aTarget,
+ iface::cellml_services::MaLaESResult* aMR
+)
+{
+  RETURN_INTO_WSTRING(lhs, aTarget->name());
+  RETURN_INTO_WSTRING(rhs, aMR->expression());
+
+  uint32_t l = aMR->supplementariesLength(), i;
+  for (i = 0; i < l; i++)
   {
-    std::list<iface::cellml_api::CellMLVariable*>::iterator i;
-    for (i = uce.mUnresolvedWanted.begin(); i != uce.mUnresolvedWanted.end();
-         i++)
-      mVariables.push_back(new CDA_CCodeVariable(*i));
-    mConstraintLevel = iface::cellml_services::UNDERCONSTRAINED;
+    RETURN_INTO_WSTRING(s, aMR->getSupplementary(i));
+    mCodeInfo->mFuncsStr += s;
   }
-  catch (OverconstrainedError& oce)
+
+  AppendAssign(aCodeTo, lhs, rhs);
+}
+
+void
+CodeGenerationState::GenerateSolveCode
+(
+ std::wstring& aCodeTo,
+ VariableEdge* aVE
+)
+{
+  RETURN_INTO_OBJREF(mr1, iface::cellml_services::MaLaESResult,
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aVE->mLHS,
+                                           aVE->mContext, NULL, NULL, 0));
+  RETURN_INTO_OBJREF(mr2, iface::cellml_services::MaLaESResult,
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aVE->mRHS,
+                                           aVE->mContext, NULL, NULL, 0));
+
+  aVE->mMaths->add_ref();
+  mCodeInfo->mFlaggedEquations.push_back(aVE->mMaths);
+
+  RETURN_INTO_WSTRING(e1, mr1->expression());
+  RETURN_INTO_WSTRING(e2, mr2->expression());
+
+  uint32_t l = mr1->supplementariesLength(), i;
+  for (i = 0; i < l; i++)
   {
-    std::list<iface::cellml_api::CellMLVariable*>::iterator i;
-    for (i = oce.mKnownVariables.begin(); i != oce.mKnownVariables.end();
-         i++)
-      mVariables.push_back(new CDA_CCodeVariable(*i));
-    oce.mEqn->add_ref();
-    mFlaggedEquations.push_back(oce.mEqn);
-    mConstraintLevel = iface::cellml_services::OVERCONSTRAINED;
+    RETURN_INTO_WSTRING(s, mr1->getSupplementary(i));
+    mCodeInfo->mFuncsStr += s;
+  }
+
+  l = mr2->supplementariesLength();
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_WSTRING(s, mr2->getSupplementary(i));
+    mCodeInfo->mFuncsStr += s;
+  }
+
+  wchar_t id[20];
+  swprintf(id, 20, L"%u", mNextSolveId++);
+
+  RETURN_INTO_WSTRING(vname, aVE->mComputedTarget->name());
+
+  uint32_t state = 0;
+  uint32_t idx = 0;
+  std::wstring* dest = &aCodeTo;
+  for (idx = 0; idx < mSolvePattern.length(); idx++)
+  {
+    wchar_t c = mSolvePattern[idx];
+    switch (state)
+    {
+    case 0:
+      if (c == L'<')
+        state = 1;
+      else
+        *dest += c;
+      continue;
+    case 1: // Seen <
+      if (c == L'L')
+        state = 2;
+      else if (c == L'R')
+        state = 3;
+      else if (c == L'I')
+        state = 4;
+      else if (c == L'V')
+        state = 5;
+      else if (c == L'S')
+        state = 13;
+      else
+      {
+        *dest += L'<';
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 2: // Seen <L
+      if (c == L'H')
+        state = 6;
+      else
+      {
+        *dest += L"<L";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 3: // Seen <R
+      if (c == L'H')
+        state = 8;
+      else
+      {
+        *dest += L"<R";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 4: // Seen <I
+      if (c == L'D')
+        state = 10;
+      else
+      {
+        *dest += L"<I";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 5: // Seen <V
+      if (c == L'A')
+        state = 11;
+      else
+      {
+        *dest += L"<V";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 6: // Seen <LH
+      if (c == L'S')
+        state = 7;
+      else
+      {
+        *dest += L"<LH";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 7: // Seen <LHS
+      if (c == L'>')
+      {
+        // Matched <LHS>
+        *dest += e1;
+        state = 0;
+      }
+      else
+      {
+        *dest += L"<LHS";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 8: // Seen <RH
+      if (c == L'S')
+        state = 9;
+      else
+      {
+        *dest += L"<RH";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 9: // Seen <RHS
+      if (c == L'>')
+      {
+        // Matched <RHS>
+        *dest += e2;
+        state = 0;
+      }
+      else
+      {
+        *dest += L"<RHS";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 10: // Seen <ID
+      if (c == L'>')
+      {
+        // Matched <ID>
+        *dest += id;
+        state = 0;
+      }
+      else
+      {
+        *dest += L"<ID";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 11: // Seen <VA
+      if (c == L'R')
+        state = 12;
+      else
+      {
+        *dest += L"<VA";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 12: // Seen <VAR
+      if (c == L'>')
+      {
+        // Matched <VAR>
+        *dest += vname;
+        state = 0;
+      }
+      else
+      {
+        *dest += L"<VAR";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 13: // Seen <S
+      if (c == L'U')
+        state = 14;
+      else
+      {
+        *dest += L"<S";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 14: // Seen <SU
+      if (c == L'P')
+        state = 15;
+      else
+      {
+        *dest += L"<SU";
+        *dest += c;
+        state = 0;
+      }
+      break;
+    case 15: // Seen <SUP
+      if (c == L'>')
+      {
+        // Matched <SUP>
+        dest = &mCodeInfo->mFuncsStr;
+        state = 0;
+      }
+      break;
+    }
   }
 }

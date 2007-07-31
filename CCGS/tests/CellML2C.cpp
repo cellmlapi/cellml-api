@@ -25,42 +25,58 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
 {
   switch (vet)
   {
-  case iface::cellml_services::BOUND:
-    return L"bound variable";
+  case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+    return L"variable of integration";
   case iface::cellml_services::CONSTANT:
     return L"constant";
-  case iface::cellml_services::COMPUTED_CONSTANT:
-    return L"computed once";
-  case iface::cellml_services::DIFFERENTIAL:
-    return L"differential";
-  case iface::cellml_services::COMPUTED:
-    return L"computed for every bound variable";
+  case iface::cellml_services::STATE_VARIABLE:
+    return L"state variable";
+  case iface::cellml_services::ALGEBRAIC:
+    return L"algebraic variable";
+  case iface::cellml_services::FLOATING:
+    return L"uncomputed";
   }
 
   return L"invalid type";
 }
 
 void
-WriteCode(iface::cellml_services::CCodeInformation* cci)
+WriteCode(iface::cellml_services::CodeInformation* cci)
 {
   iface::cellml_services::ModelConstraintLevel mcl =
     cci->constraintLevel();
   if (mcl == iface::cellml_services::UNDERCONSTRAINED)
   {
     printf("/* Model is underconstrained.\n"
-           " * List of undefined variables follows...\n");
-    iface::cellml_services::CCodeVariableIterator* ccvi = cci->iterateVariables();
-    iface::cellml_services::CCodeVariable* v;
+           " * List of undefined targets follows...\n");
+    iface::cellml_services::ComputationTargetIterator* cti = cci->iterateTargets();
+    iface::cellml_services::ComputationTarget* ct;
     std::vector<std::wstring> messages;
     while (true)
     {
-      v = ccvi->nextVariable();
-      if (v == NULL)
+      ct = cti->nextComputationTarget();
+      if (ct == NULL)
         break;
-      iface::cellml_api::CellMLVariable* sv = v->source();
-      wchar_t* n = sv->name();
-      wchar_t* c = sv->componentName();
+      if (ct->type() != iface::cellml_services::FLOATING)
+      {
+        ct->release_ref();
+        continue;
+      }
+      iface::cellml_api::CellMLVariable* v = ct->variable();
+      wchar_t* n = v->name();
+      wchar_t* c = v->componentName();
       std::wstring str = L" * * ";
+      uint32_t deg = ct->degree();
+      if (deg != 0)
+      {
+        str += L"d^";
+        wchar_t buf[20];
+        swprintf(buf, 20, L"%u", deg);
+        str += buf;
+        str += L"/dt^";
+        str += buf;
+        str += L" ";
+      }
       str += n;
       str += L" (in ";
       str += c;
@@ -68,10 +84,10 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
       free(n);
       free(c);
       messages.push_back(str);
-      sv->release_ref();
       v->release_ref();
+      ct->release_ref();
     }
-    ccvi->release_ref();
+    cti->release_ref();
     // Sort the messages...
     std::sort(messages.begin(), messages.end());
     std::vector<std::wstring>::iterator msgi;
@@ -84,25 +100,41 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
   {
     printf("/* Model is overconstrained.\n"
            " * List variables defined at time of error follows...\n");
-    iface::cellml_services::CCodeVariableIterator* ccvi = cci->iterateVariables();
-    iface::cellml_services::CCodeVariable* v;
+    iface::cellml_services::ComputationTargetIterator* cti = cci->iterateTargets();
+    iface::cellml_services::ComputationTarget* ct;
     std::vector<std::wstring> messages;
     while (true)
     {
-      v = ccvi->nextVariable();
-      if (v == NULL)
+      ct = cti->nextComputationTarget();
+      if (ct == NULL)
         break;
-      iface::cellml_api::CellMLVariable* sv = v->source();
-      wchar_t* n = sv->name();
+      if (ct->type() == iface::cellml_services::FLOATING)
+      {
+        ct->release_ref();
+        continue;
+      }
+      iface::cellml_api::CellMLVariable* v = ct->variable();
+      wchar_t* n = v->name();
       std::wstring str = L" * * ";
+      uint32_t deg = ct->degree();
+      if (deg != 0)
+      {
+        str += L"d^";
+        wchar_t buf[20];
+        swprintf(buf, 20, L"%u", deg);
+        str += buf;
+        str += L"/dt^";
+        str += buf;
+        str += L" ";
+      }
       str += n;
       free(n);
       str += L"\n";
       messages.push_back(str);
-      sv->release_ref();
       v->release_ref();
+      ct->release_ref();
     }
-    ccvi->release_ref();
+    cti->release_ref();
 
     // Sort the messages...
     std::sort(messages.begin(), messages.end());
@@ -145,6 +177,57 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
     printf(" */\n");
     return;
   }
+  else if (mcl == iface::cellml_services::UNSUITABLY_CONSTRAINED)
+  {
+    printf("/* Model is unsuitably constrained (i.e. would need capabilities"
+           " beyond those of the CCGS to solve).\n"
+           " * The status of variables at time of error follows...\n");
+    iface::cellml_services::ComputationTargetIterator* cti = cci->iterateTargets();
+    iface::cellml_services::ComputationTarget* ct;
+    std::vector<std::wstring> messages;
+    while (true)
+    {
+      ct = cti->nextComputationTarget();
+      if (ct == NULL)
+        break;
+      std::wstring str = L" * * ";
+      if (ct->type() == iface::cellml_services::FLOATING)
+        str += L" Undefined: ";
+      else
+        str += L" Defined: ";
+
+      uint32_t deg = ct->degree();
+      if (deg != 0)
+      {
+        str += L"d^";
+        wchar_t buf[20];
+        swprintf(buf, 20, L"%u", deg);
+        str += buf;
+        str += L"/dt^";
+        str += buf;
+        str += L" ";
+      }
+      iface::cellml_api::CellMLVariable* v = ct->variable();
+      wchar_t* n = v->name();
+      str += n;
+      free(n);
+      str += L"\n";
+      messages.push_back(str);
+      v->release_ref();
+      ct->release_ref();
+    }
+    cti->release_ref();
+
+    // Sort the messages...
+    std::sort(messages.begin(), messages.end());
+    std::vector<std::wstring>::iterator msgi;
+    for (msgi = messages.begin(); msgi != messages.end(); msgi++)
+      printf("%S", (*msgi).c_str());
+
+    printf(" */\n");
+    return;
+  }
+
   printf("/* Model is correctly constrained.\n");
   iface::mathml_dom::MathMLNodeList* mnl = cci->flaggedEquations();
   uint32_t i, l = mnl->length();
@@ -203,29 +286,39 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
   for (msgi = messages.begin(); msgi != messages.end(); msgi++)
     printf("%S", (*msgi).c_str());
   
-  printf(" * The main variable array needs %u entries.\n", cci->variableCount());
-  printf(" * The rate array needs %u entries.\n", cci->rateVariableCount());
-  printf(" * The constant array needs %u entries.\n", cci->constantCount());
-  printf(" * The bound array needs %u entries.\n", cci->boundCount());
+  printf(" * The rate and state arrays need %u entries.\n", cci->rateIndexCount());
+  printf(" * The algebraic variables array needs %u entries.\n", cci->algebraicIndexCount());
+  printf(" * The constant array needs %u entries.\n", cci->constantIndexCount());
   printf(" * Variable storage is as follows:\n");
   
   messages.clear();
-  iface::cellml_services::CCodeVariableIterator* cvi = cci->iterateVariables();
+  iface::cellml_services::ComputationTargetIterator* cti = cci->iterateTargets();
   while (true)
   {
-    iface::cellml_services::CCodeVariable* v = cvi->nextVariable();
-    if (v == NULL)
+    iface::cellml_services::ComputationTarget* ct = cti->nextComputationTarget();
+    if (ct == NULL)
       break;
-    iface::cellml_api::CellMLVariable* s = v->source();
-    iface::cellml_api::CellMLElement* el = s->parentElement();
+    iface::cellml_api::CellMLVariable* v = ct->variable();
+    iface::cellml_api::CellMLElement* el = v->parentElement();
     iface::cellml_api::CellMLComponent* c =
       reinterpret_cast<iface::cellml_api::CellMLComponent*>
       (el->query_interface("cellml_api::CellMLComponent"));
     el->release_ref();
 
     std::wstring str;
-    wchar_t* vn = s->name(), * cn = c->name();
-    str += L" * * Variable ";
+    wchar_t* vn = v->name(), * cn = c->name();
+    str += L" * * Target ";
+    uint32_t deg = ct->degree();
+    if (deg != 0)
+    {
+      str += L"d^";
+      wchar_t buf[20];
+      swprintf(buf, 20, L"%u", deg);
+      str += buf;
+      str += L"/dt^";
+      str += buf;
+      str += L" ";
+    }
     str += vn;
     str += L" in component ";
     str += cn;
@@ -234,29 +327,27 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
     free(cn);
 
     c->release_ref();
-    s->release_ref();
+    v->release_ref();
 
     str += L" * * * Variable type: ";
-    str += TypeToString(v->type());
+    str += TypeToString(ct->type());
     str += L"\n * * * Variable index: ";
     wchar_t buf[40];
-    swprintf(buf, 40, L"%u\n", v->variableIndex());
+    swprintf(buf, 40, L"%u\n", ct->assignedIndex());
     str += buf;
-    str += L" * * * Has differential: ";
-    if (v->hasDifferential())
-    {
-      str += L"true\n * * * Highest derivative: ";
-      swprintf(buf, 40, L"%u\n", v->derivative());
-      str += buf;
-    }
-    else
-      str += L"false\n";
 
-    v->release_ref();
+    str += L" * * * Variable storage: ";
+    wchar_t * vsn;
+    vsn = ct->name();
+    str += vsn;
+    free(vsn);
+    str += '\n';
+
+    ct->release_ref();
 
     messages.push_back(str);
   }
-  cvi->release_ref();
+  cti->release_ref();
 
   // Sort the messages...
   std::sort(messages.begin(), messages.end());
@@ -265,33 +356,25 @@ WriteCode(iface::cellml_services::CCodeInformation* cci)
 
   printf(" */\n");
 
-  char* frag = cci->functionsFragment();
-  printf("%s", frag);
+  wchar_t* frag = cci->functionsString();
+  printf("%S", frag);
   free(frag);
 
   // Now start the code...
-  frag = cci->fixedConstantFragment();
-  printf("void SetupFixedConstants(double* CONSTANTS)\n{\n%s}\n", frag);
+  frag = cci->initConstsString();
+  printf("void SetupFixedConstants(double* CONSTANTS, double* RATES)\n{\n%S}\n", frag);
   free(frag);
 
-  frag = cci->computedConstantFragment();
-  printf("void SetupComputedConstants(double* CONSTANTS, double* VARIABLES)\n"
-         "{\n%s}\n", frag);
+  frag = cci->variablesString();
+  printf("void EvaluateVariables(double BOUND, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\n"
+         "{\n%S}\n", frag);
   free(frag);
 
-  frag = cci->rateCodeFragment();
-  printf("void ComputeRates(double* BOUND, double* RATES, double* CONSTANTS, "
-         "double* VARIABLES)\n"
-         "{\n%s}\n", frag);
-  free(frag);
-
-  frag = cci->variableCodeFragment();
-  printf("void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, "
-         "double* VARIABLES)\n"
-         "{\n%s}\n", frag);
-  free(frag);
-
-  
+  frag = cci->ratesString();
+  printf("void ComputeRates(double BOUND, double* STATES, double* RATES, double* CONSTANTS, "
+         "double* ALGEBRAIC)\n"
+         "{\n%S}\n", frag);
+  free(frag);  
 }
 
 int
@@ -336,19 +419,20 @@ main(int argc, char** argv)
   ml->release_ref();
   delete [] URL;
 
-  iface::cellml_services::CGenerator* cg =
-    CreateCGenerator();
+  iface::cellml_services::CodeGeneratorBootstrap* cgb =
+    CreateCodeGeneratorBootstrap();
+  iface::cellml_services::CodeGenerator* cg =
+    cgb->createCodeGenerator();
+  cgb->release_ref();
 
-  iface::cellml_services::CCodeInformation* cci = NULL;
+  iface::cellml_services::CodeInformation* cci = NULL;
   try
   {
     cci = cg->generateCode(mod);
   }
   catch (iface::cellml_api::CellMLException& ce)
   {
-    wchar_t* err = cg->lastError();
-    printf("Caught a CellMLException while generating code: %S\n", err);
-    free(err);
+    printf("Caught a CellMLException while generating code.\n");
     cg->release_ref();
     mod->release_ref();
     return -1;
@@ -361,6 +445,16 @@ main(int argc, char** argv)
   }
   mod->release_ref();
   cg->release_ref();
+
+  wchar_t* m = cci->errorMessage();
+  if (wcscmp(m, L""))
+  {
+    printf("Error generating code: %S\n", m);
+    cci->release_ref();
+    free(m);
+    return -1;
+  }
+  free(m);
 
   // We now have the code information...
   WriteCode(cci);

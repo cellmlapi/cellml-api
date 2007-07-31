@@ -2,53 +2,50 @@
  * The following equations needed Newton-Raphson evaluation:
  *   <equation with no cmeta ID>
  *   in math with cmeta:id eq2
- * The main variable array needs 3 entries.
- * The rate array needs 1 entries.
- * The constant array needs 1 entries.
- * The bound array needs 1 entries.
+ * The rate and state arrays need 1 entries.
+ * The algebraic variables array needs 1 entries.
+ * The constant array needs 2 entries.
  * Variable storage is as follows:
- * * Variable offset in component main
+ * * Target d^1/dt^1 y in component main
+ * * * Variable type: algebraic variable
+ * * * Variable index: 0
+ * * * Variable storage: RATES[0]
+ * * Target offset in component main
  * * * Variable type: constant
  * * * Variable index: 0
- * * * Has differential: false
- * * Variable time in component main
- * * * Variable type: bound variable
+ * * * Variable storage: CONSTANTS[0]
+ * * Target time in component main
+ * * * Variable type: variable of integration
  * * * Variable index: 0
- * * * Has differential: false
- * * Variable x in component main
- * * * Variable type: computed for every bound variable
+ * * * Variable storage: VOI
+ * * Target x in component main
+ * * * Variable type: algebraic variable
+ * * * Variable index: 0
+ * * * Variable storage: ALGEBRAIC[0]
+ * * Target y in component main
+ * * * Variable type: state variable
+ * * * Variable index: 0
+ * * * Variable storage: STATES[0]
+ * * Target z in component main
+ * * * Variable type: constant
  * * * Variable index: 1
- * * * Has differential: false
- * * Variable y in component main
- * * * Variable type: differential
- * * * Variable index: 0
- * * * Has differential: true
- * * * Highest derivative: 1
- * * Variable z in component main
- * * * Variable type: computed once
- * * * Variable index: 2
- * * * Has differential: false
+ * * * Variable storage: CONSTANTS[1]
  */
-double NR_minfunc_1(double* CONSTANTS, double* VARIABLES, double* BOUND)
+double minfunc_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double * ALGEBRAIC)
 {
-  return (((VARIABLES[1]-CONSTANTS[0])) - (pow(BOUND[0],2.00000)));
+return fabs((ALGEBRAIC[0] - CONSTANTS[0])-(pow(VOI, 2)));
 }
-void SetupFixedConstants(double* CONSTANTS)
+void SetupFixedConstants(double* CONSTANTS, double* RATES)
 {
 CONSTANTS[0] = 3;
+CONSTANTS[1] = CONSTANTS[0]>1&&CONSTANTS[0]<=3 ? ( sin(CONSTANTS[0])) : CONSTANTS[0]>3 ? 3 : 1;
+STATES[0] = CONSTANTS[0];
 }
-void SetupComputedConstants(double* CONSTANTS, double* VARIABLES)
+void EvaluateVariables(double BOUND, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
-VARIABLES[0] = CONSTANTS[0];
-VARIABLES[2] = ((((CONSTANTS[0]>1.00000))&&((CONSTANTS[0]<=3.00000)))) ? (sin(CONSTANTS[0])) : (((CONSTANTS[0]>3.00000))) ? (3.00000) : (1.00000);
+NR_MINIMISE(minfunc_0, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &ALGEBRAIC[0]);
 }
-void ComputeRates(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
+void ComputeRates(double BOUND, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
-RATES[0] = (2.00000*BOUND[0]);
-}
-void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
-{
-#ifndef VARIABLES_FOR_RATES_ONLY
-NR_MINIMISE(NR_minfunc_1, CONSTANTS, VARIABLES, BOUND, 1);
-#endif
+RATES[0] =  2*VOI;
 }

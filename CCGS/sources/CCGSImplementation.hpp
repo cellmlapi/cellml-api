@@ -13,267 +13,165 @@
 #include <vector>
 #include <list>
 
-#ifdef ENABLE_CONTEXT
-#include "IfaceCellML_Context.hxx"
+class CDA_CodeInformation;
 
-extern void UnloadCCGS(void);
-#endif
-
-class CDA_CGenerator
-  : public iface::cellml_services::CGenerator
-#ifdef ENABLE_CONTEXT
-    , public iface::cellml_context::CellMLModule
-#endif
+class CDA_ComputationTarget
+  : public iface::cellml_services::ComputationTarget
 {
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-#ifdef ENABLE_CONTEXT
-  CDA_IMPL_QI2(cellml_services::CGenerator, cellml_context::CellMLModule);
-#else
-  CDA_IMPL_QI1(cellml_services::CGenerator);
-#endif
+  CDA_IMPL_QI1(cellml_services::ComputationTarget);
 
-  CDA_CGenerator() : _cda_refcount(1)
-#ifdef ENABLE_CONTEXT
-  , mUnload(NULL)
-#endif
-  {}
-  ~CDA_CGenerator() {}
+  CDA_ComputationTarget() : _cda_refcount(1), mDegree(0), mAssignedIndex(0),
+                            mEvaluationType(iface::cellml_services::FLOATING)
+  {};
+  ~CDA_ComputationTarget() {};
 
-  iface::cellml_services::CCodeInformation*
-  generateCode(iface::cellml_api::Model* aSourceModel)
-    throw(std::exception&);
+  iface::cellml_api::CellMLVariable* variable() throw();
+  uint32_t degree() throw();
+  iface::cellml_services::VariableEvaluationType type() throw();
+  wchar_t* name() throw();
+  uint32_t assignedIndex() throw();
 
-  wchar_t* lastError() throw (std::exception&)
-  { return CDA_wcsdup(mLastError.c_str()); }
-
-#ifdef ENABLE_CONTEXT
-  iface::cellml_context::CellMLModule::ModuleTypes moduleType()
-    throw(std::exception&)
-  {
-    return iface::cellml_context::CellMLModule::SERVICE;
-  }
-
-  wchar_t* moduleName() throw (std::exception&)
-  {
-    return CDA_wcsdup(L"CCCGS");
-  }
-
-  wchar_t* moduleDescription() throw (std::exception&)
-  {
-    return CDA_wcsdup(L"The CellML C Code Generation Service");
-  }
-
-  wchar_t* moduleVersion() throw (std::exception&)
-  {
-    return CDA_wcsdup(L"0.0");
-  }
-
-  wchar_t* moduleIconURL() throw (std::exception&)
-  {
-    return CDA_wcsdup(L"");
-  }
-
-  void unload() throw (std::exception&)
-  {
-    if (mUnload != NULL)
-      mUnload();
-  }
-
-  void SetUnloadCCGS(void (*unload)(void))
-  {
-    mUnload = unload;
-  }
-#endif
-
-private:
-  std::wstring mLastError;
-#ifdef ENABLE_CONTEXT
-  void (*mUnload)();
-#endif
+  // CCGS implementation access only...
+  void setNameAndIndex(uint32_t aIndex, const wchar_t* aName) throw();
+  ObjRef<iface::cellml_api::CellMLVariable> mVariable;
+  ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
+  uint32_t mDegree, mAssignedIndex;
+  iface::cellml_services::VariableEvaluationType mEvaluationType;
+  // Only available during code generation...
+  CDA_ComputationTarget* mUpDegree;
+  uint32_t mHighestDegree;
 };
 
-class CDA_CCodeInformation
-  : public iface::cellml_services::CCodeInformation
+class CDA_ComputationTargetIterator
+  : public iface::cellml_services::ComputationTargetIterator
 {
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_services::CCodeInformation);
+  CDA_IMPL_QI1(cellml_services::ComputationTargetIterator);
 
-  CDA_CCodeInformation(iface::cellml_api::Model* aSourceModel);
-  ~CDA_CCodeInformation();
+  CDA_ComputationTargetIterator
+  (
+   std::list<CDA_ComputationTarget*>& aTargets,
+   CDA_CodeInformation* aOwner
+  ) : _cda_refcount(1), mTargets(aTargets), mTargetsIt(aTargets.begin()),
+      mOwner(aOwner) {};
+  ~CDA_ComputationTargetIterator() {};
 
-  iface::cellml_services::ModelConstraintLevel constraintLevel()
-    throw (std::exception&);
-  uint32_t variableCount() throw (std::exception&);
-  uint32_t constantCount() throw (std::exception&);
-  uint32_t boundCount() throw (std::exception&);
-  uint32_t rateVariableCount() throw (std::exception&);
-  char* fixedConstantFragment() throw (std::exception&);
-  char* computedConstantFragment() throw (std::exception&);
-  char* rateCodeFragment() throw (std::exception&);
-  char* variableCodeFragment() throw (std::exception&);
-  char* functionsFragment() throw (std::exception&);
-  iface::cellml_services::CCodeVariableIterator* iterateVariables()
-    throw (std::exception&);
+  iface::cellml_services::ComputationTarget* nextComputationTarget() throw();
+
+private:
+  // These will not go away before mOwner, so we don't ref them.
+  std::list<CDA_ComputationTarget*>& mTargets;
+  std::list<CDA_ComputationTarget*>::iterator mTargetsIt;
+  ObjRef<CDA_CodeInformation> mOwner;
+};
+
+class CDA_CodeInformation
+  : public iface::cellml_services::CodeInformation
+{
+public:
+  CDA_IMPL_ID;
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(cellml_services::CodeInformation);
+
+  CDA_CodeInformation() : _cda_refcount(1) {};
+  ~CDA_CodeInformation();
+
+  wchar_t* errorMessage() throw();
+  iface::cellml_services::ModelConstraintLevel constraintLevel() throw();
+  uint32_t algebraicIndexCount() throw();
+  uint32_t rateIndexCount() throw();
+  uint32_t constantIndexCount() throw();
+  wchar_t* initConstsString() throw();
+  wchar_t* ratesString() throw();
+  wchar_t* variablesString() throw();
+  wchar_t* functionsString() throw();
+  iface::cellml_services::ComputationTargetIterator* iterateTargets()
+    throw();
   iface::mathml_dom::MathMLNodeList* flaggedEquations()
-    throw (std::exception&);
-private:
+    throw();
+
+  // CCGS implementation access only...
+  std::wstring mErrorMessage;
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
-  uint32_t mVariableCount, mConstantCount, mBoundCount, mRateVariableCount;
-  std::stringstream mFixedConstantFragment, mComputedConstantFragment,
-    mRateCodeFragment, mVariableCodeFragment, mFunctionsFragment;
-  typedef std::list<iface::cellml_services::CCodeVariable*> CCVL_t;
-  CCVL_t mVariables;
-  typedef std::vector<iface::dom::Element*> MNL_t;
-  MNL_t mFlaggedEquations;
+  uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount;
+  std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr;
+  std::list<CDA_ComputationTarget*> mTargets;
+  std::vector<iface::dom::Element*> mFlaggedEquations;
 };
 
-class CDA_CCodeVariable
-  : public iface::cellml_services::CCodeVariable
+class CDA_CodeGenerator
+  : public iface::cellml_services::CodeGenerator
 {
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_services::CCodeVariable);
+  CDA_IMPL_QI1(cellml_services::CodeGenerator);
 
-  CDA_CCodeVariable
-  (
-   iface::cellml_api::CellMLVariable* aVar, uint32_t aVariableIndex=0,
-   bool aHasDifferential=false, uint32_t aDerivative=0,
-   iface::cellml_services::VariableEvaluationType aType=
-   iface::cellml_services::COMPUTED
-  )
-    : _cda_refcount(1), mVar(aVar), mVariableIndex(aVariableIndex),
-      mHasDifferential(aHasDifferential), mDerivative(aDerivative),
-      mType(aType)
-  {
-    mVar->add_ref();
-  }
+  CDA_CodeGenerator();
+  ~CDA_CodeGenerator() {};
 
-  ~CDA_CCodeVariable()
-  {
-    mVar->release_ref();
-  }
-
-  uint32_t variableIndex()
-    throw (std::exception&)
-  {
-    return mVariableIndex;
-  }
-
-  bool hasDifferential()
-    throw (std::exception&)
-  {
-    return mHasDifferential;
-  }
-
-  uint32_t derivative()
-    throw (std::exception&)
-  {
-    return mDerivative;
-  }
-
-  iface::cellml_services::VariableEvaluationType type()
-    throw (std::exception&)
-  {
-    return mType;
-  }
-
-  iface::cellml_api::CellMLVariable* source()
-    throw (std::exception&)
-  {
-    mVar->add_ref();
-    return mVar;
-  }
-
+  wchar_t* constantPattern() throw();
+  void constantPattern(const wchar_t* aPattern) throw();
+  wchar_t* stateVariableNamePattern() throw();
+  void stateVariableNamePattern(const wchar_t* aPattern) throw();
+  wchar_t* algebraicVariableNamePattern() throw();
+  void algebraicVariableNamePattern(const wchar_t* aPattern) throw();
+  wchar_t* rateNamePattern() throw();
+  void rateNamePattern(const wchar_t* aPattern) throw();
+  wchar_t* voiPattern(void) throw();
+  void voiPattern(const wchar_t* aPattern) throw();
+  uint32_t arrayOffset() throw();
+  void arrayOffset(uint32_t offset) throw();
+  wchar_t* assignPattern() throw();
+  void assignPattern(const wchar_t* aPattern) throw();
+  wchar_t* solvePattern() throw();
+  void solvePattern(const wchar_t* aPattern) throw();
+  iface::cellml_services::MaLaESTransform* transform() throw();
+  void transform(iface::cellml_services::MaLaESTransform* aTransform)
+     throw();
+  iface::cellml_services::CeVAS* useCeVAS()
+     throw();
+  void useCeVAS(iface::cellml_services::CeVAS* aCeVAS)
+     throw();
+  iface::cellml_services::CUSES* useCUSES() throw();
+  void useCUSES(iface::cellml_services::CUSES* aCUSES) throw();
+  iface::cellml_services::AnnotationSet* useAnnoSet() throw();
+  void useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet) throw();
+  iface::cellml_services::CodeInformation* generateCode
+    (iface::cellml_api::Model* aSourceModel) throw();
 private:
-  iface::cellml_api::CellMLVariable* mVar;
-  uint32_t mVariableIndex;
-  bool mHasDifferential;
-  uint32_t mDerivative;
-  iface::cellml_services::VariableEvaluationType mType;
+  std::wstring mConstantPattern, mStateVariableNamePattern,
+    mAlgebraicVariableNamePattern,
+    mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern;
+  uint32_t mArrayOffset;
+  ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
+  ObjRef<iface::cellml_services::CeVAS> mCeVAS;
+  ObjRef<iface::cellml_services::CUSES> mCUSES;
+  ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
 };
 
-class CDA_CCodeVariableIterator
-  : public iface::cellml_services::CCodeVariableIterator
+class CDA_CodeGeneratorBootstrap
+  : public iface::cellml_services::CodeGeneratorBootstrap
 {
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_services::CCodeVariableIterator);
+  CDA_IMPL_QI1(cellml_services::CodeGeneratorBootstrap);
 
-  CDA_CCodeVariableIterator
-  (
-   CDA_CCodeInformation* aInformation,
-   const std::list<iface::cellml_services::CCodeVariable*>::iterator& aBegin,
-   const std::list<iface::cellml_services::CCodeVariable*>::iterator& aEnd
-  )
-    : _cda_refcount(1), mInformation(aInformation), mCursor(aBegin), mEnd(aEnd)
+  CDA_CodeGeneratorBootstrap() : _cda_refcount(1)
+  {}
+  ~CDA_CodeGeneratorBootstrap() {}
+
+  iface::cellml_services::CodeGenerator*
+  createCodeGenerator() throw(std::exception&)
   {
+    return new CDA_CodeGenerator();
   }
-
-  ~CDA_CCodeVariableIterator() {}
-
-  iface::cellml_services::CCodeVariable* nextVariable()
-    throw(std::exception&)
-  {
-    if (mCursor == mEnd)
-      return NULL;
-    iface::cellml_services::CCodeVariable* ccv = (*mCursor);
-    mCursor++;
-    ccv->add_ref();
-    return ccv;
-  }
-private:
-  ObjRef<CDA_CCodeInformation> mInformation;
-  std::list<iface::cellml_services::CCodeVariable*>::iterator mCursor, mEnd;
-};
-
-class CDA_CCodeMathList
-  : public iface::mathml_dom::MathMLNodeList
-{
-public:
-  CDA_IMPL_ID;
-  CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI2(mathml_dom::MathMLNodeList,
-               dom::NodeList);
-
-  CDA_CCodeMathList(CDA_CCodeInformation* aInformation,
-                    std::vector<iface::dom::Element*>& aNodes)
-    : _cda_refcount(1), mInformation(aInformation), mNodes(aNodes)
-  {
-    std::vector<iface::dom::Element*>::iterator i;
-    for (i = mNodes.begin(); i != mNodes.end(); i++)
-      (*i)->add_ref();
-  }
-
-  ~CDA_CCodeMathList()
-  {
-    std::vector<iface::dom::Element*>::iterator i;
-    for (i = mNodes.begin(); i != mNodes.end(); i++)
-      (*i)->release_ref();
-  }
-  
-  iface::dom::Node* item(uint32_t index)
-    throw(std::exception&)
-  {
-    if (mNodes.size() <= index)
-      return NULL;
-    mNodes[index]->add_ref();
-    return mNodes[index];
-  }
-
-  uint32_t length()
-    throw(std::exception&)
-  {
-    return mNodes.size();
-  }
-private:
-  ObjRef<CDA_CCodeInformation> mInformation;
-  std::vector<iface::dom::Element*> mNodes;
 };
 
 #endif // _CCGSImplementation_hpp

@@ -20,6 +20,7 @@
 #else
 #include <dirent.h>
 #endif
+#include "CCGSBootstrap.hpp"
 
 char*
 attempt_make_tempdir(const char* parentDir)
@@ -62,16 +63,12 @@ SetupCompiledModelFunctions(void* module)
 #else
 #define getsym(m,s) dlsym(m,s)
 #endif
-  cmf->SetupFixedConstants = (void (*)(double*))
-    getsym(module, "SetupFixedConstants");
-  cmf->SetupComputedConstants = (void (*)(double*,double*))
-    getsym(module, "SetupComputedConstants");
-  cmf->ComputeRates = (void (*)(double*,double*,double*,double*))
+  cmf->SetupConstants = (void (*)(double*, double*, double*))
+    getsym(module, "SetupConstants");
+  cmf->ComputeRates = (void (*)(double,double*,double*,double*,double*))
     getsym(module, "ComputeRates");
-  cmf->ComputeVariables = (void (*)(double*,double*,double*,double*))
+  cmf->ComputeVariables = (void (*)(double,double*,double*,double*,double*))
     getsym(module, "ComputeVariables");
-  cmf->ComputeVariablesForRates = (void (*)(double*,double*,double*,double*))
-    getsym(module, "ComputeVariablesForRates");
   return cmf;
 }
 
@@ -129,7 +126,7 @@ CDA_CellMLCompiledModel::CDA_CellMLCompiledModel
 (
  void* aModule, CompiledModelFunctions* aCMF,
  iface::cellml_api::Model* aModel,
- iface::cellml_services::CCodeInformation* aCCI,
+ iface::cellml_services::CodeInformation* aCCI,
  std::string& aDirname
 )
   : _cda_refcount(1), mModule(aModule), mCMF(aCMF), mModel(aModel), mCCI(aCCI),
@@ -275,7 +272,7 @@ CDA_CellMLIntegrationRun::setOverride
     mConstantOverrides.push_back(std::pair<uint32_t,double>
                                  (variableIndex, newValue));
   }
-  else if (aType == iface::cellml_services::DIFFERENTIAL)
+  else if (aType == iface::cellml_services::STATE_VARIABLE)
   {
     mIVOverrides.push_back(std::pair<uint32_t,double>
                            (variableIndex, newValue));
@@ -305,48 +302,49 @@ void
 CDA_CellMLIntegrationRun::runthread()
 {
   std::string emsg = "Unknown error";
-  double* constants = NULL, * variables = NULL, * rates = NULL;
+  double* constants = NULL, * buffer = NULL, * algebraic, * rates, * states;
+
   try
   {
     CompiledModelFunctions* f = mModel->mCMF;
-    uint32_t varSize = mModel->mCCI->variableCount();
-    uint32_t constSize = mModel->mCCI->constantCount();
-    uint32_t boundSize = mModel->mCCI->boundCount();
-    uint32_t rateSize = mModel->mCCI->rateVariableCount();
-    if (boundSize > 1)
-    {
-      emsg = "This integrator only supports systems with one bound variable "
-        "shared across all ODEs.";
-      throw std::exception();
-    }
+    uint32_t algSize = mModel->mCCI->algebraicIndexCount();
+    uint32_t constSize = mModel->mCCI->constantIndexCount();
+    uint32_t rateSize = mModel->mCCI->rateIndexCount();
+
     constants = new double[constSize];
-    variables = new double[varSize + boundSize];
-    rates = new double[rateSize];
-    f->SetupFixedConstants(constants);
-    // Now apply constant overrides...
+    buffer = new double[2 * rateSize + algSize + 1];
+    
+    buffer[0] = mStartBvar;
+    states = buffer + 1;
+    rates = states + rateSize;
+    algebraic = rates + rateSize;
+
+    memset(rates, 0, rateSize * sizeof(double));
+
+    f->SetupConstants(constants, rates, states);
+
+    // Now apply overrides...
     OverrideList::iterator oli;
     for (oli = mConstantOverrides.begin(); oli != mConstantOverrides.end();
          oli++)
       if ((*oli).first < constSize)
         constants[(*oli).first] = (*oli).second;
-
-    f->SetupComputedConstants(constants, variables);
-    // Now apply IV overrides...
     for (oli = mIVOverrides.begin(); oli != mIVOverrides.end();
          oli++)
       if ((*oli).first < rateSize)
-        variables[(*oli).first] = (*oli).second;
-
-    if (boundSize == 1)
-      variables[varSize] = mStartBvar;
-    f->ComputeVariables(variables + varSize, rates, constants, variables);
+        states[(*oli).first] = (*oli).second;
 
     if (mObserver != NULL)
-      mObserver->results(varSize + boundSize, variables);
+      mObserver->computedConstants(constSize, constants);
 
-    if (boundSize == 1)
-      SolveODEProblem(f, constSize, constants, varSize, variables, rateSize,
-                      rates);
+    f->ComputeRates(mStartBvar, constants, rates, states, algebraic);
+    f->ComputeVariables(mStartBvar, constants, rates, states, algebraic);
+
+    if (mObserver != NULL)
+      mObserver->results(2 * rateSize + algSize + 1, buffer);
+
+    SolveODEProblem(f, constSize, constants, rateSize, rates, states,
+                    algSize, algebraic);
   }
   catch (...)
   {
@@ -362,33 +360,43 @@ CDA_CellMLIntegrationRun::runthread()
 
   if (constants != NULL)
     delete [] constants;
-  if (variables != NULL)
-    delete [] variables;
-  if (rates != NULL)
-    delete [] rates;
+  if (buffer != NULL)
+    delete [] buffer;
+
   release_ref();
 }
 
 iface::cellml_services::CellMLCompiledModel*
 CDA_CellMLIntegrationService::compileModel
 (
- iface::cellml_services::CGenerator* aCG,
  iface::cellml_api::Model* aModel
 )
   throw(std::exception&)
 {
+  RETURN_INTO_OBJREF(cgb, iface::cellml_services::CodeGeneratorBootstrap,
+                     CreateCodeGeneratorBootstrap());
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator,
+                     cgb->createCodeGenerator());
+
   // Generate code information...
-  ObjRef<iface::cellml_services::CCodeInformation> cci;
+  ObjRef<iface::cellml_services::CodeInformation> cci;
   try
   {
-    cci = already_AddRefd<iface::cellml_services::CCodeInformation>
-      (aCG->generateCode(aModel));
+    cci = already_AddRefd<iface::cellml_services::CodeInformation>
+      (cg->generateCode(aModel));
+    wchar_t* msg = cci->errorMessage();
+    if (!wcscmp(msg, L""))
+      free(msg);
+    else
+    {
+      mLastError = msg;
+      free(msg);
+      throw iface::cellml_api::CellMLException();
+    }
   }
   catch (...)
   {
-    wchar_t* le = aCG->lastError();
-    mLastError = le;
-    free(le);
+    mLastError = L"Unexpected exception generating code";
     throw iface::cellml_api::CellMLException();
   }
 
@@ -465,6 +473,7 @@ CDA_CellMLIntegrationService::compileModel
      << "extern double floor(double x);" << std::endl
      << "extern double pow(double x, double y);" << std::endl    
      << "extern double factorial(double x);" << std::endl
+     << "extern double log(double x);" << std::endl
      << "extern double arbitrary_log(double x, double base);" << std::endl
      << "extern double gcd_pair(double a, double b);" << std::endl
      << "extern double lcm_pair(double a, double b);" << std::endl
@@ -472,34 +481,45 @@ CDA_CellMLIntegrationService::compileModel
      << "extern double lcm_multi(unsigned int size, ...);" << std::endl
      << "extern double multi_min(unsigned int size, ...);" << std::endl
      << "extern double multi_max(unsigned int size, ...);" << std::endl
-     << "extern void NR_MINIMISE(double(*func)(double*C, double*V, double*B),"
-        "double*C,double*V,double*B,int idx);" << std::endl;
-  char* frag = cci->functionsFragment();
-  ss << frag << std::endl;
+     << "extern void NR_MINIMISE(double(*func)(double VOI, double *C, double *R, double *S, double *A),"
+        "double VOI, double *C, double *R, double *S, double *A, double *V);" << std::endl;
+
+  wchar_t* frag = cci->functionsString();
+  size_t fragLen = wcstombs(NULL, frag, 0) + 1;
+  char* frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << frag8 << std::endl;
   free(frag);
-  ss << "void SetupFixedConstants(double* CONSTANTS)" << std::endl;
-  frag = cci->fixedConstantFragment();
-  ss << "{" << std::endl << frag << std::endl << "}" << std::endl;
+  delete [] frag8;
+
+  ss << "void SetupConstants(double* CONSTANTS, double* RATES, double *STATES)" << std::endl;
+  frag = cci->initConstsString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl << frag8 << std::endl << "}" << std::endl;
   free(frag);
-  ss << "void SetupComputedConstants(double* CONSTANTS, double* VARIABLES)"
-     << std::endl;
-  frag = cci->computedConstantFragment();
-  ss << "{" << std::endl << frag << std::endl << "}" << std::endl;
+  delete [] frag8;
+
+  ss << "void ComputeRates(double VOI, double* CONSTANTS, double* RATES, double* STATES, "
+    "double* ALGEBRAIC)" << std::endl;
+  frag = cci->ratesString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl << frag8 << std::endl << "}" << std::endl;
   free(frag);
-  ss << "void ComputeRates(double* BOUND, double* RATES, double* CONSTANTS, "
-    "double* VARIABLES)" << std::endl;
-  frag = cci->rateCodeFragment();
-  ss << "{" << std::endl << frag << std::endl << "}" << std::endl;
+  delete [] frag8;
+
+  ss << "void ComputeVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, "
+    "double* ALGEBRAIC)" << std::endl;
+  frag = cci->variablesString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl << frag8 << std::endl << "}" << std::endl;
   free(frag);
-  ss << "void ComputeVariables(double* BOUND, double* RATES, double* CONSTANTS, "
-    "double* VARIABLES)" << std::endl;
-  frag = cci->variableCodeFragment();
-  ss << "{" << std::endl << frag << std::endl << "}" << std::endl;
-  ss << "void ComputeVariablesForRates(double* BOUND, double* RATES, double* CONSTANTS, "
-    "double* VARIABLES)" << std::endl;
-  ss << "#define VARIABLES_FOR_RATES_ONLY" << std::endl;
-  ss << "{" << std::endl << frag << std::endl << "}" << std::endl;
-  free(frag);
+  delete [] frag8;
   ss.close();
 
   void* mod = CompileSource(dirname, sourcename, mLastError);

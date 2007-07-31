@@ -185,9 +185,11 @@ CDACanonicalUnitRepresentation::convertUnits
   m1 = siConversion(&o1);
   m2 = aCompareWith->siConversion(&o2);
 
-  *aOffset = (o1 - o2) / m2;
+  double fac = m1/m2;
 
-  return m1 / m2;
+  *aOffset = o1 - fac * o2;
+
+  return fac;
 }
 
 double
@@ -203,8 +205,8 @@ CDACanonicalUnitRepresentation::siConversion
     double o, m;
     o = baseUnits[0]->offset();
     m = baseUnits[0]->prefix();
-    *aOffset = o / m;
-    return m;
+    *aOffset = -o / m;
+    return 1.0 / m;
   }
 
   *aOffset = 0.0;
@@ -454,8 +456,6 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
 
   if (errorDescription != L"")
   {
-    printf("Not resolving units because errors found building dependency map: %S\n",
-           errorDescription.c_str());
     return;
   }
 
@@ -782,7 +782,7 @@ CDACUSES::PopulateBuiltinUnits()
 BUILTIN_UNIT(ampere, DERIVES(ampere, 1, 1, 0));
 BUILTIN_UNIT(becquerel, DERIVES(second, 1, -1, 0));
 BUILTIN_UNIT(candela, DERIVES(candela, 1, 1, 0));
-BUILTIN_UNIT(celsius, DERIVES(kelvin, 1, 1, 273.15));
+BUILTIN_UNIT(celsius, DERIVES(kelvin, 1, 1, -273.15));
 BUILTIN_UNIT(coulomb, DERIVES(ampere, 1, 1, 0) DERIVES(second, 1, 1, 0));
 BUILTIN_UNIT(dimensionless, ;);
 BUILTIN_UNIT(farad , DERIVES(metre, 1, -2, 0) DERIVES(kilogram, 1, -1, 0) DERIVES(second, 1, 4, 0) DERIVES(ampere, 1, 2, 0));

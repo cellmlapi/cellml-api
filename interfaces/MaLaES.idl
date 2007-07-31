@@ -5,6 +5,39 @@
 module cellml_services
 {
   /**
+   * A source variable annotated by a degree.
+   */
+  interface DegreeVariable
+    : XPCOM::IObject
+  {
+    /**
+     * The source variable.
+     */
+    readonly attribute cellml_api::CellMLVariable variable;
+
+    /**
+     * The degree of the variable.
+     * 0 = Used outside a derivative.
+     * 1 = First order derivative.
+     * 2 = Second order derivative.
+     * ...
+     */
+    readonly attribute unsigned long degree;
+  };
+
+  /**
+   * An interface allowing for iteration of variables by degree.
+   */
+  interface DegreeVariableIterator
+    : XPCOM::IObject
+  {
+    /**
+     * Fetches the next degree annotated variable.
+     */
+    DegreeVariable nextDegreeVariable();
+  };
+
+  /**
    * An interface allowing transformation results to be described.
    */
   interface MaLaESResult
@@ -40,6 +73,13 @@ module cellml_services
      * this result.
      */
     cellml_api::CellMLVariableIterator iterateInvolvedVariables();
+
+    /**
+     * Iterates through the list of 'source' variables annotated by their
+     * degree (0 = used as a non-derivative, 1 = used as a first order
+     *   derivative, ...)...
+     */
+    DegreeVariableIterator iterateInvolvedVariablesByDegree();
 
     /**
      * Iterates through the list of 'source' variables which are used as a
@@ -97,7 +137,9 @@ module cellml_services
                            in cellml_services::AnnotationSet aAnnos,
                            in mathml_dom::MathMLElement aMathML,
                            in cellml_api::CellMLElement aContext,
-                           in cellml_api::CellMLVariable aUnitsOf
+                           in cellml_api::CellMLVariable aUnitsOf,
+                           in cellml_api::CellMLVariable aBoundUnitsOf,
+                           in unsigned long aUnitsDiffDegree
                           );
   };
 

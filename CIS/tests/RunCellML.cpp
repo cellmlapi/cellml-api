@@ -44,29 +44,30 @@ public:
     mCCM->add_ref();
     mCI = mCCM->codeInformation();
 
-    iface::cellml_services::CCodeVariableIterator* vi =
-      mCI->iterateVariables();
+    iface::cellml_services::ComputationTargetIterator* cti =
+      mCI->iterateTargets();
     bool first = true;
     while (true)
     {
-      iface::cellml_services::CCodeVariable* cv = vi->nextVariable();
-      if (cv == NULL)
+      iface::cellml_services::ComputationTarget* ct = cti->nextComputationTarget();
+      if (ct == NULL)
         break;
-      if (cv->type() == iface::cellml_services::DIFFERENTIAL ||
-          cv->type() == iface::cellml_services::COMPUTED ||
-          cv->type() == iface::cellml_services::BOUND)
+      if ((ct->type() == iface::cellml_services::STATE_VARIABLE ||
+           ct->type() == iface::cellml_services::ALGEBRAIC ||
+           ct->type() == iface::cellml_services::VARIABLE_OF_INTEGRATION) &&
+          ct->degree() == 0)
       {
-        iface::cellml_api::CellMLVariable* source = cv->source();
+        iface::cellml_api::CellMLVariable* source = ct->variable();
         wchar_t* n = source->name();
         source->release_ref();
         printf(first ? "\"%S\"" : ",\"%S\"", n);
         first = false;
         free(n);
       }
-      cv->release_ref();
+      ct->release_ref();
     }
     printf("\n");
-    vi->release_ref();
+    cti->release_ref();
   }
 
   ~TestProgressObserver()
@@ -110,57 +111,81 @@ public:
   void computedConstants(uint32_t length, double* values)
     throw (std::exception&)
   {
-    iface::cellml_services::CCodeVariableIterator* vi =
-      mCI->iterateVariables();
+    iface::cellml_services::ComputationTargetIterator* cti =
+      mCI->iterateTargets();
     while (true)
     {
-      iface::cellml_services::CCodeVariable* cv = vi->nextVariable();
-      if (cv == NULL)
+      iface::cellml_services::ComputationTarget* ct = cti->nextComputationTarget();
+      if (ct == NULL)
         break;
-      if (cv->type() == iface::cellml_services::COMPUTED_CONSTANT)
+      if (ct->type() == iface::cellml_services::CONSTANT &&
+          ct->degree() == 0)
       {
-        iface::cellml_api::CellMLVariable* source = cv->source();
+        iface::cellml_api::CellMLVariable* source = ct->variable();
         wchar_t* n = source->name();
         source->release_ref();
-        printf("# Computed constant: %S = %e\n", n, values[cv->variableIndex()]);
+        printf("# Computed constant: %S = %e\n", n, values[ct->assignedIndex()]);
         free(n);
       }
-      cv->release_ref();
+      ct->release_ref();
     }
-    vi->release_ref();
+    cti->release_ref();
   }
 
   void results(uint32_t length, double* values)
     throw (std::exception&)
   {
-    uint32_t i, vc = mCI->variableCount() + 1;
-    if (vc == 0)
+    uint32_t aic = mCI->algebraicIndexCount();
+    uint32_t ric = mCI->rateIndexCount();
+    uint32_t recsize = 2 * ric + aic + 1;
+
+    if (recsize == 0)
       return;
-    for (i = 0; i < length; i += vc)
+
+    uint32_t i;
+    for (i = 0; i < length; i += recsize)
     {
       bool first = true;
-      iface::cellml_services::CCodeVariableIterator* vi =
-        mCI->iterateVariables();
+      iface::cellml_services::ComputationTargetIterator* cti =
+        mCI->iterateTargets();
       while (true)
       {
-        iface::cellml_services::CCodeVariable* cv = vi->nextVariable();
-        if (cv == NULL)
+        iface::cellml_services::ComputationTarget* ct = cti->nextComputationTarget();
+        if (ct == NULL)
           break;
-        if (cv->type() == iface::cellml_services::DIFFERENTIAL ||
-            cv->type() == iface::cellml_services::COMPUTED)
+
+        if (ct->degree() != 0)
         {
-          printf(first ? "\"%g\"" : ",\"%g\"", values[cv->variableIndex() + i]);
-          first = false;
+          ct->release_ref();
+          continue;
         }
-        if (cv->type() == iface::cellml_services::BOUND)
+
+        iface::cellml_services::VariableEvaluationType et = ct->type();
+        uint32_t varOff = 0;
+        
+        switch (et)
         {
-          printf(first ? "\"%g\"" : ",\"%g\"", values[i + vc - 1]);
-          first = false;
+        case iface::cellml_services::STATE_VARIABLE:
+          varOff = 1 + ct->assignedIndex();
+          break;
+        case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+          varOff = 0;
+          break;
+        case iface::cellml_services::ALGEBRAIC:
+          varOff = 1 + 2 * ric + ct->assignedIndex();
+          break;
+        default:
+          ct->release_ref();
+          continue;
         }
-        cv->release_ref();
+
+        printf(first ? "\"%g\"" : ",\"%g\"", values[i + varOff]);
+        first = false;
+
+        ct->release_ref();
       }
       printf("\n");
-      vi->release_ref();
+      cti->release_ref();
     }
   }
 
@@ -179,7 +204,7 @@ public:
   }
 private:
   iface::cellml_services::CellMLCompiledModel* mCCM;
-  iface::cellml_services::CCodeInformation* mCI;
+  iface::cellml_services::CodeInformation* mCI;
   uint32_t mRefcount;
 };
 
@@ -396,10 +421,6 @@ main(int argc, char** argv)
   ml->release_ref();
   delete [] URL;
 
-  printf("# Creating C generator...\n");
-  iface::cellml_services::CGenerator* cg =
-    CreateCGenerator();
-
   printf("# Creating integration service...\n");
   iface::cellml_services::CellMLIntegrationService* cis =
     CreateIntegrationService();
@@ -408,14 +429,13 @@ main(int argc, char** argv)
   try
   {
     printf("# Compiling model...\n");
-    ccm = cis->compileModel(cg, mod);
+    ccm = cis->compileModel(mod);
   }
   catch (iface::cellml_api::CellMLException& ce)
   {
     wchar_t* err = cis->lastError();
     printf("Caught a CellMLException while compiling model: %S\n", err);
     free(err);
-    cg->release_ref();
     mod->release_ref();
     cis->release_ref();
     return -1;
@@ -427,7 +447,6 @@ main(int argc, char** argv)
     return -1;
   }
   mod->release_ref();
-  cg->release_ref();
 
   printf("# Creating run...\n");
   iface::cellml_services::CellMLIntegrationRun* cir =

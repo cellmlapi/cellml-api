@@ -8,10 +8,11 @@
 #endif
 
 /**
- * Creates a new C generator.
+ * Creates a new code generator bootstrap.
  * This code is the external C++ interface which allows you to fetch the
  * implementation.
  */
 CCGS_PUBLIC_PRE
-  iface::cellml_services::CGenerator* CreateCGenerator(void)
+  iface::cellml_services::CodeGeneratorBootstrap*
+  CreateCodeGeneratorBootstrap(void)
 CCGS_PUBLIC_POST;

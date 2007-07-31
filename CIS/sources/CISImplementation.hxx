@@ -12,14 +12,11 @@ extern void UnloadCIS(void);
 
 struct CompiledModelFunctions
 {
-  void (*SetupFixedConstants)(double* CONSTANTS);
-  void (*SetupComputedConstants)(double* CONSTANTS, double* VARIABLES);
-  void (*ComputeRates)(double* BOUND, double* RATES, double* CONSTANTS,
-                       double* VARIABLES);
-  void (*ComputeVariables)(double* BOUND, double* RATES, double* CONSTANTS,
-                           double* VARIABLES);
-  void (*ComputeVariablesForRates)(double* BOUND, double* RATES, double* CONSTANTS,
-                                   double* VARIABLES);
+  void (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES);
+  void (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
+                       double* STATES, double* ALGEBRAIC);
+  void (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
+                           double* STATES, double* ALGEBRAIC);
 };
 
 class CDA_CellMLCompiledModel
@@ -29,7 +26,7 @@ public:
   CDA_CellMLCompiledModel(
                            void* aModule, CompiledModelFunctions* aCMF,
                            iface::cellml_api::Model* aModel,
-                           iface::cellml_services::CCodeInformation* aCCI,
+                           iface::cellml_services::CodeInformation* aCCI,
                            std::string& aDirname
                           );
   ~CDA_CellMLCompiledModel();
@@ -45,7 +42,7 @@ public:
     return mModel;
   }
 
-  iface::cellml_services::CCodeInformation* codeInformation()
+  iface::cellml_services::CodeInformation* codeInformation()
     throw(std::exception&)
   {
     mCCI->add_ref();
@@ -57,7 +54,7 @@ public:
   void* mModule;
   CompiledModelFunctions* mCMF;
   iface::cellml_api::Model* mModel;
-  iface::cellml_services::CCodeInformation* mCCI;
+  iface::cellml_services::CodeInformation* mCCI;
   std::string mDirname;
 };
 
@@ -99,14 +96,14 @@ protected:
 
 private:
   void SolveODEProblem(CompiledModelFunctions* f, uint32_t constSize,
-                       double* constants, uint32_t varSize, double* variables,
-                       uint32_t rateSize, double* rates);
+                       double* constants, uint32_t rateSize, double* rates,
+                       double* states, uint32_t algSize, double* algebraic);
   void SolveODEProblemGSL(CompiledModelFunctions* f, uint32_t constSize,
-                          double* constants, uint32_t varSize, double* variables,
-                          uint32_t rateSize, double* rates);
+                       double* constants, uint32_t rateSize, double* rates,
+                       double* states, uint32_t algSize, double* algebraic);
   void SolveODEProblemCVODE(CompiledModelFunctions* f, uint32_t constSize,
-                            double* constants, uint32_t varSize, double* variables,
-                            uint32_t rateSize, double* rates);
+                       double* constants, uint32_t rateSize, double* rates,
+                       double* states, uint32_t algSize, double* algebraic);
 
   CDA_CellMLCompiledModel* mModel;
   iface::cellml_services::IntegrationStepType mStepType;
@@ -148,8 +145,7 @@ public:
 #endif
 
   iface::cellml_services::CellMLCompiledModel*
-  compileModel(iface::cellml_services::CGenerator* aCG,
-               iface::cellml_api::Model* aModel)
+  compileModel(iface::cellml_api::Model* aModel)
     throw(std::exception&);
 
   iface::cellml_services::CellMLIntegrationRun*

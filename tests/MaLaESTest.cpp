@@ -170,7 +170,7 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
   mmel->release_ref();
 
   iface::cellml_services::MaLaESResult* mr =
-    mt->transform(cev, cu, as, expr, glcC, NULL);
+    mt->transform(cev, cu, as, expr, glcC, NULL, NULL, 0);
 
   CPPUNIT_ASSERT(mr);
 
@@ -179,7 +179,7 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
   free(str);
 
   str = mr->expression();
-  CPPUNIT_ASSERT(!wcscmp(str, L"first_derivative_of_glcC*1000==1000*(1000*(delta_Glc_C_rxn1*0.001)+delta_Glc_C_rxn2)"));
+  CPPUNIT_ASSERT(!wcscmp(str, L"first_derivative_of_glcC*0.001==1000*(1000*(delta_Glc_C_rxn1*0.001)+delta_Glc_C_rxn2)"));
   free(str);
 
   uint32_t l = mr->supplementariesLength();
@@ -207,7 +207,7 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
 
   cvi = mr->iterateBoundVariables();
   var = cvi->nextVariable();
-  CPPUNIT_ASSERT(var == vglcC);
+  CPPUNIT_ASSERT(var != vglcC);
   var->release_ref();
   CPPUNIT_ASSERT(!cvi->nextVariable());
   cvi->release_ref();

@@ -2,7 +2,6 @@
  * List variables defined at time of error follows...
  * * offset
  * * time
- * * x
  * * y
  * * z
  * Extraneous equation was:

@@ -29,32 +29,26 @@
 
 struct EvaluationInformation
 {
-  double* constants;
-  double* variables;
+  double* constants, * rates, * algebraic, * states;
   uint32_t rateSizeBytes, rateSize;
-  void (*ComputeRates)(double* BOUND, double* RATES, double* CONSTANTS,
-                       double* VARIABLES);
-  void (*ComputeVariables)(double* BOUND, double* RATES, double* CONSTANTS,
-                           double* VARIABLES);
-  void (*ComputeVariablesForRates)(double* BOUND, double* RATES,
-                                   double* CONSTANTS, double* VARIABLES);
+  void (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
+                       double* STATES, double* ALGEBRAIC);
+  void (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
+                           double* STATES, double* ALGEBRAIC);
 };
 
 int
-EvaluateRatesGSL(double bound, const double vars[],
+EvaluateRatesGSL(double voi, const double vars[],
                  double rates[], void* params)
 {
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
   
-  // XXX This is very unfortunate. Change CCGS to split arrays?
-  if (ei->variables != vars)
-    memcpy(ei->variables, vars, ei->rateSizeBytes);
-
   // Update variables that change based on bound/other vars...
-  ei->ComputeVariablesForRates(&bound, rates, ei->constants, ei->variables);
+  ei->ComputeRates(voi, ei->constants, ei->rates, const_cast<double*>(vars),
+                   ei->algebraic);
 
-  // Compute the rates...
-  ei->ComputeRates(&bound, rates, ei->constants, ei->variables);
+  if (rates != ei->rates)
+  memcpy(rates, ei->rates, ei->rateSizeBytes);
 
   // printf("Compute r0=%g at bound %g\n", rates[0], bound);
 
@@ -64,20 +58,22 @@ EvaluateRatesGSL(double bound, const double vars[],
 inline int
 EvaluateJacobianGSL
 (
- double bound, const double vars[],
+ double voi, const double vars[],
  double jac[], double rates[], void* params
 )
 {
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
   
-  // XXX This is very unfortunate. Change CCGS to split arrays?
-  if (ei->variables != vars)
-    memcpy(ei->variables, vars, ei->rateSizeBytes);
+  // Back up the states, so we can perturb them...
+  double* states = new double[ei->rateSize];  
+  memcpy(states, vars, ei->rateSizeBytes);
 
   double* rate0 = new double[ei->rateSize];
   double* rate1 = new double[ei->rateSize];
-  ei->ComputeVariablesForRates(&bound, rate0, ei->constants, ei->variables);
-  ei->ComputeRates(&bound, rate0, ei->constants, ei->variables);
+
+  // Initial rates...
+  ei->ComputeRates(voi, ei->constants, rate0, states,
+                   ei->algebraic);
 
   uint32_t i, j;
   for (i = 0; i < ei->rateSize; i++)
@@ -86,25 +82,26 @@ EvaluateJacobianGSL
     if (perturb == 0)
       perturb = 1E-90;
 
-    ei->variables[i] = vars[i] + perturb;
-    ei->ComputeVariablesForRates(&bound, rate1, ei->constants, ei->variables);
-    ei->ComputeRates(&bound, rate1, ei->constants, ei->variables);
+    states[i] = vars[i] + perturb;
+
+    ei->ComputeRates(voi, ei->constants, rate1, states, ei->algebraic);
 
     for (j = 0; j < ei->rateSize; j++)
     {
       jac[i * ei->rateSize + j] = (rate1[j] - rate0[j]) / perturb;
     }
 
-    ei->variables[i] = vars[i];
+    states[i] = vars[i];
   }
 
-  // Now perturb the bound and see what happens...
-  double perturb = bound * 1E-13;
+  // Now perturb the VOI and see what happens...
+  double perturb = voi * 1E-13;
   if (perturb == 0)
     perturb = 1E-90;
-  double newbound = bound + perturb;
-  ei->ComputeVariablesForRates(&newbound, rates, ei->constants, ei->variables);
-  ei->ComputeRates(&newbound, rate1, ei->constants, ei->variables);
+  double newvoi = voi + perturb;
+
+  ei->ComputeRates(newvoi, ei->constants, rate1, states, ei->algebraic);
+
   for (i = 0; i < ei->rateSize; i++)
   {
     rates[i] = (rate1[i] - rate0[i]) / perturb;
@@ -112,6 +109,7 @@ EvaluateJacobianGSL
 
   delete [] rate0;
   delete [] rate1;
+  delete [] states;
 
   return GSL_SUCCESS;
 }
@@ -133,8 +131,9 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 void
 CDA_CellMLIntegrationRun::SolveODEProblemGSL
 (
- CompiledModelFunctions* f, uint32_t constSize, double* constants,
- uint32_t varSize, double* variables, uint32_t rateSize, double* rates
+ CompiledModelFunctions* f, uint32_t constSize,
+ double* constants, uint32_t rateSize, double* rates,
+ double* states, uint32_t algSize, double* algebraic
 )
 {
   gsl_odeiv_system sys;
@@ -146,12 +145,15 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
   sys.function = EvaluateRatesGSL;
   sys.jacobian = EvaluateJacobianGSL;
   ei.constants = constants;
-  ei.variables = variables;
+  ei.states = states;
+  ei.rates = rates;
+  ei.algebraic = algebraic;
+
   ei.rateSize = rateSize;
   ei.rateSizeBytes = rateSize * sizeof(double);
+
   ei.ComputeRates = f->ComputeRates;
   ei.ComputeVariables = f->ComputeVariables;
-  ei.ComputeVariablesForRates = f->ComputeVariablesForRates;
 
   gsl_odeiv_step* s;
   gsl_odeiv_evolve* e = gsl_odeiv_evolve_alloc(rateSize);
@@ -200,42 +202,52 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
   s = gsl_odeiv_step_alloc(T, rateSize);
   
   // Start the main loop...
-  double bound = mStartBvar;
+  double voi = mStartBvar;
   double stepSize = 1E-6;
-  
-  uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / (varSize + 1)) * (varSize + 1);
+
+  uint32_t recsize = rateSize * 2 + algSize + 1;
+  uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / recsize) * recsize;
   double* storage = new double[storageCapacity];
   uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
 
-  double lastBound = 0.0 /* initialised only to avoid extraneous warning. */;
+  double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
   bool isFirst = true;
 
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
 
-  while (bound < mStopBvar)
+  while (voi < mStopBvar)
   {
     double bhl = mStopBvar;
-    if (bhl - bound > mStepSizeMax)
-      bhl = bound + mStepSizeMax;
-    gsl_odeiv_evolve_apply(e, c, s, &sys, &bound, bhl,
-                           &stepSize, variables);
+    if (bhl - voi > mStepSizeMax)
+      bhl = voi + mStepSizeMax;
+    gsl_odeiv_evolve_apply(e, c, s, &sys, &voi, bhl,
+                           &stepSize, states);
 
     if (mCancelIntegration)
       break;
 
     if (isFirst)
       isFirst = false;
-    else if (bound - lastBound < minReportForDensity)
+    else if (voi - lastVOI < minReportForDensity)
       continue;
 
-    lastBound = bound;
+    lastVOI = voi;
+
+    // Compute the extra variables that are only computed for display
+    // purposes...
+    f->ComputeVariables(voi, constants, rates, states, algebraic);
 
     // Add to storage...
-    memcpy(storage + storageSize, variables, varSize * sizeof(double));
-    storage[storageSize + varSize] = bound;
-    f->ComputeVariables(&bound, rates, constants, storage + storageSize);
-    storageSize += varSize + 1;
+    storage[storageSize] = voi;
+    memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+    memcpy(storage + storageSize + 1 + rateSize, rates,
+           rateSize * sizeof(double));
+    memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+           algSize * sizeof(double));
+
+    storageSize += recsize;
+
     // Are we ready to send?
     uint32_t timeNow = time(0);
     if (timeNow >= storageExpiry || storageSize == storageCapacity)
@@ -264,11 +276,12 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
 void
 CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 (
- CompiledModelFunctions* f, uint32_t constSize, double* constants,
- uint32_t varSize, double* variables, uint32_t rateSize, double* rates
+ CompiledModelFunctions* f, uint32_t constSize,
+ double* constants, uint32_t rateSize, double* rates,
+ double* states, uint32_t algSize, double* algebraic
 )
 {
-  N_Vector y = N_VMake_Serial(rateSize, variables);
+  N_Vector y = N_VMake_Serial(rateSize, states);
   void* solver;
   
   switch (mStepType)
@@ -291,48 +304,54 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
   CVodeSetFdata(solver, &ei);
 
   ei.constants = constants;
-  ei.variables = variables;
+  ei.states = states;
+  ei.rates = rates;
+  ei.algebraic = algebraic;
   ei.rateSize = rateSize;
   ei.rateSizeBytes = rateSize * sizeof(double);
   ei.ComputeRates = f->ComputeRates;
   ei.ComputeVariables = f->ComputeVariables;
-  ei.ComputeVariablesForRates = f->ComputeVariablesForRates;
   
-  double bound = mStartBvar;
-  
-  uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / (varSize + 1)) * (varSize + 1);
+  uint32_t recsize = rateSize * 2 + algSize + 1;
+  uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / recsize) * recsize;
   double* storage = new double[storageCapacity];
   uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
 
-  double lastBound = 0.0 /* initialised only to avoid extraneous warning. */;
+  double voi = mStartBvar;
+  double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
   bool isFirst = true;
 
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
 
-  while (bound < mStopBvar)
+  while (voi < mStopBvar)
   {
     double bhl = mStopBvar;
-    if (bhl - bound > mStepSizeMax)
-      bhl = bound + mStepSizeMax;
+    if (bhl - voi > mStepSizeMax)
+      bhl = voi + mStepSizeMax;
     CVodeSetStopTime(solver, bhl);
-    CVode(solver, bhl, y, &bound, CV_ONE_STEP_TSTOP);
+    CVode(solver, bhl, y, &voi, CV_ONE_STEP_TSTOP);
 
     if (mCancelIntegration)
       break;
 
     if (isFirst)
       isFirst = false;
-    else if (bound - lastBound < minReportForDensity)
+    else if (voi - lastVOI < minReportForDensity)
       continue;
 
-    lastBound = bound;
+    lastVOI = voi;
 
     // Add to storage...
-    memcpy(storage + storageSize, variables, varSize * sizeof(double));
-    storage[storageSize + varSize] = bound;
-    f->ComputeVariables(&bound, rates, constants, storage + storageSize);
-    storageSize += varSize + 1;
+    storage[storageSize] = voi;
+    memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+    memcpy(storage + storageSize + 1 + rateSize, rates,
+           rateSize * sizeof(double));
+    memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+           algSize * sizeof(double));
+
+    storageSize += recsize;
+
     // Are we ready to send?
     uint32_t timeNow = time(0);
     if (timeNow >= storageExpiry || storageSize == storageCapacity)
@@ -363,8 +382,9 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 void
 CDA_CellMLIntegrationRun::SolveODEProblem
 (
- CompiledModelFunctions* f, uint32_t constSize, double* constants,
- uint32_t varSize, double* variables, uint32_t rateSize, double* rates
+ CompiledModelFunctions* f, uint32_t constSize,
+ double* constants, uint32_t rateSize, double* rates,
+ double* states, uint32_t algSize, double* algebraic
 )
 {
 #ifdef DEBUG_MODE
@@ -373,11 +393,11 @@ CDA_CellMLIntegrationRun::SolveODEProblem
 
   if (mStepType == iface::cellml_services::ADAMS_MOULTON_1_12 ||
       mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
-    SolveODEProblemCVODE(f, constSize, constants, varSize, variables, rateSize,
-                         rates);
+    SolveODEProblemCVODE(f, constSize, constants, rateSize, rates, states,
+                         algSize, algebraic);
   else
-    SolveODEProblemGSL(f, constSize, constants, varSize, variables, rateSize,
-                       rates);
+    SolveODEProblemGSL(f, constSize, constants, rateSize, rates, states,
+                         algSize, algebraic);
 }
 
 extern "C"
@@ -393,8 +413,8 @@ extern "C"
   CDA_EXPORT_PRE double safe_quotient(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double safe_remainder(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double safe_factorof(double num, double den) CDA_EXPORT_POST;
-  CDA_EXPORT_PRE void NR_MINIMISE(double(*func)(double *C, double *V, double *B),
-                                  double *C,double *V,double *B,int idx)
+  CDA_EXPORT_PRE void NR_MINIMISE(double(*func)(double VOI, double *C, double *R, double *S, double *A),
+                                  double VOI,double *C,double *R,double *S,double *A,double *V)
     CDA_EXPORT_POST;
 
 }
@@ -666,26 +686,28 @@ random_double_logUniform()
 static double
 take_numeric_derivative
 (
- double(*func)(double *C, double *V, double *B),
+ double(*func)(double VOI, double *C, double *R, double *S, double *A),
+ double VOI,
  double *C,
- double *V,
- double *B,
- int idx
+ double *R,
+ double *S,
+ double *A,
+ double *x
 )
 {
   double saved_x, value0, value1, value2, delta, slope1, slope2, ratio;
-  saved_x = V[idx];
+  saved_x = *x;
   /*
    * Since we have only 52 bits of mantissa, we need delta to flip only the
    * last couple of bits.
    */
   delta = saved_x * 1E-10;
-  value0 = func(C, V, B);
-  V[idx] -= delta;
-  value1 = func(C, V, B);
-  V[idx] = saved_x + delta;
-  value2 = func(C, V, B);
-  V[idx] = saved_x;
+  value0 = func(VOI, C, R, S, A);
+  *x -= delta;
+  value1 = func(VOI, C, R, S, A);
+  *x = saved_x + delta;
+  value2 = func(VOI, C, R, S, A);
+  *x = saved_x;
   /* We take two numeric derivatives, so we can compare them. This stops us
    * from getting trapped at around discontinuities(which otherwise produce
    * very steep trapping slopes).
@@ -712,15 +734,15 @@ take_numeric_derivative
 void
 NR_MINIMISE
 (
- double(*func)(double *C, double *V, double *B),
+ double(*func)(double VOI, double *C, double *R, double *S, double *A),
+ double VOI,
  double *C,
- double *V,
- double *B,
- int idx
+ double *R,
+ double *S,
+ double *A,
+ double *x
 )
 {
-  double* x = V + idx;
-
   double best_X = 0.0, best_fX = INFINITY;
   double current_X, current_fX, current_dfX_dX;
   uint32_t steps, maxsteps;
@@ -739,7 +761,7 @@ NR_MINIMISE
     for (steps = 0; steps < maxsteps; steps++)
     {
       *x = current_X;
-      current_fX = func(C, V, B);
+      current_fX = func(VOI, C, R, S, A);
       if (!isfinite(current_fX))
       {
         break;
@@ -766,7 +788,7 @@ NR_MINIMISE
 	}
       }
 
-      current_dfX_dX = take_numeric_derivative(func, C, V, B, idx);
+      current_dfX_dX = take_numeric_derivative(func, VOI, C, R, S, A, x);
       /* If it is completely flat, or infinite, we are done with this round. */
       if (!isfinite(current_dfX_dX) || current_dfX_dX == 0.0)
       {

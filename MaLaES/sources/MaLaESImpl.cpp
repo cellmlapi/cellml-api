@@ -138,6 +138,81 @@ private:
   std::vector<iface::cellml_api::CellMLVariable*>::iterator mIt;
 };
 
+class CDAMaLaESDegreeVariable
+  : public iface::cellml_services::DegreeVariable
+{
+public:
+  CDA_IMPL_ID;
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(cellml_services::DegreeVariable);
+
+  CDAMaLaESDegreeVariable(uint32_t aDeg, iface::cellml_api::CellMLVariable* aVar)
+    : _cda_refcount(1), mDeg(aDeg), mVar(aVar)
+  {
+  }
+
+  iface::cellml_api::CellMLVariable*
+  variable() throw(std::exception&)
+  {
+    mVar->add_ref();
+    return mVar;
+  }
+
+  uint32_t
+  degree() throw(std::exception&)
+  {
+    return mDeg;
+  }
+
+private:
+  uint32_t mDeg;
+  ObjRef<iface::cellml_api::CellMLVariable> mVar;
+};
+
+class CDAMaLaESInvolvedVariableDegIterator
+  : public iface::cellml_services::DegreeVariableIterator
+{
+public:
+  CDA_IMPL_ID;
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(cellml_services::DegreeVariableIterator);
+
+  CDAMaLaESInvolvedVariableDegIterator
+  (
+   CDAMaLaESResult* aResult,
+   std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> >& aVars
+  )
+    : _cda_refcount(1), mResult(aResult), mVars(aVars)
+  {
+    mIt = mVars.begin();
+  }
+
+  ~CDAMaLaESInvolvedVariableDegIterator()
+  {
+  }
+
+  iface::cellml_services::DegreeVariable*
+  nextDegreeVariable()
+    throw(std::exception&)
+  {
+    if (mIt == mVars.end())
+      return NULL;
+
+    uint32_t deg = (*mIt).first;
+    iface::cellml_api::CellMLVariable* var = (*mIt).second;
+    
+    mIt++;
+
+    return new CDAMaLaESDegreeVariable(deg, var);
+  }
+
+private:
+  ObjRef<CDAMaLaESResult> mResult;
+  std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> >& mVars;
+  std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> >::
+    iterator mIt;
+};
+
 iface::cellml_api::CellMLVariableIterator*
 CDAMaLaESResult::iterateInvolvedVariables()
   throw(std::exception&)
@@ -154,6 +229,14 @@ CDAMaLaESResult::iterateBoundVariables()
     (this, mBoundVars);
 }
 
+iface::cellml_services::DegreeVariableIterator*
+CDAMaLaESResult::iterateInvolvedVariablesByDegree()
+  throw(std::exception&)
+{
+  return new CDAMaLaESInvolvedVariableDegIterator::
+    CDAMaLaESInvolvedVariableDegIterator(this, mInvolvedDeg);
+}
+
 void
 CDAMaLaESResult::finishTransform()
 {
@@ -167,7 +250,7 @@ CDAMaLaESResult::finishTransform()
 
 double
 CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
-                                     double& aOffset)
+                                     double& aOffset, bool aIsBound)
 {
   try
   {
@@ -226,9 +309,10 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
     {
       sv->add_ref();
       mInvolved.push_back(sv);
-      if (degree > 0)
-        mBoundVars.push_back(sv);
       mInvolvedSet.insert(sv);
+
+      if (aIsBound)
+        mBoundVars.push_back(sv);
     }
 
     if (mVariablesFromSource)
@@ -236,10 +320,21 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
     else
       processingVariable = v;
 
-    if (degree > 0)
+    if (!aIsBound)
     {
-      mup /= boundMup;
-      boundMup = 1.0;
+      std::pair<uint32_t, iface::cellml_api::CellMLVariable*>
+        dvp(degree, sv);
+      if (mInvolvedDegSet.count(dvp) == 0)
+      {
+        mInvolvedDegSet.insert(dvp);
+        mInvolvedDeg.push_back(dvp);
+      }
+
+      if (degree > 0)
+      {
+        mup /= boundMup;
+        boundMup = 1.0;
+      }
     }
 
     return mup;
@@ -501,7 +596,7 @@ CDAMaLaESResult::appendDiffVariable
   }
 
   double offset;
-  boundMup = pow(startConversionMode(bvci, offset), deg);
+  boundMup = pow(startConversionMode(bvci, offset, true), deg);
   this->degree = deg;
   if (offset != 0.0)
     throw MaLaESError(L"You can't use a variable with offset units "
@@ -662,7 +757,9 @@ CDAMaLaESTransform::transform
  iface::cellml_services::AnnotationSet* aAnnos,
  iface::mathml_dom::MathMLElement* aMathML,
  iface::cellml_api::CellMLElement* aContext,
- iface::cellml_api::CellMLVariable* aUnitsOf
+ iface::cellml_api::CellMLVariable* aUnitsOf,
+ iface::cellml_api::CellMLVariable* aBoundUnitsOf,
+ uint32_t aUnitsDiffDegree
 )
   throw(std::exception&)
 {
@@ -696,6 +793,31 @@ CDAMaLaESTransform::transform
                          iface::cellml_services::CanonicalUnitRepresentation,
                          aCUSES->getUnitsByName(compTarg, unTarg.c_str()));
       mup = curLocal->convertUnits(curTarg, &offset);
+    }
+
+    if (aUnitsDiffDegree != 0 && aBoundUnitsOf != NULL)
+    {
+      RETURN_INTO_WSTRING(unLocal, aBoundUnitsOf->unitsName());
+      RETURN_INTO_OBJREF(compLocal, iface::cellml_api::CellMLElement,
+                         aBoundUnitsOf->parentElement());
+      RETURN_INTO_OBJREF(curLocal,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         aCUSES->getUnitsByName(compLocal, unLocal.c_str()));
+      RETURN_INTO_OBJREF(cvs, iface::cellml_services::ConnectedVariableSet,
+                         aCeVAS->findVariableSet(aBoundUnitsOf));
+      RETURN_INTO_OBJREF(sv, iface::cellml_api::CellMLVariable,
+                         cvs->sourceVariable());
+      if (sv == NULL)
+        throw MaLaESError(L"Can't find source variable of units conversion target");
+
+      RETURN_INTO_WSTRING(unTarg, sv->unitsName());
+      RETURN_INTO_OBJREF(compTarg, iface::cellml_api::CellMLElement,
+                         sv->parentElement());
+      RETURN_INTO_OBJREF(curTarg,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         aCUSES->getUnitsByName(compTarg, unTarg.c_str()));
+      double tmp;
+      mup /= pow(curLocal->convertUnits(curTarg, &tmp), aUnitsDiffDegree);
     }
 
     if (mup == 1.0 && offset == 0.0)
@@ -1230,13 +1352,53 @@ CDAMaLaESTransform::RunTransformOnOperator
     return;
   }
 
+  DECLARE_QUERY_INTERFACE_OBJREF(pw, aEl, mathml_dom::MathMLPiecewiseElement);
+  if (pw != NULL)
+  {
+    uint32_t i;
+    std::wstring sn = L"piecewise_first_case";
+    for (i = 1; ; i++)
+    {
+      RETURN_INTO_OBJREF(pwc, iface::mathml_dom::MathMLCaseElement,
+                         pw->getCase(i));
+      if (pwc == NULL)
+        break;
+      
+      CleanupVector<iface::mathml_dom::MathMLElement*> tmpargs;
+      tmpargs.push_back(pwc->caseCondition());
+      tmpargs.push_back(pwc->caseValue());
+      ExecuteTransform(aResult, sn, tmpargs, bvars, NULL, NULL);
+      if (i == 1)
+        sn = L"piecewise_extra_case";
+    }
+
+    try
+    {
+      RETURN_INTO_OBJREF(pwo, iface::mathml_dom::MathMLContentElement,
+                         pw->otherwise());
+
+      args.push_back(pwo);
+      pwo->add_ref();
+
+      std::wstring sn = L"piecewise_otherwise";
+      ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
+    }
+    catch (iface::dom::DOMException& de)
+    {
+      std::wstring sn = L"piecewise_no_otherwise";
+      ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
+    }
+
+    return;
+  }
+
   DECLARE_QUERY_INTERFACE_OBJREF(apply, aEl, mathml_dom::MathMLApplyElement);
 
   if (apply == NULL)
   {
     DECLARE_QUERY_INTERFACE_OBJREF(pds, aEl, mathml_dom::MathMLPredefinedSymbol);
     if (pds == NULL)
-      throw MaLaESError(L"Only apply, cn, ci, and constants are supported.");
+      throw MaLaESError(L"Only apply, cn, ci, constants, and piecewise are supported.");
     RETURN_INTO_WSTRING(sn, pds->symbolName());
     ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
     return;

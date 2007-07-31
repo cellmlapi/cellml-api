@@ -1,121 +1,497 @@
 #define IN_CCGS_MODULE
 #include "CCGSImplementation.hpp"
 #include "CodeGenerationError.hxx"
+#include "CodeGenerationState.hxx"
 #include "CCGSBootstrap.hpp"
+#include "AnnoToolsBootstrap.hpp"
+#include "MaLaESBootstrap.hpp"
+#include "CeVASBootstrap.hpp"
+#include "CUSESBootstrap.hpp"
 
-iface::cellml_services::CCodeInformation*
-CDA_CGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
-  throw (std::exception&)
+iface::cellml_api::CellMLVariable*
+CDA_ComputationTarget::variable() throw()
 {
-  // Pass the work to the constructor...
-  try
-  {
-    return new CDA_CCodeInformation(aSourceModel);
-  }
-  catch (CodeGenerationError& cge)
-  {
-    mLastError = cge.str();
-    throw iface::cellml_api::CellMLException();
-  }
+  mVariable->add_ref();
+  return mVariable;
 }
 
-CDA_CCodeInformation::~CDA_CCodeInformation()
+uint32_t
+CDA_ComputationTarget::degree() throw()
 {
-  CCVL_t::iterator i;
-  for (i = mVariables.begin(); i != mVariables.end(); i++)
-    (*i)->release_ref();
-  MNL_t::iterator i2;
-  for (i2 = mFlaggedEquations.begin(); i2 != mFlaggedEquations.end(); i2++)
-    (*i2)->release_ref();
+  return mDegree;
+}
+
+iface::cellml_services::VariableEvaluationType
+CDA_ComputationTarget::type() throw()
+{
+  return mEvaluationType;
+}
+
+wchar_t*
+CDA_ComputationTarget::name() throw()
+{
+  const wchar_t* annoname;
+  wchar_t annobuf[30];
+  if (mDegree == 0)
+    annoname = L"expression";
+  else
+  {
+    swprintf(annobuf, 30, L"expression_d%u", mDegree);
+    annoname = annobuf;
+  }
+
+  return mAnnoSet->getStringAnnotation(mVariable, annoname);
+}
+
+uint32_t
+CDA_ComputationTarget::assignedIndex() throw()
+{
+  return mAssignedIndex;
+}
+
+void
+CDA_ComputationTarget::setNameAndIndex
+(
+ uint32_t aIndex,
+ const wchar_t* aName
+)
+  throw()
+{
+  const wchar_t* annoname;
+  wchar_t annobuf[30];
+  if (mDegree == 0)
+    annoname = L"expression";
+  else
+  {
+    swprintf(annobuf, 30, L"expression_d%u", mDegree);
+    annoname = annobuf;
+  }
+
+  mAssignedIndex = aIndex;
+
+  mAnnoSet->setStringAnnotation(mVariable, annoname, aName);
+}
+
+iface::cellml_services::ComputationTarget*
+CDA_ComputationTargetIterator::nextComputationTarget() throw()
+{
+  if (mTargetsIt == mTargets.end())
+    return NULL;
+
+  CDA_ComputationTarget* t = *mTargetsIt;
+  mTargetsIt++;
+  
+  t->add_ref();
+  return t;
+}
+
+CDA_CodeInformation::~CDA_CodeInformation()
+{
+  std::list<CDA_ComputationTarget*>::iterator ti;
+  for (ti = mTargets.begin(); ti != mTargets.end(); ti++)
+    (*ti)->release_ref();
+
+  std::vector<iface::dom::Element*>::iterator fei;
+  for (fei = mFlaggedEquations.begin(); fei != mFlaggedEquations.end(); fei++)
+    (*fei)->release_ref();
+}
+
+wchar_t*
+CDA_CodeInformation::errorMessage() throw()
+{
+  return CDA_wcsdup(mErrorMessage.c_str());
 }
 
 iface::cellml_services::ModelConstraintLevel
-CDA_CCodeInformation::constraintLevel()
-  throw (std::exception&)
+CDA_CodeInformation::constraintLevel() throw()
 {
   return mConstraintLevel;
 }
 
 uint32_t
-CDA_CCodeInformation::variableCount()
-  throw (std::exception&)
+CDA_CodeInformation::algebraicIndexCount() throw()
 {
-  return mVariableCount;
+  return mAlgebraicIndexCount;
 }
 
 uint32_t
-CDA_CCodeInformation::constantCount()
-  throw (std::exception&)
+CDA_CodeInformation::rateIndexCount() throw()
 {
-  return mConstantCount;
+  return mRateIndexCount;
 }
 
 uint32_t
-CDA_CCodeInformation::boundCount()
-  throw (std::exception&)
+CDA_CodeInformation::constantIndexCount() throw()
 {
-  return mBoundCount;
+  return mConstantIndexCount;
 }
 
-uint32_t
-CDA_CCodeInformation::rateVariableCount()
-  throw (std::exception&)
+wchar_t*
+CDA_CodeInformation::initConstsString() throw()
 {
-  return mRateVariableCount;
+  return CDA_wcsdup(mInitConstsStr.c_str());
 }
 
-char*
-CDA_CCodeInformation::fixedConstantFragment()
-  throw (std::exception&)
+wchar_t*
+CDA_CodeInformation::ratesString() throw()
 {
-  return strdup(mFixedConstantFragment.str().c_str());
+  return CDA_wcsdup(mRatesStr.c_str());
 }
 
-char*
-CDA_CCodeInformation::computedConstantFragment()
-  throw (std::exception&)
+wchar_t*
+CDA_CodeInformation::variablesString() throw()
 {
-  return strdup(mComputedConstantFragment.str().c_str());
+  return CDA_wcsdup(mVarsStr.c_str());
 }
 
-char*
-CDA_CCodeInformation::rateCodeFragment()
-  throw (std::exception&)
+wchar_t*
+CDA_CodeInformation::functionsString() throw()
 {
-  return strdup(mRateCodeFragment.str().c_str());
+  return CDA_wcsdup(mFuncsStr.c_str());
 }
 
-char*
-CDA_CCodeInformation::variableCodeFragment()
-  throw (std::exception&)
+iface::cellml_services::ComputationTargetIterator*
+CDA_CodeInformation::iterateTargets() throw()
 {
-  return strdup(mVariableCodeFragment.str().c_str());
+  return new CDA_ComputationTargetIterator(mTargets, this);
 }
 
-char*
-CDA_CCodeInformation::functionsFragment()
-  throw (std::exception&)
+class CDA_FlaggedEquationsNodeList
+  : public iface::mathml_dom::MathMLNodeList
 {
-  return strdup(mFunctionsFragment.str().c_str());
-}
+public:
+  CDA_IMPL_ID;
+  CDA_IMPL_QI2(mathml_dom::MathMLNodeList, dom::NodeList);
+  CDA_IMPL_REFCOUNT;
 
-iface::cellml_services::CCodeVariableIterator*
-CDA_CCodeInformation::iterateVariables()
-  throw (std::exception&)
-{
-  return new CDA_CCodeVariableIterator(this, mVariables.begin(),
-                                       mVariables.end());
-}
+  CDA_FlaggedEquationsNodeList(CDA_CodeInformation* aCodeInfo,
+                               std::vector<iface::dom::Element*>& aVector)
+    : _cda_refcount(1), mCodeInfo(aCodeInfo), mVector(aVector) {};
+  ~CDA_FlaggedEquationsNodeList() {};
+  
+  uint32_t length() throw()
+  {
+    return mVector.size();
+  }
+
+  iface::dom::Element* item(uint32_t idx)
+    throw(std::exception&)
+  {
+    if (idx >= mVector.size())
+      throw iface::dom::DOMException();
+
+    mVector[idx]->add_ref();
+
+    return mVector[idx];
+  }
+
+private:
+  ObjRef<CDA_CodeInformation> mCodeInfo;
+  std::vector<iface::dom::Element*>& mVector;
+};
 
 iface::mathml_dom::MathMLNodeList*
-CDA_CCodeInformation::flaggedEquations()
-  throw (std::exception&)
+CDA_CodeInformation::flaggedEquations() throw()
 {
-  return new CDA_CCodeMathList(this, mFlaggedEquations);
+  return new CDA_FlaggedEquationsNodeList(this, mFlaggedEquations);
 }
 
-iface::cellml_services::CGenerator*
-CreateCGenerator(void)
+CDA_CodeGenerator::CDA_CodeGenerator()
+ : _cda_refcount(1),
+   mConstantPattern(L"CONSTANTS[%]"),
+   mStateVariableNamePattern(L"STATES[%]"),
+   mAlgebraicVariableNamePattern(L"ALGEBRAIC[%]"),
+   mRateNamePattern(L"RATES[%]"),
+   mVOIPattern(L"VOI"),
+   mAssignPattern(L"<LHS> = <RHS>;\r\n"),
+   mSolvePattern(L"NR_MINIMISE(minfunc_<ID>, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &<VAR>);\r\n"
+                 L"<SUP>double minfunc_<ID>(double VOI, double* CONSTANTS, "
+                 L"double* RATES, double* STATES, double * ALGEBRAIC)"
+                 L"\r\n{\r\nreturn fabs((<LHS>)-(<RHS>));\r\n}\r\n"),
+   mArrayOffset(0)
 {
-  return new CDA_CGenerator();
+}
+
+wchar_t*
+CDA_CodeGenerator::constantPattern() throw()
+{
+  return CDA_wcsdup(mConstantPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::constantPattern(const wchar_t* aPattern) throw()
+{
+  mConstantPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::stateVariableNamePattern() throw()
+{
+  return CDA_wcsdup(mStateVariableNamePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::stateVariableNamePattern(const wchar_t* aPattern) throw()
+{
+  mStateVariableNamePattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::algebraicVariableNamePattern() throw()
+{
+  return CDA_wcsdup(mAlgebraicVariableNamePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::algebraicVariableNamePattern(const wchar_t* aPattern) throw()
+{
+  mAlgebraicVariableNamePattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::rateNamePattern() throw()
+{
+  return CDA_wcsdup(mRateNamePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::rateNamePattern(const wchar_t* aPattern) throw()
+{
+  mRateNamePattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::voiPattern() throw()
+{
+  return CDA_wcsdup(mVOIPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::voiPattern(const wchar_t* aPattern) throw()
+{
+  mVOIPattern = aPattern;
+}
+
+uint32_t
+CDA_CodeGenerator::arrayOffset() throw()
+{
+  return mArrayOffset;
+}
+
+void
+CDA_CodeGenerator::arrayOffset(uint32_t offset) throw()
+{
+  mArrayOffset = offset;
+}
+
+wchar_t*
+CDA_CodeGenerator::assignPattern() throw()
+{
+  return CDA_wcsdup(mAssignPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::assignPattern(const wchar_t* aPattern) throw()
+{
+  mAssignPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::solvePattern() throw()
+{
+  return CDA_wcsdup(mSolvePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::solvePattern(const wchar_t* aPattern) throw()
+{
+  mSolvePattern = aPattern;
+}
+
+iface::cellml_services::MaLaESTransform*
+CDA_CodeGenerator::transform() throw()
+{
+  if (mTransform != NULL)
+    mTransform->add_ref();
+
+  return mTransform;
+}
+
+void
+CDA_CodeGenerator::transform(iface::cellml_services::MaLaESTransform* aTransform)
+ throw()
+{
+  mTransform = aTransform;
+}
+
+iface::cellml_services::CeVAS*
+CDA_CodeGenerator::useCeVAS() throw()
+{
+  if (mCeVAS != NULL)
+    mCeVAS->add_ref();
+  return mCeVAS;
+}
+
+void
+CDA_CodeGenerator::useCeVAS(iface::cellml_services::CeVAS* aCeVAS)
+ throw()
+{
+  mCeVAS = aCeVAS;
+}
+
+iface::cellml_services::CUSES*
+CDA_CodeGenerator::useCUSES() throw()
+{
+  if (mCUSES != NULL)
+    mCUSES->add_ref();
+  return mCUSES;
+}
+
+void
+CDA_CodeGenerator::useCUSES(iface::cellml_services::CUSES* aCUSES)
+ throw()
+{
+  mCUSES = aCUSES;
+}
+
+iface::cellml_services::AnnotationSet*
+CDA_CodeGenerator::useAnnoSet() throw()
+{
+  if (mAnnoSet != NULL)
+    mAnnoSet->add_ref();
+  return mAnnoSet;
+}
+
+void
+CDA_CodeGenerator::useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet)
+ throw()
+{
+  mAnnoSet = aAnnoSet;
+}
+
+iface::cellml_services::CodeInformation*
+CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
+ throw()
+{
+  CodeGenerationState cgs(
+                          aSourceModel,
+                          mConstantPattern, mStateVariableNamePattern,
+                          mAlgebraicVariableNamePattern,
+                          mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
+                          mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet);
+
+  if (cgs.mAnnoSet == NULL)
+  {
+    RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
+                       CreateAnnotationToolService());
+    cgs.mAnnoSet =
+      already_AddRefd<iface::cellml_services::AnnotationSet>
+      (ats->createAnnotationSet());
+  }
+
+  if (cgs.mTransform == NULL)
+  {
+    RETURN_INTO_OBJREF(mb, iface::cellml_services::MaLaESBootstrap,
+                       CreateMaLaESBootstrap());
+    cgs.mTransform =
+      already_AddRefd<iface::cellml_services::MaLaESTransform>
+      (mb->compileTransformer(
+L"opengroup: (\r\n"
+L"closegroup: )\r\n"
+L"abs: #prec[H]fabs(#expr1)\r\n"
+L"and: #prec[20]#exprs[&&]\r\n"
+L"arccos: #prec[H]acos(#expr1)\r\n"
+L"arccosh: #prec[H]acosh(#expr1)\r\n"
+L"arccot: #prec[1000(900)]atan(1.0/#expr1)\r\n"
+L"arccoth: #prec[1000(900)]atanh(1.0/#expr1)\r\n"
+L"arccsc: #prec[1000(900)]asin(1/#expr1)\r\n"
+L"arccsch: #prec[1000(900)]asinh(1/#expr1)\r\n"
+L"arcsec: #prec[1000(900)]acos(1/#expr1)\r\n"
+L"arcsech: #prec[1000(900)]acosh(1/#expr1)\r\n"
+L"arcsin: #prec[H]asin(#expr1)\r\n"
+L"arcsinh: #prec[H]asinh(#expr1)\r\n"
+L"arctan: #prec[H]atan(#expr1)\r\n"
+L"arctanh: #prec[H]atanh(#expr1)\r\n"
+L"ceiling: #prec[H]ceil(#expr1)\r\n"
+L"cos: #prec[H]cos(#expr1)\r\n"
+L"cosh: #prec[H]cosh(#expr1)\r\n"
+L"cot: #prec[900(0)]1.0/tan(#expr1)\r\n"
+L"coth: #prec[900(0)]1.0/tanh(#expr1)\r\n"
+L"csc: #prec[900(0)]1.0/sin(#expr1)\r\n"
+L"csch: #prec[900(0)]1.0/sinh(#expr1)\r\n"
+L"diff: #lookupDiffVariable\r\n"
+L"divide: #prec[900]#expr1/#expr2\r\n"
+L"eq: #prec[30]#exprs[==]\r\n"
+L"exp: #prec[H]exp(#expr1)\r\n"
+L"factorial: #prec[H]factorial(#expr1)\r\n"
+L"factorof: #prec[30(900)]#expr1 % #expr2 == 0\r\n"
+L"floor: #prec[H]floor(#expr1)\r\n"
+L"gcd: #prec[H]gcd_multi(#count, #exprs[, ])\r\n"
+L"geq: #prec[30]#exprs[>=]\r\n"
+L"gt: #prec[30]#exprs[>]\r\n"
+L"implies: #prec[10(950)] !#expr1 || #expr2\r\n"
+L"int: #prec[H]defint(func#unique1, BOUND, CONSTANTS, RATES, VARIABLES, "
+L"#bvarIndex)#supplement double func#unique1(double* BOUND, "
+L"double* CONSTANTS, double* RATES, double* VARIABLES) { return #expr1; }\r\n"
+L"lcm: #prec[H]lcm_multi(#count, #exprs[, ])\r\n"
+L"leq: #prec[30]#exprs[<=]\r\n"
+L"ln: #prec[H]log(#expr1)\r\n"
+L"log: #prec[H]arbitrary_log(#expr1, #logbase)\r\n"
+L"lt: #prec[30]#exprs[<]\r\n"
+L"max: #prec[H]multi_max(#count, #exprs[, ])\r\n"
+L"min: #prec[H]multi_min(#count, #exprs[, ])\r\n"
+L"minus: #prec[500]#expr1 - #expr2\r\n"
+L"neq: #prec[30]#expr1 != #expr2\r\n"
+L"not: #prec[950]!#expr1\r\n"
+L"or: #prec[10]#exprs[||]\r\n"
+L"plus: #prec[500]#exprs[+]\r\n"
+L"power: #prec[H]pow(#expr1, #expr2)\r\n"
+L"quotient: #prec[900(0)] (int)(#expr1) / (int)(#expr2)\r\n"
+L"rem: #prec[900(0)] (int)(#expr1) % (int)(#expr2)\r\n"
+L"root: #prec[1000(900)] pow(#expr1, 1.0 / #degree)\r\n"
+L"sec: #prec[900(0)]1.0 / cos(#expr1)\r\n"
+L"sech: #prec[900(0)]1.0 / cosh(#expr1)\r\n"
+L"sin: #prec[H] sin(#expr1)\r\n"
+L"sinh: #prec[H] sinh(#expr1)\r\n"
+L"tan: #prec[H] tan(#expr1)\r\n"
+L"tanh: #prec[H] tanh(#expr1)\r\n"
+L"times: #prec[900] #exprs[*]\r\n"
+L"unary_minus: #prec[950]-#expr1\r\n"
+L"units_conversion: #prec[500(900)]#expr1*#expr2 + #expr3\r\n"
+L"units_conversion_factor: #prec[900]#expr1*#expr2\r\n"
+L"units_conversion_offset: #prec[500]#expr1+#expr2\r\n"
+L"xor: #prec[25(30)] (#expr1 != 0) ^ (#expr2 != 0)\r\n"
+L"piecewise_first_case: #prec[5]#expr1 ? #expr2 : \r\n"
+L"piecewise_extra_case: #prec[5]#expr1 ? #expr2 : \r\n"
+L"piecewise_otherwise: #prec[5]#expr1\r\n"
+L"piecewise_no_otherwise: #prec[5]0.0/0.0\r\n"
+L"pi: #prec[999] 3.14159265358979\r\n"
+L"eulergamma: #prec[999]0.577215664901533\r\n"
+L"infinity: #prec[900]1.0/0.0\r\n"
+                             ));
+  }
+
+  if (cgs.mCeVAS == NULL)
+  {
+    RETURN_INTO_OBJREF(cb, iface::cellml_services::CeVASBootstrap,
+                       CreateCeVASBootstrap());
+    cgs.mCeVAS = already_AddRefd<iface::cellml_services::CeVAS>
+      (cb->createCeVASForModel(aSourceModel));
+  }
+
+  if (cgs.mCUSES == NULL)
+  {
+    RETURN_INTO_OBJREF(cb, iface::cellml_services::CUSESBootstrap,
+                       CreateCUSESBootstrap());
+    cgs.mCUSES = already_AddRefd<iface::cellml_services::CUSES>
+      (cb->createCUSESForModel(aSourceModel, false));
+  }
+
+  return cgs.GenerateCode();
+}
+
+iface::cellml_services::CodeGeneratorBootstrap*
+CreateCodeGeneratorBootstrap(void)
+{
+  return new CDA_CodeGeneratorBootstrap();
 }

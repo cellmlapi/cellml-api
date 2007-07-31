@@ -36,13 +36,28 @@ module cellml_services
      * Called when integration results become available. The first results
      * reproduce the initial conditions, with the second result being for the
      * initial plus the bvar increment, and so on.
-     * @param state A sequence of results, for one or more bvar values. The
-     *              length of the sequence will always be an exact multiple of
-     *              the size of the variables array + the size of the bound
-     *              variables array, and will contain the
-     *              variables in the same order, followed by the bound variables
-     *              in the same order (results from several timepoints may be
-     *              concatenated into a single results call).
+     *
+     * @param state A sequence of result entries, for one or more bvar values.
+     *   Each entry has the following structure:
+     *     +---------+------------+----------------------------------+
+     *     | Index   |  Length    |       Description                |
+     *     +---------+------------+----------------------------------+
+     *     |   0     |     1      | Variable of integration (e.g.    |
+     *     |         |            | time)                            |
+     *     +---------+------------+----------------------------------+
+     *     |   1     |    nS      | The states array, using indices  |
+     *     |         |            | from the CCGS.                   |
+     *     +---------+------------+----------------------------------+
+     *     | nS+1    |    nS      | The rates array.                 |
+     *     +---------+------------+----------------------------------+
+     *     | 2*nS+1  |    nA      | The algebraic variables array.   |
+     *     +---------+------------+----------------------------------+
+     *   nS is the number of state variables, nA is the number of algebraic
+     *   variables.
+     *
+     *   Any individual call of results() will carry one or more of the above
+     *   records, and so will contain an exact multiple of 2*nS + 1 + nA
+     *   doubles in the sequence.
      */
     void results(in DoubleSeq state);
 
@@ -121,7 +136,7 @@ module cellml_services
                      in cellml_services::VariableEvaluationType type,
                      in unsigned long variableIndex,
                      in double newValue
-                     ) raises(cellml_api::CellMLException);
+                    ) raises(cellml_api::CellMLException);
 
     /**
      * Starts the integration running. Results will get notified to the
@@ -145,9 +160,9 @@ module cellml_services
     readonly attribute cellml_api::Model model;
 
     /**
-     * Information about the generated C-code which was compiled.
+     * Information about the generated code which was compiled.
      */
-    readonly attribute cellml_services::CCodeInformation codeInformation;
+    readonly attribute cellml_services::CodeInformation codeInformation;
   };
 #pragma terminal-interface
 
@@ -156,11 +171,9 @@ module cellml_services
   {
     /**
      * Called to compile the model.
-     * @param cg The C generator which should be used to generate code.
      * @param aModel The model to compile.
      */
-    CellMLCompiledModel compileModel(in cellml_services::CGenerator cg,
-                                     in cellml_api::Model aModel)
+    CellMLCompiledModel compileModel(in cellml_api::Model aModel)
       raises(cellml_api::CellMLException);
 
     /**

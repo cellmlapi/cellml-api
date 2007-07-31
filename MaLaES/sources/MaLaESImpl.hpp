@@ -54,12 +54,14 @@ public:
     throw(std::exception&);
   iface::cellml_api::CellMLVariableIterator* iterateBoundVariables()
     throw(std::exception&);
+  iface::cellml_services::DegreeVariableIterator*
+    iterateInvolvedVariablesByDegree() throw(std::exception&);
   bool involvesExternalCode() throw(std::exception&);
   
   void finishTransform();
 
   double startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
-                             double& offset);
+                             double& offset, bool aIsBound = false);
   bool writeConvertedVariable();
   void endConversionMode();
 
@@ -147,7 +149,10 @@ private:
   std::map<std::wstring, uint32_t> mUniqueAssignments;
   uint32_t mLastUnique;
   std::set<iface::cellml_api::CellMLVariable*,XPCOMComparator> mInvolvedSet;
+  std::set<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> > mInvolvedDegSet;
   CleanupVector<iface::cellml_api::CellMLVariable*> mInvolved;
+  std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> > mInvolvedDeg;
+
   std::vector<iface::cellml_api::CellMLVariable*> mBoundVars;
   std::map<iface::cellml_api::CellMLVariable*, uint32_t> mHighestDegree;
   ObjRef<iface::cellml_api::CellMLVariable> processingVariable;
@@ -175,7 +180,9 @@ public:
             iface::cellml_services::AnnotationSet* aAnnos,
             iface::mathml_dom::MathMLElement* aMathML,
             iface::cellml_api::CellMLElement* aContext,
-            iface::cellml_api::CellMLVariable* aUnitsOf)
+            iface::cellml_api::CellMLVariable* aUnitsOf,
+            iface::cellml_api::CellMLVariable* aBoundUnitsOf,
+            uint32_t aUnitsDiffDegree)
     throw(std::exception&);
 
   void RunTransformOnOperator(CDAMaLaESResult* aResult,
