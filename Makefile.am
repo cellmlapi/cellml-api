@@ -84,6 +84,10 @@ if ENABLE_CIS
 include $(top_srcdir)/CIS/build.mk
 endif
 if ENABLE_CONTEXT_AND_CORBA_AND_CIS
+include $(top_srcdir)/AnnoTools/corba_build.mk
+include $(top_srcdir)/CUSES/corba_build.mk
+include $(top_srcdir)/CeVAS/corba_build.mk
+include $(top_srcdir)/MaLaES/corba_build.mk
 include $(top_srcdir)/CIS/corba_build.mk
 endif
 
