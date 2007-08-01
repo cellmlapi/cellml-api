@@ -21,15 +21,18 @@ libmalaes_corba_stubs_la_CXXFLAGS := \
 
 libmalaes_corba_bridge_la_LIBADD := \
   $(top_builddir)/libmalaes_corba_stubs.la \
-  $(top_builddir)/libccgs_corba_bridge.la \
+  $(top_builddir)/libcuses_corba_bridge.la \
+  $(top_builddir)/libcevas_corba_bridge.la \
+  $(top_builddir)/libannotools_corba_bridge.la \
   $(top_builddir)/libcellml_corba_bridge.la \
   $(top_builddir)/libCORBASupport.la $(STLLINK)
 
 libmalaes_corba_stubs_la_LIBADD := \
   $(OMNILINK) \
   $(STLLINK) \
-  $(top_builddir)/libcellml_corba_stubs.la \
-  $(top_builddir)/libccgs_corba_stubs.la
+  $(top_builddir)/libcevas_corba_stubs.la \
+  $(top_builddir)/libcuses_corba_stubs.la \
+  $(top_builddir)/libannotools_corba_stubs.la
 
 BUILT_SOURCES += \
   $(top_builddir)/interfaces/CCIMaLaES.cxx \

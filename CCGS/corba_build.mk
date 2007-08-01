@@ -37,13 +37,19 @@ libccgs_corba_stubs_la_CXXFLAGS := \
 
 libccgs_corba_bridge_la_LIBADD := \
   $(top_builddir)/libannotools_corba_bridge.la \
+  $(top_builddir)/libcuses_corba_bridge.la \
   $(top_builddir)/libmalaes_corba_bridge.la \
   $(top_builddir)/libccgs_corba_stubs.la \
   $(top_builddir)/libcellml_corba_bridge.la \
   $(top_builddir)/libCORBASupport.la
 
 libccgs_corba_stubs_la_LIBADD := \
-  $(OMNILINK) $(STLLINK) $(top_builddir)/libcellml_corba_stubs.la
+  $(OMNILINK) \
+  $(STLLINK) \
+  $(top_builddir)/libannotools_corba_stubs.la \
+  $(top_builddir)/libcuses_corba_stubs.la \
+  $(top_builddir)/libmalaes_corba_stubs.la \
+  $(top_builddir)/libcellml_corba_stubs.la
 
 libccgs_corba_bridge_la_LDFLAGS := \
   -no-undefined

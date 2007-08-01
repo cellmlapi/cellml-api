@@ -14,7 +14,8 @@ iface::cellml_context::CellMLModule* gCodeGenerator;
 int
 do_registration(void* aContext, void* aModuleManager, void (*UnloadService)())
 {
-  RETURN_INTO_OBJREF(cgm, iface::cellml_services::CGenerator, CreateCGenerator());
+  RETURN_INTO_OBJREF(cgm, iface::cellml_services::CodeGeneratorBootstrap,
+                     CreateCodeGeneratorBootstrap());
   QUERY_INTERFACE(gCodeGenerator, cgm, cellml_context::CellMLModule);
 
   reinterpret_cast<iface::cellml_context::CellMLModuleManager*>(aModuleManager)
@@ -25,8 +26,8 @@ do_registration(void* aContext, void* aModuleManager, void (*UnloadService)())
   // gCodeGenerator->SetUnloadCCGS(UnloadService);
 
   // Ugly hack to force linking...
-  SCI::cellml_services::prodCCodeVariable();
-  CCI::cellml_services::prodCCodeVariable();
+  SCI::cellml_services::prodCodeGeneratorBootstrap();
+  CCI::cellml_services::prodCodeGeneratorBootstrap();
   
   return 0;
 }

@@ -72,6 +72,8 @@ AC_ARG_ENABLE(xpcom,
   no) xpcom=false ;;
   *)
   xpcom=$enableval
+  CHECK_SHORT_WCHAR_OPTION
+  AM_CXXFLAGS="$AM_CXXFLAGS $short_wchar_option"
   AC_DEFINE(ENABLE_XPCOM, 1, [Is XPCOM enabled?])
   ;;
 esac], [xpcom=false])
@@ -239,7 +241,12 @@ EOF
                  ])
   if test "$ac_cv_visibility_hidden" = "yes"; then
     AC_DEFINE([HAVE_VISIBILITY_ATTRIBUTE], [], [Define if gcc visibility attributes supported])
-    VISIBILITY_FLAGS=-fvisibility=hidden
+    # Visibility and CORBA don't work together correctly.
+    if test x$corba != xfalse; then
+      VISIBILITY_FLAGS=
+    else
+      VISIBILITY_FLAGS=-fvisibility=hidden
+    fi
   fi
   EXTRA_OPTIMISATION="-O2 -ffast-math"
 fi
