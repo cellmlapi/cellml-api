@@ -76,6 +76,22 @@ if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
 include $(top_srcdir)/CCGS/corba_build.mk
 endif
 
+if ENABLE_ANNOTOOLS_AND_XPCOM
+include $(top_srcdir)/AnnoTools/xpcom_build.mk
+endif
+
+if ENABLE_CEVAS_AND_XPCOM
+include $(top_srcdir)/CeVAS/xpcom_build.mk
+endif
+
+if ENABLE_CUSES_AND_XPCOM
+include $(top_srcdir)/CUSES/xpcom_build.mk
+endif
+
+if ENABLE_MALAES_AND_XPCOM
+include $(top_srcdir)/MaLaES/xpcom_build.mk
+endif
+
 if ENABLE_CCGS_AND_XPCOM
 include $(top_srcdir)/CCGS/xpcom_build.mk
 endif

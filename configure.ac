@@ -185,9 +185,25 @@ if test x$context = xtrue; then
   fi
 fi
 
+annotoolsandxpcom=false
+cevasandxpcom=false
+cusesandxpcom=false
+malaesandxpcom=false
 ccgsandxpcom=false
 cisandxpcom=false
 if test x$xpcom != xfalse; then
+   if test x$annotools = xtrue; then
+      annotoolsandxpcom=true
+   fi
+   if test x$cevas = xtrue; then
+      cevasandxpcom=true
+   fi
+   if test x$cuses = xtrue; then
+      cusesandxpcom=true
+   fi
+   if test x$malaes = xtrue; then
+      malaesandxpcom=true
+   fi
    if test x$ccgs = xtrue; then
       ccgsandxpcom=true
    fi
@@ -202,6 +218,10 @@ AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CCGS,
                test x$contextandcorbaandccgs = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CIS,
                test x$contextandcorbaandcis = xtrue)
+AM_CONDITIONAL(ENABLE_ANNOTOOLS_AND_XPCOM, test x$annotoolsandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_CEVAS_AND_XPCOM, test x$cevasandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_CUSES_AND_XPCOM, test x$cusesandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_MALAES_AND_XPCOM, test x$malaesandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
 

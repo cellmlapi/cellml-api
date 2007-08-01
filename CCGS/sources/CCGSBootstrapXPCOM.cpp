@@ -22,9 +22,9 @@ CCGSBootstrapConstructor
 {
   if (aOuter != nsnull)
     return NS_ERROR_NO_AGGREGATION;
-  iface::cellml_services::CGenerator* bs = CreateCGenerator();
-  nsCOMPtr<cellml_servicesICGenerator> xbs =
-    new ::x2p::cellml_services::CGenerator(bs);
+  iface::cellml_services::CodeGeneratorBootstrap* bs = CreateCodeGeneratorBootstrap();
+  nsCOMPtr<cellml_servicesICodeGeneratorBootstrap> xbs =
+    new ::x2p::cellml_services::CodeGeneratorBootstrap(bs);
   bs->release_ref();
   return xbs->QueryInterface(aIID, aResult);
 }
