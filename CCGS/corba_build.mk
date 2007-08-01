@@ -36,6 +36,8 @@ libccgs_corba_stubs_la_CXXFLAGS := \
 	-I$(top_srcdir)/simple_interface_generators/glue
 
 libccgs_corba_bridge_la_LIBADD := \
+  $(top_builddir)/libannotools_corba_bridge.la \
+  $(top_builddir)/libmalaes_corba_bridge.la \
   $(top_builddir)/libccgs_corba_stubs.la \
   $(top_builddir)/libcellml_corba_bridge.la \
   $(top_builddir)/libCORBASupport.la

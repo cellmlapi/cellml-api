@@ -390,7 +390,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
 
   RETURN_INTO_OBJREF(sentinel, UnitDependencies, new UnitDependencies());
 
-  std::map<std::wstring, iface::cellml_api::Units*>::iterator umi;
+  std::map<std::wstring, iface::cellml_api::Units*>::const_iterator umi;
   for (umi = unitsMap->begin(); umi != unitsMap->end(); umi++)
   {
     RETURN_INTO_OBJREF(depsX, iface::XPCOM::IObject,
@@ -861,7 +861,7 @@ CDACUSES::ComputeUnits
       double newPrefix;
       if (i == 0)
         newPrefix = u->multiplier() *
-          pow(pow(10, -u->prefix()) * bu->prefix(), u->exponent());
+          pow(pow(10.0, -u->prefix()) * bu->prefix(), u->exponent());
       else
         newPrefix = pow(bu->prefix(), u->exponent());
       double newOffset;
