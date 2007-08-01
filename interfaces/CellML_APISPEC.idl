@@ -115,6 +115,9 @@ module cellml_api
   interface UserData : XPCOM::IObject
   {
   };
+#ifdef USERDATA_NEEDED
+#pragma every-module
+#endif
 #pragma cross-module-inheritance
 
   /**

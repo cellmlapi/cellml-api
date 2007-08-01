@@ -9,8 +9,6 @@ libccgs_xpcom_bridge_la_SOURCES = \
 
 libccgs_xpcom_bridge_la_LIBADD = \
   $(STLLINK) \
-  $(top_builddir)/libcellml.la \
-  $(top_builddir)/libcellml_xpcom_bridge.la \
   $(top_builddir)/libccgs.la \
   $(top_builddir)/libXPCOMSupport.la
 

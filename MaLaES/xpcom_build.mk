@@ -9,8 +9,6 @@ libmalaes_xpcom_bridge_la_SOURCES = \
 
 libmalaes_xpcom_bridge_la_LIBADD = \
   $(STLLINK) \
-  $(top_builddir)/libcellml.la \
-  $(top_builddir)/libcellml_xpcom_bridge.la \
   $(top_builddir)/libmalaes.la \
   $(top_builddir)/libXPCOMSupport.la
 

@@ -9,11 +9,8 @@ libcis_xpcom_bridge_la_SOURCES = \
 
 libcis_xpcom_bridge_la_LIBADD = \
   $(STLLINK) \
-  $(top_builddir)/libcellml.la \
-  $(top_builddir)/libcellml_xpcom_bridge.la \
-  $(top_builddir)/libccgs.la \
-  $(top_builddir)/libccgs_xpcom_bridge.la \
-  $(top_builddir)/libcis.la
+  $(top_builddir)/libcis.la \
+  $(top_builddir)/libXPCOMSupport.la
 
 libcis_xpcom_bridge_la_LDFLAGS = \
   -no-undefined
