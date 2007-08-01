@@ -485,7 +485,7 @@ CDACUSES::scopedFind
       full += L'/';
     full += aName;
 
-    typename std::map<std::wstring, C*>::iterator i = aMap->find(full);
+    typename std::multimap<std::wstring, C*>::iterator i = aMap->find(full);
     if (i != aMap->end())
     {
       return (*i).second;
