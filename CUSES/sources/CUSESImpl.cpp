@@ -390,7 +390,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
 
   RETURN_INTO_OBJREF(sentinel, UnitDependencies, new UnitDependencies());
 
-  std::map<std::wstring, iface::cellml_api::Units*>::const_iterator umi;
+  std::multimap<std::wstring, iface::cellml_api::Units*>::const_iterator umi;
   for (umi = unitsMap->begin(); umi != unitsMap->end(); umi++)
   {
     RETURN_INTO_OBJREF(depsX, iface::XPCOM::IObject,
