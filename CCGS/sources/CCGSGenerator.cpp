@@ -540,7 +540,7 @@ CodeGenerationState::GenerateVariableName
  uint32_t index
 )
 {
-  uint32_t cursor = aPattern.find(L'%');
+  size_t cursor = aPattern.find(L'%');
   if (cursor == std::wstring::npos)
   {
     aStr.assign(aPattern);
@@ -631,8 +631,8 @@ CodeGenerationState::AppendAssign
  std::wstring& aRHS
 )
 {
-  uint32_t idx1 = mAssignPattern.find(L"<LHS>");
-  uint32_t idx2 = mAssignPattern.find(L"<RHS>");
+  size_t idx1 = mAssignPattern.find(L"<LHS>");
+  size_t idx2 = mAssignPattern.find(L"<RHS>");
   if (idx1 == std::wstring::npos && idx2 == std::wstring::npos)
   {
     aAppendTo.append(mAssignPattern);
