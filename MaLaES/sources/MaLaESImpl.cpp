@@ -217,24 +217,21 @@ iface::cellml_api::CellMLVariableIterator*
 CDAMaLaESResult::iterateInvolvedVariables()
   throw(std::exception&)
 {
-  return new CDAMaLaESInvolvedVariableIterator::CDAMaLaESInvolvedVariableIterator
-    (this, mInvolved);
+  return new CDAMaLaESInvolvedVariableIterator(this, mInvolved);
 }
 
 iface::cellml_api::CellMLVariableIterator*
 CDAMaLaESResult::iterateBoundVariables()
   throw(std::exception&)
 {
-  return new CDAMaLaESInvolvedVariableIterator::CDAMaLaESInvolvedVariableIterator
-    (this, mBoundVars);
+  return new CDAMaLaESInvolvedVariableIterator(this, mBoundVars);
 }
 
 iface::cellml_services::DegreeVariableIterator*
 CDAMaLaESResult::iterateInvolvedVariablesByDegree()
   throw(std::exception&)
 {
-  return new CDAMaLaESInvolvedVariableDegIterator::
-    CDAMaLaESInvolvedVariableDegIterator(this, mInvolvedDeg);
+  return new CDAMaLaESInvolvedVariableDegIterator(this, mInvolvedDeg);
 }
 
 void
@@ -817,7 +814,7 @@ CDAMaLaESTransform::transform
                          iface::cellml_services::CanonicalUnitRepresentation,
                          aCUSES->getUnitsByName(compTarg, unTarg.c_str()));
       double tmp;
-      mup /= pow(curLocal->convertUnits(curTarg, &tmp), aUnitsDiffDegree);
+      mup /= pow(curLocal->convertUnits(curTarg, &tmp), (double)aUnitsDiffDegree);
     }
 
     if (mup == 1.0 && offset == 0.0)
