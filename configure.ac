@@ -72,8 +72,8 @@ AC_ARG_ENABLE(xpcom,
   no) xpcom=false ;;
   *)
   xpcom=$enableval
-  CHECK_SHORT_WCHAR_OPTION
-  AM_CXXFLAGS="$AM_CXXFLAGS $short_wchar_option"
+  # CHECK_SHORT_WCHAR_OPTION
+  # AM_CXXFLAGS="$AM_CXXFLAGS $short_wchar_option"
   AC_DEFINE(ENABLE_XPCOM, 1, [Is XPCOM enabled?])
   ;;
 esac], [xpcom=false])
