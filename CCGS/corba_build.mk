@@ -33,7 +33,7 @@ libccgs_corba_bridge_la_CXXFLAGS := \
 
 libccgs_corba_stubs_la_CXXFLAGS := \
 	-I$(top_builddir)/interfaces \
-	-I$(top_srcdir)/simple_interface_generators/glue
+	-I$(top_srcdir)/simple_interface_generators/glue $(AM_CXXFLAGS)
 
 libccgs_corba_bridge_la_LIBADD := \
   $(top_builddir)/libannotools_corba_bridge.la \

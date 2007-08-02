@@ -6,4 +6,12 @@ RunCellML_LDADD=\
   $(top_builddir)/libcis.la \
   -lxml2 -lgsl -lgslcblas $(THREADFLAGS)
 RunCellML_LDFLAGS=-O0
-RunCellML_CXXFLAGS=-I$(top_srcdir)/sources -I$(top_srcdir)/sources/dom -I$(top_srcdir)/sources/mathml -I$(top_srcdir)/sources/cellml -I$(top_builddir)/interfaces -I$(top_srcdir)/CCGS/sources -I$(top_srcdir)/CIS/sources -Wall -O0
+RunCellML_CXXFLAGS=\
+  -I$(top_srcdir)/sources \
+  -I$(top_srcdir)/sources/dom \
+  -I$(top_srcdir)/sources/mathml \
+  -I$(top_srcdir)/sources/cellml \
+  -I$(top_builddir)/interfaces \
+  -I$(top_srcdir)/CCGS/sources \
+  -I$(top_srcdir)/CIS/sources \
+  -Wall -O0 $(AM_CXXFLAGS)
