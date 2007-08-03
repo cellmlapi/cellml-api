@@ -342,6 +342,8 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 
     lastVOI = voi;
 
+    f->ComputeVariables(voi, constants, rates, states, algebraic);
+
     // Add to storage...
     storage[storageSize] = voi;
     memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
