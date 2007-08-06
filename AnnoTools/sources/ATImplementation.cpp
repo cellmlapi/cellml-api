@@ -158,7 +158,7 @@ CDAAnnotationSetImpl::getObjectAnnotation
     
     return oa->value();
   }
-  catch (iface::cellml_api::CellMLException& e)
+  catch (...)
   {
     return NULL;
   }
