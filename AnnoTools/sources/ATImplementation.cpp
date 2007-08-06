@@ -109,7 +109,7 @@ CDAAnnotationSetImpl::getStringAnnotation
     
     return sa->value();
   }
-  catch (iface::cellml_api::CellMLException& e)
+  catch (...)
   {
     return CDA_wcsdup(L"");
   }
