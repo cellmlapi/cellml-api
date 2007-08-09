@@ -33,6 +33,14 @@ CodeGenerationState::GenerateCode()
 
   try
   {
+
+    RETURN_INTO_WSTRING(cevError, mCeVAS->modelError());
+    if (cevError != L"")
+      throw CodeGenerationError(cevError);
+    RETURN_INTO_WSTRING(cusesError, mCUSES->modelError());
+    if (cusesError != L"")
+      throw CodeGenerationError(cusesError);
+
     // Create all computation targets...
     CreateBaseComputationTargets();
     

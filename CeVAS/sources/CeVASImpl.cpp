@@ -480,10 +480,44 @@ CDACeVAS::ComputeConnectedVariables
         if (mv == NULL)
           break;
 
-        RETURN_INTO_OBJREF(cv1, iface::cellml_api::CellMLVariable,
-                           mv->firstVariable());
-        RETURN_INTO_OBJREF(cv2, iface::cellml_api::CellMLVariable,
-                           mv->secondVariable());
+        ObjRef<iface::cellml_api::CellMLVariable> cv1, cv2;
+        try
+        {
+          cv1 = already_AddRefd<iface::cellml_api::CellMLVariable>
+            (mv->firstVariable());
+        }
+        catch (...)
+        {
+          std::wstring msg = L"Invalid first variable or component in "
+            "connection to component ";
+          RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents,
+                             conn->componentMapping());
+          RETURN_INTO_WSTRING(cname, mc->firstComponentName());
+          msg += cname;
+          msg += L", variable ";
+          RETURN_INTO_WSTRING(vname, mv->firstVariableName());
+          msg += vname;
+          throw CeVASError(msg);
+        }
+        
+        try
+        {
+          cv2 = already_AddRefd<iface::cellml_api::CellMLVariable>
+            (mv->secondVariable());
+        }
+        catch (...)
+        {
+          std::wstring msg = L"Invalid second variable or component in "
+            "connection to component ";
+          RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents,
+                             conn->componentMapping());
+          RETURN_INTO_WSTRING(cname, mc->secondComponentName());
+          msg += cname;
+          msg += L", variable ";
+          RETURN_INTO_WSTRING(vname, mv->secondVariableName());
+          msg += vname;
+          throw CeVASError(msg);
+        }
 
         std::map<iface::cellml_api::CellMLVariable*, VariableDisjointSet*,
                  XPCOMComparator>::
