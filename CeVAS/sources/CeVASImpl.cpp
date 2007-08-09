@@ -489,7 +489,7 @@ CDACeVAS::ComputeConnectedVariables
         catch (...)
         {
           std::wstring msg = L"Invalid first variable or component in "
-            "connection to component ";
+            L"connection to component ";
           RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents,
                              conn->componentMapping());
           RETURN_INTO_WSTRING(cname, mc->firstComponentName());
@@ -508,7 +508,7 @@ CDACeVAS::ComputeConnectedVariables
         catch (...)
         {
           std::wstring msg = L"Invalid second variable or component in "
-            "connection to component ";
+            L"connection to component ";
           RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents,
                              conn->componentMapping());
           RETURN_INTO_WSTRING(cname, mc->secondComponentName());
