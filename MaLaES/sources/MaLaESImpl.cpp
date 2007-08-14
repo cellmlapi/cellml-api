@@ -345,6 +345,9 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
 bool
 CDAMaLaESResult::writeConvertedVariable()
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   if (processingVariable == NULL)
     return false;
 
@@ -435,6 +438,9 @@ CDAMaLaESResult::appendCount
  iface::mathml_dom::MathMLElement* logbase
 )
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   wchar_t buf[30];
   swprintf(buf, 30, L"%lu", aArgs.size());
   mActive += buf;
@@ -655,6 +661,9 @@ CDAMaLaESResult::appendUnique
     unique = (*i).second;
   }
 
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   wchar_t buf[30];
   swprintf(buf, 30, L"%lu", unique);
   mActive += buf;
@@ -679,6 +688,9 @@ CDAMaLaESResult::parseConstant
     throw MaLaESError(L"CN element with only spaces inside.");
   txt = txt.substr(i, j - i + 1);
 
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   return wcstod(txt.c_str(), NULL);
 }
 
@@ -688,6 +700,9 @@ CDAMaLaESResult::appendConstant
  iface::mathml_dom::MathMLCnElement* cnEl
 )
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   double v = parseConstant(cnEl);
   wchar_t buf[30];
   swprintf(buf, 30, L"%g", v);
@@ -763,6 +778,10 @@ CDAMaLaESTransform::transform
   RETURN_INTO_OBJREF(r, CDAMaLaESResult,
                      new CDAMaLaESResult(this, aCeVAS, aCUSES, aAnnos,
                                          aContext, mVariablesFromSource));
+
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     double mup = 1.0;
@@ -1264,6 +1283,9 @@ CDAMaLaESTransform::WriteConversion
  iface::mathml_dom::MathMLCiElement* ci
 )
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   CleanupVector<iface::mathml_dom::MathMLBvarElement*> bvars;
   CleanupVector<iface::mathml_dom::MathMLElement*> args;
 
@@ -1481,6 +1503,9 @@ CDAMaLaESTransform::ExecuteTransform
  iface::mathml_dom::MathMLElement* logbase
 )
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   std::wstring opName(aOpName);
 
   // This special case is ugly, but it is rooted in the fact that MathML has

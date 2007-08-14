@@ -36,6 +36,10 @@ CDA_ComputationTarget::name() throw()
 {
   const wchar_t* annoname;
   wchar_t annobuf[30];
+
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   if (mDegree == 0)
     annoname = L"expression";
   else
@@ -61,6 +65,9 @@ CDA_ComputationTarget::setNameAndIndex
 )
   throw()
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   const wchar_t* annoname;
   wchar_t annobuf[30];
   if (mDegree == 0)

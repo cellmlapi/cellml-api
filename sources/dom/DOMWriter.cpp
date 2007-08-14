@@ -570,6 +570,9 @@ DOMNamespaceContext::possiblyInventPrefix(const std::wstring& prefix)
 void
 DOMNamespaceContext::resolveOrInventPrefixes()
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   while (!NamespacesNeedingPrefixes.empty())
   {
     std::wstring nnp = NamespacesNeedingPrefixes.back();

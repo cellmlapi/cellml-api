@@ -1047,4 +1047,25 @@ struct XPCOMComparator
 
 wchar_t* CDA_wcsdup(const wchar_t* str);
 
+// XXX multithreading - I don't think there is an easy way around this however,
+//     unless we are going to avoid the C library, because locale is a global
+//     setting.
+class CNumericLocale
+{
+public:
+  CNumericLocale()
+  {
+    mOldLocale = setlocale(LC_NUMERIC, "C");
+  }
+
+  ~CNumericLocale()
+  {
+    if (mOldLocale != NULL)
+      setlocale(LC_NUMERIC, mOldLocale);
+  }
+
+private:
+  const char* mOldLocale;
+};
+
 #endif // _UTILITIES_HXX

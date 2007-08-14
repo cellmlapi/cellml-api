@@ -2290,6 +2290,9 @@ void
 CDA_MathMLDeclareElement::nargs(uint32_t attr)
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   wchar_t str[20];
   swprintf(str, 20, L"%u", attr);
   static_cast<CDA_Element*>(this)->setAttributeNS(NULL_NS, L"nargs", str);

@@ -19,6 +19,7 @@
 #else
 #define strcasecmp _stricmp
 #endif
+#include "Utilities.hxx"
 
 #ifdef ENABLE_FIND_NUMERIC_ERRORS
 #include <fenv.h>
@@ -212,6 +213,9 @@ void
 ProcessKeywords(int argc, char** argv,
                 iface::cellml_services::CellMLIntegrationRun* run)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   argc -= 2;
   argv += 2;
   while (argc >= 2)

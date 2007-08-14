@@ -15,6 +15,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include "Utilities.hxx"
 
 #ifdef _WIN32
 #define swprintf _snwprintf
@@ -43,6 +44,9 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
 void
 WriteCode(iface::cellml_services::CodeInformation* cci)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   iface::cellml_services::ModelConstraintLevel mcl =
     cci->constraintLevel();
   if (mcl == iface::cellml_services::UNDERCONSTRAINED)

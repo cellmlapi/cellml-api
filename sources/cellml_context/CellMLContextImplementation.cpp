@@ -331,6 +331,9 @@ CDA_ModuleManager::iterateModules()
 CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
   : _cda_refcount(1), mIsFrozen(false), mParentList(NULL)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   // If add_ref fails, so does this call (correct behaviour).
   aModel->add_ref();
   mDerivedModels = new CDA_ModelList();

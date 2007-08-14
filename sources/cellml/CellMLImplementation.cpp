@@ -2899,6 +2899,9 @@ void
 CDA_Unit::prefix(int32_t attr)
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     if (attr == 0)
@@ -2929,6 +2932,9 @@ double
 CDA_Unit::multiplier()
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     RETURN_INTO_WSTRING(nsURI, datastore->namespaceURI())
@@ -2960,6 +2966,9 @@ void
 CDA_Unit::multiplier(double attr)
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     if (attr == 1.0)
@@ -2982,6 +2991,9 @@ double
 CDA_Unit::offset()
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     RETURN_INTO_WSTRING(nsURI, datastore->namespaceURI())
@@ -3013,6 +3025,9 @@ void
 CDA_Unit::offset(double attr)
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     if (attr == 0.0)
@@ -3035,6 +3050,9 @@ double
 CDA_Unit::exponent()
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     RETURN_INTO_WSTRING(nsURI, datastore->namespaceURI())
@@ -3066,6 +3084,9 @@ void
 CDA_Unit::exponent(double attr)
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   try
   {
     if (attr == 1.0)
@@ -5532,6 +5553,9 @@ double
 CDA_Role::stoichiometry()
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   double s;
   RETURN_INTO_WSTRING(str, datastore->getAttributeNS(NULL_NS,
                                                      L"stoichiometry"));
@@ -5543,6 +5567,9 @@ void
 CDA_Role::stoichiometry(double attr)
   throw(std::exception&)
 {
+  // Scoped locale change.
+  CNumericLocale locobj;
+
   wchar_t buf[40];
   swprintf(buf, 40, L"%g", attr);
   datastore->setAttributeNS(NULL_NS, L"stoichiometry", buf);

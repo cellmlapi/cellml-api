@@ -450,6 +450,9 @@ CodeGenerationState::FirstPassTargetClassification()
        i != mBaseTargets.end();
        i++)
   {
+    // Scoped locale change.
+    CNumericLocale locobj;
+
     CDA_ComputationTarget* ct = *i;
 
     RETURN_INTO_WSTRING(iv, ct->mVariable->initialValue());
@@ -554,6 +557,9 @@ CodeGenerationState::GenerateVariableName
     aStr.assign(aPattern);
     return;
   }
+
+  // Scoped locale change.
+  CNumericLocale locobj;
 
   aStr.assign(aPattern.substr(0, cursor));
   wchar_t buf[30];
@@ -1213,6 +1219,9 @@ CodeGenerationState::GenerateSolveCode
     RETURN_INTO_WSTRING(s, mr2->getSupplementary(i));
     mCodeInfo->mFuncsStr += s;
   }
+
+  // Scoped locale change.
+  CNumericLocale locobj;
 
   wchar_t id[20];
   swprintf(id, 20, L"%u", mNextSolveId++);
