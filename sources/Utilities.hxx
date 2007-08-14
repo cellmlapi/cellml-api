@@ -45,6 +45,7 @@
 #endif
 
 #include "cda_compiler_support.h"
+#include <locale.h>
 
 // A dynamic_cast which can efficiently convert to the most derived type, but
 // gives undefined results if T isn't the most derived type of the input.
