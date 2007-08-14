@@ -229,6 +229,13 @@ private:
                          aModel->modelComponents());
       RETURN_INTO_OBJREF(comp, iface::cellml_api::CellMLComponent,
                          mc->getComponent(cn.c_str()));
+      if (comp == NULL)
+      {
+        std::wstring msg = L"Component ";
+        msg += cn;
+        msg += L" referred to in encapsulation component_ref does not exist.";
+        throw CeVASError(msg);
+      }
 
       // Find the real component...
       while (true)
@@ -246,6 +253,13 @@ private:
         RETURN_INTO_WSTRING(compRef, ic->componentRef());
         comp = already_AddRefd<iface::cellml_api::CellMLComponent>
           (mc->getComponent(compRef.c_str()));
+        if (comp == NULL)
+        {
+          std::wstring msg = L"Component ";
+          msg += cn;
+          msg += L" referred to from import component_ref does not exist.";
+          throw CeVASError(msg);
+        }
       }
 
       bool childAutoRelevant;
