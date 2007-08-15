@@ -233,7 +233,14 @@ private:
       {
         std::wstring msg = L"Component ";
         msg += cn;
-        msg += L" referred to in encapsulation component_ref does not exist.";
+        msg += L" referred to in encapsulation component_ref does not "
+               L"exist in model ";
+        RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->base_uri());
+        RETURN_INTO_WSTRING(uri, bu->asText());
+
+        msg += uri;
+        msg += L".";
+
         throw CeVASError(msg);
       }
 
@@ -257,7 +264,15 @@ private:
         {
           std::wstring msg = L"Component ";
           msg += cn;
-          msg += L" referred to from import component_ref does not exist.";
+          msg += L" referred to from import component_ref does not exist "
+                 L"in model ";
+
+          RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->base_uri());
+          RETURN_INTO_WSTRING(uri, bu->asText());
+          
+          msg += uri;
+          msg += L".";
+
           throw CeVASError(msg);
         }
       }
