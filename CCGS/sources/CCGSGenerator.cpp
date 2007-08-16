@@ -367,8 +367,18 @@ CodeGenerationState::CreateVariableEdges()
           ContextError(L"Unexpected MathML element; was expecting an apply",
                        mn, c);
         
-        RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement,
-                           mae->_cxx_operator());
+        ObjRef<iface::mathml_dom::MathMLElement> op;
+        try
+        {
+          op =  already_AddRefd<iface::mathml_dom::MathMLElement>
+            (mae->_cxx_operator());
+        }
+        catch (...)
+        {
+          ContextError(L"Unexpected MathML apply element with no MathML children",
+                       mae, c);
+        }
+
         RETURN_INTO_WSTRING(opn, op->localName());
         if (opn != L"eq")
           ContextError(L"Unexpected MathML element; was expecting an eq",
