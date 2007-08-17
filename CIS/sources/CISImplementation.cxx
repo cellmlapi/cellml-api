@@ -497,7 +497,13 @@ CDA_CellMLIntegrationService::compileModel
   fragLen = wcstombs(NULL, frag, 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag, fragLen);
-  ss << "{" << std::endl << frag8 << std::endl << "}" << std::endl;
+  ss << "{" << std::endl
+     << "#define VOI 0.0" << std::endl
+     << "#define ALGEBRAIC NULL" << std::endl
+     << frag8 << std::endl
+     << "#undef VOI" << std::endl
+     << "#undef ALGEBRAIC" << std::endl
+     << "}" << std::endl;
   free(frag);
   delete [] frag8;
 
