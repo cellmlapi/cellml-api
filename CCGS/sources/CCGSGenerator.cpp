@@ -84,7 +84,9 @@ CodeGenerationState::GenerateCode()
     if (BuildTargetSet(mKnown, mFloating, reachabletargets) != 0)
     {
       if (mUnusedEdges.size() != 0)
+      {
         throw UnsuitablyConstrainedError();
+      }
       else
         throw UnderconstrainedError();
     }
@@ -121,6 +123,21 @@ CodeGenerationState::GenerateCode()
   }
   catch (UnsuitablyConstrainedError uce)
   {
+    std::vector<iface::dom::Element*>::iterator fei;
+    for (fei = mCodeInfo->mFlaggedEquations.begin();
+         fei != mCodeInfo->mFlaggedEquations.end();
+         fei++)
+      (*fei)->release_ref();
+    mCodeInfo->mFlaggedEquations.clear();
+
+    std::list<VariableEdge*>::iterator uel;
+    for (uel = mUnusedEdges.begin(); uel != mUnusedEdges.end(); uel++)
+    {
+      iface::mathml_dom::MathMLApplyElement* mae = (*uel)->mMaths;
+      mae->add_ref();
+      mCodeInfo->mFlaggedEquations.push_back(mae);
+    }
+
     mCodeInfo->mConstraintLevel = iface::cellml_services::UNSUITABLY_CONSTRAINED;
   }
   catch (CodeGenerationError cge)
