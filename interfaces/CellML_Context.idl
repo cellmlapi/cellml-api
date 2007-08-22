@@ -237,6 +237,21 @@ module cellml_context
                        in cellml_api::Model newModel);
 
     /**
+     * Called whenever a caller has requested that all changes to a model be
+     * flushed (usually because the caller will be making changes to the model
+     * and replacing changes). Callers should save any changes back to the
+     * model before returning as modelReplaced may occur soon.
+     * @param changedNode The node which was changed.
+     */
+    void changesFlushed(in ModelNode changedNode);
+
+    /**
+     * Called when the owner is to be changed. The current owner can use this
+     * notification to flush any changes back into the model.
+     */
+    void ownerChanged(in ModelNode changedNode, in XPCOM::IObject newOwner);
+
+    /**
      * Called whenever the frozen state of a model is toggled.
      * @param changedNode The node on which the frozen state has changed.
      * @param newState The new frozen state of the model.
@@ -321,6 +336,30 @@ module cellml_context
      * The model this node points to...
      */
     attribute cellml_api::Model model;
+
+    /**
+     * Requests that any tools / controls which have changes that they have not
+     * saved cached somewhere flush their changes back to the model. Any tool
+     * or control except for the node owner should always call this before
+     * making changes to the model, because otherwise there might be conflicting
+     * changes made by different tools.
+     */
+    void flushChanges();
+
+    /**
+     * Describes the 'owner' tool / control of the current model object. The
+     * owner is allowed to cache changes to the model node and only flush them
+     * later when required (although it is of course preferrable that where
+     * possible changes are made immediately so views will not be stale).
+     * Owners should always monitor the node and look for ownerChanged
+     * notifications so they can flush any changes and stop acting as the owner
+     * at the appropriate point in time.
+     *
+     * May be set to null to clear the owner. There is no strong reference to
+     * owners held, so owners must clear their ownership by setting this to null
+     * before being destroyed.
+     */
+    attribute XPCOM::IObject owner;
 
     /**
      * The list of all derived models...

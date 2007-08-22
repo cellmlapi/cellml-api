@@ -155,6 +155,9 @@ public:
   void stampModifiedNow() throw(std::exception&);
   iface::cellml_api::Model* model() throw(std::exception&);
   void model(iface::cellml_api::Model* aModel) throw (std::exception&);
+  void flushChanges() throw(std::exception&);
+  iface::XPCOM::IObject* owner() throw(std::exception&);
+  void owner(iface::XPCOM::IObject* aOwner) throw(std::exception&);
   iface::cellml_context::ModelList* derivedModels() throw(std::exception&);
   void addModelMonitor(iface::cellml_context::ModelNodeMonitor* monitor)
     throw(std::exception&);
@@ -169,6 +172,8 @@ private:
   std::wstring mName;
   uint32_t mTimestamp;
   iface::cellml_api::Model* mModel;
+  // Weak reference. Owner must unset themselves when done.
+  iface::XPCOM::IObject* mOwner;
   CDA_ModelList* mDerivedModels;
   bool mIsFrozen;
   std::list<iface::cellml_context::ModelNodeMonitor*> mModelMonitors;

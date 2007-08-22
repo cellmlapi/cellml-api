@@ -329,7 +329,7 @@ CDA_ModuleManager::iterateModules()
 }
 
 CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
-  : _cda_refcount(1), mIsFrozen(false), mParentList(NULL)
+  : _cda_refcount(1), mOwner(NULL), mIsFrozen(false), mParentList(NULL)
 {
   // Scoped locale change.
   CNumericLocale locobj;
@@ -633,6 +633,70 @@ CDA_ModelNode::model(iface::cellml_api::Model* aModel)
     mModel = aModel;
     mModel->add_ref();
   }
+}
+
+void
+CDA_ModelNode::flushChanges()
+  throw(std::exception&)
+{
+  CDA_ModelList* curList = mParentList;
+  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, j;
+  while (curList)
+  {
+    for (i = curList->mNodeMonitors.begin(); i != curList->mNodeMonitors.end();)
+    {
+      j = i;
+      i++;
+      try
+      {
+        (*j)->changesFlushed(this);
+      }
+      catch (...)
+      {
+        // Dead listeners get removed from the list...
+        (*j)->release_ref();
+        curList->mNodeMonitors.erase(j);
+      }
+    }
+    if (curList->mParentNode)
+      curList = curList->mParentNode->mParentList;
+    else
+      curList = NULL;
+  }
+}
+
+iface::XPCOM::IObject*
+CDA_ModelNode::owner()
+  throw(std::exception&)
+{
+  if (mOwner)
+    mOwner->add_ref();
+
+  return mOwner;
+}
+
+void
+CDA_ModelNode::owner(iface::XPCOM::IObject* aOwner)
+  throw(std::exception&)
+{
+  CDA_ModelList* curList = mParentList;
+  std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, j;
+  for (i = curList->mNodeMonitors.begin(); i != curList->mNodeMonitors.end();)
+  {
+    j = i;
+    i++;
+    try
+    {
+      (*j)->ownerChanged(this, aOwner);
+    }
+    catch (...)
+    {
+      // Dead listeners get removed from the list...
+      (*j)->release_ref();
+      curList->mNodeMonitors.erase(j);
+    }
+  }
+  mOwner = aOwner;
 }
 
 iface::cellml_context::ModelList*
