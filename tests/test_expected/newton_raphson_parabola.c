@@ -33,12 +33,12 @@
  */
 double minfunc_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double * ALGEBRAIC)
 {
-return fabs((ALGEBRAIC[0] - CONSTANTS[0])-(pow(VOI, 2)));
+return fabs((ALGEBRAIC[0] - CONSTANTS[0])-(pow(VOI, 2.00000)));
 }
 void SetupFixedConstants(double* CONSTANTS, double* RATES)
 {
 CONSTANTS[0] = 3;
-CONSTANTS[1] = CONSTANTS[0]>1&&CONSTANTS[0]<=3 ? ( sin(CONSTANTS[0])) : CONSTANTS[0]>3 ? 3 : 1;
+CONSTANTS[1] = CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ? ( sin(CONSTANTS[0])) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000;
 STATES[0] = CONSTANTS[0];
 }
 void EvaluateVariables(double BOUND, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -47,5 +47,5 @@ NR_MINIMISE(minfunc_0, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &ALGEBRAIC[0]);
 }
 void ComputeRates(double BOUND, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
-RATES[0] =  2*VOI;
+RATES[0] =  2.00000*VOI;
 }
