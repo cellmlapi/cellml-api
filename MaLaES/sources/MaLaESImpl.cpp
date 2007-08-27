@@ -705,7 +705,7 @@ CDAMaLaESResult::appendConstant
 
   double v = parseConstant(cnEl);
   wchar_t buf[30];
-  swprintf(buf, 30, L"%g", v);
+  swprintf(buf, 30, L"%#g", v);
   mActive += buf;
 }
 
