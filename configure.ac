@@ -249,15 +249,21 @@ if test "$GCC" = "yes"; then
   AC_CACHE_CHECK(for visibility(hidden) attribute,
                  ac_cv_visibility_hidden,
                  [cat > conftest.c <<EOF
+		  class MyClass;
+		  class MyClass
+		  {
+		    MyClass() {}
+		    virtual ~MyClass() {}
+		  } __attribute__((visibility("default")));
                   int foo __attribute__ ((visibility ("hidden"))) = 1;
 EOF
                   ac_cv_visibility_hidden=no
-                  if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
+                  if ${CXX} -Werror -S conftest.cpp -o conftest.s >/dev/null 2>&1; then
                     if grep '\.hidden.*foo' conftest.s >/dev/null; then
                       ac_cv_visibility_hidden=yes
                     fi
                   fi
-                  rm -f conftest.[cs]
+                  rm -f conftest.cpp conftest.s
                  ])
   if test "$ac_cv_visibility_hidden" = "yes"; then
     AC_DEFINE([HAVE_VISIBILITY_ATTRIBUTE], [], [Define if gcc visibility attributes supported])
