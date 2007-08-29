@@ -48,7 +48,7 @@ EvaluateRatesGSL(double voi, const double vars[],
                    ei->algebraic);
 
   if (rates != ei->rates)
-  memcpy(rates, ei->rates, ei->rateSizeBytes);
+    memcpy(rates, ei->rates, ei->rateSizeBytes);
 
   // printf("Compute r0=%g at bound %g\n", rates[0], bound);
 
