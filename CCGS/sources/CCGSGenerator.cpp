@@ -927,11 +927,18 @@ CodeGenerationState::GenerateCodeForSetByType(std::set<CDA_ComputationTarget*>& 
 
     VariableEdge* ve = mEdgesInto[t];
 
+    std::set<CDA_ComputationTarget*> subtargets;
     std::list<CDA_ComputationTarget*>::iterator i;
     for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
+    {
       if (aTargets.count(*i) != 0)
-        GenerateCodeForSet(mCodeInfo->mRatesStr, aTargets);
+      {
+        aTargets.erase(*i);
+        subtargets.insert(*i);
+      }
+    }
 
+    GenerateCodeForSet(mCodeInfo->mRatesStr, subtargets);
     GenerateCodeForEdge(mCodeInfo->mRatesStr, ve);
   }
 
