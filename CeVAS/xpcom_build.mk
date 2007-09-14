@@ -13,7 +13,7 @@ libcevas_xpcom_bridge_la_LIBADD = \
   $(top_builddir)/libXPCOMSupport.la
 
 libcevas_xpcom_bridge_la_LDFLAGS = \
-  -no-undefined
+  -no-undefined -module
 
 libcevas_xpcom_bridge_la_CXXFLAGS = \
   -I$(MOZILLA_DIR)/include/nspr -I$(MOZILLA_DIR)/include/xpcom \
