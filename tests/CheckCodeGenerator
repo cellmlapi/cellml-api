@@ -45,5 +45,6 @@ runtest underconstrained_1
 runtest overconstrained_1
 runtest newton_raphson_parabola
 runtest import_eqn
+runtest number-minus
 
 exit 0

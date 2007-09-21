@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<model name="number-minus" xmlns="http://www.cellml.org/cellml/1.1#">
+  <component name="main">
+    <variable name="time" units="second" />
+    <variable name="distance" units="metre" initial_value="5" />
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply><eq/>
+        <apply><diff/>
+          <bvar><ci>time</ci></bvar>
+          <ci>distance</ci>
+        </apply>
+        <apply><minus/>
+          <cn units="dimensionless">-1</cn>
+          <apply><times/>
+            <apply><minus/>
+              <cn units="dimensionless">-1</cn>
+            </apply>
+            <ci>time</ci>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+</model>
