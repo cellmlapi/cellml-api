@@ -172,8 +172,7 @@ private:
   std::wstring mName;
   uint32_t mTimestamp;
   iface::cellml_api::Model* mModel;
-  // Weak reference. Owner must unset themselves when done.
-  iface::XPCOM::IObject* mOwner;
+  ObjRef<iface::XPCOM::IObject> mOwner;
   CDA_ModelList* mDerivedModels;
   bool mIsFrozen;
   std::list<iface::cellml_context::ModelNodeMonitor*> mModelMonitors;

@@ -383,7 +383,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -395,7 +395,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
@@ -412,7 +412,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
@@ -434,7 +434,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
@@ -461,7 +461,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
@@ -493,7 +493,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
@@ -530,7 +530,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
@@ -572,7 +572,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
@@ -619,7 +619,7 @@ private:
     void* query_interface(const char* id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::Object")) \
+      if (!strcmp(id, "xpcom::IObject")) \
       { \
         add_ref(); \
         return static_cast< iface::XPCOM::IObject* >(this); \
