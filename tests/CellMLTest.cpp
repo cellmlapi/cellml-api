@@ -613,7 +613,7 @@ public:
   query_interface(const char* className)
     throw(std::exception&)
   {
-    if (!strcmp(className, "xpcom::Object"))
+    if (!strcmp(className, "xpcom::IObject"))
       return static_cast<iface::XPCOM::IObject*>(this);
     else if (!strcmp(className, "cellml_api::UserData"))
       return static_cast<iface::cellml_api::UserData*>(this);

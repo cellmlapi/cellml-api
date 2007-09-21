@@ -100,7 +100,7 @@ public:
   void* query_interface(const char* iface)
     throw (std::exception&)
   {
-    if (!strcmp(iface, "xpcom::Object"))
+    if (!strcmp(iface, "xpcom::IObject"))
       return static_cast< ::iface::XPCOM::IObject* >(this);
     else if (!strcmp(iface, "cellml_services::IntegrationProgressObserver"))
       return
