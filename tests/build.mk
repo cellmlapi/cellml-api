@@ -41,3 +41,10 @@ tests_RunTestBin_SOURCES += \
 tests_RunTestBin_CXXFLAGS +=  -I$(top_srcdir)/MaLaES/sources
 tests_RunTestBin_LDADD += -lmalaes
 endif
+
+if ENABLE_VACSS
+tests_RunTestBin_SOURCES += \
+	tests/VACSSTest.cpp
+tests_RunTestBin_CXXFLAGS +=  -I$(top_srcdir)/VACSS/sources
+tests_RunTestBin_LDADD += -lvacss
+endif

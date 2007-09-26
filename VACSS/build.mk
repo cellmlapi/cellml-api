@@ -1,6 +1,6 @@
 lib_LTLIBRARIES += libvacss.la
 
-libvaccs_la_LIBADD = \
+libvacss_la_LIBADD = \
   libcellml.la \
   $(STLLINK)
 

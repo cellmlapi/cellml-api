@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-
-
 <!--  FILE :  glycolysis_pathway_1997.xml
 
 CREATED :  15th November 2001
@@ -23,9 +21,7 @@ CHANGES:
                      1.0 Specification.
   26/02/2002 - CML - Corrected r_influx and r_efflux equations.
   19/07/2002 - CML - Added more metadata.
--->
-
-<model name="glycolysis_pathway_1997" cmeta:id="glycolysis_pathway_1997" pathway_editor:rendering_config_file="glycolysis pathway 1997render.xml" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" xmlns:pathway_editor="http://www.physiome.com/pathway_editor/1.0#">
+--><model name="glycolysis_pathway_1997" cmeta:id="glycolysis_pathway_1997" pathway_editor:rendering_config_file="glycolysis pathway 1997render.xml" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" xmlns:pathway_editor="http://www.physiome.com/pathway_editor/1.0#">
   <foobar xmlns="http://www.example.com/testns/ext#1.0" />
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqs="http://www.cellml.org/bqs/1.0#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#">
     <!--
