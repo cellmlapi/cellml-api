@@ -44,7 +44,6 @@ VACSSTest::testGetPositionInXML()
     (BASE_DIRECTORY L"glycolysis_pathway_1997.xml");
   ml->release_ref();
 
-
   //    /**
   //     * Retrieves the position of a given node in the serialised XML
   //     * representation.
@@ -68,8 +67,8 @@ VACSSTest::testGetPositionInXML()
   CPPUNIT_ASSERT_EQUAL(24, (int)row);
   CPPUNIT_ASSERT_EQUAL(5, (int)col);
 
-  iface::dom::NodeList* nl = de->getElementsByTagNameNS(L"http://www.cellml.org/cellml/1.0#",
-                                                        L"component");
+  iface::dom::NodeList* nl = de->getElementsByTagNameNS
+    (L"http://www.cellml.org/cellml/1.0#", L"component");
   de->release_ref();
   iface::dom::Node* el = nl->item(0);
   nl->release_ref();
