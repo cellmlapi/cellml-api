@@ -1,0 +1,120 @@
+#include "CellML_APISPEC.idl"
+
+module cellml_services
+{
+  /**
+   * Represents a specific problem which causes a given document not to be a
+   * valid CellML model.
+   *
+   * This interface is also used for supplements, which are extra parts of the
+   * validity error which can be used to provide reference to other parts of the
+   * model with which the current part is incompatible.
+   */
+  interface CellMLValidityError
+    : XPCOM::IObject
+  {
+    /**
+     * A human readable description of the problem.
+     */
+    readonly attribute wstring description;
+
+    /**
+     * The number of supplements we refer to.
+     */
+    readonly attribute unsigned long nSupplements;
+
+    /**
+     * Fetches the supplement.
+     * @param index The index of the supplement. Indices start at 0 and go up
+     *              to nSupplements - 1.
+     */
+    CellMLValidityError getSupplement(in unsigned long index);
+
+    /**
+     * Determines if the 'error' is strictly speaking not a deviation from the
+     * CellML specification, but merely an indication that best practices have
+     * not been observed.
+     */
+    readonly attribute boolean isWarningOnly;
+  };
+
+  /**
+   * A validity error about the underlying structure used to represent the
+   * CellML model.
+   */
+  interface CellMLRepresentationValidityError
+    : CellMLValidityError
+  {
+    /**
+     * The node which triggered the error.
+     */
+    readonly attribute dom::Node errorNode;
+
+    /**
+     * The offset into the node at which the error occurred.
+     */
+    readonly attribute unsigned long errorNodalOffset;
+  };
+
+  /**
+   * A validity error at the semantic layer (used when the representation is
+   * valid, but there is some contradiction inherent in what is being
+   * represented.
+   */
+  interface CellMLSemanticValidityError
+    : CellMLValidityError
+  {
+    /**
+     * The node which triggered the error.
+     */
+    readonly attribute cellml_api::CellMLElement errorElement;
+  };
+
+  /**
+   * A list of CellML validity errors. The list is ordered. The exact order
+   * is not defined by the API specification, but it should be a sensible
+   * order for a human user who visits and attempts to correct errors starting
+   * at index 0 and moving through each index sequentially.
+   */
+  interface CellMLValidityErrorSet
+    : XPCOM::IObject
+  {
+    /**
+     * The number of validity errors in this set.
+     */
+    readonly attribute unsigned long nValidityErrors;
+
+    /**
+     * Fetches a particular validity error.
+     * @param index The index of the validity error. Indices start at 0 and go
+     *              up to nValidityErrors-1.
+     */
+    CellMLValidityError getValidityError(in unsigned long index);
+  };
+
+  /**
+   * The 'validation against CellML Specification Service' (VACSS) bootstrap
+   * interface.
+   */
+  interface VACSService
+    : XPCOM::IObject
+  {
+    /**
+     * Validates the specified model, and returns a set of validity errors that
+     * were found in the model (including warnings).
+     */
+    CellMLValidityErrorSet validateModel(in cellml_api::Model aModel);
+
+    /**
+     * Retrieves the position of a given node in the serialised XML
+     * representation.
+     * @param node The node to which this applies.
+     * @param nodalOffset An offset into the nodal data.
+     * @param column Output for the column number.
+     * @return The line number.
+     */
+    unsigned long getPositionInXML(in dom::Node node,
+                                   in unsigned long nodalOffset,
+                                   out unsigned long column);
+  };
+};

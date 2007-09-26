@@ -72,6 +72,10 @@ if ENABLE_CCGS
 include $(top_srcdir)/CCGS/build.mk
 endif
 
+if ENABLE_VACSS
+include $(top_srcdir)/VACSS/build.mk
+endif
+
 if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
 include $(top_srcdir)/CCGS/corba_build.mk
 endif
@@ -90,6 +94,10 @@ endif
 
 if ENABLE_MALAES_AND_XPCOM
 include $(top_srcdir)/MaLaES/xpcom_build.mk
+endif
+
+if ENABLE_VACSS_AND_XPCOM
+include $(top_srcdir)/VACSS/xpcom_build.mk
 endif
 
 if ENABLE_CCGS_AND_XPCOM

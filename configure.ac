@@ -133,6 +133,15 @@ AC_ARG_ENABLE(cevas,
 esac], [cevas=false])
 AM_CONDITIONAL(ENABLE_CEVAS, test x$cevas = xtrue)
 
+AC_ARG_ENABLE(vacss,
+[  --enable-vacss     Build the Validate Against CellML Specification Service],
+[case "${enableval}" in
+  yes) vacss=true ;;
+  no) vacss=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-vacss) ;;
+esac], [vacss=false])
+AM_CONDITIONAL(ENABLE_VACSS, test x$vacss = xtrue)
+
 AC_ARG_ENABLE(malaes,
 [  --enable-malaes   Build the MathML to Language Expression Service],
 [case "${enableval}" in
@@ -191,6 +200,7 @@ cusesandxpcom=false
 malaesandxpcom=false
 ccgsandxpcom=false
 cisandxpcom=false
+vacssandxpcom=false
 if test x$xpcom != xfalse; then
    if test x$annotools = xtrue; then
       annotoolsandxpcom=true
@@ -210,6 +220,10 @@ if test x$xpcom != xfalse; then
    if test x$cis = xtrue; then
       cisandxpcom=true
    fi
+
+   if test x$vacss = xtrue; then
+      vacssandxpcom=true
+   fi
 fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
@@ -224,6 +238,7 @@ AM_CONDITIONAL(ENABLE_CUSES_AND_XPCOM, test x$cusesandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_MALAES_AND_XPCOM, test x$malaesandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_VACSS_AND_XPCOM, test x$vacssandxpcom = xtrue)
 
 case $srcdir in
   [\\/]* | ?:[\\/]* ) # Absolute
