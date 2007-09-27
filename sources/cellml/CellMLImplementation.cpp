@@ -781,6 +781,16 @@ CDA_CellMLElement::clone(bool aDeep)
   return WrapCellMLElement(NULL, cel);
 }
 
+iface::dom::Element*
+CDA_CellMLElement::domElement()
+  throw(std::exception&)
+{
+  if (datastore != NULL)
+    datastore->add_ref();
+
+  return datastore;
+}
+
 CDA_NamedCellMLElement::CDA_NamedCellMLElement
 (
  iface::XPCOM::IObject* parent,

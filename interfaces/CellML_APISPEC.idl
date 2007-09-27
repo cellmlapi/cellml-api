@@ -308,6 +308,22 @@ module cellml_api
   };
 
   /**
+   * This is an optional additional interface which CellMLElements may
+   * implement. It provides a link between CellML elements and DOM elements.
+   *
+   * API users should be aware that not all API implementations will provide
+   * this interface.
+   */
+  interface CellMLDOMElement
+    : XPCOM::IObject
+  {
+    /**
+     * The DOM element corresponding to this CellML element.
+     */
+    readonly attribute dom::Element domElement;
+  };
+
+  /**
    * This is a general interface from which all CellML elements which have a
    * name attribute inherit.
    */

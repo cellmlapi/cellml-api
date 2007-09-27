@@ -98,6 +98,7 @@ class CDA_CellMLElementEventAdaptor;
 
 class CDA_CellMLElement
   : public virtual iface::cellml_api::CellMLElement,
+    public iface::cellml_api::CellMLDOMElement,
     public iface::events::EventTarget
 {
 public:
@@ -176,6 +177,9 @@ public:
   iface::cellml_api::CellMLElement* clone(bool aDeep)
     throw(std::exception&);
 
+  iface::dom::Element* domElement()
+    throw(std::exception&);
+
   iface::XPCOM::IObject* mParent;
   iface::dom::Element* datastore;
 protected:
@@ -221,8 +225,9 @@ public:
             iface::dom::Element* modelElement);
   virtual ~CDA_Model();
 
-  CDA_IMPL_QI4(events::EventTarget, cellml_api::CellMLElement,
-               cellml_api::NamedCellMLElement, cellml_api::Model)
+  CDA_IMPL_QI5(events::EventTarget, cellml_api::CellMLElement,
+               cellml_api::NamedCellMLElement, cellml_api::Model,
+               cellml_api::CellMLDOMElement)
 
   iface::cellml_api::Model* getAlternateVersion(const wchar_t* cellmlVersion)
     throw(std::exception&);
@@ -353,9 +358,9 @@ public:
   {}
   virtual ~CDA_CellMLComponent();
 
-  CDA_IMPL_QI5(events::EventTarget, cellml_api::CellMLElement,
+  CDA_IMPL_QI6(events::EventTarget, cellml_api::CellMLElement,
                cellml_api::NamedCellMLElement, cellml_api::MathContainer,
-               cellml_api::CellMLComponent)
+               cellml_api::CellMLComponent, cellml_api::CellMLDOMElement)
 
   iface::cellml_api::CellMLVariableSet* variables() throw(std::exception&);
   iface::cellml_api::UnitsSet* units() throw(std::exception&);
@@ -400,8 +405,9 @@ public:
       CDA_UnitsBase(parent, unitsElement) {}
   virtual ~CDA_Units() {};
 
-  CDA_IMPL_QI4(events::EventTarget, cellml_api::CellMLElement,
-               cellml_api::NamedCellMLElement, cellml_api::Units)
+  CDA_IMPL_QI5(events::EventTarget, cellml_api::CellMLElement,
+               cellml_api::NamedCellMLElement, cellml_api::Units,
+               cellml_api::CellMLDOMElement)
 };
 
 
@@ -414,8 +420,8 @@ public:
     : CDA_CellMLElement(parent, unitElement) {}
   virtual ~CDA_Unit() {};
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::Unit,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::Unit,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   int32_t prefix() throw(std::exception&);
   void prefix(int32_t attr) throw(std::exception&);
@@ -441,8 +447,8 @@ public:
       mImportUnitsSet(NULL) {}
   virtual ~CDA_CellMLImport();
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::CellMLImport,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::CellMLImport,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   iface::cellml_api::URI* xlinkHref() throw(std::exception&);
   iface::cellml_api::ImportComponentSet* components() throw(std::exception&);
@@ -484,9 +490,10 @@ public:
       CDA_CellMLComponentGroupMixin(parent, importComponent){}
   virtual ~CDA_ImportComponent() {}
 
-  CDA_IMPL_QI6(events::EventTarget, cellml_api::CellMLElement,
+  CDA_IMPL_QI7(events::EventTarget, cellml_api::CellMLElement,
                cellml_api::NamedCellMLElement, cellml_api::MathContainer,
-               cellml_api::CellMLComponent, cellml_api::ImportComponent)
+               cellml_api::CellMLComponent, cellml_api::ImportComponent,
+               cellml_api::CellMLDOMElement)
 
   iface::cellml_api::CellMLVariableSet* variables() throw(std::exception&);
   iface::cellml_api::UnitsSet* units() throw(std::exception&);
@@ -520,8 +527,9 @@ public:
       CDA_UnitsBase(parent, importUnits) {}
   virtual ~CDA_ImportUnits() {}
 
-  CDA_IMPL_QI5(events::EventTarget, cellml_api::ImportUnits, cellml_api::Units,
-               cellml_api::NamedCellMLElement, cellml_api::CellMLElement)
+  CDA_IMPL_QI6(events::EventTarget, cellml_api::ImportUnits, cellml_api::Units,
+               cellml_api::NamedCellMLElement, cellml_api::CellMLElement,
+               cellml_api::CellMLDOMElement)
 
   wchar_t* unitsRef() throw(std::exception&);
   void unitsRef(const wchar_t* attr) throw(std::exception&);
@@ -553,8 +561,9 @@ public:
       CDA_NamedCellMLElement(parent, cellmlVar),
       mConnectedCellMLVariableSet(NULL) {}
   virtual ~CDA_CellMLVariable();
-  CDA_IMPL_QI4(events::EventTarget, cellml_api::CellMLVariable,
-               cellml_api::NamedCellMLElement, cellml_api::CellMLElement)
+  CDA_IMPL_QI5(events::EventTarget, cellml_api::CellMLVariable,
+               cellml_api::NamedCellMLElement, cellml_api::CellMLElement,
+               cellml_api::CellMLDOMElement)
 
   wchar_t* initialValue() throw(std::exception&);
   void initialValue(const wchar_t* attr) throw(std::exception&);
@@ -584,8 +593,8 @@ public:
     : CDA_CellMLElement(parent, componentRef), mCRSet(NULL) {}
   virtual ~CDA_ComponentRef();
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::ComponentRef,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::ComponentRef,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   wchar_t* componentName() throw(std::exception&);
   void componentName(const wchar_t* attr) throw(std::exception&);
@@ -607,8 +616,8 @@ public:
     : CDA_CellMLElement(parent, relationshipRef) {}
   virtual ~CDA_RelationshipRef() {}
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::RelationshipRef,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::RelationshipRef,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   wchar_t* name() throw(std::exception&);
   void name(const wchar_t* attr) throw(std::exception&);
@@ -628,8 +637,8 @@ public:
     : CDA_CellMLElement(parent, group), mRRSet(NULL), mCRSet(NULL) {}
   virtual ~CDA_Group();
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::Group,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::Group,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   iface::cellml_api::RelationshipRefSet* relationshipRefs() throw(std::exception&);
   void relationshipRefs(iface::cellml_api::RelationshipRefSet* attr)
@@ -655,8 +664,8 @@ public:
     : CDA_CellMLElement(parent, connection), mMVS(NULL), mCacheSerial(0) {};
   virtual ~CDA_Connection();
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::Connection,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::Connection,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   iface::cellml_api::MapComponents* componentMapping() throw(std::exception&);
   iface::cellml_api::MapVariablesSet* variableMappings() throw(std::exception&);
@@ -676,8 +685,8 @@ public:
                  iface::dom::Element* mapComponents)
     : CDA_CellMLElement(parent, mapComponents), mCacheSerial(0) {};
   virtual ~CDA_MapComponents() {}
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::MapComponents,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::MapComponents,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   wchar_t* firstComponentName() throw(std::exception&);
   void firstComponentName(const wchar_t* attr) throw(std::exception&);
@@ -701,8 +710,8 @@ public:
                    iface::dom::Element* mapVariables)
     : CDA_CellMLElement(parent, mapVariables) {}
   virtual ~CDA_MapVariables() {}
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::MapVariables,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::MapVariables,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   wchar_t* firstVariableName() throw(std::exception&);
   void firstVariableName(const wchar_t* attr) throw(std::exception&);
@@ -724,8 +733,8 @@ public:
     : CDA_CellMLElement(parent, reaction),
       mVariableRefSet(NULL) {}
   virtual ~CDA_Reaction();
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::Reaction,
-               cellml_api::CellMLElement);
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::Reaction,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement);
 
   iface::cellml_api::VariableRefSet* variableReferences()
     throw(std::exception&);
@@ -754,8 +763,8 @@ public:
 
   virtual ~CDA_VariableRef();
 
-  CDA_IMPL_QI3(events::EventTarget, cellml_api::VariableRef,
-               cellml_api::CellMLElement)
+  CDA_IMPL_QI4(events::EventTarget, cellml_api::VariableRef,
+               cellml_api::CellMLElement, cellml_api::CellMLDOMElement)
 
   iface::cellml_api::CellMLVariable* variable() throw(std::exception&);
   void variable(iface::cellml_api::CellMLVariable* v) throw(std::exception&);
@@ -780,9 +789,9 @@ public:
     : CDA_CellMLElement(parent, role), CDA_MathContainer(parent, role) {}
   virtual ~CDA_Role() {}
 
-  CDA_IMPL_QI4(events::EventTarget, cellml_api::Role,
+  CDA_IMPL_QI5(events::EventTarget, cellml_api::Role,
                cellml_api::CellMLElement,
-               cellml_api::MathContainer)
+               cellml_api::MathContainer, cellml_api::CellMLDOMElement)
 
   iface::cellml_api::Role::RoleType variableRole() throw(std::exception&);
   void variableRole(iface::cellml_api::Role::RoleType attr)

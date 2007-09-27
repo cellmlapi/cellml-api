@@ -20,6 +20,7 @@ class CellMLTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testRDFXMLStringRepresentation);
   CPPUNIT_TEST(testURI);
   CPPUNIT_TEST(testCellMLElement);
+  CPPUNIT_TEST(testCellMLDOMElement);
   CPPUNIT_TEST(testNamedCellMLElement);
   CPPUNIT_TEST(testModel);
   CPPUNIT_TEST(testMathContainer);
@@ -56,6 +57,7 @@ public:
   void testRDFXMLStringRepresentation();
   void testURI();
   void testCellMLElement();
+  void testCellMLDOMElement();
   void testNamedCellMLElement();
   void testModel();
   void testMathContainer();

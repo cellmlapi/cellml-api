@@ -1020,6 +1020,44 @@ CellMLTest::testCellMLElement()
 }
 //   };
 
+//  /**
+//   * This is an optional additional interface which CellMLElements may
+//   * implement. It provides a link between CellML elements and DOM elements.
+//   *
+//   * API users should be aware that not all API implementations will provide
+//   * this interface.
+//   */
+//  interface CellMLDOMElement
+//    : XPCOM::IObject
+//  {
+void
+CellMLTest::testCellMLDOMElement()
+{
+  loadAchCascade();
+
+  iface::cellml_api::CellMLComponentSet* cs;
+  cs = mAchCascade->localComponents();
+  iface::cellml_api::CellMLComponent* cc = cs->getComponent(L"reaction19");
+  cs->release_ref();
+  DECLARE_QUERY_INTERFACE_REPLACE(dcc, cc, cellml_api::CellMLDOMElement);
+  CPPUNIT_ASSERT(dcc);
+
+//    /**
+//     * The DOM element corresponding to this CellML element.
+//     */
+//    readonly attribute dom::Element domElement;
+
+  iface::dom::Element* el = dcc->domElement();
+  CPPUNIT_ASSERT(el);
+  wchar_t* str = el->getAttribute(L"name");
+  CPPUNIT_ASSERT(!wcscmp(str, L"reaction19"));
+  free(str);
+  el->release_ref();
+
+  dcc->release_ref();
+//  };
+}
+
 //   /**
 //    * This is a general interface from which all CellML elements which have a
 //    * name attribute inherit.
