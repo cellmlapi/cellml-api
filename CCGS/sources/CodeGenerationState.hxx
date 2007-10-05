@@ -97,7 +97,7 @@ public:
   void BuildFloatingAndConstantLists();
   void BuildFloatingAndKnownLists();
   void BuildStateAndConstantLists();
-  uint32_t BuildTargetSet(std::list<CDA_ComputationTarget*>& aStart,
+  uint32_t BuildTargetSet(std::set<CDA_ComputationTarget*>& aStart,
                           std::list<CDA_ComputationTarget*>& aCandidates,
                           std::set<CDA_ComputationTarget*>& aTargetSet);
   bool ConsiderEdgeInTargetSet(VariableEdge* aVarEdge,
@@ -105,8 +105,10 @@ public:
                                std::set<CDA_ComputationTarget*>& aCandidates,
                                std::set<CDA_ComputationTarget*>& aTargetSet);
   void GenerateCodeForSet(std::wstring& aCodeTo,
+                          std::set<CDA_ComputationTarget*>& aKnown,
                           std::set<CDA_ComputationTarget*>& aTargets);
-  void GenerateCodeForSetByType(std::set<CDA_ComputationTarget*>& aTargets);
+  void GenerateCodeForSetByType(std::set<CDA_ComputationTarget*>& aKnown,
+                                std::set<CDA_ComputationTarget*>& aTargets);
   void GenerateStateToRateCascades();
   void GenerateCodeForEdge(std::wstring& aCodeTo, VariableEdge* aVE);
   iface::cellml_api::CellMLVariable* GetVariableInComponent
@@ -136,7 +138,8 @@ public:
   ObjRef<iface::cellml_services::CUSES> mCUSES;
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
   ObjRef<CDA_CodeInformation> mCodeInfo;
-  std::list<CDA_ComputationTarget*> mBaseTargets, mKnown, mFloating;
+  std::list<CDA_ComputationTarget*> mBaseTargets, mFloating;
+  std::set<CDA_ComputationTarget*> mKnown;
   std::list<VariableEdge*> mVariableEdges;
   std::list<VariableEdge*> mUnusedEdges;
   std::map<CDA_ComputationTarget*, VariableEdge*> mEdgesInto;

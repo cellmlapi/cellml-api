@@ -66,13 +66,13 @@ CodeGenerationState::GenerateCode()
                            mCodeInfo->mConstantIndexCount);
 
     // Write evaluations for all constants we just worked out how to compute...
-    GenerateCodeForSet(mCodeInfo->mInitConstsStr, reachabletargets);
+    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, reachabletargets);
 
     // Also we need to initialise state variable IVs...
     reachabletargets.clear();
     BuildStateAndConstantLists();
     BuildTargetSet(mKnown, mFloating, reachabletargets);
-    GenerateCodeForSet(mCodeInfo->mInitConstsStr, reachabletargets);
+    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, reachabletargets);
 
     // Put all targets into lists based on their classification...
     BuildFloatingAndKnownLists();
@@ -98,7 +98,7 @@ CodeGenerationState::GenerateCode()
                            mCodeInfo->mAlgebraicIndexCount);
 
     // Write evaluations for all rates & algebraic variables in reachabletargets
-    GenerateCodeForSetByType(reachabletargets);
+    GenerateCodeForSetByType(mKnown, reachabletargets);
 
     // Also cascade state variables to rate variables where they are the same
     // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
@@ -723,7 +723,7 @@ CodeGenerationState::BuildFloatingAndConstantLists()
     switch ((*i)->mEvaluationType)
     {
     case iface::cellml_services::CONSTANT:
-      mKnown.push_back(*i);
+      mKnown.insert(*i);
       break;
     case iface::cellml_services::FLOATING:
       mFloating.push_back(*i);
@@ -746,7 +746,7 @@ CodeGenerationState::BuildStateAndConstantLists()
       mFloating.push_back(*i);
       break;
     case iface::cellml_services::CONSTANT:
-      mKnown.push_back(*i);
+      mKnown.insert(*i);
       break;
     default:
       break;
@@ -766,7 +766,7 @@ CodeGenerationState::BuildFloatingAndKnownLists()
       mFloating.push_back(*i);
       break;
     default:
-      mKnown.push_back(*i);
+      mKnown.insert(*i);
       break;
     }
 }
@@ -774,7 +774,7 @@ CodeGenerationState::BuildFloatingAndKnownLists()
 uint32_t
 CodeGenerationState::BuildTargetSet
 (
- std::list<CDA_ComputationTarget*>& aStart,
+ std::set<CDA_ComputationTarget*>& aStart,
  std::list<CDA_ComputationTarget*>& aCandidates,
  std::set<CDA_ComputationTarget*>& aTargetSet
 )
@@ -878,6 +878,7 @@ void
 CodeGenerationState::GenerateCodeForSet
 (
  std::wstring& aCodeTo,
+ std::set<CDA_ComputationTarget*>& aKnown,
  std::set<CDA_ComputationTarget*>& aTargets
 )
 {
@@ -886,16 +887,23 @@ CodeGenerationState::GenerateCodeForSet
     CDA_ComputationTarget* t = *(aTargets.begin());
     aTargets.erase(aTargets.begin());
 
+    if (aKnown.count(t) != 0)
+      continue;
+
     std::map<CDA_ComputationTarget*, VariableEdge*>::iterator it =
       mEdgesInto.find(t);
     assert(it != mEdgesInto.end());
     VariableEdge* ve = (*it).second;
 
     std::list<CDA_ComputationTarget*>::iterator i;
-    for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
-      if (aTargets.count(*i) != 0)
-        GenerateCodeForSet(aCodeTo, aTargets);
+    std::set<CDA_ComputationTarget*> subtargets;
 
+    for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
+      if (aKnown.count(*i) == 0 && (*i) != t)
+        subtargets.insert(*i);
+
+    aKnown.insert(t);
+    GenerateCodeForSet(aCodeTo, aKnown, subtargets);
     GenerateCodeForEdge(aCodeTo, ve);
   }
 }
@@ -905,10 +913,15 @@ CodeGenerationState::GenerateCodeForSet
  * algebraic variables. It generates code in the correct place for both.
  */
 void
-CodeGenerationState::GenerateCodeForSetByType(std::set<CDA_ComputationTarget*>& aTargets)
+CodeGenerationState::GenerateCodeForSetByType
+(
+ std::set<CDA_ComputationTarget*>& aKnown,
+ std::set<CDA_ComputationTarget*>& aTargets
+)
 {
   std::set<CDA_ComputationTarget*> finalTargets;
   std::set<CDA_ComputationTarget*>::iterator ati, fti;
+
   for (ati = aTargets.begin(); ati != aTargets.end(); ati++)
   {
     if ((*ati)->mDegree != 0)
@@ -925,24 +938,28 @@ CodeGenerationState::GenerateCodeForSetByType(std::set<CDA_ComputationTarget*>& 
 
     aTargets.erase(ati);
 
+    if (aKnown.count(t) != 0)
+      continue;
+
     VariableEdge* ve = mEdgesInto[t];
 
     std::set<CDA_ComputationTarget*> subtargets;
     std::list<CDA_ComputationTarget*>::iterator i;
     for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
     {
-      if (aTargets.count(*i) != 0)
+      if (aKnown.count(*i) == 0)
       {
         aTargets.erase(*i);
         subtargets.insert(*i);
       }
     }
 
-    GenerateCodeForSet(mCodeInfo->mRatesStr, subtargets);
+    aKnown.insert(t);
+    GenerateCodeForSet(mCodeInfo->mRatesStr, aKnown, subtargets);
     GenerateCodeForEdge(mCodeInfo->mRatesStr, ve);
   }
 
-  GenerateCodeForSet(mCodeInfo->mVarsStr, aTargets);
+  GenerateCodeForSet(mCodeInfo->mVarsStr, aKnown, aTargets);
 }
 
 void
