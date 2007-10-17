@@ -543,11 +543,9 @@ CDACUSES::scopedFind
       full += L'/';
     full += aName;
 
-    typename std::multimap<std::wstring, C*>::iterator i = aMap->find(full);
+    typename std::multimap<std::wstring, C*>::iterator i(aMap->find(full));
     if (i != aMap->end())
-    {
       return (*i).second;
-    }
 
     size_t idx = contextScope.rfind(L'/');
     if (idx == std::wstring::npos)
@@ -585,7 +583,8 @@ CDACUSES::getUnitScope(iface::cellml_api::CellMLElement* aContext)
       RETURN_INTO_WSTRING(sc, comp->name());
       std::wstring newScope = L"comp_";
       newScope += sc;
-      newScope += L'/';
+      if (scope != L"")
+        newScope += L'/';
       scope = newScope + scope;
     }
     else
@@ -615,7 +614,8 @@ CDACUSES::getUnitScope(iface::cellml_api::CellMLElement* aContext)
             RETURN_INTO_WSTRING(sc, iu->name());
             std::wstring newScope = L"imp_byunits_";
             newScope += sc;
-            newScope += L'/';
+            if (scope != L"")
+              newScope += L'/';
             scope = newScope + scope;
           }
         }
@@ -624,7 +624,8 @@ CDACUSES::getUnitScope(iface::cellml_api::CellMLElement* aContext)
           RETURN_INTO_WSTRING(sc, ic->name());
           std::wstring newScope = L"imp_bycomp_";
           newScope += sc;
-          newScope += L'/';
+          if (scope != L"")
+            newScope += L'/';
           scope = newScope + scope;
         }
       }

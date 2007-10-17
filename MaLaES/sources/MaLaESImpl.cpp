@@ -46,6 +46,42 @@ CDAMaLaESResult::CDAMaLaESResult
       throw MaLaESError(L"Invalid context element supplied.");
     QUERY_INTERFACE(mContext, el, cellml_api::CellMLComponent);
   }
+
+  // If mContext is an import component, find the real component...
+  DECLARE_QUERY_INTERFACE_OBJREF(impComp, mContext,
+                                 cellml_api::ImportComponent);
+  while (impComp != NULL)
+  {
+    RETURN_INTO_WSTRING(refname, impComp->componentRef());
+    RETURN_INTO_OBJREF(p, iface::cellml_api::CellMLElement,
+                       impComp->parentElement());
+    if (p == NULL)
+      throw MaLaESError(L"Supplied context was an isolated import component.");
+
+    DECLARE_QUERY_INTERFACE_OBJREF(imp, p, cellml_api::CellMLImport);
+    if (imp == NULL)
+      throw MaLaESError(L"Import component in non-import parent");
+
+    RETURN_INTO_OBJREF(mod, iface::cellml_api::Model, imp->importedModel());
+    if (mod == NULL)
+      throw MaLaESError(L"Context component is in an uninstantiated import.");
+
+    RETURN_INTO_OBJREF(ccs, iface::cellml_api::CellMLComponentSet,
+                       mod->modelComponents());
+    mContext = already_AddRefd<iface::cellml_api::CellMLComponent>
+      (ccs->getComponent(refname.c_str()));
+    
+    if (mContext == NULL)
+    {
+      RETURN_INTO_WSTRING(name, impComp->name());
+      std::wstring msg = L"Component ";
+      msg += refname + L" imported as " + name +
+        L" from a model which doesn't contain a component named " + refname;
+      throw MaLaESError(msg);
+    }
+
+    QUERY_INTERFACE(impComp, mContext, cellml_api::ImportComponent);    
+  }
 }
 
 CDAMaLaESResult::~CDAMaLaESResult()

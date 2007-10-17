@@ -47,5 +47,7 @@ runtest newton_raphson_parabola
 runtest import_eqn
 runtest number-minus
 runtest units
+runtest units-import
+runtest units-import-import
 
 exit 0
