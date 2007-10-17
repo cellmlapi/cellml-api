@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="units_test" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" cmeta:id="units_test_model_id">
+  <component name="component" cmeta:id="component_id">
+    <units name="pms">
+      <unit units="second" exponent="-1"/>
+    </units>
+    <variable name="alpha" units="pms"/>
+    <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="units_test_eq">
+      <apply id="units_test_calculation"><eq/>
+        <ci>alpha</ci>
+        <cn cellml:units="pms">0.1</cn>
+      </apply>
+    </math>
+  </component>
+</model>

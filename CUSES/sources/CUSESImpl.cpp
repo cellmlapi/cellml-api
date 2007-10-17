@@ -303,6 +303,26 @@ CDACanonicalUnitRepresentation::addBaseUnit
   baseUnits.push_back(baseUnit);
 }
 
+template<typename C>
+class IObjectListDestroyer
+{
+public:
+  IObjectListDestroyer(C& aList)
+    : mList(aList)
+  {
+  }
+
+  ~IObjectListDestroyer()
+  {
+    typename C::iterator i;
+    for (i = mList.begin(); i != mList.end(); i++)
+      (*i)->release_ref();
+  }
+
+private:
+  C& mList;
+};
+
 CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
   throw()
   : _cda_refcount(1), mStrict(aStrict)
@@ -323,6 +343,11 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
                      aModel->allUnits());
   RETURN_INTO_OBJREF(ui, iface::cellml_api::UnitsIterator,
                      us->iterateUnits());
+
+  std::list<iface::cellml_api::Units*> unitsList;
+  IObjectListDestroyer<std::list<iface::cellml_api::Units*> >
+    unitsListDestroyer(unitsList);
+
   while (true)
   {
     RETURN_INTO_OBJREF(u, iface::cellml_api::Units, ui->nextUnits());
@@ -330,8 +355,41 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
       break;
     
     u->add_ref();
+    unitsList.push_back(u);
+  }
+
+  RETURN_INTO_OBJREF(ccs, iface::cellml_api::CellMLComponentSet,
+                     aModel->localComponents());
+  RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
+                     ccs->iterateComponents());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(c, iface::cellml_api::CellMLComponent,
+                       ci->nextComponent());
+    if (c == NULL)
+      break;
+
+    us = already_AddRefd<iface::cellml_api::UnitsSet>(c->units());
+    ui = already_AddRefd<iface::cellml_api::UnitsIterator>(us->iterateUnits());
+
+    while (true)
+    {
+      RETURN_INTO_OBJREF(u, iface::cellml_api::Units, ui->nextUnits());
+      if (u == NULL)
+        break;
+
+      u->add_ref();
+      unitsList.push_back(u);
+    }
+  }
+
+  std::list<iface::cellml_api::Units*>::iterator i;
+  for (i = unitsList.begin(); i != unitsList.end(); i++)
+  {
+    iface::cellml_api::Units* u = *i;
+    u->add_ref();
     unitsMap->insert(std::pair<std::wstring, iface::cellml_api::Units*>
-                    (getUnitScope(u), u.getPointer()));
+                    (getUnitScope(u), u));
 
     RETURN_INTO_WSTRING(currentName, u->name());
     ObjRef<iface::cellml_api::CellMLElement> el(u);
@@ -376,7 +434,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
 
           u->add_ref();
           unitsMap->insert(std::pair<std::wstring, iface::cellml_api::Units*>
-                           (scopedName, u.getPointer()));
+                           (scopedName, u));
 
           hit = true;
           break;
