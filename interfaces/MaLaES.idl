@@ -2,6 +2,13 @@
 #include "AnnoTools.idl"
 #include "CeVAS.idl"
 
+/**
+ * MaLaES (the MathML Language Expression Service) provides facilities for
+ * converting from content MathML expressions (in the context of a CellML
+ * component or reaction) into expressions in a particular programming
+ * language. The translation into a programming language occurs according to a
+ * special language description format called MAL.
+ */
 module cellml_services
 {
   /**

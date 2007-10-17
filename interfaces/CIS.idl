@@ -1,6 +1,11 @@
 #include "xpcom.idl"
 #include "CCGS.idl"
 
+/**
+ * The CIS, or CellML Integration Service, allows models to be run (integrated).
+ * Information about the procedural steps being run, such as information on
+ * assigned variable indices, is accessible via the CCGS.
+ */
 module cellml_services
 {
   typedef sequence<double> DoubleSeq;

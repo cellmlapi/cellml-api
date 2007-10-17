@@ -2,6 +2,12 @@
 #define USERDATA_NEEDED
 #include "CellML_APISPEC.idl"
 
+/**
+ * AnnoTools provide supplementary annotation services to users of the CellML
+ * API, built on top of the user data facilities in the core API. These
+ * convenience services make it easier to write local annotations of various
+ * kinds on different objects.
+ */
 module cellml_services
 {
   /**
