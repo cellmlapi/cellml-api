@@ -16,3 +16,5 @@ include_HEADERS += \
   $(top_srcdir)/VACSS/sources/VACSSBootstrap.hpp
 
 BUILT_SOURCES += $(top_builddir)/interfaces/IfaceVACSS.hxx
+
+include $(top_srcdir)/VACSS/tests/build.mk

@@ -224,6 +224,9 @@ private:
     ElementValidationLevel (ModelValidation::* customValidator)(iface::dom::Element*);
   };
 
+  void validateElementRepresentation(iface::dom::Element* aEl,
+                                     const ReprValidationElement& aSpec);
+
   static const ReprValidationElement* sNoChildren[];
   static const ReprValidationElement sModelVE;
   static const ReprValidationElement* sModelChildren[];
@@ -264,6 +267,7 @@ private:
                                                const std::wstring&);
   };
   static const ReprValidationAttribute sMandatoryName;
+  static const ReprValidationAttribute sOptionalName;
   static const ReprValidationAttribute sXlinkHref;
   static const ReprValidationAttribute sBaseUnits;
   static const ReprValidationAttribute sUnitsRef;

@@ -6,6 +6,8 @@
  * corresponding to the appropriate CellML version...
  */
 #define MATCHING_CELLML_NS L"http://www.cellml.org/cellml/"
+#define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
+#define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
 #define XLINK_NS L"http://www.w3.org/1999/xlink"
 
@@ -585,7 +587,7 @@ ModelValidation::sRelationshipRefVE =
 const ModelValidation::ReprValidationAttribute*
 ModelValidation::sRelationshipRefAttrs[] =
   {
-    &sMandatoryName,
+    &sOptionalName,
     NULL
   };
 
@@ -702,7 +704,7 @@ ModelValidation::sRoleVE =
   { /* namespace */MATCHING_CELLML_NS,
     /* name */ L"role",
     /* attributes */sRoleAttrs,
-    /* children */sNoChildren,
+    /* children */sRoleChildren,
     /* minVersion */kCellML_1_0,
     /* maxVersion */kCellML_1_1,
     /* minInParent */1,
@@ -754,6 +756,15 @@ ModelValidation::sMandatoryName =
     /* name */L"name",
     /* missingMessage */L"The CellML specification says the name attribute "
                         L"is required here",
+    /* contentValidator */&ModelValidation::validateCellMLIdentifier
+  };
+
+const ModelValidation::ReprValidationAttribute
+ModelValidation::sOptionalName =
+  {
+    /* namespace */NULL,
+    /* name */L"name",
+    /* missingMessage */NULL,
     /* contentValidator */&ModelValidation::validateCellMLIdentifier
   };
 
@@ -994,6 +1005,248 @@ ModelValidation::validateRepresentation(iface::dom::Element* aTop)
                aTop);
     return;
   }
+
+  RETURN_INTO_WSTRING(ln, aTop->localName());
+  if (ln == L"model")
+    {
+    }
+  else
+  {
+    REPR_ERROR(L"The top-level element is not <model>. No "
+               L"further errors can be displayed because of this.",
+               aTop);
+    return;
+  }
+
+  validateElementRepresentation(aTop, sModelVE);
+}
+
+void
+ModelValidation::validateElementRepresentation
+(
+ iface::dom::Element* aEl,
+ const ReprValidationElement& aSpec
+)
+{
+  uint32_t seenAttrMasks = 0, seenAttrWrongNSMasks = 0;
+
+  if (aSpec.minVersion > mCellMLVersion ||
+      aSpec.maxVersion < mCellMLVersion)
+  {
+    std::wstring msg(L"Element ");
+    msg += aSpec.name;
+    msg += L" is invalid in this version of CellML.";
+    REPR_ERROR(msg, aEl);
+  }
+
+  ReprValidationElement::ElementValidationLevel evl
+    (ReprValidationElement::EXTRANEOUS_ELEMENTS_ATTRIBUTES);
+  if (aSpec.customValidator)
+    evl = (this->*(aSpec.customValidator))(aEl);
+  bool extraAtt = (evl == ReprValidationElement::EXTRANEOUS_ATTRIBUTES) ||
+    (evl == ReprValidationElement::EXTRANEOUS_ELEMENTS_ATTRIBUTES);
+  bool extraEl = (evl == ReprValidationElement::EXTRANEOUS_ELEMENTS) ||
+    (evl == ReprValidationElement::EXTRANEOUS_ELEMENTS_ATTRIBUTES);
+
+  RETURN_INTO_OBJREF(nnm, iface::dom::NamedNodeMap,
+                     aEl->attributes());
+  uint32_t i, l = nnm->length();
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(atn, iface::dom::Node, nnm->item(i));
+    RETURN_INTO_WSTRING(ns, atn->namespaceURI());
+    RETURN_INTO_WSTRING(ln, atn->localName());
+    if (ln == L"")
+    {
+      wchar_t* tmp = atn->nodeName();
+      ln = tmp;
+      free(tmp);
+    }
+
+    if (ns == ((mCellMLVersion == kCellML_1_0) ?
+               CELLML_1_1_NS : CELLML_1_0_NS))
+    {
+      REPR_ERROR(L"It is not valid to mix the CellML 1.0 and 1.1 namespaces "
+                 L"in the same model document", atn);
+      ns = (mCellMLVersion == kCellML_1_0) ? CELLML_1_0_NS : CELLML_1_1_NS;
+    }
+
+    const ReprValidationAttribute** p = aSpec.attributes;
+    uint32_t mask = 1;
+    for (; *p != NULL; p++, mask <<= 1)
+    {
+      if (ln != (*p)->name)
+        continue;
+
+      const wchar_t* match_ns = (*p)->namespace_name;
+      if (match_ns == NULL)
+      {
+        // Kludge for the brokenness in the CellML specification, which says
+        // that an attribute in the empty namespace is really in the CellML
+        // namespace...
+        if (ns == L"")
+          match_ns = L"";
+        else
+          match_ns = MATCHING_CELLML_NS;
+      }
+
+      // Pointer comparison deliberate...
+      if (match_ns == MATCHING_CELLML_NS)
+        match_ns = (mCellMLVersion == kCellML_1_0) ?
+          CELLML_1_0_NS : CELLML_1_1_NS;
+
+      if (ns != match_ns)
+      {
+        // So we can get a more useful error message if someone gets the
+        // namespace wrong...
+        seenAttrWrongNSMasks |= mask;
+        continue;
+      }
+
+      seenAttrMasks |= mask;
+
+      if ((*p)->contentValidator != NULL)
+      {
+        RETURN_INTO_WSTRING(val, atn->nodeValue());
+        ((this->*((*p)->contentValidator))(atn, val));
+      }
+
+      break;
+    }
+
+    if (extraAtt && (*p) == NULL)
+    {
+      if (ns == CELLML_1_0_NS || ns == CELLML_1_1_NS || ns == MATHML_NS ||
+          ns == XLINK_NS || ns == L"")
+      {
+        std::wstring msg(L"Unexpected attribute ");
+        msg += ln;
+        msg += L" found - not valid here";
+        REPR_ERROR(msg, atn);
+      }
+    }
+  }
+
+  const ReprValidationAttribute** p = aSpec.attributes;
+  uint32_t mask = 1;
+  for (; *p != NULL; p++, mask <<= 1)
+  {
+    if ((*p)->missingMessage == NULL)
+      continue;
+
+    if (seenAttrMasks & mask)
+      continue;
+
+    std::wstring missingMessage((*p)->missingMessage);
+    if (seenAttrWrongNSMasks & mask)
+      missingMessage += L". Note that an element with a matching name was "
+        L"seen in a different namespace";
+
+    REPR_ERROR(missingMessage, aEl);
+  }
+
+  const ReprValidationElement** e;
+
+  // hard-coded 32 because we use a 32 bit mask above. This is a size limit on
+  // the table which drives this code and not on the data so it is not worth
+  // sacrificing the time needed to allocate here...
+  uint32_t counts[32];
+  memset(counts, 0, 32 * sizeof(uint32_t));
+
+  RETURN_INTO_OBJREF(child, iface::dom::Node, aEl->firstChild());
+  std::wstring textData;
+  for (; child != NULL;
+       child = already_AddRefd<iface::dom::Node>(child->nextSibling()))
+  {
+    uint16_t nt = child->nodeType();
+    switch (nt)
+    {
+    case iface::dom::Node::ELEMENT_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(cel, child, dom::Element);
+        RETURN_INTO_WSTRING(ns, cel->namespaceURI());
+        RETURN_INTO_WSTRING(ln, cel->localName());
+        if (ln == L"")
+        {
+          wchar_t* tmp = cel->nodeName();
+          ln = tmp;
+          free(tmp);
+        }
+
+        if (ns == ((mCellMLVersion == kCellML_1_0) ?
+                   CELLML_1_1_NS : CELLML_1_0_NS))
+        {
+          REPR_ERROR(L"It is not valid to mix the CellML 1.0 and 1.1 namespaces "
+                     L"in the same model document", cel);
+          ns = (mCellMLVersion == kCellML_1_0) ? CELLML_1_0_NS : CELLML_1_1_NS;
+        }
+
+        for (e = aSpec.children, i = 0; *e != NULL; e++, i++)
+        {
+          if (ln != (*e)->name)
+            continue;
+
+          const wchar_t* match_ns = (*e)->namespace_name;
+          // Pointer comparison deliberate...
+          if (match_ns == MATCHING_CELLML_NS)
+            match_ns = (mCellMLVersion == kCellML_1_0) ?
+              CELLML_1_0_NS : CELLML_1_1_NS;
+
+          if (ns != match_ns)
+            continue;
+
+          counts[i]++;
+          // We only give the error once even if there are more than one too
+          // many of the elements...
+          if ((*e)->maxInParent != 0 &&
+              counts[i] == (*e)->maxInParent + 1)
+            REPR_ERROR((*e)->tooManyMessage, cel);
+
+          validateElementRepresentation(cel, **e);
+          break;
+        }
+        
+        if (extraEl && *e == NULL)
+        {
+          if (ns == CELLML_1_0_NS || ns == CELLML_1_1_NS || ns == MATHML_NS ||
+              ns == XLINK_NS)
+          {
+            std::wstring msg(L"Unexpected element ");
+            msg += ln;
+            msg += L" found - not valid here";
+            REPR_ERROR(msg, cel);
+          }
+        }
+        break;
+      }
+
+    case iface::dom::Node::TEXT_NODE:
+    case iface::dom::Node::CDATA_SECTION_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
+        wchar_t* tmp = tn->data();
+        textData += tmp;
+        free(tmp);
+      }
+      break;
+
+    case iface::dom::Node::ENTITY_REFERENCE_NODE:
+      // XXX we should handle this better.
+    default:
+      continue;
+    }
+  }
+
+  for (i = 0, e = aSpec.children; *e != NULL; e++, i++)
+  {
+    if (counts[i] < (*e)->minInParent)
+    {
+      REPR_ERROR((*e)->tooFewMessage, aEl);
+    }
+  }
+
+  if (aSpec.textValidator)
+    (this->*(aSpec.textValidator))(aEl, textData);
 }
 
 void
@@ -1129,7 +1382,7 @@ ModelValidation::validateCellMLIdentifier
   wchar_t c = *i;
 
   // The 'can't start with a number' rule was introduced in CellML 1.1.
-  if (mCellMLVersion > kCellML_1_0 && c >= '0' || c <= '9')
+  if ((mCellMLVersion > kCellML_1_0) && (c >= '0' || c <= '9'))
   {
     REPR_ERROR(IDENT_MUST_NOT_START_NUMBER, aContext);
   }
@@ -1336,13 +1589,13 @@ ModelValidation::validateFloatingPoint
       continue;
     }
 
-    if (*p >= '0' && *p <= '9')
+    if (*p >= L'0' && *p <= L'9')
     {
       p++;
       continue;
     }
 
-    if (*p == 'E' || *p == 'e')
+    if (*p == L'E' || *p == L'e')
     {
       if (seenExp)
       {
@@ -1354,7 +1607,7 @@ ModelValidation::validateFloatingPoint
       seenDot = true;
       p++;
 
-      if (p != e && (*p == '-' || *p == '+'))
+      if (p != e && (*p == L'-' || *p == L'+'))
         p++;
 
       continue;
@@ -1407,8 +1660,8 @@ ModelValidation::validateRole
   }
   else
   {
-    if (c == 'r')
-      matched = (aRole == L"rate" || aRole == L"reaction");
+    if (c == L'r')
+      matched = (aRole == L"rate" || aRole == L"reactant");
     else if (c == L'p')
       matched = (aRole == L"product");
   }
