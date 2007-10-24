@@ -81,7 +81,15 @@ CodeGenerationState::GenerateCode()
     // known variables (constants, state variables, and bound variable)...
     reachabletargets.clear();
 
-    if (BuildTargetSet(mKnown, mFloating, reachabletargets) != 0)
+    bool wasError = (BuildTargetSet(mKnown, mFloating, reachabletargets) != 0);
+
+    // Assign algebraic variables for set...
+    AllocateVariablesInSet(reachabletargets, iface::cellml_services::ALGEBRAIC,
+                           mAlgebraicVariableNamePattern,
+                           mNextAlgebraicVariableIndex,
+                           mCodeInfo->mAlgebraicIndexCount);
+
+    if (wasError)
     {
       if (mUnusedEdges.size() != 0)
       {
@@ -90,12 +98,6 @@ CodeGenerationState::GenerateCode()
       else
         throw UnderconstrainedError();
     }
-
-    // Assign algebraic variables for set...
-    AllocateVariablesInSet(reachabletargets, iface::cellml_services::ALGEBRAIC,
-                           mAlgebraicVariableNamePattern,
-                           mNextAlgebraicVariableIndex,
-                           mCodeInfo->mAlgebraicIndexCount);
 
     // Write evaluations for all rates & algebraic variables in reachabletargets
     GenerateCodeForSetByType(mKnown, reachabletargets);
