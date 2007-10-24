@@ -17,14 +17,14 @@
  * * * Variable index: 0
  * * * Variable storage: VOI
  */
-void SetupFixedConstants(double* CONSTANTS, double* RATES)
+void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
 STATES[0] = 5;
 }
-void EvaluateVariables(double BOUND, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
+void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
 }
-void ComputeRates(double BOUND, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
+void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 RATES[0] = -1.00000 -  - -1.00000*VOI;
 }

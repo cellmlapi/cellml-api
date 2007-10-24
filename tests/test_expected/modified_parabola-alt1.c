@@ -29,17 +29,17 @@
  * * * Variable index: 1
  * * * Variable storage: CONSTANTS[1]
  */
-void SetupFixedConstants(double* CONSTANTS, double* RATES)
+void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
 CONSTANTS[0] = 3.00000;
 CONSTANTS[1] = CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ? ( sin(CONSTANTS[0])) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000;
 STATES[0] = CONSTANTS[0];
 }
-void EvaluateVariables(double BOUND, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
+void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
 ALGEBRAIC[0] = (pow(VOI, 2.00000))+CONSTANTS[0];
 }
-void ComputeRates(double BOUND, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
+void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 RATES[0] =  2.00000*VOI;
 }

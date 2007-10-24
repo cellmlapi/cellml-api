@@ -9,13 +9,13 @@
  * * * Variable index: 0
  * * * Variable storage: CONSTANTS[0]
  */
-void SetupFixedConstants(double* CONSTANTS, double* RATES)
+void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
 CONSTANTS[0] = 0.100000;
 }
-void EvaluateVariables(double BOUND, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
+void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
 }
-void ComputeRates(double BOUND, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
+void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 }

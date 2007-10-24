@@ -366,16 +366,16 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
 
   // Now start the code...
   frag = cci->initConstsString();
-  printf("void SetupFixedConstants(double* CONSTANTS, double* RATES)\n{\n%S}\n", frag);
+  printf("void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)\n{\n%S}\n", frag);
   free(frag);
 
   frag = cci->variablesString();
-  printf("void EvaluateVariables(double BOUND, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\n"
+  printf("void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\n"
          "{\n%S}\n", frag);
   free(frag);
 
   frag = cci->ratesString();
-  printf("void ComputeRates(double BOUND, double* STATES, double* RATES, double* CONSTANTS, "
+  printf("void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, "
          "double* ALGEBRAIC)\n"
          "{\n%S}\n", frag);
   free(frag);  
