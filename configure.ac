@@ -12,51 +12,6 @@ AC_CONFIG_HEADER([cda_config.h])
 AM_INIT_AUTOMAKE([-Wno-portability])
 PKG_PROG_PKG_CONFIG
 
-# Checks for programs.
-AC_PROG_CXX
-AC_LANG(C)
-AC_LANG(C++)
-
-# Set up libtool...
-AC_LIBTOOL_DLOPEN
-AC_LIBLTDL_CONVENIENCE
-AC_DISABLE_STATIC
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
-AC_LIB_LTDL
-LT_LANG(C++)
-AC_SUBST([LIBTOOL_DEPS])
-
-# Checks for types...
-AC_TYPE_INT8_T
-AC_TYPE_UINT8_T
-AC_TYPE_INT16_T
-AC_TYPE_UINT16_T
-AC_TYPE_INT32_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Checks for libraries.
-# PKG_CHECK_MODULES([GLIB], [glib-2.0])
-# PKG_CHECK_MODULES([GDOME], [gdome2])
-
-# Checks for header files.
-AC_CHECK_HEADERS([strings.h wchar.h])
-
-THREADFLAGS=
-AC_CHECK_LIB([pthread], [pthread_create], [THREADFLAGS=-lpthread])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_C_INLINE
-
-# Checks for library functions.
-AC_HEADER_STDC
-
-# Check for size of wchar_t...
-AC_CHECK_SIZEOF(wchar_t*)
-
 AC_ARG_ENABLE(corba,
 [  --enable-corba    Build CORBA glue],
 [case "${enableval}" in
@@ -133,6 +88,10 @@ AC_ARG_ENABLE(cevas,
 esac], [cevas=false])
 AM_CONDITIONAL(ENABLE_CEVAS, test x$cevas = xtrue)
 
+if test x$annotools = xfalse -a x$cevas = xtrue; then
+   AC_MSG_ERROR(You must enable AnnoTools if you want CeVAS)
+fi
+
 AC_ARG_ENABLE(vacss,
 [  --enable-vacss     Build the Validate Against CellML Specification Service.
                       **This option is NOT officially supported** in this
@@ -153,6 +112,13 @@ AC_ARG_ENABLE(malaes,
 esac], [malaes=false])
 AM_CONDITIONAL(ENABLE_MALAES, test x$malaes = xtrue)
 
+if test x$cuses = xfalse -a x$malaes = xtrue; then
+   AC_MSG_ERROR(You must enable CUSES if you want MaLaES)
+fi
+if test x$cevas = xfalse -a x$malaes = xtrue; then
+   AC_MSG_ERROR(You must enable CeVAS if you want MaLaES)
+fi
+
 AC_ARG_ENABLE(ccgs,
 [  --enable-ccgs    Build the CellML C Code Generation Service],
 [case "${enableval}" in
@@ -161,6 +127,10 @@ AC_ARG_ENABLE(ccgs,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-ccgs) ;;
 esac],[ccgs=false])
 AM_CONDITIONAL(ENABLE_CCGS, test x$ccgs = xtrue)
+
+if test x$malaes = xfalse -a x$ccgs = xtrue; then
+   AC_MSG_ERROR(You must enable MaLaES if you want CCGS)
+fi
 
 AC_ARG_ENABLE(cis,
 [  --enable-cis    Build the CellML Integration Service],
@@ -176,6 +146,10 @@ AC_ARG_ENABLE(cis,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-cis) ;;
 esac],[cis=false])
 AM_CONDITIONAL(ENABLE_CIS, test x$cis = xtrue)
+
+if test x$ccgs = xfalse -a x$cis = xtrue; then
+   AC_MSG_ERROR(You must enable CCGS if you want CIS)
+fi
 
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
@@ -241,6 +215,51 @@ AM_CONDITIONAL(ENABLE_MALAES_AND_XPCOM, test x$malaesandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_XPCOM, test x$vacssandxpcom = xtrue)
+
+# Checks for programs.
+AC_PROG_CXX
+AC_LANG(C)
+AC_LANG(C++)
+
+# Set up libtool...
+AC_LIBTOOL_DLOPEN
+AC_LIBLTDL_CONVENIENCE
+AC_DISABLE_STATIC
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
+AC_LIB_LTDL
+LT_LANG(C++)
+AC_SUBST([LIBTOOL_DEPS])
+
+# Checks for types...
+AC_TYPE_INT8_T
+AC_TYPE_UINT8_T
+AC_TYPE_INT16_T
+AC_TYPE_UINT16_T
+AC_TYPE_INT32_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+
+# Checks for libraries.
+# PKG_CHECK_MODULES([GLIB], [glib-2.0])
+# PKG_CHECK_MODULES([GDOME], [gdome2])
+
+# Checks for header files.
+AC_CHECK_HEADERS([strings.h wchar.h])
+
+THREADFLAGS=
+AC_CHECK_LIB([pthread], [pthread_create], [THREADFLAGS=-lpthread])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+
+# Checks for library functions.
+AC_HEADER_STDC
+
+# Check for size of wchar_t...
+AC_CHECK_SIZEOF(wchar_t*)
 
 case $srcdir in
   [\\/]* | ?:[\\/]* ) # Absolute
