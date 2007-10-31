@@ -134,7 +134,9 @@ esac], [cevas=false])
 AM_CONDITIONAL(ENABLE_CEVAS, test x$cevas = xtrue)
 
 AC_ARG_ENABLE(vacss,
-[  --enable-vacss     Build the Validate Against CellML Specification Service],
+[  --enable-vacss     Build the Validate Against CellML Specification Service.
+                      **This option is NOT officially supported** in this
+                      version and does not yet perform full validation],
 [case "${enableval}" in
   yes) vacss=true ;;
   no) vacss=false ;;
