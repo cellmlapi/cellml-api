@@ -359,7 +359,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
   }
 
   RETURN_INTO_OBJREF(ccs, iface::cellml_api::CellMLComponentSet,
-                     aModel->localComponents());
+                     aModel->allComponents());
   RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLComponentIterator,
                      ccs->iterateComponents());
   while (true)
@@ -532,7 +532,7 @@ CDACUSES::scopedFind
 (
  ScopeMap<C>& aMap,
  iface::cellml_api::CellMLElement* aContext,
- std::wstring& aName 
+ std::wstring& aName
 )
 {
   std::wstring contextScope = getUnitScope(aContext);

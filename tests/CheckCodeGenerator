@@ -49,5 +49,6 @@ runtest number-minus
 runtest units
 runtest units-import
 runtest units-import-import
+runtest units-in-imported-component
 
 exit 0

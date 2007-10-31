@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<model
+    name="units_test"
+    xmlns="http://www.cellml.org/cellml/1.1#"
+    xmlns:cellml="http://www.cellml.org/cellml/1.1#"
+    xmlns:cmeta="http://www.cellml.org/metadata/1.0#"
+    cmeta:id="units_test_model_id"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+  <import xlink:href="units-import.xml">
+    <component name="component_imported" component_ref="component"/>
+  </import>
+</model>
