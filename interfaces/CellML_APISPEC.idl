@@ -849,7 +849,9 @@ module cellml_api
     : NamedCellMLElement
   {
     /**
-     * The initial value of this variable.
+     * The initial value of this variable. If there is no initial value, will
+     * return the empty string. Setting to the empty string will delete any
+     * initial_value attribute present.
      */
     attribute CellMLAttributeString initialValue;
 

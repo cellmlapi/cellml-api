@@ -3909,7 +3909,10 @@ CDA_CellMLVariable::initialValue
 {
   try
   {
-    datastore->setAttribute(L"initial_value", attr);
+    if (!wcscmp(attr, L""))
+      datastore->removeAttribute(L"initial_value");
+    else
+      datastore->setAttribute(L"initial_value", attr);
   }
   catch (iface::dom::DOMException& de)
   {
