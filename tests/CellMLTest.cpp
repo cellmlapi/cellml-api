@@ -2196,6 +2196,15 @@ CellMLTest::testCellMLImport()
 
   m->release_ref();
 
+  CPPUNIT_ASSERT(ci1->wasInstantiated());
+//    /**
+//     * Causes the model to be uninstantiated, so that it can be re-instantiated
+//     * in the future.
+//     */
+//    void uninstantiate();
+  ci1->uninstantiate();
+  CPPUNIT_ASSERT(!ci1->wasInstantiated());
+
 //     /**
 //      * A number that, within the parent model, uniquely represents the CellMLImport.
 //      */

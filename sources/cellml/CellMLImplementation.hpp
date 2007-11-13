@@ -156,6 +156,7 @@ public:
   iface::cellml_api::CellMLElementSet* childElements() throw(std::exception&);
   void addElement(iface::cellml_api::CellMLElement* x) throw(std::exception&);
   void removeElement(iface::cellml_api::CellMLElement* x) throw(std::exception&);
+  void removeLinkFromHereToParent();
   void replaceElement(iface::cellml_api::CellMLElement* x, iface::cellml_api::CellMLElement* y) throw(std::exception&);
   void removeByName(const wchar_t* type, const wchar_t* name) throw(std::exception&);
   iface::cellml_api::CellMLElement* parentElement() throw(std::exception&);
@@ -184,6 +185,7 @@ public:
   iface::dom::Element* datastore;
 protected:
   friend class CDA_CellMLElementSet;
+  friend class CDA_CellMLImport;
   friend class CDA_Debugger;
   // This is used only when ownerModel is null. When ownerModel is assigned,
   // add_ref() must be called on ownerModel the correct number of times.
@@ -465,6 +467,8 @@ public:
 
   iface::cellml_api::Model* mImportedModel;
   iface::cellml_api::Model* importedModel() throw(std::exception&);
+  
+  void uninstantiate() throw(std::exception&);
 
   WeakReference<CDA_Model> lastIdentifierModel;
   // This number uniquely identifies the CellML import within the toplevel

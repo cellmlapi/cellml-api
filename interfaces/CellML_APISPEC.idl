@@ -793,6 +793,12 @@ module cellml_api
      * the imported Model corresponding to this CellMLImport.
      */
     readonly attribute Model importedModel;
+
+    /**
+     * Causes the model to be uninstantiated, so that it can be re-instantiated
+     * in the future.
+     */
+    void uninstantiate();
   };
 #pragma terminal-interface
 

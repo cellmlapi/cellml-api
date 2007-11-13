@@ -580,20 +580,27 @@ CDA_CellMLElement::removeElement(iface::cellml_api::CellMLElement* x)
     if (children)
       children->removeChildFromWrapper(el);
 
-    // The node is now orphaned...
-    el->mParent = NULL;
-    uint32_t i;
-    // We don't need to be kept around for its references any more.
-    for (i = 0; i < el->_cda_refcount; i++)
-      release_ref();
-
-    if (el->_cda_refcount == 0)
-      delete el;
+    el->removeLinkFromHereToParent();
   }
   catch (iface::dom::DOMException& e)
   {
     throw iface::cellml_api::CellMLException();
   }
+}
+
+void
+CDA_CellMLElement::removeLinkFromHereToParent()
+{
+  uint32_t i;
+  for (i = 0; i < _cda_refcount; i++)
+    mParent->release_ref();
+
+  
+  
+  if (_cda_refcount == 0)
+    delete this;
+  else
+    mParent = NULL;
 }
 
 void
@@ -3398,8 +3405,8 @@ CDA_CellMLImport::instantiateFromText(const wchar_t* aText)
   throw(std::exception&)
 {
   // If this import has already been instantiated, throw an exception....
-  //if (mImportedModel != NULL)
-  //  throw iface::cellml_api::CellMLException();
+  if (mImportedModel != NULL)
+    throw iface::cellml_api::CellMLException();
 
   // We need to get hold of the top level CellML model...
   CDA_CellMLElement *lastEl = NULL, *nextEl;
@@ -3633,6 +3640,19 @@ CDA_CellMLImport::importedModel()
   if (mImportedModel != NULL)
     mImportedModel->add_ref();
   return mImportedModel;
+}
+
+void
+CDA_CellMLImport::uninstantiate()
+  throw(std::exception&)
+{
+  if (mImportedModel == NULL)
+    return;
+
+  unsafe_dynamic_cast<CDA_Model*>(mImportedModel)
+    ->removeLinkFromHereToParent();
+
+  mImportedModel = NULL;
 }
 
 CDA_CellMLComponent*
