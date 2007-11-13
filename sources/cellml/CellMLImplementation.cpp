@@ -3398,8 +3398,8 @@ CDA_CellMLImport::instantiateFromText(const wchar_t* aText)
   throw(std::exception&)
 {
   // If this import has already been instantiated, throw an exception....
-  if (mImportedModel != NULL)
-    throw iface::cellml_api::CellMLException();
+  //if (mImportedModel != NULL)
+  //  throw iface::cellml_api::CellMLException();
 
   // We need to get hold of the top level CellML model...
   CDA_CellMLElement *lastEl = NULL, *nextEl;
