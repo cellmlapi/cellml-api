@@ -43,6 +43,8 @@ module cellml_services
      * Creates a (non-live) iterator of components which are relevant to this
      * model. This includes imported components, but not components which are
      * not directly imported and are not included by encapsulation.
+     * @note ImportComponents are never returned, only the actual components
+     *       from throughout the model which are used.
      */
     cellml_api::CellMLComponentIterator iterateRelevantComponents();
 
@@ -72,6 +74,10 @@ module cellml_services
     /**
      * Creates a CeVAS object for a given model. The CeVAS object is not live,
      * and the model should not be changed while the CeVAS object is in use.
+     *
+     * This operation will also instantiate any imports which are not yet
+     * instantiated (and fail if that can't be done).
+     *
      * @param aModel The top-level model on which CeVAS should operate.
      * @returns A CeVAS object.
      */
