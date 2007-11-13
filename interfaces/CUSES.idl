@@ -117,8 +117,9 @@ module cellml_services
     /**
      * Gets a units representation for a string in a given context.
      * @param context The context. This must be part of the model
-     *                (or an import) for which this object was created.
-     *                It must be either a component or a units element.
+     *                (or part of an imported model) for which this object was
+     *                created. It can be any element in the model, but would
+     *                generally be a component, units, or model element.
      * @param name The units name to look up. This can be a built-in unit, or
      *             a defined unit.
      * @returns The units representation, or null if the name is invalid.
