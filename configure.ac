@@ -362,6 +362,12 @@ case "$host-$CXX" in
 *)
         LIBXML_CFLAGS=`xml2-config --cflags`
 esac
+
+if test x$cis=xtrue; then
+     AC_CHECK_LIB([gslcblas],[cblas_dgemm], [], [AC_MSG_ERROR(GSL CBLAS library required)])
+     AC_CHECK_LIB([gsl],[gsl_blas_dgemm], [], [AC_MSG_ERROR(GSL library required)])
+fi
+
 XPCOM="$xpcom"
 AC_SUBST([XPCOM])
 AC_SUBST([CYGWIN_WRAPPER])

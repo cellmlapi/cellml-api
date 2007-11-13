@@ -40,6 +40,12 @@
 /* Define if libdlloader will be built on this platform */
 #undef HAVE_LIBDLLOADER
 
+/* Define to 1 if you have the `gsl' library (-lgsl). */
+#undef HAVE_LIBGSL
+
+/* Define to 1 if you have the `gslcblas' library (-lgslcblas). */
+#undef HAVE_LIBGSLCBLAS
+
 /* Define to 1 if you have the <mach-o/dyld.h> header file. */
 #undef HAVE_MACH_O_DYLD_H
 
