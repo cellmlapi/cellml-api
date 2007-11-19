@@ -324,10 +324,16 @@ OMNILINK="-lomniORB4 -lomnithread"
 STLLINK=
 LIBXML_CFLAGS=
 
+PRE_NON_AS_NEEDED="l"
+POST_NON_AS_NEEDED=""
+
 if test "$with_gnu_ld" = yes; then
   # Catch unresolved symbols on all platforms, because they will break the
   # build when we try on Win32.
   STLLINK="$STLLINK -Wl,--unresolved-symbols=ignore-in-shared-libs"
+
+  PRE_NON_AS_NEEDED="Wl,-no-as-needed -Wl,-l"
+  POST_NON_AS_NEEDED="\$(NULLSTRING) -Wl,-as-needed"
 fi
 
 case "$host-$CXX" in
@@ -376,6 +382,8 @@ AC_SUBST([STLLINK])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([THREADFLAGS])
 AC_SUBST([LIBXML_CFLAGS])
+AC_SUBST([PRE_NON_AS_NEEDED])
+AC_SUBST([POST_NON_AS_NEEDED])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])

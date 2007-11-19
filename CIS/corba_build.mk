@@ -11,7 +11,7 @@ libcis_corba_stubs_la_SOURCES := \
 libCISService_la_SOURCES := \
   $(top_srcdir)/CIS/sources/CISServiceRegistration.cpp
 
-libCISService_la_LDFLAGS := -shared -module -no-undefined $(OMNILINK) -lgsl -lgslcblas
+libCISService_la_LDFLAGS := -shared -module -no-undefined $(OMNILINK) -lgsl -$(PRE_NON_AS_NEEDED)gslcblas$(POST_NON_AS_NEEDED)
 
 libCISService_la_LIBADD := \
   $(top_builddir)/libcellml.la \
