@@ -326,12 +326,14 @@ LIBXML_CFLAGS=
 
 PRE_NON_AS_NEEDED="l"
 POST_NON_AS_NEEDED=""
+NO_AS_NEEDED=""
 
 if test "$with_gnu_ld" = yes; then
   # Catch unresolved symbols on all platforms, because they will break the
   # build when we try on Win32.
   STLLINK="$STLLINK -Wl,--unresolved-symbols=ignore-in-shared-libs"
 
+  NO_AS_NEEDED="-Wl,-no-as-needed"
   PRE_NON_AS_NEEDED="Wl,-no-as-needed -Wl,-l"
   POST_NON_AS_NEEDED="\$(NULLSTRING) -Wl,-as-needed"
 fi
@@ -370,8 +372,11 @@ case "$host-$CXX" in
 esac
 
 if test x$cis=xtrue; then
+     LIBS=
      AC_CHECK_LIB([gslcblas],[cblas_dgemm], [], [AC_MSG_ERROR(GSL CBLAS library required)])
+     LIBS="$NO_AS_NEEDED -lgslcblas"
      AC_CHECK_LIB([gsl],[gsl_blas_dgemm], [], [AC_MSG_ERROR(GSL library required)])
+     LIBS=
 fi
 
 XPCOM="$xpcom"
