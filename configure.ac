@@ -284,7 +284,7 @@ dnl ===============================================================
 if test "$GCC" = "yes"; then
   AC_CACHE_CHECK(for visibility(hidden) attribute,
                  ac_cv_visibility_hidden,
-                 [cat > conftest.c <<EOF
+                 [cat > conftest.cpp <<EOF
 		  class MyClass;
 		  class MyClass
 		  {
