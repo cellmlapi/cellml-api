@@ -29,7 +29,7 @@ libcis_la_SOURCES = \
   $(CVODE_SOURCES)
 
 libcis_la_LIBADD = \
-  $(top_builddir)/libccgs.la -lgsl $(STLLINK)
+  $(top_builddir)/libccgs.la $(LIBADD_DL) -lgsl $(STLLINK)
 
 libcis_la_CXXFLAGS = \
   -Wall -I$(top_srcdir)/sources \
