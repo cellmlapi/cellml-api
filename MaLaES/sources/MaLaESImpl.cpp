@@ -336,6 +336,16 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
       throw MaLaESError(msg);
     }
 
+    if (!curSrc->compatibleWith(curDest))
+    {
+      std::wstring msg = L"Variable has units ";
+      msg += unameSrc;
+      msg += L" which are incompatible with the units ";
+      msg += unameDest;
+      msg += L" on a connected variable.";
+      throw MaLaESError(msg);
+    }
+
     double mup = curSrc->convertUnits(curDest, &aOffset);
 
     if (mInvolvedSet.count(sv) == 0)
@@ -844,6 +854,17 @@ CDAMaLaESTransform::transform
       RETURN_INTO_OBJREF(curTarg,
                          iface::cellml_services::CanonicalUnitRepresentation,
                          aCUSES->getUnitsByName(compTarg, unTarg.c_str()));
+
+      if (!curLocal->compatibleWith(curTarg))
+      {
+        std::wstring msg = L"Variable has units ";
+        msg += unTarg;
+        msg += L" which are incompatible with the units ";
+        msg += unLocal;
+        msg += L" on a connected variable.";
+        throw MaLaESError(msg);
+      }
+
       mup = curLocal->convertUnits(curTarg, &offset);
     }
 
@@ -869,6 +890,16 @@ CDAMaLaESTransform::transform
                          iface::cellml_services::CanonicalUnitRepresentation,
                          aCUSES->getUnitsByName(compTarg, unTarg.c_str()));
       double tmp;
+
+      if (!curLocal->compatibleWith(curTarg))
+      {
+        std::wstring msg = L"Variable of integration has units ";
+        msg += unTarg;
+        msg += L" which are incompatible with the units ";
+        msg += unLocal;
+        msg += L" on a connected variable.";
+        throw MaLaESError(msg);
+      }
       mup /= pow(curLocal->convertUnits(curTarg, &tmp), (double)aUnitsDiffDegree);
     }
 
