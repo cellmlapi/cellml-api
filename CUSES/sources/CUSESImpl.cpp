@@ -886,59 +886,71 @@ CDACUSES::ComputeUnits
   RETURN_INTO_OBJREF(newrep, CDACanonicalUnitRepresentation,
                      new CDACanonicalUnitRepresentation(mStrict));
 
-  // All units defined in units should now exist (it is an internal error if
-  // not), so use this to define the current unit.
-
-  RETURN_INTO_OBJREF(us, iface::cellml_api::UnitSet,
-                     units->unitCollection());
-  RETURN_INTO_OBJREF(ui, iface::cellml_api::UnitIterator,
-                     us->iterateUnits());
-  while (true)
+  if (units->isBaseUnits())
   {
-    RETURN_INTO_OBJREF(u, iface::cellml_api::Unit,
-                       ui->nextUnit());
-    if (u == NULL)
-      break;
-
-    // Find the unit...
-    RETURN_INTO_WSTRING(uname, u->units());
-
-    if (uname == L"")
-      continue;
-
-    RETURN_INTO_OBJREF(urep, iface::cellml_services::CanonicalUnitRepresentation,
-                       getUnitsByName(units, uname.c_str()));
-    // If urep is null, then something is wrong internally, because we have
-    // already checked the names are valid and resolved all dependency names.
-    uint32_t l = urep->length();
-    uint32_t i;
-    for (i = 0; i < l; i++)
-    {
-      RETURN_INTO_OBJREF(bu, iface::cellml_services::BaseUnitInstance,
-                         urep->fetchBaseUnit(i));
-      double newExponent = u->exponent() * bu->exponent();
-      double newPrefix;
-      if (i == 0)
-        newPrefix = u->multiplier() *
-          pow(pow(10.0, -u->prefix()) * bu->prefix(), u->exponent());
-      else
-        newPrefix = pow(bu->prefix(), u->exponent());
-      double newOffset;
-      if (i == 0)
-        newOffset = u->offset() + bu->offset();
-      else
-        newOffset = bu->offset();
-
-      RETURN_INTO_OBJREF(ub, iface::cellml_services::BaseUnit,
-                         bu->unit());
-      RETURN_INTO_OBJREF(nbu, iface::cellml_services::BaseUnitInstance,
-                         new CDABaseUnitInstance(ub, newPrefix, newOffset,
-                                                 newExponent));
-      newrep->addBaseUnit(nbu);
-    }
+    RETURN_INTO_OBJREF(ubu, iface::cellml_services::UserBaseUnit,
+                       new CDAUserBaseUnit(units));
+    RETURN_INTO_OBJREF(nbu, iface::cellml_services::BaseUnitInstance,
+                       new CDABaseUnitInstance(ubu, 1.0, 0.0,
+                                               1.0));
+    newrep->addBaseUnit(nbu);
   }
+  else
+  {
+    // All units defined in units should now exist (it is an internal error if
+    // not), so use this to define the current unit.
+    
+    RETURN_INTO_OBJREF(us, iface::cellml_api::UnitSet,
+                       units->unitCollection());
+    RETURN_INTO_OBJREF(ui, iface::cellml_api::UnitIterator,
+                       us->iterateUnits());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(u, iface::cellml_api::Unit,
+                         ui->nextUnit());
+      if (u == NULL)
+        break;
+      
+      // Find the unit...
+      RETURN_INTO_WSTRING(uname, u->units());
+      
+      if (uname == L"")
+        continue;
+      
+      RETURN_INTO_OBJREF(urep, iface::cellml_services::CanonicalUnitRepresentation,
+                         getUnitsByName(units, uname.c_str()));
+      // If urep is null, then something is wrong internally, because we have
+      // already checked the names are valid and resolved all dependency names.
+      uint32_t l = urep->length();
+      uint32_t i;
+      for (i = 0; i < l; i++)
+      {
+        RETURN_INTO_OBJREF(bu, iface::cellml_services::BaseUnitInstance,
+                           urep->fetchBaseUnit(i));
+        double newExponent = u->exponent() * bu->exponent();
+        double newPrefix;
+        if (i == 0)
+          newPrefix = u->multiplier() *
+            pow(pow(10.0, -u->prefix()) * bu->prefix(), u->exponent());
+        else
+          newPrefix = pow(bu->prefix(), u->exponent());
+        double newOffset;
+        if (i == 0)
+          newOffset = u->offset() + bu->offset();
+        else
+          newOffset = bu->offset();
+        
+        RETURN_INTO_OBJREF(ub, iface::cellml_services::BaseUnit,
+                           bu->unit());
+        RETURN_INTO_OBJREF(nbu, iface::cellml_services::BaseUnitInstance,
+                           new CDABaseUnitInstance(ub, newPrefix, newOffset,
+                                                   newExponent));
+        newrep->addBaseUnit(nbu);
+      }
+    }
 
-  newrep->canonicalise();
+    newrep->canonicalise();
+  }
 
   std::list<std::wstring>::iterator i(context->scopes.begin());
   for (; i != context->scopes.end(); i++)
