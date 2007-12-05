@@ -3245,6 +3245,9 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
   RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
 
+  if (aURL.find(L"://") != std::wstring::npos)
+    return;
+
   // See if it is a '/' type URL...
   if (aURL[0] == L'/')
   {
@@ -3268,27 +3271,35 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
 
   // It is a completely relative URL.
   // See if base ends in a /...
+  size_t pos = base.find(L"://");
   if (base[base.length() - 1] != L'/')
   {
     // aURL last component needs to be removed...
-    size_t pos = base.rfind(L"/");
-    if (pos == std::wstring::npos)
+    size_t tpos = base.rfind(L"/");
+    if (tpos == std::wstring::npos || tpos < pos + 3)
       base += L"/";
     else
-      base = base.substr(0, pos + 1);
+      base = base.substr(0, tpos + 1);
   }
   base += aURL;
 
   // Substitute [^/]*/../ => / and /./ => /
-  size_t pos = base.find(L"://");
-  aURL.assign(base.substr(0, pos + 3));
+  size_t prepathlength = 3;
+  size_t pos2 = base.find(L"/", pos + 3);
+
+  if (pos2 != std::wstring::npos)
+    prepathlength = pos2 - pos + 1;
+
+  pos += prepathlength;
+
+  aURL.assign(base.substr(0, pos));
 
   std::list<std::wstring> pathComponents;
-  size_t pos2;
   bool last = false;
+
   do
   {
-    pos2 = base.find(L"/", pos + 1);
+    pos2 = base.find(L"/", pos);
     if (pos2 == std::wstring::npos)
     {
       last = true;
@@ -3296,9 +3307,9 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
     }
 
     // Don't bother putting an empty path component for //
-    if (pos2 != pos + 1)
+    if (pos2 != pos)
     {
-      std::wstring str = base.substr(pos + 1, pos2 - pos - 1);
+      std::wstring str = base.substr(pos, pos2 - pos);
       if (str == L"..")
       {
         if (!pathComponents.empty())
@@ -3309,18 +3320,24 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
       else
         pathComponents.push_back(str);
     }
-    pos = pos2;
+    pos = pos2 + 1;
   }
   while (!last);
+
+  bool first = true;
 
   // Now go through the path components and make a path...
   std::list<std::wstring>::iterator i;
   for (i = pathComponents.begin(); i != pathComponents.end(); i++)
   {
-    aURL += L'/';
+    if (first)
+      first = false;
+    else
+      aURL += L'/';
+
     aURL += *i;
   }
-  if (base[base.length() - 1] == '/')
+  if (base[base.length() - 1] == L'/')
     aURL += L'/';
 }
 
