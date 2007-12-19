@@ -109,9 +109,12 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     si.cb = sizeof(si);
     ZeroMemory( &pi, sizeof(pi) );
 
+    char *commandstring = (char*) malloc(strlen(cmd.c_str()));
+    strcpy(commandstring, cmd.c_str());
+
     // Start the child process. 
     if( !CreateProcess( NULL,   // No module name (use command line)
-        cmd.c_str(),        // Command line
+        commandstring,        // Command line
         NULL,           // Process handle not inheritable
         NULL,           // Thread handle not inheritable
         FALSE,          // Set handle inheritance to FALSE
@@ -123,14 +126,14 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     ) 
     {
         printf( "CreateProcess failed (%d)\n", GetLastError() );
-        return;
+        throw iface::cellml_api::CellMLException();
     }
-
+    free(commandstring);
     // Wait until child process exits.
     WaitForSingleObject( pi.hProcess, INFINITE );
     LPDWORD lpExitCode;
-    GetExitCodeProcess( pi.hProcess, &lpExitCode );
-    int ret = reinterpret_cast<int>(*lpExitCode);
+    GetExitCodeProcess( pi.hProcess, lpExitCode );
+    int ret = *lpExitCode;
 
     // Close process and thread handles. 
     CloseHandle( pi.hProcess );
