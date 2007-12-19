@@ -131,9 +131,9 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     free(commandstring);
     // Wait until child process exits.
     WaitForSingleObject( pi.hProcess, INFINITE );
-    LPDWORD lpExitCode;
-    GetExitCodeProcess( pi.hProcess, lpExitCode );
-    int ret = *lpExitCode;
+    DWORD lpExitCode;
+    GetExitCodeProcess( pi.hProcess, &lpExitCode );
+    int ret = lpExitCode;
 
     // Close process and thread handles. 
     CloseHandle( pi.hProcess );
