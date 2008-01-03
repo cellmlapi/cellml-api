@@ -87,7 +87,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #ifdef WIN32
     "-mno-cygwin -mthreads -Llib -lcis-0 "
 #else
-    "-nodefaultlibs -Llib -lcis "
+    "-nodefaultlibs -Llib -lcis -fPIC "
 #endif
     "-O3 "
 #ifdef ENABLE_FAST_MATH
