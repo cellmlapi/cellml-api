@@ -7,6 +7,7 @@
 #ifndef WIN32
 #include <sys/errno.h>
 #include <dlfcn.h>
+#include <sys/utsname.h>
 #endif
 #ifdef _MSC_VER
 #include <errno.h>
@@ -87,7 +88,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #ifdef WIN32
     "-mno-cygwin -mthreads -Llib -lcis-0 "
 #else
-    "-nodefaultlibs -Llib -lcis -fPIC "
+    "-nodefaultlibs -Llib -lcis "
 #endif
     "-O3 "
 #ifdef ENABLE_FAST_MATH
@@ -139,6 +140,19 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     CloseHandle( pi.hProcess );
     CloseHandle( pi.hThread );
 #else
+  // Add the "-fPIC" flag in case we are running on a 64-bit machine
+  // Note: we currently only check against "x86_64", but this doesn't
+  //       mean that there aren't other machines that also need that
+  //       flag...
+
+  utsname u;
+  uname(&u);
+
+  if (!strcmp(u.machine, "x86_64"))
+    cmd += " -fPIC";
+
+  // Execute the command (i.e. compile the model)
+
   int ret = system(cmd.c_str());
 #endif
   if (ret != 0)
