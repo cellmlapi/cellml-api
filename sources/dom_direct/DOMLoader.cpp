@@ -136,11 +136,11 @@ CDA_wchar_to_UTF8(const wchar_t *str)
       len += 4;
 #endif
     else
-#if defined(WCHAR_T_CONSTANT_WIDTH) && !defined(WCHAR_T_IS_32BIT)
+#if defined(WCHAR_T_CONSTANT_WIDTH) && defined(WCHAR_T_IS_32BIT)
       if (c <= 0xFFFF)
 #endif
       len += 3;
-#if defined(WCHAR_T_CONSTANT_WIDTH) && !defined(WCHAR_T_IS_32BIT)
+#if defined(WCHAR_T_CONSTANT_WIDTH) && defined(WCHAR_T_IS_32BIT)
     else
       len += 4;
 #endif
@@ -170,15 +170,15 @@ CDA_wchar_to_UTF8(const wchar_t *str)
     }
 #endif
     else
-#if defined(WCHAR_T_CONSTANT_WIDTH) && !defined(WCHAR_T_IS_32BIT)
+#if defined(WCHAR_T_CONSTANT_WIDTH) && defined(WCHAR_T_IS_32BIT)
          if (c <= 0xFFFF)
 #endif
     {
-      *np++ = (char)(0xD0 | ((c >> 12) & 0xF));
+      *np++ = (char)(0xE0 | ((c >> 12) & 0xF));
       *np++ = (char)(0x80 | ((c >> 6) & 0x3F));
       *np++ = (char)(0x80 | (c & 0x3F));
     }
-#if defined(WCHAR_T_CONSTANT_WIDTH) && !defined(WCHAR_T_IS_32BIT)
+#if defined(WCHAR_T_CONSTANT_WIDTH) && defined(WCHAR_T_IS_32BIT)
     else
     {
       *np++ = (char)(0xF0 | ((c >> 18) & 0x7));
