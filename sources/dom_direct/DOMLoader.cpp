@@ -129,14 +129,18 @@ CDA_wchar_to_UTF8(const wchar_t *str)
   {
     if (c <= 0x7F)
       len++;
-    else
-#ifndef WCHAR_T_IS_32BIT
-    if (c <= 0x7FF)
-#endif
+    else if (c <= 0x7FF)
       len += 2;
-#ifndef WCHAR_T_IS_32BIT
-    else if (c <= 0xFFFF)
+#ifndef WCHAR_T_CONSTANT_WIDTH
+    else if ((c & 0xFC00) == 0xD800)
+      len += 4;
+#endif
+    else
+#if defined(WCHAR_T_CONSTANT_WIDTH) && !defined(WCHAR_T_IS_32BIT)
+      if (c <= 0xFFFF)
+#endif
       len += 3;
+#if defined(WCHAR_T_CONSTANT_WIDTH) && !defined(WCHAR_T_IS_32BIT)
     else
       len += 4;
 #endif
