@@ -199,6 +199,11 @@ private:
 
   void validateRepresentation(iface::dom::Element* aTop);
   void validateSemantics();
+  void validatePerModel(iface::cellml_api::Model* aModel);
+  void validatePerImport(iface::cellml_api::CellMLImport* aImport);
+  void validateNameUniqueness(iface::cellml_api::Model* aModel);
+  void validateComponentRefs(iface::cellml_api::CellMLImport* aImport);
+  void validateUnitsRefs(iface::cellml_api::CellMLImport* aImport);
 
   struct ReprValidationAttribute;
   struct ReprValidationElement

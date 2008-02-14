@@ -539,7 +539,7 @@ CDAMaLaESResult::appendDegree
 )
 {
   if (degree == NULL)
-    mActive += L"1";
+    mActive += L"2";
   else
     mTransform->RunTransformOnOperator(this, degree);
 }

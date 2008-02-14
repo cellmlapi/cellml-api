@@ -43,7 +43,16 @@ ConvertSemanticValidityError
  iface::cellml_services::CellMLSemanticValidityError* csve
 )
 {
-  return L"";
+  RETURN_INTO_OBJREF(ee, iface::cellml_api::CellMLElement, csve->errorElement());
+  DECLARE_QUERY_INTERFACE_OBJREF(eede, ee, cellml_api::CellMLDOMElement);
+  RETURN_INTO_OBJREF(de, iface::dom::Element, eede->domElement());
+
+  uint32_t col;
+  uint32_t row = vacss->getPositionInXML(de, 0, &col);
+  wchar_t buf[40];
+  swprintf(buf, 40, L"line %u, column %u", row, col);
+
+  return buf;
 }
 
 void
@@ -71,6 +80,8 @@ DisplayValidityError
 
     if (csve != NULL)
       location = ConvertSemanticValidityError(vacss, model, csve);
+    else
+      location = L"*unknown - can't QI to CellMLSemanticValidityError*";
   }
 
   printf("%S%S at %S\n",

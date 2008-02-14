@@ -1,6 +1,7 @@
 #include "VACSSImpl.hpp"
 #include "VACSSBootstrap.hpp"
 #include <string>
+#include <set>
 
 /* The code special cases this to match the CellML namespace
  * corresponding to the appropriate CellML version...
@@ -1697,8 +1698,156 @@ ModelValidation::validateMaths(iface::dom::Element* aRR)
 }
 
 void
+ModelValidation::validateNameUniqueness(iface::cellml_api::Model* aModel)
+{
+  // Firstly, we will validate the uniqueness of component names...
+  RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet,
+                     aModel->modelComponents());
+  RETURN_INTO_OBJREF(cci, iface::cellml_api::CellMLComponentIterator,
+                     mc->iterateComponents());
+
+  std::set<std::wstring> allNames;
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(comp, iface::cellml_api::CellMLComponent,
+                       cci->nextComponent());
+    if (comp == NULL)
+      break;
+
+    RETURN_INTO_WSTRING(n, comp->name());
+
+    if (allNames.count(n) != 0)
+    {
+      SEMANTIC_ERROR(L"More than one component in the model named " + n, comp);
+    }
+    allNames.insert(n);
+  }
+
+  allNames.clear();
+
+  // Next, the uniqueness of all units names...
+  RETURN_INTO_OBJREF(mu, iface::cellml_api::UnitsSet,
+                     aModel->modelUnits());
+  RETURN_INTO_OBJREF(cui, iface::cellml_api::UnitsIterator,
+                     mu->iterateUnits());
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(u, iface::cellml_api::Units,
+                       cui->nextUnits());
+    if (u == NULL)
+      break;
+
+    RETURN_INTO_WSTRING(n, u->name());
+
+    if (allNames.count(n) != 0)
+    {
+      SEMANTIC_ERROR(L"More than one component in the model named " + n, u);
+    }
+    allNames.insert(n);
+  }
+}
+
+void
+ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
+{
+  validateNameUniqueness(aModel);
+  // validateComponentRefs(aModel);
+  // validateUnitsRefs(aModel);
+
+  RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet, aModel->imports());
+  RETURN_INTO_OBJREF(cii, iface::cellml_api::CellMLImportIterator, cis->iterateImports());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLImport, cii->nextImport());
+    if (ci == NULL)
+      break;
+    
+    validatePerImport(ci);
+
+    RETURN_INTO_OBJREF(m, iface::cellml_api::Model, ci->importedModel());
+    if (m != NULL)
+      validatePerModel(m);
+  }
+}
+
+void
+ModelValidation::validatePerImport(iface::cellml_api::CellMLImport* aImport)
+{
+  validateComponentRefs(aImport);
+  validateUnitsRefs(aImport);
+}
+
+void
+ModelValidation::validateComponentRefs(iface::cellml_api::CellMLImport* aImport)
+{
+  RETURN_INTO_OBJREF(ics, iface::cellml_api::ImportComponentSet,
+                     aImport->components());
+  RETURN_INTO_OBJREF(ici, iface::cellml_api::ImportComponentIterator,
+                     ics->iterateImportComponents());
+  RETURN_INTO_OBJREF(m, iface::cellml_api::Model, aImport->importedModel());
+  if (m == NULL)
+    return;
+
+  RETURN_INTO_OBJREF(ccs, iface::cellml_api::CellMLComponentSet,
+                     m->modelComponents());
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(ic, iface::cellml_api::ImportComponent,
+                       ici->nextImportComponent());
+    if (ic == NULL)
+      return;
+
+    RETURN_INTO_WSTRING(cr, ic->componentRef());
+    RETURN_INTO_OBJREF(rc, iface::cellml_api::CellMLComponent,
+                       ccs->getComponent(cr.c_str()));
+    if (rc == NULL)
+    {
+      SEMANTIC_ERROR(L"component_ref " + cr + "refers to component which "
+                     L"doesn't exist", ic);
+    }
+  }
+}
+
+void
+ModelValidation::validateUnitsRefs(iface::cellml_api::CellMLImport* aImport)
+{
+  RETURN_INTO_OBJREF(ius, iface::cellml_api::ImportUnitsSet,
+                     aImport->units());
+  RETURN_INTO_OBJREF(iui, iface::cellml_api::ImportUnitsIterator,
+                     ius->iterateImportUnits());
+  RETURN_INTO_OBJREF(m, iface::cellml_api::Model, aImport->importedModel());
+  if (m == NULL)
+    return;
+
+  RETURN_INTO_OBJREF(cus, iface::cellml_api::UnitsSet,
+                     m->modelUnits());
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(iu, iface::cellml_api::ImportUnits,
+                       iui->nextImportUnits());
+    if (iu == NULL)
+      return;
+
+    RETURN_INTO_WSTRING(ur, iu->unitsRef());
+    RETURN_INTO_OBJREF(ru, iface::cellml_api::Units,
+                       cus->getUnits(ur.c_str()));
+    if (ru == NULL)
+    {
+      SEMANTIC_ERROR(L"units_ref " + ur + "refers to units which "
+                     L"don't exist", iu);
+    }
+  }
+}
+
+void
 ModelValidation::validateSemantics()
 {
+  // Firstly do things that are done per import...
+  validatePerModel(mModel);
 }
 
 iface::cellml_services::CellMLValidityErrorSet*
