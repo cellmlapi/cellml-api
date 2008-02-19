@@ -1469,7 +1469,7 @@ CDAMaLaESTransform::RunTransformOnOperator
       std::wstring sn = L"piecewise_otherwise";
       ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
     }
-    catch (iface::dom::DOMException& de)
+    catch (...)
     {
       std::wstring sn = L"piecewise_no_otherwise";
       ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
