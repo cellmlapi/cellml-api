@@ -589,12 +589,13 @@ CDAMaLaESResult::appendBvarIndex
   double offset;
   startConversionMode(ci, offset);
   writeConvertedVariable();
-  endConversionMode();
+  //endConversionMode();
 
   RETURN_INTO_WSTRING(expr,
                       mAnnos->getStringAnnotation(processingVariable,
                                                   L"bvarIndex"));
   mActive += expr;
+  endConversionMode();
 }
 
 void
