@@ -52,6 +52,34 @@ ConvertSemanticValidityError
   wchar_t buf[40];
   swprintf(buf, 40, L"line %u, column %u", row, col);
 
+  // Up to the model...
+  while (true)
+  {
+    ee = already_AddRefd<iface::cellml_api::CellMLElement>(ee->parentElement());
+    if (ee == NULL)
+      break;
+
+    DECLARE_QUERY_INTERFACE_OBJREF(mod, ee, cellml_api::Model);
+    if (mod == NULL)
+      continue;
+
+    RETURN_INTO_OBJREF(impel, iface::cellml_api::CellMLElement, mod->parentElement());
+    if (impel == NULL)
+      break;
+
+    DECLARE_QUERY_INTERFACE(imp, impel, cellml_api::CellMLImport);
+    if (imp == NULL)
+      break;
+
+    std::wstring ret(buf);
+    ret += L" in import from ";
+    RETURN_INTO_OBJREF(href, iface::cellml_api::URI, imp->xlinkHref());
+    RETURN_INTO_WSTRING(hreft, href->asText());
+    ret += hreft;
+
+    return ret;
+  }
+
   return buf;
 }
 
