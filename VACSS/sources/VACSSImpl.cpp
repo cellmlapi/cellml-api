@@ -1,5 +1,6 @@
 #include "VACSSImpl.hpp"
 #include "VACSSBootstrap.hpp"
+#include "CUSESBootstrap.hpp"
 #include <string>
 #include <set>
 
@@ -209,7 +210,28 @@ ModelValidation::validate()
                      L"reported as valid.",
                      mModel);
 
-  validateSemantics();
+  RETURN_INTO_OBJREF(cb, iface::cellml_services::CUSESBootstrap,
+                     CreateCUSESBootstrap());
+  mCUSES = cb->createCUSESForModel(mModel, true);
+  RETURN_INTO_WSTRING(me, mCUSES->modelError());
+  if (me != L"")
+  {
+    SEMANTIC_ERROR(me, mModel);
+    SEMANTIC_WARNING(L"Cannot perform any further checking of unit names due "
+                     L"to problems processing the model units.", mModel);
+    mCUSES->release_ref();
+    mCUSES = NULL;
+  }
+
+  try
+  {
+    validateSemantics();
+  }
+  catch (...)
+  {
+  }
+  if (mCUSES != NULL)
+    mCUSES->release_ref();
 
   if (mErrors != NULL)
     mErrors->add_ref();
@@ -1799,8 +1821,41 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
 {
   validateNameUniqueness(aModel);
 
+  {
+    RETURN_INTO_OBJREF(ccs, iface::cellml_api::CellMLComponentSet,
+                       aModel->localComponents());
+    RETURN_INTO_OBJREF(cci, iface::cellml_api::CellMLComponentIterator,
+                       ccs->iterateComponents());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(cc, iface::cellml_api::CellMLComponent,
+                         cci->nextComponent());
+      if (cc == NULL)
+        break;
+      
+      validatePerComponent(cc);
+    }
+  }
+
+  {
+    RETURN_INTO_OBJREF(cus, iface::cellml_api::UnitsSet,
+                       aModel->localUnits());
+    RETURN_INTO_OBJREF(cui, iface::cellml_api::UnitsIterator,
+                       cus->iterateUnits());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(cu, iface::cellml_api::Units,
+                         cui->nextUnits());
+      if (cu == NULL)
+        break;
+      
+      validatePerUnits(cu);
+    }
+  }
+
   RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet, aModel->imports());
-  RETURN_INTO_OBJREF(cii, iface::cellml_api::CellMLImportIterator, cis->iterateImports());
+  RETURN_INTO_OBJREF(cii, iface::cellml_api::CellMLImportIterator,
+                     cis->iterateImports());
   while (true)
   {
     RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLImport, cii->nextImport());
@@ -1820,6 +1875,34 @@ ModelValidation::validatePerImport(iface::cellml_api::CellMLImport* aImport)
 {
   validateComponentRefs(aImport);
   validateUnitsRefs(aImport);
+
+  RETURN_INTO_OBJREF(ccs, iface::cellml_api::ImportComponentSet,
+                     aImport->components());
+  RETURN_INTO_OBJREF(cci, iface::cellml_api::ImportComponentIterator,
+                     ccs->iterateImportComponents());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(cc, iface::cellml_api::ImportComponent,
+                       cci->nextImportComponent());
+    if (cc == NULL)
+      break;
+    
+    validatePerImportComponent(cc);
+  }
+  
+  RETURN_INTO_OBJREF(cus, iface::cellml_api::ImportUnitsSet,
+                     aImport->units());
+  RETURN_INTO_OBJREF(cui, iface::cellml_api::ImportUnitsIterator,
+                     cus->iterateImportUnits());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(cu, iface::cellml_api::ImportUnits,
+                       cui->nextImportUnits());
+    if (cu == NULL)
+      break;
+    
+    validatePerImportUnits(cu);
+  }
 }
 
 void
@@ -1884,6 +1967,42 @@ ModelValidation::validateUnitsRefs(iface::cellml_api::CellMLImport* aImport)
                      L"don't exist", iu);
     }
   }
+}
+
+void
+ModelValidation::validatePerComponent
+(
+ iface::cellml_api::CellMLComponent* aComponent
+)
+{
+  // Look for variables with duplicated names, and also bad units...
+  std::set<std::wstring> vnames;
+
+  RETURN_INTO_OBJREF(vs, iface::cellml_api::CellMLVariableSet, aComponent->variables());
+  RETURN_INTO_OBJREF(vi, iface::cellml_api::CellMLVariableIterator, vs->iterateVariables());
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable, vi->nextVariable());
+  }
+}
+
+void
+ModelValidation::validatePerUnits(iface::cellml_api::Units* aUnits)
+{
+}
+
+void
+ModelValidation::validatePerImportComponent
+(
+ iface::cellml_api::ImportComponent* aComponent
+)
+{
+}
+
+void
+ModelValidation::validatePerImportUnits(iface::cellml_api::ImportUnits* aUnits)
+{
 }
 
 void

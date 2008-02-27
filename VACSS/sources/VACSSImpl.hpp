@@ -10,6 +10,7 @@
 #include "IfaceCellML_APISPEC.hxx"
 #include "Utilities.hxx"
 #include "IfaceVACSS.hxx"
+#include "IfaceCUSES.hxx"
 
 class CDA_VACSService
   : public iface::cellml_services::VACSService
@@ -205,6 +206,11 @@ private:
   void validateComponentRefs(iface::cellml_api::CellMLImport* aImport);
   void validateUnitsRefs(iface::cellml_api::CellMLImport* aImport);
   void validateExtensionElement(iface::dom::Element* aEl);
+  void validatePerComponent(iface::cellml_api::CellMLComponent* aComponent);
+  void validatePerUnits(iface::cellml_api::Units* aUnits);
+  void validatePerImportComponent(iface::cellml_api::ImportComponent*
+                                  aComponent);
+  void validatePerImportUnits(iface::cellml_api::ImportUnits* aUnits);
 
   struct ReprValidationAttribute;
   struct ReprValidationElement
@@ -340,6 +346,8 @@ private:
                          const std::wstring& aDirection);
   ReprValidationElement::ElementValidationLevel
     validateMaths(iface::dom::Element* aRR);
+
+  iface::cellml_services::CUSES* mCUSES;
 };
 
 

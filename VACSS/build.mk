@@ -1,6 +1,7 @@
 lib_LTLIBRARIES += libvacss.la
 
 libvacss_la_LIBADD = \
+  libcuses.la \
   libcellml.la \
   $(STLLINK)
 
@@ -8,7 +9,7 @@ libvacss_la_SOURCES = \
   $(top_srcdir)/VACSS/sources/VACSSImpl.cpp
 
 libvacss_la_CXXFLAGS = \
-  -Wall -I$(top_srcdir)/sources -I$(top_builddir)/interfaces \
+  -Wall -I$(top_srcdir)/sources -I$(top_builddir)/interfaces -I$(top_srcdir)/CUSES/sources \
   $(AM_CXXFLAGS)
 
 include_HEADERS += \
