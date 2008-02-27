@@ -1984,6 +1984,29 @@ ModelValidation::validatePerComponent
   while (true)
   {
     RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable, vi->nextVariable());
+    if (v == NULL)
+      break;
+
+    RETURN_INTO_WSTRING(vn, v->name());
+
+    if (vnames.count(vn) != 0)
+    {
+      SEMANTIC_ERROR(L"There is more than one variable in the same component called " + vn,
+                     v);
+    }
+    vnames.insert(vn);
+
+    if (mCUSES != NULL)
+    {
+      RETURN_INTO_WSTRING(u, v->unitsName());
+      RETURN_INTO_OBJREF(cur,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         mCUSES->getUnitsByName(v, u.c_str()));
+      if (cur == NULL)
+      {
+        SEMANTIC_ERROR(L"Invalid units on variable: " + u, v);
+      }
+    }
   }
 }
 
