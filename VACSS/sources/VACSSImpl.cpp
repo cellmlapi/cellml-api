@@ -1217,6 +1217,8 @@ ModelValidation::validateElementRepresentation
             msg += L" found - not valid here";
             REPR_ERROR(msg, cel);
           }
+          else
+            validateExtensionElement(cel);
         }
         break;
       }
@@ -1248,6 +1250,46 @@ ModelValidation::validateElementRepresentation
 
   if (aSpec.textValidator)
     (this->*(aSpec.textValidator))(aEl, textData);
+}
+
+void
+ModelValidation::validateExtensionElement(iface::dom::Element* aEl)
+{
+  RETURN_INTO_OBJREF(nnm, iface::dom::NamedNodeMap,
+                     aEl->attributes());
+  uint32_t i, l = nnm->length();
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(atn, iface::dom::Node, nnm->item(i));
+    RETURN_INTO_WSTRING(ns, atn->namespaceURI());
+    if (ns == CELLML_1_1_NS || ns == CELLML_1_0_NS || ns == MATHML_NS)
+    {
+      RETURN_INTO_WSTRING(n, atn->localName());
+      std::wstring msg = L"Attribute " + n + L" in namespace " + ns +
+        L"is not allowed in extension elements.";
+      REPR_WARNING(msg, aEl);
+    }
+  }
+
+  RETURN_INTO_OBJREF(elcnl, iface::dom::NodeList, aEl->childNodes());
+  l = elcnl->length();
+  
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, elcnl->item(i));
+    DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
+    if (el == NULL)
+      continue;
+
+    RETURN_INTO_WSTRING(ns, el->namespaceURI());
+    if (ns == CELLML_1_1_NS || ns == CELLML_1_0_NS || ns == MATHML_NS)
+    {
+      RETURN_INTO_WSTRING(n, el->tagName());
+      std::wstring msg = L"Element " + n + L" in namespace " + ns +
+        L"is not allowed in extension elements.";
+      REPR_WARNING(msg, aEl);
+    }
+  }
 }
 
 void
@@ -1383,9 +1425,12 @@ ModelValidation::validateCellMLIdentifier
   wchar_t c = *i;
 
   // The 'can't start with a number' rule was introduced in CellML 1.1.
-  if ((mCellMLVersion > kCellML_1_0) && (c >= '0' || c <= '9'))
+  if ((mCellMLVersion > kCellML_1_0) && (c >= '0' && c <= '9'))
   {
-    REPR_ERROR(IDENT_MUST_NOT_START_NUMBER, aContext);
+    std::wstring msg(IDENT_MUST_NOT_START_NUMBER);
+    msg += L": ";
+    msg += aIdent;
+    REPR_ERROR(msg, aContext);
   }
 
   bool sawLetter = false;
@@ -1743,7 +1788,7 @@ ModelValidation::validateNameUniqueness(iface::cellml_api::Model* aModel)
 
     if (allNames.count(n) != 0)
     {
-      SEMANTIC_ERROR(L"More than one component in the model named " + n, u);
+      SEMANTIC_ERROR(L"More than one units in the model named " + n, u);
     }
     allNames.insert(n);
   }
@@ -1753,8 +1798,6 @@ void
 ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
 {
   validateNameUniqueness(aModel);
-  // validateComponentRefs(aModel);
-  // validateUnitsRefs(aModel);
 
   RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet, aModel->imports());
   RETURN_INTO_OBJREF(cii, iface::cellml_api::CellMLImportIterator, cis->iterateImports());

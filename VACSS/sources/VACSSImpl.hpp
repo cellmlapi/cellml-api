@@ -204,6 +204,7 @@ private:
   void validateNameUniqueness(iface::cellml_api::Model* aModel);
   void validateComponentRefs(iface::cellml_api::CellMLImport* aImport);
   void validateUnitsRefs(iface::cellml_api::CellMLImport* aImport);
+  void validateExtensionElement(iface::dom::Element* aEl);
 
   struct ReprValidationAttribute;
   struct ReprValidationElement
