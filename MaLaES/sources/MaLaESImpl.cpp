@@ -584,12 +584,12 @@ CDAMaLaESResult::appendBvarIndex
   if (ci == NULL)
     throw MaLaESError(L"Bvar argument was not a ci (invalid).");
 
-  // We don't want an actual conversion here, so we just ignore the factors.
+  // We don't want an actual conversion here; this is used to get the bvar
+  // into processingVariable, so we just ignore the factors.
   boundVariable = true;
   double offset;
   startConversionMode(ci, offset);
   writeConvertedVariable();
-  //endConversionMode();
 
   RETURN_INTO_WSTRING(expr,
                       mAnnos->getStringAnnotation(processingVariable,
