@@ -7,6 +7,7 @@
 #include <exception>
 #include <vector>
 #include <string>
+#include <set>
 #include "IfaceCellML_APISPEC.hxx"
 #include "Utilities.hxx"
 #include "IfaceVACSS.hxx"
@@ -193,6 +194,7 @@ public:
 private:
   iface::cellml_api::Model * mModel;
   ObjRef<CDA_CellMLValidityErrorSet> mErrors;
+  std::set<std::pair<std::string, std::string> > mAllConns;
   static const uint32_t kCellML_1_0 = 0;
   static const uint32_t kCellML_1_1 = 1;
 
@@ -207,6 +209,8 @@ private:
   void validateUnitsRefs(iface::cellml_api::CellMLImport* aImport);
   void validateExtensionElement(iface::dom::Element* aEl);
   void validatePerComponent(iface::cellml_api::CellMLComponent* aComponent);
+  void validatePerVariable(iface::cellml_api::CellMLVariable* aVariable);
+  void validatePerConnection(iface::cellml_api::Connection* aConn);
   void validatePerUnits(iface::cellml_api::Units* aUnits);
   void validatePerImportComponent(iface::cellml_api::ImportComponent*
                                   aComponent);
@@ -347,7 +351,7 @@ private:
   ReprValidationElement::ElementValidationLevel
     validateMaths(iface::dom::Element* aRR);
 
-  iface::cellml_services::CUSES* mCUSES;
+  ObjRef<iface::cellml_services::CUSES> mStrictCUSES, mWeakCUSES;
 };
 
 

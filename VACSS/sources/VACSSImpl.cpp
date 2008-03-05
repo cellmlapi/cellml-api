@@ -212,15 +212,18 @@ ModelValidation::validate()
 
   RETURN_INTO_OBJREF(cb, iface::cellml_services::CUSESBootstrap,
                      CreateCUSESBootstrap());
-  mCUSES = cb->createCUSESForModel(mModel, true);
-  RETURN_INTO_WSTRING(me, mCUSES->modelError());
+  mStrictCUSES = already_AddRefd<iface::cellml_services::CUSES>
+    (cb->createCUSESForModel(mModel, true));
+  mWeakCUSES = already_AddRefd<iface::cellml_services::CUSES>
+    (cb->createCUSESForModel(mModel, false));
+  RETURN_INTO_WSTRING(me, mStrictCUSES->modelError());
   if (me != L"")
   {
     SEMANTIC_ERROR(me, mModel);
     SEMANTIC_WARNING(L"Cannot perform any further checking of unit names due "
                      L"to problems processing the model units.", mModel);
-    mCUSES->release_ref();
-    mCUSES = NULL;
+    mStrictCUSES = NULL;
+    mWeakCUSES = NULL;
   }
 
   try
@@ -230,8 +233,8 @@ ModelValidation::validate()
   catch (...)
   {
   }
-  if (mCUSES != NULL)
-    mCUSES->release_ref();
+  mStrictCUSES = NULL;
+  mWeakCUSES = NULL;
 
   if (mErrors != NULL)
     mErrors->add_ref();
@@ -1853,6 +1856,78 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
     }
   }
 
+  {
+    RETURN_INTO_OBJREF(cons, iface::cellml_api::ConnectionSet,
+                       aModel->connections());
+    RETURN_INTO_OBJREF(coni, iface::cellml_api::ConnectionIterator,
+                       cons->iterateConnections());
+    
+    while (true)
+    {
+      RETURN_INTO_OBJREF(conn, iface::cellml_api::Connection,
+                         coni->nextConnection());
+      if (conn == NULL)
+        break;
+
+      RETURN_INTO_OBJREF(cm, iface::cellml_api::MapComponents,
+                         conn->componentMapping());
+
+      // Look for duplicate components...
+      ObjRef<iface::cellml_api::CellMLComponent> comp1, comp2;
+      try
+      {
+        comp1 = already_AddRefd<iface::cellml_api::CellMLComponent>
+          (cm->firstComponent());
+      }
+      catch (...)
+      {
+        SEMANTIC_ERROR(L"Invalid component referenced by component_1 attribute",
+                       cm);
+      }
+
+      try
+      {
+        comp2 = already_AddRefd<iface::cellml_api::CellMLComponent>
+          (cm->secondComponent());
+      }
+      catch (...)
+      {
+        SEMANTIC_ERROR(L"Invalid component referenced by component_2 attribute",
+                       cm);
+      }
+
+      if (comp1 != NULL && comp2 != NULL)
+      {
+        char* s1 = comp1->objid();
+        char* s2 = comp2->objid();
+
+        int match = strcmp(s1, s2);
+        std::string id1((match > 0) ? s1 : s2);
+        std::string id2((match > 0) ? s2 : s1);
+
+        free(s1);
+        free(s2);
+
+        if (match == 0)
+        {
+          SEMANTIC_ERROR(L"Cannot connect a component to itself", cm);
+        }
+
+        std::pair<std::string, std::string> p(id1, id2);
+
+        if (mAllConns.count(p) != 0)
+        {
+          SEMANTIC_ERROR(L"There is more than one connection elements for the "
+                         L"same pair of components.", cm);
+        }
+        else
+          mAllConns.insert(p);
+      }
+
+      validatePerConnection(conn);
+    }
+  }
+
   RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet, aModel->imports());
   RETURN_INTO_OBJREF(cii, iface::cellml_api::CellMLImportIterator,
                      cis->iterateImports());
@@ -1996,15 +2071,86 @@ ModelValidation::validatePerComponent
     }
     vnames.insert(vn);
 
-    if (mCUSES != NULL)
+    validatePerVariable(v);
+  }
+}
+
+void
+ModelValidation::validatePerVariable(iface::cellml_api::CellMLVariable* v)
+{
+  if (mStrictCUSES != NULL)
+  {
+    RETURN_INTO_WSTRING(u, v->unitsName());
+    RETURN_INTO_OBJREF(cur,
+                       iface::cellml_services::CanonicalUnitRepresentation,
+                       mStrictCUSES->getUnitsByName(v, u.c_str()));
+    if (cur == NULL)
     {
-      RETURN_INTO_WSTRING(u, v->unitsName());
-      RETURN_INTO_OBJREF(cur,
-                         iface::cellml_services::CanonicalUnitRepresentation,
-                         mCUSES->getUnitsByName(v, u.c_str()));
-      if (cur == NULL)
+      SEMANTIC_ERROR(L"Invalid units on variable: " + u, v);
+    }
+  }
+
+  iface::cellml_api::VariableInterface pubi(v->publicInterface()),
+    privi(v->privateInterface());
+
+  if (pubi == privi &&
+      pubi == iface::cellml_api::INTERFACE_IN)
+  {
+    SEMANTIC_ERROR(L"Cannot have two in interfaces on variable.", v);
+  }
+}
+
+void
+ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
+{
+  RETURN_INTO_OBJREF(vms, iface::cellml_api::MapVariablesSet,
+                     aConn->variableMappings());
+  RETURN_INTO_OBJREF(vmi, iface::cellml_api::MapVariablesIterator,
+                     vms->iterateMapVariables());
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(mv, iface::cellml_api::MapVariables,
+                       vmi->nextMapVariable());
+    if (mv == NULL)
+      break;
+    
+    ObjRef<iface::cellml_api::CellMLVariable> v1, v2;
+    try
+    {
+      v1 = already_AddRefd<iface::cellml_api::CellMLVariable>
+        (mv->firstVariable());
+    }
+    catch (...)
+    {
+      SEMANTIC_ERROR(L"variable_1 attribute doesn't refer to a valid "
+                     L"variable.", mv);
+    }
+
+    try
+    {
+      v2 = already_AddRefd<iface::cellml_api::CellMLVariable>
+        (mv->secondVariable());
+    }
+    catch (...)
+    {
+      SEMANTIC_ERROR(L"variable_2 attribute doesn't refer to a valid "
+                     L"variable.", mv);
+    }
+
+    if (v1 != NULL && v2 != NULL && mWeakCUSES != NULL)
+    {
+      // Connected variables must be dimensionally compatible...
+      RETURN_INTO_WSTRING(u1, v1->unitsName());
+      RETURN_INTO_OBJREF(cur1, iface::cellml_services::CanonicalUnitRepresentation,
+                         mWeakCUSES->getUnitsByName(v1, u1.c_str()));
+      RETURN_INTO_WSTRING(u2, v2->unitsName());
+      RETURN_INTO_OBJREF(cur2, iface::cellml_services::CanonicalUnitRepresentation,
+                         mWeakCUSES->getUnitsByName(v2, u2.c_str()));
+      if (cur1 != NULL && cur2 != NULL && !cur1->compatibleWith(cur2))
       {
-        SEMANTIC_ERROR(L"Invalid units on variable: " + u, v);
+        SEMANTIC_ERROR(L"Connection of two variables which have dimensionally "
+                       L"inconsistent units", mv);
       }
     }
   }
