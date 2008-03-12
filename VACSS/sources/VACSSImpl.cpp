@@ -1928,6 +1928,22 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
     }
   }
 
+  {
+    RETURN_INTO_OBJREF(gs, iface::cellml_api::GroupSet,
+                       aModel->groups());
+    RETURN_INTO_OBJREF(gi, iface::cellml_api::GroupIterator,
+                       gs->iterateGroups());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(g, iface::cellml_api::Group,
+                         gi->nextGroup());
+      if (g == NULL)
+        break;
+
+      validatePerGroup(g);
+    }
+  }
+
   RETURN_INTO_OBJREF(cis, iface::cellml_api::CellMLImportSet, aModel->imports());
   RETURN_INTO_OBJREF(cii, iface::cellml_api::CellMLImportIterator,
                      cis->iterateImports());
@@ -2159,6 +2175,176 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
 void
 ModelValidation::validatePerUnits(iface::cellml_api::Units* aUnits)
 {
+}
+
+void
+ModelValidation::validatePerGroup(iface::cellml_api::Group* aGroup)
+{
+  RETURN_INTO_OBJREF(rrs,
+                     iface::cellml_api::RelationshipRefSet,
+                     aGroup->relationshipRefs());
+  RETURN_INTO_OBJREF(rri,
+                     iface::cellml_api::RelationshipRefIterator,
+                     rrs->iterateRelationshipRefs());
+
+  std::set<GroupRelationship> relns;
+  while (true)
+  {
+    RETURN_INTO_OBJREF(rr, iface::cellml_api::RelationshipRef,
+                       rri->nextRelationshipRef());
+    if (rr == NULL)
+      break;
+
+    RETURN_INTO_WSTRING(n, rr->name());
+    RETURN_INTO_WSTRING(reln, rr->relationship());
+    RETURN_INTO_WSTRING(relnns, rr->relationshipNamespace());
+    GroupRelationship g(relnns, reln, n);
+    if (relns.count(g) != 0)
+    {
+      SEMANTIC_ERROR(L"Duplicate relationship_ref within group", rr);
+    }
+    else
+      relns.insert(g);
+  }
+
+  RETURN_INTO_OBJREF(crs,
+                     iface::cellml_api::ComponentRefSet,
+                     aGroup->componentRefs());
+  validateGroupComponentRefs(relns, crs, true);
+}
+
+bool
+ModelValidation::validateGroupComponentRefs
+(
+ const std::set<GroupRelationship>& aRelns,
+ iface::cellml_api::ComponentRefSet* aCRS,
+ bool aMustHaveChildren
+)
+{
+  bool foundSomething = false;
+
+  RETURN_INTO_OBJREF(cri,
+                     iface::cellml_api::ComponentRefIterator,
+                     aCRS->iterateComponentRefs());
+
+  ObjRef<iface::cellml_api::CellMLComponentSet> ccs;
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(cr, iface::cellml_api::ComponentRef,
+                       cri->nextComponentRef());
+    if (cr == NULL)
+      break;
+
+    if (!foundSomething)
+    {
+      RETURN_INTO_OBJREF(model, iface::cellml_api::Model,
+                         cr->modelElement());
+      ccs = already_AddRefd<iface::cellml_api::CellMLComponentSet>
+        (model->modelComponents());
+    }
+
+    foundSomething = true;
+
+    // Recursively check child component refs, and as a side effect, decide
+    // if there are any child component refs...
+    RETURN_INTO_OBJREF(childCompRefs, iface::cellml_api::ComponentRefSet,
+                       cr->componentRefs());
+    bool hasChildren = validateGroupComponentRefs(aRelns, childCompRefs);
+
+    if (aMustHaveChildren && !hasChildren)
+    {
+      SEMANTIC_ERROR(L"component_ref element appears as child of a group element "
+                     L"but does not have any child component_ref elements.", cr);
+      continue;
+    }
+
+    // Check that the component_ref is valid...
+    RETURN_INTO_WSTRING(name, cr->componentName());
+    RETURN_INTO_OBJREF(c, iface::cellml_api::CellMLComponent,
+                       ccs->getComponent(name.c_str()));
+
+    if (c == NULL)
+    {
+      SEMANTIC_ERROR(L"component_ref element references component which does "
+                     L"not exist.", cr);
+      continue;
+    }
+
+    while (true)
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(ic, c, cellml_api::ImportComponent);
+      if (ic == NULL)
+        break;
+
+      RETURN_INTO_WSTRING(compref, ic->componentRef());
+
+      RETURN_INTO_OBJREF(impel, iface::cellml_api::CellMLElement,
+                         c->parentElement());
+      DECLARE_QUERY_INTERFACE_OBJREF(imp, impel, cellml_api::CellMLImport);
+      if (imp == NULL)
+        break;
+
+      RETURN_INTO_OBJREF(m, iface::cellml_api::Model, imp->importedModel());
+
+      RETURN_INTO_OBJREF(iccs,
+                         iface::cellml_api::CellMLComponentSet,
+                         m->modelComponents());
+      c = already_AddRefd<iface::cellml_api::CellMLComponent>
+        (iccs->getComponent(compref.c_str()));
+
+      if (c == NULL)
+        break;
+    }
+
+    // If this happens, model is invalid, but it will be reported elsewhere...
+    if (c == NULL)
+      continue;
+
+    char* sobjid = c->objid();
+    std::string objid = sobjid;
+    free(sobjid);
+
+    if (hasChildren)
+    {
+      // Now we validate the 'only one occurrence as parent' rule...
+      for (std::set<GroupRelationship>::const_iterator i(aRelns.begin());
+           i != aRelns.end();
+           i++)
+      {
+        GroupParent gp(objid, *i);
+        if (mGroupParents.count(gp) != 0)
+        {
+          std::wstring msg =
+            L"In a given hierarchy, only one of the <component_ref> "
+            L"elements that reference a given component may contain "
+            L"further <component_ref> elements, but the ";
+          msg += (*i).relationship;
+          msg += L" hierarchy";
+          if ((*i).relNamespace != L"")
+          {
+            msg += L", in the namespace ";
+            msg += (*i).relNamespace;
+          }
+          if ((*i).name != L"")
+          {
+            msg += L" with name ";
+            msg += name;
+          }
+          
+          msg += L" has more than one non-terminal component_ref to ";
+          RETURN_INTO_WSTRING(cname, c->name());
+          msg += cname;
+          
+          SEMANTIC_ERROR(msg, cr);
+        }
+        else
+          mGroupParents.insert(gp);
+      }
+    }
+  }
+
+  return foundSomething;
 }
 
 void

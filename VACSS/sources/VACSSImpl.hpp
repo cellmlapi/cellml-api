@@ -185,6 +185,67 @@ private:
   ObjRef<iface::cellml_api::CellMLElement> mElement;
 };
 
+struct GroupRelationship
+{
+public:
+  GroupRelationship(const std::wstring& arelNamespace,
+                    const std::wstring& arelationship,
+                    const std::wstring& aname)
+    : relNamespace(arelNamespace), relationship(arelationship), name(aname)
+  {
+  }
+
+  GroupRelationship(const GroupRelationship& aGR)
+    : relNamespace(aGR.relNamespace), relationship(aGR.relationship),
+      name(aGR.name)
+  {
+  }
+
+  bool
+  operator<(const GroupRelationship& aGR) const
+  {
+    if (aGR.name == name)
+    {
+      if (aGR.relationship == relationship)
+      {
+        return relNamespace < aGR.relNamespace;
+      }
+      return relationship < aGR.relationship;
+    }
+    return name < aGR.name;
+  }
+
+  std::wstring relNamespace, relationship, name;
+};
+
+struct GroupParent
+{
+public:
+  GroupParent(const std::string& aComponentObjId,
+              const GroupRelationship& aGR)
+    : groupRel(aGR), componentObjId(aComponentObjId)
+  {}
+
+  GroupParent(const GroupParent& aGP)
+    : groupRel(aGP.groupRel), componentObjId(aGP.componentObjId)
+  {}
+      
+
+  bool
+  operator<(const GroupParent& aGP) const
+  {
+    if (aGP.componentObjId == componentObjId)
+    {
+      return groupRel < aGP.groupRel;
+    }
+    return componentObjId < aGP.componentObjId;
+  }
+
+  GroupRelationship groupRel;
+  // The ObjId of the real component (not the import component)...
+  std::string componentObjId;
+};
+
 class ModelValidation
 {
 public:
@@ -195,6 +256,7 @@ private:
   iface::cellml_api::Model * mModel;
   ObjRef<CDA_CellMLValidityErrorSet> mErrors;
   std::set<std::pair<std::string, std::string> > mAllConns;
+  std::set<GroupParent> mGroupParents;
   static const uint32_t kCellML_1_0 = 0;
   static const uint32_t kCellML_1_1 = 1;
 
@@ -212,6 +274,10 @@ private:
   void validatePerVariable(iface::cellml_api::CellMLVariable* aVariable);
   void validatePerConnection(iface::cellml_api::Connection* aConn);
   void validatePerUnits(iface::cellml_api::Units* aUnits);
+  void validatePerGroup(iface::cellml_api::Group* aGroup);
+  bool validateGroupComponentRefs(const std::set<GroupRelationship>& aRelns,
+                                  iface::cellml_api::ComponentRefSet* aCRS,
+                                  bool aMustHaveChildren = false);
   void validatePerImportComponent(iface::cellml_api::ImportComponent*
                                   aComponent);
   void validatePerImportUnits(iface::cellml_api::ImportUnits* aUnits);
