@@ -136,8 +136,13 @@ CodeGenerationState::GenerateCode()
     for (uel = mUnusedEdges.begin(); uel != mUnusedEdges.end(); uel++)
     {
       iface::mathml_dom::MathMLApplyElement* mae = (*uel)->mMaths;
-      mae->add_ref();
-      mCodeInfo->mFlaggedEquations.push_back(mae);
+      // If there was an initial value that was set to a variable which could not
+      // be computed, it will be an unused edge with null mMaths.
+      if (mae != NULL)
+      {
+        mae->add_ref();
+        mCodeInfo->mFlaggedEquations.push_back(mae);
+      }
     }
 
     mCodeInfo->mConstraintLevel = iface::cellml_services::UNSUITABLY_CONSTRAINED;
