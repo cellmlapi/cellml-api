@@ -1,0 +1,258 @@
+#ifndef INCLUDED_RDF_APISPEC
+#define INCLUDED_RDF_APISPEC
+
+#include "xpcom.idl"
+#include "DOM_APISPEC.idl"
+
+/**
+ * This module contains a description of an Application Programming Interface
+ * for RDF in the language-neutral IDL form.
+ */
+module rdf_api
+{
+  interface TripleSet;
+  interface Triple;
+  interface Resource;
+  interface URIReference;
+  interface BlankNode;
+
+  exception RDFProcessingError
+  {
+  };
+
+  /**
+   * A top-level interface for this RDF API.
+   */
+  interface DataSource
+    : XPCOM::IObject
+  {
+    /**
+     * Fetches a URI reference resource. This resource is specific to this
+     * data source and cannot be used with objects retrieved via another data
+     * source.
+     * @param aURI The URI of the resource to fetch.
+     * @return The URI reference resource.
+     */
+    URIReference getURIReference(in wstring aURI);
+
+    /**
+     * Creates a blank node. This resource is specific to this data source
+     * and cannot be used with objects retrieved via another data source.
+     * Calling createBlankNode several times will create a new blank node each
+     * time.
+     * @return The new blank node.
+     */
+    BlankNode createBlankNode();
+
+    /**
+     * Fetches the set of all triples present anywhere in the model.
+     * @return The set of all triples.
+     */
+    TripleSet getAllTriples();
+  };
+#pragma terminal-interface
+
+  /**
+   * A node (resource or literal) in RDF. This is always associated with a
+   * specific datasource.
+   */
+  interface Node
+    : XPCOM::IObject
+  {
+    /**
+     * Finds all the triples for which this node is the object.
+     * @return The set of all triples where this node is the object.
+     */
+    TripleSet getTriplesInto();
+
+    /**
+     * Fetches all triples for which this node is the object and aPredicate
+     * is the predicate.
+     * @param aPredicate The predicate we are looking for.
+     * @return The set of all triples meeting the constraints.
+     */
+    TripleSet getTriplesIntoByPredicate(in Resource aPredicate);
+  };
+
+  /**
+   * A resource in RDF. This is always associated with a specific datasource.
+   */
+  interface Resource
+    : Node
+  {
+    /**
+     * Finds all the triples for which this node is the subject and the
+     * parameter is the predicate.
+     * @param aPredicate The predicate we are searching on.
+     * @return The set of all triples meeting the constraints.
+     */
+    TripleSet getTriplesOutOfByPredicate(in Node aPredicate);
+
+    /**
+     * Finds a triple for which this node is the subject and the
+     * parameter is the predicate if possible.
+     * @param aPredicate The predicate we are searching on.
+     * @return The set of all triples meeting the constraints.
+     * @raises RDFProcessingError if there was no matching triple found.
+     */
+    Triple getTripleOutOfByPredicate(in Node aPredicate)
+      raises(RDFProcessingError);
+
+    /**
+     * Determines if there is a triple where this node is the subject, and
+     * aPredicate is the predicate and aObject is the object.
+     * @param aPredicate The predicate to search for.
+     * @param aObject The object to search for.
+     * @return True if and only if there is a matching triple.
+     */
+    boolean hasTripleOutOf(in Resource aPredicate, in Node aObject);
+
+    /**
+     * Creates a triple where this node is the subject, and
+     * aPredicate is the predicate and aObject is the object.
+     * If the triple being asserted has already been asserted, then nothing
+     * happens.
+     * @param aPredicate The predicate for the new triple.
+     * @param aObject The object for the new triple.
+     */
+    void createTripleOutOf(in Resource aPredicate, in Node aObject);
+
+    /**
+     * Finds all the triples for which this node is the subject and the
+     * parameter is the object.
+     * @param aObject The object we are searching on.
+     * @return The set of all triples meeting the constraints.
+     */
+    TripleSet getTriplesOutOfByObject(in Node aObject);
+
+    /**
+     * Finds all the triples for which this node is the predicate.
+     * @return The set of all triples meeting the constraints.
+     */
+    TripleSet getTriplesWherePredicate();
+
+    /**
+     * Finds all the triples for which this node is the subject.
+     * @return The set of all triples meeting the constraints.
+     */
+    TripleSet getTriplesWhereSubject();
+  };
+
+  /**
+   * A blank node in RDF. This is always associated with a specific datasource.
+   */
+  interface BlankNode
+    : Resource
+  {
+  };
+#pragma terminal-interface
+
+  /**
+   * A URI reference in RDF. This is always associated with a specific
+   * datasource.
+   */
+  interface URIReference
+    : Resource
+  {
+    /**
+     * Fetches the URI.
+     */
+    readonly attribute wstring URI;
+  };
+#pragma terminal-interface
+
+  /**
+   * A literal of some kind in RDF. This is always associated with a specific
+   * datasource.
+   */
+  interface Literal
+    : Node
+  {
+    /**
+     * The lexical form of the literal.
+     */
+    readonly attribute wstring lexicalForm;
+  };
+
+  /**
+   * A plain (untyped) literal in RDF. This is always associated with a specific
+   * datasource.
+   */
+  interface PlainLiteral
+    : Literal
+  {
+    /**
+     * The language of the literal.
+     */
+    readonly attribute wstring language;
+  };
+#pragma terminal-interface;
+
+  /**
+   * A typed literal in RDF. This is always associated with a specific
+   * datasource.
+   */
+  interface TypedLiteral
+    : Literal
+  {
+    /**
+     * The data type URI of the typed literal.
+     */
+    readonly attribute wstring datatypeURI;
+  };
+#pragma terminal-interface;
+
+  /**
+   * A triple in RDF. This is always associated with a specific
+   * datasource.
+   */
+  interface Triple
+    : XPCOM::IObject
+  {
+    /**
+     * The subject of the triple.
+     */
+    attribute Resource subject;
+
+    /**
+     * The predicate of the triple.
+     */
+    attribute Resource predicate;
+
+    /**
+     * The object of the triple.
+     */
+    attribute Node _object;
+
+    /**
+     * Removes the assertion from the data source. Once this has been done,
+     * the only way to re-add it is to make another triple with the same
+     * information. If the triple is not currently asserted on the data source
+     * at the time of the call, nothing happens. Objects implementing this
+     * interface are not invalidated when a triple is unasserted. If an identical
+     * triple is unasserted and subsequently re-added, unassert will still remove
+     * the triple.
+     */
+    void unassert();
+  };
+#pragma terminal-interface
+
+  interface TripleEnumerator
+    : XPCOM::IObject
+  {
+    /**
+     * Retrieves the next triple from this enumerator, or return null if there
+     * are no more triples.
+     */
+    Triple getNextTriple();
+  };
+#pragma terminal-interface
+
+  interface TripleSet
+    : XPCOM::IObject
+  {
+  };
+#pragma terminal-interface
+};
+
+#endif // INCLUDED_RDF_APISPEC

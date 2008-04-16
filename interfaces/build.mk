@@ -5,6 +5,7 @@ include_HEADERS += \
   $(top_builddir)/interfaces/Ifacexpcom.hxx \
   $(top_builddir)/interfaces/IfaceMathML_content_APISPEC.hxx \
   $(top_builddir)/interfaces/IfaceCellML_APISPEC.hxx \
+  $(top_builddir)/interfaces/IfaceRDF_APISPEC.hxx \
   $(top_builddir)/interfaces/IfaceCellML_events.hxx
 
 $(top_builddir)/interfaces/Iface%.hxx \
@@ -23,4 +24,5 @@ BUILT_SOURCES += $(top_builddir)/interfaces/IfaceDOM_APISPEC.hxx \
   $(top_builddir)/interfaces/Ifacexpcom.hxx \
   $(top_builddir)/interfaces/IfaceMathML_content_APISPEC.hxx \
   $(top_builddir)/interfaces/IfaceCellML_APISPEC.hxx \
+  $(top_builddir)/interfaces/IfaceRDF_APISPEC.hxx \
   $(top_builddir)/interfaces/IfaceCellML_events.hxx

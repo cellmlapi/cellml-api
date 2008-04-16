@@ -8,10 +8,12 @@ libcellml_xpcom_bridge_la_SOURCES = \
   $(top_builddir)/interfaces/p2xMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/p2xCellML_APISPEC.cpp \
   $(top_builddir)/interfaces/p2xCellML_events.cpp \
+  $(top_builddir)/interfaces/p2xRDF_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pDOM_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pDOM_events.cpp \
   $(top_builddir)/interfaces/x2pMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pCellML_APISPEC.cpp \
+  $(top_builddir)/interfaces/x2pRDF_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pCellML_events.cpp \
   $(top_srcdir)/sources/cellml/CellMLBootstrapXPCOM.cpp
 
@@ -30,7 +32,7 @@ libcellml_xpcom_bridge_la_CXXFLAGS = \
   -I$(top_builddir)/simple_interface_generators/glue/xpcom \
   $(AM_CXXFLAGS) -DMODULE_CONTAINS_xpcom -DMODULE_CONTAINS_DOMAPISPEC \
   -DMODULE_CONTAINS_MathMLcontentAPISPEC -DMODULE_CONTAINS_CellMLAPISPEC \
-  -DMODULE_CONTAINS_CellMLevents
+  -DMODULE_CONTAINS_CellMLevents -DMODULE_CONTAINS_RDFAPISPEC
 
 $(top_builddir)/interfaces/p2x%.cpp \
 $(top_builddir)/interfaces/p2x%.hxx \
@@ -58,8 +60,10 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/p2xMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/p2xCellML_APISPEC.cpp \
   $(top_builddir)/interfaces/p2xCellML_events.cpp \
+  $(top_builddir)/interfaces/p2xRDF_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pDOM_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pDOM_events.cpp \
   $(top_builddir)/interfaces/x2pMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pCellML_APISPEC.cpp \
-  $(top_builddir)/interfaces/x2pCellML_events.cpp
+  $(top_builddir)/interfaces/x2pCellML_events.cpp \
+  $(top_builddir)/interfaces/x2pRDF_APISPEC.cpp
