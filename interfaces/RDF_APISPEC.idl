@@ -2,7 +2,7 @@
 #define INCLUDED_RDF_APISPEC
 
 #include "xpcom.idl"
-#include "DOM_APISPEC.idl"
+#include "CellML_APISPEC.idl"
 
 /**
  * This module contains a description of an Application Programming Interface
@@ -24,7 +24,7 @@ module rdf_api
    * A top-level interface for this RDF API.
    */
   interface DataSource
-    : XPCOM::IObject
+    : cellml_api::RDFRepresentation
   {
     /**
      * Fetches a URI reference resource. This resource is specific to this
