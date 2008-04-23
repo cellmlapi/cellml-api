@@ -56,6 +56,10 @@ include $(top_srcdir)/libltdl/build.mk
 include $(top_srcdir)/sources/cellml_corba_server/build.mk
 endif
 
+if ENABLE_RDF
+include $(top_srcdir)/sources/rdf/build.mk
+endif
+
 if ENABLE_ANNOTOOLS
 include $(top_srcdir)/AnnoTools/build.mk
 endif

@@ -128,6 +128,15 @@ AC_ARG_ENABLE(ccgs,
 esac],[ccgs=false])
 AM_CONDITIONAL(ENABLE_CCGS, test x$ccgs = xtrue)
 
+AC_ARG_ENABLE(rdf,
+[  --enable-rdf    Build the CellML low level RDF Service],
+[case "${enableval}" in
+  yes) rdf=true ;;
+  no)  rdf=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-rdf) ;;
+esac],[rdf=false])
+AM_CONDITIONAL(ENABLE_RDF, test x$rdf = xtrue)
+
 if test x$malaes = xfalse -a x$ccgs = xtrue; then
    AC_MSG_ERROR(You must enable MaLaES if you want CCGS)
 fi
@@ -177,6 +186,7 @@ malaesandxpcom=false
 ccgsandxpcom=false
 cisandxpcom=false
 vacssandxpcom=false
+rdfandxpcom=false
 if test x$xpcom != xfalse; then
    if test x$annotools = xtrue; then
       annotoolsandxpcom=true
@@ -200,6 +210,9 @@ if test x$xpcom != xfalse; then
    if test x$vacss = xtrue; then
       vacssandxpcom=true
    fi
+   if test x$rdf = xtrue; then
+      rdfandxpcom=true
+   fi
 fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
@@ -215,6 +228,7 @@ AM_CONDITIONAL(ENABLE_MALAES_AND_XPCOM, test x$malaesandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_XPCOM, test x$vacssandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_RDF_AND_XPCOM, test x$rdfandxpcom = xtrue)
 
 # Checks for programs.
 AC_PROG_CXX
