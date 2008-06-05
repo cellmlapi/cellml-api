@@ -39,7 +39,7 @@ CONSTANTS[0] = 3;
 }
 void SetupComputedConstants(double* CONSTANTS, double* VARIABLES)
 {
-VARIABLES[2] = ((((CONSTANTS[0]>1.00000))&&((CONSTANTS[0]<=3.00000)))) ? (sin(CONSTANTS[0])) : (((CONSTANTS[0]>3.00000))) ? (3.00000) : (1.00000);
+VARIABLES[2] = (((((CONSTANTS[0]>1.00000))&&((CONSTANTS[0]<=3.00000)))) ? (sin(CONSTANTS[0])) : (((CONSTANTS[0]>3.00000))) ? (3.00000) : (1.00000));
 VARIABLES[0] = CONSTANTS[0];
 }
 void ComputeRates(double* BOUND, double* RATES, double* CONSTANTS, double* VARIABLES)
