@@ -71,5 +71,5 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC);
-RATES[0] =  (4.00000/7.00000)*( 2.00000*(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1]);
+RATES[0] =  (4.00000/7.00000)*( 2.00000*(pow(ALGEBRAIC[1], 3.00000))+ALGEBRAIC[0]);
 }
