@@ -316,11 +316,24 @@ module cellml_services
     *       equality.
     * <SUP> causes the following text to go into the supplementary function
     *       array instead of the main code list.
-    * <VAR> gives the array index of the variable to compute.
+    * <VAR> gives the name to the variable to compute.
     * <ID> is replaced with a numeric ID unique to this equation.
     * Default: NR_MINIMISE(minfunc_<ID>, CONSTANTS, VARIABLES, <VAR>);\r\n<SUP>void minfunc_<ID>(double* CONSTANTS, double* VARIABLES)\r\n{\r\nreturn fabs(<LHS>-<RHS>);\r\n}\r\n
     */
    attribute wstring solvePattern;
+
+   /**
+    * The pattern which is used to solve a system of n equations in n unknowns.
+    * <LHS> is replaced by the expression for the first argument to the
+    *       equality.
+    * <RHS> is replaced by the expression for the second argument to the
+    *       equality.
+    * <SUP> causes the following text to go into the supplementary function
+    *       array instead of the main code list.
+    * <VAR> gives the name to the variable to compute.
+    * <ID> is replaced with a numeric ID unique to this equation.
+    */
+   attribute wstring solveNLSystemPattern;
 
    /**
     * A MaLaES transform to use. If will be null if it has not bee set, and

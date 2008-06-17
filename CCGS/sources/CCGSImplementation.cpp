@@ -215,10 +215,76 @@ CDA_CodeGenerator::CDA_CodeGenerator()
    mRateNamePattern(L"RATES[%]"),
    mVOIPattern(L"VOI"),
    mAssignPattern(L"<LHS> = <RHS>;\r\n"),
-   mSolvePattern(L"NR_MINIMISE(minfunc_<ID>, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &<VAR>);\r\n"
-                 L"<SUP>double minfunc_<ID>(double VOI, double* CONSTANTS, "
-                 L"double* RATES, double* STATES, double * ALGEBRAIC)"
-                 L"\r\n{\r\nreturn fabs((<LHS>)-(<RHS>));\r\n}\r\n"),
+   mSolvePattern
+   (
+    L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC);\r\n"
+    L"<SUP>"
+    L"void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)\r\n"
+    L"{\r\n"
+    L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+    L"#define VOI rfi->aVOI\r\n"
+    L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+    L"#define RATES rfi->aRATES\r\n"
+    L"#define STATES rfi->aSTATES\r\n"
+    L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+    L"  <VAR> = *p;\r\n"
+    L"  *hx = fixnans((<LHS>) - (<RHS>));\r\n"
+    L"#undef VOI\r\n"
+    L"#undef CONSTANTS\r\n"
+    L"#undef RATES\r\n"
+    L"#undef STATES\r\n"
+    L"#undef ALGEBRAIC\r\n"
+    L"}\r\n"
+    L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\r\n"
+    L"{\r\n"
+    L"  static double p = 0.1, bp, work[LM_DIF_WORKSZ(1, 1)];\r\n"
+    L"  struct rootfind_info rfi;\r\n"
+    L"  rfi.aVOI = VOI;\r\n"
+    L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+    L"  rfi.aRATES = RATES;\r\n"
+    L"  rfi.aSTATES = STATES;\r\n"
+    L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+    L"  do_levmar(objfunc_<ID>, &p, &bp, work, 1, &rfi);\r\n"
+    L"  <VAR> = p;\r\n"
+    L"}\r\n"
+   ),
+   mSolveNLSystemPattern
+   (
+    L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC);\r\n"
+    L"<SUP>"
+    L"void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)\r\n"
+    L"{\r\n"
+    L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+    L"#define VOI rfi->aVOI\r\n"
+    L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+    L"#define RATES rfi->aRATES\r\n"
+    L"#define STATES rfi->aSTATES\r\n"
+    L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"  <EQUATIONS>hx[<INDEX>] = fixnans((<LHS>) - (<RHS>));<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"#undef VOI\r\n"
+    L"#undef CONSTANTS\r\n"
+    L"#undef RATES\r\n"
+    L"#undef STATES\r\n"
+    L"#undef ALGEBRAIC\r\n"
+    L"}\r\n"
+    L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\r\n"
+    L"{\r\n"
+    L"  static double p[<COUNT>] = {<EQUATIONS>0.1<JOIN>,</EQUATIONS>},\r\n"
+    L"         bp[<COUNT>], work[LM_DIF_WORKSZ(<COUNT>, <COUNT>)];\r\n"
+    L"  struct rootfind_info rfi;\r\n"
+    L"  rfi.aVOI = VOI;\r\n"
+    L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+    L"  rfi.aRATES = RATES;\r\n"
+    L"  rfi.aSTATES = STATES;\r\n"
+    L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+    L"  do_levmar(objfunc_<ID>, p, bp, work, <COUNT>, &rfi);\r\n"
+    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"}\r\n"
+   ),
    mArrayOffset(0)
 {
 }
@@ -319,6 +385,18 @@ CDA_CodeGenerator::solvePattern(const wchar_t* aPattern) throw()
   mSolvePattern = aPattern;
 }
 
+wchar_t*
+CDA_CodeGenerator::solveNLSystemPattern() throw()
+{
+  return CDA_wcsdup(mSolveNLSystemPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::solveNLSystemPattern(const wchar_t* aPattern) throw()
+{
+  mSolveNLSystemPattern = aPattern;
+}
+
 iface::cellml_services::MaLaESTransform*
 CDA_CodeGenerator::transform() throw()
 {
@@ -389,7 +467,7 @@ CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
                           mConstantPattern, mStateVariableNamePattern,
                           mAlgebraicVariableNamePattern,
                           mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
-                          mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet);
+                          mSolveNLSystemPattern, mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet);
 
   if (cgs.mAnnoSet == NULL)
   {

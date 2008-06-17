@@ -50,6 +50,6 @@ runtest units
 runtest units-import
 runtest units-import-import
 runtest units-in-imported-component
-runtest null_IV_incorrectly_constrained
+runtest SimpleDAE_NonLinear
 
 exit 0

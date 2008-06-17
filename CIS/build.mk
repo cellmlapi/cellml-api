@@ -23,10 +23,15 @@ CVODE_SOURCES = \
   $(top_srcdir)/CIS/sources/sundials/sundials_spgmr.c \
   $(top_srcdir)/CIS/sources/sundials/sundials_sptfqmr.c
 
+LEVMAR_SOURCES = \
+  $(top_srcdir)/CIS/sources/levmar/Axb.c \
+  $(top_srcdir)/CIS/sources/levmar/lm.c \
+  $(top_srcdir)/CIS/sources/levmar/misc.c
+
 libcis_la_SOURCES = \
   $(top_srcdir)/CIS/sources/CISImplementation.cxx \
   $(top_srcdir)/CIS/sources/CISSolve.cxx \
-  $(CVODE_SOURCES)
+  $(CVODE_SOURCES) $(LEVMAR_SOURCES)
 
 libcis_la_LIBADD = \
   $(top_builddir)/libccgs.la $(LIBADD_DL) -lgsl $(STLLINK)

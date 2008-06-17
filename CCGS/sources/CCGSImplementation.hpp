@@ -43,6 +43,43 @@ public:
   // Only available during code generation...
   CDA_ComputationTarget* mUpDegree;
   uint32_t mHighestDegree;
+
+  // Disjoint set utilities...
+  uint32_t rank;
+  CDA_ComputationTarget* parent;
+  void resetSetMembership()
+  {
+    rank = 0;
+    parent = this;
+  }
+
+  CDA_ComputationTarget* findRoot()
+  {
+    if (parent == this)
+      return this;
+
+    parent = parent->findRoot();
+    return parent;
+  }
+
+  void unionWith(CDA_ComputationTarget* b)
+  {
+    findRoot();
+    b->findRoot();
+
+    if (parent == b->parent)
+      return;
+
+    if (parent->rank > b->parent->rank)
+      b->parent = parent;
+    else if (b->parent->rank > parent->rank)
+      parent = b->parent;
+    else
+    {
+      b->parent = parent;
+      parent->rank++;
+    }
+  }
 };
 
 class CDA_ComputationTargetIterator
@@ -131,6 +168,8 @@ public:
   void assignPattern(const wchar_t* aPattern) throw();
   wchar_t* solvePattern() throw();
   void solvePattern(const wchar_t* aPattern) throw();
+  wchar_t* solveNLSystemPattern() throw();
+  void solveNLSystemPattern(const wchar_t* aPattern) throw();
   iface::cellml_services::MaLaESTransform* transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
      throw();
@@ -147,7 +186,8 @@ public:
 private:
   std::wstring mConstantPattern, mStateVariableNamePattern,
     mAlgebraicVariableNamePattern,
-    mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern;
+    mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
+    mSolveNLSystemPattern;
   uint32_t mArrayOffset;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;

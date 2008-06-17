@@ -7,16 +7,24 @@
 #include "CodeGenerationError.hxx"
 #include "IfaceMathML_content_APISPEC.hxx"
 #include "DOMBootstrap.hxx"
+#include <assert.h>
 
 // Win32 hack...
 #ifdef _WIN32
 #define swprintf _snwprintf
 #endif
 
+// Asymptotic complexity is bound around O(n^(((t^2)+t)/2)) for t=SEARCH_DEPTH. This is a pretty poor upper bound.
+#define SEARCH_DEPTH 3
+
 CodeGenerationState::~CodeGenerationState()
 {
-  std::list<VariableEdge*>::iterator i;
-  for (i = mVariableEdges.begin(); i != mVariableEdges.end(); i++)
+  for (std::list<Equation*>::iterator i = mEquations.begin();
+       i != mEquations.end(); i++)
+    delete *i;
+
+  for (std::list<System*>::iterator i = mSystems.begin();
+       i != mSystems.end(); i++)
     delete *i;
 }
 
@@ -33,7 +41,6 @@ CodeGenerationState::GenerateCode()
 
   try
   {
-
     RETURN_INTO_WSTRING(cevError, mCeVAS->modelError());
     if (cevError != L"")
       throw CodeGenerationError(cevError);
@@ -46,61 +53,72 @@ CodeGenerationState::GenerateCode()
     
     // Create all variable edges (this creates derived computation targets as a
     //   side-effect)...
-    CreateVariableEdges();
+    CreateEquations();
 
     // Next, set starting classification for all targets...
     FirstPassTargetClassification();
 
-    mUnusedEdges = mVariableEdges;
+    mUnusedEquations.insert(mEquations.begin(), mEquations.end());
 
     // Put all targets into lists based on their classification...
     BuildFloatingAndConstantLists();
 
+    std::list<System*> systems;
+
     // Now, determine all constants computable from the current constants...
-    std::set<CDA_ComputationTarget*> reachabletargets;
-    BuildTargetSet(mKnown, mFloating, reachabletargets);
+    DecomposeIntoSystems(mKnown, mFloating, systems);
 
     // Assign constant variables for set...
-    AllocateVariablesInSet(reachabletargets, iface::cellml_services::CONSTANT,
+    AllocateVariablesInSet(systems, iface::cellml_services::CONSTANT,
                            mConstantPattern, mNextConstantIndex,
                            mCodeInfo->mConstantIndexCount);
 
+    std::map<CDA_ComputationTarget*, System*> sysByTargReq;
+    // Build an index from variables required to systems...
+    BuildSystemsByTargetsRequired(systems, sysByTargReq);
+
     // Write evaluations for all constants we just worked out how to compute...
-    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, reachabletargets);
+    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, systems, sysByTargReq);
 
     // Also we need to initialise state variable IVs...
-    reachabletargets.clear();
+    systems.clear();
     BuildStateAndConstantLists();
-    BuildTargetSet(mKnown, mFloating, reachabletargets);
-    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, reachabletargets);
+    DecomposeIntoSystems(mKnown, mFloating, systems);
+    BuildSystemsByTargetsRequired(systems, sysByTargReq);
+    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, systems, sysByTargReq);
 
     // Put all targets into lists based on their classification...
     BuildFloatingAndKnownLists();
 
     // Now, determine all algebraic variables / rates computable from the
     // known variables (constants, state variables, and bound variable)...
-    reachabletargets.clear();
+    systems.clear();
 
-    bool wasError = (BuildTargetSet(mKnown, mFloating, reachabletargets) != 0);
+    bool wasError = DecomposeIntoSystems(mKnown, mFloating, systems);
+    BuildSystemsByTargetsRequired(systems, sysByTargReq);
 
     // Assign algebraic variables for set...
-    AllocateVariablesInSet(reachabletargets, iface::cellml_services::ALGEBRAIC,
+    AllocateVariablesInSet(systems, iface::cellml_services::ALGEBRAIC,
                            mAlgebraicVariableNamePattern,
                            mNextAlgebraicVariableIndex,
                            mCodeInfo->mAlgebraicIndexCount);
 
     if (wasError)
     {
-      if (mUnusedEdges.size() != 0)
+      if (mUnusedEquations.size() != 0)
       {
-        throw UnsuitablyConstrainedError();
+        if (mFloating.size() != 0)
+          throw UnsuitablyConstrainedError();
+        else
+          throw OverconstrainedError
+            ((*(mUnusedEquations.begin()))->mMaths);
       }
       else
         throw UnderconstrainedError();
     }
 
     // Write evaluations for all rates & algebraic variables in reachabletargets
-    GenerateCodeForSetByType(mKnown, reachabletargets);
+    GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
 
     // Also cascade state variables to rate variables where they are the same
     // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
@@ -119,8 +137,13 @@ CodeGenerationState::GenerateCode()
          fei++)
       (*fei)->release_ref();
     mCodeInfo->mFlaggedEquations.clear();
-    oce.mEqn->add_ref();
-    mCodeInfo->mFlaggedEquations.push_back(oce.mEqn);
+
+    if (oce.mEqn)
+    {
+      oce.mEqn->add_ref();
+      mCodeInfo->mFlaggedEquations.push_back(oce.mEqn);
+    }
+
     mCodeInfo->mConstraintLevel = iface::cellml_services::OVERCONSTRAINED;
   }
   catch (UnsuitablyConstrainedError uce)
@@ -132,8 +155,8 @@ CodeGenerationState::GenerateCode()
       (*fei)->release_ref();
     mCodeInfo->mFlaggedEquations.clear();
 
-    std::list<VariableEdge*>::iterator uel;
-    for (uel = mUnusedEdges.begin(); uel != mUnusedEdges.end(); uel++)
+    std::set<Equation*>::iterator uel;
+    for (uel = mUnusedEquations.begin(); uel != mUnusedEquations.end(); uel++)
     {
       iface::mathml_dom::MathMLApplyElement* mae = (*uel)->mMaths;
       // If there was an initial value that was set to a variable which could not
@@ -341,7 +364,7 @@ CodeGenerationState::ContextError
 }
 
 void
-CodeGenerationState::CreateVariableEdges()
+CodeGenerationState::CreateEquations()
 {
   RETURN_INTO_OBJREF(cci, iface::cellml_api::CellMLComponentIterator,
                      mCeVAS->iterateRelevantComponents());
@@ -419,19 +442,19 @@ CodeGenerationState::CreateVariableEdges()
         RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
                            mr->iterateInvolvedVariablesByDegree());
         
-        VariableEdge* ve = new VariableEdge();
-        mVariableEdges.push_back(ve);
+        Equation* eq = new Equation();
+        mEquations.push_back(eq);
         
-        ve->mContext = c;
-        ve->mMaths = mae;
+        eq->mContext = c;
+        eq->mMaths = mae;
 
         if (mae->nArguments() != 3)
           ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
                        mae, c);
         
-        ve->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+        eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
           (mae->getArgument(2));
-        ve->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+        eq->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
           (mae->getArgument(3));
         
         while (true)
@@ -448,7 +471,7 @@ CodeGenerationState::CreateVariableEdges()
             ::iterator  mi = mTargetsBySource.find(cv);
           if (mi != mTargetsBySource.end())
           {
-            ve->mTargets.push_back(GetTargetOfDegree((*mi).second, dv->degree()));
+            eq->mTargets.push_back(GetTargetOfDegree((*mi).second, dv->degree()));
           }
         }
 
@@ -497,14 +520,14 @@ CodeGenerationState::FirstPassTargetClassification()
       wcstod(iv.c_str(), &end);
       if (end == NULL || *end != 0)
       {
-        VariableEdge* ve = new VariableEdge();
-        mVariableEdges.push_back(ve);
-        ve->mMaths = NULL;
-        ve->mTargets.push_back(ct);
+        Equation* eq = new Equation();
+        mEquations.push_back(eq);
+        eq->mMaths = NULL;
+        eq->mTargets.push_back(ct);
         RETURN_INTO_OBJREF(el, iface::cellml_api::CellMLElement,
                            ct->mVariable->parentElement());
         DECLARE_QUERY_INTERFACE_OBJREF(comp, el, cellml_api::CellMLComponent);
-        ve->mContext = comp;
+        eq->mContext = comp;
         RETURN_INTO_OBJREF(cvs, iface::cellml_api::CellMLVariableSet,
                            comp->variables());
         RETURN_INTO_OBJREF(var, iface::cellml_api::CellMLVariable,
@@ -526,7 +549,7 @@ CodeGenerationState::FirstPassTargetClassification()
         if (j == mTargetsBySource.end())
           ContextError(L"Invalid initial_value attribute", NULL, var);
 
-        ve->mTargets.push_back((*j).second);
+        eq->mTargets.push_back((*j).second);
       }
       else
       {
@@ -616,7 +639,7 @@ CodeGenerationState::AllocateVariable(CDA_ComputationTarget* aCT,
 void
 CodeGenerationState::AllocateVariablesInSet
 (
- std::set<CDA_ComputationTarget*>& aCT,
+ std::list<System*>& aCT,
  iface::cellml_services::VariableEvaluationType aET,
  std::wstring& aPattern,
  uint32_t& aNextIndex,
@@ -625,17 +648,22 @@ CodeGenerationState::AllocateVariablesInSet
 {
   std::wstring str;
   
-  std::set<CDA_ComputationTarget*>::iterator i;
+  std::list<System*>::iterator i;
+  std::set<CDA_ComputationTarget*>::iterator j;
+
   for (i = aCT.begin(); i != aCT.end(); i++)
   {
-    (*i)->mEvaluationType = aET;
-
-    // Don't rename it if it is already assigned...
-    RETURN_INTO_WSTRING(n, (*i)->name());
-    if (n == L"")
+    for (j = (*i)->mUnknowns.begin(); j != (*i)->mUnknowns.end(); j++)
     {
-      AllocateVariable(*i, str, aPattern, aNextIndex);
-      aCountVar++;
+      (*j)->mEvaluationType = aET;
+
+      // Don't rename it if it is already assigned...
+      RETURN_INTO_WSTRING(n, (*j)->name());
+      if (n == L"")
+      {
+        AllocateVariable(*j, str, aPattern, aNextIndex);
+        aCountVar++;
+      }
     }
   }
 }
@@ -733,7 +761,7 @@ CodeGenerationState::BuildFloatingAndConstantLists()
       mKnown.insert(*i);
       break;
     case iface::cellml_services::FLOATING:
-      mFloating.push_back(*i);
+      mFloating.insert(*i);
       break;
     default:
       ;
@@ -750,7 +778,7 @@ CodeGenerationState::BuildStateAndConstantLists()
     switch ((*i)->mEvaluationType)
     {
     case iface::cellml_services::STATE_VARIABLE:
-      mFloating.push_back(*i);
+      mFloating.insert(*i);
       break;
     case iface::cellml_services::CONSTANT:
       mKnown.insert(*i);
@@ -770,7 +798,7 @@ CodeGenerationState::BuildFloatingAndKnownLists()
     switch ((*i)->mEvaluationType)
     {
     case iface::cellml_services::FLOATING:
-      mFloating.push_back(*i);
+      mFloating.insert(*i);
       break;
     default:
       mKnown.insert(*i);
@@ -778,216 +806,592 @@ CodeGenerationState::BuildFloatingAndKnownLists()
     }
 }
 
-uint32_t
-CodeGenerationState::BuildTargetSet
+bool
+CodeGenerationState::DecomposeIntoSystems
 (
  std::set<CDA_ComputationTarget*>& aStart,
- std::list<CDA_ComputationTarget*>& aCandidates,
- std::set<CDA_ComputationTarget*>& aTargetSet
+ std::set<CDA_ComputationTarget*>& aCandidates,
+ std::list<System*>& aSystems
 )
 {
-  bool didWork = false;
+  std::set<CDA_ComputationTarget*> start(aStart);
 
-  std::set<CDA_ComputationTarget*> start(aStart.begin(), aStart.end());
-  std::set<CDA_ComputationTarget*> candidates(aCandidates.begin(), aCandidates.end());
+  while (true)
+  {
+    // The first step is to cluster all candidate variables into disjoint sets,
+    // where two variables are in the same set if there is an until now unused
+    // equation involving both of them.
+    for (
+         std::set<CDA_ComputationTarget*>::iterator i = aCandidates.begin();
+         i != aCandidates.end();
+         i++
+        )
+      (*i)->resetSetMembership();
 
+    for (std::set<Equation*>::iterator i = mUnusedEquations.begin();
+         i != mUnusedEquations.end(); i++)
+    {
+      std::list<CDA_ComputationTarget*>::iterator j = (*i)->mTargets.begin(), f;
+
+      CDA_ComputationTarget* linkWith = NULL;
+      // See if we should ignore this equation.
+      bool ignoreEquation(false);
+      for (; j != (*i)->mTargets.end(); j++)
+      {
+        if (start.count(*j) > 0)
+          continue;
+        if (aCandidates.count(*j) == 0)
+        {
+          ignoreEquation = true;
+          break;
+        }
+        if (linkWith == NULL)
+        {
+          linkWith = *j;
+          f = j;
+        }
+      }
+      if (ignoreEquation)
+        continue;
+      if (linkWith == NULL)
+        // This means that the model is overconstrained.
+        throw OverconstrainedError((*i)->mMaths);
+
+      if (f == (*i)->mTargets.end())
+        continue;
+
+      for (j = f, j++; j != (*i)->mTargets.end(); j++)
+        if (aCandidates.count(*j) != 0)
+        {
+          (*j)->unionWith(linkWith);
+          assert(linkWith->findRoot() == (*j)->findRoot());
+        }
+    }
+    
+    typedef std::pair<std::set<Equation*>, std::set<CDA_ComputationTarget*> >
+      EquationCTSetPair ;
+    typedef std::pair<CDA_ComputationTarget*, EquationCTSetPair>
+      EquationCTSetPairByCT;
+    typedef std::map<CDA_ComputationTarget*, EquationCTSetPair>
+      MapEquationCTSetPairByCT;
+
+    MapEquationCTSetPairByCT targets;
+
+    for (
+         std::set<CDA_ComputationTarget*>::iterator j = aCandidates.begin();
+         j != aCandidates.end();
+         j++
+        )
+    {
+      CDA_ComputationTarget* root = (*j)->findRoot();
+
+      MapEquationCTSetPairByCT::iterator cti(targets.find(root));
+
+      if (cti == targets.end())
+      {
+        std::set<CDA_ComputationTarget*> s;
+        s.insert(*j);
+        targets.insert(EquationCTSetPairByCT(root, EquationCTSetPair
+                                             (std::set<Equation*>(), s)));
+      }
+      else
+      {
+        (*cti).second.second.insert(*j);
+      }
+    }
+
+    // Now, we need to go through all the unused equations and stick them in a
+    // set with the appropriate set of computation targets...
+    for (
+         std::set<Equation*>::iterator i = mUnusedEquations.begin();
+         i != mUnusedEquations.end();
+         i++
+        )
+    {
+      // See if we should ignore this equation.
+      bool ignoreEquation(false);
+      CDA_ComputationTarget* first = NULL;
+      for (
+           std::list<CDA_ComputationTarget*>::iterator j((*i)->mTargets.begin());
+           j != (*i)->mTargets.end();
+           j++
+          )
+      {
+        if (start.count(*j) > 0)
+          continue;
+        if (aCandidates.count(*j) == 0)
+        {
+          ignoreEquation = true;
+          break;
+        }
+
+        first = *j;
+      }
+      if (ignoreEquation)
+        continue;
+
+      // First is guaranteed not to be null because of the overconstrained
+      // checks above, and is guaranteed to belong to exactly one of the
+      // disjoint sets of variables. Find which one...
+
+      for (MapEquationCTSetPairByCT::iterator j(targets.begin());
+           j != targets.end();
+           j++)
+        for (std::set<CDA_ComputationTarget*>::iterator k((*j).second.second.begin());
+             k != (*j).second.second.end();
+             k++)
+        {
+          bool done(false);
+          if (first == *k)
+          {
+            (*j).second.first.insert(*i);
+            done = true;
+            break;
+          }
+          if (done)
+            break;
+        }
+    }
+
+    bool progress = false;
+
+    // We now have a set of disjoint sets of variables (i.e. there are no
+    // equations which have not yet been used linking variables in different
+    // disjoint sets), and the equations linking them.
+    for (MapEquationCTSetPairByCT::iterator i(targets.begin());
+         i != targets.end();
+         i++)
+    {
+      if (FindSmallSystem((*i).second.first, (*i).second.second, start,
+                          aCandidates, aSystems))
+      {
+        progress = true;
+        continue;
+      }
+
+      // We failed to find a small system. Instead, start off with everything
+      // in one system and start taking stuff out...
+      bool error = FindBigSystem((*i).second.first, (*i).second.second, start, aCandidates,
+                                 aSystems);
+
+      progress |= (!error);
+    }
+
+    if (!progress)
+      return (aCandidates.size() != 0) || (mUnusedEquations.size() != 0);
+
+    // Having found one system, we may have further fragmented the systems by
+    // removing the linking variables. The next iteration will detect this and
+    // then we can try again.
+  }
+}
+
+bool
+CodeGenerationState::FindSmallSystem
+(
+ std::set<Equation*>& aUseEquations,
+ std::set<CDA_ComputationTarget*>& aUseVars,
+ std::set<CDA_ComputationTarget*>& aStart,
+ std::set<CDA_ComputationTarget*>& aCandidates,
+ std::list<System*>& aSystems
+)
+{
+  for (uint32_t systemCardinality = 1;
+       systemCardinality <= SEARCH_DEPTH;
+       systemCardinality++)
+  {
+    std::set<Equation*> s;
+    std::set<Equation*>::iterator i(aUseEquations.begin());
+    if (RecursivelyTestSmallSystem(s, i, systemCardinality,
+                                   aUseEquations, aUseVars, aStart, aCandidates,
+                                   aSystems
+                                  ))
+      return true;
+  }
+  return false;
+}
+
+bool
+CodeGenerationState::RecursivelyTestSmallSystem
+(
+ std::set<Equation*>& aSystem,
+ std::set<Equation*>::iterator& aEqIt,
+ uint32_t aNeedToAdd,
+ std::set<Equation*>& aUseEquations,
+ std::set<CDA_ComputationTarget*>& aUseVars,
+ std::set<CDA_ComputationTarget*>& aStart,
+ std::set<CDA_ComputationTarget*>& aCandidates,
+ std::list<System*>& aSystems
+)
+{
+  // Pre: aNeedToAdd is >= 1...
+  aNeedToAdd--;
+
+  for (std::set<Equation*>::iterator i(aEqIt); i != aUseEquations.end();)
+  {
+    // We do this insert and erase thing rather than copy the set to save stack
+    // space.
+    std::set<Equation*>::iterator sysEq(aSystem.insert(*i).first);
+    i++;
+
+    if (aNeedToAdd > 0)
+    {
+      if (RecursivelyTestSmallSystem(aSystem, i, aNeedToAdd, aUseEquations,
+                                     aUseVars, aStart, aCandidates, aSystems))
+        return true;
+    }
+    else
+    {
+      // Well, we now have a set of equations which we are going to consider as
+      // a possible system in aSystem. Work out the variables involved...
+      std::set<CDA_ComputationTarget*> targets;
+      std::set<CDA_ComputationTarget*> known;
+
+      for (std::set<Equation*>::iterator j(aSystem.begin());
+           j != aSystem.end(); j++)
+        for (std::list<CDA_ComputationTarget*>::iterator k
+               ((*j)->mTargets.begin());
+             k != ((*j)->mTargets.end()); k++)
+        {
+          if (aStart.count(*k))
+          {
+            assert(aCandidates.count(*k) == 0);
+            known.insert(*k);
+          }
+          else
+          {
+            assert(aCandidates.count(*k));
+            targets.insert(*k);
+          }
+        }
+      
+      uint32_t nEqns = aSystem.size(), nUnknowns = targets.size();
+
+      if (nEqns > nUnknowns)
+        throw OverconstrainedError((*(aUseEquations.begin()))->mMaths);
+
+      if (nEqns < nUnknowns)
+      {
+        aSystem.erase(sysEq);
+        continue;
+      }
+
+      // If we get here, we found a small system to remove.
+      System* syst = new System(aSystem, known, targets);
+      mSystems.push_back(syst);
+      aSystems.push_back(syst);
+
+      aStart.insert(targets.begin(), targets.end());
+
+      for (std::set<CDA_ComputationTarget*>::iterator k(targets.begin());
+           k != targets.end();
+           k++)
+        aCandidates.erase(*k);
+
+      for (std::set<Equation*>::iterator k(aSystem.begin());
+           k != aSystem.end(); k++)
+        mUnusedEquations.erase(*k);
+
+      return true;
+    }
+
+    aSystem.erase(sysEq);
+  }
+
+  return false;
+}
+
+bool
+CodeGenerationState::FindBigSystem
+(
+ std::set<Equation*>& aUseEquations,
+ std::set<CDA_ComputationTarget*>& aUseVars,
+ std::set<CDA_ComputationTarget*>& aStart,
+ std::set<CDA_ComputationTarget*>& aCandidates,
+ std::list<System*>& aSystems
+)
+{
+  // There is absolutely no point in doing this if the system is improperly
+  // constrained...
+  if (aUseEquations.size() != aUseVars.size())
+    return true;
+
+  bool didWork;
+  
   do
   {
     didWork = false;
 
-    // Go through all unused edges looking for a suitable candidate...
-    std::list<VariableEdge*>::iterator i, j;
-    for (i = mUnusedEdges.begin(); i != mUnusedEdges.end();)
+    for (uint32_t nonSystemCardinality = 1;
+         nonSystemCardinality <= SEARCH_DEPTH;
+         nonSystemCardinality++)
     {
-      j = i;
-      i++;
+      // Empty systems are entirely meaningless...
+      if (nonSystemCardinality >= aUseEquations.size())
+        break;
 
-      bool usedEdge(ConsiderEdgeInTargetSet(*j, start, candidates,
-                                            aTargetSet));
-      if (usedEdge)
+      std::set<Equation*> s;
+      std::set<Equation*>::iterator i(aUseEquations.begin());
+      if (RecursivelyTestBigSystem(s, i, nonSystemCardinality,
+                                   aUseEquations, aUseVars, aStart, aCandidates
+                                  ))
       {
         didWork = true;
-        mUnusedEdges.erase(j);
+        break;
       }
     }
   }
   while (didWork);
 
-  return candidates.size();
+  // If we get here, we have removed as many equations as we can from aUseVars
+  // and aUseEquations, so that is now our system...
+
+  std::set<CDA_ComputationTarget*> known;
+  for (std::set<Equation*>::iterator i(aUseEquations.begin());
+       i != aUseEquations.end();
+       i++)
+    for (std::list<CDA_ComputationTarget*>::iterator j((*i)->mTargets.begin());
+         j != (*i)->mTargets.end();
+         j++)
+      if (aStart.count(*j))
+        known.insert(*j);
+
+  System* st = new System(aUseEquations, known, aUseVars);
+  mSystems.push_back(st);
+  aSystems.push_back(st);
+
+  aStart.insert(aUseVars.begin(), aUseVars.end());
+  for (std::set<CDA_ComputationTarget*>::iterator k(aUseVars.begin());
+       k != aUseVars.end();
+       k++)
+    aCandidates.erase(*k);
+  
+  for (std::set<Equation*>::iterator k(aUseEquations.begin());
+       k != aUseEquations.end(); k++)
+    mUnusedEquations.erase(*k);
+
+  return false;
 }
 
 bool
-CodeGenerationState::ConsiderEdgeInTargetSet
+CodeGenerationState::RecursivelyTestBigSystem
 (
- VariableEdge* aVarEdge,
+ std::set<Equation*>& aNonSystem,
+ std::set<Equation*>::iterator& aEqIt,
+ uint32_t aNeedToRemove,
+ std::set<Equation*>& aUseEquations,
+ std::set<CDA_ComputationTarget*>& aUseVars,
  std::set<CDA_ComputationTarget*>& aStart,
- std::set<CDA_ComputationTarget*>& aCandidates,
- std::set<CDA_ComputationTarget*>& aTargetSet
+ std::set<CDA_ComputationTarget*>& aCandidates
 )
 {
-  std::list<CDA_ComputationTarget*>::iterator i = aVarEdge->mTargets.begin();
-  CDA_ComputationTarget* unknown;
+  // Pre: aNeedToRemove is >= 1...
+  aNeedToRemove--;
 
-  int unknownCount = 0;
-  int idx = 0;
-
-  for (; i != aVarEdge->mTargets.end(); i++)
+  for (std::set<Equation*>::iterator i(aEqIt); i != aUseEquations.end();)
   {
-    // Ignore edges that involve completely unknown targets...
-    if (aStart.count(*i) == 0 &&
-        aCandidates.count(*i) == 0)
+    // We do this insert and erase thing rather than copy the set to save stack
+    // space.
+    std::set<Equation*>::iterator sysEq(aNonSystem.insert(*i).first);
+    i++;
+
+    if (aNeedToRemove > 0)
     {
-      return false;
+      if (RecursivelyTestBigSystem(aNonSystem, i, aNeedToRemove, aUseEquations,
+                                   aUseVars, aStart, aCandidates))
+        return true;
     }
-
-    // Can't use initial_value="foo" if we don't know foo...
-    if (aVarEdge->mMaths == NULL && idx++ != 0 &&
-        aStart.count(*i) == 0)
+    else
     {
-      return false;
-    }
+      // Build aUseEquations \ aNonSystem...
+      std::set<Equation*> syst;
+      std::set_difference(aUseEquations.begin(),
+                          aUseEquations.end(),
+                          aNonSystem.begin(),
+                          aNonSystem.end(),
+                          std::inserter(syst, syst.end()));
 
-    if (aStart.count(*i) == 0)
-    {
-      // Either mMaths is non-null (i.e. it is a normal MathML equation, not
-      // an initial value assignment) or this is the LHS of the initial value
-      // assignment.
-      unknown = *i;
-      unknownCount++;
+      // Which variables does this involve?
+      std::set<CDA_ComputationTarget*> targs;
+      for (std::set<Equation*>::iterator j(syst.begin());
+           j != syst.end(); j++)
+        for (std::list<CDA_ComputationTarget*>::iterator k
+               ((*j)->mTargets.begin());
+             k != (*j)->mTargets.end(); k++)
+          if (aCandidates.count(*k))
+            targs.insert(*k);
 
-      if (unknownCount > 1)
+      if (targs.size() != syst.size())
       {
-        return false;
+        aNonSystem.erase(sysEq);
+        continue;
       }
 
-      continue;
+      // Well, we managed to shrink the system, so keep these changes and we
+      // will see if we get any further later...
+
+      aUseEquations = syst;
+      aUseVars = targs;
+
+      return true;
     }
+
+    aNonSystem.erase(sysEq);
   }
 
-  if (unknownCount == 0)
-    throw OverconstrainedError(aVarEdge->mMaths);
-
-  aVarEdge->mComputedTarget = unknown;
-
-  aCandidates.erase(unknown);
-  aStart.insert(unknown);
-  aTargetSet.insert(unknown);
-
-  mEdgesInto.insert(std::pair<CDA_ComputationTarget*, VariableEdge*>
-                    (unknown, aVarEdge));
-
-  return true;
+  return false;
 }
 
-#include <assert.h>
+void
+CodeGenerationState::BuildSystemsByTargetsRequired
+(
+ std::list<System*>& aSystems,
+ std::map<CDA_ComputationTarget*, System*>& aSysByTargReq
+)
+{
+  aSysByTargReq.clear();
+
+  for (std::list<System*>::iterator i = aSystems.begin();
+       i != aSystems.end();
+       i++)
+  {
+    for (std::set<CDA_ComputationTarget*>::iterator j = (*i)->mUnknowns.begin();
+         j != (*i)->mUnknowns.end();
+         j++)
+      aSysByTargReq.insert(std::pair<CDA_ComputationTarget*, System*>(*j, *i));
+  }
+}
 
 void
 CodeGenerationState::GenerateCodeForSet
 (
  std::wstring& aCodeTo,
  std::set<CDA_ComputationTarget*>& aKnown,
- std::set<CDA_ComputationTarget*>& aTargets
+ std::list<System*>& aSystems,
+ std::map<CDA_ComputationTarget*, System*>&
+   aSysByTargReq
 )
 {
-  while (!aTargets.empty())
+  while (!aSystems.empty())
   {
-    CDA_ComputationTarget* t = *(aTargets.begin());
-    aTargets.erase(aTargets.begin());
+    System* sys = aSystems.front();
+    aSystems.pop_front();
 
-    if (aKnown.count(t) != 0)
+    // See if this system is already known. Since we always compute whole
+    // systems at a time, we can do this by looking at the first target of the
+    // system...
+    if (aKnown.count(*sys->mUnknowns.begin()))
       continue;
 
-    std::map<CDA_ComputationTarget*, VariableEdge*>::iterator it =
-      mEdgesInto.find(t);
-    assert(it != mEdgesInto.end());
-    VariableEdge* ve = (*it).second;
+    // Find everything we don't know but want to...
+    std::list<System*> subtargets;
+    
+    for (std::set<CDA_ComputationTarget*>::iterator j = sys->mKnowns.begin();
+         j != sys->mKnowns.end();
+         j++)
+    {
+      if (aKnown.count(*j))
+        continue;
 
-    std::list<CDA_ComputationTarget*>::iterator i;
-    std::set<CDA_ComputationTarget*> subtargets;
+      std::map<CDA_ComputationTarget*, System*>::iterator sbtr
+        (aSysByTargReq.find(*j));
 
-    for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
-      if (aKnown.count(*i) == 0 && (*i) != t)
-        subtargets.insert(*i);
+      // This should be guaranteed if we got this far...
+      assert(sbtr != aSysByTargReq.end());
 
-    aKnown.insert(t);
-    GenerateCodeForSet(aCodeTo, aKnown, subtargets);
-    GenerateCodeForEdge(aCodeTo, ve);
+      subtargets.push_back((*sbtr).second);
+    }
+
+    aKnown.insert(sys->mUnknowns.begin(), sys->mUnknowns.end());
+
+    GenerateCodeForSet(aCodeTo, aKnown, subtargets, aSysByTargReq);
+    GenerateCodeForSystem(aCodeTo, sys);
   }
 }
 
 /*
- * Note: This function takes a set of variables which be either rates or
+ * Note: This function takes a set of variables which are either rates or
  * algebraic variables. It generates code in the correct place for both.
  */
 void
 CodeGenerationState::GenerateCodeForSetByType
 (
  std::set<CDA_ComputationTarget*>& aKnown,
- std::set<CDA_ComputationTarget*>& aTargets
+ std::list<System*>& aSystems,
+ std::map<CDA_ComputationTarget*, System*>&
+   aSysByTargReq
 )
 {
-  std::set<CDA_ComputationTarget*> finalTargets;
-  std::set<CDA_ComputationTarget*>::iterator ati, fti;
-
-  for (ati = aTargets.begin(); ati != aTargets.end(); ati++)
+  // Make a list of all systems which allow us to compute rates...
+  std::list<System*> rateSys;
+  for
+  (
+   std::list<System*>::iterator i(aSystems.begin());
+   i != aSystems.end();
+   i++
+  )
   {
-    if ((*ati)->mDegree != 0)
-      finalTargets.insert(*ati);
-  }
+    System* sys(*i);
 
-  for (fti = finalTargets.begin(); fti != finalTargets.end(); fti++)
-  {
-    CDA_ComputationTarget* t = *fti;
-
-    ati = aTargets.find(t);
-    if (ati == aTargets.end())
+    // See if this system is already known. Since we always compute whole
+    // systems at a time, we can do this by looking at the first target of the
+    // system...
+    if (aKnown.count(*sys->mUnknowns.begin()))
       continue;
 
-    aTargets.erase(ati);
+    // See if this system has a rate variable...
+    bool hasRate(false);
 
-    if (aKnown.count(t) != 0)
-      continue;
-
-    VariableEdge* ve = mEdgesInto[t];
-
-    std::set<CDA_ComputationTarget*> subtargets;
-    std::list<CDA_ComputationTarget*>::iterator i;
-    for (i = ve->mTargets.begin(); i != ve->mTargets.end(); i++)
-    {
-      if (aKnown.count(*i) == 0)
+    for (std::set<CDA_ComputationTarget*>::iterator j(sys->mUnknowns.begin());
+         j != sys->mUnknowns.end();
+         j++)
+      if ((*j)->mDegree != 0)
       {
-        aTargets.erase(*i);
-        subtargets.insert(*i);
+        hasRate = true;
+        break;
       }
-    }
 
-    aKnown.insert(t);
-    GenerateCodeForSet(mCodeInfo->mRatesStr, aKnown, subtargets);
-    GenerateCodeForEdge(mCodeInfo->mRatesStr, ve);
+    if (hasRate)
+      rateSys.push_back(sys);
   }
 
-  GenerateCodeForSet(mCodeInfo->mVarsStr, aKnown, aTargets);
+  GenerateCodeForSet(mCodeInfo->mRatesStr, aKnown, rateSys, aSysByTargReq);
+
+  // And now everything else goes in mVarsStr
+  GenerateCodeForSet(mCodeInfo->mVarsStr, aKnown, aSystems, aSysByTargReq);
 }
 
 void
-CodeGenerationState::GenerateCodeForEdge
+CodeGenerationState::GenerateCodeForSystem
 (
  std::wstring& aCodeTo,
- VariableEdge* aVE
+ System* aSys
 )
 {
-  if (aVE->mMaths == NULL)
+  // If the system is of size > 1, hand it off to the multivariate solver
+  // code, since all of the algebraic simplification attempts below only work
+  // for the univariate case...
+
+  if (aSys->mEquations.size() > 1)
+  {
+    GenerateMultivariateSolveCode(aCodeTo, aSys);
+    return;
+  }
+
+  Equation* eq = *(aSys->mEquations.begin());
+
+  if (eq->mMaths == NULL)
   {
     // No maths, it is a simple LHS = RHS initial_value assignment.
-    std::list<CDA_ComputationTarget*>::iterator i = aVE->mTargets.begin();
+    std::list<CDA_ComputationTarget*>::iterator i = eq->mTargets.begin();
     CDA_ComputationTarget* t1 = *i;
     i++;
     CDA_ComputationTarget* t2 = *i;
 
     RETURN_INTO_OBJREF(localVarLHS, iface::cellml_api::CellMLVariable,
-                       GetVariableInComponent(aVE->mContext, t1->mVariable));
+                       GetVariableInComponent(eq->mContext, t1->mVariable));
     RETURN_INTO_OBJREF(localVarRHS, iface::cellml_api::CellMLVariable,
-                       GetVariableInComponent(aVE->mContext, t2->mVariable));
+                       GetVariableInComponent(eq->mContext, t2->mVariable));
 
     RETURN_INTO_OBJREF(di, iface::dom::DOMImplementation,
                        CreateDOMImplementation());
@@ -1002,7 +1406,7 @@ CodeGenerationState::GenerateCodeForEdge
     DECLARE_QUERY_INTERFACE_OBJREF(ci, dci, mathml_dom::MathMLElement);
     RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
                        mTransform->transform(mCeVAS, mCUSES, mAnnoSet, ci,
-                                             aVE->mContext, localVarLHS,
+                                             eq->mContext, localVarLHS,
                                              NULL, 0));
     GenerateAssignmentMaLaESResult(aCodeTo, t1, mr);
     return;
@@ -1013,22 +1417,24 @@ CodeGenerationState::GenerateCodeForEdge
 
   bool swapOk = false;
 
-  if (aVE->mComputedTarget->mDegree == 0)
+  CDA_ComputationTarget* computedTarget = *(aSys->mUnknowns.begin());
+
+  if (computedTarget->mDegree == 0)
   {
     // It isn't a derivative we are after, so see if one side or the other is a
     // CI...
-    DECLARE_QUERY_INTERFACE_OBJREF(rhsci, aVE->mRHS, mathml_dom::MathMLCiElement);
-    DECLARE_QUERY_INTERFACE_OBJREF(lhsci, aVE->mLHS, mathml_dom::MathMLCiElement);
+    DECLARE_QUERY_INTERFACE_OBJREF(rhsci, eq->mRHS, mathml_dom::MathMLCiElement);
+    DECLARE_QUERY_INTERFACE_OBJREF(lhsci, eq->mLHS, mathml_dom::MathMLCiElement);
     if (lhsci == NULL && rhsci == NULL)
     {
-      GenerateSolveCode(aCodeTo, aVE);
+      GenerateSolveCode(aCodeTo, eq, computedTarget);
       return;
     }
 
     if (lhsci == NULL)
     {
-      aVE->mRHS = aVE->mLHS;
-      aVE->mLHS = rhsci;
+      eq->mRHS = eq->mLHS;
+      eq->mLHS = rhsci;
     }
 
     if (lhsci != NULL && rhsci != NULL)
@@ -1038,9 +1444,9 @@ CodeGenerationState::GenerateCodeForEdge
   {
     // We want to evaluate a derivative, so see if there is a derivative by
     // itself on either side of the equation...
-    DECLARE_QUERY_INTERFACE_OBJREF(rhsapply, aVE->mRHS,
+    DECLARE_QUERY_INTERFACE_OBJREF(rhsapply, eq->mRHS,
                                    mathml_dom::MathMLApplyElement);
-    DECLARE_QUERY_INTERFACE_OBJREF(lhsapply, aVE->mLHS,
+    DECLARE_QUERY_INTERFACE_OBJREF(lhsapply, eq->mLHS,
                                    mathml_dom::MathMLApplyElement);
     bool lhsIsDiff = false, rhsIsDiff = false;
     if (rhsapply)
@@ -1062,14 +1468,14 @@ CodeGenerationState::GenerateCodeForEdge
 
     if (lhsIsDiff == false && rhsIsDiff == false)
     {
-      GenerateSolveCode(aCodeTo, aVE);
+      GenerateSolveCode(aCodeTo, eq, computedTarget);
       return;
     }
 
     if (!lhsIsDiff)
     {
-      aVE->mRHS = aVE->mLHS;
-      aVE->mLHS = rhsapply;
+      eq->mRHS = eq->mLHS;
+      eq->mLHS = rhsapply;
     }
     else
       swapOk = true;
@@ -1081,7 +1487,7 @@ CodeGenerationState::GenerateCodeForEdge
     RETURN_INTO_OBJREF(mr,
                        iface::cellml_services::MaLaESResult,
                        mTransform->transform
-                       (mCeVAS, mCUSES, mAnnoSet, aVE->mLHS, aVE->mContext,
+                       (mCeVAS, mCUSES, mAnnoSet, eq->mLHS, eq->mContext,
                         NULL, NULL, 0));
     RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
                        mr->iterateInvolvedVariablesByDegree());
@@ -1089,20 +1495,20 @@ CodeGenerationState::GenerateCodeForEdge
                        dvi->nextDegreeVariable());
     if (dv == NULL)
       ContextError(L"Couldn't find variable in ci",
-                   NULL, aVE->mContext);
+                   NULL, eq->mContext);
 
     RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable, dv->variable());
-    if (dv->degree() != aVE->mComputedTarget->mDegree ||
-        CDA_objcmp(cv, aVE->mComputedTarget->mVariable))
+    if (dv->degree() != computedTarget->mDegree ||
+        CDA_objcmp(cv, computedTarget->mVariable))
     {
       if (!swapOk)
         break;
 
       // It didn't work out that way around, but swapping is allowed...
       swapOk = false;
-      ObjRef<iface::mathml_dom::MathMLElement> tmp(aVE->mRHS);
-      aVE->mRHS = aVE->mLHS;
-      aVE->mLHS = tmp;
+      ObjRef<iface::mathml_dom::MathMLElement> tmp(eq->mRHS);
+      eq->mRHS = eq->mLHS;
+      eq->mLHS = tmp;
       continue;
     }
 
@@ -1114,8 +1520,8 @@ CodeGenerationState::GenerateCodeForEdge
                        localVar,
                        iface::cellml_api::CellMLVariable,
                        GetVariableInComponent(
-                                              aVE->mContext,
-                                              aVE->mComputedTarget->mVariable
+                                              eq->mContext,
+                                              computedTarget->mVariable
                                              )
                       );
 
@@ -1126,7 +1532,7 @@ CodeGenerationState::GenerateCodeForEdge
       localBound = already_AddRefd<iface::cellml_api::CellMLVariable>
         (
          GetVariableInComponent(
-                                aVE->mContext,
+                                eq->mContext,
                                 (*mBoundTargs.begin())->mVariable
                                )
         );
@@ -1134,9 +1540,9 @@ CodeGenerationState::GenerateCodeForEdge
 
     mr = already_AddRefd<iface::cellml_services::MaLaESResult>
       (
-       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aVE->mRHS,
-                             aVE->mContext, localVar, localBound,
-                             aVE->mComputedTarget->mDegree)
+       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, eq->mRHS,
+                             eq->mContext, localVar, localBound,
+                             computedTarget->mDegree)
       );
 
     dvi = already_AddRefd<iface::cellml_services::DegreeVariableIterator>
@@ -1151,11 +1557,11 @@ CodeGenerationState::GenerateCodeForEdge
         (dvi->nextDegreeVariable());
       if (dv == NULL)
         break;
-      if (dv->degree() != aVE->mComputedTarget->mDegree)
+      if (dv->degree() != computedTarget->mDegree)
         continue;
       RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                          dv->variable());
-      if (CDA_objcmp(cv, aVE->mComputedTarget->mVariable))
+      if (CDA_objcmp(cv, computedTarget->mVariable))
         continue;
 
       match = true;
@@ -1166,12 +1572,12 @@ CodeGenerationState::GenerateCodeForEdge
 
     // We have the variable we want by itself on one side of the equation. A
     // straight assignment will suffice.
-    GenerateAssignmentMaLaESResult(aCodeTo, aVE->mComputedTarget, mr);
+    GenerateAssignmentMaLaESResult(aCodeTo, computedTarget, mr);
     return;
   }
   while (true);
 
-  GenerateSolveCode(aCodeTo, aVE);
+  GenerateSolveCode(aCodeTo, eq, computedTarget);
 }
 
 void
@@ -1248,18 +1654,19 @@ void
 CodeGenerationState::GenerateSolveCode
 (
  std::wstring& aCodeTo,
- VariableEdge* aVE
+ Equation* aEq,
+ CDA_ComputationTarget* aComputedTarget
 )
 {
   RETURN_INTO_OBJREF(mr1, iface::cellml_services::MaLaESResult,
-                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aVE->mLHS,
-                                           aVE->mContext, NULL, NULL, 0));
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aEq->mLHS,
+                                           aEq->mContext, NULL, NULL, 0));
   RETURN_INTO_OBJREF(mr2, iface::cellml_services::MaLaESResult,
-                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aVE->mRHS,
-                                           aVE->mContext, NULL, NULL, 0));
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aEq->mRHS,
+                                           aEq->mContext, NULL, NULL, 0));
 
-  aVE->mMaths->add_ref();
-  mCodeInfo->mFlaggedEquations.push_back(aVE->mMaths);
+  aEq->mMaths->add_ref();
+  mCodeInfo->mFlaggedEquations.push_back(aEq->mMaths);
 
   RETURN_INTO_WSTRING(e1, mr1->expression());
   RETURN_INTO_WSTRING(e2, mr2->expression());
@@ -1284,7 +1691,7 @@ CodeGenerationState::GenerateSolveCode
   wchar_t id[20];
   swprintf(id, 20, L"%u", mNextSolveId++);
 
-  RETURN_INTO_WSTRING(vname, aVE->mComputedTarget->name());
+  RETURN_INTO_WSTRING(vname, aComputedTarget->name());
 
   uint32_t state = 0;
   uint32_t idx = 0;
@@ -1469,6 +1876,396 @@ CodeGenerationState::GenerateSolveCode
       {
         // Matched <SUP>
         dest = &mCodeInfo->mFuncsStr;
+        state = 0;
+      }
+      break;
+    }
+  }
+}
+
+void
+CodeGenerationState::GenerateMultivariateSolveCode
+(
+ std::wstring& aCodeTo,
+ System* aSys
+)
+{
+  /*
+   * Annotate the equation with the code... We implement a bit of a kludge
+   * here: because we assume the number of equations is equal to the number of
+   * variables, we iterate through the unknown targets at the same time so
+   * that in our specification language we can use a single
+   * <EQUATION></EQUATION> iterator construct.
+   */
+  std::set<CDA_ComputationTarget*>::iterator k(aSys->mUnknowns.begin());
+  for(std::set<Equation*>::iterator i(aSys->mEquations.begin());
+      i != aSys->mEquations.end();
+      i++, k++)
+  {
+    Equation* eq(*i);
+
+    RETURN_INTO_OBJREF(mr1, iface::cellml_services::MaLaESResult,
+                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, eq->mLHS,
+                                             eq->mContext, NULL, NULL, 0));
+    RETURN_INTO_OBJREF(mr2, iface::cellml_services::MaLaESResult,
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, eq->mRHS,
+                                           eq->mContext, NULL, NULL, 0));
+
+    eq->mMaths->add_ref();
+    mCodeInfo->mFlaggedEquations.push_back(eq->mMaths);
+
+    RETURN_INTO_WSTRING(e1, mr1->expression());
+    RETURN_INTO_WSTRING(e2, mr2->expression());
+
+    eq->mLHSCode = e1;
+    eq->mRHSCode = e2;
+
+    uint32_t l = mr1->supplementariesLength(), j;
+    for (j = 0; j < l; j++)
+    {
+      RETURN_INTO_WSTRING(s, mr1->getSupplementary(j));
+      mCodeInfo->mFuncsStr += s;
+    }
+
+    l = mr2->supplementariesLength();
+    for (j = 0; j < l; j++)
+    {
+      RETURN_INTO_WSTRING(s, mr2->getSupplementary(j));
+      mCodeInfo->mFuncsStr += s;
+    }
+
+    RETURN_INTO_WSTRING(vname, (*k)->name());
+    eq->mVarName = vname;
+  }
+
+  // Scoped locale change.
+  CNumericLocale locobj;
+  wchar_t id[20];
+  swprintf(id, 20, L"%u", mNextSolveId++);
+
+  // See if there is a <SUP> marker...
+  size_t supPos = mSolveNLSystemPattern.find(L"<SUP>");
+  if (supPos == std::wstring::npos)
+    GenerateMultivariateSolveCodeTo(aCodeTo, aSys, mSolveNLSystemPattern, id);
+  else
+  {
+    GenerateMultivariateSolveCodeTo(aCodeTo, aSys,
+                                    mSolveNLSystemPattern.substr(0, supPos), id);
+    GenerateMultivariateSolveCodeTo(mCodeInfo->mFuncsStr, aSys,
+                                    mSolveNLSystemPattern.substr(supPos + 5), id);
+  }
+}
+
+std::wstring
+CodeGenerationState::ReplaceIDs(std::wstring aReplaceFrom,
+                                const wchar_t* aId,
+                                const wchar_t* aIndex,
+                                const wchar_t* aCount)
+{
+  size_t offset = 0;
+
+  while (true)
+  {
+    offset = aReplaceFrom.find(L"<ID>", offset);
+    if (offset == std::wstring::npos)
+      break;
+
+    aReplaceFrom.replace(offset, 4, aId);
+    offset++;
+  }
+  offset = 0;
+  while (true)
+  {
+    offset = aReplaceFrom.find(L"<INDEX>", offset);
+    if (offset == std::wstring::npos)
+      break;
+
+    aReplaceFrom.replace(offset, 7, aIndex);
+    offset++;
+  }
+  offset = 0;
+  while (true)
+  {
+    offset = aReplaceFrom.find(L"<COUNT>", offset);
+    if (offset == std::wstring::npos)
+      break;
+
+    aReplaceFrom.replace(offset, 7, aCount);
+    offset++;
+  }
+
+  return aReplaceFrom;
+}
+
+void
+CodeGenerationState::GenerateMultivariateSolveCodeTo
+(
+ std::wstring& aCodeTo,
+ System* aSys,
+ const std::wstring& aPattern,
+ const wchar_t* aId
+)
+{
+  // Look for <EQUATIONS>...
+  size_t offset = 0;
+  size_t occurrence;
+
+  wchar_t countStr[15];
+  swprintf(countStr, 15, L"%u", aSys->mEquations.size());
+
+  while ((occurrence = aPattern.find(L"<EQUATIONS>", offset))
+         != std::wstring::npos)
+  {
+    aCodeTo += ReplaceIDs(aPattern.substr(offset, occurrence - offset),
+                          aId, L"", countStr);
+    offset = occurrence + 11;
+
+    occurrence = aPattern.find(L"</EQUATIONS>", offset);
+    if (occurrence == std::wstring::npos)
+    {
+      // This only happens if we were given a dubious string with no closing
+      // </EQUATIONS>...
+      offset -= 11;
+      break;
+    }
+
+    std::wstring perEqPattern(aPattern.substr(offset, occurrence - offset));
+
+    size_t joinOffset(perEqPattern.find(L"<JOIN>"));
+    std::wstring join;
+    if (joinOffset != std::wstring::npos)
+    {
+      join = perEqPattern.substr(joinOffset + 6);
+      perEqPattern = perEqPattern.substr(0, joinOffset);
+    }
+
+    uint32_t index = 0;
+    for(std::set<Equation*>::iterator i(aSys->mEquations.begin());
+        i != aSys->mEquations.end();
+        i++)
+    {
+      wchar_t indexStr[15];
+      swprintf(indexStr, 15, L"%u", index);
+      index++;
+      if (i != aSys->mEquations.begin())
+        aCodeTo += ReplaceIDs(join, aId, indexStr, countStr);
+      GenerateMultivariateSolveCodeEq(aCodeTo, *i, perEqPattern, aId, indexStr);
+    }
+
+    offset = occurrence + 12;
+  }
+
+  aCodeTo += ReplaceIDs(aPattern.substr(offset), aId, L"", countStr);
+}
+
+void
+CodeGenerationState::GenerateMultivariateSolveCodeEq
+(
+ std::wstring& aCodeTo,
+ Equation* aEq,
+ const std::wstring& aPattern,
+ const wchar_t* aId,
+ const wchar_t* aIndex
+)
+{
+  uint32_t state = 0;
+  uint32_t idx = 0;
+  for (idx = 0; idx < aPattern.length(); idx++)
+  {
+    wchar_t c = aPattern[idx];
+    switch (state)
+    {
+    case 0:
+      if (c == L'<')
+        state = 1;
+      else
+        aCodeTo += c;
+      continue;
+    case 1: // Seen <
+      if (c == L'L')
+        state = 2;
+      else if (c == L'R')
+        state = 3;
+      else if (c == L'I')
+        state = 4;
+      else if (c == L'V')
+        state = 5;
+      else
+      {
+        aCodeTo += L'<';
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 2: // Seen <L
+      if (c == L'H')
+        state = 6;
+      else
+      {
+        aCodeTo += L"<L";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 3: // Seen <R
+      if (c == L'H')
+        state = 8;
+      else
+      {
+        aCodeTo += L"<R";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 4: // Seen <I
+      if (c == L'D')
+        state = 10;
+      else if (c == L'N')
+        state = 13;
+      else
+      {
+        aCodeTo += L"<I";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 5: // Seen <V
+      if (c == L'A')
+        state = 11;
+      else
+      {
+        aCodeTo += L"<V";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 6: // Seen <LH
+      if (c == L'S')
+        state = 7;
+      else
+      {
+        aCodeTo += L"<LH";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 7: // Seen <LHS
+      if (c == L'>')
+      {
+        // Matched <LHS>
+        aCodeTo += aEq->mLHSCode;
+        state = 0;
+      }
+      else
+      {
+        aCodeTo += L"<LHS";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 8: // Seen <RH
+      if (c == L'S')
+        state = 9;
+      else
+      {
+        aCodeTo += L"<RH";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 9: // Seen <RHS
+      if (c == L'>')
+      {
+        // Matched <RHS>
+        aCodeTo += aEq->mRHSCode;
+        state = 0;
+      }
+      else
+      {
+        aCodeTo += L"<RHS";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 10: // Seen <ID
+      if (c == L'>')
+      {
+        // Matched <ID>
+        aCodeTo += aId;
+        state = 0;
+      }
+      else
+      {
+        aCodeTo += L"<ID";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 11: // Seen <VA
+      if (c == L'R')
+        state = 12;
+      else
+      {
+        aCodeTo += L"<VA";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 12: // Seen <VAR
+      if (c == L'>')
+      {
+        // Matched <VAR>
+        aCodeTo += aEq->mVarName;
+        state = 0;
+      }
+      else
+      {
+        aCodeTo += L"<VAR";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 13: // Seen <IN
+      if (c == L'D')
+        state = 14;
+      else
+      {
+        aCodeTo += L"<IN";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 14: // Seen <IND
+      if (c == L'E')
+        state = 15;
+      else
+      {
+        aCodeTo += L"<IND";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 15: // Seen <INDE
+      if (c == L'X')
+        state = 16;
+      else
+      {
+        aCodeTo += L"<INDE";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 16: // Seen <INDEX
+      if (c == L'>')
+      {
+        // Matched <INDEX>
+        aCodeTo += aIndex;
+        state = 0;
+      }
+      else
+      {
+        aCodeTo += L"<INDEX";
+        aCodeTo += c;
         state = 0;
       }
       break;

@@ -31,7 +31,7 @@
  */
 double NR_minfunc_1(double* CONSTANTS, double* VARIABLES, double* BOUND)
 {
-  return (((VARIABLES[1]-CONSTANTS[0])) - (pow(BOUND[0],2.00000)));
+  return square(((VARIABLES[1]-CONSTANTS[0])) - (pow(BOUND[0],2.00000)));
 }
 void SetupFixedConstants(double* CONSTANTS)
 {

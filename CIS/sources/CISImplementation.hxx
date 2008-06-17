@@ -112,7 +112,7 @@ private:
   iface::cellml_services::IntegrationProgressObserver* mObserver;
   typedef std::list<std::pair<uint32_t,double> > OverrideList;
   OverrideList mConstantOverrides, mIVOverrides;
-  bool mCancelIntegration;
+  volatile bool mCancelIntegration;
 };
 
 class CDA_CellMLIntegrationService

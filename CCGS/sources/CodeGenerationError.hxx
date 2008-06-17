@@ -52,19 +52,22 @@ public:
   OverconstrainedError(iface::dom::Element* aEqn)
     : mEqn(aEqn)
   {
-    mEqn->add_ref();
+    if (mEqn != NULL)
+      mEqn->add_ref();
   }
 
  OverconstrainedError(const OverconstrainedError& aCopy)
    : mEqn(aCopy.mEqn)
   {
-    mEqn->add_ref();
+    if (mEqn != NULL)
+      mEqn->add_ref();
   }
 
   ~OverconstrainedError()
     throw()
   {
-    mEqn->release_ref();
+    if (mEqn != NULL)
+      mEqn->release_ref();
   }
 
   iface::dom::Element* mEqn;

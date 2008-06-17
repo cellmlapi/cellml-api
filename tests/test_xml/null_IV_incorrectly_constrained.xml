@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<model xmlns="http://www.cellml.org/cellml/1.1#" xml:base="http://www.example.org/repository/null_IV_incorrectly_constrained.xml">
-<component name="component">
-<variable name="t" units="dimensionless"/><variable name="x" units="dimensionless"/><variable initial_value="z" name="y" units="dimensionless"/><variable name="z" units="dimensionless"/><variable name="a" units="dimensionless"/><variable name="b" units="dimensionless"/>
-<math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><apply><diff/><bvar><ci>t</ci></bvar><ci>x</ci></apply><ci>t</ci></apply><apply><eq/><ci>z</ci><apply><plus/><ci>a</ci><ci>b</ci></apply></apply><apply><eq/><ci>a</ci><apply><times/><ci>b</ci><ci>z</ci></apply></apply><apply><eq/><ci>b</ci><cn>2</cn></apply>
-</math>
-</component>
-</model>

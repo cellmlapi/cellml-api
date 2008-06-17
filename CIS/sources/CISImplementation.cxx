@@ -168,7 +168,18 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #endif
   if (t == NULL)
   {
-    lastError = L"Cannot load the model code module.";
+    lastError = L"Cannot load the model code module";
+#ifndef WIN32
+    char* msg = dlerror();
+    uint32_t l = strlen(msg) + 1;
+    wchar_t buf[l];
+    swprintf(buf, l, L"%s", msg);
+    lastError += L" (";
+    lastError += buf;
+    lastError += L").";
+#else
+    lastError += L".";
+#endif
     throw iface::cellml_api::CellMLException();
   }
 
@@ -534,8 +545,15 @@ CDA_CellMLIntegrationService::compileModel
      << "extern double lcm_multi(unsigned int size, ...);" << std::endl
      << "extern double multi_min(unsigned int size, ...);" << std::endl
      << "extern double multi_max(unsigned int size, ...);" << std::endl
-     << "extern void NR_MINIMISE(double(*func)(double VOI, double *C, double *R, double *S, double *A),"
-        "double VOI, double *C, double *R, double *S, double *A, double *V);" << std::endl;
+     << "static double fixnans(double x) { return finite(x) ? x : 1E100; }" << std::endl
+     << "struct rootfind_info" << std::endl
+     << "{" << std::endl
+     << "  double aVOI, * aCONSTANTS, * aRATES, * aSTATES, * aALGEBRAIC;"
+     << "};" << std::endl
+     << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
+    "(nmeas)*(npar) + (npar)*(npar))" << std::endl
+     << "extern void do_levmar(void (*)(double *, double *, int, int, void*), "
+    "double*, double*, double*, unsigned long, void*);" << std::endl;
 
   wchar_t* frag = cci->functionsString();
   size_t fragLen = wcstombs(NULL, frag, 0) + 1;
