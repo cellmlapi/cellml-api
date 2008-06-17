@@ -25,7 +25,14 @@ function runtest()
   if [[ $? -ne 0 ]]; then
     if [[ -f $BASEDIR/test_expected/$name-alt1.c ]]; then
         $DIFF -b $TEMPFILE $BASEDIR/test_expected/$name-alt1.c
-        FAIL=$?
+        if [[ $? -ne 0 ]]; then
+            if [[ -f $BASEDIR/test_expected/$name-alt2.c ]]; then
+                $DIFF -b $TEMPFILE $BASEDIR/test_expected/$name-alt2.c
+                FAIL=$?
+            else
+                FAIL=1
+            fi
+        fi
     else
         FAIL=1
     fi
