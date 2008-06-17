@@ -8,6 +8,7 @@
 #include "IfaceMathML_content_APISPEC.hxx"
 #include "DOMBootstrap.hxx"
 #include <assert.h>
+#include <algorithm>
 
 // Win32 hack...
 #ifdef _WIN32
