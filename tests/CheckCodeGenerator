@@ -62,11 +62,11 @@ function runtest_usenames()
   $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-usenames.c
   FAIL=$?
   if [[ $FAIL -ne 0 ]]; then
-    echo FAIL: $name (with names) generated wrong output.
+    echo FAIL: $name with names generated wrong output.
     rm -f $TEMPFILE
     exit 1
   fi
-  echo PASS: $name (with names) generated correct output.
+  echo PASS: $name with names generated correct output.
   rm -f $TEMPFILE
 }
 
