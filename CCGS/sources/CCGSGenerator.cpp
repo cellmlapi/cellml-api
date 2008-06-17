@@ -632,9 +632,15 @@ CodeGenerationState::AllocateVariable(CDA_ComputationTarget* aCT,
                                       std::wstring& aPattern,
                                       uint32_t& aNextIndex)
 {
-  uint32_t index = aNextIndex++;
-  GenerateVariableName(aCT, aStr, aPattern, index);
-  aCT->setNameAndIndex(index, aStr.c_str());
+  RETURN_INTO_WSTRING(n, aCT->name());
+  if (n == L"")
+  {
+    uint32_t index = aNextIndex++;
+    GenerateVariableName(aCT, aStr, aPattern, index);
+    aCT->setNameAndIndex(index, aStr.c_str());
+  }
+  else
+    aStr = n;
 }
 
 void
@@ -1594,9 +1600,11 @@ CodeGenerationState::GenerateStateToRateCascades()
     while (ct->mUpDegree != NULL)
     {
       RETURN_INTO_WSTRING(stateN, ct->name());
-      std::wstring rateN;
-      GenerateVariableName(ct, rateN, mRateNamePattern,
-                           ct->mAssignedIndex - 1);
+      RETURN_INTO_WSTRING(rateN, ct->mUpDegree->name());
+
+      if (rateN == L"")
+        GenerateVariableName(ct, rateN, mRateNamePattern,
+                             ct->mAssignedIndex - 1);
 
       AppendAssign(mCodeInfo->mRatesStr, rateN, stateN);
       ct = ct->mUpDegree;

@@ -53,6 +53,23 @@ function runtest()
   rm -f $TEMPFILE
 }
 
+function runtest_usenames()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $CELLML2C $BASEDIR/test_xml/$name.xml usenames >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-usenames.c
+  FAIL=$?
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: $name (with names) generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name (with names) generated correct output.
+  rm -f $TEMPFILE
+}
+
 runtest cellml_simple_test
 runtest modified_parabola
 runtest underconstrained_1
@@ -65,5 +82,7 @@ runtest units-import
 runtest units-import-import
 runtest units-in-imported-component
 runtest SimpleDAE_NonLinear
+
+runtest_usenames modified_parabola
 
 exit 0

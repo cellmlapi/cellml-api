@@ -6,8 +6,10 @@
 #include "cda_compiler_support.h"
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCCGS.hxx"
+#include "IfaceAnnoTools.hxx"
 #include "CCGSBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
+#include "AnnoToolsBootstrap.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -378,7 +380,59 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
   printf("void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, "
          "double* ALGEBRAIC)\n"
          "{\n%S}\n", frag);
-  free(frag);  
+  free(frag);
+}
+
+void
+doNameAnnotations(iface::cellml_api::Model* aModel,
+                  iface::cellml_services::CodeGenerator* aCG)
+{
+  // Make an annotation set...
+  iface::cellml_services::AnnotationToolService* ats
+    (CreateAnnotationToolService());
+  iface::cellml_services::AnnotationSet* as(ats->createAnnotationSet());
+  ats->release_ref();
+
+  aCG->useAnnoSet(as);
+
+  // Now we go through all variables in the model and set their annotations...
+  iface::cellml_api::CellMLComponentSet* ccs = aModel->allComponents();
+
+  iface::cellml_api::CellMLComponentIterator* cci = ccs->iterateComponents();
+  ccs->release_ref();
+
+  iface::cellml_api::CellMLComponent* comp;
+  while ((comp = cci->nextComponent()) != NULL)
+  {
+    iface::cellml_api::CellMLVariableSet* vs(comp->variables());
+    wchar_t* compname = comp->name();
+    comp->release_ref();
+    iface::cellml_api::CellMLVariableIterator* vi(vs->iterateVariables());
+    vs->release_ref();
+
+    iface::cellml_api::CellMLVariable* v;
+    while ((v = vi->nextVariable()) != NULL)
+    {
+      wchar_t* name = v->name();
+      std::wstring varn = compname;
+      varn += L"_";
+      varn += name;
+      free(name);
+      std::wstring raten = L"rate_";
+      raten += varn;
+      as->setStringAnnotation(v, L"expression", varn.c_str());
+      as->setStringAnnotation(v, L"expression_d1", raten.c_str());
+      v->release_ref();
+    }
+
+    vi->release_ref();
+
+    free(compname);
+  }
+
+  cci->release_ref();
+
+  as->release_ref();
 }
 
 int
@@ -389,6 +443,14 @@ main(int argc, char** argv)
   {
     printf("Usage: CellML2C modelURL\n");
     return -1;
+  }
+
+  uint32_t usenames = 0;
+
+  if (argc > 2)
+  {
+    if (!strcmp(argv[2], "usenames"))
+      usenames = 1;
   }
 
   wchar_t* URL;
@@ -428,6 +490,9 @@ main(int argc, char** argv)
   iface::cellml_services::CodeGenerator* cg =
     cgb->createCodeGenerator();
   cgb->release_ref();
+
+  if (usenames)
+    doNameAnnotations(mod, cg);
 
   iface::cellml_services::CodeInformation* cci = NULL;
   try
