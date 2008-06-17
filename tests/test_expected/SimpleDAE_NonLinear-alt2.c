@@ -15,11 +15,11 @@
  * * Target c in component main
  * * * Variable type: algebraic variable
  * * * Variable index: 1
- * * * Variable storage: ALGEBRAIC[0]
+ * * * Variable storage: ALGEBRAIC[1]
  * * Target d in component main
  * * * Variable type: algebraic variable
  * * * Variable index: 0
- * * * Variable storage: ALGEBRAIC[1]
+ * * * Variable storage: ALGEBRAIC[0]
  * * Target d^1/dt^1 a in component main
  * * * Variable type: algebraic variable
  * * * Variable index: 0
@@ -39,8 +39,8 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 #define ALGEBRAIC rfi->aALGEBRAIC
   ALGEBRAIC[0] = p[0];
   ALGEBRAIC[1] = p[1];
-  hx[0] = fixnans(( 3.00000*((pow(ALGEBRAIC[1], 3.00000))+ -1.00000*( 3.00000*ALGEBRAIC[0]))) - (0.00000));
-  hx[1] = fixnans(( 2.00000*( -1.00000*STATES[0]+(pow(ALGEBRAIC[1], 3.00000))+ALGEBRAIC[0])) - (0.00000));
+  hx[0] = fixnans(( 2.00000*( -1.00000*STATES[0]+(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1])) - (0.00000));
+  hx[1] = fixnans(( 3.00000*((pow(ALGEBRAIC[0], 3.00000))+ -1.00000*( 3.00000*ALGEBRAIC[1]))) - (0.00000));
 #undef VOI
 #undef CONSTANTS
 #undef RATES
@@ -71,5 +71,5 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC);
-RATES[0] =  (4.00000/7.00000)*( 2.00000*(pow(ALGEBRAIC[1], 3.00000))+ALGEBRAIC[0]);
+RATES[0] =  (4.00000/7.00000)*( 2.00000*(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1]);
 }
