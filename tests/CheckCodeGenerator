@@ -21,13 +21,13 @@ function runtest()
   rm -f $TEMPFILE;
   $CELLML2C $BASEDIR/test_xml/$name.xml >$TEMPFILE
   FAIL=0
-  $DIFF -b $TEMPFILE $BASEDIR/test_expected/$name.c
+  $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name.c
   if [[ $? -ne 0 ]]; then
     if [[ -f $BASEDIR/test_expected/$name-alt1.c ]]; then
-        $DIFF -b $TEMPFILE $BASEDIR/test_expected/$name-alt1.c
+        $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt1.c
         if [[ $? -ne 0 ]]; then
             if [[ -f $BASEDIR/test_expected/$name-alt2.c ]]; then
-                $DIFF -b $TEMPFILE $BASEDIR/test_expected/$name-alt2.c
+                $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt2.c
                 FAIL=$?
             else
                 FAIL=1
