@@ -246,6 +246,32 @@ public:
   std::string componentObjId;
 };
 
+struct OrderlessXPCOMPairComparator
+{
+  bool
+  operator()(
+             std::pair<iface::XPCOM::IObject*,iface::XPCOM::IObject*> o1,
+             std::pair<iface::XPCOM::IObject*,iface::XPCOM::IObject*> o2
+            ) const
+  {
+    XPCOMComparator xc;
+    bool p1(xc(o1.first, o1.second));
+    bool p2(xc(o2.first, o2.second));
+    iface::XPCOM::IObject* f1(p1 ? o1.first : o1.second), * f2(p1 ? o2.first :
+                                                               o2.second);
+    iface::XPCOM::IObject* s1(p2 ? o1.second : o1.first), * s2(p2 ? o2.second :
+                                                               o2.first);
+
+    if (xc(f1, f2))
+      return true;
+
+    if (xc(f2, f1))
+      return false;
+
+    return xc(s1, s2);
+  }
+};
+
 class ModelValidation
 {
 public:
@@ -256,6 +282,11 @@ private:
   iface::cellml_api::Model * mModel;
   ObjRef<CDA_CellMLValidityErrorSet> mErrors;
   std::set<std::pair<std::string, std::string> > mAllConns;
+  std::set<std::wstring> mReservedUnits;
+  std::set<iface::cellml_api::CellMLVariable*, XPCOMComparator> mSeenInVars;
+  std::set<std::pair<iface::cellml_api::CellMLComponent*,
+                     iface::cellml_api::CellMLComponent*>,
+           OrderlessXPCOMPairComparator> mConnectedComps;
   std::set<GroupParent> mGroupParents;
   static const uint32_t kCellML_1_0 = 0;
   static const uint32_t kCellML_1_1 = 1;
@@ -271,7 +302,8 @@ private:
   void validateUnitsRefs(iface::cellml_api::CellMLImport* aImport);
   void validateExtensionElement(iface::dom::Element* aEl);
   void validatePerComponent(iface::cellml_api::CellMLComponent* aComponent);
-  void validatePerVariable(iface::cellml_api::CellMLVariable* aVariable);
+  void validatePerVariable(iface::cellml_api::CellMLVariable* aVariable,
+                           iface::cellml_api::CellMLComponent* aComponent);
   void validatePerConnection(iface::cellml_api::Connection* aConn);
   void validatePerUnits(iface::cellml_api::Units* aUnits);
   void validatePerGroup(iface::cellml_api::Group* aGroup);

@@ -178,6 +178,24 @@ CDA_CellMLSemanticValidityError::errorElement()
 ModelValidation::ModelValidation(iface::cellml_api::Model* aModel)
   : mModel(aModel)
 {
+  const wchar_t* reservedUnits[] =
+    {
+      L"ampere",  L"farad",         L"katal",     L"lux",
+      L"pascal",  L"tesla",         L"becquerel", L"gram",
+      L"kelvin",  L"meter",         L"radian",    L"volt",
+      L"candela", L"gray",          L"kilogram",  L"metre",
+      L"second",  L"watt",          L"celsius",   L"henry",
+      L"liter",   L"mole",          L"siemens",   L"weber",
+      L"coulomb", L"hertz",         L"litre",     L"newton",
+      L"sievert", L"dimensionless", L"joule",     L"lumen",
+      L"ohm",     L"steradian"
+    };
+
+  for (uint32_t i = 0; i < (sizeof(reservedUnits) / sizeof(reservedUnits[0]));
+       i++)
+  {
+    mReservedUnits.insert(reservedUnits[i]);
+  }
 }
 
 #define SEMANTIC_ERROR(message, node) \
@@ -207,7 +225,7 @@ ModelValidation::validate()
     SEMANTIC_WARNING(L"Can't perform representational validation because you are "
                      L"using a model implementation which doesn't allow the DOM "
                      L"to be fetched; this may cause an invalid model to be "
-                     L"reported as valid.",
+                     L"reported as valid",
                      mModel);
 
   RETURN_INTO_OBJREF(cb, iface::cellml_services::CUSESBootstrap,
@@ -221,7 +239,7 @@ ModelValidation::validate()
   {
     SEMANTIC_ERROR(me, mModel);
     SEMANTIC_WARNING(L"Cannot perform any further checking of unit names due "
-                     L"to problems processing the model units.", mModel);
+                     L"to problems processing the model units", mModel);
     mStrictCUSES = NULL;
     mWeakCUSES = NULL;
   }
@@ -233,6 +251,10 @@ ModelValidation::validate()
   catch (...)
   {
   }
+
+  mSeenInVars.clear();
+  mConnectedComps.clear();
+
   mStrictCUSES = NULL;
   mWeakCUSES = NULL;
 
@@ -248,7 +270,7 @@ static const wchar_t* kCellMLNamespaces[] =
   };
 
 #define INTERNAL_ERROR_MESSAGE_M(l) L"Internal error (line " #l L" in " \
-  __FILE__ L"): this should never happen, please report a bug."
+  __FILE__ L"): this should never happen, please report a bug"
 #define INTERNAL_ERROR_MESSAGE INTERNAL_ERROR_MESSAGE_M(__LINE__)
 
 const ModelValidation::ReprValidationElement
@@ -1027,7 +1049,7 @@ ModelValidation::validateRepresentation(iface::dom::Element* aTop)
   {
     REPR_ERROR(L"The top-level element is in an unrecognised namespace. No "
                L"further errors can be displayed because the version to "
-               L"validate against could not be determined.",
+               L"validate against could not be determined",
                aTop);
     return;
   }
@@ -1039,7 +1061,7 @@ ModelValidation::validateRepresentation(iface::dom::Element* aTop)
   else
   {
     REPR_ERROR(L"The top-level element is not <model>. No "
-               L"further errors can be displayed because of this.",
+               L"further errors can be displayed because of this",
                aTop);
     return;
   }
@@ -1061,7 +1083,7 @@ ModelValidation::validateElementRepresentation
   {
     std::wstring msg(L"Element ");
     msg += aSpec.name;
-    msg += L" is invalid in this version of CellML.";
+    msg += L" is invalid in this version of CellML";
     REPR_ERROR(msg, aEl);
   }
 
@@ -1291,7 +1313,7 @@ ModelValidation::validateExtensionElement(iface::dom::Element* aEl)
     {
       RETURN_INTO_WSTRING(n, atn->localName());
       std::wstring msg = L"Attribute " + n + L" in namespace " + ns +
-        L"is not allowed in extension elements.";
+        L"is not allowed in extension elements";
       REPR_WARNING(msg, aEl);
     }
   }
@@ -1311,7 +1333,7 @@ ModelValidation::validateExtensionElement(iface::dom::Element* aEl)
     {
       RETURN_INTO_WSTRING(n, el->tagName());
       std::wstring msg = L"Element " + n + L" in namespace " + ns +
-        L"is not allowed in extension elements.";
+        L"is not allowed in extension elements";
       REPR_WARNING(msg, aEl);
     }
   }
@@ -1328,7 +1350,7 @@ ModelValidation::whitespaceOnlyValidatorCellML
   L"Per section 2.4.4 of the CellML specification, any characters that " \
   L"occur immediately within elements in the CellML namespace must be "\
   L"either space (#x20) characters, carriage returns (#xA), line feeds "\
-  L"(#xD), or tabs (#x9)."
+  L"(#xD), or tabs (#x9)"
 
   std::wstring::const_iterator p;
   for (p = aText.begin(); p != aText.end(); p++)
@@ -1815,6 +1837,12 @@ ModelValidation::validateNameUniqueness(iface::cellml_api::Model* aModel)
     {
       SEMANTIC_ERROR(L"More than one units in the model named " + n, u);
     }
+
+    if (mReservedUnits.count(n) != 0)
+    {
+      SEMANTIC_ERROR(L"Units in the model uses reserved name " + n, u);
+    }
+
     allNames.insert(n);
   }
 }
@@ -1917,8 +1945,8 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
 
         if (mAllConns.count(p) != 0)
         {
-          SEMANTIC_ERROR(L"There is more than one connection elements for the "
-                         L"same pair of components.", cm);
+          SEMANTIC_ERROR(L"There is more than one connection element for the "
+                         L"same pair of components", cm);
         }
         else
           mAllConns.insert(p);
@@ -2087,12 +2115,41 @@ ModelValidation::validatePerComponent
     }
     vnames.insert(vn);
 
-    validatePerVariable(v);
+    validatePerVariable(v, aComponent);
+  }
+
+  RETURN_INTO_OBJREF(cus, iface::cellml_api::UnitsSet, aComponent->units());
+  RETURN_INTO_OBJREF(cui, iface::cellml_api::UnitsIterator, cus->iterateUnits());
+  std::set<std::wstring> allNames;
+  while (true)
+  {
+    RETURN_INTO_OBJREF(u, iface::cellml_api::Units,
+                       cui->nextUnits());
+    if (u == NULL)
+      break;
+
+    RETURN_INTO_WSTRING(n, u->name());
+
+    if (allNames.count(n) != 0)
+    {
+      SEMANTIC_ERROR(L"More than one units in the component named " + n, u);
+    }
+
+    if (mReservedUnits.count(n) != 0)
+    {
+      SEMANTIC_ERROR(L"Units in the component uses reserved name " + n, u);
+    }
+
+    allNames.insert(n);
   }
 }
 
 void
-ModelValidation::validatePerVariable(iface::cellml_api::CellMLVariable* v)
+ModelValidation::validatePerVariable
+(
+ iface::cellml_api::CellMLVariable* v,
+ iface::cellml_api::CellMLComponent* c
+)
 {
   if (mStrictCUSES != NULL)
   {
@@ -2112,9 +2169,51 @@ ModelValidation::validatePerVariable(iface::cellml_api::CellMLVariable* v)
   if (pubi == privi &&
       pubi == iface::cellml_api::INTERFACE_IN)
   {
-    SEMANTIC_ERROR(L"Cannot have two in interfaces on variable.", v);
+    SEMANTIC_ERROR(L"Cannot have two in interfaces on variable", v);
+  }
+
+  // Now look at initial_value attribute...
+  RETURN_INTO_WSTRING(iv, v->initialValue());
+  if (iv != L"")
+  {
+    if (pubi == iface::cellml_api::INTERFACE_IN ||
+        privi == iface::cellml_api::INTERFACE_IN
+       )
+    {
+      SEMANTIC_ERROR(L"Variables with public or private interfaces of in cannot"
+                     L" have initial value attributes", v);
+    }
+
+    if ((!((iv[0] >= '0' && iv[0] <= '9') || iv[0] == '-')))
+    {
+      RETURN_INTO_WSTRING(n, v->name());
+      if (n == iv)
+      {
+        SEMANTIC_ERROR(L"Variable can't have initial_value attribute reference "
+                       L"itself", v);
+      }
+
+      RETURN_INTO_OBJREF(vs, iface::cellml_api::CellMLVariableSet,
+                         c->variables());
+      RETURN_INTO_OBJREF(vsrc, iface::cellml_api::CellMLVariable,
+                         vs->getVariable(iv.c_str()));
+      if (vsrc == NULL)
+      {
+        SEMANTIC_ERROR(L"Variable has initial_value attribute which is "
+                       L"a CellML identifier which does not name a variable "
+                       L"in the same component", v);
+      }
+    }
   }
 }
+
+enum EncapsulationRelationship
+{
+  COMP1_PARENT_COMP2,
+  COMP2_PARENT_COMP1,
+  COMP1_SIBLING_COMP2,
+  COMP1_HIDDEN_COMP2
+};
 
 void
 ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
@@ -2123,6 +2222,69 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
                      aConn->variableMappings());
   RETURN_INTO_OBJREF(vmi, iface::cellml_api::MapVariablesIterator,
                      vms->iterateMapVariables());
+
+  RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents,
+                     aConn->componentMapping());
+  ObjRef<iface::cellml_api::CellMLComponent> c1, c2;
+  try
+  {
+    c1 = already_AddRefd<iface::cellml_api::CellMLComponent>
+      (mc->firstComponent());
+  }
+  catch (...)
+  {
+    SEMANTIC_ERROR(L"component_1 attribute doesn't refer to a valid "
+                   L"component", mc);
+  }
+
+  try
+  {
+    c2 = already_AddRefd<iface::cellml_api::CellMLComponent>
+      (mc->secondComponent());
+  }
+  catch (...)
+  {
+    SEMANTIC_ERROR(L"component_2 attribute doesn't refer to a valid "
+                   L"component", mc);
+  }
+
+  if (!CDA_objcmp(c1, c2))
+  {
+    SEMANTIC_ERROR(L"It is not valid to map a component to itself", mc);
+  }
+
+  std::pair<iface::cellml_api::CellMLComponent*,
+            iface::cellml_api::CellMLComponent*>
+    cp(c1, c2);
+
+  if (mConnectedComps.count(cp) != 0)
+  {
+    SEMANTIC_ERROR(L"The can only be a single connection element for each pair "
+                   L"of components in the model", mc);
+  }
+  mConnectedComps.insert(cp);
+
+  RETURN_INTO_OBJREF(ep1, iface::cellml_api::CellMLComponent,
+                     c1->encapsulationParent());
+  RETURN_INTO_OBJREF(ep2, iface::cellml_api::CellMLComponent,
+                     c2->encapsulationParent());
+
+  EncapsulationRelationship er(COMP1_HIDDEN_COMP2);
+  if ((ep1 == NULL && ep2 == NULL) || (ep1 != NULL && ep2 != NULL && !CDA_objcmp(ep1, ep2)))
+    er = COMP1_SIBLING_COMP2;
+  else if ((ep2 != NULL) && !CDA_objcmp(ep2, c1))
+    er = COMP1_PARENT_COMP2;
+  else if ((ep1 != NULL) && !CDA_objcmp(ep1, c2))
+    er = COMP2_PARENT_COMP1;
+  else
+  {
+    SEMANTIC_ERROR(L"Connection of components which are encapsulated in the "
+                   L"hidden set of each other", mc);
+  }
+
+  std::set<std::pair<iface::cellml_api::CellMLVariable*,
+                     iface::cellml_api::CellMLVariable*>,
+           OrderlessXPCOMPairComparator> connectedVars;
 
   while (true)
   {
@@ -2140,7 +2302,7 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
     catch (...)
     {
       SEMANTIC_ERROR(L"variable_1 attribute doesn't refer to a valid "
-                     L"variable.", mv);
+                     L"variable", mv);
     }
 
     try
@@ -2151,7 +2313,7 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
     catch (...)
     {
       SEMANTIC_ERROR(L"variable_2 attribute doesn't refer to a valid "
-                     L"variable.", mv);
+                     L"variable", mv);
     }
 
     if (v1 != NULL && v2 != NULL && mWeakCUSES != NULL)
@@ -2169,6 +2331,72 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
                        L"inconsistent units", mv);
       }
     }
+
+    std::pair<iface::cellml_api::CellMLVariable*, iface::cellml_api::CellMLVariable*>
+      vp(v1, v2);
+    if (connectedVars.count(vp))
+    {
+      SEMANTIC_ERROR(L"Connection of the same two variables more than once",
+                     mv);
+    }
+    connectedVars.insert(vp);
+
+    iface::cellml_api::VariableInterface vi1, vi2;
+    std::wstring int1, int2;
+    if (er == COMP1_SIBLING_COMP2)
+    {
+      vi1 = v1->publicInterface();
+      int1 = L"public";
+      vi2 = v2->publicInterface();
+      int2 = L"public";
+    }
+    else if (er == COMP1_PARENT_COMP2)
+    {
+      vi1 = v1->privateInterface();
+      int1 = L"private";
+      vi2 = v2->publicInterface();
+      int2 = L"public";
+    }
+    else
+    {
+      vi1 = v1->publicInterface();
+      int1 = L"public";
+      vi2 = v2->privateInterface();
+      int2 = L"private";
+    }
+
+    if (vi1 == iface::cellml_api::INTERFACE_NONE)
+    {
+      SEMANTIC_ERROR(L"Mapping variable_1 has " + int1 + L" interface of none",
+                     mv);
+    }
+
+    if (vi2 == iface::cellml_api::INTERFACE_NONE)
+    {
+      SEMANTIC_ERROR(L"Mapping variable_2 has " + int2 + L" interface of none",
+                     mv);
+    }
+
+    if (vi1 == vi2)
+    {
+      std::wstring dir = (vi1 == iface::cellml_api::INTERFACE_IN) ? L"in" : L"out";
+      SEMANTIC_ERROR(L"Mapping variable_1 has " + int1 + L" interface of " + dir +
+                     L" but variable_2 also has " + int2 + L" interface of " +
+                     dir + L"", mv);
+    }
+
+    // We now need to add the variable with the in interface to a list of
+    // variables which have been connected up so we can check that the same
+    // variable isn't connected twice...
+    iface::cellml_api::CellMLVariable* vin =
+      (vi1 == iface::cellml_api::INTERFACE_IN) ? v1 : v2;
+
+    if (mSeenInVars.count(vin))
+    {
+      SEMANTIC_ERROR(L"More than one connection to in interface of variable", vin);
+    }
+
+    mSeenInVars.insert(vin);
   }
 }
 
@@ -2255,7 +2483,7 @@ ModelValidation::validateGroupComponentRefs
     if (aMustHaveChildren && !hasChildren)
     {
       SEMANTIC_ERROR(L"component_ref element appears as child of a group element "
-                     L"but does not have any child component_ref elements.", cr);
+                     L"but does not have any child component_ref elements", cr);
       continue;
     }
 
@@ -2267,7 +2495,7 @@ ModelValidation::validateGroupComponentRefs
     if (c == NULL)
     {
       SEMANTIC_ERROR(L"component_ref element references component which does "
-                     L"not exist.", cr);
+                     L"not exist", cr);
       continue;
     }
 
