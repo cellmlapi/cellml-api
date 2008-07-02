@@ -99,6 +99,29 @@ module cellml_services
      * @returns The multiplier, i.e. the value A in the equation above.
      */
     double siConversion(out double offset);
+
+    /**
+     * Adds a new base unit to the canonical unit representation. Under normal
+     * circumstances, CanonicalUnitRepresentations should be treated as
+     * immutable, but this is provided as an aid to code which wishes to create
+     * its own CanonicalUnitRepresentations for other purposes.
+     */
+    void addBaseUnit(in BaseUnitInstance baseUnit);
+
+    /**
+     * Merges this unit with another CanonicalUnitRepresentation, applying an
+     * exponent along the way...
+     * @param thisExponent The exponent to apply to this canonical unit
+     *                     representation.
+     * @param other The other canonical unit representation. This is ignored
+     *              and may be null if otherExponent is zero.
+     * @param otherExponent The exponent to apply to the other canonical unit
+     *                      representation.
+     */
+    CanonicalUnitRepresentation mergeWith(in double thisExponent,
+                                          in CanonicalUnitRepresentation other,
+                                          in double otherExponent)
+      raises(cellml_api::CellMLException);
   };
 
   interface CUSES
@@ -126,6 +149,13 @@ module cellml_services
      */
     CanonicalUnitRepresentation getUnitsByName(in cellml_api::CellMLElement aContext,
                                                in wstring aName);
+
+    /**
+     * Creates an empty CanonicalUnitRepresentation, which may be used
+     * by code which wants to compare units in the model with synthesised
+     * units.
+     */
+    CanonicalUnitRepresentation createEmptyUnits();
   };
 
   interface CUSESBootstrap

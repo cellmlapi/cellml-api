@@ -78,8 +78,13 @@ public:
     throw(std::exception&);
 
   void canonicalise() throw(std::exception&);
+  void addBaseUnit(iface::cellml_services::BaseUnitInstance* baseUnit) throw();
+  iface::cellml_services::CanonicalUnitRepresentation*
+  mergeWith(double aThisExponent,
+            iface::cellml_services::CanonicalUnitRepresentation* aOther,
+            double aOtherExponent)
+    throw(std::exception&);
 
-  void addBaseUnit(iface::cellml_services::BaseUnitInstance* baseUnit);
 private:
   bool mStrict;
   std::vector<iface::cellml_services::BaseUnitInstance*> baseUnits;
@@ -103,6 +108,8 @@ public:
     throw(std::exception&);
 
   wchar_t* modelError() throw(std::exception&);
+  iface::cellml_services::CanonicalUnitRepresentation* createEmptyUnits()
+    throw(std::exception&);
 
 private:
   std::wstring errorDescription;

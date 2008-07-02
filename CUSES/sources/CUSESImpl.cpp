@@ -297,10 +297,75 @@ void
 CDACanonicalUnitRepresentation::addBaseUnit
 (
  iface::cellml_services::BaseUnitInstance* baseUnit
-)
+) throw()
 {
   baseUnit->add_ref();
   baseUnits.push_back(baseUnit);
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+CDACanonicalUnitRepresentation::mergeWith
+(
+ double aThisExponent,
+ iface::cellml_services::CanonicalUnitRepresentation* aOther,
+ double aOtherExponent
+)
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(uNew, CDACanonicalUnitRepresentation,
+                     new CDACanonicalUnitRepresentation(mStrict));
+
+  if (aOtherExponent != 0 && aOther == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  if (aThisExponent != 0)
+  {
+    uint32_t l = length();
+    for (uint32_t i = 0; i < l; i++)
+    {
+      RETURN_INTO_OBJREF(bu, iface::cellml_services::BaseUnitInstance,
+                         fetchBaseUnit(i));
+      if (aThisExponent == 1)
+        uNew->addBaseUnit(bu);
+      else
+      {
+        RETURN_INTO_OBJREF(u, iface::cellml_services::BaseUnit, bu->unit());
+        RETURN_INTO_OBJREF(bui, iface::cellml_services::BaseUnitInstance,
+                           new CDABaseUnitInstance
+                           (u, pow(bu->prefix(), aThisExponent), bu->offset(),
+                            bu->exponent() * aThisExponent));
+        uNew->addBaseUnit(bui);
+      }
+    }
+  }
+
+  if (aOtherExponent != 0)
+  {
+    uint32_t l = aOther->length();
+    for (uint32_t i = 0; i < l; i++)
+    {
+      RETURN_INTO_OBJREF(bu, iface::cellml_services::BaseUnitInstance,
+                         aOther->fetchBaseUnit(i));
+      if (aOtherExponent == 1)
+        uNew->addBaseUnit(bu);
+      else
+      {
+        RETURN_INTO_OBJREF(u, iface::cellml_services::BaseUnit, bu->unit());
+        RETURN_INTO_OBJREF(bui, iface::cellml_services::BaseUnitInstance,
+                           new CDABaseUnitInstance
+                           (u, pow(bu->prefix(), aThisExponent), bu->offset(),
+                            bu->exponent() * aThisExponent));
+        uNew->addBaseUnit(bui);
+      }
+    }
+  }
+
+  uNew->canonicalise();
+
+  iface::cellml_services::CanonicalUnitRepresentation* cur = uNew;
+  cur->add_ref();
+
+  return cur;
 }
 
 template<typename C>
@@ -985,6 +1050,13 @@ CDACUSES::modelError()
   std::wstring tot = errorDescription;
   tot += warningDescription;
   return CDA_wcsdup(tot.c_str());
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+CDACUSES::createEmptyUnits()
+  throw(std::exception&)
+{
+  return new CDACanonicalUnitRepresentation(mStrict);
 }
 
 iface::cellml_services::CUSESBootstrap*
