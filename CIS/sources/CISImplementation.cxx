@@ -64,11 +64,11 @@ SetupCompiledModelFunctions(void* module)
 #else
 #define getsym(m,s) dlsym(m,s)
 #endif
-  cmf->SetupConstants = (void (*)(double*, double*, double*))
+  cmf->SetupConstants = (int (*)(double*, double*, double*))
     getsym(module, "SetupConstants");
-  cmf->ComputeRates = (void (*)(double,double*,double*,double*,double*))
+  cmf->ComputeRates = (int (*)(double,double*,double*,double*,double*))
     getsym(module, "ComputeRates");
-  cmf->ComputeVariables = (void (*)(double,double*,double*,double*,double*))
+  cmf->ComputeVariables = (int (*)(double,double*,double*,double*,double*))
     getsym(module, "ComputeVariables");
   return cmf;
 }
@@ -548,12 +548,13 @@ CDA_CellMLIntegrationService::compileModel
      << "static double fixnans(double x) { return finite(x) ? x : 1E100; }" << std::endl
      << "struct rootfind_info" << std::endl
      << "{" << std::endl
-     << "  double aVOI, * aCONSTANTS, * aRATES, * aSTATES, * aALGEBRAIC;"
+     << "  double aVOI, * aCONSTANTS, * aRATES, * aSTATES, * aALGEBRAIC;" << std::endl
+     << "  int* aPRET;" << std::endl
      << "};" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
     "(nmeas)*(npar) + (npar)*(npar))" << std::endl
      << "extern void do_levmar(void (*)(double *, double *, int, int, void*), "
-    "double*, double*, double*, unsigned long, void*);" << std::endl;
+    "double*, double*, double*, int*, unsigned long, void*);" << std::endl;
 
   wchar_t* frag = cci->functionsString();
   size_t fragLen = wcstombs(NULL, frag, 0) + 1;
@@ -563,38 +564,49 @@ CDA_CellMLIntegrationService::compileModel
   free(frag);
   delete [] frag8;
 
-  ss << "void SetupConstants(double* CONSTANTS, double* RATES, double *STATES)" << std::endl;
+  ss << "int SetupConstants(double* CONSTANTS, double* RATES, "
+    "double *STATES)" << std::endl;
   frag = cci->initConstsString();
   fragLen = wcstombs(NULL, frag, 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag, fragLen);
   ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
      << "#define VOI 0.0" << std::endl
      << "#define ALGEBRAIC NULL" << std::endl
      << frag8 << std::endl
      << "#undef VOI" << std::endl
      << "#undef ALGEBRAIC" << std::endl
+     << "  return ret;" << std::endl
      << "}" << std::endl;
   free(frag);
   delete [] frag8;
 
-  ss << "void ComputeRates(double VOI, double* CONSTANTS, double* RATES, double* STATES, "
-    "double* ALGEBRAIC)" << std::endl;
+  ss << "int ComputeRates(double VOI, double* CONSTANTS, double* RATES, "
+     << "double* STATES, double* ALGEBRAIC)" << std::endl;
   frag = cci->ratesString();
   fragLen = wcstombs(NULL, frag, 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag, fragLen);
-  ss << "{" << std::endl << frag8 << std::endl << "}" << std::endl;
+  ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
+     << frag8 << std::endl
+     << "  return ret;" << std::endl
+     << "}" << std::endl;
   free(frag);
   delete [] frag8;
 
-  ss << "void ComputeVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, "
-    "double* ALGEBRAIC)" << std::endl;
+  ss << "int ComputeVariables(double VOI, double* CONSTANTS, double* RATES, "
+    "double* STATES, double* ALGEBRAIC)" << std::endl;
   frag = cci->variablesString();
   fragLen = wcstombs(NULL, frag, 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag, fragLen);
-  ss << "{" << std::endl << frag8 << std::endl << "}" << std::endl;
+  ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
+     << frag8 << std::endl
+     << "  return ret;" << std::endl
+     << "}" << std::endl;
   free(frag);
   delete [] frag8;
   ss.close();

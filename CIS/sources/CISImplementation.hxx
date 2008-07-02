@@ -12,10 +12,10 @@ extern void UnloadCIS(void);
 
 struct CompiledModelFunctions
 {
-  void (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES);
-  void (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
+  int (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES);
+  int (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
                        double* STATES, double* ALGEBRAIC);
-  void (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
+  int (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
                            double* STATES, double* ALGEBRAIC);
 };
 

@@ -37,6 +37,7 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 #define RATES rfi->aRATES
 #define STATES rfi->aSTATES
 #define ALGEBRAIC rfi->aALGEBRAIC
+#define pret rfi->aPRET
   ALGEBRAIC[0] = p[0];
   ALGEBRAIC[1] = p[1];
   hx[0] = fixnans(( 3.00000*((pow(ALGEBRAIC[0], 3.00000))+ -1.00000*( 3.00000*ALGEBRAIC[1]))) - (0.00000));
@@ -46,8 +47,9 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 #undef RATES
 #undef STATES
 #undef ALGEBRAIC
+#undef pret
 }
-void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
+void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)
 {
   static double p[2] = {0.1,0.1},
          bp[2], work[LM_DIF_WORKSZ(2, 2)];
@@ -57,7 +59,8 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
   rfi.aRATES = RATES;
   rfi.aSTATES = STATES;
   rfi.aALGEBRAIC = ALGEBRAIC;
-  do_levmar(objfunc_0, p, bp, work, 2, &rfi);
+  rfi.aPRET = pret;
+  do_levmar(objfunc_0, p, bp, work, pret, 2, &rfi);
   ALGEBRAIC[0] = p[0];
   ALGEBRAIC[1] = p[1];
 }
@@ -70,6 +73,6 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
-rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC);
+rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);
 RATES[0] =  (4.00000/7.00000)*( 2.00000*(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1]);
 }

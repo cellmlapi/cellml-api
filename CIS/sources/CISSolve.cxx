@@ -35,10 +35,10 @@ struct EvaluationInformation
 {
   double* constants, * rates, * algebraic, * states;
   uint32_t rateSizeBytes, rateSize;
-  void (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
-                       double* STATES, double* ALGEBRAIC);
-  void (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
-                           double* STATES, double* ALGEBRAIC);
+  int (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
+                      double* STATES, double* ALGEBRAIC);
+  int (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
+                          double* STATES, double* ALGEBRAIC);
 };
 
 int
@@ -48,15 +48,18 @@ EvaluateRatesGSL(double voi, const double vars[],
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
   
   // Update variables that change based on bound/other vars...
-  ei->ComputeRates(voi, ei->constants, ei->rates, const_cast<double*>(vars),
-                   ei->algebraic);
+  int ret = ei->ComputeRates(voi, ei->constants, ei->rates, const_cast<double*>(vars),
+                             ei->algebraic);
 
   if (rates != ei->rates)
     memcpy(rates, ei->rates, ei->rateSizeBytes);
 
-  // printf("Compute r0=%g at bound %g\n", rates[0], bound);
-
-  return GSL_SUCCESS;
+  if (ret == 0)
+    return GSL_SUCCESS;
+  else if (ret < 0)
+    return GSL_FAILURE;
+  else
+    return GSL_CONTINUE;
 }
 
 inline int
@@ -121,9 +124,17 @@ EvaluateJacobianGSL
 int
 EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 {
-  EvaluateRatesGSL(bound, N_VGetArrayPointer_Serial(varsV),
-                   N_VGetArrayPointer_Serial(ratesV), params);
-  return 0;
+  EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
+  
+  // Update variables that change based on bound/other vars...
+  int ret = ei->ComputeRates(bound, ei->constants, ei->rates, N_VGetArrayPointer_Serial(varsV),
+                             ei->algebraic);
+
+  double* rates = N_VGetArrayPointer_Serial(ratesV);
+  if (rates != ei->rates)
+    memcpy(rates, ei->rates, ei->rateSizeBytes);
+
+  return ret;
 }
 
 // Don't cache more than 2MB of variables (assuming 8 bytes per variable). This
@@ -421,10 +432,11 @@ extern "C"
   CDA_EXPORT_PRE double safe_factorof(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE void do_levmar(void (*)(double *p, double *hx, int m, int n,
                                          void *adata),
-                                double* params, double* bp, double* work, uint32_t size,
-                                void* adata) CDA_EXPORT_POST;
+                                double* params, double* bp, double* work, int* pret,
+                                uint32_t size, void* adata) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double defint(double (*f)(double VOI,double *C,double *R,double *S,double *A),
-                               double VOI,double *C,double *R,double *S,double *A,double *V)
+                               double VOI,double *C,double *R,double *S,double *A,double *V,
+                               int* pret)
     CDA_EXPORT_POST;
 
 }
@@ -701,6 +713,7 @@ do_levmar
  double* params,
  double* bp,
  double* work,
+ int* pret,
  uint32_t size,
  void* adata
 )
@@ -712,6 +725,9 @@ do_levmar
 
   do
   {
+    /* XXX we shouldn't pass NULL (meaning use default) to dlevmar_dif as the second
+     * to last parameter (the options such as tolerances...)
+     */
     dlevmar_dif(f, bp, NULL, size, size, 1000, NULL, info, work, NULL, adata);
     if (isfinite(info[0]) && (info[0] < best))
     {
@@ -723,4 +739,8 @@ do_levmar
       bp[k] = random_double_logUniform();
   }
   while (i++ < 100);
+
+  /* XXX we shouldn't hard-code the tolerance... */
+  if (best > 1E-6)
+    *pret = 1;
 }
