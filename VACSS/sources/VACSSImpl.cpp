@@ -1786,7 +1786,170 @@ ModelValidation::validateDirection
 ModelValidation::ReprValidationElement::ElementValidationLevel
 ModelValidation::validateMaths(iface::dom::Element* aRR)
 {
+  // Much of this validation is of conventions which have been established but
+  // which are not adequately described in the specification. This is
+  // unfortunate...
+
+  RETURN_INTO_OBJREF(cn, iface::dom::NodeList, aRR->childNodes());
+  uint32_t l = cn->length();
+  for (uint32_t i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
+
+    DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
+    if (el == NULL)
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+      if (tn != NULL)
+      {
+        REPR_ERROR(L"MathML math elements cannot contain text nodes.", tn);
+      }
+      continue;
+    }
+
+    RETURN_INTO_WSTRING(ns, el->namespaceURI());
+    if (ns != MATHML_NS)
+    {
+      REPR_ERROR(L"Non-MathML element inside top-level MathML math element.", el);
+      continue;
+    }
+
+    RETURN_INTO_WSTRING(ln, el->localName());
+    if (ln == L"semantics")
+    {
+      el = already_AddRefd<iface::dom::Element>
+        (extractSemanticsValidateAnnotation(el));
+      if (el == NULL)
+        continue;
+
+      wchar_t *tmp = el->localName();
+      ln = tmp;
+      free(tmp);
+    }
+
+    if (ln != L"apply")
+    {
+      REPR_ERROR(L"Expected apply element inside MathML math element.",
+                 el);
+      continue;
+    }
+
+    // Check the operator...
+    DECLARE_QUERY_INTERFACE_OBJREF(mae, el, mathml_dom::MathMLApplyElement);
+
+    ObjRef<iface::mathml_dom::MathMLElement> op;
+    try
+    {
+      op = already_AddRefd<iface::mathml_dom::MathMLElement>(mae->_cxx_operator());
+    }
+    catch (...)
+    {
+      REPR_ERROR(L"Missing MathML operator on apply inside MathML math element.",
+                 mae);
+      continue;
+    }
+    
+    RETURN_INTO_WSTRING(oln, op->localName());
+    if (oln != L"equals")
+    {
+      REPR_ERROR(L"Expected MathML operator on apply inside MathML math "
+                 L"element to be equals.",
+                 op);
+      continue;
+    }
+
+    l = mae->nArguments();
+    if (l < 3)
+    {
+      REPR_ERROR(L"Expected apply inside MathML math element to be equate at "
+                 L"least two expressions.",
+                 mae);
+      continue;
+    }
+
+    RETURN_INTO_OBJREF(a, iface::mathml_dom::MathMLElement, mae->getArgument(2));
+    RETURN_INTO_OBJREF(aUnits,
+                       iface::cellml_services::CanonicalUnitRepresentation,
+                       validateMathMLExpression(a));
+    for (uint32_t i = 3; i < (l - 1); i++)
+    {
+      RETURN_INTO_OBJREF(b, iface::mathml_dom::MathMLElement, mae->getArgument(i));
+      RETURN_INTO_OBJREF(bUnits,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         validateMathMLExpression(b));
+    }
+  }
+
   return ModelValidation::ReprValidationElement::NOTHING_FURTHER;
+}
+
+iface::dom::Element*
+ModelValidation::extractSemanticsValidateAnnotation(iface::dom::Element* aEl)
+{
+  ObjRef<iface::dom::Element> result;
+
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList, aEl->childNodes());
+  uint32_t n = nl->length();
+  for (uint32_t i = 0; i < n; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
+
+    DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
+    if (el == NULL)
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+      if (tn != NULL)
+      {
+        REPR_ERROR(L"Text should not be present directly inside a MathML "
+                   L"semantics element", tn);
+      }
+      continue;
+    }
+
+    // See if the element is in the MathML namespace...
+    RETURN_INTO_WSTRING(ns, el->namespaceURI());
+    if (ns != MATHML_NS)
+    {
+      REPR_ERROR(L"Non-MathML elements are not allowed as children of the "
+                 L"MathML semantics element.", el);
+      continue;
+    }
+
+    RETURN_INTO_WSTRING(ln, el->localName());
+    if (ln == L"annotation-xml" || ln == L"annotation")
+      // Can we perhaps check that they are XML or non-XML?
+      continue;
+
+    if (result != NULL)
+    {
+      REPR_ERROR(L"More than one element child other than an annotation-xml or "
+                 L"annotation child inside a semantics element.", el);
+      continue;
+    }
+
+    result = el;
+  }
+
+  iface::dom::Element* r = result;
+  if (r == NULL)
+  {
+    REPR_ERROR(L"No MathML element to which the semantics are being applied "
+               L"inside MathML semantics element.", aEl);
+  }
+  else
+    r->add_ref();
+
+  return r;
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+ModelValidation::validateMathMLExpression
+(
+ iface::mathml_dom::MathMLElement* aEl
+)
+{
+  /* XXX TODO */
+  return NULL;
 }
 
 void

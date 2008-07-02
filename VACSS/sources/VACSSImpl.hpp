@@ -313,6 +313,10 @@ private:
   void validatePerImportComponent(iface::cellml_api::ImportComponent*
                                   aComponent);
   void validatePerImportUnits(iface::cellml_api::ImportUnits* aUnits);
+  iface::dom::Element*
+  extractSemanticsValidateAnnotation(iface::dom::Element* aEl);
+  iface::cellml_services::CanonicalUnitRepresentation*
+  validateMathMLExpression(iface::mathml_dom::MathMLElement* aEl);
 
   struct ReprValidationAttribute;
   struct ReprValidationElement
