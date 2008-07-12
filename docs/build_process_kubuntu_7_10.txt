@@ -1,5 +1,5 @@
-Build PCEnv from its source code under Kubuntu 7.10
-===================================================
+Build the CellML DOM API from its source code under Kubuntu 7.10
+================================================================
 
 Prerequisites
 -------------
@@ -24,8 +24,10 @@ Check out the source code
 
 From a shell prompt:
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~
 svn co https://svn.physiomeproject.org/svn/physiome/CellML_DOM_API/trunk/ CellML_DOM_API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note: you will be told that the certificate is invalid, so you may want to ignore that message and accept the certificate permanently.
 
@@ -35,10 +37,12 @@ Build the CellML DOM API
 
 From a shell prompt:
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~/CellML_DOM_API
 aclocal && autoconf && automake
 ./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis
 make
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note #1: "aclocal && autoconf && automake" is not required if building from a source tar.
 Note #2: if the CellML DOM API is to be used within PCEnv, then the following extra parameter is to be used in the call to "configure": "--enable-xpcom=/home/[Username]/mozilla-obj/obj-i686-pc-linux-gnu/stablexr/dist".
@@ -49,5 +53,7 @@ Test the CellML API
 
 From a shell prompt:
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~/CellML_DOM_API
 make check
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
