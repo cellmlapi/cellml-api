@@ -274,23 +274,37 @@ CDACanonicalUnitRepresentation::canonicalise()
         if (CDA_objcmp(buLast, buThis) == 0)
         {
           anyChanges = true;
+          newBaseUnits.back()->release_ref();
           newBaseUnits.pop_back();
           double newPref = uThis->prefix() * uLast->prefix();
           double newExp = uThis->exponent() + uLast->exponent();
-          uLast->release_ref();
-          uThis->release_ref();
-          uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
-          newBaseUnits.push_back(uLast);
+          if (newExp != 0)
+          {
+            uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
+            newBaseUnits.push_back(uLast);
+          }
           continue;
         }
       }
     }
+    uThis->add_ref();
     newBaseUnits.push_back(uThis);
     uLast = uThis;
   }
 
   if (anyChanges)
+  {
+    std::vector<iface::cellml_services::BaseUnitInstance*>::iterator i;
+    for (i = baseUnits.begin(); i != baseUnits.end(); i++)
+      (*i)->release_ref();
     baseUnits = newBaseUnits;
+  }
+  else
+  {
+    std::vector<iface::cellml_services::BaseUnitInstance*>::iterator i;
+    for (i = newBaseUnits.begin(); i != newBaseUnits.end(); i++)
+      (*i)->release_ref();
+  }
 }
 
 void
@@ -353,8 +367,8 @@ CDACanonicalUnitRepresentation::mergeWith
         RETURN_INTO_OBJREF(u, iface::cellml_services::BaseUnit, bu->unit());
         RETURN_INTO_OBJREF(bui, iface::cellml_services::BaseUnitInstance,
                            new CDABaseUnitInstance
-                           (u, pow(bu->prefix(), aThisExponent), bu->offset(),
-                            bu->exponent() * aThisExponent));
+                           (u, pow(bu->prefix(), aOtherExponent), bu->offset(),
+                            bu->exponent() * aOtherExponent));
         uNew->addBaseUnit(bui);
       }
     }
