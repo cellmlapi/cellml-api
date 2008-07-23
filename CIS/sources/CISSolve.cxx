@@ -705,6 +705,17 @@ random_double_logUniform()
   return X.asDouble;
 }
 
+// XXX TODO make this configurable?
+static const double levMarOpts[] =
+  {
+    1E-3, /* tau */
+    1E-17, /* epsilon1 */
+    1E-17, /* epsilon2 */
+    1E-17 * 1E-17, /* epsilon2 squared */
+    1E-17, /* epsilon3 */
+    1E-8 /* delta */
+  };
+
 void
 do_levmar
 (
@@ -725,10 +736,11 @@ do_levmar
 
   do
   {
-    /* XXX we shouldn't pass NULL (meaning use default) to dlevmar_dif as the second
-     * to last parameter (the options such as tolerances...)
+    /* XXX casting away constness is bad, but it seems in this case dlevmar_dif is
+     *     just missing a const specifier.
      */
-    dlevmar_dif(f, bp, NULL, size, size, 1000, NULL, info, work, NULL, adata);
+    dlevmar_dif(f, bp, NULL, size, size, 1000, const_cast<double*>(levMarOpts),
+                info, work, NULL, adata);
     if (isfinite(info[0]) && (info[0] < best))
     {
       memcpy(params, bp, sizeof(double) * size);
