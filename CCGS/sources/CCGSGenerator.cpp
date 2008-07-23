@@ -589,7 +589,8 @@ CodeGenerationState::FirstPassTargetClassification()
       if (ct->mUpDegree)
       {
         uint32_t mrvi = mNextStateVariableIndex - 1;
-        AllocateVariable(tct, cname, mRateNamePattern, mrvi);
+        uint32_t count = 0;
+        AllocateVariable(tct, cname, mRateNamePattern, mrvi, count);
       }
       else if (ct->mEvaluationType == iface::cellml_services::CONSTANT)
       {
@@ -630,12 +631,14 @@ void
 CodeGenerationState::AllocateVariable(CDA_ComputationTarget* aCT,
                                       std::wstring& aStr,
                                       std::wstring& aPattern,
-                                      uint32_t& aNextIndex)
+                                      uint32_t& aNextIndex,
+                                      uint32_t& aCount)
 {
   RETURN_INTO_WSTRING(n, aCT->name());
   if (n == L"")
   {
     uint32_t index = aNextIndex++;
+    aCount++;
     GenerateVariableName(aCT, aStr, aPattern, index);
     aCT->setNameAndIndex(index, aStr.c_str());
   }
@@ -668,8 +671,7 @@ CodeGenerationState::AllocateVariablesInSet
       RETURN_INTO_WSTRING(n, (*j)->name());
       if (n == L"")
       {
-        AllocateVariable(*j, str, aPattern, aNextIndex);
-        aCountVar++;
+        AllocateVariable(*j, str, aPattern, aNextIndex, aCountVar);
       }
     }
   }
@@ -679,31 +681,32 @@ void
 CodeGenerationState::AllocateConstant(CDA_ComputationTarget* aCT,
                                       std::wstring& aStr)
 {
-  mCodeInfo->mConstantIndexCount++;
-  AllocateVariable(aCT, aStr, mConstantPattern, mNextConstantIndex);
+  AllocateVariable(aCT, aStr, mConstantPattern, mNextConstantIndex,
+                   mCodeInfo->mConstantIndexCount);
 }
 
 void
 CodeGenerationState::AllocateStateVariable(CDA_ComputationTarget* aCT,
                                            std::wstring& aStr)
 {
-  mCodeInfo->mRateIndexCount++;
-  AllocateVariable(aCT, aStr, mStateVariableNamePattern, mNextStateVariableIndex);
+  AllocateVariable(aCT, aStr, mStateVariableNamePattern, mNextStateVariableIndex,
+                   mCodeInfo->mRateIndexCount);
 }
 
 void
 CodeGenerationState::AllocateAlgebraicVariable(CDA_ComputationTarget* aCT,
                                                std::wstring& aStr)
 {
-  mCodeInfo->mAlgebraicIndexCount++;
-  AllocateVariable(aCT, aStr, mAlgebraicVariableNamePattern, mNextAlgebraicVariableIndex);
+  AllocateVariable(aCT, aStr, mAlgebraicVariableNamePattern, mNextAlgebraicVariableIndex,
+                   mCodeInfo->mAlgebraicIndexCount);
 }
 
 void
 CodeGenerationState::AllocateVOI(CDA_ComputationTarget* aCT,
                                  std::wstring& aStr)
 {
-  AllocateVariable(aCT, aStr, mVOIPattern, mNextVOI);
+  uint32_t count = 0;
+  AllocateVariable(aCT, aStr, mVOIPattern, mNextVOI, count);
 }
 
 void

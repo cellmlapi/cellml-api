@@ -105,7 +105,8 @@ public:
                     iface::cellml_api::CellMLElement* context2);
   void FirstPassTargetClassification();
   void AllocateVariable(CDA_ComputationTarget* aCT, std::wstring& aStr,
-                        std::wstring& aPattern, uint32_t& aNextIndex);
+                        std::wstring& aPattern, uint32_t& aNextIndex,
+                        uint32_t& aCount);
   void GenerateVariableName(CDA_ComputationTarget* aCT, std::wstring& aStr,
                             std::wstring& aPattern, uint32_t index);
   void AllocateVariablesInSet(std::list<System*>& aSet,

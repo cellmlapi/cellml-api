@@ -1,8 +1,8 @@
 /* Model is correctly constrained.
  * No equations needed Newton-Raphson evaluation.
- * The rate and state arrays need 1 entries.
+ * The rate and state arrays need 0 entries.
  * The algebraic variables array needs 0 entries.
- * The constant array needs 1 entries.
+ * The constant array needs 0 entries.
  * Variable storage is as follows:
  * * Target d^1/dt^1 y in component main
  * * * Variable type: algebraic variable
