@@ -246,7 +246,7 @@ public:
 };
 
 void
-CDACanonicalUnitRepresentation::canonicalise()
+CDACanonicalUnitRepresentation::canonicalise(bool strictKeep)
   throw(std::exception&)
 {
   CanonicalUnitComparator cuc;
@@ -265,7 +265,7 @@ CDACanonicalUnitRepresentation::canonicalise()
     uThis = baseUnits[i];
     if (uLast != NULL)
     {
-      if (!mStrict || uLast->prefix() != uThis->prefix())
+      if (!strictKeep || uLast->prefix() != uThis->prefix())
       {
         RETURN_INTO_OBJREF(buLast, iface::cellml_services::BaseUnit,
                            uLast->unit());
@@ -274,10 +274,12 @@ CDACanonicalUnitRepresentation::canonicalise()
         if (CDA_objcmp(buLast, buThis) == 0)
         {
           anyChanges = true;
-          newBaseUnits.back()->release_ref();
-          newBaseUnits.pop_back();
           double newPref = uThis->prefix() * uLast->prefix();
           double newExp = uThis->exponent() + uLast->exponent();
+
+          newBaseUnits.back()->release_ref();
+          newBaseUnits.pop_back();
+
           if (newExp != 0)
           {
             uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
@@ -374,7 +376,7 @@ CDACanonicalUnitRepresentation::mergeWith
     }
   }
 
-  uNew->canonicalise();
+  uNew->canonicalise(false);
 
   iface::cellml_services::CanonicalUnitRepresentation* cur = uNew;
   cur->add_ref();
@@ -905,7 +907,7 @@ CDACUSES::PopulateBuiltinUnits()
     RETURN_INTO_OBJREF(cu, CDACanonicalUnitRepresentation, \
                        new CDACanonicalUnitRepresentation(mStrict)); \
     x \
-    cu->canonicalise(); \
+    cu->canonicalise(false);                                          \
     mUnitsMap->insert(std::pair<std::wstring, CDACanonicalUnitRepresentation*> \
                       (L###name, cu)); \
     cu->add_ref(); \
@@ -1028,7 +1030,7 @@ CDACUSES::ComputeUnits
       }
     }
 
-    newrep->canonicalise();
+    newrep->canonicalise(mStrict);
   }
 
   std::list<std::wstring>::iterator i(context->scopes.begin());

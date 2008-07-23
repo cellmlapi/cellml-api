@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <map>
 #include "IfaceCellML_APISPEC.hxx"
 #include "Utilities.hxx"
 #include "IfaceVACSS.hxx"
@@ -279,6 +280,40 @@ public:
   
   iface::cellml_services::CellMLValidityErrorSet* validate();
 private:
+  enum ApplyInputType
+  {
+    AI_MATCH,
+    AI_IGNORE,
+    AI_DIMENSIONLESS,
+    AI_BOOLEAN,
+  };
+
+  enum ApplyResultType
+  {
+    AR_CUSTOM,
+    AR_INPUT,
+    AR_INPUT_SQ,
+    AR_DIMENSIONLESS,
+    AR_BOOLEAN
+  };
+
+  enum ApplyArityType
+  {
+    AA_UNARY,
+    AA_BINARY,
+    AA_NARY
+  };
+
+  struct ApplyOperatorInformation
+  {
+    const wchar_t* mName;
+    ApplyInputType mInput;
+    ApplyResultType mOutput;
+    ApplyArityType mArity;
+  };
+
+  static const ApplyOperatorInformation mApplyOperators[];
+  std::map<std::wstring, const ApplyOperatorInformation*> mApplyOperatorMap;
   iface::cellml_api::Model * mModel;
   ObjRef<CDA_CellMLValidityErrorSet> mErrors;
   std::set<std::pair<std::string, std::string> > mAllConns;
@@ -313,10 +348,26 @@ private:
   void validatePerImportComponent(iface::cellml_api::ImportComponent*
                                   aComponent);
   void validatePerImportUnits(iface::cellml_api::ImportUnits* aUnits);
-  iface::dom::Element*
+  iface::mathml_dom::MathMLElement*
   extractSemanticsValidateAnnotation(iface::dom::Element* aEl);
   iface::cellml_services::CanonicalUnitRepresentation*
-  validateMathMLExpression(iface::mathml_dom::MathMLElement* aEl);
+  validateMathMLExpression(iface::cellml_api::CellMLElement* aContext,
+                           iface::dom::Element* aEl);
+  iface::cellml_services::CanonicalUnitRepresentation*
+  validateChildMathMLExpression(iface::cellml_api::CellMLElement* aContext,
+                                iface::dom::Element* aEl);
+  iface::cellml_services::CanonicalUnitRepresentation*
+  validateMathMLConstant(iface::cellml_api::CellMLElement* aContext,
+                         iface::mathml_dom::MathMLElement* aEl);
+  iface::cellml_services::CanonicalUnitRepresentation*
+  validateMathMLCI(iface::cellml_api::CellMLElement* aContext,
+                   iface::mathml_dom::MathMLElement* aEl);
+  iface::cellml_services::CanonicalUnitRepresentation*
+  validateMathMLPiecewise(iface::cellml_api::CellMLElement* aContext,
+                          iface::mathml_dom::MathMLElement* aEl);
+  iface::cellml_services::CanonicalUnitRepresentation*
+  validateMathMLApply(iface::cellml_api::CellMLElement* aContext,
+                      iface::mathml_dom::MathMLElement* aEl);
 
   struct ReprValidationAttribute;
   struct ReprValidationElement
@@ -451,9 +502,21 @@ private:
   void validateDirection(iface::dom::Node* aContext,
                          const std::wstring& aDirection);
   ReprValidationElement::ElementValidationLevel
-    validateMaths(iface::dom::Element* aRR);
+  nullValidator(iface::dom::Element* aRR);
+  void
+  validateMaths(iface::cellml_api::CellMLElement* aContext,
+                iface::dom::Element* aRR);
+  void checkMathMLElementEmpty(iface::mathml_dom::MathMLElement* aEl,
+                               const std::wstring& aLocalname);
+  void checkMathMLAttributes(iface::dom::Element* aEl,
+                             bool aAllowDefinitionURL = false,
+                             bool aAllowEncoding = false);
+  bool findConstantValue(iface::mathml_dom::MathMLElement* aEl, double& aValue,
+                         const std::wstring& aType);
 
   ObjRef<iface::cellml_services::CUSES> mStrictCUSES, mWeakCUSES;
+  ObjRef<iface::cellml_services::CanonicalUnitRepresentation> mBooleanUnits,
+    mDimensionlessUnits;
 };
 
 

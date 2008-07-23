@@ -3,6 +3,7 @@
 #include "CUSESBootstrap.hpp"
 #include <string>
 #include <set>
+#include <assert.h>
 
 /* The code special cases this to match the CellML namespace
  * corresponding to the appropriate CellML version...
@@ -175,6 +176,49 @@ CDA_CellMLSemanticValidityError::errorElement()
   return mElement;
 }
 
+const ModelValidation::ApplyOperatorInformation
+ModelValidation::mApplyOperators[] =
+{
+  {L"quotient",   AI_IGNORE,         AR_CUSTOM,        AA_BINARY},
+  {L"factorial",  AI_MATCH,          AR_DIMENSIONLESS, AA_UNARY},
+  {L"divide",     AI_IGNORE,         AR_CUSTOM,        AA_BINARY},
+  {L"max",        AI_MATCH,          AR_INPUT,         AA_NARY},
+  {L"min",        AI_MATCH,          AR_INPUT,         AA_NARY},
+  {L"minus",      AI_MATCH,          AR_INPUT,         AA_BINARY},
+  {L"plus",       AI_MATCH,          AR_INPUT,         AA_NARY},
+  {L"power",      AI_IGNORE,         AR_CUSTOM,        AA_BINARY},
+  {L"rem",        AI_MATCH,          AR_INPUT,         AA_BINARY},
+  {L"times",      AI_IGNORE,         AR_CUSTOM,        AA_NARY},
+  {L"root",       AI_MATCH,          AR_CUSTOM,        AA_UNARY},
+  {L"gcd",        AI_DIMENSIONLESS,  AR_DIMENSIONLESS, AA_NARY},
+  {L"and",        AI_BOOLEAN,        AR_BOOLEAN,       AA_NARY},
+  {L"or",         AI_BOOLEAN,        AR_BOOLEAN,       AA_NARY},
+  {L"xor",        AI_BOOLEAN,        AR_BOOLEAN,       AA_NARY},
+  {L"not",        AI_BOOLEAN,        AR_BOOLEAN,       AA_UNARY},
+  {L"implies",    AI_BOOLEAN,        AR_BOOLEAN,       AA_BINARY},
+  {L"abs",        AI_MATCH,          AR_INPUT,         AA_UNARY},
+  {L"lcm",        AI_DIMENSIONLESS,  AR_DIMENSIONLESS, AA_NARY},
+  {L"floor",      AI_MATCH,          AR_INPUT,         AA_UNARY},
+  {L"ceiling",    AI_MATCH,          AR_INPUT,         AA_UNARY},
+  {L"eq",         AI_MATCH,          AR_BOOLEAN,       AA_NARY},
+  {L"neq",        AI_MATCH,          AR_BOOLEAN,       AA_BINARY},
+  {L"gt",         AI_MATCH,          AR_BOOLEAN,       AA_NARY},
+  {L"lt",         AI_MATCH,          AR_BOOLEAN,       AA_NARY},
+  {L"geq",        AI_MATCH,          AR_BOOLEAN,       AA_NARY},
+  {L"leq",        AI_MATCH,          AR_BOOLEAN,       AA_NARY},
+  {L"equivalent", AI_MATCH,          AR_BOOLEAN,       AA_NARY},
+  {L"approx",     AI_MATCH,          AR_BOOLEAN,       AA_NARY},
+  {L"factorof",   AI_MATCH,          AR_BOOLEAN,       AA_BINARY},
+  {L"exp",        AI_DIMENSIONLESS,  AR_DIMENSIONLESS, AA_UNARY},
+  {L"ln",         AI_DIMENSIONLESS,  AR_DIMENSIONLESS, AA_UNARY},
+  {L"log",        AI_DIMENSIONLESS,  AR_DIMENSIONLESS, AA_UNARY},
+  {L"mean",       AI_MATCH,          AR_INPUT,         AA_NARY},
+  {L"sdev",       AI_MATCH,          AR_INPUT,         AA_NARY},
+  {L"variance",   AI_MATCH,          AR_INPUT_SQ,      AA_NARY},
+  {L"median",     AI_MATCH,          AR_INPUT,         AA_NARY},
+  {L"mode",       AI_MATCH,          AR_INPUT,         AA_NARY}
+};
+
 ModelValidation::ModelValidation(iface::cellml_api::Model* aModel)
   : mModel(aModel)
 {
@@ -195,6 +239,12 @@ ModelValidation::ModelValidation(iface::cellml_api::Model* aModel)
        i++)
   {
     mReservedUnits.insert(reservedUnits[i]);
+  }
+
+  for (uint32_t i = 0; i < (sizeof(mApplyOperators) / sizeof(mApplyOperators[0]));
+       i++)
+  {
+    mApplyOperatorMap[mApplyOperators[i].mName] = mApplyOperators + i;
   }
 }
 
@@ -234,6 +284,14 @@ ModelValidation::validate()
     (cb->createCUSESForModel(mModel, true));
   mWeakCUSES = already_AddRefd<iface::cellml_services::CUSES>
     (cb->createCUSESForModel(mModel, false));
+
+  mBooleanUnits =
+    already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
+    (mStrictCUSES->createEmptyUnits());
+  mDimensionlessUnits =
+    already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
+    (mStrictCUSES->createEmptyUnits());
+
   RETURN_INTO_WSTRING(me, mStrictCUSES->modelError());
   if (me != L"")
   {
@@ -794,7 +852,7 @@ ModelValidation::sMathVE =
     /* maxInParent */0,
     /* tooManyMessage */INTERNAL_ERROR_MESSAGE,
     /* textValidator */&ModelValidation::whitespaceOnlyValidatorCellML,
-    /* customValidator */&ModelValidation::validateMaths
+    /* customValidator */&ModelValidation::nullValidator
   };
 
 const ModelValidation::ReprValidationAttribute
@@ -1784,7 +1842,14 @@ ModelValidation::validateDirection
 }
 
 ModelValidation::ReprValidationElement::ElementValidationLevel
-ModelValidation::validateMaths(iface::dom::Element* aRR)
+ModelValidation::nullValidator(iface::dom::Element* aRR)
+{
+  return ModelValidation::ReprValidationElement::NOTHING_FURTHER;
+}
+
+void
+ModelValidation::validateMaths(iface::cellml_api::CellMLElement* aContext,
+                               iface::dom::Element* aRR)
 {
   // Much of this validation is of conventions which have been established but
   // which are not adequately described in the specification. This is
@@ -1802,7 +1867,14 @@ ModelValidation::validateMaths(iface::dom::Element* aRR)
       DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
       if (tn != NULL)
       {
-        REPR_ERROR(L"MathML math elements cannot contain text nodes.", tn);
+        RETURN_INTO_WSTRING(d, tn->data());
+        for (std::wstring::const_iterator j = d.begin(); j != d.end(); j++)
+        {
+          if ((*j) == ' ' || (*j) == '\n' || (*j) == '\r' || (*j) == '\t')
+            continue;
+          REPR_ERROR(L"MathML math elements cannot contain text nodes", tn);
+          break;
+        }
       }
       continue;
     }
@@ -1810,7 +1882,7 @@ ModelValidation::validateMaths(iface::dom::Element* aRR)
     RETURN_INTO_WSTRING(ns, el->namespaceURI());
     if (ns != MATHML_NS)
     {
-      REPR_ERROR(L"Non-MathML element inside top-level MathML math element.", el);
+      REPR_ERROR(L"Non-MathML element inside top-level MathML math element", el);
       continue;
     }
 
@@ -1829,7 +1901,7 @@ ModelValidation::validateMaths(iface::dom::Element* aRR)
 
     if (ln != L"apply")
     {
-      REPR_ERROR(L"Expected apply element inside MathML math element.",
+      REPR_ERROR(L"Expected apply element inside MathML math element",
                  el);
       continue;
     }
@@ -1844,16 +1916,16 @@ ModelValidation::validateMaths(iface::dom::Element* aRR)
     }
     catch (...)
     {
-      REPR_ERROR(L"Missing MathML operator on apply inside MathML math element.",
+      REPR_ERROR(L"Missing MathML operator on apply inside MathML math element",
                  mae);
       continue;
     }
     
     RETURN_INTO_WSTRING(oln, op->localName());
-    if (oln != L"equals")
+    if (oln != L"eq")
     {
       REPR_ERROR(L"Expected MathML operator on apply inside MathML math "
-                 L"element to be equals.",
+                 L"element to be eq(equals)",
                  op);
       continue;
     }
@@ -1862,7 +1934,7 @@ ModelValidation::validateMaths(iface::dom::Element* aRR)
     if (l < 3)
     {
       REPR_ERROR(L"Expected apply inside MathML math element to be equate at "
-                 L"least two expressions.",
+                 L"least two expressions",
                  mae);
       continue;
     }
@@ -1870,24 +1942,34 @@ ModelValidation::validateMaths(iface::dom::Element* aRR)
     RETURN_INTO_OBJREF(a, iface::mathml_dom::MathMLElement, mae->getArgument(2));
     RETURN_INTO_OBJREF(aUnits,
                        iface::cellml_services::CanonicalUnitRepresentation,
-                       validateMathMLExpression(a));
-    for (uint32_t i = 3; i < (l - 1); i++)
+                       validateMathMLExpression(aContext, a));
+    for (uint32_t i = 3; i < (l + 1); i++)
     {
       RETURN_INTO_OBJREF(b, iface::mathml_dom::MathMLElement, mae->getArgument(i));
       RETURN_INTO_OBJREF(bUnits,
                          iface::cellml_services::CanonicalUnitRepresentation,
-                         validateMathMLExpression(b));
+                         validateMathMLExpression(aContext, b));
+
+      if (
+          aUnits && bUnits &&
+          (!aUnits->compatibleWith(bUnits) ||
+           ((!CDA_objcmp(aUnits, mBooleanUnits)) !=
+            (!CDA_objcmp(bUnits, mBooleanUnits))))
+         )
+      {
+        REPR_WARNING(L"MathML equals element has inconsistent units between "
+                     L"the sides", b);
+      }
     }
   }
-
-  return ModelValidation::ReprValidationElement::NOTHING_FURTHER;
 }
 
-iface::dom::Element*
+iface::mathml_dom::MathMLElement*
 ModelValidation::extractSemanticsValidateAnnotation(iface::dom::Element* aEl)
 {
   ObjRef<iface::dom::Element> result;
 
+  checkMathMLAttributes(aEl, true, true);
   RETURN_INTO_OBJREF(nl, iface::dom::NodeList, aEl->childNodes());
   uint32_t n = nl->length();
   for (uint32_t i = 0; i < n; i++)
@@ -1911,33 +1993,43 @@ ModelValidation::extractSemanticsValidateAnnotation(iface::dom::Element* aEl)
     if (ns != MATHML_NS)
     {
       REPR_ERROR(L"Non-MathML elements are not allowed as children of the "
-                 L"MathML semantics element.", el);
+                 L"MathML semantics element", el);
       continue;
     }
 
     RETURN_INTO_WSTRING(ln, el->localName());
     if (ln == L"annotation-xml" || ln == L"annotation")
+    {
+      checkMathMLAttributes(el, false, true);
       // Can we perhaps check that they are XML or non-XML?
       continue;
+    }
 
     if (result != NULL)
     {
       REPR_ERROR(L"More than one element child other than an annotation-xml or "
-                 L"annotation child inside a semantics element.", el);
+                 L"annotation child inside a semantics element", el);
       continue;
     }
 
     result = el;
   }
 
-  iface::dom::Element* r = result;
-  if (r == NULL)
+  iface::mathml_dom::MathMLElement* r = NULL;
+  if (result == NULL)
   {
     REPR_ERROR(L"No MathML element to which the semantics are being applied "
-               L"inside MathML semantics element.", aEl);
+               L"inside MathML semantics element", aEl);
   }
   else
-    r->add_ref();
+  {
+    QUERY_INTERFACE(r, result, mathml_dom::MathMLElement);
+    if (r == NULL)
+    {
+      REPR_ERROR(L"Expected a MathML element as the child of the semantics "
+                 L"element", result);
+    }
+  }
 
   return r;
 }
@@ -1945,11 +2037,1540 @@ ModelValidation::extractSemanticsValidateAnnotation(iface::dom::Element* aEl)
 iface::cellml_services::CanonicalUnitRepresentation*
 ModelValidation::validateMathMLExpression
 (
+ iface::cellml_api::CellMLElement* aContext,
+ iface::dom::Element* aEl
+)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(el, aEl, mathml_dom::MathMLElement);
+  if (el == NULL)
+  {
+    REPR_ERROR(L"Found a non-MathML element where a MathML expression was "
+               L"expected", aEl);
+    return NULL;
+  }
+
+  // Get the element name...
+  RETURN_INTO_WSTRING(ln, el->localName());
+  
+  if (ln == L"semantics")
+  {
+    // If it is a semantics element, extract the annotated MathML and continue...
+    el = already_AddRefd<iface::mathml_dom::MathMLElement>
+      (extractSemanticsValidateAnnotation(el));
+    wchar_t* tmp = el->localName();
+    ln = tmp;
+    free(tmp);
+  }
+
+  if (el == NULL)
+    return NULL;
+
+  // Eliminate some of the possibilities which don't make much sense in
+  // CellML 1.0/1.1...
+  if (ln == L"integers" || ln == L"reals" || ln == L"rationals" ||
+      ln == L"naturalnumbers" || ln == L"complexes" || ln == L"primes" ||
+      ln == L"primes" || ln == L"emptyset" || ln == L"imaginaryi" ||
+      ln == L"interval" || ln == L"set" || ln == L"list" || ln == L"matrix" ||
+      ln == L"vector" || ln == L"lambda")
+  {
+    REPR_WARNING(L"Only real number types can be used in this version of "
+                 L"CellML", aEl);
+    return NULL;
+  }
+
+  // Handle remaining constants...
+  bool isBoolean = false;
+  if (ln == L"true" || ln == L"false")
+    isBoolean = true;
+
+  if (isBoolean || ln == L"exponentiale" || ln == L"notanumber" ||
+      ln == L"pi" || ln == L"eulergamma" || ln == L"infinity")
+  {
+    checkMathMLElementEmpty(el, ln);
+    iface::cellml_services::CanonicalUnitRepresentation* cur
+      = isBoolean ? mBooleanUnits : mDimensionlessUnits;
+    cur->add_ref();
+    return cur;
+  }
+
+  if (ln == L"fn" || ln == L"reln")
+  {
+    REPR_WARNING(L"MathML 1.0 element " + ln + L" is deprecated in MathML "
+                 L"2.0 and should not be used in CellML models", el);
+    ln = L"apply";
+  }
+  else if (ln == L"csymbol")
+  {
+    REPR_WARNING(L"Validation of csymbol element not supported - did you "
+                 L"mean ci?",
+                 el);
+    return NULL;
+  }
+  else if (ln == L"cn")
+    return validateMathMLConstant(aContext, el);
+  else if (ln == L"ci")
+    return validateMathMLCI(aContext, el);
+  else if (ln == L"piecewise")
+    return validateMathMLPiecewise(aContext, el);
+
+  if (ln == L"apply")
+    return validateMathMLApply(aContext, el);
+
+  REPR_ERROR(L"MathML element " + ln + L" was not expected in this context",
+             el);
+
+  return NULL;
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+ModelValidation::validateChildMathMLExpression
+(
+ iface::cellml_api::CellMLElement* aContext,
+ iface::dom::Element* aEl
+)
+{
+  ObjRef<iface::cellml_services::CanonicalUnitRepresentation> ret;
+
+  ObjRef<iface::dom::Node> n(already_AddRefd<iface::dom::Node>(aEl->firstChild()));
+  bool seenChild = false;
+  for (; n; n = already_AddRefd<iface::dom::Node>(n->nextSibling()))
+  {
+    uint16_t nt = n->nodeType();
+    switch (nt)
+    {
+    case iface::dom::Node::ELEMENT_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(cel, n, dom::Element);
+        RETURN_INTO_WSTRING(ns, cel->namespaceURI());
+
+        if (ns != MATHML_NS)
+        {
+          REPR_ERROR(L"Unexpected non-MathML content inside MathML element", n);
+          continue;
+        }
+
+        if (seenChild)
+        {
+          REPR_ERROR(L"Only expected one child element inside MathML element", n);
+          continue;
+        }
+
+        seenChild = true;
+        ret = already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
+          (validateMathMLExpression(aContext, cel));
+      }
+      break;
+    case iface::dom::Node::TEXT_NODE:
+    case iface::dom::Node::CDATA_SECTION_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+        RETURN_INTO_WSTRING(d, tn->data());
+        for (std::wstring::const_iterator p = d.begin(); p != d.end(); p++)
+        {
+          if ((*p) != L' ' && (*p) != L'\n' && (*p) != L'\r' && (*p) != L'\t')
+          {
+            REPR_ERROR(L"MathML element shouldn't contain text",
+                       n);
+            break;
+          }
+        }
+      }
+      break;
+
+    case iface::dom::Node::ENTITY_REFERENCE_NODE:
+    case iface::dom::Node::PROCESSING_INSTRUCTION_NODE:
+      REPR_ERROR(L"Unexpected content inside MathML element",
+                 n);
+      break;
+
+    default:
+      ;
+    }
+  }
+
+  if (!seenChild)
+  {
+    REPR_ERROR(L"Expected a MathML child element inside MathML element", n);
+    return NULL;
+  }
+
+  if (ret != NULL)
+    ret->add_ref();
+
+  return ret;
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+ModelValidation::validateMathMLConstant
+(
+ iface::cellml_api::CellMLElement* aContext,
  iface::mathml_dom::MathMLElement* aEl
 )
 {
-  /* XXX TODO */
+  // Check for any inappropriate children...
+  RETURN_INTO_OBJREF(child, iface::dom::Node, aEl->firstChild());
+  std::wstring txt;
+  for (; child != NULL;
+       child = already_AddRefd<iface::dom::Node>(child->nextSibling()))
+  {
+    uint16_t nt = child->nodeType();
+    switch (nt)
+    {
+    case iface::dom::Node::ELEMENT_NODE:
+      REPR_ERROR(L"MathML cn elements shouldn't have element children", aEl);
+      break;
+    case iface::dom::Node::TEXT_NODE:
+    case iface::dom::Node::CDATA_SECTION_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
+        wchar_t* tmp = tn->data();
+        txt += tmp;
+        free(tmp);
+      }
+      break;
+    default:
+      ;
+    }
+  }
+
+  RETURN_INTO_OBJREF(nnm, iface::dom::NamedNodeMap, aEl->attributes());
+  for (uint32_t i = 0, l = nnm->length(); i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nnm->item(i));
+
+    RETURN_INTO_WSTRING(ns, n->namespaceURI());
+    if (ns == ((mCellMLVersion == kCellML_1_0) ?
+               CELLML_1_1_NS : CELLML_1_0_NS))
+    {
+      REPR_ERROR(L"It is not valid to mix the CellML 1.0 and 1.1 namespaces "
+                 L"in the same model document", n);
+    }
+
+    RETURN_INTO_WSTRING(ln, n->localName());
+
+    if (ns == CELLML_1_1_NS || ns == CELLML_1_0_NS)
+    {
+      if (ln == L"units")
+        continue;
+      
+      REPR_ERROR(L"Invalid attribute in the CellML namespace found on "
+                 L"MathML cn element", n);
+      continue;
+    }
+    else if (ns != MATHML_NS)
+      continue;
+
+    RETURN_INTO_WSTRING(v, n->nodeValue());
+    if (ln == L"base")
+    {
+      if (v != L"10")
+      {
+        REPR_WARNING(L"Base other than 10 encountered; validation may "
+                     L"give incorrect results", n);
+      }
+    }
+    else if (ln == L"type")
+    {
+      if (v != L"real")
+      {
+        REPR_ERROR(L"This version of CellML doesn't support non-real numbers "
+                   L"but type other than real found on constant", n);
+      }
+    }
+    else
+    {
+      REPR_ERROR(L"Invalid MathML attribute " + ln + L" encountered",
+                 n);
+    }
+  }
+
+  // Now we have to check if textData is a valid real number...
+  int i = 0, j = txt.length() - 1;
+  wchar_t c;
+  while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+    i++;
+  while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+    j--;
+  if (j < i)
+    j = i - 1;
+  txt = txt.substr(i, j - i + 1);
+  
+  // Now, we need to see if the constant is valid. For now, we are treating it
+  // as a real number in base 10...
+  /*
+   * A real number is presented in decimal notation. Decimal notation consists
+   * of an optional sign ("+" or "-") followed by a string of digits possibly
+   * separated into an integer and a fractional part by a "decimal point". Some
+   * examples are 0.3, 1, and -31.56. If a different base is specified, then
+   * the digits are interpreted as being digits computed to that base.
+   */
+  std::wstring::const_iterator p(txt.begin());
+  if (p == txt.end())
+  {
+    REPR_ERROR(L"MathML cn element doesn't contain a constant",
+               aEl);
+  }
+  else
+  {
+    if (*p == L'-' || *p == L'+')
+      p++;
+
+    bool valid = true;
+
+    do
+    {
+      if (p == txt.end())
+      {
+        valid = false;
+        break;
+      }
+
+      if ((*p) < L'0' || (*p) > L'9')
+      {
+        valid = false;
+        break;
+      }
+
+      p++;
+
+      while (p != txt.end() && ((*p) >= L'0' && (*p) <= L'9'))
+        p++;
+
+      if (p == txt.end())
+        break;
+
+      if ((*p) != L'.')
+      {
+        valid = false;
+        break;
+      }
+
+      p++;
+
+      while (p != txt.end() && ((*p) >= L'0' && (*p) <= L'9'))
+        p++;
+
+      if (p != txt.end())
+        valid = false;
+    }
+    while (0);
+
+    if (!valid)
+    {
+      REPR_ERROR(L"MathML cn element contains an invalid constant representation",
+                 aEl);
+    }
+  }
+
+  RETURN_INTO_WSTRING
+  (
+   units,
+   aEl->getAttributeNS(((mCellMLVersion == kCellML_1_0) ? CELLML_1_0_NS :
+                        CELLML_1_1_NS), L"units")
+  );
+
+  if (units == L"")
+  {
+    REPR_ERROR(L"MathML cn elements must have CellML units attribute",
+               aEl);
+    return NULL;
+  }
+
+  // Next, we go hunting for the units...
+  RETURN_INTO_OBJREF(u, iface::cellml_services::CanonicalUnitRepresentation,
+                     mWeakCUSES->getUnitsByName(aContext, units.c_str()));
+  if (u == NULL)
+  {
+    REPR_ERROR(L"MathML cn element has invalid units",
+               aEl);
+  }
+  else
+    u->add_ref();
+
+  return u;
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+ModelValidation::validateMathMLCI
+(
+ iface::cellml_api::CellMLElement* aContext,
+ iface::mathml_dom::MathMLElement* aEl
+)
+{
+  // Check for any inappropriate children...
+  RETURN_INTO_OBJREF(child, iface::dom::Node, aEl->firstChild());
+  std::wstring txt;
+  for (; child != NULL;
+       child = already_AddRefd<iface::dom::Node>(child->nextSibling()))
+  {
+    uint16_t nt = child->nodeType();
+    switch (nt)
+    {
+    case iface::dom::Node::ELEMENT_NODE:
+      REPR_ERROR(L"MathML ci elements shouldn't have element children", aEl);
+      break;
+    case iface::dom::Node::TEXT_NODE:
+    case iface::dom::Node::CDATA_SECTION_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
+        wchar_t* tmp = tn->data();
+        txt += tmp;
+        free(tmp);
+      }
+      break;
+    default:
+      ;
+    }
+  }
+
+  RETURN_INTO_OBJREF(nnm, iface::dom::NamedNodeMap, aEl->attributes());
+  for (uint32_t i = 0, l = nnm->length(); i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nnm->item(i));
+
+    RETURN_INTO_WSTRING(ns, n->namespaceURI());
+    if (ns == ((mCellMLVersion == kCellML_1_0) ?
+               CELLML_1_1_NS : CELLML_1_0_NS))
+    {
+      REPR_ERROR(L"It is not valid to mix the CellML 1.0 and 1.1 namespaces "
+                 L"in the same model document", n);
+    }
+
+    RETURN_INTO_WSTRING(ln, n->localName());
+
+    if (ns == CELLML_1_1_NS || ns == CELLML_1_0_NS)
+    {
+      REPR_ERROR(L"Invalid attribute in the CellML namespace found on "
+                 L"MathML ci element", n);
+      continue;
+    }
+    else if (ns != MATHML_NS)
+      continue;
+
+    RETURN_INTO_WSTRING(v, n->nodeValue());
+    if (ln == L"type")
+    {
+      if (v != L"real")
+      {
+        REPR_ERROR(L"This version of CellML doesn't support non-real numbers "
+                   L"but type other than real found on ci", n);
+      }
+    }
+    else
+    {
+      REPR_ERROR(L"Invalid MathML attribute " + ln + L" encountered",
+                 n);
+    }
+  }
+
+  int i = 0, j = txt.length() - 1;
+  wchar_t c;
+  while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+    i++;
+  while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+    j--;
+  if (j < i)
+    j = i - 1;
+  txt = txt.substr(i, j - i + 1);
+
+  // Find the component from our context...
+  ObjRef<iface::cellml_api::CellMLElement> context(aContext);
+  ObjRef<iface::cellml_api::CellMLComponent> comp;
+  while (true)
+  {
+    QUERY_INTERFACE(comp, context, cellml_api::CellMLComponent);
+    if (comp != NULL)
+      break;
+
+    context = already_AddRefd<iface::cellml_api::CellMLElement>
+      (context->parentElement());
+  }
+
+  RETURN_INTO_OBJREF(vs, iface::cellml_api::CellMLVariableSet,
+                     comp->variables());
+  RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable,
+                     vs->getVariable(txt.c_str()));
+  if (v == NULL)
+  {
+    REPR_ERROR(L"MathML ci element references variable which doesn't exist",
+               aEl);
+    return NULL;
+  }
+  RETURN_INTO_WSTRING(vunits, v->unitsName());
+  
+  return mWeakCUSES->getUnitsByName(comp, vunits.c_str());
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+ModelValidation::validateMathMLPiecewise
+(
+ iface::cellml_api::CellMLElement* aContext,
+ iface::mathml_dom::MathMLElement* aEl
+)
+{
+  ObjRef<iface::cellml_services::CanonicalUnitRepresentation> units;
+
+  checkMathMLAttributes(aEl);
+
+  ObjRef<iface::dom::Node> n;
+  for (n = already_AddRefd<iface::dom::Node>(aEl->firstChild());
+       n;
+       n = already_AddRefd<iface::dom::Node>(n->nextSibling()))
+  {
+    switch (n->nodeType())
+    {
+    case iface::dom::Node::ELEMENT_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
+
+        // All elements should be in the MathML namespace...
+        RETURN_INTO_WSTRING(ns, el->namespaceURI());
+        if (ns != MATHML_NS)
+        {
+          REPR_ERROR(L"MathML piecewise elements shouldn't contain elements not "
+                     L"in the MathML namespace",
+                     el);
+          continue;
+        }
+
+        RETURN_INTO_WSTRING(ln, el->localName());
+        if (ln == L"piece")
+        {
+          checkMathMLAttributes(el);
+          ObjRef<iface::dom::Node> n2;
+          uint32_t pieceChildren = 0;
+          for (n2 = already_AddRefd<iface::dom::Node>(el->firstChild());
+               n2;
+               n2 = already_AddRefd<iface::dom::Node>(n2->nextSibling()))
+          {
+            switch (n2->nodeType())
+            {
+            case iface::dom::Node::ELEMENT_NODE:
+              {
+                DECLARE_QUERY_INTERFACE_OBJREF(el2, n2, dom::Element);
+                RETURN_INTO_WSTRING(ns2, el2->namespaceURI());
+                if (ns2 != MATHML_NS)
+                {
+                  REPR_ERROR(L"MathML piece elements shouldn't contain elements not "
+                             L"in the MathML namespace",
+                             el2);
+                  continue;
+                }
+
+                pieceChildren++;
+                if (pieceChildren == 1)
+                {
+                  RETURN_INTO_OBJREF
+                  (
+                   pcu,
+                   iface::cellml_services::CanonicalUnitRepresentation,
+                   validateMathMLExpression(aContext, el2)
+                  );
+
+                  if (pcu == NULL)
+                    continue;
+
+                  if (units == NULL)
+                    units = pcu;
+                  else if (!units->compatibleWith(pcu) ||
+                           ((!CDA_objcmp(units, mBooleanUnits)) !=
+                            (!CDA_objcmp(pcu, mBooleanUnits))))
+                  {
+                    REPR_WARNING(L"Inconsistent units between pieces "
+                                 L"of the piecewise equation", el2);
+                  }
+                }
+                else if (pieceChildren == 2)
+                {
+                  RETURN_INTO_OBJREF
+                  (
+                   pcu,
+                   iface::cellml_services::CanonicalUnitRepresentation,
+                   validateMathMLExpression(aContext, el2)
+                  );
+
+                  if (pcu && CDA_objcmp(pcu, mBooleanUnits))
+                  {
+                    REPR_WARNING(L"Expected piece condition to have boolean type",
+                                 el2);
+                  }
+                }
+                else
+                {
+                  REPR_ERROR(L"MathML piece element should only have two "
+                             L"element children", el2);
+                  continue;
+                }
+              }
+              break;
+
+            case iface::dom::Node::TEXT_NODE:
+            case iface::dom::Node::CDATA_SECTION_NODE:
+              {
+                DECLARE_QUERY_INTERFACE_OBJREF(tn, n2, dom::Text);
+                RETURN_INTO_WSTRING(d, tn->data());
+                for (std::wstring::const_iterator p = d.begin(); p != d.end(); p++)
+                {
+                  if ((*p) != L' ' && (*p) != L'\n' && (*p) != L'\r' && (*p) != L'\t')
+                  {
+                    REPR_ERROR(L"MathML piece element shouldn't contain text",
+                               el);
+                    break;
+                  }
+                }
+              }
+              break;
+              
+            case iface::dom::Node::ENTITY_REFERENCE_NODE:
+            case iface::dom::Node::PROCESSING_INSTRUCTION_NODE:
+              REPR_ERROR(L"Unexpected content inside piece element", n2);
+              break;
+              
+            default:
+              ;
+            }
+          }
+
+          if (pieceChildren < 2)
+          {
+            REPR_ERROR(L"MathML piece element should have two "
+                       L"element children", el);
+          }
+        }
+        else if (ln == L"otherwise")
+        {
+          checkMathMLAttributes(el);
+
+          RETURN_INTO_OBJREF
+          (
+           pcu,
+           iface::cellml_services::CanonicalUnitRepresentation,
+           validateChildMathMLExpression(aContext, el)
+          );
+
+          if (pcu != NULL)
+          {
+            if (units == NULL)
+              units = pcu;
+            else if (!units->compatibleWith(pcu) ||
+                     ((!CDA_objcmp(units, mBooleanUnits)) !=
+                      (!CDA_objcmp(pcu, mBooleanUnits))))
+            {
+              REPR_WARNING(L"Inconsistent units between pieces and otherwise "
+                           L"of the piecewise equation", el);
+            }
+          }
+        }
+        else
+        {
+          REPR_ERROR(L"MathML piecewise element can only contain piece "
+                     L"and otherwise elements", aEl);
+        }
+      }
+      break;
+
+    case iface::dom::Node::TEXT_NODE:
+    case iface::dom::Node::CDATA_SECTION_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+        RETURN_INTO_WSTRING(d, tn->data());
+        for (std::wstring::const_iterator p = d.begin(); p != d.end(); p++)
+        {
+          if ((*p) != L' ' && (*p) != L'\n' && (*p) != L'\r' && (*p) != L'\t')
+          {
+            REPR_ERROR(L"MathML piecewise element shouldn't contain text",
+                       n);
+            break;
+          }
+        }
+      }
+      break;
+
+    case iface::dom::Node::ENTITY_REFERENCE_NODE:
+    case iface::dom::Node::PROCESSING_INSTRUCTION_NODE:
+      REPR_ERROR(L"Unexpected content inside piecewise element",
+                 n);
+      break;
+
+    default:
+      ;
+    }
+  }
+
+  if (units != NULL)
+    units->add_ref();
+  return units;
+}
+
+template<class T>
+class ContainerReleaser
+{
+public:
+  ContainerReleaser(T& aContainer)
+    : mContainer(aContainer)
+  {
+  }
+
+  ~ContainerReleaser()
+  {
+    for (iterator i = mContainer.begin(); i != mContainer.end(); i++)
+      (*i)->release_ref();
+  }
+
+private:
+  T& mContainer;
+  typedef typename T::iterator iterator;
+};
+
+bool
+ModelValidation::findConstantValue
+(
+ iface::mathml_dom::MathMLElement* aEl,
+ double& aValue,
+ const std::wstring& aType
+)
+{
+  ObjRef<iface::dom::Node> n2;
+  for (n2 = already_AddRefd<iface::dom::Node>(aEl->firstChild());
+       n2;
+       n2 = already_AddRefd<iface::dom::Node>(n2->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el2, n2, dom::Element);
+    if (el2 == NULL)
+      continue;
+    
+    RETURN_INTO_WSTRING(ns2, el2->namespaceURI());
+    if (ns2 != MATHML_NS)
+      continue;
+
+    RETURN_INTO_WSTRING(ln2, el2->localName());
+    if (ln2 == L"semantics")
+    {
+      el2 = already_AddRefd<iface::dom::Element>
+        (extractSemanticsValidateAnnotation(el2));
+      wchar_t* str = el2->localName();
+      ln2 = str;
+      free(str);
+    }
+
+    if (ln2 != L"cn")
+    {
+      REPR_WARNING((std::wstring(L"Units validation results may be incorrect "
+                                 L"because the ") + aType +
+                    L" is not a constant").c_str(), el2);
+      break;
+    }
+    
+    // This is safe because degreeUnits is non-null...
+    DECLARE_QUERY_INTERFACE_OBJREF(cn, el2, mathml_dom::MathMLCnElement);
+    RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
+    
+    DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
+    if (tn != NULL)
+    {
+      RETURN_INTO_WSTRING(tns, tn->data());
+      int i = 0, j = tns.length() - 1;
+      wchar_t c;
+      while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+        i++;
+      while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+        j--;
+      if (j < i)
+        j = i - 1;
+      tns = tns.substr(i, j - i + 1);
+
+      wchar_t* e;
+      aValue = wcstod(tns.c_str(), &e);
+      if (*e != 0 || aValue == 0)
+      {
+        REPR_WARNING((aType + L" should be integral").c_str(), el2);
+        aValue = 1;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+iface::cellml_services::CanonicalUnitRepresentation*
+ModelValidation::validateMathMLApply
+(
+ iface::cellml_api::CellMLElement* aContext,
+ iface::mathml_dom::MathMLElement* aEl
+)
+{
+  uint32_t nChildren = 0;
+
+  std::list<iface::mathml_dom::MathMLElement*> elList;
+  ContainerReleaser<std::list<iface::mathml_dom::MathMLElement*> > elListReleaser(elList);
+  ObjRef<iface::mathml_dom::MathMLElement> op;
+  ObjRef<iface::mathml_dom::MathMLElement> lowlimit, uplimit, bvar, degree,
+    logbase, interval, condition, domainofapplication, momentabout;
+
+  checkMathMLAttributes(aEl);
+  ObjRef<iface::dom::Node> n;
+  for (n = already_AddRefd<iface::dom::Node>(aEl->firstChild());
+       n;
+       n = already_AddRefd<iface::dom::Node>(n->nextSibling()))
+  {
+    switch (n->nodeType())
+    {
+    case iface::dom::Node::ELEMENT_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(mel, n, mathml_dom::MathMLElement);
+        if (mel == NULL)
+        {
+          REPR_ERROR(L"MathML apply elements shouldn't contain elements not "
+                     L"in the MathML namespace",
+                     n);
+          continue;
+        }
+
+        RETURN_INTO_WSTRING(ln, mel->localName());
+
+#define QUAL(x) (ln == L## #x) \
+        {\
+          if (x != NULL) \
+          { \
+            REPR_ERROR(L"More than one " L## #x L" specified", mel); \
+          } \
+          x = mel; \
+          continue; \
+        }
+
+        // Check for qualifiers and if we find them treat them specially...
+        if QUAL(lowlimit) else if QUAL(uplimit) else if QUAL(bvar)
+        else if QUAL(degree) else if QUAL(logbase) else if QUAL(interval)
+        else if QUAL(condition) else if QUAL(domainofapplication) else if QUAL(momentabout);
+        
+        nChildren++;
+
+        if (nChildren == 1)
+          op = mel;
+        else
+        {
+          mel->add_ref();
+          elList.push_back(mel);
+        }
+      }
+      break;
+
+    case iface::dom::Node::TEXT_NODE:
+    case iface::dom::Node::CDATA_SECTION_NODE:
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+        RETURN_INTO_WSTRING(d, tn->data());
+        for (std::wstring::const_iterator p = d.begin(); p != d.end(); p++)
+        {
+          if ((*p) != L' ' && (*p) != L'\n' && (*p) != L'\r' && (*p) != L'\t')
+          {
+            REPR_ERROR(L"MathML piecewise element shouldn't contain text",
+                       n);
+            break;
+          }
+        }
+      }
+      break;
+
+    case iface::dom::Node::ENTITY_REFERENCE_NODE:
+    case iface::dom::Node::PROCESSING_INSTRUCTION_NODE:
+      REPR_ERROR(L"Unexpected content inside piecewise element",
+                 n);
+      break;
+
+    default:
+      ;
+    }
+  }
+
+  if (op == NULL)
+  {
+    REPR_ERROR(L"MathML apply element is missing operator", aEl);
+    return NULL;
+  }
+
+  checkMathMLAttributes(op, true, true);
+
+  RETURN_INTO_WSTRING(ln, op->localName());
+  if (ln == L"csymbol")
+  {
+    REPR_WARNING(L"Apply elements with csymbol operators are not validated",
+                 op);
+    return NULL;
+  }
+
+  // Get rid of anything not over real numbers straight away. This simplifies
+  // qualifier handling... There is a bit of an inconsistency here in that we
+  // keep diff and int by thinking of variables as being functions of time, but
+  // then can't allow inverse, divergance, grad, curl, laplacian and the
+  // like.
+  if (
+      ln == L"conjugate" || ln == L"arg" || ln == L"real" || ln == L"imaginary" ||
+      ln == L"inverse" || ln == L"ident" || ln == L"domain" || ln == L"codomain" ||
+      ln == L"image" || ln == L"determinant" || ln == L"transpose" ||
+      ln == L"divergence" || ln == L"grad" || ln == L"curl" || ln == L"laplacian" ||
+      ln == L"card" || ln == L"setdiff" || ln == L"vectorproduct" ||
+      ln == L"scalarproduct" || ln == L"outerproduct" || ln == L"selector" ||
+      ln == L"union" || ln == L"intersect" || ln == L"cartesianproduct" ||
+      ln == L"selector" || ln == L"compose" || ln == L"sum" || ln == L"product" ||
+      ln == L"forall" || ln == L"exists" || ln == L"moment" || ln == L"limit"
+     )
+  {
+    REPR_ERROR(L"This version of CellML can only be used with real numbers",
+               op);
+    return NULL;
+  }
+
+  if (momentabout)
+  {
+    checkMathMLAttributes(momentabout);
+    REPR_WARNING(L"Validation of momentabout qualifier is not supported "
+                 L"because all operators which can legitimately take it are "
+                 L"not valid in this version of CellML",
+                 momentabout);
+  }
+
+  if (logbase)
+  {
+    checkMathMLAttributes(logbase);
+    if (ln != L"log")
+      REPR_ERROR(L"Only MathML log operators can have logbase qualifiers",
+                 logbase);
+
+    // Check logbase is dimensionless...
+    RETURN_INTO_OBJREF(logbaseUnits,
+                       iface::cellml_services::CanonicalUnitRepresentation,
+                       validateChildMathMLExpression(aContext, logbase));
+    if (logbaseUnits != NULL)
+    {
+      if (!logbaseUnits->compatibleWith(mDimensionlessUnits) ||
+          (!CDA_objcmp(logbaseUnits, mBooleanUnits)))
+      {
+        REPR_WARNING(L"logbase qualifier should be in dimensionless units",
+                     logbase);
+      }
+    }
+  }
+
+  double overallDegree = 1.0;
+
+  if (degree)
+  {
+    checkMathMLAttributes(degree);
+    if (ln != L"diff" && ln != L"partialdiff" && ln != L"root")
+    {
+      REPR_ERROR(L"Only MathML diff, partialdiff, moment and root operators can "
+                 L"have degree qualifiers", degree);
+    }
+
+    RETURN_INTO_OBJREF(degreeUnits,
+                       iface::cellml_services::CanonicalUnitRepresentation,
+                       validateChildMathMLExpression(aContext, degree));
+    if (degreeUnits)
+    {
+      if (!degreeUnits->compatibleWith(mDimensionlessUnits) ||
+          (!CDA_objcmp(degreeUnits, mBooleanUnits)))
+      {
+        REPR_ERROR(L"degree qualifier should be in dimensionless units",
+                   degree);
+      }
+    }
+
+    if (degreeUnits && ln != L"root")
+    {
+      // To work out the units properly, we actually need a number for the
+      // degree...
+      findConstantValue(degree, overallDegree,
+                        L"degree of differentiation");
+    }
+  }
+
+  ObjRef<iface::cellml_services::CanonicalUnitRepresentation> bvarUnits;
+  if (bvar)
+  {
+    checkMathMLAttributes(bvar);
+    bool seenDegree = false, seenNotDegree = false;
+
+    // Look for a degree child...
+    ObjRef<iface::dom::Node> n2;
+    for (n2 = already_AddRefd<iface::dom::Node>(bvar->firstChild());
+         n2;
+         n2 = already_AddRefd<iface::dom::Node>(n2->nextSibling()))
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(el2, n2, dom::Element);
+      if (el2 == NULL)
+        continue;
+
+      RETURN_INTO_WSTRING(ns2, el2->namespaceURI());
+      if (ns2 != MATHML_NS)
+        continue;
+
+      RETURN_INTO_WSTRING(ln2, el2->localName());
+      if (ln2 != L"degree")
+      {
+        if (seenNotDegree)
+        {
+          REPR_ERROR(L"There should only be one MathML expression per bvar",
+                     el2);
+          continue;
+        }
+
+        // We need it to be ci...
+        if (ln2 != L"ci")
+        {
+          REPR_ERROR(L"Only variables (MathML ci elements) may be used with "
+                     L"bvar", el2);
+          continue;
+        }
+
+        bvarUnits =
+          already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
+          (validateMathMLExpression(aContext, el2));
+
+        seenNotDegree = true;
+        continue;
+      }
+
+      if (seenDegree)
+      {
+        REPR_ERROR(L"There should only be one degree qualifier per bvar",
+                   el2);
+        continue;
+      }
+      seenDegree = true;
+
+      RETURN_INTO_OBJREF(degreeUnits,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         validateMathMLExpression(aContext, el2));
+      if (degreeUnits)
+      {
+        if (!degreeUnits->compatibleWith(mDimensionlessUnits) ||
+            (!CDA_objcmp(degreeUnits, mBooleanUnits)))
+        {
+          REPR_ERROR(L"degree qualifier should be in dimensionless units",
+                     el2);
+        }
+      }
+      
+      if (degreeUnits)
+      {
+        // To work out the units properly, we actually need a number for the
+        // degree...
+        ObjRef<iface::dom::Node> n3;
+        for (n3 = already_AddRefd<iface::dom::Node>(el2->firstChild());
+             n3;
+             n3 = already_AddRefd<iface::dom::Node>(n3->nextSibling()))
+        {
+          DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, dom::Element);
+          if (el3 == NULL)
+            continue;
+        
+          RETURN_INTO_WSTRING(ns3, el3->namespaceURI());
+          if (ns3 != MATHML_NS)
+            continue;
+
+          RETURN_INTO_WSTRING(ln3, el3->localName());
+          if (ln3 == L"semantics")
+          {
+            el3 = already_AddRefd<iface::dom::Element>
+              (extractSemanticsValidateAnnotation(el3));
+            wchar_t* str = el3->localName();
+            ln3 = str;
+            free(str);
+          }
+
+          if (ln3 != L"cn")
+          {
+            REPR_WARNING(L"Units validation results may be incorrect because the "
+                         L"degree of differentiation is not a constant", el3);
+            break;
+          }
+
+          // This is safe because degreeUnits is non-null...
+          DECLARE_QUERY_INTERFACE_OBJREF(cn, el3, mathml_dom::MathMLCnElement);
+          RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
+
+          DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
+          if (tn != NULL)
+          {
+            RETURN_INTO_WSTRING(tns, tn->data());
+            int i = 0, j = tns.length() - 1;
+            wchar_t c;
+            while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+              i++;
+            while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+              j--;
+            if (j < i)
+              j = i - 1;
+            tns = tns.substr(i, j - i + 1);
+
+            wchar_t* e;
+            overallDegree = wcstoul(tns.c_str(), &e, 10);
+            if (*e != 0 || overallDegree == 0)
+            {
+              REPR_WARNING(L"Degree of differentiation should be integral", el2);
+              overallDegree = 1;
+            }
+          }
+        }
+      }
+    }
+
+    if (!seenNotDegree)
+    {
+      REPR_ERROR(L"MathML bvar element must contain bound variable",
+                 bvar);
+    }
+  }
+
+  // int is the only thing which supports a domain of application if we are not
+  // allowing sets...
+  if (ln == L"int")
+  {
+    if (interval || condition || domainofapplication)
+    {
+      REPR_WARNING(L"The only domain of application qualifiers currently "
+                   L"validated for int are uplimit and lowlimit", op);
+    }
+
+    if (!bvar)
+    {
+      REPR_ERROR(L"Integral without bound variable (bvar) specified", op);
+      return NULL;
+    }
+
+    if (!lowlimit)
+    {
+      REPR_WARNING(L"No lowlimit on MathML int application; if you intended "
+                   L"to express an indefinite integral please be aware that "
+                   L"all or most tools will not support this", op);
+    }
+
+    if (!uplimit)
+    {
+      REPR_WARNING(L"No uplimit on MathML int application; if you intended "
+                   L"to express an indefinite integral please be aware that "
+                   L"all or most tools will not support this", op);
+    }
+
+    if (lowlimit && bvarUnits)
+    {
+      checkMathMLAttributes(lowlimit);
+      RETURN_INTO_OBJREF(lowlimitUnits,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         validateChildMathMLExpression(aContext, lowlimit));
+
+      if (!lowlimitUnits->compatibleWith(bvarUnits) ||
+          ((!CDA_objcmp(lowlimitUnits, mBooleanUnits)) !=
+           (!CDA_objcmp(bvarUnits, mBooleanUnits))))
+      {
+        REPR_ERROR(L"MathML int apply lowlimit units should match the bound "
+                   L"variable units", lowlimit);
+      }
+    }
+
+    if (uplimit && bvarUnits)
+    {
+      checkMathMLAttributes(uplimit);
+      RETURN_INTO_OBJREF(uplimitUnits,
+                         iface::cellml_services::CanonicalUnitRepresentation,
+                         validateChildMathMLExpression(aContext, uplimit));
+
+      if (!uplimitUnits->compatibleWith(bvarUnits) ||
+          ((!CDA_objcmp(uplimitUnits, mBooleanUnits)) !=
+           (!CDA_objcmp(bvarUnits, mBooleanUnits))))
+      {
+        REPR_ERROR(L"MathML int apply uplimit units should match the bound "
+                   L"variable units", uplimit);
+      }
+    }
+
+    if (elList.size() == 0)
+    {
+      REPR_ERROR(L"MathML int apply missing expression to integrate", aEl);
+      return NULL;
+    }
+    if (elList.size() > 1)
+    {
+      REPR_ERROR(L"MathML int apply has more than one child", aEl);
+    }
+
+    RETURN_INTO_OBJREF(integrandUnits,
+                       iface::cellml_services::CanonicalUnitRepresentation,
+                       validateMathMLExpression(aContext, elList.front()));
+    if (integrandUnits != NULL && bvarUnits != NULL)
+      return integrandUnits->mergeWith(1, bvarUnits, -overallDegree);
+
+    return NULL;
+  }
+
+  std::wstring doaElement;
+  if (lowlimit)
+    doaElement = L"lowlimit";
+  else if (uplimit)
+    doaElement = L"uplimit";
+  else if (interval)
+    doaElement = L"interval";
+  else if (condition)
+    doaElement = L"condition";
+  else if (domainofapplication)
+    doaElement = L"domainofapplication";
+  
+  if (doaElement != L"")
+  {
+    REPR_WARNING(L"Domain of "
+                 L"application qualifier " + doaElement +
+                 L" is not valid here", op);
+  }
+
+  if (ln == L"diff" || ln == L"partialdiff")
+  {
+    if (!bvar)
+    {
+      REPR_ERROR(L"Derivative without bound variable (bvar) specified", op);
+      return NULL;
+    }
+
+    if (elList.size() == 0)
+    {
+      REPR_ERROR(L"MathML diff apply missing expression to differentiate", aEl);
+      return NULL;
+    }
+    if (elList.size() > 1)
+    {
+      REPR_ERROR(L"MathML diff apply has more than one child", aEl);
+    }
+
+    RETURN_INTO_OBJREF(diffUnits,
+                       iface::cellml_services::CanonicalUnitRepresentation,
+                       validateMathMLExpression(aContext, elList.front()));
+    if (diffUnits != NULL && bvarUnits != NULL)
+      return diffUnits->mergeWith(1, bvarUnits, -overallDegree);
+
+    return NULL;
+  }
+
+  std::list<iface::cellml_services::CanonicalUnitRepresentation*> unitsList;
+  ContainerReleaser<std::list<iface::cellml_services::
+                              CanonicalUnitRepresentation*> >
+    unitsListReleaser(unitsList);
+
+  for (
+       std::list<iface::mathml_dom::MathMLElement*>::iterator i
+         = elList.begin();
+       i != elList.end();
+       i++
+      )
+  {
+    iface::cellml_services::CanonicalUnitRepresentation* cur
+      = validateMathMLExpression(aContext, *i);
+    if (cur == NULL)
+      return NULL;
+
+    unitsList.push_back(cur);
+  }
+
+  std::map<std::wstring, const ApplyOperatorInformation*>::iterator opit
+    (mApplyOperatorMap.find(ln));
+  if (opit == mApplyOperatorMap.end())
+  {
+    REPR_ERROR(L"Unrecognised MathML operator encountered", op);
+    return NULL;
+  }
+
+  const ApplyOperatorInformation* opinfo = (*opit).second;
+
+  // This simplifies the logic later...
+  if (unitsList.empty())
+  {
+    REPR_ERROR(L"Expected operator to have at least one argument",
+               op);
+    return NULL;
+  }
+
+  if (opinfo->mInput == AI_MATCH)
+  {
+    if (!unitsList.empty())
+    {
+      std::list<iface::cellml_services::CanonicalUnitRepresentation*>::iterator
+        ui(unitsList.begin());
+
+      iface::cellml_services::CanonicalUnitRepresentation *firstUnits =
+        *ui;
+      for (ui++; ui != unitsList.end(); ui++)
+      {
+        iface::cellml_services::CanonicalUnitRepresentation *thisUnits =
+          *ui;
+        if (
+            (!firstUnits->compatibleWith(thisUnits) ||
+             ((!CDA_objcmp(firstUnits, mBooleanUnits)) !=
+              (!CDA_objcmp(thisUnits, mBooleanUnits))))
+           )
+        {
+          REPR_WARNING(L"Expected all arguments to MathML apply to have the same "
+                       L"units", op);
+        }
+      }
+    }
+  }
+  else if (opinfo->mInput == AI_DIMENSIONLESS)
+  {
+    std::list<iface::cellml_services::CanonicalUnitRepresentation*>::iterator
+      ui(unitsList.begin());
+    for (; ui != unitsList.end(); ui++)
+      if (!(*ui)->compatibleWith(mDimensionlessUnits) ||
+          !CDA_objcmp(*ui, mBooleanUnits))
+      {
+        REPR_WARNING(L"Expected arguments to MathML apply to have dimensionless "
+                     L"units", op);
+      }
+  }
+  else if (opinfo->mInput == AI_BOOLEAN)
+  {
+    std::list<iface::cellml_services::CanonicalUnitRepresentation*>::iterator
+      ui(unitsList.begin());
+    for (; ui != unitsList.end(); ui++)
+      if (CDA_objcmp(*ui, mBooleanUnits))
+      {
+        REPR_WARNING(L"Expected arguments to MathML apply to have boolean "
+                     L"units", op);
+      }
+  }
+
+  if (opinfo->mArity == AA_UNARY)
+  {
+    if (unitsList.size() != 1)
+    {
+      REPR_ERROR(L"Expected operator to be unary (i.e. have exactly one argument)",
+                 op);
+      return NULL;
+    }
+  }
+  else if (opinfo->mArity == AA_BINARY)
+  {
+    if (unitsList.size() != 2)
+    {
+      if (ln == L"minus")
+      {
+        if (unitsList.size() != 1)
+        {
+          REPR_ERROR(L"Expected minus operator to be unary or binary (i.e. "
+                     L"have one or two arguments)", op);
+          return NULL;
+        }
+      }
+      else
+      {
+        REPR_ERROR(L"Expected operator to be binary (i.e. have exactly "
+                   L"two arguments)", op);
+        return NULL;
+      }
+    }
+  }
+
+  if (ln == L"power")
+  {
+    std::list<iface::cellml_services::CanonicalUnitRepresentation*>::iterator
+      ui(unitsList.begin());
+    
+    iface::cellml_services::CanonicalUnitRepresentation* ubase = *ui++;
+    iface::cellml_services::CanonicalUnitRepresentation* uexp = *ui++;
+
+    if (!uexp->compatibleWith(mDimensionlessUnits) ||
+        !CDA_objcmp(uexp, mBooleanUnits))
+    {
+      REPR_ERROR(L"Expected exponent to MathML apply pow to have dimensionless "
+                 L"units", op);
+    }
+
+    double expVal;
+    std::list<iface::mathml_dom::MathMLElement*>::iterator eli(elList.begin());
+    eli++;
+
+    if (!CDA_objcmp(mBooleanUnits, ubase))
+    {
+      REPR_WARNING(L"It is not valid to take a power of boolean units", op);
+    }
+
+    // Don't require exponent to be constant if the base is dimensionless.
+    if (mDimensionlessUnits->compatibleWith(ubase))
+    {
+      mDimensionlessUnits->add_ref();
+      return mDimensionlessUnits;
+    }
+
+    if (!findConstantValue(*eli, expVal, L"exponent"))
+      return NULL;
+
+    return ubase->mergeWith(expVal, NULL, 0.0);
+  }
+  else if (ln == L"root")
+  {
+    iface::cellml_services::CanonicalUnitRepresentation* ubase = unitsList.front();
+
+    double rootDegree = 2.0;
+
+    if (degree != NULL)
+    {
+      if (!findConstantValue(degree, rootDegree, L"degree of root"))
+        return NULL;
+    }
+
+    if (!CDA_objcmp(mBooleanUnits, ubase))
+    {
+      REPR_WARNING(L"It is not valid to take a root of boolean units", op);
+    }
+
+    return ubase->mergeWith(1.0 / rootDegree, NULL, 0.0);
+  }
+  else if (ln == L"times")
+  {
+    ObjRef<iface::cellml_services::CanonicalUnitRepresentation> finalUnits
+      (mDimensionlessUnits);
+
+    for (std::list<iface::cellml_services::CanonicalUnitRepresentation*>
+           ::iterator i(unitsList.begin());
+         i != unitsList.end();
+         i++)
+    {
+      if (!CDA_objcmp((*i), mBooleanUnits))
+      {
+        REPR_WARNING(L"It is not valid to multiply boolean units", op);
+      }
+
+      finalUnits = already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
+        (finalUnits->mergeWith(1.0, *i, 1.0));
+    }
+
+    finalUnits->add_ref();
+    return finalUnits;
+  }
+  else if (ln == L"quotient" || ln == L"divide")
+  {
+    std::list<iface::cellml_services::CanonicalUnitRepresentation*>
+      ::iterator ui(unitsList.begin());
+
+    iface::cellml_services::CanonicalUnitRepresentation* udividend(*ui++),
+      * udivisor(*ui);
+
+    if (!CDA_objcmp(udividend, mBooleanUnits))
+    {
+      REPR_WARNING(L"It is not valid to divide boolean units", op);
+    }
+    if (!CDA_objcmp(udivisor, mBooleanUnits))
+    {
+      REPR_WARNING(L"It is not valid to divide boolean units", op);
+    }
+    
+    return udividend->mergeWith(1.0, udivisor, -1.0);
+  }
+
+  if (opinfo->mOutput == AR_INPUT)
+  {
+    iface::cellml_services::CanonicalUnitRepresentation* u = unitsList.front();
+    u->add_ref();
+    return u;
+  }
+  else if (opinfo->mOutput == AR_INPUT_SQ)
+    return unitsList.front()->mergeWith(2.0, NULL, 0.0);
+  else if (opinfo->mOutput == AR_DIMENSIONLESS)
+  {
+    mDimensionlessUnits->add_ref();
+    return mDimensionlessUnits;
+  }
+  else if (opinfo->mOutput == AR_BOOLEAN)
+  {
+    mBooleanUnits->add_ref();
+    return mBooleanUnits;
+  }
+
+  // Unreachable...
+  assert(0);
   return NULL;
+}
+
+void
+ModelValidation::checkMathMLElementEmpty
+(
+ iface::mathml_dom::MathMLElement* aEl,
+ const std::wstring& aLocalname
+)
+{
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList, aEl->childNodes());
+  uint32_t l(nl->length());
+  for (uint32_t i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
+    uint32_t nt = n->nodeType();
+    if (nt == iface::dom::Node::ELEMENT_NODE ||
+        nt == iface::dom::Node::CDATA_SECTION_NODE ||
+        nt == iface::dom::Node::ENTITY_REFERENCE_NODE ||
+        nt == iface::dom::Node::PROCESSING_INSTRUCTION_NODE)
+    {
+      REPR_ERROR(L"Unexpected content inside " + aLocalname + L" element", n);
+    }
+    else if (nt == iface::dom::Node::TEXT_NODE)
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+      RETURN_INTO_WSTRING(d, tn->data());
+      for (std::wstring::const_iterator j = d.begin(); j != d.end(); j++)
+      {
+        if ((*j) == ' ' || (*j) == '\n' || (*j) == '\r' || (*j) == '\t')
+          continue;
+
+        REPR_ERROR(L"Unexpected content text inside " + aLocalname +
+                   L" element", tn);
+        break;
+      }
+    }
+  }
+}
+
+void
+ModelValidation::checkMathMLAttributes
+(
+ iface::dom::Element* aEl,
+ bool aAllowDefinitionURL,
+ bool aAllowEncoding
+)
+{
+  RETURN_INTO_OBJREF(nnm, iface::dom::NamedNodeMap, aEl->attributes());
+  for (uint32_t i = 0, l = nnm->length(); i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nnm->item(i));
+
+    RETURN_INTO_WSTRING(ns, n->namespaceURI());
+    if (ns == ((mCellMLVersion == kCellML_1_0) ?
+               CELLML_1_1_NS : CELLML_1_0_NS))
+    {
+      REPR_ERROR(L"It is not valid to mix the CellML 1.0 and 1.1 namespaces "
+                 L"in the same model document", n);
+    }
+
+    RETURN_INTO_WSTRING(ln, n->localName());
+
+    if (ns == CELLML_1_1_NS || ns == CELLML_1_0_NS)
+    {
+      REPR_ERROR(L"Invalid attribute in the CellML namespace found on "
+                 L"MathML element", n);
+      continue;
+    }
+    else if (ns != MATHML_NS)
+      continue;
+
+    RETURN_INTO_WSTRING(v, n->nodeValue());
+    if (aAllowDefinitionURL && ln == L"definitionURL")
+      continue;
+    else if (aAllowEncoding && ln == L"encoding")
+      continue;
+    else
+    {
+      REPR_ERROR(L"Invalid MathML attribute " + ln + L" encountered",
+                 n);
+    }
+  }
 }
 
 void
@@ -2305,6 +3926,17 @@ ModelValidation::validatePerComponent
 
     allNames.insert(n);
   }
+
+  RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, aComponent->math());
+  RETURN_INTO_OBJREF(mli, iface::cellml_api::MathMLElementIterator, ml->iterate());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(el, iface::mathml_dom::MathMLElement, mli->next());
+    if (el == NULL)
+      break;
+
+    validateMaths(aComponent, el);
+  }
 }
 
 void
@@ -2410,6 +4042,9 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
     SEMANTIC_ERROR(L"component_2 attribute doesn't refer to a valid "
                    L"component", mc);
   }
+
+  if (c1 == NULL || c2 == NULL)
+    return;
 
   if (!CDA_objcmp(c1, c2))
   {
@@ -2530,13 +4165,13 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
 
     if (vi1 == iface::cellml_api::INTERFACE_NONE)
     {
-      SEMANTIC_ERROR(L"Mapping variable_1 has " + int1 + L" interface of none",
+      SEMANTIC_ERROR(L"Mapping variable_1 which has " + int1 + L" interface of none",
                      mv);
     }
 
     if (vi2 == iface::cellml_api::INTERFACE_NONE)
     {
-      SEMANTIC_ERROR(L"Mapping variable_2 has " + int2 + L" interface of none",
+      SEMANTIC_ERROR(L"Mapping variable_2 which has " + int2 + L" interface of none",
                      mv);
     }
 
