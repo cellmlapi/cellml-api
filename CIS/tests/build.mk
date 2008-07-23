@@ -1,4 +1,4 @@
-noinst_PROGRAMS += RunCellML
+bin_PROGRAMS += RunCellML
 RunCellML_SOURCES=$(top_srcdir)/CIS/tests/RunCellML.cpp
 RunCellML_LDADD=\
   $(top_builddir)/libcellml.la \

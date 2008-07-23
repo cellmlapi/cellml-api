@@ -1,4 +1,4 @@
-noinst_PROGRAMS += ValidateCellML
+bin_PROGRAMS += ValidateCellML
 ValidateCellML_SOURCES=$(top_srcdir)/VACSS/tests/ValidateCellML.cpp
 ValidateCellML_LDADD=\
   $(top_builddir)/libcellml.la \

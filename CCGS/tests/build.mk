@@ -1,4 +1,4 @@
-noinst_PROGRAMS += CellML2C
+bin_PROGRAMS += CellML2C
 CellML2C_SOURCES=$(top_srcdir)/CCGS/tests/CellML2C.cpp
 CellML2C_LDADD=\
   $(top_builddir)/libcellml.la \
