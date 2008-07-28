@@ -80,6 +80,8 @@ public:
 
   void setStepSizeControl(double epsAbs, double epsRel, double scalVar,
                           double scalRate, double maxStep) throw (std::exception&);
+  void setTabulationStepControl(double tabStepSize, bool strictTab)
+    throw (std::exception&);
   void setResultRange(double startBvar, double stopBvar, double incrementBvar)
     throw (std::exception&);
   void setProgressObserver(iface::cellml_services::IntegrationProgressObserver*
@@ -108,11 +110,12 @@ private:
   CDA_CellMLCompiledModel* mModel;
   iface::cellml_services::IntegrationStepType mStepType;
   double mEpsAbs, mEpsRel, mScalVar, mScalRate, mStepSizeMax;
-  double mStartBvar, mStopBvar, mMaxPointDensity;
+  double mStartBvar, mStopBvar, mMaxPointDensity, mTabStepSize;
   iface::cellml_services::IntegrationProgressObserver* mObserver;
   typedef std::list<std::pair<uint32_t,double> > OverrideList;
   OverrideList mConstantOverrides, mIVOverrides;
   volatile bool mCancelIntegration;
+  bool mStrictTab;
 };
 
 class CDA_CellMLIntegrationService

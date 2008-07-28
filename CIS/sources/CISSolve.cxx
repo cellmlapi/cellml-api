@@ -230,12 +230,18 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
   bool isFirst = true;
 
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
+  double nextStopPoint = mTabStepSize + voi;
+  if (mTabStepSize == 0.0)
+    nextStopPoint = mStopBvar;
 
   while (voi < mStopBvar)
   {
     double bhl = mStopBvar;
     if (bhl - voi > mStepSizeMax)
       bhl = voi + mStepSizeMax;
+    if(bhl > nextStopPoint)
+      bhl = nextStopPoint;
+
     gsl_odeiv_evolve_apply(e, c, s, &sys, &voi, bhl,
                            &stepSize, states);
 
@@ -244,8 +250,13 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
 
     if (isFirst)
       isFirst = false;
-    else if (voi - lastVOI < minReportForDensity)
+    else if (voi - lastVOI < minReportForDensity && !(voi==nextStopPoint))
       continue;
+    else if(mStrictTab && voi!=nextStopPoint)
+      continue;
+
+    if (voi==nextStopPoint)
+      nextStopPoint += mTabStepSize;
 
     lastVOI = voi;
 
@@ -338,12 +349,18 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
   bool isFirst = true;
 
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
+  double nextStopPoint = mTabStepSize + voi;
+  if (mTabStepSize == 0.0)
+    nextStopPoint = mStopBvar;
 
   while (voi < mStopBvar)
   {
     double bhl = mStopBvar;
     if (bhl - voi > mStepSizeMax)
       bhl = voi + mStepSizeMax;
+    if(bhl > nextStopPoint)
+      bhl = nextStopPoint;
+
     CVodeSetStopTime(solver, bhl);
     CVode(solver, bhl, y, &voi, CV_ONE_STEP_TSTOP);
 
@@ -352,8 +369,13 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 
     if (isFirst)
       isFirst = false;
-    else if (voi - lastVOI < minReportForDensity)
+    else if (voi - lastVOI < minReportForDensity && !(voi==nextStopPoint))
       continue;
+    else if(mStrictTab && voi!=nextStopPoint)
+      continue;
+
+    if (voi==nextStopPoint)
+      nextStopPoint += mTabStepSize;
 
     lastVOI = voi;
 
