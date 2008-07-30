@@ -1987,7 +1987,7 @@ ModelValidation::validateMaths(iface::cellml_api::CellMLElement* aContext,
          )
       {
         REPR_WARNING(L"MathML equals element has inconsistent units between "
-                     L"the sides", b);
+                     L"the sides", op);
       }
     }
   }
