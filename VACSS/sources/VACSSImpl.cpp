@@ -354,7 +354,11 @@ static const wchar_t* kCellMLNamespaces[] =
 
 #define INTERNAL_ERROR_MESSAGE_M(l) L"Internal error (line " #l L" in " \
   __FILE__ L"): this should never happen, please report a bug"
+#ifdef _MSC_VER
+#define INTERNAL_ERROR_MESSAGE L"Internal error: this should never happen, please report a bug"
+#else
 #define INTERNAL_ERROR_MESSAGE INTERNAL_ERROR_MESSAGE_M(__LINE__)
+#endif
 
 const ModelValidation::ReprValidationElement
 ModelValidation::sModelVE =
