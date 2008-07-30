@@ -9,7 +9,6 @@
 #include "VACSSBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
 #include <string>
-#include <strings.h>
 
 #ifdef _WIN32
 #define swprintf _snwprintf
@@ -140,7 +139,7 @@ int
 main(int argc, char** argv)
 {
   // Get the URL from which to load the model...
-  if (argc < 2 || !strcasecmp(argv[1], "--help"))
+  if (argc < 2 || !strcmp(argv[1], "--help"))
   {
     printf("Usage: ValidateCellML modelURL\n"
           );
