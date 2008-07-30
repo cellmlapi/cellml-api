@@ -1634,7 +1634,7 @@ ModelValidation::validateInitialValue
     REPR_ERROR(L"If present, the value of the initial_value attribute MAY be "
                L"a real number or the value of the name attribute of a "
                L"<variable> element declared in the current component "
-               "(section 3.4.3.7)", aContext);
+               L"(section 3.4.3.7)", aContext);
     return;
   }
 
@@ -3863,7 +3863,7 @@ ModelValidation::validateComponentRefs(iface::cellml_api::CellMLImport* aImport)
                        ccs->getComponent(cr.c_str()));
     if (rc == NULL)
     {
-      SEMANTIC_ERROR(L"component_ref " + cr + "refers to component which "
+      SEMANTIC_ERROR(L"component_ref " + cr + L"refers to component which "
                      L"doesn't exist", ic);
     }
   }
@@ -3895,7 +3895,7 @@ ModelValidation::validateUnitsRefs(iface::cellml_api::CellMLImport* aImport)
                        cus->getUnits(ur.c_str()));
     if (ru == NULL)
     {
-      SEMANTIC_ERROR(L"units_ref " + ur + "refers to units which "
+      SEMANTIC_ERROR(L"units_ref " + ur + L"refers to units which "
                      L"don't exist", iu);
     }
   }
