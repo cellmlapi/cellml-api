@@ -116,7 +116,7 @@ From a Cygwin bash shell prompt (using the Cygwin batch file created for the Moz
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd /cygdrive/c/Projects/CellML_DOM_API
 aclocal && autoconf && automake
-./configure CC="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-xpcom=/cygdrive/c/Projects/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist
+./configure CC="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis  --enable-vacss --enable-xpcom=/cygdrive/c/Projects/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist
 make
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
