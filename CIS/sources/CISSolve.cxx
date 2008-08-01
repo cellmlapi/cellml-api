@@ -252,7 +252,8 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
       isFirst = false;
     else if (voi - lastVOI < minReportForDensity && !(voi==nextStopPoint))
       continue;
-    else if(mStrictTab && voi!=nextStopPoint)
+
+    if(mStrictTab && voi!=nextStopPoint)
       continue;
 
     if (voi==nextStopPoint)
@@ -371,7 +372,8 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
       isFirst = false;
     else if (voi - lastVOI < minReportForDensity && !(voi==nextStopPoint))
       continue;
-    else if(mStrictTab && voi!=nextStopPoint)
+
+    if(mStrictTab && voi!=nextStopPoint)
       continue;
 
     if (voi==nextStopPoint)
