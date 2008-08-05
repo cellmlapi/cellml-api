@@ -103,14 +103,14 @@ module cellml_services
 
     /**
      * Sets a tabulation interval. 
-     * @param tabStepSize The tabulation step size. If set to zero, it will be
-     *                    internally set to the final value of the bound
-     *                    variable.
-     * @param strict If true, only tabulate at tabulation points. Otherwise, at
-     *               least ensure that there are data points at the tabulation
-     *               points.
+     * @param tabulationStepSize The tabulation step size. If set to zero, it
+     *                    will be internally set to the final value of the
+     *                    bound variable.
+     * @param strictTabulation If true, only tabulate at tabulation points.
+     *                         Otherwise, at least ensure that there are data 
+     *                         points at the tabulation points.
      **/
-     void setTabulationStepControl(in double tabStepSize, in boolean strictTab);
+     void setTabulationStepControl(in double tabulationStepSize, in boolean strictTabulation);
 
     /**
      * Sets the range of results to be returned.

@@ -121,6 +121,16 @@ EvaluateJacobianGSL
   return GSL_SUCCESS;
 }
 
+#define tabulationRelativeTolerance 1E-200
+
+bool floatsEqual
+(
+ const double &a, const double &b, const double &tolerance
+)
+{
+  return fabs(a - b) <= tolerance;
+}
+
 int
 EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 {
@@ -230,8 +240,9 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
   bool isFirst = true;
 
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
-  double nextStopPoint = mTabStepSize + voi;
-  if (mTabStepSize == 0.0)
+  uint32_t tabStepNumber = 1;
+  double nextStopPoint = mTabulationStepSize + voi;
+  if (mTabulationStepSize == 0.0)
     nextStopPoint = mStopBvar;
 
   while (voi < mStopBvar)
@@ -250,14 +261,14 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
 
     if (isFirst)
       isFirst = false;
-    else if (voi - lastVOI < minReportForDensity && !(voi==nextStopPoint))
+    else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
       continue;
 
-    if(mStrictTab && voi!=nextStopPoint)
+    if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
       continue;
 
     if (voi==nextStopPoint)
-      nextStopPoint += mTabStepSize;
+      nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
 
     lastVOI = voi;
 
@@ -350,8 +361,9 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
   bool isFirst = true;
 
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
-  double nextStopPoint = mTabStepSize + voi;
-  if (mTabStepSize == 0.0)
+  uint32_t tabStepNumber = 1;
+  double nextStopPoint = mTabulationStepSize + voi;
+  if (mTabulationStepSize == 0.0)
     nextStopPoint = mStopBvar;
 
   while (voi < mStopBvar)
@@ -370,14 +382,14 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 
     if (isFirst)
       isFirst = false;
-    else if (voi - lastVOI < minReportForDensity && !(voi==nextStopPoint))
+    else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
       continue;
 
-    if(mStrictTab && voi!=nextStopPoint)
+    if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
       continue;
 
     if (voi==nextStopPoint)
-      nextStopPoint += mTabStepSize;
+      nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
 
     lastVOI = voi;
 

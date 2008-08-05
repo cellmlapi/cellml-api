@@ -248,7 +248,7 @@ CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
     mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
     mEpsAbs(1E-6), mEpsRel(1E-6), mScalVar(1.0), mScalRate(0.0),
     mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mMaxPointDensity(10000.0),
-    mTabStepSize(0.0), mObserver(NULL), mCancelIntegration(false), mStrictTab(false)
+    mTabulationStepSize(0.0), mObserver(NULL), mCancelIntegration(false), mStrictTabulation(false)
 {
   mModel = dynamic_cast<CDA_CellMLCompiledModel*>(aModel);
   if (mModel == NULL)
@@ -300,12 +300,12 @@ CDA_CellMLIntegrationRun::setStepSizeControl
 void
 CDA_CellMLIntegrationRun::setTabulationStepControl
 (
-  double tabStepSize, bool strictTab
+  double tabulationStepSize, bool strictTabulation
 )
   throw (std::exception&)
 {
-  mTabStepSize = tabStepSize;
-  mStrictTab = strictTab;
+  mTabulationStepSize = tabulationStepSize;
+  mStrictTabulation = strictTabulation;
 }
 
 void

@@ -27,7 +27,10 @@
 
 bool gFinished = false;
 double gStart = 0.0, gStop = 10.0, gDensity = 1000.0;
+double gTabStep = 0.0;
+bool gTStrict = false;
 uint32_t gSleepTime = 0;
+
 
 #ifdef WIN32
 #include <windows.h>
@@ -341,6 +344,23 @@ ProcessKeywords(int argc, char** argv,
       gStop = stop;
       gDensity = density;
     }
+    else if (!strcasecmp(command, "tabulation"))
+    {
+      double tabstepsize;
+      bool tstrict;
+      tabstepsize = strtod(value, &value);
+      if (*value != ',')
+      {
+        printf("# Warning: Expected ',' after starting point. "
+               "tabulation ignored.\n");
+        continue;
+      }
+      value++;
+      tstrict = !strcasecmp(value, "true");
+      run->setTabulationStepControl(tabstepsize, tstrict);
+      gTabStep = tabstepsize;
+      gTStrict = tstrict;
+    }
     // A special undocumented debugging command...
     else if (!strcasecmp(command, "sleep_time"))
     {
@@ -388,6 +408,10 @@ main(int argc, char** argv)
            "       stop: A floating point stop value.\n"
            "       density: A floating point value specifying the maximum "
            "density of points (as a number of points for the whole run).\n"
+           "  tabulation step_size,true|false\n"
+           "    => Sets the interval in the bound variable for guaranteed values in other variables,\n"
+           "       and whether to only tabulate values at points that are thus guaranteed.\n"
+           "       step_size: A floating point tabulation step size.\n"
           );
     return -1;
   }
