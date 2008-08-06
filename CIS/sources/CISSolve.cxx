@@ -121,14 +121,14 @@ EvaluateJacobianGSL
   return GSL_SUCCESS;
 }
 
-#define tabulationRelativeTolerance 1E-200
+#define tabulationRelativeTolerance 1E-20
 
 bool floatsEqual
 (
- const double &a, const double &b, const double &tolerance
+ const double &candidate, const double &expected, const double &tolerance
 )
 {
-  return fabs(a - b) <= tolerance;
+  return fabs(candidate - expected) / (fabs(expected) + std::numeric_limits<double>::min()) <= tolerance;
 }
 
 int
