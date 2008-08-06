@@ -129,6 +129,7 @@ bool floatsEqual
  const double &candidate, const double &expected, const double &tolerance
 )
 {
+#undef min
   return fabs(candidate - expected) / (fabs(expected) + std::numeric_limits<double>::min()) <= tolerance;
 }
 
