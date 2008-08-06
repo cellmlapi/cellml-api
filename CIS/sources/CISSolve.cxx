@@ -4,6 +4,7 @@
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
+#include <limits>
 #include "Utilities.hxx"
 #include "CISImplementation.hxx"
 #include <gsl/gsl_odeiv.h>
