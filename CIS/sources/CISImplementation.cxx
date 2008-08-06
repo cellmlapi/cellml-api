@@ -4,6 +4,7 @@
 #include "Utilities.hxx"
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <limits>
 #ifndef WIN32
 #include <sys/errno.h>
 #include <dlfcn.h>
