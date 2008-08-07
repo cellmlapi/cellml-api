@@ -384,6 +384,14 @@ module cellml_context
      * parent.
      */
     readonly attribute ModelList parentList;
+
+    /**
+     * Determines if the model is 'dirty'. Models are initially not dirty, but
+     * if any changes are made to the model, they become dirty. The dirty flag
+     * can also be manually set of cleared. This flag is used to indicate if
+     * the model has unsaved changes.
+     */
+    attribute boolean dirty;
   };
 #pragma terminal-interface
 

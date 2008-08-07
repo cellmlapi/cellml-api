@@ -329,7 +329,8 @@ CDA_ModuleManager::iterateModules()
 }
 
 CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
-  : _cda_refcount(1), mIsFrozen(false), mParentList(NULL)
+  : _cda_refcount(1), mIsFrozen(false), mParentList(NULL),
+    mModelDirty(false)
 {
   // Scoped locale change.
   CNumericLocale locobj;
@@ -339,6 +340,8 @@ CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
   mDerivedModels = new CDA_ModelList();
   mDerivedModels->mParentNode = this;
   mModel = aModel;
+  
+  installModelEventListener(mModel);
 
   // XXX threadsafety (but localtime_r isn't portable).
   // It would be nice to use C++ standard library locales for this, but it
@@ -355,6 +358,12 @@ CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
 
 CDA_ModelNode::~CDA_ModelNode()
 {
+  // We need this or our reference count will go back to 1 and then down to 0
+  // again in removeModelEventListener, triggering re-entrancy.
+  add_ref();
+
+  removeModelEventListener(mModel);
+
   mModel->release_ref();
   std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i;
   for (i = mModelMonitors.begin(); i != mModelMonitors.end(); i++)
@@ -585,6 +594,9 @@ CDA_ModelNode::model(iface::cellml_api::Model* aModel)
   if (aModel == NULL)
     throw iface::cellml_api::CellMLException();
 
+  removeModelEventListener(mModel);
+  installModelEventListener(aModel);
+
   // Now notify the change...
   std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, j;
   for (i = mModelMonitors.begin(); i != mModelMonitors.end();)
@@ -633,6 +645,54 @@ CDA_ModelNode::model(iface::cellml_api::Model* aModel)
     mModel = aModel;
     mModel->add_ref();
   }
+}
+
+void
+CDA_ModelNode::installModelEventListener(iface::cellml_api::Model* aModel)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(m, aModel, cellml_api::CellMLDOMElement);
+  if (m == NULL)
+    return;
+
+  RETURN_INTO_OBJREF(de, iface::dom::Element, m->domElement());
+  if (de == NULL)
+    return;
+
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, de->ownerDocument());
+  if (doc == NULL)
+    return;
+
+  DECLARE_QUERY_INTERFACE_OBJREF(et, doc, events::EventTarget);
+  et->addEventListener(L"DOMSubtreeModified", this, false);
+
+  // Workaround for reference cycle: set refcount down by one after adding the
+  // event listener. This means we will get deleted even while the event
+  // listener still exists. We bump our own refcount up by one before removing
+  // the event listener.
+  release_ref();
+}
+
+void
+CDA_ModelNode::removeModelEventListener(iface::cellml_api::Model* aModel)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(m, aModel, cellml_api::CellMLDOMElement);
+  if (m == NULL)
+    return;
+
+  RETURN_INTO_OBJREF(de, iface::dom::Element, m->domElement());
+  if (de == NULL)
+    return;
+
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, de->ownerDocument());
+  if (doc == NULL)
+    return;
+
+  DECLARE_QUERY_INTERFACE_OBJREF(et, doc, events::EventTarget);
+
+  // Workaround for reference cycle: set refcount down by one after adding the
+  // event listener, bump it back up before removing...
+  add_ref();
+  et->removeEventListener(L"DOMSubtreeModified", this, false);
 }
 
 void
@@ -995,6 +1055,27 @@ CDA_ModelNode::setParentList(CDA_ModelList* aParentList)
   }
   else if (_cda_refcount == 0)
     delete this;
+}
+
+void
+CDA_ModelNode::dirty(bool aDirty)
+  throw(std::exception&)
+{
+  mModelDirty = aDirty;
+}
+
+bool
+CDA_ModelNode::dirty()
+  throw(std::exception&)
+{
+  return mModelDirty;
+}
+
+void
+CDA_ModelNode::handleEvent(iface::events::Event* aEvent)
+  throw(std::exception&)
+{
+  mModelDirty = true;
 }
 
 CDA_CellMLContext::CDA_CellMLContext()

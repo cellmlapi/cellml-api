@@ -7,6 +7,7 @@
 #include <string>
 #include "CellMLContextBootstrap.hxx"
 #include "Utilities.hxx"
+#include "IfaceDOM_events.hxx"
 
 class CDA_ModuleManager;
 
@@ -132,7 +133,8 @@ private:
 class CDA_ModelList;
 
 class CDA_ModelNode
-  : public iface::cellml_context::ModelNode
+  : public iface::cellml_context::ModelNode,
+    public iface::events::EventListener
 {
 public:
   CDA_ModelNode(iface::cellml_api::Model* aModel);
@@ -167,6 +169,10 @@ public:
     throw(std::exception&);
 
   void setParentList(CDA_ModelList* aParentList);
+  void dirty(bool aDirty) throw(std::exception&);
+  bool dirty() throw(std::exception&);
+
+  void handleEvent(iface::events::Event* aEvent) throw(std::exception&);
 
 private:
   std::wstring mName;
@@ -177,6 +183,11 @@ private:
   bool mIsFrozen;
   std::list<iface::cellml_context::ModelNodeMonitor*> mModelMonitors;
   uint32_t _cda_refcount;
+  bool mModelDirty;
+
+  void installModelEventListener(iface::cellml_api::Model* aModel);
+  void removeModelEventListener(iface::cellml_api::Model* aModel);
+
 public: // within CellMLContextImplementation only...
   // Not refcounted, but set/cleared automatically when added/removed.
   CDA_ModelList* mParentList;
