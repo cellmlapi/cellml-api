@@ -4143,7 +4143,11 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
                      L"variable", mv);
     }
 
-    if (v1 != NULL && v2 != NULL && mWeakCUSES != NULL)
+    // Can't do anything further if either variable is null...
+    if (v1 == NULL || v2 == NULL)
+      return;
+
+    if (mWeakCUSES != NULL)
     {
       // Connected variables must be dimensionally compatible...
       RETURN_INTO_WSTRING(u1, v1->unitsName());
