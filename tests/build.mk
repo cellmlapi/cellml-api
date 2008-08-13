@@ -1,8 +1,7 @@
 # Tests...
 check_PROGRAMS=tests/RunTestBin$(EXEEXT)
-bin_PROGRAMS+=tests/RunTestBin$(EXEEXT)
 
-TESTS=tests/RunTestBin tests/CheckCodeGenerator
+TESTS=tests/RunTestBin$(EXEEXT) tests/CheckCodeGenerator
 tests_RunTestBin_SOURCES=\
 	tests/TestOutput.cpp \
 	tests/DOMTest.cpp \
