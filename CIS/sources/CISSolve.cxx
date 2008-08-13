@@ -18,6 +18,7 @@
 #include <time.h>
 #endif
 
+#undef N
 #undef M
 #include <cvode/cvode.h>
 #include <nvector/nvector_serial.h>
