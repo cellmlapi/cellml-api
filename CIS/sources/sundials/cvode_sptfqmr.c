@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2006/03/15 15:33:45 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:32:33 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier and Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2005, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for the CVSPTFQMR linear solver.
  * -----------------------------------------------------------------
@@ -17,12 +17,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cvode_sptfqmr.h"
+#include <cvode/cvode_sptfqmr.h>
 #include "cvode_spils_impl.h"
 #include "cvode_impl.h"
 
-#include "sundials_sptfqmr.h"
-#include "sundials_math.h"
+#include <sundials/sundials_sptfqmr.h>
+#include <sundials/sundials_math.h>
 
 /* Other Constants */
 

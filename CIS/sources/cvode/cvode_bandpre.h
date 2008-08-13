@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2006/03/16 00:42:35 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:27:50 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the header file for the CVBANDPRE module, which
  * provides a banded difference quotient Jacobian-based
@@ -38,8 +38,8 @@
  *   To use these routines, the sequence of calls in the user
  *   main program should be as follows:
  *
- *   #include "cvbandpre.h"
- *   #include "nvector_serial.h"
+ *   #include <cvode/cvode_bandpre.h>
+ *   #include <nvector_serial.h>
  *   ...
  *   void *bp_data;
  *   ...
@@ -81,7 +81,7 @@
 extern "C" {
 #endif
 
-#include "sundials_nvector.h"
+#include <sundials/sundials_nvector.h>
 
 /* CVBANDPRE return values */
 

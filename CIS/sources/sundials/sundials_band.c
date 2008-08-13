@@ -1,15 +1,14 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006/01/25 23:08:22 $
+ * $Revision: 1.4 $
+ * $Date: 2006/11/06 18:14:58 $
  * -----------------------------------------------------------------
- * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
- *                Radu Serban @ LLNL
+ * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for a generic BAND linear
  * solver package.
@@ -19,8 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sundials_band.h"
-#include "sundials_math.h"
+#include <sundials/sundials_band.h>
+#include <sundials/sundials_math.h>
 
 #define ZERO RCONST(0.0)
 #define ONE  RCONST(1.0)
@@ -59,14 +58,14 @@ long int *BandAllocPiv(long int N)
   return(bandallocpiv(N));
 }
 
-long int BandFactor(BandMat A, long int *p)
+long int BandGBTRF(BandMat A, long int *p)
 {
-  return(gbfa(A->data, A->size, A->mu, A->ml, A->smu, p));
+  return(bandGBTRF(A->data, A->size, A->mu, A->ml, A->smu, p));
 }
 
-void BandBacksolve(BandMat A, long int *p, realtype *b)
+void BandGBTRS(BandMat A, long int *p, realtype *b)
 {
-  gbsl(A->data, A->size, A->smu, A->ml, p, b);
+  bandGBTRS(A->data, A->size, A->smu, A->ml, p, b);
 }
 
 void BandZero(BandMat A)
@@ -143,8 +142,8 @@ long int *bandallocpiv(long int n)
   return(piv);
 }
 
-long int gbfa(realtype **a, long int n, long int mu, long int ml, 
-              long int smu, long int *p)
+long int bandGBTRF(realtype **a, long int n, long int mu, long int ml, 
+                   long int smu, long int *p)
 {
   long int c, r, num_rows;
   long int i, j, k, l, storage_l, storage_k, last_col_k, last_row_k;
@@ -250,8 +249,8 @@ long int gbfa(realtype **a, long int n, long int mu, long int ml,
   return(0);
 }
 
-void gbsl(realtype **a, long int n, long int smu, long int ml, 
-          long int *p, realtype *b)
+void bandGBTRS(realtype **a, long int n, long int smu, long int ml, 
+               long int *p, realtype *b)
 {
   long int k, l, i, first_row_k, last_row_k;
   realtype mult, *diag_k;
@@ -356,14 +355,14 @@ void bandprint(realtype **a, long int n, long int mu, long int ml,
   for (i=0; i < n; i++) {
     start = MAX(0,i-ml);
     finish = MIN(n-1,i+mu);
-    for (j=0; j < start; j++) printf("%10s","");
+    for (j=0; j < start; j++) printf("%12s  ","");
     for (j=start; j <= finish; j++) {
 #if defined(SUNDIALS_EXTENDED_PRECISION)
-      printf("%10Lg", a[j][i-j+smu]);
+      printf("%12Lg  ", a[j][i-j+smu]);
 #elif defined(SUNDIALS_DOUBLE_PRECISION)
-      printf("%10lg", a[j][i-j+smu]);
+      printf("%12lg  ", a[j][i-j+smu]);
 #else
-      printf("%10g", a[j][i-j+smu]);
+      printf("%12g  ", a[j][i-j+smu]);
 #endif
     }
     printf("\n");

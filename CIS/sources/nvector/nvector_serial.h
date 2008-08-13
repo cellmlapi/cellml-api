@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.20 $
- * $Date: 2006/01/11 21:14:01 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:27:52 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the header file for the serial implementation of the
  * NVECTOR module.
@@ -28,12 +28,12 @@
  * Notes:
  *
  *   - The definition of the generic N_Vector structure can be found
- *     in the header file shared/include/nvector.h.
+ *     in the header file sundials_nvector.h.
  *
  *   - The definition of the type 'realtype' can be found in the
- *     header file shared/include/sundialstypes.h, and it may be
- *     changed (at the configuration stage) according to the user's
- *     needs. The sundialstypes.h file also contains the definition
+ *     header file sundials_types.h, and it may be changed (at the 
+ *     configuration stage) according to the user's needs. 
+ *     The sundials_types.h file also contains the definition
  *     for the type 'booleantype'.
  *
  *   - N_Vector arguments to arithmetic vector operations need not
@@ -53,7 +53,7 @@
 extern "C" {
 #endif
 
-#include "sundials_nvector.h"
+#include <sundials/sundials_nvector.h>
 
 /*
  * -----------------------------------------------------------------

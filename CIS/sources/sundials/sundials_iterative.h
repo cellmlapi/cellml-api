@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2006/01/11 21:14:02 $
+ * $Date: 2006/07/05 15:27:52 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen and Alan C. Hindmarsh @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This header file contains declarations intended for use by
  * generic iterative solvers of Ax = b. The enumeration gives
@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-#include "sundials_nvector.h"
+#include <sundials/sundials_nvector.h>
 
 
 /*

@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2006/02/06 23:17:36 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:32:32 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * Implementation header file for the CVBANDPRE module.
  * -----------------------------------------------------------------
@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-#include "cvode_bandpre.h"
-#include "sundials_band.h"
+#include <cvode/cvode_bandpre.h>
+#include <sundials/sundials_band.h>
 
 /*
  * -----------------------------------------------------------------

@@ -39,7 +39,12 @@ libcis_la_LIBADD = \
 libcis_la_CXXFLAGS = \
   -Wall -I$(top_srcdir)/sources \
   -I$(top_srcdir)/CCGS/sources -I$(top_builddir)/interfaces \
-  -I$(top_srcdir)/CIS/sources/sundials $(AM_CXXFLAGS)
+  -I$(top_srcdir)/CIS/sources/sundials -I$(top_srcdir)/CIS/sources $(AM_CXXFLAGS)
+
+libcis_la_CFLAGS = \
+  -Wall -I$(top_srcdir)/sources \
+  -I$(top_srcdir)/CCGS/sources -I$(top_builddir)/interfaces \
+  -I$(top_srcdir)/CIS/sources/sundials -I$(top_srcdir)/CIS/sources $(AM_CXXFLAGS)
 
 include_HEADERS += \
   $(top_builddir)/interfaces/IfaceCIS.hxx \

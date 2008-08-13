@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
  * $Revision: 1.2 $
- * $Date: 2006/02/02 00:31:06 $
+ * $Date: 2006/10/11 16:34:10 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2005, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the header file for the CVODE scaled preconditioned TFQMR 
  * linear solver, CVSPTFQMR.
@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-#include "cvode_spils.h"
-#include "sundials_sptfqmr.h"
+#include <cvode/cvode_spils.h>
+#include <sundials/sundials_sptfqmr.h>
 
 /*
  * -----------------------------------------------------------------

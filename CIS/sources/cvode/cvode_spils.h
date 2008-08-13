@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2006/02/10 21:19:13 $
+ * $Revision: 1.2 $
+ * $Date: 2006/10/20 16:50:29 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the common header file for the Scaled, Preconditioned
  * Iterative Linear Solvers in CVODE/CVODES.
@@ -23,8 +23,8 @@
 extern "C" {
 #endif
 
-#include "sundials_iterative.h"
-#include "sundials_nvector.h"
+#include <sundials/sundials_iterative.h>
+#include <sundials/sundials_nvector.h>
 
 /*
  * -----------------------------------------------------------------
@@ -129,7 +129,7 @@ extern "C" {
  *       and ewt (the error weight vector) are accessible through
  *       CVodeGetCurrentStep and CVodeGetErrWeights, respectively).
  *       The unit roundoff is available as UNIT_ROUNDOFF defined in
- *       sundialstypes.h.
+ *       sundials_types.h.
  *
  * Returned value:
  * The value to be returned by the PrecSetup function is a flag

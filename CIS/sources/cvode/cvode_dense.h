@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.5 $
- * $Date: 2006/02/10 21:19:13 $
+ * $Revision: 1.2 $
+ * $Date: 2006/10/20 16:50:29 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the header file for the CVODE dense linear solver, CVDENSE.
  * -----------------------------------------------------------------
@@ -22,8 +22,8 @@
 extern "C" {
 #endif
 
-#include "sundials_dense.h"
-#include "sundials_nvector.h"
+#include <sundials/sundials_dense.h>
+#include <sundials/sundials_nvector.h>
 
 /*
  * -----------------------------------------------------------------
@@ -91,7 +91,7 @@ extern "C" {
  *       and ewt (the error weight vector) are accessible through
  *       CVodeGetCurrentStep and CVodeGetErrWeights, respectively
  *       (see cvode.h). The unit roundoff is available as
- *       UNIT_ROUNDOFF defined in sundialstypes.h.
+ *       UNIT_ROUNDOFF defined in sundials_types.h.
  *
  * tmp1, tmp2, and tmp3 are pointers to memory allocated for
  * vectors of length N which can be used by a CVDenseJacFn

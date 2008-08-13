@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2006/02/10 21:19:15 $
+ * $Revision: 1.3 $
+ * $Date: 2006/10/23 19:43:51 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,9 +9,9 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
- * This is the implementation file for the CVDENSE linear solver.
+ * This is the impleentation file for the CVDENSE linear solver.
  * -----------------------------------------------------------------
  */
 
@@ -20,7 +20,7 @@
 
 #include "cvode_dense_impl.h"
 #include "cvode_impl.h"
-#include "sundials_math.h"
+#include <sundials/sundials_math.h>
 
 /* Other Constants */
 
@@ -152,14 +152,14 @@ int CVDense(void *cvode_mem, long int N)
   /* Allocate memory for M, savedJ, and pivot array */
 
   M = NULL;
-  M = DenseAllocMat(N);
+  M = DenseAllocMat(N, N);
   if (M == NULL) {
     CVProcessError(cv_mem, CVDENSE_MEM_FAIL, "CVDENSE", "CVDense", MSGDS_MEM_FAIL);
     free(cvdense_mem); cvdense_mem = NULL;
     return(CVDENSE_MEM_FAIL);
   }
   savedJ = NULL;
-  savedJ = DenseAllocMat(N);
+  savedJ = DenseAllocMat(N, N);
   if (savedJ == NULL) {
     CVProcessError(cv_mem, CVDENSE_MEM_FAIL, "CVDENSE", "CVDense", MSGDS_MEM_FAIL);
     DenseFreeMat(M);
@@ -465,7 +465,7 @@ static int CVDenseSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
   DenseAddI(M);
 
   /* Do LU factorization of M */
-  ier = DenseFactor(M, pivots); 
+  ier = DenseGETRF(M, pivots); 
 
   /* Return 0 if the LU was complete; otherwise return 1 */
   last_flag = ier;
@@ -492,7 +492,7 @@ static int CVDenseSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight,
   
   bd = N_VGetArrayPointer(b);
 
-  DenseBacksolve(M, pivots, bd);
+  DenseGETRS(M, pivots, bd);
 
   /* If CV_BDF, scale the correction to account for change in gamma */
   if ((lmm == CV_BDF) && (gamrat != ONE)) {
@@ -546,7 +546,7 @@ static int CVDenseDQJac(long int N, DenseMat J, realtype t,
   realtype *tmp2_data, *y_data, *ewt_data;
   N_Vector ftemp, jthCol;
   long int j;
-  int retval;
+  int retval = 0;
 
   CVodeMem cv_mem;
   CVDenseMem  cvdense_mem;
@@ -586,10 +586,7 @@ static int CVDenseDQJac(long int N, DenseMat J, realtype t,
 
     retval = f(tn, y, ftemp, f_data);
     nfeD++;
-    if (retval != 0) {
-      N_VSetArrayPointer(tmp2_data, tmp2);
-      return(retval);
-    }
+    if (retval != 0) break;
     
     y_data[j] = yjsaved;
 
@@ -602,5 +599,5 @@ static int CVDenseDQJac(long int N, DenseMat J, realtype t,
   /* Restore original array pointer in tmp2 */
   N_VSetArrayPointer(tmp2_data, tmp2);
 
-  return(0);
+  return(retval);
 }

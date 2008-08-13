@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2006/02/15 02:23:26 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:32:38 $
  * -----------------------------------------------------------------
  * Programmer(s): Peter Brown and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2004, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for the scaled, preconditioned
  * Bi-CGSTAB (SPBCG) iterative linear solver.
@@ -18,8 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sundials_spbcgs.h"
-#include "sundials_math.h"
+#include <sundials/sundials_spbcgs.h>
+#include <sundials/sundials_math.h>
 
 /*
  * -----------------------------------------------------------------
@@ -210,7 +210,7 @@ int SpbcgSolve(SpbcgMem mem, void *A_data, N_Vector x, N_Vector b,
   /* Set r_norm to L2 norm of r_star = sb P1_inv r_0, and
      return if small */
 
-  *res_norm = r_norm = RSqrt(beta_denom);
+  *res_norm = r_norm = rho = RSqrt(beta_denom);
   if (r_norm <= delta) return(SPBCG_SUCCESS);
 
   /* Copy r_star to r and p */

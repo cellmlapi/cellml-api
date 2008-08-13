@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
  * $Revision: 1.1 $
- * $Date: 2006/01/11 21:14:02 $
+ * $Date: 2006/07/05 15:27:53 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott Cohen, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
@@ -9,12 +9,12 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  *------------------------------------------------------------------
  * This header file exports two types: realtype and booleantype,
  * as well as the constants TRUE and FALSE.
  *
- * Users should include the header file sundialstypes.h in every
+ * Users should include the header file sundials_types.h in every
  * program file and use the exported name realtype instead of
  * float, double or long double.
  *
@@ -47,7 +47,7 @@ extern "C" {
 
 #ifndef _SUNDIALS_CONFIG_H
 #define _SUNDIALS_CONFIG_H
-#include "sundials_config.h"
+#include <sundials/sundials_config.h>
 #endif
 
 #include <float.h>

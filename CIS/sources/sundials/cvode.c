@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.66 $
- * $Date: 2006/03/21 19:14:22 $
+ * $Revision: 1.4 $
+ * $Date: 2006/10/17 21:00:02 $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Dan Shumaker @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for the main CVODE integrator.
  * It is independent of the CVODE linear solver in use.
@@ -25,8 +25,8 @@
 #include <stdarg.h>
 
 #include "cvode_impl.h"
-#include "sundials_math.h"
-#include "sundials_types.h"
+#include <sundials/sundials_math.h>
+#include <sundials/sundials_types.h>
 
 /*=================================================================*/
 /*             Macros                                              */
@@ -64,7 +64,7 @@
  * CVHin return values:
  *    CV_SUCCESS
  *    CV_RHSFUNC_FAIL
- *    TOUT_TOO_CLOSE
+ *    CV_TOO_CLOSE
  *
  * CVStep control constants:
  *    DO_ERROR_TEST
@@ -94,8 +94,6 @@
  *    TRY_AGAIN
  * 
  */
-
-#define TOUT_TOO_CLOSE   +1
 
 #define DO_ERROR_TEST    +2
 #define PREDICT_AGAIN    +3
@@ -1005,6 +1003,12 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
   int ewtsetOK;
   realtype troundoff, rh, nrm;
 
+  /*
+   * -------------------------------------
+   * 1. Check and process inputs
+   * -------------------------------------
+   */
+
   /* Check if cvode_mem exists */
   if (cvode_mem == NULL) {
     CVProcessError(NULL, CV_MEM_NULL, "CVODE", "CVode", MSGCV_NO_MEM);
@@ -1056,7 +1060,17 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
   }
   taskc = task;
 
-  /* Begin first call block */ 
+  /*
+   * ----------------------------------------
+   * 2. Initializations performed only at
+   *    the first step (nst=0):
+   *    - initial setup
+   *    - initialize Nordsieck history array
+   *    - compute initial step size
+   *    - check for approach to tstop
+   *    - check for approach to a root
+   * ----------------------------------------
+   */
 
   if (nst == 0) {
 
@@ -1077,6 +1091,8 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
       CVProcessError(cv_mem, CV_FIRST_RHSFUNC_ERR, "CVODE", "CVode", MSGCV_RHSFUNC_FIRST);
       return(CV_FIRST_RHSFUNC_ERR);
     }
+
+    /* Set initial h (from H0 or CVHin). */
 
     h = hin;
     if ( (h != ZERO) && ((tout-tn)*h < ZERO) ) {
@@ -1102,14 +1118,18 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
         return(CV_ILL_INPUT);
       }
       if ( (tn + h - tstop)*h > ZERO ) 
-        h = tstop - tn;
+        h = (tstop - tn)*(ONE-FOUR*uround);
     }
+
+    /* Scale zn[1] by h.*/
 
     hscale = h; 
     h0u    = h;
     hprime = h;
 
     N_VScale(h, zn[1], zn[1]);
+
+    /* Check for zeros of root function g at and near t0. */
 
     if (nrtfn > 0) {
 
@@ -1127,14 +1147,28 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
 
   } /* end of first call block */
 
-  /* At following steps, perform stop tests */
+  /*
+   * ------------------------------------------------------
+   * 3. At following steps, perform stop tests:
+   *    - check for root in last step
+   *    - check if we passed tstop
+   *    - check if we passed tout (NORMAL mode)
+   *    - check if current tn was returned (ONE_STEP mode)
+   *    - check if we are close to tstop
+   *      (adjust step size if needed)
+   * -------------------------------------------------------
+   */
 
   if (nst > 0) {
+
+    /* Estimate an infinitesimal time interval to be used as
+       a roundoff for time quantities (based on current time 
+       and step size) */
+    troundoff = FUZZ_FACTOR*uround*(ABS(tn) + ABS(h));
 
     /* First, check for a root in the last step taken, other than the
        last root found, if any.  If task = CV_ONE_STEP and y(tn) was not
        returned because of an intervening root, return y(tn) now.     */
-
     if (nrtfn > 0) {
 
       irfndp = irfnd;
@@ -1152,7 +1186,9 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
         return(CV_ROOT_RETURN);
       }
 
-      if (tn != tretlast) {       /* Check remaining interval for roots */
+      /* If tn is distinct from tretlast (within roundoff),
+         check remaining interval for roots */
+      if ( ABS(tn - tretlast) > troundoff ) {
 
         retval = CVRcheck3(cv_mem);
 
@@ -1194,7 +1230,7 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
 
     /* In CV_ONE_STEP mode, test if tn was returned */
-    if (task == CV_ONE_STEP && tretlast != tn) {
+    if ( task == CV_ONE_STEP && ABS(tn - tretlast) > troundoff ) {
       tretlast = *tret = tn;
       N_VScale(ONE, zn[0], yout);
       return(CV_SUCCESS);
@@ -1203,7 +1239,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     /* Test for tn at tstop or near tstop */
     if ( istop ) {
 
-      troundoff = FUZZ_FACTOR*uround*(ABS(tn) + ABS(h));
       if ( ABS(tn - tstop) <= troundoff) {
         ier =  CVodeGetDky(cv_mem, tstop, 0, yout);
         if (ier != CV_SUCCESS) {
@@ -1214,8 +1249,9 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
         return(CV_TSTOP_RETURN);
       }
       
+      /* If next step would overtake tstop, adjust stepsize */
       if ( (tn + hprime - tstop)*h > ZERO ) {
-        hprime = tstop - tn;
+        hprime = (tstop - tn)*(ONE-FOUR*uround);
         eta = hprime/h;
       }
 
@@ -1223,7 +1259,21 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     
   } /* end stopping tests block */  
 
-  /* Looping point for internal steps */
+  /*
+   * --------------------------------------------------
+   * 4. Looping point for internal steps
+   *
+   *    4.1. check for errors (too many steps, too much
+   *         accuracy requested, step size too small)
+   *    4.2. take a new step (call CVStep)
+   *    4.3. stop on error 
+   *    4.4. perform stop tests:
+   *         - check for root in last step
+   *         - check if tout was passed
+   *         - check if close to tstop
+   *         - check if in ONE_STEP mode (must return)
+   * --------------------------------------------------
+   */
 
   nstloc = 0;
   loop {
@@ -1232,7 +1282,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     next_q = q;
     
     /* Reset and check ewt */
-
     if (nst > 0) {
 
       ewtsetOK = efun(zn[0], ewt, e_data);
@@ -1253,7 +1302,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
     
     /* Check for too many steps */
-    
     if (nstloc >= mxstep) {
       CVProcessError(cv_mem, CV_TOO_MUCH_WORK, "CVODE", "CVode", MSGCV_MAX_STEPS, tn);
       istate = CV_TOO_MUCH_WORK;
@@ -1263,7 +1311,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
 
     /* Check for too much accuracy requested */
-
     nrm = N_VWrmsNorm(zn[0], ewt);
     tolsf = uround * nrm;
     if (tolsf > ONE) {
@@ -1278,7 +1325,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
 
     /* Check for h below roundoff level in tn */
-
     if (tn + h == tn) {
       nhnil++;
       if (nhnil <= mxhnil) 
@@ -1288,11 +1334,9 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     }
 
     /* Call CVStep to take a step */
-
     kflag = CVStep(cv_mem);
 
     /* Process failed step cases, and exit loop */
-   
     if (kflag != CV_SUCCESS) {
       istate = CVHandleFailure(cv_mem, kflag);
       tretlast = *tret = tn;
@@ -1303,7 +1347,6 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
     nstloc++;
 
     /* Check for root in last step taken. */
-
     if (nrtfn > 0) {
 
       retval = CVRcheck3(cv_mem);
@@ -1321,8 +1364,17 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
 
     }
 
-    /* Check if tn is at tstop or near tstop */
+    /* In NORMAL mode, check if tout reached */
+    if ( (task == CV_NORMAL) &&  (tn-tout)*h >= ZERO ) {
+      istate = CV_SUCCESS;
+      tretlast = *tret = tout;
+      (void) CVodeGetDky(cv_mem, tout, 0, yout);
+      next_q = qprime;
+      next_h = hprime;
+      break;
+    }
 
+    /* Check if tn is at tstop or near tstop */
     if ( istop ) {
 
       troundoff = FUZZ_FACTOR*uround*(ABS(tn) + ABS(h));
@@ -1334,29 +1386,17 @@ int CVode(void *cvode_mem, realtype tout, N_Vector yout,
       }
 
       if ( (tn + hprime - tstop)*h > ZERO ) {
-        hprime = tstop - tn;
+        hprime = (tstop - tn)*(ONE-FOUR*uround);
         eta = hprime/h;
       }
 
     }
 
-    /* Check if in one-step mode, and if so copy y and exit loop */
-    
+    /* In ONE_STEP mode, copy y and exit loop */
     if (task == CV_ONE_STEP) {
       istate = CV_SUCCESS;
       tretlast = *tret = tn;
       N_VScale(ONE, zn[0], yout);
-      next_q = qprime;
-      next_h = hprime;
-      break;
-    }
-
-    /* Check if tout reached, and if so interpolate and exit loop */
-
-    if ((tn-tout)*h >= ZERO) {
-      istate = CV_SUCCESS;
-      tretlast = *tret = tout;
-      (void) CVodeGetDky(cv_mem, tout, 0, yout);
       next_q = qprime;
       next_h = hprime;
       break;
@@ -1683,7 +1723,7 @@ static int CVInitialSetup(CVodeMem cv_mem)
  * CVHin
  *
  * This routine computes a tentative initial step size h0. 
- * If tout is too close to tn (= t0), then CVHin returns TOUT_TOO_CLOSE
+ * If tout is too close to tn (= t0), then CVHin returns CV_TOO_CLOSE
  * and h remains uninitialized. 
  * If the RHS function fails unrecoverably, CVHin returns CV_RHSFUNC_FAIL.
  * If the RHS function fails recoverably too many times and recovery is
@@ -1720,13 +1760,13 @@ static int CVHin(CVodeMem cv_mem, realtype tout)
 
   /* If tout is too close to tn, give up */
   
-  if ((tdiff = tout-tn) == ZERO) return(TOUT_TOO_CLOSE);
+  if ((tdiff = tout-tn) == ZERO) return(CV_TOO_CLOSE);
   
   sign = (tdiff > ZERO) ? 1 : -1;
   tdist = ABS(tdiff);
   tround = uround * MAX(ABS(tn), ABS(tout));
 
-  if (tdist < TWO*tround) return(TOUT_TOO_CLOSE);
+  if (tdist < TWO*tround) return(CV_TOO_CLOSE);
   
   /* 
      Set lower and upper bounds on h0, and take geometric mean 
@@ -1748,6 +1788,7 @@ static int CVHin(CVodeMem cv_mem, realtype tout)
   /* Outer loop */
 
   hnewOK = FALSE;
+  hs = hg;         /* safeguard against 'uninitialized variable' warning */
 
   for(count1 = 1; count1 <= MAX_ITERS; count1++) {
 
@@ -3110,9 +3151,8 @@ static int CVHandleFailure(CVodeMem cv_mem, int flag)
   case CV_RTFUNC_FAIL:    
     CVProcessError(cv_mem, CV_RTFUNC_FAIL, "CVODE", "CVode", MSGCV_RTFUNC_FAILED, tn);
     break;
-  case TOUT_TOO_CLOSE:
-    CVProcessError(cv_mem, CV_ILL_INPUT, "CVODE", "CVode", MSGCV_TOO_CLOSE);
-    return(CV_ILL_INPUT);
+  case CV_TOO_CLOSE:
+    CVProcessError(cv_mem, CV_TOO_CLOSE, "CVODE", "CVode", MSGCV_TOO_CLOSE);
   default:
     return(CV_SUCCESS);   
   }

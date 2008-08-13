@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006/01/25 23:08:22 $
+ * $Revision: 1.3 $
+ * $Date: 2006/10/19 21:19:39 $
  * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,42 +9,43 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
- * This is the implementation file for a generic DENSE linear
- * solver package.
+ * This is the implementation file for a generic package of dense
+ * matrix operations.
  * -----------------------------------------------------------------
  */ 
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sundials_dense.h"
-#include "sundials_math.h"
+#include <sundials/sundials_dense.h>
+#include <sundials/sundials_math.h>
 
 #define ZERO RCONST(0.0)
 #define ONE  RCONST(1.0)
 
 /* Implementation */
 
-DenseMat DenseAllocMat(long int N)
+DenseMat DenseAllocMat(long int M, long int N)
 {
   DenseMat A;
 
-  if (N <= 0) return(NULL);
+  /* Note that M and N are tested in denalloc */
 
   A = NULL;
   A = (DenseMat) malloc(sizeof *A);
   if (A==NULL) return (NULL);
   
   A->data = NULL;
-  A->data = denalloc(N);
+  A->data = denalloc(M, N);
   if (A->data == NULL) {
     free(A); A = NULL;
     return(NULL);
   }
 
-  A->size = N;
+  A->M = M;
+  A->N = N;
 
   return(A);
 }
@@ -54,34 +55,34 @@ long int *DenseAllocPiv(long int N)
   return(denallocpiv(N));
 }
 
-long int DenseFactor(DenseMat A, long int *p)
+long int DenseGETRF(DenseMat A, long int *p)
 {
-  return(gefa(A->data, A->size, p));
+  return(denGETRF(A->data, A->M, A->N, p));
 }
 
-void DenseBacksolve(DenseMat A, long int *p, realtype *b)
+void DenseGETRS(DenseMat A, long int *p, realtype *b)
 {
-  gesl(A->data, A->size, p, b);
+  denGETRS(A->data, A->N, p, b);
 }
 
 void DenseZero(DenseMat A)
 {
-  denzero(A->data, A->size);
+  denzero(A->data, A->M, A->N);
 }
 
 void DenseCopy(DenseMat A, DenseMat B)
 {
-  dencopy(A->data, B->data, A->size);
+  dencopy(A->data, B->data, A->M, A->N);
 }
 
 void DenseScale(realtype c, DenseMat A)
 {
-  denscale(c, A->data, A->size);
+  denscale(c, A->data, A->M, A->N);
 }
 
 void DenseAddI(DenseMat A)
 {
-  denaddI(A->data, A->size);
+  denaddI(A->data, A->N);
 }
 
 void DenseFreeMat(DenseMat A)
@@ -97,5 +98,5 @@ void DenseFreePiv(long int *p)
 
 void DensePrint(DenseMat A)
 {
-  denprint(A->data, A->size);
+  denprint(A->data, A->M, A->N);
 }

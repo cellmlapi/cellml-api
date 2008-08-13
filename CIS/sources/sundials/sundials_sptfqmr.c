@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006/03/18 02:06:52 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:32:38 $
  * -----------------------------------------------------------------
  * Programmer(s): Aaron Collier @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2005, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for the scaled preconditioned
  * Transpose-Free Quasi-Minimal Residual (SPTFQMR) linear solver.
@@ -18,8 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sundials_sptfqmr.h"
-#include "sundials_math.h"
+#include <sundials/sundials_sptfqmr.h>
+#include <sundials/sundials_math.h>
 
 /*
  * -----------------------------------------------------------------
@@ -217,6 +217,8 @@ int SptfqmrSolve(SptfqmrMem mem, void *A_data, N_Vector x, N_Vector b,
 
   /* Exit immediately if memory pointer is NULL */
   if (mem == NULL) return(SPTFQMR_MEM_NULL);
+
+  temp_val = r_curr_norm = -ONE;  /* Initialize to avoid compiler warnings */
 
   *nli = *nps = 0;    /* Initialize counters */
   converged = FALSE;  /* Initialize convergence flag */

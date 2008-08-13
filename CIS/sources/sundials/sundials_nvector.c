@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
  * $Revision: 1.2 $
- * $Date: 2006/01/25 23:08:22 $
+ * $Date: 2006/10/11 16:34:20 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban and Aaron Collier @ LLNL                               
  * -----------------------------------------------------------------
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for a generic NVECTOR package.
  * It contains the implementation of the N_Vector operations listed
@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 
-#include "sundials_nvector.h"
+#include <sundials/sundials_nvector.h>
 
 /*
  * -----------------------------------------------------------------

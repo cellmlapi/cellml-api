@@ -18,11 +18,11 @@
 #include <time.h>
 #endif
 
-#undef N
-#include <cvode.h>
-#include <nvector_serial.h>
-#include <sundials_types.h>
-#include <cvode_dense.h>
+#undef M
+#include <cvode/cvode.h>
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_types.h>
+#include <cvode/cvode_dense.h>
 
 #ifdef _MSC_VER
 #include <float.h>

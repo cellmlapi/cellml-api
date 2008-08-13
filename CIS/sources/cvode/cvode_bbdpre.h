@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2006/03/16 00:42:35 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:27:50 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the header file for the CVBBDPRE module, for a
  * band-block-diagonal preconditioner, i.e. a block-diagonal
@@ -32,8 +32,8 @@
  *
  * The user's calling program should have the following form:
  *
- *   #include "nvector_parallel.h"
- *   #include "cvbbdpre.h"
+ *   #include <nvector_parallel.h>
+ *   #include <cvode/cvode_bbdpre.h>
  *   ...
  *   void *cvode_mem;
  *   void *bbd_data;
@@ -111,7 +111,7 @@
 extern "C" {
 #endif
 
-#include "sundials_nvector.h"
+#include <sundials/sundials_nvector.h>
 
 /* CVBBDPRE return values */
 

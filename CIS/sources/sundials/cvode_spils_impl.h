@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006/02/06 23:17:36 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:32:33 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2005, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * Common implementation header file for the scaled, preconditioned
  * linear solver modules.
@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#include "cvode_spils.h"
+#include <cvode/cvode_spils.h>
 
 /* Types of iterative linear solvers */
 

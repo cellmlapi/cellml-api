@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.9 $
- * $Date: 2006/02/10 21:19:15 $
+ * $Revision: 1.2 $
+ * $Date: 2006/10/11 16:34:13 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This file contains implementations of the banded difference
  * quotient Jacobian-based preconditioner and solver routines for
@@ -23,11 +23,11 @@
 #include "cvode_impl.h"
 #include "cvode_bandpre_impl.h"
 
-#include "cvode_sptfqmr.h"
-#include "cvode_spbcgs.h"
-#include "cvode_spgmr.h"
+#include <cvode/cvode_sptfqmr.h>
+#include <cvode/cvode_spbcgs.h>
+#include <cvode/cvode_spgmr.h>
 
-#include "sundials_math.h"
+#include <sundials/sundials_math.h>
 
 #define MIN_INC_MULT RCONST(1000.0)
 #define ZERO         RCONST(0.0)
@@ -385,7 +385,7 @@ static int CVBandPrecSetup(realtype t, N_Vector y, N_Vector fy,
   BandAddI(savedP);
  
   /* Do LU factorization of matrix. */
-  ier = BandFactor(savedP, pivots);
+  ier = BandGBTRF(savedP, pivots);
  
   /* Return 0 if the LU was complete; otherwise return 1. */
   if (ier > 0) return(1);
@@ -430,7 +430,7 @@ static int CVBandPrecSolve(realtype t, N_Vector y, N_Vector fy,
   /* Do band backsolve on the vector z. */
   zd = N_VGetArrayPointer(z);
 
-  BandBacksolve(savedP, pivots, zd);
+  BandGBTRS(savedP, pivots, zd);
 
   return(0);
 }

@@ -1,14 +1,14 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.4 $
- * $Date: 2006/02/10 21:19:15 $
+ * $Revision: 1.2 $
+ * $Date: 2006/10/17 21:00:03 $
  * -----------------------------------------------------------------
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for the optional input and output
  * functions for the CVODE solver.
@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 #include "cvode_impl.h"
-#include "sundials_types.h"
+#include <sundials/sundials_types.h>
 
 #define ZERO RCONST(0.0)
 #define ONE  RCONST(1.0)
@@ -1172,6 +1172,9 @@ char *CVodeGetReturnFlagName(int flag)
   case CV_BAD_DKY:
     sprintf(name,"CV_BAD_DKY");
     break;
+  case CV_TOO_CLOSE:
+    sprintf(name,"CV_TOO_CLOSE");
+    break;    
   default:
     sprintf(name,"NONE");
   }

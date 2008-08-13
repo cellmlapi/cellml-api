@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.3 $
- * $Date: 2006/02/15 02:23:22 $
+ * $Revision: 1.1 $
+ * $Date: 2006/07/05 15:27:53 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/shared/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the header file for the implementation of SPGMR Krylov
  * iterative linear solver.  The SPGMR algorithm is based on the
@@ -74,7 +74,7 @@
 extern "C" {
 #endif
 
-#include "sundials_iterative.h"
+#include <sundials/sundials_iterative.h>
 
 /*
  * -----------------------------------------------------------------

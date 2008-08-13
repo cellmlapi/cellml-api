@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.7 $
- * $Date: 2006/02/10 21:19:15 $
+ * $Revision: 1.3 $
+ * $Date: 2006/10/23 19:43:51 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -9,7 +9,7 @@
  * Copyright (c) 2002, The Regents of the University of California.
  * Produced at the Lawrence Livermore National Laboratory.
  * All rights reserved.
- * For details, see sundials/cvode/LICENSE.
+ * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the implementation file for the CVBAND linear solver.
  * -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 
 #include "cvode_band_impl.h"
 #include "cvode_impl.h"
-#include "sundials_math.h"
+#include <sundials/sundials_math.h>
 
 /* Other Constants */
 
@@ -483,7 +483,7 @@ static int CVBandSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
   BandAddI(M);
 
   /* Do LU factorization of M */
-  ier = BandFactor(M, pivots);
+  ier = BandGBTRF(M, pivots);
 
   /* Return 0 if the LU was complete; otherwise return 1 */
   if (ier > 0) {
@@ -513,7 +513,7 @@ static int CVBandSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight,
 
   bd = N_VGetArrayPointer(b);
 
-  BandBacksolve(M, pivots, bd);
+  BandGBTRS(M, pivots, bd);
 
   /* If CV_BDF, scale the correction to account for change in gamma */
   if ((lmm == CV_BDF) && (gamrat != ONE)) {
@@ -566,7 +566,7 @@ static int CVBandDQJac(long int N, long int mupper, long int mlower,
   N_Vector ftemp, ytemp;
   long int group, i, j, width, ngroups, i1, i2;
   realtype *col_j, *ewt_data, *fy_data, *ftemp_data, *y_data, *ytemp_data;
-  int retval;
+  int retval = 0;
 
   CVodeMem cv_mem;
   CVBandMem cvband_mem;
@@ -611,7 +611,7 @@ static int CVBandDQJac(long int N, long int mupper, long int mlower,
 
     retval = f(tn, ytemp, ftemp, f_data);
     nfeB++;
-    if (retval != 0) return(retval);
+    if (retval != 0) break;
 
     /* Restore ytemp, then form and load difference quotients */
     for (j=group-1; j < N; j+=width) {
@@ -627,6 +627,6 @@ static int CVBandDQJac(long int N, long int mupper, long int mlower,
     }
   }
   
-  return(0);
+  return(retval);
 
 }
