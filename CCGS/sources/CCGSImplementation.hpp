@@ -13,6 +13,10 @@
 #include <vector>
 #include <list>
 
+#ifdef ENABLE_CONTEXT
+#include "IfaceCellML_Context.hxx"
+#endif
+
 class CDA_CodeInformation;
 
 class CDA_ComputationTarget
@@ -197,13 +201,23 @@ private:
 
 class CDA_CodeGeneratorBootstrap
   : public iface::cellml_services::CodeGeneratorBootstrap
+#ifdef ENABLE_CONTEXT 
+  , public iface::cellml_context::CellMLModule
+#endif 
 {
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
+#ifdef ENABLE_CONTEXT
+  CDA_IMPL_QI2(cellml_services::CodeGeneratorBootstrap, cellml_context::CellMLModule);
+#else
   CDA_IMPL_QI1(cellml_services::CodeGeneratorBootstrap);
+#endif
 
   CDA_CodeGeneratorBootstrap() : _cda_refcount(1)
+#ifdef ENABLE_CONTEXT
+                               , mUnload(NULL)
+#endif
   {}
   ~CDA_CodeGeneratorBootstrap() {}
 
@@ -212,6 +226,48 @@ public:
   {
     return new CDA_CodeGenerator();
   }
+
+#ifdef ENABLE_CONTEXT
+  iface::cellml_context::CellMLModule::ModuleTypes moduleType()
+    throw(std::exception&)
+  {
+    return iface::cellml_context::CellMLModule::SERVICE;
+  }
+
+  wchar_t* moduleName() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"CCCGS");
+  }
+
+  wchar_t* moduleDescription() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"The CellML C Code Generation Service");
+  }
+
+  wchar_t* moduleVersion() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"0.0");
+  }
+
+  wchar_t* moduleIconURL() throw (std::exception&)
+  {
+    return CDA_wcsdup(L"");
+  }
+
+  void unload() throw (std::exception&)
+  {
+    if (mUnload != NULL)
+      mUnload();
+  }
+
+  void SetUnloadCCGS(void (*unload)(void))
+  {
+    mUnload = unload;
+  }
+
+private:
+  void (*mUnload)();
+#endif
 };
 
 #endif // _CCGSImplementation_hpp
