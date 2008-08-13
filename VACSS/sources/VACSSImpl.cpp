@@ -4039,6 +4039,59 @@ enum EncapsulationRelationship
   COMP1_HIDDEN_COMP2
 };
 
+bool
+ModelValidation::checkComponentRelevant(iface::cellml_api::CellMLComponent* aComp)
+{
+  ObjRef<iface::cellml_api::CellMLComponent> c(aComp), next;
+
+  while (true)
+  {
+    next = already_AddRefd<iface::cellml_api::CellMLComponent>
+      (c->encapsulationParent());
+    if (next == NULL)
+      break;
+
+    c = next;
+  }
+
+  // encapsulationParent takes us to the top of the encapsulation hierarchy,
+  // even when there are imports involved. So now it is a case of going straight
+  // up to see if we have a path to the toplevel model...
+
+  while (true)
+  {
+    RETURN_INTO_WSTRING(componentName, c->name());
+    RETURN_INTO_OBJREF(m, iface::cellml_api::Model, c->modelElement());
+    RETURN_INTO_OBJREF(mp, iface::cellml_api::CellMLElement,
+                       m->parentElement());
+
+    if (mp == NULL)
+      return true;
+
+    DECLARE_QUERY_INTERFACE_OBJREF(imp, mp, cellml_api::CellMLImport);
+
+    RETURN_INTO_OBJREF(ics, iface::cellml_api::ImportComponentSet,
+                       imp->components());
+    RETURN_INTO_OBJREF(ici, iface::cellml_api::ImportComponentIterator,
+                       ics->iterateImportComponents());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(ic, iface::cellml_api::ImportComponent,
+                         ici->nextImportComponent());
+      if (ic == NULL)
+        return false;
+      
+      RETURN_INTO_WSTRING(cr, ic->componentRef());
+      if (cr == componentName)
+      {
+        c = ic;
+        break;
+      }
+    }
+  }
+  // Unreachable.
+}
+
 void
 ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
 {
@@ -4090,6 +4143,11 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
                    L"of components in the model", mc);
   }
   mConnectedComps.insert(cp);
+
+  // We can only do the remaining checks if the component is actually imported or
+  // encapsulated under something which is imported...
+  if (!checkComponentRelevant(c1) || !checkComponentRelevant(c2))
+    return;
 
   RETURN_INTO_OBJREF(ep1, iface::cellml_api::CellMLComponent,
                      c1->encapsulationParent());

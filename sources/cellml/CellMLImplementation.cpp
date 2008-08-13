@@ -2047,7 +2047,8 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
   RETURN_INTO_WSTRING(componentName, name());
   ObjRef<iface::cellml_api::CellMLComponent> currentComponent = this;
 
-  // We have a component. Go down the import chain, so we can search up...
+  // We have a component. Go down the import chain and look for the
+  // encapsulation parent in the top-most model.
   while (model->mParent)
   {
     CDA_CellMLImport* import = dynamic_cast<CDA_CellMLImport*>(model->mParent);
@@ -2083,131 +2084,89 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
       break;
   }
 
-  // We are now as far down the import chain as we can go. Start the search
-  // from here and build our way back up...
-
-  while (model)
+  // We need to search deeply into groups...
+  RETURN_INTO_OBJREF(groupSet, iface::cellml_api::GroupSet,
+                     model->groups());
+  RETURN_INTO_OBJREF(groupIt, iface::cellml_api::GroupIterator,
+                     groupSet->iterateGroups());
+  
+  // We now have the group iterator,
+  while (true)
   {
-    // We need to search deeply into groups...
-    RETURN_INTO_OBJREF(groupSet, iface::cellml_api::GroupSet,
-                       model->groups());
-    RETURN_INTO_OBJREF(groupIt, iface::cellml_api::GroupIterator,
-                       groupSet->iterateGroups());
-
-    // We now have the group iterator,
+    RETURN_INTO_OBJREF(group, iface::cellml_api::Group, groupIt->nextGroup());
+    if (group == NULL)
+      break;
+    if (!group->isEncapsulation())
+      continue;
+    
+    RETURN_INTO_OBJREF(comprs, iface::cellml_api::ComponentRefSet,
+                       group->componentRefs());
+    RETURN_INTO_OBJREF(compri, iface::cellml_api::ComponentRefIterator,
+                       comprs->iterateComponentRefs());
     while (true)
     {
-      RETURN_INTO_OBJREF(group, iface::cellml_api::Group, groupIt->nextGroup());
-      if (group == NULL)
+      RETURN_INTO_OBJREF(compr, iface::cellml_api::ComponentRef,
+                         compri->nextComponentRef());
+      // See if we can find an appropriate relationship ref...
+      if (compr == NULL)
         break;
-      if (!group->isEncapsulation())
-        continue;
+      
+      CDA_ComponentRef* crf =
+        RecursivelySearchCR(static_cast<CDA_ComponentRef*>
+                            (compr.getPointer()),
+                            componentName.c_str());
 
-      RETURN_INTO_OBJREF(comprs, iface::cellml_api::ComponentRefSet,
-                         group->componentRefs());
-      RETURN_INTO_OBJREF(compri, iface::cellml_api::ComponentRefIterator,
-                         comprs->iterateComponentRefs());
+      if (crf == NULL)
+        continue;
+      
+      // See if the parent is a relationship ref too...
+      CDA_ComponentRef* crp =
+        dynamic_cast<CDA_ComponentRef*>(crf->mParent);
+      if (crp == NULL)
+        continue;
+      
+      // crp is the parent of this relationship ref. Get the name.
+      RETURN_INTO_WSTRING(parname, crp->componentName());
+      
       while (true)
       {
-        RETURN_INTO_OBJREF(compr, iface::cellml_api::ComponentRef,
-                           compri->nextComponentRef());
-        // See if we can find an appropriate relationship ref...
-        if (compr == NULL)
-          break;
-
-        CDA_ComponentRef* crf =
-          RecursivelySearchCR(static_cast<CDA_ComponentRef*>
-                              (compr.getPointer()),
-                              componentName.c_str());
-
-        if (crf == NULL)
-          continue;
-
-        // See if the parent is a relationship ref too...
-        CDA_ComponentRef* crp =
-          dynamic_cast<CDA_ComponentRef*>(crf->mParent);
-        if (crp == NULL)
-          continue;
-
-        // crp is the parent of this relationship ref. Get the name.
-        RETURN_INTO_WSTRING(parname, crp->componentName());
-
-        while (true)
+        // Find the component in this model...
+        RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet,
+                           model->modelComponents());
+        RETURN_INTO_OBJREF(fc, iface::cellml_api::NamedCellMLElement,
+                           mc->get(parname.c_str()));
+        
+        // If it is missing, then the CellML is malformed.
+        if (fc == NULL)
+          throw iface::cellml_api::CellMLException();
+        
+        // See if it is an ImportComponent...
+        CDA_ImportComponent* ic =
+          dynamic_cast<CDA_ImportComponent*>(fc.getPointer());
+        if (ic == NULL)
         {
-          // Find the component in this model...
-          RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet,
-                             model->modelComponents());
-          RETURN_INTO_OBJREF(fc, iface::cellml_api::NamedCellMLElement,
-                             mc->get(parname.c_str()));
-          
-          // If it is missing, then the CellML is malformed.
-          if (fc == NULL)
-            throw iface::cellml_api::CellMLException();
-
-          // See if it is an ImportComponent...
-          CDA_ImportComponent* ic =
-            dynamic_cast<CDA_ImportComponent*>(fc.getPointer());
-          if (ic == NULL)
-          {
-            iface::cellml_api::CellMLComponent* fcr = 
-              dynamic_cast<iface::cellml_api::CellMLComponent*>
-              (fc.getPointer());
-            fcr->add_ref();
-            return fcr;
-          }
-          // We now have an ImportComponent, but we want the real one if we can
-          // get it.
-          CDA_CellMLImport* ci = dynamic_cast<CDA_CellMLImport*>(ic->mParent);
-          if (ci->mImportedModel == NULL)
-          {
-            ic->add_ref();
-            return ic;
-          }
-          model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
-          // If the real component isn't instantiated yet, return the
-          // ImportComponent...
-          wchar_t *cr = ic->componentRef();
-          parname = cr;
-          free(cr);
+          iface::cellml_api::CellMLComponent* fcr = 
+            dynamic_cast<iface::cellml_api::CellMLComponent*>
+            (fc.getPointer());
+          fcr->add_ref();
+          return fcr;
         }
+        // We now have an ImportComponent, but we want the real one if we can
+        // get it.
+        CDA_CellMLImport* ci = dynamic_cast<CDA_CellMLImport*>(ic->mParent);
+        if (ci->mImportedModel == NULL)
+        {
+          ic->add_ref();
+          return ic;
+        }
+        model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
+        // If the real component isn't instantiated yet, return the
+        // ImportComponent...
+        wchar_t *cr = ic->componentRef();
+        parname = cr;
+        free(cr);
       }
     }
-
-    // If we get here, the current model does not contain the definition of
-    // where to find the parent. However, it may be the case that the component
-    // is imported, and the encapsulation parent is defined in the imported
-    // model. We firstly need to look in imports for one that imports this
-    // component...
-
-    // See if this is an ImportComponent...
-    CDA_ImportComponent* ic = dynamic_cast<CDA_ImportComponent*>
-      (currentComponent.getPointer());
-    if (ic == NULL)
-      // If its not an import component, there is no parent...
-      return NULL;
-
-    CDA_CellMLImport* ci = dynamic_cast<CDA_CellMLImport*>(ic->mParent);
-    if (ci == NULL)
-      throw iface::cellml_api::CellMLException();
-
-    if (ci->mImportedModel == NULL)
-      throw iface::cellml_api::CellMLException();
-    model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
-
-    RETURN_INTO_WSTRING(cr, ic->componentRef());
-
-    // Search the new model for the component...
-    RETURN_INTO_OBJREF(mcs, iface::cellml_api::CellMLComponentSet,
-                       model->modelComponents());
-
-    currentComponent = already_AddRefd<iface::cellml_api::CellMLComponent>
-      (mcs->getComponent(cr.c_str()));
-    if (currentComponent == NULL)
-      throw iface::cellml_api::CellMLException();
-
-    wchar_t* str = currentComponent->name();
-    componentName = str;
-    free(str);
   }
 
   return NULL;

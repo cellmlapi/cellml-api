@@ -513,6 +513,7 @@ private:
                              bool aAllowEncoding = false);
   bool findConstantValue(iface::mathml_dom::MathMLElement* aEl, double& aValue,
                          const std::wstring& aType);
+  bool checkComponentRelevant(iface::cellml_api::CellMLComponent* aComp);
 
   ObjRef<iface::cellml_services::CUSES> mStrictCUSES, mWeakCUSES;
   ObjRef<iface::cellml_services::CanonicalUnitRepresentation> mBooleanUnits,
