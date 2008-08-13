@@ -724,6 +724,10 @@ CDAMaLaESResult::parseConstant
 {
   RETURN_INTO_OBJREF(n, iface::dom::Node, cnEl->getArgument(1));
   DECLARE_QUERY_INTERFACE_OBJREF(t, n, dom::Text);
+
+  if (t == NULL)
+    throw MaLaESError(L"CN element missing text node.");
+
   RETURN_INTO_WSTRING(txt, t->data());
   int i = 0, j = txt.length() - 1;
   wchar_t c;
