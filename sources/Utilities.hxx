@@ -44,6 +44,9 @@
 #undef AddMonitor
 #endif
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "cda_compiler_support.h"
 #include <locale.h>
 
