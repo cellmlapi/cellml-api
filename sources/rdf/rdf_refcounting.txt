@@ -1,0 +1,55 @@
+The following scheme is used for RDF reference counting. It is more complex
+than the reference counting used in most of the API because it is common
+for RDF graphs to contain cycles of various kinds, but we want RDF related
+objects to be deleted if all external references to them are removed.
+
+Reference counting is discussed in terms of the following objects:
+  1) DataSource
+  2) Node (including Resource, URIResource, Literal)
+  3) Triple
+  4) TripleSet and TripleEnumerator
+
+* All objects except the DataSource are associated with a DataSource from the
+  point they are created. The datasource associated with these objects will
+  not change over the lifetime of the objects.
+* The DataSource will not be deleted until all objects associated with it have
+  been deleted.
+* There is only one TripleSet, which shares a reference count with the
+  DataSource. The TripleSet is created when the DataSource is created, and
+  destroyed when the DataSource is destroyed.
+* TripleEnumerator objects are created on demand, and hold a strong reference
+  to the DataSource. There are no strong references from the DataSource back to
+  the TripleEnumerator (although the DataSource knows about the TripleEnumerators
+  so iterator invalidation can occur properly, through a weak reference).
+* Triple objects store a reference to the DataSource, but the DataSource does
+  not store a list of Triple objects (it does of course store a list of the RDF
+  triples, but this list is only indirectly exposed to the user through Triple
+  objects). Triple objects hold a strong reference to the DataSource.
+* There are two types of Nodes for the purpose of reference counting:
+  1. associated nodes.
+  2. unassociated nodes.
+  Associated nodes are nodes which are used in RDF triples in the datasource.
+  Unassociated nodes are nodes which are not used in RDF triples in the datasource.
+
+  Every node has an association count (this is separate from the reference
+  count). The association count is equal to the number of 'triple slots'
+  (subject, predicate, or object) in which the node appears. So for example, if
+  a node appears in only one triple, and it is both the subject and the
+  predicate, then it has an association count of two.
+
+  Nodes with an association count of zero are unassociated nodes.
+* Unassociated nodes are not referenced by the DataSource. They maintain
+  a reference count, but also forward add_ref and release_ref on to the
+  DataSource. If their reference count falls to zero, they are deleted.
+* Associated nodes are stored in a list by the DataSource. The DataSource does
+  not hold an ordinary reference to them, but if their reference count falls
+  to zero, then they are not deleted. They maintain a reference count, but also
+  forward add_ref and release_ref on to the DataSource. When the DataSource is
+  deleted (which, due to refcount forwarding, should only be possible when the
+  all the associated node refcounts are zero), all the associated nodes are also
+  deleted.
+* When a node transitions from unassociated to associated, it informs the
+  DataSource so that the DataSource can add it to the list.
+* When a node transitions from associated to unassociated, it:
+  1. informs the DataSource so it can be removed from the list.
+  2. checks if the reference count is zero. If it is, the destructor is called.
