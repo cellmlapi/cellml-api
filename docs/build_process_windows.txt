@@ -4,7 +4,7 @@ NOTE: THIS DOCUMENT IS WORK IN PROGRESS. PLEASE DO NOT RELY ON IT FOR ANYTHING!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Personal note: are Python and omniORB really required or cannot we just use the versions that come with Cygwin?...
+Personal notes: Prerequisites seem to include Python, omniORB and gsl. The first one is not a problem. Regarding omniORB, it compiled fine and this using Microsoft Visual C++, which is what we want. Now, regarding gsl, there are some problems. First, one has to modify "configure" to account for the fact that Windows (and therefore Microsoft Visual C++) doesn't support symbolic links. This can easily be fixed by making a copy of the files rather than making links to them. This allows the compilation to start, but then a bunch errors are generated. They are related to "BASE_GSL_COMPLEX*" in files such as "C:\Projects\gsl-1.11\matrix\rowcol.c"...
 
 Build the CellML DOM API from its source code under Windows
 ===========================================================
@@ -84,12 +84,28 @@ gsl
 
 gsl is also required to build the CellML DOM API and also has to be installed separately.
 
-gsl 1.9 can be downloaded from http://www.gnu.org/. You want gsl-1.9.tar.gz. Unpack that file to C:\Projects\ and then from a Cygwin bash shell prompt (using the Cygwin batch file created for the Mozilla framework build):
+gsl 1.11 can be downloaded from http://www.gnu.org/. You want gsl-1.11.tar.gz. From there:
+
+- Unpack that file to C:\Projects\.
+- Edit C:\Projects\gsl-1.11\configure so that
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c/Projects/gsl-1.9
-REM ---GRY--- ./configure CC="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper"
-./configure
+LN_S=$as_ln_s
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+now reads
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+LN_S='cp -p'
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The reason behind the above is that Windows (and therefore Microsoft Visual C++) does not support symbolic links.
+
+- From a Cygwin bash shell prompt (using the Cygwin batch file created for the Mozilla framework build):
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c/Projects/gsl-1.11
+./configure CC="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper"
 make
 make install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
