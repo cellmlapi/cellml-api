@@ -867,15 +867,14 @@ CodeGenerationState::DecomposeIntoSystems
         // This means that the model is overconstrained.
         throw OverconstrainedError((*i)->mMaths);
 
-      if (f == (*i)->mTargets.end())
-        continue;
-
       for (j = f, j++; j != (*i)->mTargets.end(); j++)
-        if (aCandidates.count(*j) != 0)
-        {
-          (*j)->unionWith(linkWith);
-          assert(linkWith->findRoot() == (*j)->findRoot());
-        }
+      {
+        if (start.count(*j) > 0)
+          continue;
+
+        (*j)->unionWith(linkWith);
+        assert(linkWith->findRoot() == (*j)->findRoot());
+      }
     }
     
     typedef std::pair<std::set<Equation*>, std::set<CDA_ComputationTarget*> >
@@ -944,23 +943,8 @@ CodeGenerationState::DecomposeIntoSystems
       // checks above, and is guaranteed to belong to exactly one of the
       // disjoint sets of variables. Find which one...
 
-      for (MapEquationCTSetPairByCT::iterator j(targets.begin());
-           j != targets.end();
-           j++)
-        for (std::set<CDA_ComputationTarget*>::iterator k((*j).second.second.begin());
-             k != (*j).second.second.end();
-             k++)
-        {
-          bool done(false);
-          if (first == *k)
-          {
-            (*j).second.first.insert(*i);
-            done = true;
-            break;
-          }
-          if (done)
-            break;
-        }
+      MapEquationCTSetPairByCT::iterator j(targets.find(first->findRoot()));
+      (*j).second.first.insert(*i);
     }
 
     bool progress = false;
@@ -1006,6 +990,7 @@ CodeGenerationState::FindSmallSystem
  std::list<System*>& aSystems
 )
 {
+
   for (uint32_t systemCardinality = 1;
        systemCardinality <= SEARCH_DEPTH;
        systemCardinality++)
@@ -1018,6 +1003,7 @@ CodeGenerationState::FindSmallSystem
                                   ))
       return true;
   }
+
   return false;
 }
 
@@ -1157,14 +1143,17 @@ CodeGenerationState::FindBigSystem
   // and aUseEquations, so that is now our system...
 
   std::set<CDA_ComputationTarget*> known;
+
   for (std::set<Equation*>::iterator i(aUseEquations.begin());
        i != aUseEquations.end();
        i++)
     for (std::list<CDA_ComputationTarget*>::iterator j((*i)->mTargets.begin());
          j != (*i)->mTargets.end();
          j++)
+    {
       if (aStart.count(*j))
         known.insert(*j);
+    }
 
   System* st = new System(aUseEquations, known, aUseVars);
   mSystems.push_back(st);

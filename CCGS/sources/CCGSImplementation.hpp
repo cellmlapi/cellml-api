@@ -75,12 +75,12 @@ public:
       return;
 
     if (parent->rank > b->parent->rank)
-      b->parent = parent;
+      b->parent->parent = parent;
     else if (b->parent->rank > parent->rank)
-      parent = b->parent;
+      parent->parent = b->parent;
     else
     {
-      b->parent = parent;
+      b->parent->parent = parent;
       parent->rank++;
     }
   }
