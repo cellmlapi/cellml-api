@@ -780,10 +780,10 @@ do_levmar
      */
     dlevmar_dif(f, bp, NULL, size, size, 1000, const_cast<double*>(levMarOpts),
                 info, work, NULL, adata);
-    if (isfinite(info[0]) && (info[0] < best))
+    if (isfinite(info[1]) && (info[1] < best))
     {
       memcpy(params, bp, sizeof(double) * size);
-      best = info[0];
+      best = info[1];
     }
 
     for (k = 0; k < size; k++)
