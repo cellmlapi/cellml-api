@@ -69,8 +69,9 @@ aclocal && autoconf && automake
 make
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note #1:	"aclocal && autoconf && automake" is not required if building from a source tar.
-Note #2:	if the CellML DOM API is to be used within PCEnv, then the following extra parameter is to be used in the call to "configure": "--enable-xpcom=/home/[Username]/mozilla-obj/obj-i686-pc-linux-gnu/stablexr/dist".
+Note #1: "aclocal && autoconf && automake" is not required if building from a source tar.
+Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/home/[Username]/mozilla-obj/obj-i686-pc-linux-gnu/stablexr/dist" to the "configure" command line.
+Note #3: if the examples are required (e.g. CellML2C, RunCellML and ValidateCellML), then add "--enable-examples=yes" to the "configure" command line.
 
 
 Test the CellML API
