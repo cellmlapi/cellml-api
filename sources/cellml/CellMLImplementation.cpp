@@ -7145,15 +7145,12 @@ SIMPLE_SET_ITERATORFETCH_GET
  getImportUnits
 );
 
-SIMPLE_SET_ITERATORFETCH_GET
+SIMPLE_SET_ITERATORFETCH
 (
  CDA_CellMLImportSet,
  CDA_CellMLImportIterator,
  iface::cellml_api::CellMLImportIterator,
- iterateImports,
- CDA_CellMLImport,
- iface::cellml_api::CellMLImport,
- getImport
+ iterateImports
 );
 
 SIMPLE_SET_ITERATORFETCH

@@ -1567,20 +1567,13 @@ module cellml_api
    * An interface for accessing a set of Imports
    */
   interface CellMLImportSet
-    : NamedCellMLElementSet
+    : CellMLElementSet
   {
     /**
      * Returns a CellMLElementIterator that can be used to iterate through the
      * elements. The iteration order is undefined.
      */
     CellMLImportIterator iterateImports();
-
-    /**
-     * Fetch a NamedCellMLElement by name.
-     * @param name The name of the element
-     * @return The element, or nil if not found.
-     */
-    CellMLImport getImport(in CellMLAttributeString name);
   };
 #pragma terminal-interface
 

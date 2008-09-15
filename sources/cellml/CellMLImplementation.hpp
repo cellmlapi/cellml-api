@@ -1588,24 +1588,19 @@ public:
 
 class CDA_CellMLImportSet
   : public iface::cellml_api::CellMLImportSet,
-    public CDA_NamedCellMLElementSetBase
+    public CDA_CellMLElementSetOuter
 {
 public:
   CDA_CellMLImportSet(CDA_CellMLElement* aParent,
                       CDA_CellMLElementSet* aInner)
-    : CDA_NamedCellMLElementSetBase(aParent, aInner) {}
+    : CDA_CellMLElementSetOuter(aParent, aInner) {}
   virtual ~CDA_CellMLImportSet() {}
 
-  CDA_IMPL_QI3(cellml_api::CellMLImportSet,
-               cellml_api::NamedCellMLElementSet,
+  CDA_IMPL_QI2(cellml_api::CellMLImportSet,
                cellml_api::CellMLElementSet)
 
   iface::cellml_api::CellMLElementIterator* iterate() throw(std::exception&);
   iface::cellml_api::CellMLImportIterator* iterateImports()
-    throw(std::exception&);
-
-  iface::cellml_api::CellMLImport*
-  getImport(const wchar_t* name)
     throw(std::exception&);
 };
 
