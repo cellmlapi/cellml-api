@@ -258,9 +258,9 @@ struct OrderlessXPCOMPairComparator
     XPCOMComparator xc;
     bool p1(xc(o1.first, o1.second));
     bool p2(xc(o2.first, o2.second));
-    iface::XPCOM::IObject* f1(p1 ? o1.first : o1.second), * f2(p1 ? o2.first :
+    iface::XPCOM::IObject* f1(p1 ? o1.first : o1.second), * f2(p2 ? o2.first :
                                                                o2.second);
-    iface::XPCOM::IObject* s1(p2 ? o1.second : o1.first), * s2(p2 ? o2.second :
+    iface::XPCOM::IObject* s1(p1 ? o1.second : o1.first), * s2(p2 ? o2.second :
                                                                o2.first);
 
     if (xc(f1, f2))
