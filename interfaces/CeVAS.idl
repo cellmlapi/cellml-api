@@ -13,7 +13,7 @@ module cellml_services
   {
     /**
      * The source variable (that is, the variable with no public or private
-     * interfaces).
+     * 'in' interfaces).
      */
     readonly attribute cellml_api::CellMLVariable sourceVariable;
 
@@ -31,11 +31,14 @@ module cellml_services
   interface CeVAS
     : XPCOM::IObject
   {
+
     /**
      * A description of any connection or interface errors found in the model.
-     * If no error is found, this will be the empty string. The results of any
-     * other operation on this object is undefined if there is an error, and so
-     * should not be called.
+     * If no error is found, this will be the empty string.
+     *
+     * If there is an error, the result of any other operation on this
+     * CeVAS object is undefined, and so other operations should not
+     * be performed.
      */
     readonly attribute wstring modelError;
 

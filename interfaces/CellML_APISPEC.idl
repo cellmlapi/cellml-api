@@ -99,11 +99,10 @@ module cellml_api
   {
     /**
      * A complete RDF/XML document (including a single top-level RDF:rdf
-     * element) as a serialised string. The document fetched is a copy of the RDF
-     * in the model (that is, it is not live). However, fetching the attribute
-     * again will update to the latest data. Assigning this attribute to
-     * a new document (or a changed version of the previous document) will
-     * replace all the RDF in the model with the contents of the new document.
+     * element) as a serialised string. Fetching the attribute again will
+     * update to the latest data. Assigning this attribute to a new string will
+     * cause the string to be parsed as RDF/XML, and all RDF in the model will
+     * be replaced with the resulting RDF/XML tree.
      */
     attribute wstring serialisedData;
   };
@@ -111,6 +110,9 @@ module cellml_api
 
   /**
    * This interface can be inherited from by the user for use in annotations.
+   *
+   * See also the optional AnnoTools service, which provides a higher-level
+   * interface on top of this facility.
    */
   interface UserData : XPCOM::IObject
   {
@@ -144,7 +146,7 @@ module cellml_api
 
   /**
    * Represents a uniform resource indicator, conforming to RFC2396
-   * (http://rfc.net/rfc2396.html)
+   * (http://rfc.net/rfc2396.html).
    */
   interface URI : XPCOM::IObject
   {
@@ -168,7 +170,7 @@ module cellml_api
     readonly attribute CellMLAttributeString cellmlVersion;
 
     /**
-     * This element's cmeta id(which may be defined on any CellML element)
+     * This element's cmeta id (which may be defined on any CellML element)
      */
     attribute CellMLAttributeString cmetaId;
 
@@ -180,8 +182,8 @@ module cellml_api
     readonly attribute ExtensionElementList extensionElements;
 
     /**
-     * Insert an element into this collection without disturbing the order of
-     * the existing elements.
+     * Insert an element into the collection of extension elements without
+     * disturbing the order of the existing elements.
      * @param marker The element after which to insert the element. If this is
      *               nil, then the insertion will be at the start of the list.
      * @param newEl The new element to insert.
@@ -189,13 +191,13 @@ module cellml_api
     void insertExtensionElementAfter(in ExtensionElement marker, in ExtensionElement newEl);
 
     /**
-     * Equivalent to insertAt(last extension element, x)
+     * Equivalent to insertExtensionElementAfter(last extension element, x).
      * @param x The element to append.
      */
     void appendExtensionElement(in ExtensionElement x);
 
     /**
-     * Equivalent to insertAt(nil, x)
+     * Equivalent to insertExtensionElementAfter(nil, x)
      * @param x The element to prepend.
      */
     void prependExtensionElement(in ExtensionElement x);
@@ -263,7 +265,7 @@ module cellml_api
                       in CellMLAttributeString name);
 
     /**
-     * The parent element of this model...
+     * The parent element of this element...
      */
     readonly attribute CellMLElement parentElement;
 
@@ -345,7 +347,7 @@ module cellml_api
     /**
      * This allows a model with a different cellmlVersion to be returned. This
      * function changes the namespace of the CellML attributes, but it does not
-     * change the model structure(even if, for example, this produces a model
+     * change the model structure (even if, for example, this produces a model
      * with import elements in the CellML 1.0 namespace). Applications should
      * use a flattening ModelTransformationService if they wish to change
      * CellML 1.1 import structures into valid CellML 1.0 constructs.
@@ -386,15 +388,22 @@ module cellml_api
     readonly attribute UnitsSet modelUnits;
 
     /**
-     * The collection of units. Provided that the imports are instantiated,
-     * this will fetch units in both direct and indirect imports. If the
-     * import containing the unit definition has been instantiated, iterating
-     * the set will return the unit definition, otherwise it will return
-     * the ImportUnit. If an import containing unit definitions is instantiated
-     * after iterator creation but before unit retrieval, the implementation
-     * may choose to return either the ImportUnit or the unit definition.
-     * Applications must not rely upon the behaviour of any particular
-     * implementation in this case.
+     * Provided that the imports are instantiated, this will fetch all
+     * units defined in models either directly or indirectly imported.
+     * If a model is imported n times, the set will contain n copies of each
+     * of its units.  Note that since the set contains original units
+     * definitions, the names on these units will be as given in their
+     * original model.
+     *
+     * If, however, an import has not been instantiated, units definitions
+     * from the imported model will not be returned; instead the set will
+     * contain an ImportUnits for each units explicitly imported.
+     *
+     * If an import containing units definitions is instantiated after
+     * iterator creation but before units retrieval, the implementation
+     * may choose to return either the ImportUnits or the units
+     * definition. Applications must not rely upon the behaviour of any
+     * particular implementation in this case.
      */
     readonly attribute UnitsSet allUnits;
 
@@ -404,23 +413,29 @@ module cellml_api
     readonly attribute CellMLComponentSet localComponents;
 
     /**
-     * The collection of components. This will fetch all the components retrieved by
-     * localComponents, but in addition will also fetch all the ImportComponents
-     * declared in this model.
+     * The collection of components. This will fetch all the components
+     * retrieved by localComponents, but in addition will also fetch all the
+     * ImportComponents declared in this model.
      */
     readonly attribute CellMLComponentSet modelComponents;
 
     /**
-     * Returns all components with interface 'CellMLComponent' in the model.
-     * Provided that the imports are instantiated, this will fetch components
-     * in both direct and indirect imports. If the import containing the
-     * component definition has been instantiated, iterating the set will
-     * return the component definition, otherwise it will return the
-     * ImportComponent. If an import containing component definitions is
-     * instantiated after iterator creation but before component retrieval,
-     * the implementation may choose to return either the ImportComponent or
-     * the component definition. Applications must not rely upon the behaviour
-     * of any particular implementation in this case.
+     * Provided that the imports are instantiated, this will fetch all
+     * components defined in models either directly or indirectly imported.
+     * If a model is imported n times, the set will contain n copies of each
+     * of its components.  Note that since the set contains original component
+     * definitions, the names on these components will be as given in their
+     * original model.
+     *
+     * If however an import has not been instantiated, component definitions
+     * from the imported model will not be returned; instead the set will
+     * contain an ImportComponent for each component explicitly imported.
+     *
+     * If an import containing component definitions is instantiated after
+     * iterator creation but before component retrieval, the implementation
+     * may choose to return either the ImportComponent or the component
+     * definition. Applications must not rely upon the behaviour of any
+     * particular implementation in this case.
      */
     readonly attribute CellMLComponentSet allComponents;
 
@@ -430,13 +445,10 @@ module cellml_api
     readonly attribute ConnectionSet connections;
 
     /**
-     * The following also searches user-defined relationships.
+     * Returns all groups having the given relationship.
      * @param name The name of the relationship to search for.
      */
-    GroupSet findGroupsWithRelationshipRefName
-    (
-     in CellMLAttributeString name
-    );
+    GroupSet findGroupsWithRelationshipRefName(in CellMLAttributeString name);
 
     /**
      * This fully instantiates the import definitions. It will then recursively
@@ -453,37 +465,37 @@ module cellml_api
     void asyncFullyInstantiateImports(in ImportInstantiationListener listener);
 
     /**
-     * Creates a new (local) CellMLComponent
+     * Creates a new (local) CellMLComponent.
      */
     CellMLComponent createComponent();
 
     /**
-     * Creates a new ImportComponent
+     * Creates a new ImportComponent.
      */
     ImportComponent createImportComponent();
 
     /**
-     * Creates a new (local) Units
+     * Creates a new (local) Units.
      */
     Units createUnits();
 
     /**
-     * Creates a new (import) Units
+     * Creates a new ImportUnits.
      */
     ImportUnits createImportUnits();
 
     /**
-     * Creates a new Unit
+     * Creates a new Unit.
      */
     Unit createUnit();
 
     /**
-     * Creates a new CellMLImport
+     * Creates a new CellMLImport.
      */
     CellMLImport createCellMLImport();
 
     /**
-     * Creates a new CellMLVariable
+     * Creates a new CellMLVariable.
      */
     CellMLVariable createCellMLVariable();
 
@@ -513,28 +525,28 @@ module cellml_api
     MapVariables createMapVariables();
 
     /**
-     * Creates a new Reaction
+     * Creates a new Reaction.
      */
     Reaction createReaction();
 
     /**
-     * Creates a new VariableRef
+     * Creates a new VariableRef.
      */
     VariableRef createVariableRef();
 
     /**
-     * Creates a new Role
+     * Creates a new Role.
      */
     Role createRole();
 
     /**
-     * Creates a new MathMLMathElement...
+     * Creates a new MathMLMathElement.
      * @return The new MathML math element.
      */
     mathml_dom::MathMLMathElement createMathElement();
 
     /**
-     * Creates a new extension element...
+     * Creates a new extension element.
      * @param namespaceURI The new namespace URI.
      * @param qualifiedName The new (optionally) qualified name.
      */
@@ -592,7 +604,7 @@ module cellml_api
      * @param x The element to find.
      * @param y The element to replace x with.
      * @raises CellMLException If y is not valid according to the constraints
-     *                         on this collection(check optional).
+     *                         on this collection (check optional).
      */
     void replaceMath(in MathMLElement x, in MathMLElement y);
 
@@ -636,7 +648,7 @@ module cellml_api
     readonly attribute CellMLComponent encapsulationParent;
 
     /**
-     * The set of all children of this component.
+     * The set of all children of this component in the encapsulation hierarchy.
      */
     readonly attribute CellMLComponentSet encapsulationChildren;
 
@@ -647,7 +659,7 @@ module cellml_api
     readonly attribute CellMLComponent containmentParent;
 
     /**
-     * The containment parent for this component. This must work correctly
+     * The containment children for this component. This must work correctly
      * across imports if imports have been instantiated.
      */
     readonly attribute CellMLComponentSet containmentChildren;
@@ -661,7 +673,8 @@ module cellml_api
      * Gets the 'import number' in which this component is contained.
      * 0 means it is in the parent, and all other numbers are those allocated
      * for each import. This must match the uniqueIdentifier on the import
-     * element which causes the importation of this model.
+     * element which causes the importation of the model containing this
+     * component.
      */
     readonly attribute unsigned long importNumber;
   };
@@ -745,9 +758,9 @@ module cellml_api
 
     /**
      * The collection of all connections defined in the import or in components
-     * which are imported by the import(and so on) and which involve only
-     * the imported component or other components beneath the same imported
-     * component in the encapsulation hierarchy.
+     * which are imported by the import (and so on) and which involve only
+     * the imported component(s) or other components beneath the same imported
+     * component(s) in the encapsulation hierarchy.
      */
     readonly attribute ConnectionSet importedConnections;
 
@@ -1348,9 +1361,8 @@ module cellml_api
   interface ModelIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next Model, and advances the iterator.
+     * @return The next Model, or nil if there are no more Model elements.
      */
     Model nextModel();
   };
@@ -1363,15 +1375,15 @@ module cellml_api
     : NamedCellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a ModelIterator that can be used to iterate through the
+     * Model elements. The iteration order is undefined.
      */
     ModelIterator iterateModels();
 
     /**
-     * Fetch a NamedCellMLElement by name.
-     * @param name The name of the element
-     * @return The element, or nil if not found.
+     * Fetch a Model by name.
+     * @param name The name of the Model
+     * @return The Model, or nil if not found.
      */
     Model getModel(in CellMLAttributeString name);
   };
@@ -1383,29 +1395,29 @@ module cellml_api
   interface CellMLComponentIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next CellMLComponent, and advances the iterator.
+     * @return The next CellMLComponent, or nil if there are no more
+     *         CellMLComponents.
      */
     CellMLComponent nextComponent();
   };
 
   /**
-   * An interface for accessing a set of CellMLComponents
+   * An interface for accessing a set of CellMLComponents.
    */
   interface CellMLComponentSet
     : NamedCellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a CellMLComponentIterator that can be used to iterate through the
+     * CellMLComponent elements. The iteration order is undefined.
      */
     CellMLComponentIterator iterateComponents();
 
     /**
-     * Fetch a NamedCellMLElement by name.
-     * @param name The name of the element
-     * @return The element, or nil if not found.
+     * Fetch a component by name.
+     * @param name The name of the CellMLComponent.
+     * @return The CellMLComponent, or nil if not found.
      */
     CellMLComponent getComponent(in CellMLAttributeString name);
   };
@@ -1417,29 +1429,29 @@ module cellml_api
   interface ImportComponentIterator : CellMLComponentIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next ImportComponent, and advances the iterator.
+     * @return The next ImportComponent, or nil if there are no more
+     *         ImportComponents.
      */
     ImportComponent nextImportComponent();
   };
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of ImportComponents
+   * An interface for accessing a set of ImportComponents.
    */
   interface ImportComponentSet
     : CellMLComponentSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns an ImportComponentIterator that can be used to iterate through
+     * the ImportComponents. The iteration order is undefined.
      */
     ImportComponentIterator iterateImportComponents();
 
     /**
-     * Fetch a NamedCellMLElement by name.
-     * @param name The name of the element
+     * Fetch an ImportComponent by name.
+     * @param name The name of the component, as given by the importing model.
      * @return The element, or nil if not found.
      */
     ImportComponent getImportComponent(in CellMLAttributeString name);
@@ -1452,30 +1464,30 @@ module cellml_api
   interface CellMLVariableIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next CellMLVariable, and advances the iterator.
+     * @return The next CellMLVariable, or nil if there are no more
+     *         CellMLVariable elements.
      */
     CellMLVariable nextVariable();
   };
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of ImportComponents
+   * An interface for accessing a set of CellMLVariable elements.
    */
   interface CellMLVariableSet
     : NamedCellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a CellMLVariableIterator that can be used to iterate through the
+     * CellMLVariable elements. The iteration order is undefined.
      */
     CellMLVariableIterator iterateVariables();
 
     /**
-     * Fetch a NamedCellMLElement by name.
-     * @param name The name of the element
-     * @return The element, or nil if not found.
+     * Fetch a variable by name.
+     * @param name The name of the variable.
+     * @return The CellMLVariable, or nil if not found.
      */
     CellMLVariable getVariable(in CellMLAttributeString name);
   };
@@ -1487,8 +1499,8 @@ module cellml_api
   interface UnitsIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
+     * Fetches the next Units element, and advances the iterator.
+     * @return The next Units element, or nil if there are no more Units
      *         elements.
      */
     Units nextUnits();
@@ -1501,15 +1513,15 @@ module cellml_api
     : NamedCellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a UnitsIterator that can be used to iterate through the
+     * Units elements. The iteration order is undefined.
      */
     UnitsIterator iterateUnits();
 
     /**
-     * Fetch a NamedCellMLElement by name.
-     * @param name The name of the element
-     * @return The element, or nil if not found.
+     * Fetch a Units element by name.
+     * @param name The name of the units.
+     * @return The Units element, or nil if not found.
      */
     Units getUnits(in CellMLAttributeString name);
   };
@@ -1520,30 +1532,31 @@ module cellml_api
   interface ImportUnitsIterator : UnitsIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next ImportUnits element, and advances the iterator.
+     * @return The next ImportUnits element, or nil if there are no more
+     * ImportUnits elements.
      */
     ImportUnits nextImportUnits();
   };
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of ImportUnits
+   * An interface for accessing a set of ImportUnits.
    */
   interface ImportUnitsSet
     : UnitsSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns an ImportUnitsIterator that can be used to iterate through the
+     * ImportUnits elements. The iteration order is undefined.
      */
     ImportUnitsIterator iterateImportUnits();
 
     /**
-     * Fetch a NamedCellMLElement by name.
-     * @param name The name of the element
-     * @return The element, or nil if not found.
+     * Fetch a ImportUnits by name.
+     * @param name The name of the units definition, as given by the
+     *             importing model.
+     * @return The ImportUnits, or nil if not found.
      */
     ImportUnits getImportUnits(in CellMLAttributeString name);
   };
@@ -1555,9 +1568,8 @@ module cellml_api
   interface CellMLImportIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next import, and advances the iterator.
+     * @return The next import, or nil if there are no more imports.
      */
     CellMLImport nextImport();
   };
@@ -1570,18 +1582,21 @@ module cellml_api
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a CellMLImportIterator that can be used to iterate through the
+     * imports. The iteration order is undefined.
      */
     CellMLImportIterator iterateImports();
   };
 #pragma terminal-interface
 
+  /**
+   * An interface allowing Unit elements to be iterated.
+   */
   interface UnitIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
+     * Fetches the next Unit element, and advances the iterator.
+     * @return The next Unit element, or nil if there are no more Unit
      *         elements.
      */
     Unit nextUnit();
@@ -1589,23 +1604,26 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of Imports
+   * An interface for accessing a set of unit elements.
    */
   interface UnitSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a UnitIterator that can be used to iterate through the
+     * unit elements. The iteration order is undefined.
      */
     UnitIterator iterateUnits();
   };
 
+  /**
+   * An interface allowing connection elements to be iterated.
+   */
   interface ConnectionIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
+     * Fetches the next Connection, and advances the iterator.
+     * @return The next Connection, or nil if there are no more Connection
      *         elements.
      */
     Connection nextConnection();
@@ -1613,24 +1631,27 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of Imports
+   * An interface for accessing a set of connection elements.
    */
   interface ConnectionSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a ConnectionIterator that can be used to iterate through the
+     * connection elements. The iteration order is undefined.
      */
     ConnectionIterator iterateConnections();
   };
 #pragma terminal-interface
 
+  /**
+   * An interface allow group elements to be iterated.
+   */
   interface GroupIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
+     * Fetches the next Group, and advances the iterator.
+     * @return The next Group, or nil if there are no more Group
      *         elements.
      */
     Group nextGroup();
@@ -1638,14 +1659,14 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of Imports
+   * An interface for accessing a set of group elements.
    */
   interface GroupSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a GroupIterator that can be used to iterate through the
+     * group elements. The iteration order is undefined.
      */
     GroupIterator iterateGroups();
 
@@ -1658,100 +1679,112 @@ module cellml_api
     GroupSet getSubsetInvolvingRelationship(in CellMLAttributeString relName);
 
     /**
-     * The subset of all connections in this collection involving
+     * The subset of all groups in this collection involving
      * encapsulation.
      */
     readonly attribute GroupSet subsetInvolvingEncapsulation;
 
     /**
-     * The subset of all connections in this collection involving
+     * The subset of all groups in this collection involving
      * containment.
      */
     readonly attribute GroupSet subsetInvolvingContainment;
   };
 #pragma terminal-interface
   
+  /**
+   * An interface allowing RelationshipRef elements to be iterated.
+   */
   interface RelationshipRefIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next RelationshipRef, and advances the iterator.
+     * @return The next RelationshipRef, or nil if there are no more
+     *         RelationshipRef elements.
      */
     RelationshipRef nextRelationshipRef();
   };
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of RelationshipRefs
+   * An interface for accessing a set of RelationshipRef elements.
    */
   interface RelationshipRefSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a RelationshipRefIterator that can be used to iterate through the
+     * RelationshipRef elements. The iteration order is undefined.
      */
     RelationshipRefIterator iterateRelationshipRefs();
   };
 #pragma terminal-interface
 
+  /**
+   * An interface allowing ComponentRef elements to be iterated.
+   */
   interface ComponentRefIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next ComponentRef, and advances the iterator.
+     * @return The next ComponentRef, or nil if there are no more
+     *         ComponentRef elements.
      */
     ComponentRef nextComponentRef();
   };
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of RelationshipRefs
+   * An interface for accessing a set of ComponentRef elements.
    */
   interface ComponentRefSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a ComponentRefIterator that can be used to iterate through the
+     * ComponentRef elements. The iteration order is undefined.
      */
     ComponentRefIterator iterateComponentRefs();
   };
 #pragma terminal-interface
 
+  /**
+   * An interface allowing MapVariables elements to be iterated.
+   */
   interface MapVariablesIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
-     *         elements.
+     * Fetches the next MapVariables element, and advances the iterator.
+     * @return The next MapVariables element, or nil if there are no more
+     *         MapVariables elements.
      */
     MapVariables nextMapVariable();
   };
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of MapVariables
+   * An interface for accessing a set of MapVariables elements.
    */
   interface MapVariablesSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a MapVariablesIterator that can be used to iterate through the
+     * MapVariables elements. The iteration order is undefined.
      */
     MapVariablesIterator iterateMapVariables();
   };
 #pragma terminal-interface
 
+  /**
+   * An interface allowing Reaction elements to be iterated.
+   */
   interface ReactionIterator
     : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
+     * Fetches the next Reaction, and advances the iterator.
+     * @return The next Reaction, or nil if there are no more Reaction
      *         elements.
      */
     Reaction nextReaction();
@@ -1759,24 +1792,27 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of Reactions
+   * An interface for accessing a set of Reaction elements.
    */
   interface ReactionSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a ReactionIterator that can be used to iterate through the
+     * Reaction elements. The iteration order is undefined.
      */
     ReactionIterator iterateReactions();
   };
 #pragma terminal-interface
 
+  /**
+   * An interface allowing VariableRef elements to be iterated.
+   */
   interface VariableRefIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
+     * Fetches the next VariableRef, and advances the iterator.
+     * @return The next VariableRef, or nil if there are no more VariableRef
      *         elements.
      */
     VariableRef nextVariableRef();
@@ -1784,24 +1820,27 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of VariableRefs
+   * An interface for accessing a set of VariableRef elements.
    */
   interface VariableRefSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
+     * Returns a VariableRefIterator that can be used to iterate through the
+     * VariableRef elements. The iteration order is undefined.
      */
     VariableRefIterator iterateVariableRefs();
   };
 #pragma terminal-interface
 
+  /**
+   * An interface allowing Role elements to be iterated.
+   */
   interface RoleIterator : CellMLElementIterator
   {
     /**
-     * Fetches the next CellML element, and advances the iterator.
-     * @return The next CellML element, or nil if there are no more CellML
+     * Fetches the next Role, and advances the iterator.
+     * @return The next Role, or nil if there are no more Role
      *         elements.
      */
     Role nextRole();
@@ -1809,13 +1848,13 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of VariableRefs
+   * An interface for accessing a set of VariableRef elements.
    */
   interface RoleSet
     : CellMLElementSet
   {
     /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
+     * Returns a RoleIterator that can be used to iterate through the Role
      * elements. The iteration order is undefined.
      */
     RoleIterator iterateRoles();
@@ -1860,7 +1899,7 @@ module cellml_api
   {
     /**
      * Loads a model from the given URL, using the local URL loader.
-     * Note that this operation may be unavailable(or restricted to certain
+     * Note that this operation may be unavailable (or restricted to certain
      * URLs) due to security restrictions on some remotely hosted model
      * loaders.
      * @param URL The URL from which to load the model.
@@ -1872,7 +1911,7 @@ module cellml_api
 
     /**
      * Loads a model from the given URL asynchronously, using the local URL
-     * loader. Note that this operation may be unavailable(or restricted to
+     * loader. Note that this operation may be unavailable (or restricted to
      * certain URLs) due to security restrictions on some remotely hosted model
      * loaders. Applications should be aware that the loadCompleted operation on
      * listener may be called prior to the return on this operation.
@@ -1884,7 +1923,7 @@ module cellml_api
                           in ModelLoadedListener listener);
 
     /**
-     * Creates a serialised XML document.
+     * Loads a model from a serialised XML document.
      * @param xmlText A complete XML document, serialised into text.
      * @return The loaded CellML model.
      * @param CellMLException if the XML cannot be parsed into a model.
@@ -1903,7 +1942,7 @@ module cellml_api
      * badxml/line/column/msg The XML was malformed. Line an column give the
      *   location in the file at which the error occurred. msg is the message
      *   from the processor stating what is wrong.
-     * notcellml The model did not have a cellml::model document element in
+     * notcellml The model did not have a cellml:model document element in
      *   either the CellML 1.0 or CellML 1.1 namespace.
      */
     readonly attribute dom::DOMString lastErrorMessage;
@@ -1927,7 +1966,8 @@ module cellml_api
       raises(CellMLException);
 
     /**
-     * Loads an XML formatted document from a given serialised for into a DOM.
+     * Loads an XML formatted document from the given serialised text into a
+     * DOM representation.
      * @param xmlText The serialised XML used to create the document.
      * @return The loaded document.
      * @raises CellMLException if the model cannot be loaded.
@@ -1976,7 +2016,7 @@ module cellml_api
   {
     /**
      * Loads the DOM for the model from the specified URL using the supplied
-     * DOMURLLoader. If further URLs need to be loaded(for example, to satisfy
+     * DOMURLLoader. If further URLs need to be loaded (for example, to satisfy
      * imports), the supplied loader will be used.
      * @param url The URL from which to load.
      * @param loader The URL loader to load the model and any imports needed.
@@ -1989,7 +2029,7 @@ module cellml_api
 
     /**
      * Loads the DOM for the model from the specified URL using the supplied
-     * DOMURLLoader. If further URLs need to be loaded(for example, to satisfy
+     * DOMURLLoader. If further URLs need to be loaded (for example, to satisfy
      * imports), the supplied loader will be used.
      * @param url The URL from which to load.
      * @param loader The URL loader to load the model and any imports needed.
@@ -2035,7 +2075,7 @@ module cellml_api
     Model createModel(in wstring version);
 
     /**
-     * Serialises a DOM node into a string. The serialised node must have
+     * Serialises a DOM node into a string. The node to serialise must have
      * originated from the locally hosted DOM implementation.
      * @param node The DOM node to serialise.
      * @return The node, as a serialised string.

@@ -5,6 +5,11 @@
 
 #include "DOM_APISPEC.idl"
 
+/**
+ * Document Object Model (DOM) Level 2 Events Specification.
+ *
+ * @see http://www.w3.org/TR/DOM-Level-2-Events
+ */
 module events
 {
   typedef dom::DOMString DOMString;

@@ -6,6 +6,11 @@
 #include "xpcom.idl"
 #include "DOM_APISPEC.idl"
 
+/**
+ * Document Object Model for (content) MathML.
+ *
+ * @see http://www.w3.org/TR/MathML2/chapter8.html
+ */
 module mathml_dom
 {
   interface MathMLDocument;

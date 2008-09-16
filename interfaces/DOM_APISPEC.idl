@@ -5,6 +5,12 @@
 
 #include "xpcom.idl"
 
+
+/**
+ * Document Object Model (DOM) Level 2 Core Specification.
+ *
+ * @see http://www.w3.org/TR/DOM-Level-2-Core/
+ */
 module dom
 {
 
