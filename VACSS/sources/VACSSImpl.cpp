@@ -6,6 +6,17 @@
 #include <set>
 #include <assert.h>
 
+// This is needed to work around MSVC brokenness.
+template<class T1, class T2> bool
+operator<(const std::pair<T1*, T2*>& a,
+          const std::pair<T1*, T2*>& b)
+{
+  if (a.first == b.first)
+    return a.second < b.second;
+
+  return a.first < b.first;
+}
+
 /* The code special cases this to match the CellML namespace
  * corresponding to the appropriate CellML version...
  */
