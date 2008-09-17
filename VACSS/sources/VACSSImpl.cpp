@@ -8,8 +8,11 @@
 
 /* The code special cases this to match the CellML namespace
  * corresponding to the appropriate CellML version...
+ * This has to be a static const for MSVC compatibility (because we do pointer
+ * comparisons, and it seems MSVC doesn't always coalesce matching constant
+ * strings to a single address).
  */
-#define MATCHING_CELLML_NS L"http://www.cellml.org/cellml/"
+static const wchar_t* MATCHING_CELLML_NS = L"http://www.cellml.org/cellml/";
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
 #define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
