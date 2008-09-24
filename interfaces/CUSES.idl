@@ -2,11 +2,11 @@
 
 /**
  * CUSES (the CellML Units Simiplification and Expansion Service) provides
- * services for processing units in CellML, providing services such as
- * looking up unit names in specific contexts, and reducing units to the
- * simplest form involving only built in and user defined base units. It
- * also provides facilities for converting between different but dimensionally
- * compatible units.
+ * services for processing units in CellML, providing services such as looking
+ * up unit names in specific contexts, and reducing units to the simplest form
+ * involving only built in and user defined base units. It also provides
+ * facilities for converting between different but dimensionally compatible
+ * units.
  */
 module cellml_services
 {
@@ -28,6 +28,12 @@ module cellml_services
     readonly attribute cellml_api::Units cellmlUnits;
   };
 
+  /**
+   * A reference to a base unit, optionally with a multiplier, offset,
+   * and exponent set.  The canonical representation for a units
+   * definition (see CanonicalUnitRepresentation) is built from a set
+   * of such references.
+   */
   interface BaseUnitInstance
     : XPCOM::IObject
   {
@@ -54,6 +60,11 @@ module cellml_services
     readonly attribute double exponent;
   };
 
+  /**
+   * The canonical representation of a units definition, as the product of
+   * powers of base units (perhaps with multiplicative factors, and optionally
+   * an offset if there is a single base unit).
+   */
   interface CanonicalUnitRepresentation
     : XPCOM::IObject
   {
@@ -63,7 +74,9 @@ module cellml_services
     readonly attribute unsigned long length;
 
     /**
-     * Fetches the nth base unit (0 for the first).
+     * Fetches the nth base unit (0 for the first). The ordering is arbitrary,
+     * but fixed for a given CUSES instance.
+     *
      * @param index The index of the base unit.
      * @returns The base unit instance at the specified index.
      * @raises CellMLException on error.
@@ -73,6 +86,11 @@ module cellml_services
 
     /**
      * Compares one unit representation with another.
+     *
+     * Whether this checks for exact unit identity or dimensional equivalence
+     * depends on whether the CUSES object used to create this representation
+     * is strict or not.
+     *
      * @param aCompareWith the unit representation to compare with.
      * @returns True if the units are equivalent.
      */
@@ -92,7 +110,8 @@ module cellml_services
 
     /**
      * Computes the conversion needed to convert to the SI base units
-     * representation. The equation is:
+     * representation (i.e. where the base units referenced are kg, m, etc.
+     * rather than, say, g, cm, etc.). The equation is:
      *  y = A * x + b
      * Where y is the SI base units, and x is the current units.
      * @output offset the value b in the equation above.
@@ -110,13 +129,17 @@ module cellml_services
 
     /**
      * Merges this unit with another CanonicalUnitRepresentation, applying an
-     * exponent along the way...
+     * exponent along the way. This performs the operations of the units
+     * algebra, and can be used to form products or quotients of units, or (by
+     * setting otherExponent to zero) to just raise this definition to the
+     * given exponent.
      * @param thisExponent The exponent to apply to this canonical unit
      *                     representation.
      * @param other The other canonical unit representation. This is ignored
      *              and may be null if otherExponent is zero.
      * @param otherExponent The exponent to apply to the other canonical unit
      *                      representation.
+     * @raises CellMLException if other is null and otherExponent is non-zero.
      */
     CanonicalUnitRepresentation mergeWith(in double thisExponent,
                                           in CanonicalUnitRepresentation other,
@@ -124,6 +147,9 @@ module cellml_services
       raises(cellml_api::CellMLException);
   };
 
+  /**
+   * The primary interface to units processing services for a model.
+   */
   interface CUSES
     : XPCOM::IObject
   {
@@ -138,13 +164,14 @@ module cellml_services
     readonly attribute wstring modelError;
 
     /**
-     * Gets a units representation for a string in a given context.
+     * Gets a units representation for a string (giving the name of the units)
+     * in a given context.
      * @param context The context. This must be part of the model
      *                (or part of an imported model) for which this object was
      *                created. It can be any element in the model, but would
      *                generally be a component, units, or model element.
      * @param name The units name to look up. This can be a built-in unit, or
-     *             a defined unit.
+     *             a user-defined unit.
      * @returns The units representation, or null if the name is invalid.
      */
     CanonicalUnitRepresentation getUnitsByName(in cellml_api::CellMLElement aContext,

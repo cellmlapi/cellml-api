@@ -24,7 +24,8 @@ module cellml_services
     * possible for both derivatives and non-state variables to be constant.
     */
    CONSTANT,
-     /**
+
+   /**
     * The target is a state variable, that is, it starts at an initial
     * value and evolves according to rates defined in the model.
     * Note that derivatives can be state variables too, for example if you
@@ -336,7 +337,7 @@ module cellml_services
    attribute wstring solveNLSystemPattern;
 
    /**
-    * A MaLaES transform to use. If will be null if it has not bee set, and
+    * A MaLaES transform to use. If will be null if it has not been set, and
     * no code has been generated from this generator. If generateCode is
     * called but this is null, a new default MaLaESTransform will be created,
     * with a MAL description suitable for use in C programs.

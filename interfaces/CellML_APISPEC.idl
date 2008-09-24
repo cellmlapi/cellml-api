@@ -12,7 +12,6 @@ module cellml_api
 {
   /* Forward definitions... */
   interface Model;
-  interface Units;
   interface Group;
   interface MapComponents;
   interface CellMLComponent;
@@ -84,9 +83,9 @@ module cellml_api
      * A complete RDF/XML document (including a single top-level RDF:rdf
      * element) as a DOM document. The document fetched is a copy of the RDF
      * in the model (that is, it is not live). However, fetching the attribute
-     * again will update to the latest data. Assigning this attribute to
-     * a new document (or a changed version of the previous document) will
-     * replace all the RDF in the model with the contents of the new document.
+     * again will update to the latest data. Assigning a new document (or a
+     * changed version of the previous document) will replace all the RDF in
+     * the model with the contents of the new document.
      */
     attribute dom::Document data;
   };
@@ -170,7 +169,7 @@ module cellml_api
     readonly attribute CellMLAttributeString cellmlVersion;
 
     /**
-     * This element's cmeta id (which may be defined on any CellML element)
+     * This element's cmeta id (which may be defined on any CellML element).
      */
     attribute CellMLAttributeString cmetaId;
 
@@ -816,8 +815,13 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * This interface represents a <component> element inside an <import>
-   * element.
+   * This interface represents a component element inside an import element.
+   *
+   * If the import has not yet been instantiated, then accessing many
+   * of the attributes from the CellMLComponent interface, available
+   * here by inheritance, will raise a CellMLException.  The
+   * attributes name, parentElement, and modelElement are safe to
+   * access.
    */
   interface ImportComponent
     : CellMLComponent
@@ -1356,7 +1360,7 @@ module cellml_api
   };
 
   /**
-   * An interface allowing Models to be iterated.
+   * An interface allowing Model elements to be iterated.
    */
   interface ModelIterator : CellMLElementIterator
   {
@@ -1507,7 +1511,7 @@ module cellml_api
   };
 
   /**
-   * An interface for accessing a set of Units
+   * An interface for accessing a set of Units.
    */
   interface UnitsSet
     : NamedCellMLElementSet
@@ -1576,7 +1580,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of Imports
+   * An interface for accessing a set of Imports.
    */
   interface CellMLImportSet
     : CellMLElementSet
@@ -1604,7 +1608,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of unit elements.
+   * An interface for accessing a set of Unit elements.
    */
   interface UnitSet
     : CellMLElementSet
@@ -1645,7 +1649,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface allow group elements to be iterated.
+   * An interface allow Group elements to be iterated.
    */
   interface GroupIterator : CellMLElementIterator
   {
@@ -1659,7 +1663,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of group elements.
+   * An interface for accessing a set of Group elements.
    */
   interface GroupSet
     : CellMLElementSet
@@ -1848,7 +1852,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for accessing a set of VariableRef elements.
+   * An interface for accessing a set of Role elements.
    */
   interface RoleSet
     : CellMLElementSet

@@ -40,9 +40,11 @@ module cellml_services
    * A set of finite-lifetime annotations. The purpose of this interface is to
    * allow annotations to be set throughout the life of a tool invocation or
    * operation, but then to be all removed at the end (a similar concept to
-   * pooled memory management).
-   * The service also allocates a unique prefix, allowing annotations to be
-   * done on a per-AnnotationSet basis.
+   * pooled memory management). All annotations set using this AnnotationSet
+   * will be removed when the AnnotationSet is destroyed. The service also
+   * allocates a unique prefix, allowing annotations to be done on a
+   * per-AnnotationSet basis - different sets of annotations will not interfere
+   * with each other.
    */
   interface AnnotationSet
     : XPCOM::IObject
@@ -54,7 +56,7 @@ module cellml_services
 
     /**
      * Saves a string on an object. The annotation is specific to this
-     *   AnnotationSet, and will be removed when then annotation set is
+     *   AnnotationSet, and will be removed when the annotation set is
      *   destroyed.
      * @param element The element to annotate.
      * @param key The key to set.
@@ -75,12 +77,13 @@ module cellml_services
 
     /**
      * Saves an object on an object. The annotation is specific to this
-     *   AnnotationSet, and will be removed when then annotation set is
+     *   AnnotationSet, and will be removed when the annotation set is
      *   destroyed.
      * @param element The element to annotate.
      * @param key The key to set.
      * @param value The value to set.
-     * Will replace any existing annotation with the same key.
+     * Will replace any existing annotation from this annotation set with the
+     * same key.
      */
     void setObjectAnnotation(in cellml_api::CellMLElement element,
                              in wstring key,
@@ -96,7 +99,7 @@ module cellml_services
   };
 
   /**
-   * A service which allows other types of annotation utlility objects to be
+   * A service which allows other types of annotation utility objects to be
    * created.
    */
   interface AnnotationToolService
