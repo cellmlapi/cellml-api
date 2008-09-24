@@ -1592,11 +1592,10 @@ CodeGenerationState::GenerateStateToRateCascades()
     while (ct->mUpDegree != NULL)
     {
       RETURN_INTO_WSTRING(stateN, ct->name());
-      RETURN_INTO_WSTRING(rateN, ct->mUpDegree->name());
+      std::wstring rateN;
 
-      if (rateN == L"")
-        GenerateVariableName(ct, rateN, mRateNamePattern,
-                             ct->mAssignedIndex - 1);
+      GenerateVariableName(ct, rateN, mRateNamePattern,
+                           ct->mAssignedIndex - 1);
 
       AppendAssign(mCodeInfo->mRatesStr, rateN, stateN);
       ct = ct->mUpDegree;

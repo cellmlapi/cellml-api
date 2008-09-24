@@ -636,14 +636,54 @@ CDAMaLaESResult::appendDiffVariable
     throw MaLaESError(L"Sorry, MaLaES currently can only take the "
                       L"derivative of variables.");
 
-  int deg = 1;
+  bool noOtherDeg = true;
+  int deg = 0;
   if (degree != NULL)
   {
     DECLARE_QUERY_INTERFACE_OBJREF(dcn, degree, mathml_dom::MathMLCnElement);
     if (dcn == NULL)
       throw MaLaESError(L"Sorry, only constant diff degrees are supported.");
     deg = (uint32_t)parseConstant(dcn);
+    noOtherDeg = false;
   }
+
+  // In addition to the global degree, add up the degrees on the bvars...
+  for (std::vector<iface::mathml_dom::MathMLBvarElement*>::iterator i =
+         aBvars.begin();
+       i != aBvars.end();
+       i++)
+  {
+    ObjRef<iface::dom::Node> bdeg;
+    for (bdeg = already_AddRefd<iface::dom::Node>((*i)->firstChild());
+         bdeg != NULL;
+         bdeg = already_AddRefd<iface::dom::Node>(bdeg->nextSibling()))
+    {
+      RETURN_INTO_WSTRING(ln, bdeg->localName());
+      if (ln == L"degree")
+      {
+        RETURN_INTO_WSTRING(ns, bdeg->namespaceURI());        
+        if (ns == MATHML_NS)
+          break;
+      }
+    }
+
+    if (bdeg != NULL)
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(bdegC, bdeg, mathml_dom::MathMLContainer);
+      if (bdegC->nArguments() < 1)
+        throw MaLaESError(L"Found a degree with no argument (invalid)");
+      RETURN_INTO_OBJREF(bdegv,iface::mathml_dom::MathMLElement,
+                         bdegC->getArgument(1));
+      DECLARE_QUERY_INTERFACE_OBJREF(dcn, bdegv, mathml_dom::MathMLCnElement);
+      if (dcn == NULL)
+        throw MaLaESError(L"Sorry, only constant diff degrees are supported.");
+      deg += (uint32_t)parseConstant(dcn);
+      noOtherDeg = false;
+    }
+  }
+
+  if (noOtherDeg)
+    deg++;
 
   double offset;
   boundMup = pow(startConversionMode(bvci, offset, true), deg);
