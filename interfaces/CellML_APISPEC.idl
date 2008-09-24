@@ -1619,6 +1619,7 @@ module cellml_api
      */
     UnitIterator iterateUnits();
   };
+#pragma terminal-interface
 
   /**
    * An interface allowing connection elements to be iterated.
