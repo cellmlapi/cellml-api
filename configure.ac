@@ -385,7 +385,7 @@ case "$host-$CXX" in
         LIBXML_CFLAGS=`xml2-config --cflags`
 esac
 
-if test x$cis=xtrue; then
+if test x$cis = xtrue; then
      LIBS=
      AC_CHECK_LIB([gslcblas],[cblas_dgemm], [], [AC_MSG_ERROR(GSL CBLAS library required)])
      LIBS="$NO_AS_NEEDED -lgslcblas"
