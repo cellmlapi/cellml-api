@@ -3,6 +3,9 @@
 /* Is the CellML Context enabled? */
 #undef ENABLE_CONTEXT
 
+/* Is RDF enabled? */
+#undef ENABLE_RDF
+
 /* Is XPCOM enabled? */
 #undef ENABLE_XPCOM
 
@@ -163,6 +166,9 @@
 
 /* Define TESTDIR to path of test sources. */
 #undef TESTDIR
+
+/* Define TESTDIR to path of test sources. */
+#undef TESTDIR8
 
 /* Version number of package */
 #undef VERSION

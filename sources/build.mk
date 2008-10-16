@@ -10,6 +10,10 @@ libcellml_la_LIBADD = \
 libcellml_la_CXXFLAGS = -I$(top_srcdir) -I$(top_srcdir)/sources \
   -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
 
+if ENABLE_RDF
+libcellml_la_LIBADD += librdf.la
+endif
+
 libdomdirectonly_la_SOURCES = \
   sources/dom_direct/DOMImplementation.cpp \
   sources/dom_direct/DOMLoader.cpp
@@ -46,4 +50,5 @@ libcellmlonly_la_SOURCES = \
 libcellmlonly_la_CXXFLAGS = \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/cellml \
   -I $(top_srcdir)/sources/dom -I $(top_srcdir)/sources/dom_direct \
-  -I $(top_srcdir)/sources/mathml -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
+  -I $(top_srcdir)/sources/mathml -I$(top_builddir)/interfaces -I$(top_srcdir)/sources/rdf \
+  $(AM_CXXFLAGS)

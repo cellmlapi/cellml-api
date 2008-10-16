@@ -7,11 +7,12 @@ tests_RunTestBin_SOURCES=\
 	tests/DOMTest.cpp \
 	tests/MathMLTest.cpp \
 	tests/CellMLTest.cpp \
-	tests/CellMLEventsTest.cpp
+	tests/CellMLEventsTest.cpp \
+        tests/URITest.cpp
 
 tests_RunTestBin_LDADD=-L$(top_builddir) -lcellml -lcppunit -lxml2
 tests_RunTestBin_CXXFLAGS=\
-  -I$(top_srcdir)/sources -I$(top_srcdir)/sources/dom \
+  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_srcdir)/sources/dom \
   -I$(top_srcdir)/sources/mathml -I$(top_srcdir)/sources/cellml \
   -I$(top_builddir)/interfaces -I$(top_srcdir)/tests $(AM_CXXFLAGS)
 
@@ -48,4 +49,10 @@ tests_RunTestBin_SOURCES += \
 	tests/VACSSTest.cpp
 tests_RunTestBin_CXXFLAGS +=  -I$(top_srcdir)/VACSS/sources
 tests_RunTestBin_LDADD += -lvacss
+endif
+
+if ENABLE_RDF
+tests_RunTestBin_SOURCES += \
+	tests/RDFTest.cpp
+tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/sources/rdf
 endif

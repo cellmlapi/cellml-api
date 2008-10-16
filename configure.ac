@@ -135,6 +135,9 @@ AC_ARG_ENABLE(rdf,
   no)  rdf=false ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-rdf) ;;
 esac],[rdf=false])
+if test x$rdf = xtrue; then
+  AC_DEFINE(ENABLE_RDF, 1, [Is RDF enabled?])
+fi
 AM_CONDITIONAL(ENABLE_RDF, test x$rdf = xtrue)
 
 if test x$malaes = xfalse -a x$ccgs = xtrue; then
@@ -405,6 +408,8 @@ AC_SUBST([PRE_NON_AS_NEEDED])
 AC_SUBST([POST_NON_AS_NEEDED])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
+                   [Define TESTDIR to path of test sources.])
+AC_DEFINE_UNQUOTED(TESTDIR8, "$testdir",
                    [Define TESTDIR to path of test sources.])
 
 AC_CONFIG_FILES([

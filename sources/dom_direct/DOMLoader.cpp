@@ -48,7 +48,7 @@ CDA_utf8_data_t CDA_utf8_data[] =
 static void
 operator+=(std::wstring& data, const char* str)
 {
-  char c;
+  unsigned char c;
   uint32_t l;
 
   if (CDA_UNLIKELY(str == NULL))

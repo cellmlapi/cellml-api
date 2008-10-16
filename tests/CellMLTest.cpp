@@ -1248,13 +1248,7 @@ CellMLTest::testModel()
   xh->release_ref();
   ci->release_ref();
   cii->release_ref();
-//     /**
-//      * Fetch a NamedCellMLElement by name.
-//      * @param name The name of the element
-//      * @return The element, or nil if not found.
-//      */
-//     CellMLImport getImport(in CellMLAttributeString name);
-  // XXX CellMLImport is not a NamedCellMLElement.
+
 //   };
   cis->release_ref();
 

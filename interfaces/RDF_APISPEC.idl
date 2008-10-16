@@ -3,6 +3,7 @@
 
 #include "xpcom.idl"
 #include "CellML_APISPEC.idl"
+#include "DOM_APISPEC.idl"
 
 /**
  * This module contains a description of an Application Programming Interface
@@ -15,6 +16,8 @@ module rdf_api
   interface Resource;
   interface URIReference;
   interface BlankNode;
+  interface PlainLiteral;
+  interface TypedLiteral;
 
   exception RDFProcessingError
   {
@@ -24,7 +27,7 @@ module rdf_api
    * A top-level interface for this RDF API.
    */
   interface DataSource
-    : cellml_api::RDFRepresentation
+    : XPCOM::IObject
   {
     /**
      * Fetches a URI reference resource. This resource is specific to this
@@ -43,6 +46,24 @@ module rdf_api
      * @return The new blank node.
      */
     BlankNode createBlankNode();
+
+    /**
+     * Fetches a plain literal. This resource is specific to this data source
+     * and cannot be used with objects retrieved via another data source.
+     * @param aForm The lexical form of the literal.
+     * @param aLanguage The language of the literal.
+     * @return The plain literal.
+     */
+    PlainLiteral getPlainLiteral(in wstring aForm, in wstring aLanguage);
+
+    /**
+     * Fetches a typed literal. This resource is specific to this data source
+     * and cannot be used with objects retrieved via another data source.
+     * @param aForm The lexical form of the literal.
+     * @param datatypeURI The datatype URI for the literal.
+     * @return The plain literal.
+     */
+    TypedLiteral getTypedLiteral(in wstring aForm, in wstring datatypeURI);
 
     /**
      * Fetches the set of all triples present anywhere in the model.
@@ -86,16 +107,16 @@ module rdf_api
      * @param aPredicate The predicate we are searching on.
      * @return The set of all triples meeting the constraints.
      */
-    TripleSet getTriplesOutOfByPredicate(in Node aPredicate);
+    TripleSet getTriplesOutOfByPredicate(in Resource aPredicate);
 
     /**
      * Finds a triple for which this node is the subject and the
      * parameter is the predicate if possible.
      * @param aPredicate The predicate we are searching on.
-     * @return The set of all triples meeting the constraints.
+     * @return A triple meeting the constraints.
      * @raises RDFProcessingError if there was no matching triple found.
      */
-    Triple getTripleOutOfByPredicate(in Node aPredicate)
+    Triple getTripleOutOfByPredicate(in Resource aPredicate)
       raises(RDFProcessingError);
 
     /**
@@ -212,17 +233,17 @@ module rdf_api
     /**
      * The subject of the triple.
      */
-    attribute Resource subject;
+    readonly attribute Resource subject;
 
     /**
      * The predicate of the triple.
      */
-    attribute Resource predicate;
+    readonly attribute Resource predicate;
 
     /**
      * The object of the triple.
      */
-    attribute Node _object;
+    readonly attribute Node _object;
 
     /**
      * Removes the assertion from the data source. Once this has been done,
@@ -259,6 +280,60 @@ module rdf_api
      * Creates a new triple enumerator.
      */
     TripleEnumerator enumerateTriples();
+  };
+#pragma terminal-interface
+
+  interface Bootstrap
+    : XPCOM::IObject
+  {
+    /**
+     * Creates an empty data source.
+     */
+    DataSource createDataSource();
+
+    /**
+     * Parses RDF/XML, using the specified element as the root, putting triples
+     * into the DataSource. Raises an RDF processing error if parsing fails.
+     * @param ds The DataSource to put triples into.
+     * @param root The root element of the RDF/XML serialisation to parse.
+     * @param baseURI The base URI against which to resolve relative URIs.
+     */
+    void parseIntoDataSource(in DataSource ds, in dom::Element root, in wstring baseURI)
+      raises(RDFProcessingError);
+
+    /**
+     * Creates a DOM Document which, if serialised, would result in a valid
+     * RDF/XML serialisation of DataSource.
+     * @param ds The DataSource to fetch triples from.
+     * @param baseURI The URI to assume the RDF/XML document will be stored at,
+     *                and should generate URIs relative to.
+     */
+    dom::Document getDOMForDataSource(in DataSource ds, in wstring baseURI);
+
+    /**
+     * Serialises all the triples in the RDF DataSource into a string of
+     * RDF/XML
+     * @param ds The DataSource to fetch triples from.
+     * @param baseURI The URI the parser should assume the RDF will be stored
+     *                at, and should generate URIs relative to.
+     */
+    wstring serialiseDataSource(in DataSource ds, in wstring baseURI);
+  };
+#pragma terminal-interface
+
+  /**
+   * The RDF representation for type="http://www.cellml.org/RDF/API"
+   */
+  interface RDFAPIRepresentation : cellml_api::RDFRepresentation
+  {
+    /**
+     * The RDF DataSource being represented. This is created afresh from the
+     * contents of the model every time you fetch it, and if you assign to it,
+     * then the RDF/XML in the model will be updated from it. However, changes
+     * made to the DataSource will not appear in the model until such an
+     * assignment is made.
+     */
+    attribute DataSource source;
   };
 #pragma terminal-interface
 };

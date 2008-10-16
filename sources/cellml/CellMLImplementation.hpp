@@ -13,6 +13,9 @@
 #include "IfaceDOM_events.hxx"
 #include <typeinfo>
 #include <assert.h>
+#ifdef ENABLE_RDF
+#include "IfaceRDF_APISPEC.hxx"
+#endif
 
 typedef uint32_t cda_serial_t;
 
@@ -75,6 +78,26 @@ public:
 private:
   ObjRef<CDA_Model> mModel;
 };
+
+#ifdef ENABLE_RDF
+class CDA_RDFAPIRepresentation
+  : public iface::rdf_api::RDFAPIRepresentation
+{
+public:
+  CDA_IMPL_REFCOUNT
+  CDA_IMPL_QI2(cellml_api::RDFRepresentation, rdf_api::RDFAPIRepresentation)
+  CDA_IMPL_ID
+
+  CDA_RDFAPIRepresentation(CDA_Model* aModel);
+
+  wchar_t* type() throw(std::exception&);
+  iface::rdf_api::DataSource* source() throw(std::exception&);
+  void source(iface::rdf_api::DataSource*) throw(std::exception&);
+
+private:
+  ObjRef<CDA_Model> mModel;
+};
+#endif
 
 class CDA_URI
   : public iface::cellml_api::URI

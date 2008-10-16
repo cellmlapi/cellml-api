@@ -3,6 +3,9 @@
 
 #include "CellMLImplementation.hpp"
 #include "DOMWriter.hxx"
+#ifdef ENABLE_RDF
+#include "RDFBootstrap.hpp"
+#endif
 #include <memory>
 #include <assert.h>
 #include <stdio.h>
@@ -241,6 +244,98 @@ CDA_RDFXMLStringRepresentation::serialisedData(const wchar_t* attr)
   mModel->datastore->appendChild(ide)->release_ref();
 }
 
+#ifdef ENABLE_RDF
+CDA_RDFAPIRepresentation::CDA_RDFAPIRepresentation(CDA_Model* aModel)
+  : mModel(aModel)
+{
+}
+
+wchar_t*
+CDA_RDFAPIRepresentation::type()
+  throw(std::exception&)
+{
+  return CDA_wcsdup(L"http://www.cellml.org/RDF/API");
+}
+
+iface::rdf_api::DataSource*
+CDA_RDFAPIRepresentation::source()
+  throw(std::exception&)
+{
+  // Create a brand new document to store the data...
+  RETURN_INTO_OBJREF(impl, iface::dom::DOMImplementation,
+                     mModel->mDoc->implementation());
+  RETURN_INTO_OBJREF(rdoc, iface::dom::Document,
+                     impl->createDocument(RDF_NS, L"RDF", NULL));
+  RETURN_INTO_OBJREF(rdocel, iface::dom::Element,
+                     rdoc->documentElement());
+
+  // Find our model's datastore...
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList,
+                     mModel->datastore->getElementsByTagNameNS(RDF_NS, L"RDF"));
+  uint32_t i, l = nl->length();
+  for (i = 0; i < l; i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
+    // Now go through each child of the RDF:rdf element, and import into the
+    // document.
+
+    RETURN_INTO_OBJREF(nl2, iface::dom::NodeList,
+                       n->childNodes());
+
+    uint32_t j, m = nl2->length();
+    for (j = 0; j < m; j++)
+    {
+      RETURN_INTO_OBJREF(n2, iface::dom::Node, nl2->item(j));
+      if (n2->nodeType() == iface::dom::Node::ELEMENT_NODE)
+      {
+        RETURN_INTO_OBJREF(ln, iface::dom::Node, rdoc->importNode(n2, true));
+        rdocel->appendChild(ln)->release_ref();
+      }
+    }
+  }
+
+  RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
+  RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, bs->createDataSource());
+
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
+  RETURN_INTO_WSTRING(base, bu->asText());
+  bs->parseIntoDataSource(ds, rdocel, base.c_str());
+
+  ds->add_ref();
+  return ds;
+}
+
+void
+CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
+  throw(std::exception&)
+{
+  // Step one: Wipe out all RDF from the model...
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList,
+                     mModel->datastore->getElementsByTagNameNS(RDF_NS, L"RDF"));
+  uint32_t i, l = nl->length();
+  for (i = 0; i < l; i++)
+  {
+    // The item remains as 0, because we keep deleting the items after it...
+    RETURN_INTO_OBJREF(el, iface::dom::Node, nl->item(0));
+    RETURN_INTO_OBJREF(pel, iface::dom::Node, el->parentNode());
+    pel->removeChild(el)->release_ref();
+  }
+
+  // Step two: Convert the data-source into an RDF document...
+  RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
+  RETURN_INTO_WSTRING(base, bu->asText());
+  RETURN_INTO_OBJREF(doc, iface::dom::Document,
+                     bs->getDOMForDataSource(aSource, base.c_str()));
+
+  // Step three: Add the RDF into the model...
+  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
+  RETURN_INTO_OBJREF(ide, iface::dom::Node,
+                     mModel->mDoc->importNode(de, true));
+  mModel->datastore->appendChild(ide)->release_ref();
+}
+#endif
+
 CDA_URI::CDA_URI(iface::dom::Attr* idata)
   : _cda_refcount(1), datastore(idata)
 {
@@ -357,6 +452,10 @@ CDA_Model::getRDFRepresentation(const wchar_t* type)
     return new CDA_RDFXMLDOMRepresentation(this);
   else if (!wcscmp(type, L"http://www.cellml.org/RDFXML/string"))
     return new CDA_RDFXMLStringRepresentation(this);
+#ifdef ENABLE_RDF
+  else if (!wcscmp(type, L"http://www.cellml.org/RDF/API"))
+    return new CDA_RDFAPIRepresentation(this);
+#endif
 
   throw iface::cellml_api::CellMLException();
 }
