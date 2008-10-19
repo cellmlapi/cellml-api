@@ -12,7 +12,7 @@ tests_RunTestBin_SOURCES=\
 
 tests_RunTestBin_LDADD=-L$(top_builddir) -lcellml -lcppunit -lxml2
 tests_RunTestBin_CXXFLAGS=\
-  -Wall -ggdb -I$(top_srcdir)/sources -I$(top_srcdir)/sources/dom \
+  -Wall -I$(top_srcdir)/sources -I$(top_srcdir)/sources/dom \
   -I$(top_srcdir)/sources/mathml -I$(top_srcdir)/sources/cellml \
   -I$(top_builddir)/interfaces -I$(top_srcdir)/tests $(AM_CXXFLAGS)
 
