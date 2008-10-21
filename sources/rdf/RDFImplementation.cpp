@@ -742,7 +742,7 @@ public:
     : mDataSource(aDataSource), mBase(aDocURI)
   {
 #define RESOURCE(n, t) m##n##Resource = already_AddRefd<iface::rdf_api::Resource> \
-      (aDataSource->getURIReference(RDF_NS #t))
+      (aDataSource->getURIReference(RDF_NS L#t))
     RESOURCE(Type, type);
     RESOURCE(Subj, subject);
     RESOURCE(Pred, predicate);
@@ -903,7 +903,7 @@ private:
 
   bool isCoreSyntaxTerm(const std::wstring& aURI)
   {
-#define T(x) (aURI == RDF_NS #x)
+#define T(x) (aURI == RDF_NS L#x)
     if (T(RDF) || T(ID) || T(about) || T(parseType) || T(resource) || T(nodeID)
         || T(datatype))
       return true;

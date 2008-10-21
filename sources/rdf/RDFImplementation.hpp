@@ -12,6 +12,8 @@ class CDA_AllTriplesSet;
 class CDA_Resource;
 class CDA_RDFNode;
 
+#undef assert
+
 class CDA_DataSource
   : public iface::rdf_api::DataSource
 {
