@@ -152,8 +152,6 @@ operator<<(std::ostream& aStream, iface::rdf_api::Node* aNode)
     }
   }
 
-  aStream << "(" << reinterpret_cast<uint32_t>(aNode) << ")";
-
   return aStream;
 }
 
