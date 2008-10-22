@@ -8,14 +8,14 @@ libcellml_xpcom_bridge_la_SOURCES = \
   $(top_builddir)/interfaces/p2xMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/p2xCellML_APISPEC.cpp \
   $(top_builddir)/interfaces/p2xCellML_events.cpp \
-  $(top_builddir)/interfaces/p2xRDF_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pDOM_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pDOM_events.cpp \
   $(top_builddir)/interfaces/x2pMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pCellML_APISPEC.cpp \
-  $(top_builddir)/interfaces/x2pRDF_APISPEC.cpp \
   $(top_builddir)/interfaces/x2pCellML_events.cpp \
-  $(top_srcdir)/sources/cellml/CellMLBootstrapXPCOM.cpp
+  $(top_srcdir)/sources/cellml/CellMLBootstrapXPCOM.cpp \
+  $(top_builddir)/interfaces/p2xRDF_APISPEC.cpp \
+  $(top_builddir)/interfaces/x2pRDF_APISPEC.cpp
 
 libcellml_xpcom_bridge_la_LIBADD = \
   $(STLLINK) \
@@ -27,7 +27,7 @@ libcellml_xpcom_bridge_la_LDFLAGS = \
 libcellml_xpcom_bridge_la_CXXFLAGS = \
   -I$(MOZILLA_DIR)/include/nspr -I$(MOZILLA_DIR)/include/xpcom \
   -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
-  -I$(top_srcdir) -I$(top_srcdir)/sources \
+  -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
   -I$(top_srcdir)/simple_interface_generators/glue/xpcom \
   -I$(top_builddir)/simple_interface_generators/glue/xpcom \
   $(AM_CXXFLAGS) -DMODULE_CONTAINS_xpcom -DMODULE_CONTAINS_DOMAPISPEC \
