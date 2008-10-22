@@ -19,6 +19,12 @@
 #endif
 #endif
 
+#ifdef _WIN32
+#ifndef swprintf
+#define swprintf _snwprintf
+#endif
+#endif
+
 CPPUNIT_TEST_SUITE_REGISTRATION( RDFTest );
 
 void
