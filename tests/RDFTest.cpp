@@ -8,8 +8,8 @@
 
 #include "cda_config.h"
 
-#ifndef BASE_DIRECTORY
-#define BASE_DIRECTORY TESTDIR8 "/test_rdf/"
+#ifndef BASE_DIRECTORY_NTRIP
+#define BASE_DIRECTORY_NTRIP TESTDIR8 "/test_rdf/"
 #endif
 #ifndef BASE_URI
 #ifdef WIN32
@@ -190,7 +190,7 @@ public:
               uint32_t aTestNo)
     : mTestNo(aTestNo)
   {
-    std::string path(BASE_DIRECTORY);
+    std::string path(BASE_DIRECTORY_NTRIP);
     path += testId;
     path += ".nt";
     std::ifstream f(path.c_str());
