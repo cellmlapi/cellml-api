@@ -10,6 +10,8 @@
 
 #ifndef BASE_DIRECTORY
 #define BASE_DIRECTORY TESTDIR8 "/test_rdf/"
+#endif
+#ifndef BASE_URI
 #ifdef WIN32
 #define BASE_URI L"file:///" TESTDIR L"/test_rdf/"
 #else
