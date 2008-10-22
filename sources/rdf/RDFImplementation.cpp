@@ -1,4 +1,5 @@
 #define MODULE_CONTAINS_RDFAPISPEC
+#define IN_DOMWRITER_MODULE
 #include "RDFImplementation.hpp"
 #include "Utilities.hxx"
 #include "URITool.hpp"
