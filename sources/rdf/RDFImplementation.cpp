@@ -213,10 +213,13 @@ CDA_RDFNode::release_ref()
   throw()
 {
   mRefCount--;
-  mDataSource->release_ref();
+
+  iface::rdf_api::DataSource* ds = mDataSource;
   
   if (mRefCount == 0 && mAssociationCount == 0)
     delete this;
+
+  ds->release_ref();
 }
 
 void
