@@ -246,7 +246,7 @@ CDA_RDFXMLStringRepresentation::serialisedData(const wchar_t* attr)
 
 #ifdef ENABLE_RDF
 CDA_RDFAPIRepresentation::CDA_RDFAPIRepresentation(CDA_Model* aModel)
-  : mModel(aModel)
+  : _cda_refcount(1), mModel(aModel)
 {
 }
 
