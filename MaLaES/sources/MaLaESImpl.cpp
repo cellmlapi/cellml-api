@@ -1503,20 +1503,24 @@ CDAMaLaESTransform::RunTransformOnOperator
         sn = L"piecewise_extra_case";
     }
 
+    ObjRef<iface::mathml_dom::MathMLContentElement> pwo;
     try
     {
-      RETURN_INTO_OBJREF(pwo, iface::mathml_dom::MathMLContentElement,
-                         pw->otherwise());
-
-      args.push_back(pwo);
-      pwo->add_ref();
-
-      std::wstring sn = L"piecewise_otherwise";
-      ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
+      pwo = already_AddRefd<iface::mathml_dom::MathMLContentElement>(pw->otherwise());
     }
     catch (...)
     {
       std::wstring sn = L"piecewise_no_otherwise";
+      ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
+    }
+
+
+    if (pwo)
+    {
+      args.push_back(pwo);
+      pwo->add_ref();
+
+      std::wstring sn = L"piecewise_otherwise";
       ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
     }
 
