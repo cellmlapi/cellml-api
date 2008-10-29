@@ -1457,11 +1457,11 @@ public:
             RETURN_INTO_WSTRING(dtu, objtl->datatypeURI());
             if (dtu == RDF_NS L"XMLLiteral" && lf == L"")
             {
-              propEl->setAttributeNS(RDF_NS, L"parseType", L"Literal");
+              propEl->setAttributeNS(RDF_NS, L"rdf:parseType", L"Literal");
               continue;
             }
 
-            propEl->setAttributeNS(RDF_NS, L"datatype", dtu.c_str());
+            propEl->setAttributeNS(RDF_NS, L"rdf:datatype", dtu.c_str());
           }
           else
           {
@@ -1520,19 +1520,19 @@ private:
   createNodeElementForResource(iface::rdf_api::Resource* res)
   {
     RETURN_INTO_OBJREF(descr, iface::dom::Element,
-                       mDoc->createElementNS(RDF_NS, L"Description"));
+                       mDoc->createElementNS(RDF_NS, L"rdf:Description"));
     DECLARE_QUERY_INTERFACE_OBJREF(uri, res, rdf_api::URIReference);
     if (uri != NULL)
     {
       RETURN_INTO_WSTRING(uSubjStr, uri->URI());
       URI uSubj(uSubjStr);
-      descr->setAttributeNS(RDF_NS, L"about",
+      descr->setAttributeNS(RDF_NS, L"rdf:about",
                             uSubj.relativeURI(mBase).c_str());
     }
     else
     {
       // It must be a blank node. 
-      descr->setAttributeNS(RDF_NS, L"nodeID",
+      descr->setAttributeNS(RDF_NS, L"rdf:nodeID",
                             getOrAssignNodeID(res).c_str());
     }
 
@@ -1554,7 +1554,7 @@ CDA_RDFBootstrap::getDOMForDataSource
 {
   RETURN_INTO_OBJREF(impl, iface::dom::DOMImplementation, CreateDOMImplementation());
   RETURN_INTO_OBJREF(rdoc, iface::dom::Document,
-                     impl->createDocument(RDF_NS, L"RDF", NULL));
+                     impl->createDocument(RDF_NS, L"rdf:RDF", NULL));
   RETURN_INTO_OBJREF(rdocel, iface::dom::Element,
                      rdoc->documentElement());
   RDFDOMBuilder b(rdoc, rdocel, aDataSource, aBaseURI);

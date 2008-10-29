@@ -84,7 +84,7 @@ URITest::testURISerialise()
   URI u2(L"http://www.cellml.org/tools/api/blargh?abc/#def?");
   CPPUNIT_ASSERT(u2.absoluteURI() == L"http://www.cellml.org/tools/api/blargh?abc/#def?");
   URI u3(L"file:///a/b/c/d/e/f");
-  CPPUNIT_ASSERT(u3.absoluteURI() == L"file:/a/b/c/d/e/f");
+  CPPUNIT_ASSERT(u3.absoluteURI() == L"file:///a/b/c/d/e/f");
 }
 
 void
@@ -96,5 +96,5 @@ URITest::testURISerialiseRelative()
   URI r2(L"http://www.cellml.org/index_html");
   CPPUNIT_ASSERT(r2.relativeURI(base) == L"../../index_html");
   URI r3(L"file:///a/b/c/d/e/f");
-  CPPUNIT_ASSERT(r3.relativeURI(base) == L"file:/a/b/c/d/e/f");
+  CPPUNIT_ASSERT(r3.relativeURI(base) == L"file:///a/b/c/d/e/f");
 }

@@ -205,6 +205,9 @@ public:
   absoluteURI()
   {
     std::wstring res;
+    bool showEmptyAuthority = false;
+    if (scheme == L"file")
+      showEmptyAuthority = true;
 
     if (scheme != L"")
     {
@@ -212,9 +215,13 @@ public:
       res += L':';
     }
 
+    if (showEmptyAuthority)
+      res += L"//";
+
     if (authority != L"")
     {
-      res += L"//";
+      if (!showEmptyAuthority)
+        res += L"//";
       res += authority;
     }
 
@@ -248,11 +255,19 @@ public:
       rollUp = true;
     }
 
-    if (authority != L"" && (rollUp || aRelativeTo.authority != authority))
+    bool needAuthority = (rollUp || aRelativeTo.authority != authority);
+    if (needAuthority)
     {
-      res += L"//";
-      res += authority;
-      rollUp = true;
+      bool showEmptyAuthority = false;
+      if (scheme == L"file")
+        showEmptyAuthority = true;
+
+      if (authority != L"" || showEmptyAuthority)
+      {
+        res += L"//";
+        res += authority;
+        rollUp = true;
+      }
     }
 
     if (rollUp)
