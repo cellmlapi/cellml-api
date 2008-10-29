@@ -31,9 +31,12 @@ iface::rdf_api::URIReference*
 CDA_DataSource::getURIReference(const wchar_t* aURI)
   throw(std::exception&)
 {
+  URI u(aURI);
+  std::wstring abs(u.absoluteURI());
+
   // See if it already exists...
   std::map<std::wstring, CDA_URIReference*>::iterator i
-    (mURIReferences.find(aURI));
+    (mURIReferences.find(abs));
 
   if (i != mURIReferences.end())
   {
@@ -43,7 +46,7 @@ CDA_DataSource::getURIReference(const wchar_t* aURI)
 
   // We need to make a new URI reference...
   CDA_URIReference* ur = new CDA_URIReference(aURI, this);
-  mURIReferences.insert(std::pair<std::wstring, CDA_URIReference*>(aURI, ur));
+  mURIReferences.insert(std::pair<std::wstring, CDA_URIReference*>(abs, ur));
 
   return ur;
 }
@@ -893,7 +896,9 @@ private:
   {
     RETURN_INTO_WSTRING(ns, aNode->namespaceURI());
     RETURN_INTO_WSTRING(ln, aNode->localName());
-    return ns + ln;
+
+    URI u(ns+ln);
+    return u.absoluteURI();
   }
 
   bool isXMLAttributeURI(const std::wstring& aURI)
