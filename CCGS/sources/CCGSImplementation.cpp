@@ -562,9 +562,13 @@ L"piecewise_first_case: #prec[1000(5)](#expr1 ? #expr2 : \r\n"
 L"piecewise_extra_case: #prec[1000(5)]#expr1 ? #expr2 : \r\n"
 L"piecewise_otherwise: #prec[1000(5)]#expr1)\r\n"
 L"piecewise_no_otherwise: #prec[1000(5)]0.0/0.0)\r\n"
-L"pi: #prec[999] 3.14159265358979\r\n"
 L"eulergamma: #prec[999]0.577215664901533\r\n"
+L"exponentiale: #prec[999]2.71828182845905\r\n"
+L"false: #prec[999]0.0\r\n"
 L"infinity: #prec[900]1.0/0.0\r\n"
+L"notanumber: #prec[999]0.0/0.0\r\n"
+L"pi: #prec[999] 3.14159265358979\r\n"
+L"true: #prec[999]1.0\r\n"
                              ));
   }
 
