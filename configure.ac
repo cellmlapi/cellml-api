@@ -303,11 +303,11 @@ if test "$GCC" = "yes"; then
                  ac_cv_visibility_hidden,
                  [cat > conftest.cpp <<EOF
 		  class MyClass;
-		  class MyClass
+		  class __attribute__((visibility("default"))) MyClass
 		  {
 		    MyClass() {}
 		    virtual ~MyClass() {}
-		  } __attribute__((visibility("default")));
+		  };
                   int foo __attribute__ ((visibility ("hidden"))) = 1;
 EOF
                   ac_cv_visibility_hidden=no
