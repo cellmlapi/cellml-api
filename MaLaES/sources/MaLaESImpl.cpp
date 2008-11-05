@@ -414,8 +414,9 @@ CDAMaLaESResult::writeConvertedVariable()
     else if ((*i).second < degree)
       (*i).second = degree;
 
-    wchar_t buf[30];
-    swprintf(buf, 30, L"expression_d%d", degree);
+    const unsigned int bufferSize=30;
+    wchar_t buf[bufferSize];
+    swprintf(buf, bufferSize, L"expression_d%d", degree);
     RETURN_INTO_WSTRING(expr,
                         mAnnos->getStringAnnotation(processingVariable, buf));
     mActive += expr;
