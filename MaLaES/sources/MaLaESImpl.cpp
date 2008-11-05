@@ -415,7 +415,7 @@ CDAMaLaESResult::writeConvertedVariable()
       (*i).second = degree;
 
     wchar_t buf[30];
-    swprintf(buf, 40, L"expression_d%d", degree);
+    swprintf(buf, 30, L"expression_d%d", degree);
     RETURN_INTO_WSTRING(expr,
                         mAnnos->getStringAnnotation(processingVariable, buf));
     mActive += expr;
