@@ -19,7 +19,7 @@ class DOMNamespaceContext;
 #endif
 
 DOMWRITER_PUBLIC_PRE
-class DOMWriter
+class DOMWRITER_PUBLIC_POST DOMWriter
 {
 public:
   DOMWRITER_PUBLIC_PRE DOMWriter() DOMWRITER_PUBLIC_POST;
@@ -57,7 +57,7 @@ public:
     throw(std::exception);
   void writeNotation(DOMNamespaceContext* dnc, iface::dom::Notation* nt, std::wstring& appendTo)
     throw(std::exception);
-} DOMWRITER_PUBLIC_POST;
+};
 
 class DOMNamespaceContext
 {
