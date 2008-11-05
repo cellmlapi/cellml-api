@@ -1962,8 +1962,8 @@ ModelValidation::validateMaths(iface::cellml_api::CellMLElement* aContext,
       continue;
     }
 
-    l = mae->nArguments();
-    if (l < 3)
+    uint32_t m = mae->nArguments();
+    if (m < 3)
     {
       REPR_ERROR(L"Expected apply inside MathML math element to be equate at "
                  L"least two expressions",
@@ -1975,9 +1975,9 @@ ModelValidation::validateMaths(iface::cellml_api::CellMLElement* aContext,
     RETURN_INTO_OBJREF(aUnits,
                        iface::cellml_services::CanonicalUnitRepresentation,
                        validateMathMLExpression(aContext, a));
-    for (uint32_t i = 3; i < (l + 1); i++)
+    for (uint32_t k = 3; k < (m + 1); k++)
     {
-      RETURN_INTO_OBJREF(b, iface::mathml_dom::MathMLElement, mae->getArgument(i));
+      RETURN_INTO_OBJREF(b, iface::mathml_dom::MathMLElement, mae->getArgument(k));
       RETURN_INTO_OBJREF(bUnits,
                          iface::cellml_services::CanonicalUnitRepresentation,
                          validateMathMLExpression(aContext, b));
