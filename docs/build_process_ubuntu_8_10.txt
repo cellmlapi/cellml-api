@@ -4,7 +4,7 @@ Build the CellML DOM API from its source code under Ubuntu 8.10
 Prerequisites
 -------------
 
-The Mozilla framework will have to be built first, if you are to use the CellML DOM API from within PCEnv.
+The XUL Runner SDK must have been downloaded and uncompressed to /home/[Username], if you are to use the CellML DOM API from within PCEnv.
 
 
 Required packages
@@ -40,12 +40,12 @@ From a shell prompt:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~/CellML_DOM_API
 aclocal && autoconf && automake
-./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss
+./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf
 make
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note #1: "aclocal && autoconf && automake" is not required if building from a source tar.
-Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/home/[Username]/mozilla-obj/obj-i686-pc-linux-gnu/stablexr/dist" to the "configure" command line.
+Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/home/[Username]/xulrunner-sdk" to the "configure" command line.
 Note #3: if the examples are required (e.g. CellML2C, RunCellML and ValidateCellML), then add "--enable-examples=yes" to the "configure" command line.
 
 
@@ -58,4 +58,3 @@ From a shell prompt:
 cd ~/CellML_DOM_API
 make check
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
