@@ -283,6 +283,7 @@ CDACanonicalUnitRepresentation::canonicalise(bool strictKeep)
           if (newExp != 0)
           {
             uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
+            uLast->add_ref();
             newBaseUnits.push_back(uLast);
           }
           continue;
