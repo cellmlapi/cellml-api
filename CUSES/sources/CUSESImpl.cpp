@@ -280,10 +280,11 @@ CDACanonicalUnitRepresentation::canonicalise(bool strictKeep)
           newBaseUnits.back()->release_ref();
           newBaseUnits.pop_back();
 
+          uLast = NULL;
+
           if (newExp != 0)
           {
             uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
-            uLast->add_ref();
             newBaseUnits.push_back(uLast);
           }
           continue;
