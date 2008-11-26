@@ -67,7 +67,7 @@ CellMLTest::loadTenTusscher()
 {
   mTenTusscher =
     mModelLoader->loadFromURL
-    (L"http://www.bioeng.auckland.ac.nz/people/nickerso/research/models/"
+    (L"http://www.cellml.org/Members/miller/andres_models/"
      L"2004_tenTusscher/experiments/periodic-stimulus-endocardial.xml");
 }
 
@@ -1233,16 +1233,14 @@ CellMLTest::testModel()
   iface::cellml_api::URI* xh;
   CPPUNIT_ASSERT_NO_THROW(xh = ci->xlinkHref());
   CPPUNIT_ASSERT_NO_THROW(str = xh->asText());
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.bioeng.auckland.ac.nz/people/"
-                              L"nickerso/research/models/common/units.xml"));
+  CPPUNIT_ASSERT(!wcscmp(str, L"../../common/units.xml"));
   free(str);
   xh->release_ref();
   ci->release_ref();
   CPPUNIT_ASSERT_NO_THROW(ci = cii->nextImport());
   CPPUNIT_ASSERT_NO_THROW(xh = ci->xlinkHref());
   CPPUNIT_ASSERT_NO_THROW(str = xh->asText());
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.bioeng.auckland.ac.nz/people/"
-                         L"nickerso/research/models/2004_tenTusscher/2004_"
+  CPPUNIT_ASSERT(!wcscmp(str, L"../2004_"
                          L"tenTusscher_noble_noble_panfilov-endo.xml"));
   free(str);
   xh->release_ref();
@@ -2114,15 +2112,14 @@ CellMLTest::testCellMLImport()
 //     readonly attribute URI xlinkHref;
   iface::cellml_api::URI* u = ci1->xlinkHref();
   wchar_t* str = u->asText();
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.bioeng.auckland.ac.nz/people/"
-                         L"nickerso/research/models/common/units.xml"));
+  CPPUNIT_ASSERT(!wcscmp(str, L"../../common/units.xml"));
   free(str);
   u->asText(L"http://www.example.org/models/test.xml");
   str = u->asText();
   CPPUNIT_ASSERT(!wcscmp(str, L"http://www.example.org/models/test.xml"));
   free(str);
-  u->asText(L"http://www.bioeng.auckland.ac.nz/people/nickerso/research/"
-            L"models/common/units.xml");
+  u->asText(L"http://www.cellml.org/Members/miller/andres_models/"
+            L"common/units.xml");
   u->release_ref();
 
 //     /**

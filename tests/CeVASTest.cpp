@@ -44,7 +44,7 @@ void
 CeVASTest::testCeVASCore()
 {
   iface::cellml_api::Model* tenTusscher = mModelLoader->loadFromURL
-    (L"http://www.bioeng.auckland.ac.nz/people/nickerso/research/models/"
+    (L"http://www.cellml.org/Members/miller/andres_models/"
      L"2004_tenTusscher/experiments/periodic-stimulus-endocardial.xml");
 
 //  interface CeVASBootstrap

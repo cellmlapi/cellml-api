@@ -44,7 +44,7 @@ CUSESTest::testCUSESObject()
 {
   iface::cellml_api::Model* tenTusscher =
     mModelLoader->loadFromURL
-    (L"http://www.bioeng.auckland.ac.nz/people/nickerso/research/models/"
+    (L"http://www.cellml.org/Members/miller/andres_models/"
      L"2004_tenTusscher/experiments/periodic-stimulus-endocardial.xml");
   iface::cellml_services::CUSES* c =
     mCUSESBootstrap->createCUSESForModel(tenTusscher, false);
