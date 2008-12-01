@@ -6,8 +6,10 @@
 #include "cda_compiler_support.h"
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCCGS.hxx"
+#include "IfaceMaLaES.hxx"
 #include "IfaceAnnoTools.hxx"
 #include "CCGSBootstrap.hpp"
+#include "MaLaESBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
 #include "AnnoToolsBootstrap.hpp"
 #include <stdio.h>
@@ -367,20 +369,29 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
   printf("\"\"\"\n");
 
   wchar_t* frag = cci->functionsString();
-  printf("%S", frag);
+  printf("%S\n", frag);
   free(frag);
 
   // Now start the code...
   frag = cci->initConstsString();
-  printf("def SetupFixedConstants(CONSTANTS, RATES, STATES):\n%S\n", frag);
+  if (wcscmp(frag, L""))
+    printf("def setup_fixed_constants(constants, rates, states):\n%S\n", frag);
+  else
+    printf("def setup_fixed_constants(constants, rates, states): pass\n\n");
   free(frag);
 
   frag = cci->variablesString();
-  printf("def EvaluateVariables(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC):\n%S\n", frag);
+  if (wcscmp(frag, L""))
+    printf("def evaluate_variables(voi, constants, rates, states, algebraic):\n%S\n", frag);
+  else
+    printf("def evaluate_variables(voi, constants, rates, states, algebraic): pass\n\n");
   free(frag);
 
   frag = cci->ratesString();
-  printf("def ComputeRates(VOI, STATES, RATES, CONSTANTS, ALGEBRAIC):\n%S\n", frag);
+  if (wcscmp(frag, L""))
+    printf("def compute_rates(voi, states, rates, constants, algebraic):\n%S", frag);
+  else
+    printf("def compute_rates(voi, states, rates, constants, algebraic): pass\n");
   free(frag);
 }
 
@@ -491,6 +502,87 @@ main(int argc, char** argv)
   iface::cellml_services::CodeGenerator* cg =
     cgb->createCodeGenerator();
   cgb->release_ref();
+
+  // The code generator is designed to generate C code by default, so
+  // we need to customise it to generate Python code instead
+
+  cg->constantPattern(L"constants[%]");
+  cg->stateVariableNamePattern(L"states[%]");
+  cg->algebraicVariableNamePattern(L"algebraic[%]");
+  cg->rateNamePattern(L"rates[%]");
+  cg->voiPattern(L"voi");
+  cg->assignPattern(L"    <LHS> = <RHS>;\r\n");
+
+  iface::cellml_services::MaLaESBootstrap* mb = CreateMaLaESBootstrap();
+
+  iface::cellml_services::MaLaESTransform* mt =
+    mb->compileTransformer
+    (
+L"opengroup: (\r\n"
+L"closegroup: )\r\n"
+L"abs: #prec[H]fabs(#expr1)\r\n"
+L"and: #prec[20]#exprs[ and ]\r\n"
+L"arccos: #prec[H]arccos(#expr1)\r\n"
+L"arccosh: #prec[H]arccosh(#expr1)\r\n"
+L"arccot: #prec[1000(900)]arctan(1.0/#expr1)\r\n"
+L"arccoth: #prec[1000(900)]arctanh(1.0/#expr1)\r\n"
+L"arccsc: #prec[1000(900)]arcsin(1/#expr1)\r\n"
+L"arccsch: #prec[1000(900)]arcsinh(1/#expr1)\r\n"
+L"arcsec: #prec[1000(900)]arccos(1/#expr1)\r\n"
+L"arcsech: #prec[1000(900)]arccosh(1/#expr1)\r\n"
+L"arcsin: #prec[H]arcsin(#expr1)\r\n"
+L"arcsinh: #prec[H]arcsinh(#expr1)\r\n"
+L"arctan: #prec[H]arctan(#expr1)\r\n"
+L"arctanh: #prec[H]arctanh(#expr1)\r\n"
+L"ceiling: #prec[H]ceil(#expr1)\r\n"
+L"cos: #prec[H]cos(#expr1)\r\n"
+L"cosh: #prec[H]cosh(#expr1)\r\n"
+L"cot: #prec[900(0)]1.0/tan(#expr1)\r\n"
+L"coth: #prec[900(0)]1.0/tanh(#expr1)\r\n"
+L"csc: #prec[900(0)]1.0/sin(#expr1)\r\n"
+L"csch: #prec[900(0)]1.0/sinh(#expr1)\r\n"
+L"diff: #lookupDiffVariable\r\n"
+L"divide: #prec[900]#expr1/#expr2\r\n"
+L"eq: #prec[30]#exprs[==]\r\n"
+L"exp: #prec[H]exp(#expr1)\r\n"
+L"exponentiale: #prec[999]2.71828182846\r\n"
+L"factorial: #prec[H]factorial(#expr1)\r\n"
+L"false: #prec[999]False\r\n"
+L"floor: #prec[H]floor(#expr1)\r\n"
+L"geq: #prec[30]#exprs[ >= ]\r\n"
+L"gt: #prec[30]#exprs[ > ]\r\n"
+L"leq: #prec[30]#exprs[ <= ]\r\n"
+L"ln: #prec[H]log(#expr1)\r\n"
+L"log: #prec[H]arbitrary_log(#expr1, #logbase)\r\n"
+L"lt: #prec[30]#exprs[ < ]\r\n"
+L"minus: #prec[500]#expr1-#expr2\r\n"
+L"neq: #prec[30]#expr1 != #expr2\r\n"
+L"not: #prec[950]!#expr1\r\n"
+L"or: #prec[10]#exprs[ or ]\r\n"
+L"pi: #prec[999]3.14159265358979\r\n"
+L"piecewise_extra_case: #prec[1000(5)]#expr2 if #expr1 else \r\n"
+L"piecewise_first_case: #prec[1000(5)]#expr2 if #expr1 else \r\n"
+L"piecewise_no_otherwise: #prec[1000(5)]0.0/0.0)\r\n"
+L"piecewise_otherwise: #prec[1000(5)]#expr1\r\n"
+L"plus: #prec[500]#exprs[+]\r\n"
+L"power: #prec[H]#expr1**#expr2\r\n"
+L"root: #prec[1000(900)]#expr1**(1.0/#degree)\r\n"
+L"sec: #prec[900(0)]1.0/cos(#expr1)\r\n"
+L"sech: #prec[900(0)]1.0/cosh(#expr1)\r\n"
+L"sin: #prec[H]sin(#expr1)\r\n"
+L"sinh: #prec[H]sinh(#expr1)\r\n"
+L"tan: #prec[H]tan(#expr1)\r\n"
+L"tanh: #prec[H]tanh(#expr1)\r\n"
+L"times: #prec[900]#exprs[*]\r\n"
+L"true: #prec[999]True\r\n"
+L"unary_minus: #prec[950]-#expr1\r\n"
+L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
+    );
+
+  cg->transform(mt);
+
+  mt->release_ref();
+  mb->release_ref();
 
   if (usenames)
     doNameAnnotations(mod, cg);
