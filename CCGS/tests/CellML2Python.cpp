@@ -373,6 +373,16 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
   free(frag);
 
   // Now start the code...
+
+  printf("from math import *\n\n");
+
+  printf("states_size = %u\n", cci->rateIndexCount());
+  printf("rates_size = %u\n", cci->rateIndexCount());
+  printf("algebraic_size = %u\n", cci->algebraicIndexCount());
+  printf("constants_size = %u\n", cci->constantIndexCount());
+
+  printf("\n");
+
   frag = cci->initConstsString();
   if (wcscmp(frag, L""))
     printf("def setup_fixed_constants(constants, rates, states):\n%S\n", frag);
@@ -511,7 +521,7 @@ main(int argc, char** argv)
   cg->algebraicVariableNamePattern(L"algebraic[%]");
   cg->rateNamePattern(L"rates[%]");
   cg->voiPattern(L"voi");
-  cg->assignPattern(L"    <LHS> = <RHS>;\r\n");
+  cg->assignPattern(L"    <LHS> = <RHS>\r\n");
 
   iface::cellml_services::MaLaESBootstrap* mb = CreateMaLaESBootstrap();
 
