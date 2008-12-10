@@ -1,0 +1,12 @@
+#include <exception>
+#include <jni.h>
+#include "j2pMaLaES.hxx"
+#include "MaLaESBootstrap.hpp"
+
+extern "C" { JWRAP_PUBLIC_PRE jobject Java_cellml_1bootstrap_MaLaESBootstrap_createMaLaESBootstrap(JNIEnv* env, jclass clazz) JWRAP_PUBLIC_POST; }
+
+jobject
+Java_cellml_1bootstrap_MaLaESBootstrap_createMaLaESBootstrap(JNIEnv* env, jclass clazz)
+{
+  return wrap_cellml_services_MaLaESBootstrap(env, CreateMaLaESBootstrap());
+}

@@ -1,5 +1,7 @@
 #include "xpcom.idl"
+#ifndef IN_CELLML_MODULE
 #define USERDATA_NEEDED
+#endif
 #include "CellML_APISPEC.idl"
 
 /**

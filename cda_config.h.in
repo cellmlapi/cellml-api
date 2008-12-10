@@ -6,7 +6,7 @@
 /* Is RDF enabled? */
 #undef ENABLE_RDF
 
-/* Is XPCOM enabled? */
+/* Is Java enabled? */
 #undef ENABLE_XPCOM
 
 /* Define to 1 if you have the `closedir' function. */

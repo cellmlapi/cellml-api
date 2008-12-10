@@ -34,6 +34,19 @@ AC_ARG_ENABLE(xpcom,
 esac], [xpcom=false])
 AM_CONDITIONAL(ENABLE_XPCOM, test x$xpcom != xfalse)
 
+AC_ARG_ENABLE(java,
+[  --enable-java  Build Java bindings],
+[case "${enableval}" in
+  no) java=false ;;
+  *)
+  java=$enableval
+  # CHECK_SHORT_WCHAR_OPTION
+  # AM_CXXFLAGS="$AM_CXXFLAGS $short_wchar_option"
+  AC_DEFINE(ENABLE_XPCOM, 1, [Is Java enabled?])
+  ;;
+esac], [java=false])
+AM_CONDITIONAL(ENABLE_JAVA, test x$java != xfalse)
+
 AC_ARG_ENABLE(context,
 [  --enable-context    Build the CellML Context],
 [case "${enableval}" in
@@ -166,6 +179,7 @@ fi
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
 contextandxpcom=false
+contextandjava=false
 if test x$context = xtrue; then
   AC_DEFINE(ENABLE_CONTEXT, 1, [Is the CellML Context enabled?])
   if test x$corba = xtrue; then
@@ -180,6 +194,9 @@ if test x$context = xtrue; then
   if test x$xpcom != xfalse; then
     contextandxpcom=true
   fi
+  if test x$java != xfalse; then
+    contextandjava=true
+  fi
 fi
 
 annotoolsandxpcom=false
@@ -190,22 +207,37 @@ ccgsandxpcom=false
 cisandxpcom=false
 vacssandxpcom=false
 rdfandxpcom=false
+
+annotoolsandjava=false
+cevasandjava=false
+cusesandjava=false
+malaesandjava=false
+ccgsandjava=false
+cisandjava=false
+vacssandjava=false
+rdfandjava=false
+
 if test x$xpcom != xfalse; then
    if test x$annotools = xtrue; then
       annotoolsandxpcom=true
    fi
+
    if test x$cevas = xtrue; then
       cevasandxpcom=true
    fi
+
    if test x$cuses = xtrue; then
       cusesandxpcom=true
    fi
+
    if test x$malaes = xtrue; then
       malaesandxpcom=true
    fi
+
    if test x$ccgs = xtrue; then
       ccgsandxpcom=true
    fi
+
    if test x$cis = xtrue; then
       cisandxpcom=true
    fi
@@ -232,6 +264,50 @@ AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_XPCOM, test x$vacssandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_XPCOM, test x$rdfandxpcom = xtrue)
+
+if test x$java != xfalse; then
+   if test x$annotools = xtrue; then
+      annotoolsandjava=true
+   fi
+
+   if test x$cevas = xtrue; then
+      cevasandjava=true
+   fi
+
+   if test x$cuses = xtrue; then
+      cusesandjava=true
+   fi
+
+   if test x$malaes = xtrue; then
+      malaesandjava=true
+   fi
+
+   if test x$ccgs = xtrue; then
+      ccgsandjava=true
+   fi
+
+   if test x$cis = xtrue; then
+      cisandjava=true
+   fi
+
+   if test x$vacss = xtrue; then
+      vacssandjava=true
+   fi
+
+   if test x$rdf = xtrue; then
+      rdfandjava=true
+   fi
+fi
+
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_JAVA, test x$contextandjava = xtrue)
+AM_CONDITIONAL(ENABLE_ANNOTOOLS_AND_JAVA, test x$annotoolsandjava = xtrue)
+AM_CONDITIONAL(ENABLE_CEVAS_AND_JAVA, test x$cevasandjava = xtrue)
+AM_CONDITIONAL(ENABLE_CUSES_AND_JAVA, test x$cusesandjava = xtrue)
+AM_CONDITIONAL(ENABLE_MALAES_AND_JAVA, test x$malaesandjava = xtrue)
+AM_CONDITIONAL(ENABLE_CCGS_AND_JAVA, test x$ccgsandjava = xtrue)
+AM_CONDITIONAL(ENABLE_CIS_AND_JAVA, test x$cisandjava = xtrue)
+AM_CONDITIONAL(ENABLE_VACSS_AND_JAVA, test x$vacssandjava = xtrue)
+AM_CONDITIONAL(ENABLE_RDF_AND_JAVA, test x$rdfandjava = xtrue)
 
 # Checks for programs.
 AC_PROG_CXX
