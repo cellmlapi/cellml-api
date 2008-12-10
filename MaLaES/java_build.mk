@@ -24,14 +24,14 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/MaLaESBootstrap.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/MaLaESBootstrap.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/DegreeVariable.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/DegreeVariableIterator.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/MaLaESResult.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/MaLaESTransform.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/MaLaESBootstrap.java \
-  $(top_builddir)/javacp/cellml_services/DegreeVariable.java \
-  $(top_builddir)/javacp/cellml_services/DegreeVariableIterator.java \
-  $(top_builddir)/javacp/cellml_services/MaLaESResult.java \
-  $(top_builddir)/javacp/cellml_services/MaLaESTransform.java \
-  $(top_builddir)/javacp/cellml_services/MaLaESBootstrap.java
+  $(top_builddir)/javacp/cellml_bootstrap/MaLaESBootstrap.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/DegreeVariable.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/DegreeVariableIterator.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/MaLaESResult.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/MaLaESTransform.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/MaLaESBootstrap.class \
+  $(top_builddir)/javacp/cellml_services/DegreeVariable.class \
+  $(top_builddir)/javacp/cellml_services/DegreeVariableIterator.class \
+  $(top_builddir)/javacp/cellml_services/MaLaESResult.class \
+  $(top_builddir)/javacp/cellml_services/MaLaESTransform.class \
+  $(top_builddir)/javacp/cellml_services/MaLaESBootstrap.class

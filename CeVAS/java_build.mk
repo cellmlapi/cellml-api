@@ -20,10 +20,10 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/CeVASBootstrap.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/CeVASBootstrap.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/ConnectedVariableSet.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CeVAS.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CeVASBootstrap.java \
-  $(top_builddir)/javacp/cellml_services/ConnectedVariableSet.java \
-  $(top_builddir)/javacp/cellml_services/CeVAS.java \
-  $(top_builddir)/javacp/cellml_services/CeVASBootstrap.java
+  $(top_builddir)/javacp/cellml_bootstrap/CeVASBootstrap.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/ConnectedVariableSet.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CeVAS.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CeVASBootstrap.class \
+  $(top_builddir)/javacp/cellml_services/ConnectedVariableSet.class \
+  $(top_builddir)/javacp/cellml_services/CeVAS.class \
+  $(top_builddir)/javacp/cellml_services/CeVASBootstrap.class

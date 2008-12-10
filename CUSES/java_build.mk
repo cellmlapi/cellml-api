@@ -26,16 +26,16 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/CUSESBootstrap.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/CUSESBootstrap.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/BaseUnit.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/UserBaseUnit.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/BaseUnitInstance.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CanonicalUnitRepresentation.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CUSES.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CUSESBootstrap.java \
-  $(top_builddir)/javacp/cellml_services/BaseUnit.java \
-  $(top_builddir)/javacp/cellml_services/UserBaseUnit.java \
-  $(top_builddir)/javacp/cellml_services/BaseUnitInstance.java \
-  $(top_builddir)/javacp/cellml_services/CanonicalUnitRepresentation.java \
-  $(top_builddir)/javacp/cellml_services/CUSES.java \
-  $(top_builddir)/javacp/cellml_services/CUSESBootstrap.java
+  $(top_builddir)/javacp/cellml_bootstrap/CUSESBootstrap.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/BaseUnit.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/UserBaseUnit.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/BaseUnitInstance.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CanonicalUnitRepresentation.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CUSES.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CUSESBootstrap.class \
+  $(top_builddir)/javacp/cellml_services/BaseUnit.class \
+  $(top_builddir)/javacp/cellml_services/UserBaseUnit.class \
+  $(top_builddir)/javacp/cellml_services/BaseUnitInstance.class \
+  $(top_builddir)/javacp/cellml_services/CanonicalUnitRepresentation.class \
+  $(top_builddir)/javacp/cellml_services/CUSES.class \
+  $(top_builddir)/javacp/cellml_services/CUSESBootstrap.class

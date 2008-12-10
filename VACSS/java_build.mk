@@ -12,13 +12,11 @@ BUILT_SOURCES += \
 
 cellml_jar_java += \
   $(top_srcdir)/java/cellml_bootstrap/VACSSBootstrap.java \
-  $(top_builddir)/interfaces/pjm2pcm/cellml_services/ValidationService.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CellMLValidityError.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CellMLRepresentationValidityError.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CellMLSemanticValidityError.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CellMLValidityErrorSet.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/VACSService.java \
-  $(top_builddir)/interfaces/cellml_services/ValidationService.java \
   $(top_builddir)/interfaces/cellml_services/CellMLValidityError.java \
   $(top_builddir)/interfaces/cellml_services/CellMLRepresentationValidityError.java \
   $(top_builddir)/interfaces/cellml_services/CellMLSemanticValidityError.java \
@@ -26,16 +24,14 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/VACSService.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/VACSSBootstrap.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/ValidationService.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLValidityError.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLRepresentationValidityError.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLSemanticValidityError.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLValidityErrorSet.java \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/VACSService.java \
-  $(top_builddir)/javacp/cellml_services/ValidationService.java \
-  $(top_builddir)/javacp/cellml_services/CellMLValidityError.java \
-  $(top_builddir)/javacp/cellml_services/CellMLRepresentationValidityError.java \
-  $(top_builddir)/javacp/cellml_services/CellMLSemanticValidityError.java \
-  $(top_builddir)/javacp/cellml_services/CellMLValidityErrorSet.java \
-  $(top_builddir)/javacp/cellml_services/VACSService.java
+  $(top_builddir)/javacp/cellml_bootstrap/VACSSBootstrap.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLValidityError.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLRepresentationValidityError.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLSemanticValidityError.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CellMLValidityErrorSet.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/VACSService.class \
+  $(top_builddir)/javacp/cellml_services/CellMLValidityError.class \
+  $(top_builddir)/javacp/cellml_services/CellMLRepresentationValidityError.class \
+  $(top_builddir)/javacp/cellml_services/CellMLSemanticValidityError.class \
+  $(top_builddir)/javacp/cellml_services/CellMLValidityErrorSet.class \
+  $(top_builddir)/javacp/cellml_services/VACSService.class
