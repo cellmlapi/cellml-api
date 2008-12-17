@@ -2408,6 +2408,9 @@ ModelValidation::validateMathMLConstant
     return NULL;
   }
 
+  if (mWeakCUSES == NULL)
+    return NULL;
+
   // Next, we go hunting for the units...
   RETURN_INTO_OBJREF(u, iface::cellml_services::CanonicalUnitRepresentation,
                      mWeakCUSES->getUnitsByName(aContext, units.c_str()));
@@ -2530,6 +2533,9 @@ ModelValidation::validateMathMLCI
   }
   RETURN_INTO_WSTRING(vunits, v->unitsName());
   
+  if (mWeakCUSES == NULL)
+    return NULL;
+
   return mWeakCUSES->getUnitsByName(comp, vunits.c_str());
 }
 
