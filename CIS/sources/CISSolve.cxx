@@ -396,6 +396,7 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 
     lastVOI = voi;
 
+    f->    ComputeRates(voi, constants, rates, states, algebraic);
     f->ComputeVariables(voi, constants, rates, states, algebraic);
 
     // Add to storage...
