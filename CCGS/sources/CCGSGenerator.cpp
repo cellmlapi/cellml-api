@@ -2039,7 +2039,7 @@ CodeGenerationState::GenerateMultivariateSolveCodeTo
       perEqPattern = perEqPattern.substr(0, joinOffset);
     }
 
-    uint32_t index = 0;
+    uint32_t index = 0 + mArrayOffset;
     for(std::set<Equation*>::iterator i(aSys->mEquations.begin());
         i != aSys->mEquations.end();
         i++)
