@@ -1,3 +1,12 @@
+# Please note that CellML2C is included as a testing program to help test the
+# API, and not as a general purpose tool. Please carefully consider whether
+# adding a new CellML2* program is justified on the grounds of testing the API
+# more extensively before doing so; if your only reason for wanting to provide
+# a command line tool for another language, please do so in a separate package
+# instead. See also:
+#  [1] https://tracker.physiomeproject.org/show_bug.cgi?id=1279
+#  [2] https://tracker.physiomeproject.org/show_bug.cgi?id=1514#c16
+#  [3] http://www.cellml.org/pipermail/cellml-tools-developers/2009-January/000140.html
 bin_PROGRAMS += CellML2C CellML2Python CellML2Matlab
 CellML2C_SOURCES=$(top_srcdir)/CCGS/tests/CellML2C.cpp
 CellML2C_LDADD=\
