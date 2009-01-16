@@ -763,27 +763,70 @@ CDAMaLaESResult::parseConstant
  iface::mathml_dom::MathMLCnElement* cnEl
 )
 {
-  RETURN_INTO_OBJREF(n, iface::dom::Node, cnEl->getArgument(1));
-  DECLARE_QUERY_INTERFACE_OBJREF(t, n, dom::Text);
+  // Check whether cn is of the type 'e-notation', or a flat constant
+  RETURN_INTO_WSTRING(cntype, cnEl->type());
+  if(cntype==L"e-notation")
+  {
+    RETURN_INTO_OBJREF(arg, iface::dom::Node, cnEl->getArgument(2));
+    RETURN_INTO_OBJREF(man, iface::dom::Node, cnEl->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(narg, arg, dom::Text);
+    DECLARE_QUERY_INTERFACE_OBJREF(mant, man, dom::Text);
 
-  if (t == NULL)
-    throw MaLaESError(L"CN element missing text node.");
+    if (narg == NULL)
+      throw MaLaESError(L"CN element missing text node 2.");
 
-  RETURN_INTO_WSTRING(txt, t->data());
-  int i = 0, j = txt.length() - 1;
-  wchar_t c;
-  while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-    i++;
-  while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-    j--;
-  if (j < i)
-    throw MaLaESError(L"CN element with only spaces inside.");
-  txt = txt.substr(i, j - i + 1);
+    if (mant == NULL)
+      throw MaLaESError(L"CN element missing text node 1.");
+    RETURN_INTO_WSTRING(txtn, narg->data());
+    RETURN_INTO_WSTRING(txtm, mant->data());
+    int i = 0, j = txtn.length() - 1;
+    wchar_t c;
+    while ((c = txtn[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = txtn[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      throw MaLaESError(L"CN element with only spaces inside.");
+    txtn = txtn.substr(i, j - i + 1);
+    i = 0;
+    j = txtm.length() - 1;
+    while ((c = txtm[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = txtm[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      throw MaLaESError(L"CN element with only spaces inside.");
+    txtm = txtm.substr(i, j - i + 1);
 
-  // Scoped locale change.
-  CNumericLocale locobj;
+    // Scoped locale change.
+    CNumericLocale locobj;
 
-  return wcstod(txt.c_str(), NULL);
+    return wcstod(txtm.c_str(), NULL) * pow(10, wcstod(txtn.c_str(), NULL));
+  }
+  else
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, cnEl->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(t, n, dom::Text);
+
+    if (t == NULL)
+      throw MaLaESError(L"CN element missing text node.");
+
+    RETURN_INTO_WSTRING(txt, t->data());
+    int i = 0, j = txt.length() - 1;
+    wchar_t c;
+    while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      throw MaLaESError(L"CN element with only spaces inside.");
+    txt = txt.substr(i, j - i + 1);
+
+    // Scoped locale change.
+    CNumericLocale locobj;
+
+    return wcstod(txt.c_str(), NULL);
+  }
 }
 
 void

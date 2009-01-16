@@ -32,7 +32,7 @@
         </apply>
         <apply><power/>
           <ci>time</ci>
-          <cn cellml:units="dimensionless">2.0</cn>
+          <cn cellml:units="dimensionless" type="e-notation">20.0<sep/>-1</cn>
         </apply>
       </apply>
     </math>
