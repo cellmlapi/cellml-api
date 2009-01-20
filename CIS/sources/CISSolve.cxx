@@ -315,6 +315,24 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
 }
 
 void
+cda_cvode_error_handler(int error_code, const char* module,
+                        const char* function, char* msg, void* eh_data)
+{
+  reinterpret_cast<CDA_CellMLIntegrationRun*>(eh_data)->CVODEError(error_code, module,
+                                                                   function, msg);
+}
+
+void
+CDA_CellMLIntegrationRun::CVODEError
+(
+ int error_code, const char* module, const char* function, const char* msg
+)
+{
+  if (error_code < 0)
+    mWhyFailure = msg;
+}
+
+void
 CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 (
  CompiledModelFunctions* f, uint32_t constSize,
@@ -335,6 +353,8 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
     solver = CVodeCreate(CV_BDF, CV_NEWTON);
     break;
   }
+
+  CVodeSetErrHandlerFn(solver, cda_cvode_error_handler, this);
 
   EvaluationInformation ei;
 
@@ -366,6 +386,8 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
   uint32_t tabStepNumber = 1;
   double nextStopPoint = mTabulationStepSize + voi;
+  bool sendFailure = false;
+
   if (mTabulationStepSize == 0.0)
     nextStopPoint = mStopBvar;
 
@@ -378,7 +400,11 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
       bhl = nextStopPoint;
 
     CVodeSetStopTime(solver, bhl);
-    CVode(solver, bhl, y, &voi, CV_ONE_STEP_TSTOP);
+    if (CVode(solver, bhl, y, &voi, CV_ONE_STEP_TSTOP) < 0)
+    {
+      sendFailure = true;
+      break;
+    }
 
     if (mCancelIntegration)
       break;
@@ -424,7 +450,12 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
     mObserver->results(storageSize, storage);
   }
   if (mObserver != NULL)
-    mObserver->done();
+  {
+    if (sendFailure)
+      mObserver->failed(mWhyFailure.c_str());
+    else
+      mObserver->done();
+  }
 
   delete [] storage;
 

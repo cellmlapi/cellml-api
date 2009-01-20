@@ -93,6 +93,9 @@ public:
   void start() throw (std::exception&);
   void stop() throw (std::exception&);
 
+  void CVODEError(int error_code, const char* module, const char* function,
+                  const char* msg);
+
 protected:
   void runthread();
 
@@ -116,6 +119,7 @@ private:
   OverrideList mConstantOverrides, mIVOverrides;
   volatile bool mCancelIntegration;
   bool mStrictTabulation;
+  std::string mWhyFailure;
 };
 
 class CDA_CellMLIntegrationService
