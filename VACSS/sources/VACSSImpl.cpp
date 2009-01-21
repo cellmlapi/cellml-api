@@ -2763,6 +2763,70 @@ private:
 bool
 ModelValidation::findConstantValue
 (
+ iface::dom::Node* an,
+ double& aValue,
+ const std::wstring& aType
+)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(el2, an, dom::Element);
+  if (el2 == NULL)
+    return false;
+    
+  RETURN_INTO_WSTRING(ns2, el2->namespaceURI());
+  if (ns2 != MATHML_NS)
+    return false;
+
+  RETURN_INTO_WSTRING(ln2, el2->localName());
+  if (ln2 == L"semantics")
+  {
+    el2 = already_AddRefd<iface::dom::Element>
+      (extractSemanticsValidateAnnotation(el2));
+    wchar_t* str = el2->localName();
+    ln2 = str;
+    free(str);
+  }
+
+  if (ln2 != L"cn")
+  {
+    REPR_WARNING((std::wstring(L"Units validation results may be incorrect "
+                               L"because the ") + aType +
+                  L" is not a constant").c_str(), el2);
+    return false;
+  }
+
+  // This is safe because cn is non-null...
+  DECLARE_QUERY_INTERFACE_OBJREF(cn, el2, mathml_dom::MathMLCnElement);
+  RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
+    
+  DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
+  if (tn != NULL)
+  {
+    RETURN_INTO_WSTRING(tns, tn->data());
+    int i = 0, j = tns.length() - 1;
+    wchar_t c;
+    while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      j = i - 1;
+    tns = tns.substr(i, j - i + 1);
+    
+    wchar_t* e;
+    aValue = wcstod(tns.c_str(), &e);
+    if (*e != 0 || aValue == 0)
+    {
+      REPR_WARNING((aType + L" should be integral").c_str(), el2);
+      aValue = 1;
+    }
+  }
+
+  return true;
+}
+
+bool
+ModelValidation::findChildConstantValue
+(
  iface::mathml_dom::MathMLElement* aEl,
  double& aValue,
  const std::wstring& aType
@@ -2770,65 +2834,16 @@ ModelValidation::findConstantValue
 {
   ObjRef<iface::dom::Node> n2;
   for (n2 = already_AddRefd<iface::dom::Node>(aEl->firstChild());
-       n2;
+       n2 != NULL;
        n2 = already_AddRefd<iface::dom::Node>(n2->nextSibling()))
   {
-    DECLARE_QUERY_INTERFACE_OBJREF(el2, n2, dom::Element);
-    if (el2 == NULL)
-      continue;
-    
-    RETURN_INTO_WSTRING(ns2, el2->namespaceURI());
-    if (ns2 != MATHML_NS)
-      continue;
-
-    RETURN_INTO_WSTRING(ln2, el2->localName());
-    if (ln2 == L"semantics")
-    {
-      el2 = already_AddRefd<iface::dom::Element>
-        (extractSemanticsValidateAnnotation(el2));
-      wchar_t* str = el2->localName();
-      ln2 = str;
-      free(str);
-    }
-
-    if (ln2 != L"cn")
-    {
-      REPR_WARNING((std::wstring(L"Units validation results may be incorrect "
-                                 L"because the ") + aType +
-                    L" is not a constant").c_str(), el2);
-      break;
-    }
-    
-    // This is safe because degreeUnits is non-null...
-    DECLARE_QUERY_INTERFACE_OBJREF(cn, el2, mathml_dom::MathMLCnElement);
-    RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
-    
-    DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
-    if (tn != NULL)
-    {
-      RETURN_INTO_WSTRING(tns, tn->data());
-      int i = 0, j = tns.length() - 1;
-      wchar_t c;
-      while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-        i++;
-      while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-        j--;
-      if (j < i)
-        j = i - 1;
-      tns = tns.substr(i, j - i + 1);
-
-      wchar_t* e;
-      aValue = wcstod(tns.c_str(), &e);
-      if (*e != 0 || aValue == 0)
-      {
-        REPR_WARNING((aType + L" should be integral").c_str(), el2);
-        aValue = 1;
-      }
-    }
-
-    return true;
+    if (findConstantValue(n2, aValue, aType))
+      return true;
   }
 
+  REPR_WARNING((std::wstring(L"Units validation results may be incorrect "
+                             L"because the ") + aType +
+                L" is not a constant").c_str(), aEl);
   return false;
 }
 
@@ -3020,8 +3035,8 @@ ModelValidation::validateMathMLApply
     {
       // To work out the units properly, we actually need a number for the
       // degree...
-      findConstantValue(degree, overallDegree,
-                        L"degree of differentiation");
+      findChildConstantValue(degree, overallDegree,
+                             L"degree of differentiation");
     }
   }
 
@@ -3452,7 +3467,7 @@ ModelValidation::validateMathMLApply
 
     if (degree != NULL)
     {
-      if (!findConstantValue(degree, rootDegree, L"degree of root"))
+      if (!findChildConstantValue(degree, rootDegree, L"degree of root"))
         return NULL;
     }
 

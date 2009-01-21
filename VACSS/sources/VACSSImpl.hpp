@@ -511,7 +511,9 @@ private:
   void checkMathMLAttributes(iface::dom::Element* aEl,
                              bool aAllowDefinitionURL = false,
                              bool aAllowEncoding = false);
-  bool findConstantValue(iface::mathml_dom::MathMLElement* aEl, double& aValue,
+  bool findChildConstantValue(iface::mathml_dom::MathMLElement* aEl, double& aValue,
+                              const std::wstring& aType);
+  bool findConstantValue(iface::dom::Node* an, double& aValue,
                          const std::wstring& aType);
   bool checkComponentRelevant(iface::cellml_api::CellMLComponent* aComp);
 
