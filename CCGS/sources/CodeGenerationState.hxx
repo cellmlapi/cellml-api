@@ -119,8 +119,8 @@ public:
   void AllocateAlgebraicVariable(CDA_ComputationTarget* aCT, std::wstring& aStr);
   void AllocateVOI(CDA_ComputationTarget* aCT, std::wstring& aStr);
   void AppendAssign(std::wstring& aAppendTo,
-                    std::wstring& aLHS,
-                    std::wstring& aRHS);
+                    const std::wstring& aLHS,
+                    const std::wstring& aRHS);
   void BuildFloatingAndConstantLists();
   void BuildFloatingAndKnownLists();
   void BuildStateAndConstantLists();

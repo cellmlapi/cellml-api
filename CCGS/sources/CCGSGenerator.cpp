@@ -583,6 +583,10 @@ CodeGenerationState::FirstPassTargetClassification()
         {
           AppendAssign(mCodeInfo->mInitConstsStr, cname, iv);
         }
+        else if (tct != ct)
+        {
+          AppendAssign(mCodeInfo->mInitConstsStr, cname, L"0.0");
+        }
         tct = tct->mUpDegree;
         tct->mEvaluationType = iface::cellml_services::FLOATING;
       }
@@ -713,8 +717,8 @@ void
 CodeGenerationState::AppendAssign
 (
  std::wstring& aAppendTo,
- std::wstring& aLHS,
- std::wstring& aRHS
+ const std::wstring& aLHS,
+ const std::wstring& aRHS
 )
 {
   size_t idx1 = mAssignPattern.find(L"<LHS>");
