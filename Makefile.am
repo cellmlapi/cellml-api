@@ -150,11 +150,23 @@ if ENABLE_CIS
 include $(top_srcdir)/CIS/build.mk
 endif
 if ENABLE_CONTEXT_AND_CORBA_AND_CIS
-include $(top_srcdir)/AnnoTools/corba_build.mk
-include $(top_srcdir)/CUSES/corba_build.mk
-include $(top_srcdir)/CeVAS/corba_build.mk
-include $(top_srcdir)/MaLaES/corba_build.mk
 include $(top_srcdir)/CIS/corba_build.mk
+endif
+
+if ENABLE_CONTEXT_AND_CORBA_AND_CUSES
+include $(top_srcdir)/CUSES/corba_build.mk
+endif
+
+if ENABLE_CONTEXT_AND_CORBA_AND_CEVAS
+include $(top_srcdir)/CeVAS/corba_build.mk
+endif
+
+if ENABLE_CONTEXT_AND_CORBA_AND_MALAES
+include $(top_srcdir)/MaLaES/corba_build.mk
+endif
+
+if ENABLE_CONTEXT_AND_CORBA_AND_ANNOTOOLS
+include $(top_srcdir)/AnnoTools/corba_build.mk
 endif
 
 if ENABLE_CIS_AND_XPCOM

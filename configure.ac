@@ -190,6 +190,24 @@ if test x$context = xtrue; then
     if test x$cis = xtrue; then
       contextandcorbaandcis=true
     fi
+    if test x$annotools = xtrue; then
+      contextandcorbaandannotools=true
+    fi
+    if test x$cevas = xtrue; then
+      contextandcorbaandcevas=true
+    fi
+    if test x$cuses = xtrue; then
+      contextandcorbaandcuses=true
+    fi
+    if test x$malaes = xtrue; then
+      contextandcorbaandmalaes=true
+    fi
+    if test x$vacss = xtrue; then
+      contextandcorbaandvacss=true
+    fi
+    if test x$rdf = xtrue; then
+      contextandcorbaandrdf=true
+    fi
   fi
   if test x$xpcom != xfalse; then
     contextandxpcom=true
@@ -252,10 +270,24 @@ fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_XPCOM, test x$contextandxpcom = xtrue)
+
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CCGS,
                test x$contextandcorbaandccgs = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CIS,
                test x$contextandcorbaandcis = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_ANNOTOOLS,
+               test x$contextandcorbaandannotools = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CEVAS,
+               test x$contextandcorbaandcevas = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CUSES,
+               test x$contextandcorbaandcuses = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_MALAES,
+               test x$contextandcorbaandmalaes = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_VACSS,
+               test x$contextandcorbaandvacss = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_RDF,
+               test x$contextandcorbaandrdf = xtrue)
+
 AM_CONDITIONAL(ENABLE_ANNOTOOLS_AND_XPCOM, test x$annotoolsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CEVAS_AND_XPCOM, test x$cevasandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CUSES_AND_XPCOM, test x$cusesandxpcom = xtrue)
