@@ -2250,11 +2250,13 @@ ModelValidation::validateMathMLConstant
     switch (nt)
     {
     case iface::dom::Node::ELEMENT_NODE:
-      if (type != L"e-notation")
-        REPR_ERROR(L"MathML cn elements shouldn't have element children", aEl);
       name = child->nodeName();
-      if (name != L"sep")
-        REPR_ERROR(L"MathML cn elements with type=e-notation shouldn't have non sep element children", aEl);
+      if (type != L"e-notation")
+        REPR_ERROR(L"MathML cn elements without the attribute type=e-notation "
+                   L"shouldn't have element children", aEl);
+      else if (name != L"sep")
+        REPR_ERROR(L"MathML cn elements with the attribute type=e-notation "
+                   L"shouldn't have non sep element children", aEl);
       else
         txt += L"<sep/>";
       break;
@@ -2354,7 +2356,7 @@ ModelValidation::validateMathMLConstant
     if (*p == L'-' || *p == L'+')
       p++;
 
-    bool valid = true, seperatornotseen = (type == L"e-notation");
+    bool valid = true, seperatorNotSeen = (type == L"e-notation");
 
     do
     {
@@ -2378,12 +2380,12 @@ ModelValidation::validateMathMLConstant
       if (p == txt.end())
         break;
 
-      if ((*p) == L'<' && seperatornotseen)
+      if ((*p) == L'<' && seperatorNotSeen)
       {
         if ((p[1] == L's') && (p[2] == L'e') && (p[3] == L'p') &&
             (p[4] == L'/') && (p[5] == L'>'))
         {
-          seperatornotseen = false;
+          seperatorNotSeen = false;
           p += 5;
         }
         else
@@ -2403,12 +2405,12 @@ ModelValidation::validateMathMLConstant
       while (p != txt.end() && ((*p) >= L'0' && (*p) <= L'9'))
         p++;
 
-      if ((*p) == L'<' && seperatornotseen)
+      if ((*p) == L'<' && seperatorNotSeen)
       {
         if ((p[1] == L's') && (p[2] == L'e') && (p[3] == L'p') &&
             (p[4] == L'/') && (p[5] == L'>'))
         {
-          seperatornotseen = false;
+          seperatorNotSeen = false;
           p += 6;
           continue;
         }
