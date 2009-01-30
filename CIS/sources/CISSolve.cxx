@@ -810,9 +810,9 @@ do_levmar
     /* XXX casting away constness is bad, but it seems in this case dlevmar_dif is
      *     just missing a const specifier.
      */
-    dlevmar_dif(f, bp, NULL, size, size, 1000, const_cast<double*>(levMarOpts),
+    const int levmarReturnCode = dlevmar_dif(f, bp, NULL, size, size, 1000, const_cast<double*>(levMarOpts),
                 info, work, NULL, adata);
-    if (isfinite(info[1]) && (info[1] < best))
+    if ( (levmarReturnCode != LM_ERROR) && isfinite(info[1]) && (info[1] < best))
     {
       memcpy(params, bp, sizeof(double) * size);
       best = info[1];
