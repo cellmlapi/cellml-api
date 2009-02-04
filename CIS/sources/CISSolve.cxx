@@ -735,9 +735,11 @@ safe_factorof(double num, double den)
   return ((inum % iden) == 0) ? 1.0 : 0.0;
 }
 
-#define NR_RANDOM_STARTS 100
+#define NR_RANDOM_STARTS_MIN 100
+#define NR_RANDOM_STARTS_MAX 10000000
 #define NR_MAX_STEPS 1000
 #define NR_MAX_STEPS_INITIAL 10
+#define RANDOM_SEED 0x7ce4176c
 
 static double
 random_double_logUniform()
@@ -802,8 +804,11 @@ do_levmar
 {
   double info[9], best = INFINITY;
   uint32_t i = 0, k;
+  double tolerance = 1E-6 * size;
 
   memcpy(bp, params, sizeof(double) * size);
+
+  srand(RANDOM_SEED);
 
   do
   {
@@ -821,9 +826,10 @@ do_levmar
     for (k = 0; k < size; k++)
       bp[k] = random_double_logUniform();
   }
-  while (i++ < 100);
+  while ((i++ < NR_RANDOM_STARTS_MIN) ||
+         (best > tolerance && i <= NR_RANDOM_STARTS_MAX));
 
   /* XXX we shouldn't hard-code the tolerance... */
-  if (best > 1E-6)
+  if (best > tolerance)
     *pret = 1;
 }
