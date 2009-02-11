@@ -229,6 +229,9 @@ public:
    const wchar_t* aCount
   );
 
+  void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
+  void RestoreSavedRates(std::wstring& aCode);
+
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
     & mAlgebraicVariableNamePattern, & mRateNamePattern,
@@ -251,6 +254,7 @@ public:
   std::set<CDA_ComputationTarget*> mBoundTargs;
   uint32_t mNextConstantIndex, mNextStateVariableIndex,
     mNextAlgebraicVariableIndex, mNextVOI, mNextSolveId;
+  std::list<std::pair<CDA_ComputationTarget*, std::wstring> > mRateNameBackup;
 };
 
 #endif // _CodeGenerationState_hxx

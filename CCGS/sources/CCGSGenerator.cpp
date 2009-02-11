@@ -74,6 +74,9 @@ CodeGenerationState::GenerateCode()
                            mConstantPattern, mNextConstantIndex,
                            mCodeInfo->mConstantIndexCount);
 
+    // Allocate temporary names in constants for the rates...
+    AllocateRateNamesAsConstants(systems);
+
     std::map<CDA_ComputationTarget*, System*> sysByTargReq;
     // Build an index from variables required to systems...
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
@@ -87,6 +90,7 @@ CodeGenerationState::GenerateCode()
     DecomposeIntoSystems(mKnown, mFloating, systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, systems, sysByTargReq);
+
 
     // Put all targets into lists based on their classification...
     BuildFloatingAndKnownLists();
@@ -117,6 +121,9 @@ CodeGenerationState::GenerateCode()
       else
         throw UnderconstrainedError();
     }
+
+    // Restore the saved rates...
+    RestoreSavedRates(mCodeInfo->mRatesStr);
 
     // Write evaluations for all rates & algebraic variables in reachabletargets
     GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
@@ -678,6 +685,51 @@ CodeGenerationState::AllocateVariablesInSet
         AllocateVariable(*j, str, aPattern, aNextIndex, aCountVar);
       }
     }
+  }
+}
+
+void
+CodeGenerationState::AllocateRateNamesAsConstants(std::list<System*>& aSystems)
+{
+  for (std::list<System*>::iterator i(aSystems.begin()); i != aSystems.end(); i++)
+  {
+    for (std::set<CDA_ComputationTarget*>::iterator j = (*i)->mUnknowns.begin();
+         j != (*i)->mUnknowns.end(); j++)
+    {
+      if ((*j)->degree() == 0)
+        continue;
+      
+      // Backup the old name...
+      uint32_t oldIndex = (*j)->assignedIndex();
+      RETURN_INTO_WSTRING(oldName, (*j)->name());
+      mRateNameBackup.push_back(std::pair<CDA_ComputationTarget*, std::wstring>
+                                (*j, oldName));
+      
+      // We can't use AllocateConstant / AllocateVariable here because we are
+      // creating an alias not the original name.
+      uint32_t index = mCodeInfo->mConstantIndexCount++;
+      std::wstring tmpname;
+      GenerateVariableName(*j, tmpname, mConstantPattern, index);
+      (*j)->setNameAndIndex(oldIndex, tmpname.c_str());
+    }
+  }
+}
+
+void
+CodeGenerationState::RestoreSavedRates(std::wstring& aCodeTo)
+{
+  while (!mRateNameBackup.empty())
+  {
+    std::pair<CDA_ComputationTarget*, std::wstring> p =
+      mRateNameBackup.front();
+    mRateNameBackup.pop_front();
+
+    RETURN_INTO_WSTRING(constName, p.first->name());
+
+    uint32_t index = p.first->assignedIndex();
+
+    AppendAssign(aCodeTo, p.second, constName);
+    p.first->setNameAndIndex(index, p.second.c_str());
   }
 }
 
