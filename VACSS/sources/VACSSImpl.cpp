@@ -2405,7 +2405,7 @@ ModelValidation::validateMathMLConstant
       while (p != txt.end() && ((*p) >= L'0' && (*p) <= L'9'))
         p++;
 
-      if ((*p) == L'<' && seperatorNotSeen)
+      if (p != txt.end() && (*p) == L'<' && seperatorNotSeen)
       {
         if ((p[1] == L's') && (p[2] == L'e') && (p[3] == L'p') &&
             (p[4] == L'/') && (p[5] == L'>'))
