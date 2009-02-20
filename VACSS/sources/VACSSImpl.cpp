@@ -5,6 +5,7 @@
 #include <string>
 #include <set>
 #include <assert.h>
+#include <iterator>
 
 /* The code special cases this to match the CellML namespace
  * corresponding to the appropriate CellML version...
@@ -2382,8 +2383,11 @@ ModelValidation::validateMathMLConstant
 
       if ((*p) == L'<' && seperatorNotSeen)
       {
-        if ((p[1] == L's') && (p[2] == L'e') && (p[3] == L'p') &&
-            (p[4] == L'/') && (p[5] == L'>'))
+        std::wstring::const_iterator::difference_type charsleft = 0;
+        charsleft = std::distance(p, std::wstring::const_iterator(txt.end()));
+        
+        if ((charsleft > 6) && (p[1] == L's') && (p[2] == L'e') && (p[3] == L'p')
+            && (p[4] == L'/') && (p[5] == L'>'))
         {
           seperatorNotSeen = false;
           p += 5;
@@ -2407,8 +2411,11 @@ ModelValidation::validateMathMLConstant
 
       if (p != txt.end() && (*p) == L'<' && seperatorNotSeen)
       {
-        if ((p[1] == L's') && (p[2] == L'e') && (p[3] == L'p') &&
-            (p[4] == L'/') && (p[5] == L'>'))
+        std::wstring::const_iterator::difference_type charsleft = 0;
+        charsleft = std::distance(p, std::wstring::const_iterator(txt.end()));
+        
+        if ((charsleft > 6) && (p[1] == L's') && (p[2] == L'e') && (p[3] == L'p')
+            && (p[4] == L'/') && (p[5] == L'>'))
         {
           seperatorNotSeen = false;
           p += 6;
