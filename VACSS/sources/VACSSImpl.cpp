@@ -2419,7 +2419,6 @@ ModelValidation::validateMathMLConstant
         {
           seperatorNotSeen = false;
           p += 6;
-          continue;
         }
         else
         {
