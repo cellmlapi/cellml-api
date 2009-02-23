@@ -2345,6 +2345,10 @@ ModelValidation::validateMathMLConstant
    * separated into an integer and a fractional part by a "decimal point". Some
    * examples are 0.3, 1, and -31.56. If a different base is specified, then
    * the digits are interpreted as being digits computed to that base.
+   * If the constant is of type="e-notation", it will consist of a real
+   * number, followed by a separator of the form "<sep/>", followed by a
+   * real number. For example, the number 4.37e-32 would be represented by
+   * the string "4.37<sep/>-32".
    */
   std::wstring::const_iterator p(txt.begin());
   if (p == txt.end())
@@ -2354,10 +2358,10 @@ ModelValidation::validateMathMLConstant
   }
   else
   {
-    if (*p == L'-' || *p == L'+')
+    if ((*p) == L'-' || (*p) == L'+')
       p++;
 
-    bool valid = true, seperatorNotSeen = (type == L"e-notation");
+    bool valid = true;
 
     do
     {
@@ -2381,16 +2385,33 @@ ModelValidation::validateMathMLConstant
       if (p == txt.end())
         break;
 
-      if ((*p) == L'<' && seperatorNotSeen)
+      if ((*p) == L'.')
       {
-        std::wstring::const_iterator::difference_type charsleft = 0;
+        p++;
+
+        while (p != txt.end() && ((*p) >= L'0' && (*p) <= L'9'))
+          p++;
+
+        if (p == txt.end())
+          break;
+      }
+
+      if ((*p) == L'<' && type == L"e-notation")
+      {
+        std::wstring::const_iterator::difference_type charsleft(0);
         charsleft = std::distance(p, std::wstring::const_iterator(txt.end()));
         
         if ((charsleft > 6) && (p[1] == L's') && (p[2] == L'e') && (p[3] == L'p')
             && (p[4] == L'/') && (p[5] == L'>'))
         {
-          seperatorNotSeen = false;
-          p += 5;
+          p += 6;
+          if (p != txt.end() && ((*p) == L'-' || (*p) == L'+'))
+            p++;
+          if (p == txt.end())
+          {
+            valid = false;
+            break;
+          }
         }
         else
         {
@@ -2398,33 +2419,27 @@ ModelValidation::validateMathMLConstant
           break;
         }
       }
-      else if ((*p) != L'.')
+      else
       {
         valid = false;
         break;
       }
 
-      p++;
-
       while (p != txt.end() && ((*p) >= L'0' && (*p) <= L'9'))
         p++;
 
-      if (p != txt.end() && (*p) == L'<' && seperatorNotSeen)
+      if (p == txt.end())
+        break;
+
+      if ((*p) == L'.')
       {
-        std::wstring::const_iterator::difference_type charsleft = 0;
-        charsleft = std::distance(p, std::wstring::const_iterator(txt.end()));
-        
-        if ((charsleft > 6) && (p[1] == L's') && (p[2] == L'e') && (p[3] == L'p')
-            && (p[4] == L'/') && (p[5] == L'>'))
-        {
-          seperatorNotSeen = false;
-          p += 6;
-        }
-        else
-        {
-          valid = false;
+        p++;
+
+        while (p != txt.end() && ((*p) >= L'0' && (*p) <= L'9'))
+          p++;
+
+        if (p == txt.end())
           break;
-        }
       }
 
       if (p != txt.end())
