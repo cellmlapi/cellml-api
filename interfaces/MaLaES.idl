@@ -1,3 +1,5 @@
+#ifndef _MaLaES_idl_
+#define _MaLaES_idl_
 #include "CUSES.idl"
 #include "AnnoTools.idl"
 #include "CeVAS.idl"
@@ -164,3 +166,4 @@ module cellml_services
     MaLaESTransform compileTransformer(in wstring specification);
   };
 };
+#endif //_MaLaES_idl_ 

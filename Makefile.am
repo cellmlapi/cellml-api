@@ -90,6 +90,14 @@ if ENABLE_CCGS
 include $(top_srcdir)/CCGS/build.mk
 endif
 
+if ENABLE_CELEDS
+include $(top_srcdir)/CeLEDS/build.mk
+endif
+
+if ENABLE_CELEDSEXPORT
+include $(top_srcdir)/CeLEDSExporter/build.mk
+endif
+
 if ENABLE_VACSS
 include $(top_srcdir)/VACSS/build.mk
 endif
@@ -146,6 +154,22 @@ if ENABLE_CCGS_AND_JAVA
 include $(top_srcdir)/CCGS/java_build.mk
 endif
 
+if ENABLE_CELEDS_AND_XPCOM
+include $(top_srcdir)/CeLEDS/xpcom_build.mk
+endif
+
+if ENABLE_CELEDS_AND_JAVA
+include $(top_srcdir)/CeLEDS/java_build.mk
+endif
+
+if ENABLE_CELEDSEXPORT_AND_XPCOM
+include $(top_srcdir)/CeLEDSExporter/xpcom_build.mk
+endif
+
+if ENABLE_CELEDSEXPORT_AND_JAVA
+include $(top_srcdir)/CeLEDSExporter/java_build.mk
+endif
+
 if ENABLE_CIS
 include $(top_srcdir)/CIS/build.mk
 endif
@@ -163,6 +187,14 @@ endif
 
 if ENABLE_CONTEXT_AND_CORBA_AND_MALAES
 include $(top_srcdir)/MaLaES/corba_build.mk
+endif
+
+if ENABLE_CONTEXT_AND_CORBA_AND_CELEDS
+include $(top_srcdir)/CeLEDS/corba_build.mk
+endif
+
+if ENABLE_CONTEXT_AND_CORBA_AND_CELEDSEXPORT
+include $(top_srcdir)/CeLEDSExporter/corba_build.mk
 endif
 
 if ENABLE_CONTEXT_AND_CORBA_AND_ANNOTOOLS

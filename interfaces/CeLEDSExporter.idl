@@ -1,0 +1,68 @@
+#include "CellML_APISPEC.idl"
+#include "CeLEDS.idl"
+#include "CCGS.idl"
+/**
+ * CeLEDS (CellML Language Export Definition Service) provides a 
+ * service for accessing language export definitions required by components
+ * involved in export of CellML models to various programming languages.
+ * Language definitions are stored in XML files.
+ * This interface uses CCGS to export code as a string.
+ */
+module cellml_services
+{
+ /**
+  * Interface for exporting model to a programming language
+  */
+ interface CodeExporter
+   : XPCOM::IObject
+ {
+   /**
+    * Attributes that can be set to modify solver parameters
+    */
+   attribute double rangeStart; // Default 0.0
+   attribute double rangeEnd;   // Default 10.0
+   attribute double absTol;     // Default 1E-6
+   attribute double relTol;     // Default 1E-6
+   attribute double maxStep;    // Default 1.0
+
+   /*
+    * Return generated code.
+    * If there are errors generating the code they will be listed in the
+    * returned string.
+    */
+   wstring generateCode(in cellml_api::Model model);
+ };
+
+ interface CeLEDSExporterBootstrap
+   : XPCOM::IObject
+ {
+   /**
+    * Creates a CeLEDS DictionaryGenerator from an XML language definition file
+    * via the lower level CeLEDS interface
+    * @param URL URL of XML file to load.
+    */
+   cellml_services::DictionaryGenerator createDictGenerator(in wstring URL);
+   /**
+    * Creates a CeLEDS DictionaryGenerator from an XML language definition file.
+    * via the lower level CeLEDS interface
+    * @param XMLText XML file as a string
+    */
+   cellml_services::DictionaryGenerator createDictGeneratorFromText(in wstring XMLText);
+   /**
+    * Creates a CodeExporter from an XML language definition file.
+    * @param URL URL of XML file to load.
+    */
+   CodeExporter createExporter(in wstring URL);
+   /**
+    * Creates a CodeExporter from an XML language definition file.
+    * @param XMLText XML file as a string
+    */
+   CodeExporter createExporterFromText(in wstring XMLText);
+
+   /**
+    * Error loading XML file.
+    * If this is set the dictionary generator will be null.
+    */
+   readonly attribute wstring loadError;
+ };
+};

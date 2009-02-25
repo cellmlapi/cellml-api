@@ -1,0 +1,70 @@
+#include "CellML_APISPEC.idl"
+#include "MaLaES.idl"
+/**
+ * CeLEDS (CellML Language Export Definition Service) provides a 
+ * service for accessing language export definitions required by components
+ * involved in export of CellML models to various programming languages.
+ * Language definitions are stored in XML files.
+ * This interface depends only on MaLaES and can create a MaLaES
+ * transform object
+ */
+module cellml_services
+{
+ /**
+  * Language dictionary for a specific service, eg
+  * MaLaES Tags or CCGS Patterns.
+  */
+ interface LanguageDictionary
+  : XPCOM::IObject
+ {
+   /**
+    * Return the value for a given key.
+    */
+   wstring getValue(in wstring keyName);
+   /**
+    * Get a list of mappings between keys and values
+    */
+   dom::NodeList getMappings();
+ };
+
+ interface DictionaryGenerator
+   : XPCOM::IObject
+ {
+   /**
+    * Creates a CeLEDS language dictionary object from the XML language definition file.
+    * Provides a low level interface for accessing dictionaries
+    * @param componentNameSpace XML namespace for element to retrieve dictionary entries from
+    */
+   LanguageDictionary getDictionary(in wstring dictionaryNameSpace);
+   /**
+    * Retrieve an element from the XML. Useful if something more complex than a dictionary is used.
+    */
+   dom::Element getElementNS(in wstring nameSpace, in wstring elementName);
+   /**
+    * Load MaLaES dictionary and create a MaLaES transform object from all tags.
+    */
+   cellml_services::MaLaESTransform getMalTransform();
+ };
+
+ interface CeLEDSBootstrap
+   : XPCOM::IObject
+ {
+   /**
+    * Creates a CeLEDS DictionaryGenerator from an XML language definition file.
+    * @param URL URL of XML file to load.
+    */
+   DictionaryGenerator createDictGenerator(in wstring URL);
+   /**
+    * Creates a CeLEDS DictionaryGenerator from an XML language definition file.
+    * @param XMLText XML file as a string
+    */
+   DictionaryGenerator createDictGeneratorFromText(in wstring XMLText);
+   /**
+    * Error loading XML file.
+    * If this is set the dictionary generator will be null.
+    */
+   readonly attribute wstring loadError;
+
+ };
+
+};

@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+targetNamespace="http://www.cellml.org/CeLEDS/1.0#"
+elementFormDefault="qualified"
+xmlns:mal="http://www.cellml.org/CeLEDS/MaLaES/1.0#"
+xmlns:ccgs="http://www.cellml.org/CeLEDS/CCGS/1.0#">
+
+<xs:import namespace="http://www.cellml.org/CeLEDS/MaLaES/1.0#" schemaLocation="MaLaES.xsd"/>
+<xs:import namespace="http://www.cellml.org/CeLEDS/CCGS/1.0#" schemaLocation="CCGS.xsd"/>
+
+<xs:element name="language">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element name="title" type="xs:string"/>
+      <xs:element ref="mal:dictionary"/>
+      <xs:element ref="ccgs:dictionary"/>
+      <xs:element name="dictionary">
+        <xs:complexType>
+        <xs:sequence>
+          <xs:element name="mapping" minOccurs="1" maxOccurs="unbounded">
+            <xs:complexType>
+            <xs:simpleContent>
+              <xs:extension base="xs:string">
+                <xs:attribute name="keyname" type="xs:string" use="required" />
+                <xs:attribute name="solverparameters" type="xs:boolean" use="optional" default="false" />
+              </xs:extension>
+            </xs:simpleContent>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="extrafunctions">
+        <xs:complexType>
+        <xs:sequence>
+          <xs:element name="function" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+            <xs:simpleContent>
+              <xs:extension base="xs:string">
+                <xs:attribute name="searchname" type="xs:string" use="required" />
+              </xs:extension>
+            </xs:simpleContent>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+</xs:schema>

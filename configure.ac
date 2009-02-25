@@ -141,6 +141,15 @@ AC_ARG_ENABLE(ccgs,
 esac],[ccgs=false])
 AM_CONDITIONAL(ENABLE_CCGS, test x$ccgs = xtrue)
 
+AC_ARG_ENABLE(celeds,
+[  --enable-celeds    Build the CellML Language Export Definition Service],
+[case "${enableval}" in
+  yes) celeds=true ;;
+  no)  celeds=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-celeds) ;;
+esac],[celeds=false])
+AM_CONDITIONAL(ENABLE_CELEDS, test x$celeds = xtrue)
+
 AC_ARG_ENABLE(rdf,
 [  --enable-rdf    Build the CellML low level RDF Service],
 [case "${enableval}" in
@@ -176,6 +185,14 @@ if test x$ccgs = xfalse -a x$cis = xtrue; then
    AC_MSG_ERROR(You must enable CCGS if you want CIS)
 fi
 
+celedsexport=false
+if test x$ccgs = xtrue; then
+  if test x$celeds = xtrue; then
+    celedsexport=true
+    AM_CONDITIONAL(ENABLE_CELEDSEXPORT, test x$celedsexport = xtrue)
+  fi
+fi
+
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
 contextandxpcom=false
@@ -202,6 +219,12 @@ if test x$context = xtrue; then
     if test x$malaes = xtrue; then
       contextandcorbaandmalaes=true
     fi
+    if test x$celeds = xtrue; then
+      contextandcorbaandceleds=true
+    fi
+    if test x$celedsexport = xtrue; then
+      contextandcorbaandceledsexport=true
+    fi
     if test x$vacss = xtrue; then
       contextandcorbaandvacss=true
     fi
@@ -222,6 +245,8 @@ cevasandxpcom=false
 cusesandxpcom=false
 malaesandxpcom=false
 ccgsandxpcom=false
+celedsandxpcom=false
+celedsexportandxpcom=false
 cisandxpcom=false
 vacssandxpcom=false
 rdfandxpcom=false
@@ -231,6 +256,8 @@ cevasandjava=false
 cusesandjava=false
 malaesandjava=false
 ccgsandjava=false
+celedsandjava=false
+celedexportsandjava=false
 cisandjava=false
 vacssandjava=false
 rdfandjava=false
@@ -254,6 +281,14 @@ if test x$xpcom != xfalse; then
 
    if test x$ccgs = xtrue; then
       ccgsandxpcom=true
+   fi
+
+   if test x$celeds = xtrue; then
+      celedsandxpcom=true
+   fi
+
+   if test x$celedsexport = xtrue; then
+      celedsexportandxpcom=true
    fi
 
    if test x$cis = xtrue; then
@@ -283,6 +318,10 @@ AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CUSES,
                test x$contextandcorbaandcuses = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_MALAES,
                test x$contextandcorbaandmalaes = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CELEDS,
+               test x$contextandcorbaandceleds = xtrue)
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_CELEDSEXPORT,
+               test x$contextandcorbaandceledsexport = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_VACSS,
                test x$contextandcorbaandvacss = xtrue)
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA_AND_RDF,
@@ -293,6 +332,8 @@ AM_CONDITIONAL(ENABLE_CEVAS_AND_XPCOM, test x$cevasandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CUSES_AND_XPCOM, test x$cusesandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_MALAES_AND_XPCOM, test x$malaesandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CCGS_AND_XPCOM, test x$ccgsandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_CELEDS_AND_XPCOM, test x$celedsandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_CELEDSEXPORT_AND_XPCOM, test x$celedsexportandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_XPCOM, test x$vacssandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_XPCOM, test x$rdfandxpcom = xtrue)
@@ -318,6 +359,14 @@ if test x$java != xfalse; then
       ccgsandjava=true
    fi
 
+   if test x$celeds = xtrue; then
+      celedsandjava=true
+   fi
+
+   if test x$celedsexport = xtrue; then
+      celedsexportandjava=true
+   fi
+
    if test x$cis = xtrue; then
       cisandjava=true
    fi
@@ -337,6 +386,8 @@ AM_CONDITIONAL(ENABLE_CEVAS_AND_JAVA, test x$cevasandjava = xtrue)
 AM_CONDITIONAL(ENABLE_CUSES_AND_JAVA, test x$cusesandjava = xtrue)
 AM_CONDITIONAL(ENABLE_MALAES_AND_JAVA, test x$malaesandjava = xtrue)
 AM_CONDITIONAL(ENABLE_CCGS_AND_JAVA, test x$ccgsandjava = xtrue)
+AM_CONDITIONAL(ENABLE_CELEDS_AND_JAVA, test x$celedsandjava = xtrue)
+AM_CONDITIONAL(ENABLE_CELEDSEXPORT_AND_JAVA, test x$celedsexportandjava = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_JAVA, test x$cisandjava = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_JAVA, test x$vacssandjava = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_JAVA, test x$rdfandjava = xtrue)
