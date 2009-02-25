@@ -189,9 +189,9 @@ celedsexport=false
 if test x$ccgs = xtrue; then
   if test x$celeds = xtrue; then
     celedsexport=true
-    AM_CONDITIONAL(ENABLE_CELEDSEXPORT, test x$celedsexport = xtrue)
   fi
 fi
+AM_CONDITIONAL(ENABLE_CELEDSEXPORT, test x$celedsexport = xtrue)
 
 # This is verbose but it should (I hope) be portable...
 contextandcorba=false
