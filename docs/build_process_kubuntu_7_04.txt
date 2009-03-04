@@ -13,9 +13,9 @@ Required packages
 - automake         A tool for generating GNU Standards-compliant Makefiles
 - g++              The GNU C++ compiler
 - libcppunit-dev   Unit Testing Library for C++ (note: only required for testing testing the CellML DOM API)
-- libgsl0-dev      GNU Scientific Library (GSL) – development package
+- libgsl0-dev      GNU Scientific Library (GSL) - development package
 - libxml2-dev      Development files for the GNOME XML library
-- omniidl4         omniORB4 – idl compiler
+- omniidl4         omniORB4 - idl compiler
 - subversion       Advanced version control system
 
 
