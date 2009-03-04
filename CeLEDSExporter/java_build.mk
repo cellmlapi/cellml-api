@@ -1,7 +1,7 @@
 libcellml_java_bridge_la_SOURCES += \
   $(top_builddir)/interfaces/p2jCeLEDSExporter.cpp \
   $(top_builddir)/interfaces/j2pCeLEDSExporter.cpp \
-  $(top_srcdir)/CeLEDS/sources/CeLEDSExporterBootstrapJava.cpp
+  $(top_srcdir)/CeLEDSExporter/sources/CeLEDSExporterBootstrapJava.cpp
 
 libcellml_java_bridge_la_LIBADD += \
   $(top_builddir)/libceledsexporter.la
@@ -21,5 +21,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_bootstrap/CeLEDSExporterBootstrap.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/CeLEDSExporterBootstrap.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeExporter.class \
-  $(top_builddir)/javacp/cellml_services/CeLEDSBootstrap.class \
+  $(top_builddir)/javacp/cellml_services/CeLEDSExporterBootstrap.class \
   $(top_builddir)/javacp/cellml_services/CodeExporter.class
