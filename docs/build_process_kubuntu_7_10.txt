@@ -13,9 +13,9 @@ Required packages
 - automake         A tool for generating GNU Standards-compliant Makefiles
 - g++              The GNU C++ compiler
 - libcppunit-dev   Unit Testing Library for C++ (note: only required for testing testing the CellML DOM API)
-- libgsl0-dev      GNU Scientific Library (GSL) – development package
+- libgsl0-dev      GNU Scientific Library (GSL) â€“ development package
 - libxml2-dev      Development files for the GNOME XML library
-- omniidl4         omniORB4 – idl compiler
+- omniidl4         omniORB4 â€“ idl compiler
 - subversion       Advanced version control system
 
 
@@ -40,7 +40,7 @@ From a shell prompt:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~/CellML_DOM_API
 aclocal && autoconf && automake
-./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss
+./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds
 make
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
