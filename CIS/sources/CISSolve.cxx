@@ -821,6 +821,10 @@ do_levmar
     {
       memcpy(params, bp, sizeof(double) * size);
       best = info[1];
+      if (best < tolerance) {
+        // Found a solution that is good enough, no need to keep searching.
+        break;
+      }
     }
 
     for (k = 0; k < size; k++)
