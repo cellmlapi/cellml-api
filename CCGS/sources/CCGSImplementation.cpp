@@ -89,7 +89,7 @@ CDA_ComputationTargetIterator::nextComputationTarget() throw()
   if (mTargetsIt == mTargets.end())
     return NULL;
 
-  CDA_ComputationTarget* t = *mTargetsIt;
+  ptr_tag<CDA_ComputationTarget> t = *mTargetsIt;
   mTargetsIt++;
   
   t->add_ref();
@@ -98,7 +98,7 @@ CDA_ComputationTargetIterator::nextComputationTarget() throw()
 
 CDA_CodeInformation::~CDA_CodeInformation()
 {
-  std::list<CDA_ComputationTarget*>::iterator ti;
+  std::list<ptr_tag<CDA_ComputationTarget> >::iterator ti;
   for (ti = mTargets.begin(); ti != mTargets.end(); ti++)
     (*ti)->release_ref();
 

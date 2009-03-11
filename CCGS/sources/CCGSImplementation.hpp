@@ -22,12 +22,13 @@ class CDA_CodeInformation;
 class CDA_ComputationTarget
   : public iface::cellml_services::ComputationTarget
 {
+  ptr_tag<CDA_ComputationTarget> self;
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::ComputationTarget);
 
-  CDA_ComputationTarget() : _cda_refcount(1), mDegree(0), mAssignedIndex(0),
+  CDA_ComputationTarget() : self(this), _cda_refcount(1), mDegree(0), mAssignedIndex(0),
                             mEvaluationType(iface::cellml_services::FLOATING)
   {};
   ~CDA_ComputationTarget() {};
@@ -38,6 +39,8 @@ public:
   wchar_t* name() throw();
   uint32_t assignedIndex() throw();
 
+  ptr_tag<CDA_ComputationTarget>& getSelf() { return self; }
+
   // CCGS implementation access only...
   void setNameAndIndex(uint32_t aIndex, const wchar_t* aName) throw();
   ObjRef<iface::cellml_api::CellMLVariable> mVariable;
@@ -45,28 +48,28 @@ public:
   uint32_t mDegree, mAssignedIndex;
   iface::cellml_services::VariableEvaluationType mEvaluationType;
   // Only available during code generation...
-  CDA_ComputationTarget* mUpDegree;
+  ptr_tag<CDA_ComputationTarget> mUpDegree;
   uint32_t mHighestDegree;
 
   // Disjoint set utilities...
   uint32_t rank;
-  CDA_ComputationTarget* parent;
+  ptr_tag<CDA_ComputationTarget> parent;
   void resetSetMembership()
   {
     rank = 0;
-    parent = this;
+    parent = self;
   }
 
-  CDA_ComputationTarget* findRoot()
+  ptr_tag<CDA_ComputationTarget> findRoot()
   {
     if (parent == this)
-      return this;
+      return self;
 
     parent = parent->findRoot();
     return parent;
   }
 
-  void unionWith(CDA_ComputationTarget* b)
+  void unionWith(ptr_tag<CDA_ComputationTarget> b)
   {
     findRoot();
     b->findRoot();
@@ -96,7 +99,7 @@ public:
 
   CDA_ComputationTargetIterator
   (
-   std::list<CDA_ComputationTarget*>& aTargets,
+   std::list<ptr_tag<CDA_ComputationTarget> >& aTargets,
    CDA_CodeInformation* aOwner
   ) : _cda_refcount(1), mTargets(aTargets), mTargetsIt(aTargets.begin()),
       mOwner(aOwner) {};
@@ -106,8 +109,8 @@ public:
 
 private:
   // These will not go away before mOwner, so we don't ref them.
-  std::list<CDA_ComputationTarget*>& mTargets;
-  std::list<CDA_ComputationTarget*>::iterator mTargetsIt;
+  std::list<ptr_tag<CDA_ComputationTarget> >& mTargets;
+  std::list<ptr_tag<CDA_ComputationTarget> >::iterator mTargetsIt;
   ObjRef<CDA_CodeInformation> mOwner;
 };
 
@@ -141,7 +144,7 @@ public:
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
   uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount;
   std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr;
-  std::list<CDA_ComputationTarget*> mTargets;
+  std::list<ptr_tag<CDA_ComputationTarget> > mTargets;
   std::vector<iface::dom::Element*> mFlaggedEquations;
 };
 

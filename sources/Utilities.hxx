@@ -1072,4 +1072,83 @@ private:
   const char* mOldLocale;
 };
 
+// A non-threadsafe, compilation-unit local number for serial allocation...
+static uint32_t cuNextSerial = 0;
+
+// Like a pointer, but with deterministic sort...
+template<class C>
+class ptr_tag
+{
+public:
+  ptr_tag()
+    : mSerial(0), mPtr(NULL)
+  {
+  }
+
+  template<class D>
+  ptr_tag(const ptr_tag<D>& aOther)
+    : mSerial(aOther.serial())
+  {
+    D* ptr = aOther;
+    mPtr = ptr;
+  }
+
+  template<class D>
+  explicit ptr_tag(D* aOther)
+  {
+    D* ptr = aOther;
+    setup(ptr);
+  }
+
+  template<class D>
+  ptr_tag<C>&
+  operator=(D* aPtr)
+  {
+    setup(aPtr);
+    return *this;
+  }
+
+  template<class D>
+  ptr_tag<C>&
+  operator=(const ptr_tag<D>& aOther)
+  {
+    D* ptr = aOther;
+    mPtr = ptr;
+    mSerial = aOther.serial();
+  }
+
+  uint32_t serial() const
+  {
+    return mSerial;
+  };
+
+  void setup(C* aPtr)
+  {
+    mSerial = cuNextSerial++;
+    mPtr = aPtr;
+  }
+
+  operator C*() const
+  {
+    return mPtr;
+  }
+
+  C*
+  operator->() const
+  {
+    return mPtr;
+  }
+
+  template<class D>
+  bool
+  operator<(const ptr_tag<D>& aOther) const
+  {
+    return (mSerial < aOther.serial());
+  }
+
+private:
+  uint32_t mSerial;
+  C* mPtr;
+};
+
 #endif // _UTILITIES_HXX
