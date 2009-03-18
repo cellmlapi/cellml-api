@@ -18,6 +18,7 @@ libccgs_la_CXXFLAGS = \
   -I$(top_srcdir)/MaLaES/sources \
   -I$(top_srcdir)/CeVAS/sources \
   -I$(top_srcdir)/CUSES/sources \
+  -I$(top_srcdir)/sources/rdf \
   -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
 
 include_HEADERS += \

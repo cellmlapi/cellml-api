@@ -114,7 +114,7 @@ void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)
 void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, 
 double* STATES, double* ALGEBRAIC, int* pret)
 {
-  static double p = 0.1, bp, work[LM_DIF_WORKSZ(1, 1)];
+  static double bp, work[LM_DIF_WORKSZ(1, 1)];
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;
@@ -122,7 +122,7 @@ double* STATES, double* ALGEBRAIC, int* pret)
   rfi.aSTATES = STATES;
   rfi.aALGEBRAIC = ALGEBRAIC;
   rfi.aPRET = pret;
-  do_levmar(objfunc_<ID>, &p, &bp, work, pret, 1, &rfi);
+  do_levmar(objfunc_<ID>, &<VAR>, &bp, work, pret, 1, &rfi);
   <VAR> = p;
 }
 ]]></ccgs:mapping>
@@ -151,8 +151,10 @@ void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)
 void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES,
 double* STATES, double* ALGEBRAIC, int* pret)
 {
-  static double p[<COUNT>] = {<EQUATIONS>0.1<JOIN>,</EQUATIONS>},
+  double p[<COUNT>],
          bp[<COUNT>], work[LM_DIF_WORKSZ(<COUNT>, <COUNT>)];
+  <EQUATIONS>p[<INDEX>] = <VAR>;<JOIN>
+</EQUATIONS>
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;

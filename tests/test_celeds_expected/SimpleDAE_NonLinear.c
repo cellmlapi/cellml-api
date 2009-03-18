@@ -14,6 +14,8 @@ void
 initConsts(double* CONSTANTS, double* RATES, double *STATES)
 {
 STATES[0] = 1;
+ALGEBRAIC[0] = 0.1;
+ALGEBRAIC[1] = 0.1;
 }
 void
 computeRates(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -49,8 +51,10 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 void rootfind_0(double VOI, double* CONSTANTS, double* RATES,
 double* STATES, double* ALGEBRAIC, int* pret)
 {
-  static double p[2] = {0.1,0.1},
+  double p[2],
          bp[2], work[LM_DIF_WORKSZ(2, 2)];
+  p[0] = ALGEBRAIC[0];
+p[1] = ALGEBRAIC[1];
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;

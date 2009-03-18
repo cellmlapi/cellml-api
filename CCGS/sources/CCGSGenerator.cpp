@@ -9,6 +9,10 @@
 #include "DOMBootstrap.hxx"
 #include <assert.h>
 #include <algorithm>
+#ifdef ENABLE_RDF
+#include "IfaceRDF_APISPEC.hxx"
+#include "RDFBootstrap.hpp"
+#endif
 
 // Win32 hack...
 #ifdef _WIN32
@@ -61,6 +65,8 @@ CodeGenerationState::GenerateCode()
 
     mUnusedEquations.insert(mEquations.begin(), mEquations.end());
 
+    ProcessModellerSuppliedIVHints();
+
     // Put all targets into lists based on their classification...
     BuildFloatingAndConstantLists();
 
@@ -82,15 +88,22 @@ CodeGenerationState::GenerateCode()
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
 
     // Write evaluations for all constants we just worked out how to compute...
-    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, systems, sysByTargReq);
+    std::wstring tmp;
+    GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
+    WriteIVs(systems);
+    mCodeInfo->mInitConstsStr += tmp;
 
     // Also we need to initialise state variable IVs...
     systems.clear();
+
     BuildStateAndConstantLists();
     DecomposeIntoSystems(mKnown, mFloating, systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
-    GenerateCodeForSet(mCodeInfo->mInitConstsStr, mKnown, systems, sysByTargReq);
 
+    tmp = L"";
+    GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
+    WriteIVs(systems);
+    mCodeInfo->mInitConstsStr += tmp;
 
     // Put all targets into lists based on their classification...
     BuildFloatingAndKnownLists();
@@ -127,6 +140,8 @@ CodeGenerationState::GenerateCode()
 
     // Write evaluations for all rates & algebraic variables in reachabletargets
     GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
+
+    WriteIVs(systems);
 
     // Also cascade state variables to rate variables where they are the same
     // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
@@ -185,6 +200,170 @@ CodeGenerationState::GenerateCode()
 
   mCodeInfo->add_ref();
   return mCodeInfo;
+}
+
+#define HINTS_NS L"http://www.cellml.org/metadata/simulation/solverhints/1.0#"
+
+void
+CodeGenerationState::ProcessModellerSuppliedIVHints()
+{
+#ifdef ENABLE_RDF
+  RETURN_INTO_OBJREF(rr, iface::cellml_api::RDFRepresentation,
+                     mModel->getRDFRepresentation(L"http://www.cellml.org/RDF/API"));
+  if (rr == NULL)
+    return;
+
+  DECLARE_QUERY_INTERFACE_OBJREF(rar, rr, rdf_api::RDFAPIRepresentation);
+  RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, rar->source());
+
+  RETURN_INTO_OBJREF(buo, iface::cellml_api::URI, mModel->base_uri());
+  RETURN_INTO_WSTRING(bu, buo->asText());
+  std::wstring modelURL = bu + L"#";
+  RETURN_INTO_WSTRING(cmId, mModel->cmetaId());
+  modelURL += cmId;
+
+  std::map<std::wstring, ptr_tag<CDA_ComputationTarget> > cmetaCTMap;
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i = mBaseTargets.begin();
+       i != mBaseTargets.end(); i++)
+  {
+    RETURN_INTO_OBJREF(cvs, iface::cellml_services::ConnectedVariableSet,
+                       mCeVAS->findVariableSet((*i)->mVariable));
+    uint32_t l = cvs->length();
+    for (uint32_t j = 0; j < l; j++)
+    {
+      RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                         cvs->getVariable(j));
+      RETURN_INTO_WSTRING(vcmId, cv->cmetaId());
+      if (vcmId != L"")
+      {
+        RETURN_INTO_OBJREF(vm, iface::cellml_api::Model, cv->modelElement());
+        RETURN_INTO_OBJREF(vbuo, iface::cellml_api::URI, vm->base_uri());
+        RETURN_INTO_WSTRING(vbu, vbuo->asText());
+        std::wstring url(vbu + L"#" + vcmId);
+        cmetaCTMap.insert(std::pair<std::wstring, ptr_tag<CDA_ComputationTarget> >(url, *i));
+      }
+    }
+  }
+
+#define URI_REF(v, s) RETURN_INTO_OBJREF(v, iface::rdf_api::URIReference, \
+                                         ds->getURIReference(s));
+  URI_REF(modelr, modelURL.c_str());
+  URI_REF(simhintr, HINTS_NS L"solverHint");
+  URI_REF(variabler, HINTS_NS L"variable");
+  URI_REF(degreer, HINTS_NS L"degree");
+  URI_REF(ivr, HINTS_NS L"initialValue");
+
+  RETURN_INTO_OBJREF(ts, iface::rdf_api::TripleSet,
+                     modelr->getTriplesOutOfByPredicate(simhintr));
+  RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator,
+                     ts->enumerateTriples());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+    if (t == NULL)
+      break;
+
+    RETURN_INTO_OBJREF(hintsn, iface::rdf_api::Node, t->object());
+    DECLARE_QUERY_INTERFACE_OBJREF(hintsr, hintsn, rdf_api::Resource);
+    
+    uint32_t degree = 0;
+    try
+    {
+      RETURN_INTO_OBJREF(degt, iface::rdf_api::Triple,
+                         hintsr->getTripleOutOfByPredicate(degreer));
+      RETURN_INTO_OBJREF(degn, iface::rdf_api::Node,
+                         degt->object());
+      DECLARE_QUERY_INTERFACE_OBJREF(degl, degn, rdf_api::Literal);
+      if (degl != NULL)
+      {
+        RETURN_INTO_WSTRING(deglf, degl->lexicalForm());
+        degree = wcstoul(deglf.c_str(), NULL, 10);
+      }
+    }
+    catch (...)
+    {
+    }
+
+    try
+    {
+      RETURN_INTO_OBJREF(ivt, iface::rdf_api::Triple,
+                         hintsr->getTripleOutOfByPredicate(ivr));
+      RETURN_INTO_OBJREF(ivn, iface::rdf_api::Node, ivt->object());
+      DECLARE_QUERY_INTERFACE_OBJREF(ivl, ivn, rdf_api::Literal);
+      if (ivl == NULL)
+        continue;
+
+      RETURN_INTO_WSTRING(ivlf, ivl->lexicalForm());
+      double iv = wcstod(ivlf.c_str(), NULL);
+      
+      RETURN_INTO_OBJREF(vart, iface::rdf_api::Triple,
+                         hintsr->getTripleOutOfByPredicate(variabler));
+      RETURN_INTO_OBJREF(varn, iface::rdf_api::Node,
+                         vart->object());
+      DECLARE_QUERY_INTERFACE_OBJREF(varu, varn, rdf_api::URIReference);
+      if (varu == NULL)
+        continue;
+
+      RETURN_INTO_WSTRING(varuw, varu->URI());
+      std::map<std::wstring, ptr_tag<CDA_ComputationTarget> >::iterator
+        it(cmetaCTMap.find(varuw));
+      if (it == cmetaCTMap.end())
+        continue;
+
+      ptr_tag<CDA_ComputationTarget> ct = (*it).second;
+
+      for (; degree && ct; degree--)
+      {
+        ct = ct->mUpDegree;
+      }
+      if (degree)
+        continue;
+
+      mInitialOverrides.insert(std::pair<ptr_tag<CDA_ComputationTarget>,
+                               double>(ct, iv));
+    }
+    catch (...)
+    {
+    }
+  }
+#endif
+}
+
+void
+CodeGenerationState::WriteIVs(std::list<System*>& aSystems)
+{
+  CNumericLocale locobj;
+
+  for (std::list<System*>::iterator i = aSystems.begin();
+       i != aSystems.end();
+       i++)
+  {
+    System* s = *i;
+
+    if (s->mEquations.size() == 1)
+    {
+      Equation* eq = *s->mEquations.begin();
+      if (eq->mMaths == NULL || eq->mLHS != NULL)
+        continue;
+    }
+
+    for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j =
+           s->mUnknowns.begin(); j != s->mUnknowns.end(); j++)
+    {
+      // We have a computation target...
+      double iv = 0.1;
+      
+      std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator k
+        (mInitialOverrides.find(*j));
+      if (k != mInitialOverrides.end())
+        iv = (*k).second;
+
+      wchar_t buf[30];
+      swprintf(buf, 30, L"%g", iv);
+      RETURN_INTO_WSTRING(vname, (*j)->name());
+      AppendAssign(mCodeInfo->mInitConstsStr, vname, buf);      
+    }
+  }
 }
 
 ptr_tag<CDA_ComputationTarget>
@@ -1327,10 +1506,11 @@ CodeGenerationState::GenerateCodeForSet
    aSysByTargReq
 )
 {
-  while (!aSystems.empty())
+  std::list<System*> sysCopy(aSystems);
+  while (!sysCopy.empty())
   {
-    System* sys = aSystems.front();
-    aSystems.pop_front();
+    System* sys = sysCopy.front();
+    sysCopy.pop_front();
 
     // See if this system is already known. Since we always compute whole
     // systems at a time, we can do this by looking at the first target of the
@@ -1483,6 +1663,7 @@ CodeGenerationState::GenerateCodeForSystem
     if (lhsci == NULL && rhsci == NULL)
     {
       GenerateSolveCode(aCodeTo, eq, computedTarget);
+      eq->mLHS = NULL;
       return;
     }
 
@@ -1524,6 +1705,7 @@ CodeGenerationState::GenerateCodeForSystem
     if (lhsIsDiff == false && rhsIsDiff == false)
     {
       GenerateSolveCode(aCodeTo, eq, computedTarget);
+      eq->mLHS = NULL;
       return;
     }
 
@@ -1633,6 +1815,7 @@ CodeGenerationState::GenerateCodeForSystem
   while (true);
 
   GenerateSolveCode(aCodeTo, eq, computedTarget);
+  eq->mLHS = NULL;
 }
 
 void

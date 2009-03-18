@@ -121,6 +121,7 @@ public:
                     const std::wstring& aRHS);
   void BuildFloatingAndConstantLists();
   void BuildFloatingAndKnownLists();
+  void WriteForcedInitialVariables();
   void BuildStateAndConstantLists();
   bool DecomposeIntoSystems(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                             std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
@@ -229,6 +230,8 @@ public:
 
   void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
   void RestoreSavedRates(std::wstring& aCode);
+  void ProcessModellerSuppliedIVHints();
+  void WriteIVs(std::list<System*>& aSystems);
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
@@ -243,6 +246,7 @@ public:
   ObjRef<CDA_CodeInformation> mCodeInfo;
   std::list<ptr_tag<CDA_ComputationTarget> > mBaseTargets;
   std::set<ptr_tag<CDA_ComputationTarget> > mKnown, mFloating;
+  std::map<ptr_tag<CDA_ComputationTarget>, double> mInitialOverrides;
   std::list<ptr_tag<Equation> > mEquations;
   std::list<System*> mSystems;
   std::set<ptr_tag<Equation> > mUnusedEquations;
