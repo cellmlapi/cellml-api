@@ -420,7 +420,15 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
 
   ScopeMap<iface::cellml_api::Units> unitsMap;
 
-  aModel->fullyInstantiateImports();
+  try
+  {
+    aModel->fullyInstantiateImports();
+  }
+  catch (...)
+  {
+    errorDescription += L"Could not load all imports;";
+    return;
+  }
 
   RETURN_INTO_OBJREF(us, iface::cellml_api::UnitsSet,
                      aModel->allUnits());
