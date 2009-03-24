@@ -4,30 +4,94 @@ NOTE: THIS DOCUMENT IS WORK IN PROGRESS. PLEASE DO NOT RELY ON IT FOR ANYTHING!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Personal notes: Prerequisites seem to include Python, omniORB and gsl. The first one is not a problem. Regarding omniORB, it compiled fine and this using Microsoft Visual C++, which is what we want. Now, regarding gsl, there are some problems. First, one has to modify "configure" to account for the fact that Windows (and therefore Microsoft Visual C++) doesn't support symbolic links. This can easily be fixed by making a copy of the files rather than making links to them. This allows the compilation to start, but then a bunch errors are generated. They are related to "BASE_GSL_COMPLEX*" in files such as "C:\Projects\gsl-1.11\matrix\rowcol.c"...
+Personal notes: Prerequisites seem to include Python, omniORB and gsl. The first one is not a problem. Regarding omniORB, it compiled fine and this using Microsoft Visual C++, which is what we want. Now, regarding gsl, there are some problems. First, one has to modify "configure" to account for the fact that Windows (and therefore Microsoft Visual C++) doesn't support symbolic links. This can easily be fixed by making a copy of the files rather than making links to them. This allows the compilation to start, but then a bunch errors are generated. They are related to "BASE_GSL_COMPLEX*" in files such as "C:\Projects\gsl-1.12\matrix\rowcol.c"...
 
-Build the CellML DOM API from its source code under Windows
-===========================================================
+Build the CellML DOM API from its source code under Windows (using Cygwin)
+==========================================================================
+
+Notes
+-----
+
+- The location of the OpenCell files seems to be critical (and, unfortunately, it is not clear why it is so). As a result, we would advise either putting the files under C:\ (i.e. C:\opencell\) or under C:\[Some Folder Name]\ (e.g. C:\Projects\opencell\). It is worth mentioning that putting the files under /home/[Username]/ (i.e. C:\cygwin\home\[Username]\) didn't work for us, neither did putting the files on another drive (e.g. D:\Projects\).
+
 
 Prerequisites
 -------------
 
-The Mozilla framework will have to be built first, if you are to use the CellML DOM API from within PCEnv.
+- Cygwin (http://www.cygwin.com/)
+  Note: this document assumes that *all* of Cygwin was installed and this in C:\cygwin\.
 
+- Microsoft Visual C++ 2005 Service Pack 1 (SP1). Note that a free version is available (http://www.microsoft.com/express/2005/download/). Either way, make sure to upgrade to SP1 (for the free version, you can do so from http://www.microsoft.com/downloads/details.aspx?FamilyId=7B0B0339-613A-46E6-AB4D-080D4D4A8C4E&displaylang=en).
 
-Cygwin
-------
+- In case you are using Microsoft Windows XP, then you must (at least) have Windows XP SP2 and .NET Framework 2.0 (http://www.microsoft.com/downloads/info.aspx?na=47&p=3&SrcDisplayLang=en&SrcCategoryId=&SrcFamilyId=4377f86d-c913-4b5c-b87e-ef72e5b4e065&u=details.aspx%3ffamilyid%3d0856EACB-4362-4B0D-8EDD-AAB15C5E04F5%26displaylang%3den).
 
-- Edit C:\Projects\Cygwin.bat file so that
+- In case you are using the free version of Visual C++ 2005 SP1 (i.e. the Express Edition), then you must download and install Microsoft Windows Server 2003 R2 Platform SDK (at least the "Windows Core SDK", "Web Workshop (IE) SDK", and the "Data Access Services (MDAC) SDK" components; http://www.microsoft.com/downloads/details.aspx?familyid=0baf2b35-c656-4969-ace8-e4c0c0716adb&displaylang=en).
+
+??? - Microsoft Windows Vista SDK (http://www.microsoft.com/downloads/details.aspx?familyid=4377F86D-C913-4B5C-B87E-EF72E5B4E065&displaylang=en).
+
+- MozillaBuild 1.3 package (http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-1.3.exe).
+
+- JDK 6 Update 12 (or any later version; http://java.sun.com/javase/downloads/), if you intend to build the CellML DOM API with Java bindings.
+
+- Make 3.80 (http://ftp.gnu.org/pub/gnu/make/make-3.80.tar.gz). You need to build it from its source code, i.e.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SET INCLUDE=%MSSDK%\include;%MSSDK%\include\atl;%INCLUDE%
+cd [WhereverMake3.80Is]
+tar -xvf make-3.80.tar.gz
+rm make-3.80.tar.gz
+cd make-3.80
+./configure
+make
+make install
+cd ..
+rm -fr make-3.80
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Edit /etc/profile so that
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:$PATH
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 now reads
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SET INCLUDE=%MSSDK%\include;%MSSDK%\include\atl;%MSSDK%\include\mfc;%INCLUDE%
+PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Edit C:\cygwin\cygwin.bat to read:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo off
+
+set VCVARS=C:\Program Files\Microsoft Visual Studio 8\VC\bin\vcvars32.bat
+
+set SDKDIR=C:\Program Files\Microsoft SDKs\Windows\v6.0
+
+set MOZBUILDDIR=C:\mozilla-build
+set MOZ_TOOLS=%MOZBUILDDIR%\moztools
+
+set MOZ_OBJ=C:\mozilla-obj\obj-i686-pc-cygwin
+
+set CYGWINBASE=C:\cygwin
+set CYGWIN=nodosfilewarning
+
+set PATH=%CYGWINBASE%\bin;%PATH%
+
+call "%VCVARS%"
+
+set PATH=%SDKDIR%\bin;%PATH%
+set INCLUDE=%SDKDIR%\include;%SDKDIR%\include\atl;%INCLUDE%
+set LIB=%SDKDIR%\lib;%LIB%;%MOZBUILDDIR%\atlthunk_compat
+
+set PATH=%PATH%;%MOZ_TOOLS%\bin
+
+set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_12
+
+C:
+chdir C:\cygwin\bin
+
+bash --login -i
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -36,7 +100,7 @@ Python
 
 Python is required to build the CellML DOM API and has to be installed separately.
 
-Python 2.5.2 can be downloaded from http://www.python.org/. You want http://www.python.org/ftp/python/2.5.2/python-2.5.2.msi. From there, install it in C:\Projects\.
+Python 2.5.4 can be downloaded from http://www.python.org/. You want http://www.python.org/ftp/python/2.5.4/python-2.5.4.msi. From there, install it under C:\.
 
 
 omniORB
@@ -44,10 +108,10 @@ omniORB
 
 omniORB is also required to build the CellML DOM API and also has to be installed separately.
 
-omniORB 4.1.2 can be downloaded from http://sourceforge.net/projects/omniorb/. You want omniORB-4.1.2.tar.gz. From there:
+omniORB 4.1.3 can be downloaded from http://sourceforge.net/projects/omniorb/. You want http://downloads.sourceforge.net/omniorb/omniORB-4.1.3-x86_win32-vs8.zip. From there:
 
-- Unpack that file to C:\Projects\.
-- Edit C:\Projects\omniORB-4.1.2\config\config.mk so that
+- Unpack that file to C:\.
+- Edit C:\omniORB-4.1.3\config\config.mk so that
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #platform = x86_win32_vs_8
@@ -59,7 +123,7 @@ now reads
 platform = x86_win32_vs_8
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Edit C:\Projects\omniORB-4.1.2\mk\platforms\x86_win32_vs_8.mk so that
+- Edit C:\omniORB-4.1.3\mk\platforms\x86_win32_vs_8.mk so that
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #PYTHON = /cygdrive/c/Python24/python
@@ -68,13 +132,13 @@ platform = x86_win32_vs_8
 now reads
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-PYTHON = /cygdrive/c/Projects/Python25/python
+PYTHON = /cygdrive/c/Python25/python
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- From a Cygwin bash shell prompt (using the Cygwin batch file created for the Mozilla framework build):
+- From a Cygwin bash shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c/Projects/omniORB-4.1.2/src
+cd /cygdrive/c/omniORB-4.1.3/src
 make export
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -84,10 +148,10 @@ gsl
 
 gsl is also required to build the CellML DOM API and also has to be installed separately.
 
-gsl 1.11 can be downloaded from http://www.gnu.org/. You want gsl-1.11.tar.gz. From there:
+gsl 1.12 can be downloaded from http://www.gnu.org/. You want gsl-1.12.tar.gz. From there:
 
-- Unpack that file to C:\Projects\.
-- Edit C:\Projects\gsl-1.11\configure so that
+- Unpack that file to C:\.
+- Edit C:\gsl-1.12\configure so that
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 LN_S=$as_ln_s
@@ -99,13 +163,13 @@ now reads
 LN_S='cp -p'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The reason behind the above is that Windows (and therefore Microsoft Visual C++) does not support symbolic links.
+Note: the reason behind the above is that Windows (and therefore Microsoft Visual C++) does not support symbolic links.
 
-- From a Cygwin bash shell prompt (using the Cygwin batch file created for the Mozilla framework build):
+- From a Cygwin bash shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c/Projects/gsl-1.11
-./configure CC="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper"
+cd /cygdrive/c/gsl-1.12
+./configure CC="/cygdrive/c/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/CellML_DOM_API/build/msvc-wrapper"
 make
 make install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,7 +178,7 @@ make install
 Check out the source code
 -------------------------
 
-From a Cygwin bash shell prompt (using the Cygwin batch file created for the Mozilla framework build):
+From a Cygwin bash shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~
@@ -127,24 +191,24 @@ Note: you will be told that the certificate is invalid, so you may want to ignor
 Build the CellML DOM API
 ------------------------
 
-From a Cygwin bash shell prompt (using the Cygwin batch file created for the Mozilla framework build):
+From a Cygwin bash shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c/Projects/CellML_DOM_API
+cd /cygdrive/c/CellML_DOM_API
 aclocal && autoconf && automake
-./configure CC="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/Projects/CellML_DOM_API/build/msvc-wrapper" --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds --enable-xpcom=/cygdrive/c/Projects/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist
+./configure CC="/cygdrive/c/CellML_DOM_API/build/msvc-wrapper" CXX="/cygdrive/c/CellML_DOM_API/build/msvc-wrapper" LD="/cygdrive/c/CellML_DOM_API/build/msvc-wrapper" --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds --enable-xpcom=/cygdrive/c/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist
 make
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note #1: "aclocal && autoconf && automake" is not required if building from a source tar.
-Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/cygdrive/c/Projects/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist" to the "configure" command line.
+Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/cygdrive/c/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist" to the "configure" command line.
 Note #3: if the examples are required (e.g. CellML2C, RunCellML and ValidateCellML), then add "--enable-examples=yes" to the "configure" command line.
 
 
 Test the CellML API
 -------------------
 
-From a Cygwin bash shell prompt (using the Cygwin batch file created for the Mozilla framework build):
+From a Cygwin bash shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~/CellML_DOM_API
