@@ -1,6 +1,6 @@
 #include <exception>
 #include <jni.h>
-#include "j2pCCGS.hxx"
+#include "j2pCUSES.hxx"
 #include "CUSESBootstrap.hpp"
 #include "Utilities.hxx"
 
