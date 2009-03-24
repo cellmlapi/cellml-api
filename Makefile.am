@@ -209,4 +209,4 @@ if ENABLE_CIS_AND_JAVA
 include $(top_srcdir)/CIS/java_build.mk
 endif
 
-CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh
+CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh

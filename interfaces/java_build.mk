@@ -37,7 +37,7 @@ $(top_builddir)/interfaces/p2j%.cpp \
 $(top_builddir)/interfaces/p2j%.hxx \
 $(top_builddir)/interfaces/j2p%.cpp \
 $(top_builddir)/interfaces/j2p%.hxx: \
-$(top_srcdir)/interfaces/%.idl
+$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
