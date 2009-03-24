@@ -217,7 +217,8 @@ public:
    ptr_tag<Equation> aEq,
    const std::wstring& aPattern,
    const wchar_t* aId,
-   const wchar_t* aIndex
+   const wchar_t* aIndex,
+   const wchar_t* aIV
   );
 
   std::wstring ReplaceIDs
@@ -231,7 +232,6 @@ public:
   void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
   void RestoreSavedRates(std::wstring& aCode);
   void ProcessModellerSuppliedIVHints();
-  void WriteIVs(std::list<System*>& aSystems);
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,

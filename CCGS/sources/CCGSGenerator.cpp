@@ -90,7 +90,6 @@ CodeGenerationState::GenerateCode()
     // Write evaluations for all constants we just worked out how to compute...
     std::wstring tmp;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
-    WriteIVs(systems);
     mCodeInfo->mInitConstsStr += tmp;
 
     // Also we need to initialise state variable IVs...
@@ -102,7 +101,6 @@ CodeGenerationState::GenerateCode()
 
     tmp = L"";
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
-    WriteIVs(systems);
     mCodeInfo->mInitConstsStr += tmp;
 
     // Put all targets into lists based on their classification...
@@ -140,8 +138,6 @@ CodeGenerationState::GenerateCode()
 
     // Write evaluations for all rates & algebraic variables in reachabletargets
     GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
-
-    WriteIVs(systems);
 
     // Also cascade state variables to rate variables where they are the same
     // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
@@ -327,43 +323,6 @@ CodeGenerationState::ProcessModellerSuppliedIVHints()
     }
   }
 #endif
-}
-
-void
-CodeGenerationState::WriteIVs(std::list<System*>& aSystems)
-{
-  CNumericLocale locobj;
-
-  for (std::list<System*>::iterator i = aSystems.begin();
-       i != aSystems.end();
-       i++)
-  {
-    System* s = *i;
-
-    if (s->mEquations.size() == 1)
-    {
-      Equation* eq = *s->mEquations.begin();
-      if (eq->mMaths == NULL || eq->mLHS != NULL)
-        continue;
-    }
-
-    for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j =
-           s->mUnknowns.begin(); j != s->mUnknowns.end(); j++)
-    {
-      // We have a computation target...
-      double iv = 0.1;
-      
-      std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator k
-        (mInitialOverrides.find(*j));
-      if (k != mInitialOverrides.end())
-        iv = (*k).second;
-
-      wchar_t buf[30];
-      swprintf(buf, 30, L"%g", iv);
-      RETURN_INTO_WSTRING(vname, (*j)->name());
-      AppendAssign(mCodeInfo->mInitConstsStr, vname, buf);      
-    }
-  }
 }
 
 ptr_tag<CDA_ComputationTarget>
@@ -1931,6 +1890,12 @@ CodeGenerationState::GenerateSolveCode
   swprintf(id, 20, L"%u", mNextSolveId++);
 
   RETURN_INTO_WSTRING(vname, aComputedTarget->name());
+  
+  wchar_t iv[30] = { L'0', L'.', L'1', L'\0' };
+  std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator ivIt
+    (mInitialOverrides.find(aComputedTarget));
+  if (ivIt != mInitialOverrides.end())
+    swprintf(iv, 30, L"%g", (*ivIt).second);
 
   uint32_t state = 0;
   uint32_t idx = 0;
@@ -1987,6 +1952,8 @@ CodeGenerationState::GenerateSolveCode
     case 4: // Seen <I
       if (c == L'D')
         state = 10;
+      else if (c == L'V')
+        state = 16;
       else
       {
         *dest += L"<I";
@@ -2115,6 +2082,20 @@ CodeGenerationState::GenerateSolveCode
       {
         // Matched <SUP>
         dest = &mCodeInfo->mFuncsStr;
+        state = 0;
+      }
+      break;
+    case 16: // Seen <IV
+      if (c == L'>')
+      {
+        // Matched <IV>
+        *dest += iv;
+        state = 0;
+      }
+      else
+      {
+        *dest += L"<IV";
+        *dest += c;
         state = 0;
       }
       break;
@@ -2279,16 +2260,23 @@ CodeGenerationState::GenerateMultivariateSolveCodeTo
     }
 
     uint32_t index = 0 + mArrayOffset;
-    for(std::set<ptr_tag<Equation> >::iterator i(aSys->mEquations.begin());
-        i != aSys->mEquations.end();
-        i++)
+    std::set<ptr_tag<Equation> >::iterator i;
+    std::set<ptr_tag<CDA_ComputationTarget> >::iterator j;
+    for(i = aSys->mEquations.begin(), j = aSys->mUnknowns.begin();
+        i != aSys->mEquations.end(); i++, j++)
     {
+      wchar_t ivStr[30] = {L'0', L'.', L'1', L'\0'};
+      std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator ioi(mInitialOverrides.find(*j));
+      if (ioi != mInitialOverrides.end())
+        swprintf(ivStr, 30, L"%g", (*ioi).second);
+
       wchar_t indexStr[15];
       swprintf(indexStr, 15, L"%u", index);
       index++;
       if (i != aSys->mEquations.begin())
         aCodeTo += ReplaceIDs(join, aId, indexStr, countStr);
-      GenerateMultivariateSolveCodeEq(aCodeTo, *i, perEqPattern, aId, indexStr);
+      GenerateMultivariateSolveCodeEq(aCodeTo, *i, perEqPattern, aId, indexStr,
+                                      ivStr);
     }
 
     offset = occurrence + 12;
@@ -2304,7 +2292,8 @@ CodeGenerationState::GenerateMultivariateSolveCodeEq
  ptr_tag<Equation> aEq,
  const std::wstring& aPattern,
  const wchar_t* aId,
- const wchar_t* aIndex
+ const wchar_t* aIndex,
+ const wchar_t* aIV
 )
 {
   uint32_t state = 0;
@@ -2361,6 +2350,8 @@ CodeGenerationState::GenerateMultivariateSolveCodeEq
         state = 10;
       else if (c == L'N')
         state = 13;
+      else if (c == L'V')
+        state = 17;
       else
       {
         aCodeTo += L"<I";
@@ -2504,6 +2495,20 @@ CodeGenerationState::GenerateMultivariateSolveCodeEq
       else
       {
         aCodeTo += L"<INDEX";
+        aCodeTo += c;
+        state = 0;
+      }
+      break;
+    case 17: // Seen <IV
+      if (c == L'>')
+      {
+        // matched <IV>
+        aCodeTo += aIV;
+        state = 0;
+      }
+      else
+      {
+        aCodeTo += L"<IV";
         aCodeTo += c;
         state = 0;
       }

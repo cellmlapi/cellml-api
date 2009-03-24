@@ -17,7 +17,6 @@ initConsts(double* CONSTANTS, double* RATES, double *STATES)
 CONSTANTS[0] = 3;
 CONSTANTS[1] = (CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ? ( sin(CONSTANTS[0])) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000);
 STATES[0] = CONSTANTS[0];
-ALGEBRAIC[0] = 0.1;
 }
 void
 computeRates(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -51,7 +50,8 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 void rootfind_0(double VOI, double* CONSTANTS, double* RATES, 
 double* STATES, double* ALGEBRAIC, int* pret)
 {
-  static double bp, work[LM_DIF_WORKSZ(1, 1)];
+  static double val = 0.1;
+  double bp, work[LM_DIF_WORKSZ(1, 1)];
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;
@@ -59,6 +59,6 @@ double* STATES, double* ALGEBRAIC, int* pret)
   rfi.aSTATES = STATES;
   rfi.aALGEBRAIC = ALGEBRAIC;
   rfi.aPRET = pret;
-  do_levmar(objfunc_0, &ALGEBRAIC[0], &bp, work, pret, 1, &rfi);
-  ALGEBRAIC[0] = p;
+  do_levmar(objfunc_0, &val, &bp, work, pret, 1, &rfi);
+  ALGEBRAIC[0] = val;
 }
