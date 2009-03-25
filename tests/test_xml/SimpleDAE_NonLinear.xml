@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<model xmlns="http://www.cellml.org/cellml/1.1#" xml:base="file:///C:/Randall/Now/eclipseWorkspace1/scratchpad/SimpleDAE_NonLinear.xml">
+<model xmlns="http://www.cellml.org/cellml/1.1#">
 	<component name="main">
 		<variable initial_value="1" name="a" units="dimensionless"/>
 		<variable name="d" units="dimensionless"/>
