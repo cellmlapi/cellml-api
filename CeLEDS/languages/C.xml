@@ -154,8 +154,6 @@ double* STATES, double* ALGEBRAIC, int* pret)
 {
   static double p[<COUNT>] = {<EQUATIONS><IV><JOIN>,</EQUATIONS>};
   double bp[<COUNT>], work[LM_DIF_WORKSZ(<COUNT>, <COUNT>)];
-  <EQUATIONS>p[<INDEX>] = <VAR>;<JOIN>
-</EQUATIONS>
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;

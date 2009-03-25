@@ -51,8 +51,6 @@ double* STATES, double* ALGEBRAIC, int* pret)
 {
   static double p[2] = {0.1,0.1};
   double bp[2], work[LM_DIF_WORKSZ(2, 2)];
-  p[0] = ALGEBRAIC[0];
-p[1] = ALGEBRAIC[1];
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;
