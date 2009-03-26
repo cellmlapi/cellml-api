@@ -31,7 +31,7 @@ Prerequisites
 
 - JDK 6 Update 12 (or any later version; http://java.sun.com/javase/downloads/), if you intend to build the CellML DOM API with Java bindings.
 
-- Make 3.80 (http://ftp.gnu.org/pub/gnu/make/make-3.80.tar.gz). You need to build it from its source code, i.e.
+- Make 3.80 (http://ftp.gnu.org/gnu/make/make-3.80.tar.gz). You need to build it from its source code, i.e.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd [WhereverMake3.80Is]
@@ -43,6 +43,34 @@ make
 make install
 cd ..
 rm -fr make-3.80
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Autoconf 2.60 (http://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz). You need to build it from its source code, i.e.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd [WhereverAutoconf2.60Is]
+tar -xvf autoconf-2.60.tar.gz
+rm autoconf-2.60.tar.gz
+cd autoconf-2.60
+./configure
+make
+make install
+cd ..
+rm -fr autoconf-2.60
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Automake 1.10 (http://ftp.gnu.org/gnu/automake/automake-1.10.tar.gz). You need to build it from its source code, i.e.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd [WhereverAutomake1.10Is]
+tar -xvf automake-1.10.tar.gz
+rm automake-1.10.tar.gz
+cd automake-1.10
+./configure
+make
+make install
+cd ..
+rm -fr automake-1.10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Edit /etc/profile so that
@@ -74,7 +102,7 @@ set MOZ_OBJ=C:\mozilla-obj\obj-i686-pc-cygwin
 set CYGWINBASE=C:\cygwin
 set CYGWIN=nodosfilewarning
 
-set PATH=%CYGWINBASE%\bin;%PATH%
+set PATH=%CYGWINBASE%\usr\local\bin;%CYGWINBASE%\bin;%PATH%
 
 call "%VCVARS%"
 
@@ -87,9 +115,12 @@ set PATH=%PATH%;%MOZ_TOOLS%\bin
 set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_12
 
 set GSL=C:\gsl-1.11
+set OMNIORB=C:\omniORB-4.1.3
+set LIBXML=C:\libxml2-2.6.27.win32
 
-SET INCLUDE=%GSL%\win32\include;%INCLUDE%
-SET LIB=%GSL%\win32\lib\release;%INCLUDE%
+set PATH=%OMNIORB%\bin\x86_win32;%PATH%
+set INCLUDE=%GSL%\win32\include;%LIBXML%\include;%INCLUDE%;%CYGWINBASE%\usr\include
+set LIB=%GSL%\win32\lib\release;%LIBXML%\lib;%LIB%;%CYGWINBASE%\usr\lib
 
 C:
 chdir C:\cygwin\bin
@@ -113,12 +144,12 @@ omniORB is also required to build the CellML DOM API and also has to be installe
 
 omniORB 4.1.3 can be downloaded from http://sourceforge.net/projects/omniorb/. You want http://downloads.sourceforge.net/omniorb/omniORB-4.1.3-x86_win32-vs8.zip. From there:
 
-- Unpack that file to C:\, i.e.
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd /cygdrive/c
 unzip omniORB-4.1.3-x86_win32-vs8.zip
 rm omniORB-4.1.3-x86_win32-vs8.zip
+cd omniORB-4.1.3/bin/x86_win32
+chmod +x *
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -142,8 +173,6 @@ gsl is also required to build the CellML DOM API and also has to be installed se
 
 gsl 1.11 can be downloaded from http://www.gnu.org/. You want gsl-1.11.tar.gz. From there:
 
-- Unpack that file to C:\, i.e.
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd /cygdrive/c
 tar -xvf gsl-1.11.tar.gz
@@ -164,6 +193,34 @@ unzip /cygdrive/c/cellml/docs/gsl-1.11-win32.zip
    - Click on the "Close" button; and
    - Press the F7 key.
 
+libxml
+------
+
+libxml is also required to build the CellML DOM API and also has to be installed separately.
+
+libxml 2.6.27 can be downloaded from http://xmlsoft.org/. You want http://xmlsoft.org/sources/win32/oldreleases/libxml2-2.6.27.win32.zip. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip libxml2-2.6.27.win32.zip
+rm libxml2-2.6.27.win32.zip
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+XUL Runner SDK
+--------------
+
+The XUL Runner SDK must be downloaded and uncompressed to /cygdrive/c, if you are to use the CellML DOM API from within PCEnv. Version 1.9.0.7 can be downloaded from http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.0.7/sdk/. From there, do the following to make it available under /cygdrive/c/xulrunner-sdk:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip xulrunner-1.9.0.7.en-US.win32.sdk.zip
+rm xulrunner-1.9.0.7.en-US.win32.sdk.zip
+cd xulrunner-sdk/bin
+chmod +x *
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 Build the CellML DOM API
 ------------------------
@@ -173,13 +230,13 @@ From a Cygwin bash shell prompt:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd /cygdrive/c/cellml
 aclocal && autoconf && automake
-./configure CC="/cygdrive/c/cellml/build/msvc-wrapper" CXX="/cygdrive/c/cellml/build/msvc-wrapper" LD="/cygdrive/c/cellml/build/msvc-wrapper" --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds --enable-xpcom=/cygdrive/c/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist
+./configure CC="/cygdrive/c/cellml/build/msvc-wrapper" CXX="/cygdrive/c/cellml/build/msvc-wrapper" LD="/cygdrive/c/cellml/build/msvc-wrapper" --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds
 make
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note #1: "aclocal && autoconf && automake" is not required if building from a source tar.
-Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/cygdrive/c/mozilla-obj/obj-i686-pc-cygwin/stablexr/dist" to the "configure" command line.
-Note #3: if the examples are required (e.g. CellML2C, RunCellML and ValidateCellML), then add "--enable-examples=yes" to the "configure" command line.
+Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/cygdrive/c/xulrunner-sdk" to the "configure" command line.
+Note #3: at the moment, "--enable-examples=yes" is not supported, so examples (e.g. CellML2C, RunCellML and ValidateCellML) cannot be generated.
 
 
 Test the CellML API
