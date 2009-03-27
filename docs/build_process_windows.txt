@@ -13,28 +13,31 @@ Notes
 - The location of the OpenCell files seems to be critical (and, unfortunately, it is not clear why it is so). As a result, we would advise either putting the files under C:\ (i.e. C:\opencell\) or under C:\[Some Folder Name]\ (e.g. C:\Projects\opencell\). It is worth mentioning that putting the files under /home/[Username]/ (i.e. C:\cygwin\home\[Username]\) didn't work for us, neither did putting the files on another drive (e.g. D:\Projects\).
 
 
-Prerequisites
--------------
+General Prerequisites
+---------------------
 
 - Cygwin (http://www.cygwin.com/)
   Note: this document assumes that *all* of Cygwin was installed and this in C:\cygwin\.
 
 - Microsoft Visual C++ 2005 Service Pack 1 (SP1). Note that a free version is available (http://www.microsoft.com/express/2005/download/). Either way, make sure to upgrade to SP1 (for the free version, you can do so from http://www.microsoft.com/downloads/details.aspx?FamilyId=7B0B0339-613A-46E6-AB4D-080D4D4A8C4E&displaylang=en).
 
-- In case you are using Microsoft Windows XP, then you must (at least) have Windows XP SP2 and .NET Framework 2.0 (http://www.microsoft.com/downloads/info.aspx?na=47&p=3&SrcDisplayLang=en&SrcCategoryId=&SrcFamilyId=4377f86d-c913-4b5c-b87e-ef72e5b4e065&u=details.aspx%3ffamilyid%3d0856EACB-4362-4B0D-8EDD-AAB15C5E04F5%26displaylang%3den).
+- In case you are using Microsoft Windows XP, then you must have Windows XP SP2 (or above) and .NET Framework 2.0 (http://www.microsoft.com/downloads/info.aspx?na=47&p=3&SrcDisplayLang=en&SrcCategoryId=&SrcFamilyId=4377f86d-c913-4b5c-b87e-ef72e5b4e065&u=details.aspx%3ffamilyid%3d0856EACB-4362-4B0D-8EDD-AAB15C5E04F5%26displaylang%3den).
 
 - In case you are using the free version of Visual C++ 2005 SP1 (i.e. the Express Edition), then you must download and install Microsoft Windows Server 2003 R2 Platform SDK (at least the "Windows Core SDK", "Web Workshop (IE) SDK", and the "Data Access Services (MDAC) SDK" components; http://www.microsoft.com/downloads/details.aspx?familyid=0baf2b35-c656-4969-ace8-e4c0c0716adb&displaylang=en).
 
-??? - Microsoft Windows Vista SDK (http://www.microsoft.com/downloads/details.aspx?familyid=4377F86D-C913-4B5C-B87E-EF72E5B4E065&displaylang=en).
+- Microsoft Windows Vista SDK (http://www.microsoft.com/downloads/details.aspx?familyid=4377F86D-C913-4B5C-B87E-EF72E5B4E065&displaylang=en).
 
 - MozillaBuild 1.3 package (http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-1.3.exe).
 
 - JDK 6 Update 12 (or any later version; http://java.sun.com/javase/downloads/), if you intend to build the CellML DOM API with Java bindings.
 
-- Make 3.80 (http://ftp.gnu.org/gnu/make/make-3.80.tar.gz). You need to build it from its source code, i.e.
+
+Make 3.80
+---------
+
+Cygwin currently comes with Make 3.81 while we want Make 3.80 (originally, to build the Mozilla framework). It can be downloaded from http://www.gnu.org/software/make/. You want http://ftp.gnu.org/gnu/make/make-3.80.tar.gz. From there:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd [WhereverMake3.80Is]
 tar -xvf make-3.80.tar.gz
 rm make-3.80.tar.gz
 cd make-3.80
@@ -45,10 +48,13 @@ cd ..
 rm -fr make-3.80
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Autoconf 2.60 (http://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz). You need to build it from its source code, i.e.
+
+Autoconf 2.60
+-------------
+
+Cygwin currently comes with Autoconf 2.63 while the CellML DOM API relies on Autoconf 2.60. It can be downloaded from http://www.gnu.org/software/autoconf/. You want http://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz. From there:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd [WhereverAutoconf2.60Is]
 tar -xvf autoconf-2.60.tar.gz
 rm autoconf-2.60.tar.gz
 cd autoconf-2.60
@@ -59,10 +65,13 @@ cd ..
 rm -fr autoconf-2.60
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Automake 1.10 (http://ftp.gnu.org/gnu/automake/automake-1.10.tar.gz). You need to build it from its source code, i.e.
+
+Automake 1.10
+-------------
+
+Cygwin currently comes with Automake 1.10.1 while the CellML DOM API relies on Automake 1.10. It can be downloaded from http://www.gnu.org/software/automake/. You want http://ftp.gnu.org/gnu/automake/automake-1.10.tar.gz. From there:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd [WhereverAutomake1.10Is]
 tar -xvf automake-1.10.tar.gz
 rm automake-1.10.tar.gz
 cd automake-1.10
@@ -73,7 +82,129 @@ cd ..
 rm -fr automake-1.10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Edit /etc/profile so that
+
+Python 2.5.4
+------------
+
+Python 2.5.4 can be downloaded from http://www.python.org/. You want http://www.python.org/ftp/python/2.5.4/python-2.5.4.msi. From there, install it under C:\.
+
+
+omniORB 4.1.3
+-------------
+
+omniORB 4.1.3 can be downloaded from http://sourceforge.net/projects/omniorb/. You want http://downloads.sourceforge.net/omniorb/omniORB-4.1.3-x86_win32-vs8.zip. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip omniORB-4.1.3-x86_win32-vs8.zip
+rm omniORB-4.1.3-x86_win32-vs8.zip
+cd omniORB-4.1.3/bin/x86_win32
+chmod +x *
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+gsl 1.11
+--------
+
+gsl 1.11 can be downloaded from http://www.gnu.org/software/gsl/. You want http://ftp.gnu.org/gnu/gsl/gsl-1.11.tar.gz. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+tar -xvf gsl-1.11.tar.gz
+rm gsl-1.11.tar.gz
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Now, unfortunately, gsl is not supported by Microsoft Visual C++ 2005, so we need to do a bit of tweaking around, but thankfully David Geldreich had done most of the work for us by porting gsl 1.11 to Visual .NET 2003 (http://david.geldreich.free.fr/dev.html), which meant we could get gsl to build under Visual C++ 2005. For this, you need to unpack some files that we ship with the CellML DOM API, i.e.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip /cygdrive/c/cellml/docs/gsl-1.11-win32.zip
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note: you must agree to replacing templates_on.h.
+
+- Next, open the C:\gsl-1.11\gsl.sln solution file within Microsoft Visual C++ 2005 and build the solution after having made sure that the release build has been selected, i.e.:
+   - Right click on the "gsl" solution in the "Solution Explorer" panel;
+   - Select the "Configuation Manager..." menu item;
+   - Select "Release" as the "Active solution configuration";
+   - Click on the "Close" button; and
+   - Press the F7 key.
+
+
+libiconv 1.9.1
+--------------
+
+libiconv 1.9.1 can be downloaded from http://www.gnu.org/software/libiconv/. You want http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.9.1.bin.woe32.zip. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mkdir /cydrive/c/libiconv-1.9.1
+cd /cydrive/c/libiconv-1.9.1
+unzip ../libiconv-1.9.1.bin.woe32.zip
+rm ../libiconv-1.9.1.bin.woe32.zip
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+gettext 0.13.1
+--------------
+
+gettext 0.13.1 can be downloaded from http://www.gnu.org/software/gettext/. You want http://ftp.gnu.org/pub/gnu/gettext/gettext-runtime-0.13.1.bin.woe32.zip. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cydrive/c/libiconv-1.9.1
+unzip ../gettext-runtime-0.13.1.bin.woe32.zip
+rm ../gettext-runtime-0.13.1.bin.woe32.zip
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note: gettext must be unpacked in the same folder as libicon.
+
+
+libtool 1.5.22 (is it actually required?!)
+--------------
+
+libtool 1.5.22 can be downloaded from http://www.gnu.org/software/libtool/. You want http://ftp.gnu.org/pub/gnu/libtool/libtool-1.5.22.tar.gz. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cydrive/c
+tar -xvf libtool-1.5.22.tar.gz
+rm libtool-1.5.22.tar.gz
+cd libtool-1.5.22
+./configure
+make
+make install
+rm -fr libtool-1.5.22
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+libxml 2.6.27
+-------------
+
+libxml 2.6.27 can be downloaded from http://xmlsoft.org/. You want http://xmlsoft.org/sources/win32/oldreleases/libxml2-2.6.27.win32.zip. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip libxml2-2.6.27.win32.zip
+rm libxml2-2.6.27.win32.zip
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+XUL Runner SDK 1.9.0.7
+----------------------
+
+If you are to use the CellML DOM API from within OpenCell, then you must get the XUL Runner SDK 1.9.0.7. It can be downloaded http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/. You want http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.0.7/sdk/. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip xulrunner-1.9.0.7.en-US.win32.sdk.zip
+rm xulrunner-1.9.0.7.en-US.win32.sdk.zip
+cd xulrunner-sdk/bin
+chmod +x *
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+/etc/profile
+------------
+
+Edit /etc/profile so that
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PATH=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:$PATH
@@ -85,7 +216,11 @@ now reads
 PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Edit C:\cygwin\cygwin.bat to read:
+
+C:\cygwin\Cygwin.bat
+--------------------
+
+Edit C:\cygwin\cygwin.bat to read:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @echo off
@@ -116,40 +251,17 @@ set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_12
 
 set GSL=C:\gsl-1.11
 set OMNIORB=C:\omniORB-4.1.3
+set LIBICONV=C:\libiconv-1.9.1
 set LIBXML=C:\libxml2-2.6.27.win32
 
-set PATH=%OMNIORB%\bin\x86_win32;%PATH%
-set INCLUDE=%GSL%\win32\include;%LIBXML%\include;%INCLUDE%;%CYGWINBASE%\usr\include
-set LIB=%GSL%\win32\lib\release;%LIBXML%\lib;%LIB%;%CYGWINBASE%\usr\lib
+set PATH=%OMNIORB%\bin\x86_win32;%LIBICONV%\bin;%LIBICONV%\lib;%LIBXML%\bin;%LIBXML%\lib;%PATH%
+set INCLUDE=%GSL%\win32\include;%OMNIORB%\include;%LIBICONV%\include;%LIBXML%\include;%INCLUDE%
+set LIB=%GSL%\win32\lib\release;%OMNIORB%\lib\x86_win32;%LIBICONV%\lib;%LIBXML%\lib;%LIB%
 
 C:
 chdir C:\cygwin\bin
 
 bash --login -i
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-Python
-------
-
-Python is required to build the CellML DOM API and has to be installed separately.
-
-Python 2.5.4 can be downloaded from http://www.python.org/. You want http://www.python.org/ftp/python/2.5.4/python-2.5.4.msi. From there, install it under C:\.
-
-
-omniORB
--------
-
-omniORB is also required to build the CellML DOM API and also has to be installed separately.
-
-omniORB 4.1.3 can be downloaded from http://sourceforge.net/projects/omniorb/. You want http://downloads.sourceforge.net/omniorb/omniORB-4.1.3-x86_win32-vs8.zip. From there:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c
-unzip omniORB-4.1.3-x86_win32-vs8.zip
-rm omniORB-4.1.3-x86_win32-vs8.zip
-cd omniORB-4.1.3/bin/x86_win32
-chmod +x *
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -159,67 +271,10 @@ Check out the source code
 From a Cygwin bash shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd ~
 svn co https://svn.physiomeproject.org/svn/physiome/CellML_DOM_API/trunk/ /cygdrive/c/cellml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note: you will be told that the certificate is invalid, so you may want to ignore that message and accept the certificate permanently.
-
-
-gsl
----
-
-gsl is also required to build the CellML DOM API and also has to be installed separately.
-
-gsl 1.11 can be downloaded from http://www.gnu.org/. You want gsl-1.11.tar.gz. From there:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c
-tar -xvf gsl-1.11.tar.gz
-rm gsl-1.11.tar.gz
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- Now, unfortunately, gsl is not supported by Microsoft Visual C++ 2005, so we need to do a bit of tweaking and, thanksto  David Geldreich who has ported gsl to Visual .NET 2003 (http://david.geldreich.free.fr/dev.html), we could get gsl to build under Visual C++ 2005. For this, you need to unpack some files that we ship we the CellML DOM API (agree to replacing templates_on.h), i.e.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c
-unzip /cygdrive/c/cellml/docs/gsl-1.11-win32.zip
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- Open the C:\gsl-1.11\gsl.sln solution file in Microsoft Visual C++ 2005 and build after having made sure that the release build has been selected, i.e.:
-   - Right click on the "gsl" solution in the "Solution Explorer" panel;
-   - Select the "Configuation Manager..." menu item;
-   - Select "Release" as the "Active solution configuration";
-   - Click on the "Close" button; and
-   - Press the F7 key.
-
-libxml
-------
-
-libxml is also required to build the CellML DOM API and also has to be installed separately.
-
-libxml 2.6.27 can be downloaded from http://xmlsoft.org/. You want http://xmlsoft.org/sources/win32/oldreleases/libxml2-2.6.27.win32.zip. From there:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c
-unzip libxml2-2.6.27.win32.zip
-rm libxml2-2.6.27.win32.zip
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-XUL Runner SDK
---------------
-
-The XUL Runner SDK must be downloaded and uncompressed to /cygdrive/c, if you are to use the CellML DOM API from within PCEnv. Version 1.9.0.7 can be downloaded from http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.0.7/sdk/. From there, do the following to make it available under /cygdrive/c/xulrunner-sdk:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c
-unzip xulrunner-1.9.0.7.en-US.win32.sdk.zip
-rm xulrunner-1.9.0.7.en-US.win32.sdk.zip
-cd xulrunner-sdk/bin
-chmod +x *
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 
 Build the CellML DOM API
