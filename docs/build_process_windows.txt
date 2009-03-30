@@ -16,8 +16,16 @@ Notes
 General Prerequisites
 ---------------------
 
-- Cygwin (http://www.cygwin.com/)
-  Note: this document assumes that *all* of Cygwin was installed and this in C:\cygwin\.
+- Cygwin (http://www.cygwin.com/).
+  Note: this document assumes that you installed Cygwin with the default settings + the following packages:
+   - diffutils: a GNU collection of diff utilities;
+   - gcc: C compiler upgrade helper;
+   - m4: GNU implementation of the traditional UNIX macro processor;
+   - make: the GNU version of the 'make' utility;
+   - perl: Larry Wall's Practical Extracting and Report Language;
+   - python: an interactive object-oriented scripting language;
+   - subversion: a version control system;
+   - unzip: Info-ZIP decompression utility;
 
 - Microsoft Visual C++ 2005 Service Pack 1 (SP1). Note that a free version is available (http://www.microsoft.com/express/2005/download/). Either way, make sure to upgrade to SP1 (for the free version, you can do so from http://www.microsoft.com/downloads/details.aspx?FamilyId=7B0B0339-613A-46E6-AB4D-080D4D4A8C4E&displaylang=en).
 
@@ -83,22 +91,16 @@ rm -fr automake-1.10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Python 2.5.4
-------------
+XUL Runner SDK 1.9.0.7
+----------------------
 
-Python 2.5.4 can be downloaded from http://www.python.org/. You want http://www.python.org/ftp/python/2.5.4/python-2.5.4.msi. From there, install it under C:\.
-
-
-omniORB 4.1.3
--------------
-
-omniORB 4.1.3 can be downloaded from http://sourceforge.net/projects/omniorb/. You want http://downloads.sourceforge.net/omniorb/omniORB-4.1.3-x86_win32-vs8.zip. From there:
+If you are to use the CellML DOM API from within OpenCell, then you must get the XUL Runner SDK 1.9.0.7. It can be downloaded http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/. You want http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.0.7/sdk/. From there:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd /cygdrive/c
-unzip omniORB-4.1.3-x86_win32-vs8.zip
-rm omniORB-4.1.3-x86_win32-vs8.zip
-cd omniORB-4.1.3/bin/x86_win32
+unzip xulrunner-1.9.0.7.en-US.win32.sdk.zip
+rm xulrunner-1.9.0.7.en-US.win32.sdk.zip
+cd xulrunner-sdk/bin
 chmod +x *
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -118,7 +120,7 @@ rm gsl-1.11.tar.gz
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd /cygdrive/c
-unzip /cygdrive/c/cellml/docs/gsl-1.11-win32.zip
+unzip cellml/docs/gsl-1.11-win32.zip
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note: you must agree to replacing templates_on.h.
@@ -131,14 +133,42 @@ Note: you must agree to replacing templates_on.h.
    - Press the F7 key.
 
 
+omniORB 4.1.3
+-------------
+
+omniORB 4.1.3 can be downloaded from http://sourceforge.net/projects/omniorb/. You want http://downloads.sourceforge.net/omniorb/omniORB-4.1.3-x86_win32-vs8.zip. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip omniORB-4.1.3-x86_win32-vs8.zip
+rm omniORB-4.1.3-x86_win32-vs8.zip
+cd omniORB-4.1.3/bin/x86_win32
+chmod +x *
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+libxml 2.6.27
+-------------
+
+libxml 2.6.27 can be downloaded from http://xmlsoft.org/. You want http://xmlsoft.org/sources/win32/oldreleases/libxml2-2.6.27.win32.zip. From there:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd /cygdrive/c
+unzip libxml2-2.6.27.win32.zip
+rm libxml2-2.6.27.win32.zip
+cd libxml2-2.6.27.win32/lib
+cp libxml2.lib xml2.lib
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 libiconv 1.9.1
 --------------
 
 libiconv 1.9.1 can be downloaded from http://www.gnu.org/software/libiconv/. You want http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.9.1.bin.woe32.zip. From there:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-mkdir /cydrive/c/libiconv-1.9.1
-cd /cydrive/c/libiconv-1.9.1
+mkdir /cygdrive/c/libiconv-1.9.1
+cd /cygdrive/c/libiconv-1.9.1
 unzip ../libiconv-1.9.1.bin.woe32.zip
 rm ../libiconv-1.9.1.bin.woe32.zip
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -155,50 +185,7 @@ unzip ../gettext-runtime-0.13.1.bin.woe32.zip
 rm ../gettext-runtime-0.13.1.bin.woe32.zip
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note: gettext must be unpacked in the same folder as libicon.
-
-
-libtool 1.5.22 (is it actually required?!)
---------------
-
-libtool 1.5.22 can be downloaded from http://www.gnu.org/software/libtool/. You want http://ftp.gnu.org/pub/gnu/libtool/libtool-1.5.22.tar.gz. From there:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cydrive/c
-tar -xvf libtool-1.5.22.tar.gz
-rm libtool-1.5.22.tar.gz
-cd libtool-1.5.22
-./configure
-make
-make install
-rm -fr libtool-1.5.22
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-libxml 2.6.27
--------------
-
-libxml 2.6.27 can be downloaded from http://xmlsoft.org/. You want http://xmlsoft.org/sources/win32/oldreleases/libxml2-2.6.27.win32.zip. From there:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c
-unzip libxml2-2.6.27.win32.zip
-rm libxml2-2.6.27.win32.zip
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-XUL Runner SDK 1.9.0.7
-----------------------
-
-If you are to use the CellML DOM API from within OpenCell, then you must get the XUL Runner SDK 1.9.0.7. It can be downloaded http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/. You want http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.0.7/sdk/. From there:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd /cygdrive/c
-unzip xulrunner-1.9.0.7.en-US.win32.sdk.zip
-rm xulrunner-1.9.0.7.en-US.win32.sdk.zip
-cd xulrunner-sdk/bin
-chmod +x *
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Note: gettext must be unpacked in the same folder as libiconv.
 
 
 /etc/profile
@@ -254,7 +241,7 @@ set OMNIORB=C:\omniORB-4.1.3
 set LIBICONV=C:\libiconv-1.9.1
 set LIBXML=C:\libxml2-2.6.27.win32
 
-set PATH=%OMNIORB%\bin\x86_win32;%LIBICONV%\bin;%LIBICONV%\lib;%LIBXML%\bin;%LIBXML%\lib;%PATH%
+set PATH=%OMNIORB%\bin\x86_win32;%LIBICONV%\bin;%LIBXML%\bin;%PATH%
 set INCLUDE=%GSL%\win32\include;%OMNIORB%\include;%LIBICONV%\include;%LIBXML%\include;%INCLUDE%
 set LIB=%GSL%\win32\lib\release;%OMNIORB%\lib\x86_win32;%LIBICONV%\lib;%LIBXML%\lib;%LIB%
 
