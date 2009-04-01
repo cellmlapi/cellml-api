@@ -13,6 +13,7 @@ General Prerequisites
 - Cygwin (http://www.cygwin.com/).
   Note: this document assumes that you installed Cygwin with the default settings + the following packages:
    - diffutils: a GNU collection of diff utilities;
+   - file: determines file type using 'magic' numbers;
    - gcc: C compiler upgrade helper;
    - m4: GNU implementation of the traditional UNIX macro processor;
    - make: the GNU version of the 'make' utility;
@@ -148,7 +149,9 @@ libxml 2.6.27 can be downloaded from http://xmlsoft.org/. You want http://xmlsof
 cd /cygdrive/c
 unzip libxml2-2.6.27.win32.zip
 rm libxml2-2.6.27.win32.zip
-cd libxml2-2.6.27.win32/lib
+cd libxml2-2.6.27.win32/bin
+cp libxml2.dll xml2.dll
+cd ../libxml2-2.6.27.win32/lib
 cp libxml2.lib xml2.lib
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
