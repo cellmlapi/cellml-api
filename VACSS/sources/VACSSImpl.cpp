@@ -2327,6 +2327,12 @@ ModelValidation::validateMathMLConstant
   }
 
   // Now we have to check if textData is a valid real number...
+  // But first, we need to trim any space, tab, etc. from textData
+  // Note: if textData equals "   123   ", then it will become equal to "123".
+  //       However, if textData equals "   1   <sep/>   2   ", then it will
+  //       become equal to "1   <sep/>   2", so we will need to do some
+  //       further trimming later on in case of an e-notation cn element...
+
   int i = 0, j = txt.length() - 1;
   wchar_t c;
   while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
@@ -2396,17 +2402,30 @@ ModelValidation::validateMathMLConstant
           break;
       }
 
+      // At this stage, textData might look something like "   <sep/>   2", so
+      // we need to trim it on the left before going any further
+
+      while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')
+        p++;
+
       if ((*p) == L'<' && type == L"e-notation")
       {
         std::wstring::const_iterator::difference_type charsleft(0);
         charsleft = std::distance(p, std::wstring::const_iterator(txt.end()));
-        
+
         if ((charsleft > 6) && (p[1] == L's') && (p[2] == L'e') && (p[3] == L'p')
             && (p[4] == L'/') && (p[5] == L'>'))
         {
           p += 6;
           if (p != txt.end() && ((*p) == L'-' || (*p) == L'+'))
             p++;
+
+          // At this stage, textData might look something like "   2", so
+          // we need to trim it on the left before going any further
+
+          while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')
+            p++;
+
           if (p == txt.end())
           {
             valid = false;
