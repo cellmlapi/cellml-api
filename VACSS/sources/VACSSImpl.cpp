@@ -2405,7 +2405,7 @@ ModelValidation::validateMathMLConstant
       // At this stage, textData might look something like "   <sep/>   2", so
       // we need to trim it on the left before going any further
 
-      while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')
+      while ((*p) == L' ' || (*p) == L'\t' || (*p) == L'\r' || (*p) == L'\n')
         p++;
 
       if ((*p) == L'<' && type == L"e-notation")
@@ -2417,13 +2417,14 @@ ModelValidation::validateMathMLConstant
             && (p[4] == L'/') && (p[5] == L'>'))
         {
           p += 6;
-          if (p != txt.end() && ((*p) == L'-' || (*p) == L'+'))
-            p++;
 
           // At this stage, textData might look something like "   2", so
           // we need to trim it on the left before going any further
 
-          while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')
+          while ((*p) == L' ' || (*p) == L'\t' || (*p) == L'\r' || (*p) == L'\n')
+            p++;
+
+          if (p != txt.end() && ((*p) == L'-' || (*p) == L'+'))
             p++;
 
           if (p == txt.end())
