@@ -1,0 +1,111 @@
+Download and uncompress the XUL Runner SDK
+==========================================
+
+The latest release of the XUL Runner SDK can be downloaded from http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/, e.g. http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.0.7/sdk/xulrunner-1.9.0.7.en-US.linux-i686.sdk.tar.bz2. From there, do the following to make it available in /home/[Username]/xulrunner-sdk:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd ~
+tar -xvf xulrunner-1.9.0.7.en-US.linux-i686.sdk.tar.bz2
+rm xulrunner-1.9.0.7.en-US.linux-i686.sdk.tar.bz2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Build the CellML DOM API from its source code
+=============================================
+
+Required Linux packages
+-----------------------
+
+- automake         A tool for generating GNU Standards-compliant Makefiles
+- g++              The GNU C++ compiler
+- libcppunit-dev   Unit Testing Library for C++ (note: only required for testing the CellML DOM API)
+- libgsl0-dev      GNU Scientific Library (GSL) – development package
+- libtool          Generic library support script
+- libxml2-dev      Development files for the GNOME XML library
+- omniidl4         omniORB idl to C++ and Python compiler
+- subversion       Advanced version control system
+
+
+Check out the source code
+-------------------------
+
+From a shell prompt:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd ~
+svn co https://svn.physiomeproject.org/svn/physiome/CellML_DOM_API/trunk/ CellML_DOM_API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note: you will be told that the certificate is invalid, so you may want to ignore that message and accept the certificate permanently.
+
+
+Java (only required if you want the Java binding to the CellML DOM API)
+-----------------------------------------------------------------------
+
+Java is (obviously) required to build the Java binding to the CellML DOM API.
+
+Java SE Development Kit 6 Update 13 can be downloaded from http://java.sun.com/javase/downloads/index.jsp. You need to click on the "Download" button next to Java SE "Development Kit (JDK) 6 Update 10". From there, select "Linux" as the platform, tick the "I agree to the  Java SE Development Kit 6 License Agreement" checkbox, and click on the "Continue" button. A new page will open, giving you access to the download itself: jdk-6u13-linux-i586.bin. Once downloaded, do the following from a shell prompt:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd ~
+sudo mv jdk-6u13-linux-i586.bin /usr/local/share
+cd /usr/local/share
+chmod +x jdk-6u13-linux-i586.bin
+sudo ./jdk-6u13-linux-i586.bin
+sudo rm jdk-6u13-linux-i586.bin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Finally, add the following to /home/[Username]/.bashrc:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+export JAVA_HOME=/usr/local/share/jdk1.6.0_10
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+and then restart it:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+. ./.bashrc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Build the CellML DOM API
+------------------------
+
+From a shell prompt:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd ~/CellML_DOM_API
+aclocal && autoconf && automake
+./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds
+libtoolize
+mv libtool libtool.backup
+ln -s /usr/bin/libtool
+make
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Note #1: "aclocal && autoconf && automake" is not required if building from a source tar.
+Note #2: if the CellML DOM API is to be used within PCEnv, then add "--enable-xpcom=/home/[Username]/xulrunner-sdk" to the "configure" command line.
+Note #3: if the examples are required (e.g. CellML2C, RunCellML and ValidateCellML), then add "--enable-examples=yes" to the "configure" command line. NOTE: THIS OPTION SHOULD WORK, BUT FOR SOME REASON IS NOT RECOGNISED UNDER UBUNTU 9.04...
+Note #4: if you want the Java binding to the CellML DOM API, then add "--enable-java" to the "configure" command line.
+
+
+Test the CellML API
+-------------------
+
+From a shell prompt:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd ~/CellML_DOM_API
+make check
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Install the CellML API
+----------------------
+
+From a shell prompt:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd ~/CellML_DOM_API
+sudo make install
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
