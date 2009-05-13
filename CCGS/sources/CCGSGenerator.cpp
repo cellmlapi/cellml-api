@@ -1150,6 +1150,9 @@ CodeGenerationState::DecomposeIntoSystems
          i != targets.end();
          i++)
     {
+      if ((*i).second.first.empty())
+        continue;
+
       if (FindSmallSystem((*i).second.first, (*i).second.second, start,
                           aCandidates, aSystems))
       {
@@ -1191,11 +1194,18 @@ CodeGenerationState::FindSmallSystem
   {
     std::set<ptr_tag<Equation> > s;
     std::set<ptr_tag<Equation> >::iterator i(aUseEquations.begin());
+
+    // printf("Trying to find small system of size %u from network of %u candidates, %u equations\n",
+    //        systemCardinality, aCandidates.size(), aUseEquations.size());
     if (RecursivelyTestSmallSystem(s, i, systemCardinality,
                                    aUseEquations, aUseVars, aStart, aCandidates,
                                    aSystems
                                   ))
+    {
+      // printf("Success\n");
       return true;
+    }
+    // printf("No luck, upping cardinality.\n");
   }
 
   return false;
@@ -1251,11 +1261,14 @@ CodeGenerationState::RecursivelyTestSmallSystem
           else
           {
             assert(aCandidates.count(*k));
+            assert(aUseVars.count(*k));
             targets.insert(*k);
           }
         }
       
       uint32_t nEqns = aSystem.size(), nUnknowns = targets.size();
+
+      // printf("In this case, nEqns = %u, nUnknowns = %u\n", nEqns, nUnknowns);
 
       if (nEqns > nUnknowns)
         throw OverconstrainedError((*(aUseEquations.begin()))->mMaths);
