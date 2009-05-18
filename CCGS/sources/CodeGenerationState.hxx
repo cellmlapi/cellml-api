@@ -123,8 +123,12 @@ public:
   void BuildFloatingAndKnownLists();
   void WriteForcedInitialVariables();
   void BuildStateAndConstantLists();
+  void RuleOutCandidates(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
+                         std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
+                         std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted);
   bool DecomposeIntoSystems(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                             std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
+                            std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
                             std::list<System*>& aSystems);
   bool FindSmallSystem(
                        std::set<ptr_tag<Equation> >& aUseEquations,
@@ -245,7 +249,7 @@ public:
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
   ObjRef<CDA_CodeInformation> mCodeInfo;
   std::list<ptr_tag<CDA_ComputationTarget> > mBaseTargets;
-  std::set<ptr_tag<CDA_ComputationTarget> > mKnown, mFloating;
+  std::set<ptr_tag<CDA_ComputationTarget> > mKnown, mFloating, mUnwanted;
   std::map<ptr_tag<CDA_ComputationTarget>, double> mInitialOverrides;
   std::list<ptr_tag<Equation> > mEquations;
   std::list<System*> mSystems;

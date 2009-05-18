@@ -73,7 +73,9 @@ CodeGenerationState::GenerateCode()
     std::list<System*> systems;
 
     // Now, determine all constants computable from the current constants...
-    DecomposeIntoSystems(mKnown, mFloating, systems);
+    DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
+
+    mUnwanted.clear();
 
     // Assign constant variables for set...
     AllocateVariablesInSet(systems, iface::cellml_services::CONSTANT,
@@ -96,7 +98,7 @@ CodeGenerationState::GenerateCode()
     systems.clear();
 
     BuildStateAndConstantLists();
-    DecomposeIntoSystems(mKnown, mFloating, systems);
+    DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
 
     tmp = L"";
@@ -110,7 +112,7 @@ CodeGenerationState::GenerateCode()
     // known variables (constants, state variables, and bound variable)...
     systems.clear();
 
-    bool wasError = DecomposeIntoSystems(mKnown, mFloating, systems);
+    bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
 
     // Assign algebraic variables for set...
@@ -967,6 +969,10 @@ CodeGenerationState::BuildFloatingAndConstantLists()
     case iface::cellml_services::FLOATING:
       mFloating.insert(*i);
       break;
+    case iface::cellml_services::STATE_VARIABLE:
+    case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+      mUnwanted.insert(*i);
+
     default:
       ;
     }
@@ -1010,11 +1016,61 @@ CodeGenerationState::BuildFloatingAndKnownLists()
     }
 }
 
+void
+CodeGenerationState::RuleOutCandidates
+(
+ std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted
+)
+{
+  for (bool progress = true; progress;)
+  {
+    progress = false;
+    // Look for equations with a single unwanted candidate.
+    for (std::set<ptr_tag<Equation> >::iterator i = mUnusedEquations.begin();
+         i != mUnusedEquations.end(); i++)
+    {
+      uint32_t count = 0, ucount = 0;
+      std::list<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mTargets.begin(), f;
+      for (; j != (*i)->mTargets.end(); j++)
+      {
+        if (aStart.count(*j))
+          continue;
+        if (aCandidates.count(*j))
+        {
+          count++;
+          if (count > 1)
+            break;
+          f = j;
+        }
+        else if (aUnwanted.count(*j))
+          ucount++;
+        else
+        {
+          count = 0;
+          break;
+        }
+      }
+
+      if (count == 1 && ucount)
+      {
+        // So we have one or more unwanted variables, and just one wanted one.
+        // We therefore infer a dependency between the wanted and unwanted
+        // variables, and decide we will be unable to compute the wanted one.
+        progress = true;
+        aCandidates.erase(*f);
+      }
+    }
+  }
+}
+
 bool
 CodeGenerationState::DecomposeIntoSystems
 (
  std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
  std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
  std::list<System*>& aSystems
 )
 {
@@ -1022,6 +1078,8 @@ CodeGenerationState::DecomposeIntoSystems
 
   while (true)
   {
+    RuleOutCandidates(aStart, aCandidates, aUnwanted);
+
     // The first step is to cluster all candidate variables into disjoint sets,
     // where two variables are in the same set if there is an until now unused
     // equation involving both of them.
