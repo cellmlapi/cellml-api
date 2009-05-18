@@ -1060,6 +1060,7 @@ CodeGenerationState::RuleOutCandidates
         // variables, and decide we will be unable to compute the wanted one.
         progress = true;
         aCandidates.erase(*f);
+        aUnwanted.insert(*f);
       }
     }
   }
