@@ -1,0 +1,58 @@
+Memory management: Avoiding leaks and dangling pointers.
+
+Terminology:
+1) Instance:
+  Refers to a particular instance of some dynamically allocated
+  datatype(e.g. an object, string, etc..).
+1) Block of code:
+  Refers to some logical group of code, such as a function, or the
+  code associated with a particular instance.
+2) Access rights:
+  A block of code which has access rights to an instance may perform
+  any operation on that instance(subject to the usual rules of what
+  you can do with that datatype).
+3) Ownership:
+  Any block of code which owns an instance has implicit access rights
+  to that instance until it takes some action which relinquishes its
+  ownership. It may transfer that ownership to another block of code,
+  and, if it provides a mechanism to ensure that it does not
+  relinquish ownership before the access rights have been
+  relinquished, it may pass access rights to another block of code
+  while maintaining ownership.
+
+To avoid memory management problems, the following rules must be
+followed:
+1) A block of code must ensure that the number of instances it can own
+at any one time are bounded, or else define rules which place
+responsibility for this on its client(for example, a list might either
+have an upper bound on size, or demand that clients do not keep adding
+an unbounded number of things to the list).
+2) A block of code must not access an instance unless it has access
+rights to that instance.
+3) A block of code must not perform any operation which relinquishes
+ownership of an instance unless it already owns that instance.
+4) An block of code which has access rights to an object may gain
+ownership by calling add_ref on that object.
+5) A block of code which owns an object may relinquish ownership by
+calling release_ref on that object.
+6) A block of code which owns a string may call free(str) on that
+string to relinquish ownership of that string.
+7) A block of code which owns a structure may relinquish ownership of
+that structure by relinquishing ownership of each member of that
+structure, and then calling free(str) on that structure.
+8) A block of code which owns an array may relinquish ownership of
+that array by relinquishing ownership of each member of that array,
+and then calling free(arry) on each member of that array.
+9) A block of code which calls a function and passes an instance as an
+in parameter grants access rights to that function.
+10) A block of code which calls a function and passes an instance as
+an in/out parameter grants ownership of the instance passed to the
+function, unless the function returns an error, in which case
+ownership returns to the calling function.
+11) A function which has an out or in/out parameter passes ownership of the
+instance returned in the out parameter to the caller.
+Corollary: If the in/out parameter is never modified, ownership
+initially belongs to the caller, passes to the callee, and then
+returns to the caller when the function returns.
+12) A function which returns an instance passes ownership to the
+callee.

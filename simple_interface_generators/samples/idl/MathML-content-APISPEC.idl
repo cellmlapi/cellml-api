@@ -1,0 +1,296 @@
+// This file has been modified to only support content MathML...
+// File: mathml-dom.idl
+#ifndef _MATHMLDOM_IDL_
+#define _MATHMLDOM_IDL_
+
+#include "xpcom.idl"
+#include "DOM-APISPEC.idl"
+
+module mathml_dom
+{
+  interface MathMLDocument;
+  interface MathMLMathElement;
+  interface MathMLBvarElement;
+  interface MathMLConditionElement;
+  interface MathMLDeclareElement;
+  interface MathMLMatrixrowElement;
+  interface MathMLCaseElement;
+  
+  interface MathMLDOMImplementation : dom::DOMImplementation
+  {
+    MathMLDocument            createMathMLDocument();
+  };
+  
+  interface MathMLDocument : dom::Document
+  {
+    readonly attribute dom::DOMString         referrer;
+    readonly attribute dom::DOMString         domain;
+    readonly attribute dom::DOMString         URI;
+  };
+  
+  interface MathMLNodeList : dom::NodeList
+  {
+  };
+  
+  interface MathMLElement : dom::Element
+  {
+             attribute dom::DOMString         className;
+             attribute dom::DOMString         mathElementStyle;
+             attribute dom::DOMString         id;
+             attribute dom::DOMString         xref;
+             attribute dom::DOMString         href;
+    readonly attribute MathMLMathElement ownerMathElement;
+  };
+  
+  interface MathMLContainer : XPCOM::IObject
+  {
+    readonly attribute unsigned long     nArguments;
+    readonly attribute MathMLNodeList    arguments;
+    readonly attribute MathMLNodeList    declarations;
+    MathMLElement             getArgument(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLElement             setArgument(in MathMLElement newArgument,
+                                          in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLElement             insertArgument(in MathMLElement newArgument,
+                                             in unsigned long index)
+                                               raises(dom::DOMException);
+    void                      deleteArgument(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLElement             removeArgument(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLDeclareElement      getDeclaration(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLDeclareElement      setDeclaration(in MathMLDeclareElement newDeclaration,
+                                             in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLDeclareElement      insertDeclaration(in MathMLDeclareElement newDeclaration,
+                                                in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLDeclareElement      removeDeclaration(in unsigned long index)
+                                               raises(dom::DOMException);
+    void                      deleteDeclaration(in unsigned long index)
+                                               raises(dom::DOMException);
+  };
+  
+  interface MathMLMathElement : MathMLElement, MathMLContainer
+  {
+             attribute dom::DOMString         macros;
+             attribute dom::DOMString         display;
+  };
+  
+  interface MathMLContentElement : MathMLElement
+  {
+  };
+  
+  interface MathMLContentToken : MathMLContentElement
+  {
+    readonly attribute MathMLNodeList    arguments;
+             attribute dom::DOMString         definitionURL;
+             attribute dom::DOMString         encoding;
+    dom::Node                      getArgument(in unsigned long index);
+    dom::Node                      insertArgument(in dom::Node newArgument,
+                                             in unsigned long index);
+    dom::Node                      setArgument(in dom::Node newArgument,
+                                          in unsigned long index);
+    void                      deleteArgument(in unsigned long index);
+    dom::Node                      removeArgument(in unsigned long index);
+  };
+  
+  interface MathMLCnElement : MathMLContentToken
+  {
+             attribute dom::DOMString         type;
+             attribute dom::DOMString         base;
+    readonly attribute unsigned long     nargs;
+  };
+  
+  interface MathMLCiElement : MathMLContentToken
+  {
+             attribute dom::DOMString         type;
+  };
+  
+  interface MathMLCsymbolElement : MathMLContentToken
+  {
+  };
+  
+  interface MathMLContentContainer : MathMLContentElement, MathMLContainer
+  {
+    readonly attribute unsigned long     nBoundVariables;
+             attribute MathMLConditionElement condition;
+                                               // raises(dom::DOMException) on setting
+             attribute MathMLElement     opDegree;
+                                               // raises(dom::DOMException) on setting
+             attribute MathMLElement     domainOfApplication;
+                                               // raises(dom::DOMException) on setting
+             attribute MathMLElement     momentAbout;
+                                               // raises(dom::DOMException) on setting
+    MathMLBvarElement         getBoundVariable(in unsigned long index);
+    MathMLBvarElement         insertBoundVariable(in MathMLBvarElement newBVar,
+                                                  in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLBvarElement         setBoundVariable(in MathMLBvarElement newBVar,
+                                               in unsigned long index)
+                                               raises(dom::DOMException);
+    void                      deleteBoundVariable(in unsigned long index);
+    MathMLBvarElement         removeBoundVariable(in unsigned long index);
+  };
+  
+  interface MathMLApplyElement : MathMLContentContainer
+  {
+             attribute MathMLElement     operator;
+             attribute MathMLElement     lowLimit;
+                                               // raises(dom::DOMException) on setting
+             attribute MathMLElement     upLimit;
+                                               // raises(dom::DOMException) on setting
+  };
+  
+  interface MathMLFnElement : MathMLContentContainer
+  {
+             attribute dom::DOMString         definitionURL;
+             attribute dom::DOMString         encoding;
+  };
+  
+  interface MathMLLambdaElement : MathMLContentContainer
+  {
+             attribute MathMLElement     expression;
+  };
+  
+  interface MathMLSetElement : MathMLContentContainer
+  {
+    readonly attribute boolean           isExplicit;
+             attribute dom::DOMString         type;
+  };
+  
+  interface MathMLListElement : MathMLContentContainer
+  {
+    readonly attribute boolean           isExplicit;
+             attribute dom::DOMString         ordering;
+  };
+  
+  interface MathMLBvarElement : MathMLContentContainer
+  {
+  };
+  
+  interface MathMLPredefinedSymbol : MathMLContentElement
+  {
+             attribute dom::DOMString         definitionURL;
+             attribute dom::DOMString         encoding;
+    readonly attribute dom::DOMString         arity;
+    readonly attribute dom::DOMString         symbolName;
+  };
+  
+  interface MathMLTendsToElement : MathMLPredefinedSymbol
+  {
+             attribute dom::DOMString         type;
+  };
+  
+  interface MathMLIntervalElement : MathMLContentElement
+  {
+             attribute dom::DOMString         closure;
+             attribute MathMLContentElement start;
+             attribute MathMLContentElement end;
+  };
+  
+  interface MathMLConditionElement : MathMLContentElement
+  {
+             attribute MathMLApplyElement condition;
+  };
+  
+  interface MathMLDeclareElement : MathMLContentElement
+  {
+             attribute dom::DOMString         type;
+             attribute unsigned long     nargs;
+             attribute dom::DOMString         occurrence;
+             attribute dom::DOMString         definitionURL;
+             attribute dom::DOMString         encoding;
+             attribute MathMLCiElement   identifier;
+             attribute MathMLElement     constructor;
+  };
+  
+  interface MathMLVectorElement : MathMLContentElement
+  {
+    readonly attribute unsigned long     ncomponents;
+    MathMLContentElement      getComponent(in unsigned long index);
+    MathMLContentElement      insertComponent(in MathMLContentElement newComponent,
+                                              in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLContentElement      setComponent(in MathMLContentElement newComponent,
+                                           in unsigned long index)
+                                               raises(dom::DOMException);
+    void                      deleteComponent(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLContentElement      removeComponent(in unsigned long index);
+  };
+  
+  interface MathMLMatrixElement : MathMLContentElement
+  {
+    readonly attribute unsigned long     nrows;
+    readonly attribute unsigned long     ncols;
+    readonly attribute MathMLNodeList    rows;
+    MathMLMatrixrowElement    getRow(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLMatrixrowElement    insertRow(in MathMLMatrixrowElement newRow,
+                                        in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLMatrixrowElement    setRow(in MathMLMatrixrowElement newRow,
+                                     in unsigned long index)
+                                               raises(dom::DOMException);
+    void                      deleteRow(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLMatrixrowElement    removeRow(in unsigned long index)
+                                               raises(dom::DOMException);
+  };
+  
+  interface MathMLMatrixrowElement : MathMLContentElement
+  {
+    readonly attribute unsigned long     nEntries;
+    MathMLContentElement      getEntry(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLContentElement      insertEntry(in MathMLContentElement newEntry,
+                                          in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLContentElement      setEntry(in MathMLContentElement newEntry,
+                                       in unsigned long index)
+                                               raises(dom::DOMException);
+    void                      deleteEntry(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLContentElement      removeEntry(in unsigned long index)
+                                               raises(dom::DOMException);
+  };
+  
+  interface MathMLPiecewiseElement : MathMLContentElement
+  {
+    readonly attribute MathMLNodeList    pieces;
+             attribute MathMLContentElement otherwise;
+    MathMLCaseElement         getCase(in unsigned long index);
+    MathMLCaseElement         setCase(in unsigned long index,
+                                      in MathMLCaseElement caseEl)
+                                               raises(dom::DOMException);
+    void                      deleteCase(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLCaseElement         removeCase(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLCaseElement         insertCase(in unsigned long index,
+                                         in MathMLCaseElement newCase)
+                                               raises(dom::DOMException);
+    MathMLContentElement      getCaseValue(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLContentElement      setCaseValue(in unsigned long index,
+                                           in MathMLContentElement value)
+                                               raises(dom::DOMException);
+    MathMLContentElement      getCaseCondition(in unsigned long index)
+                                               raises(dom::DOMException);
+    MathMLContentElement      setCaseCondition(in unsigned long index,
+                                               in MathMLContentElement condition)
+                                               raises(dom::DOMException);
+  };
+  
+  interface MathMLCaseElement : MathMLContentElement
+  {
+             attribute MathMLContentElement caseCondition;
+             attribute MathMLContentElement caseValue;
+  };
+  
+};
+
+#endif

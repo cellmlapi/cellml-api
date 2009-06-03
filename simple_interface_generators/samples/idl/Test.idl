@@ -1,0 +1,17 @@
+#include "xpcom.idl"
+
+module Foo
+{
+  typedef sequence<wchar> wcharSeq;
+  typedef sequence<wstring> wstringSeq;
+  typedef sequence<XPCOM::IObject> iobjectSeq;
+
+  interface Test : XPCOM::IObject
+  {
+    readonly attribute wstring foo;
+    attribute wstring bar;
+    void testOp(in wstring a, inout wstring b, inout XPCOM::IObject c,
+                out XPCOM::IObject d, in wcharSeq e, out wstringSeq f, inout iobjectSeq g);
+  };
+
+};

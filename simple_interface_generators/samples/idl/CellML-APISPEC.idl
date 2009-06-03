@@ -1,0 +1,1887 @@
+#include "xpcom.idl"
+#include "DOM-APISPEC.idl"
+#include "MathML-content-APISPEC.idl"
+/**
+ * This module contains a description of the CellML Application Programming
+ * Interface in the language-neutral IDL form.
+ */
+module cellml_api
+{
+  /* Forward definitions... */
+  interface Model;
+  interface Units;
+  interface Group;
+  interface MapComponents;
+  interface CellMLComponent;
+  interface ImportComponent;
+  interface ImportUnits;
+  interface Units;
+  interface Unit;
+  interface CellMLImport;
+  interface CellMLVariable;
+  interface ComponentRef;
+  interface RelationshipRef;
+  interface Connection;
+  interface MapVariables;
+  interface Reaction;
+  interface ReactionSet;
+  interface VariableRef;
+  interface Role;
+  interface ExtensionElementList;
+  interface MathList;
+  interface ModelSet;
+  interface CellMLElementSet;
+  interface CellMLComponentSet;
+  interface ImportComponentSet;
+  interface CellMLVariableSet;
+  interface UnitsSet;
+  interface CellMLImportSet;
+  interface ImportUnitsSet;
+  interface UnitSet;
+  interface ConnectionSet;
+  interface GroupSet;
+  interface RelationshipRefSet;
+  interface ComponentRefSet;
+  interface MapVariablesSet;
+  interface VariableRefSet;
+  interface RoleSet;
+
+  typedef dom::Element ExtensionElement;
+
+  /**
+   * This holds attribute values for the XML attributes of elements in
+   * serialised CellML. Character data in XML can be any Unicode character;
+   * the sequence of characters must conform to the rules of XML character data
+   * (which define escaping of reserved characters etc).
+   * @see http://www.w3.org/TR/REC-xml/#syntax
+   */
+  typedef wstring CellMLAttributeString;
+
+  typedef mathml_dom::MathMLElement MathMLElement;
+
+  /**
+   * This interface is the generic base class for all RDF representations.
+   */
+  interface RDFRepresentation : XPCOM::IObject
+  {
+    /**
+     * Returns the URN for the type of representation this is.
+     * An application may use the type to determine what specific instance of
+     * RDFRepresentation it may cast the object to.
+     */
+    readonly attribute wstring type;
+  };
+
+  /**
+   * The RDF representation for type="http://www.cellml.org/RDFXML/DOM"
+   */
+  interface RDFXMLDOMRepresentation : RDFRepresentation
+  {
+    /**
+     * The RDF/XML as a document object model element.
+     */
+    readonly attribute dom::Element data;
+  };
+
+  /**
+   * The RDF representation for type="http://www.cellml.org/RDFXML/string"
+   */
+  interface RDFXMLStringRepresentation : RDFRepresentation
+  {
+    /**
+     * The RDF/XML as a serialised string.
+     */
+    attribute wstring serialisedData;
+  };
+
+  /**
+   * This interface can be inherited from by the user for use in annotations.
+   */
+  interface UserData : XPCOM::IObject
+  {
+  };
+
+  /**
+   * This interface is implemented by the application to receive notification
+   * when an asynchronous import instantiatiation is complete.
+   */
+  interface ImportInstantiationListener : XPCOM::IObject
+  {
+    /**
+     * This is called after imports have been instantiated.
+     * @param wasStale If an xlink:href was changed while the corresponding
+     *                 import was loading.
+     */
+    void loadCompleted(in boolean wasStale);
+  };
+
+  /**
+   * Indicates that something went wrong. Implementations are free to add more
+   * attributes to this, but to support all implementations, these are not
+   * required.
+   */
+  exception CellMLException{};
+
+  /**
+   * Represents a uniform resource indicator, conforming to RFC2396
+   * (http://rfc.net/rfc2396.html)
+   */
+  interface URI : XPCOM::IObject
+  {
+    /**
+     * A representation of this string as text.
+     */
+    attribute wstring asText;
+  };
+
+  /**
+   * This is a general interface from which all CellML elements inherit.
+   */
+  interface CellMLElement : XPCOM::IObject
+  {
+    /**
+     * The CellML version that this element corresponds to.
+     * Can be the string "1.0" or "1.1".
+     * Other values are reserved for future use.
+     */
+    readonly attribute CellMLAttributeString cellmlVersion;
+
+    /**
+     * This element's cmeta id(which may be defined on any CellML element)
+     */
+    attribute CellMLAttributeString cmetaId;
+
+    /**
+     * The RDF metadata associated with this element. An element must have a
+     * cmeta:id for any RDF to be able to refer to it.
+     * @param type The URN describing the type of RDF metadata. Implementations
+     *             are free to add new types by creating new type names at URNs
+     *             under their jurisdiction. New URNs under http://www.cellml.org
+     *             are reserved for future versions of this specification.
+     * @return The object containing the RDF representation. If no arcs are
+     *         defined, an empty RDF representation is returned. The object may
+     *         be cast in an application defined manner depending on the type
+     *         returned.
+     * @raises CellMLException if type isn't supported.
+     * All implementations must implement the following types:
+     *             http://www.cellml.org/RDFXML/string
+     *             http://www.cellml.org/RDFXML/DOM
+     */
+    RDFRepresentation getRDFRepresentation(in wstring type) raises(CellMLException);
+
+    /**
+     * The collection of extension elements associated with this CellML
+     * element. The list is "live", and so it will automatically update
+     * as changes to the underlying DOM representation are made.
+     */
+    readonly attribute ExtensionElementList extensionElements;
+
+    /**
+     * Insert an element into this collection without disturbing the order of
+     * the existing elements.
+     * @param marker The element after which to insert the element. If this is
+     *               nil, then the insertion will be at the start of the list.
+     * @param newEl The new element to insert.
+     */
+    void insertExtensionElementAfter(in ExtensionElement marker, in ExtensionElement newEl);
+
+    /**
+     * Equivalent to insertAt(last extension element, x)
+     * @param x The element to append.
+     */
+    void appendExtensionElement(in ExtensionElement x);
+
+    /**
+     * Equivalent to insertAt(nil, x)
+     * @param x The element to prepend.
+     */
+    void prependExtensionElement(in ExtensionElement x);
+
+    /**
+     * Remove an extension element. If the element is not found,
+     * do nothing.
+     * @param x The element to remove.
+     */
+    void removeExtensionElement(in ExtensionElement x);
+
+    /**
+     * Find an extension element, and if it is found, replace it
+     * with another element.
+     * @param x The element to find.
+     * @param y The element to replace x with.
+     */
+    void replaceExtensionElement(in ExtensionElement x, in ExtensionElement y);
+
+    /**
+     * Remove all extension elements from this element.
+     */
+    void clearExtensionElements();
+
+    /**
+     * Get a list of all the child CellMLElements in this element.
+     */
+    readonly attribute CellMLElementSet childElements;
+
+    /**
+     * Add a CellML element to this element. Checking is performed to ensure
+     * that it is a type of element that is allowed in this type of element,
+     * and if it is not, an exception is raised. Checking is also performed to
+     * ensure that the element belongs in this Model, and that it is not
+     * already inserted into the document.
+     * @param x The CellMLElement to add.
+     * @raises CellMLException if the element cannot be added to this Element.
+     */
+    void addElement(in CellMLElement x) raises(CellMLException);
+
+    /**
+     * Removes a CellML element from this element.
+     * @param x The CellMLElement to remove.
+     */
+    void removeElement(in CellMLElement x);
+
+    /**
+     * Removes a CellML element from this element, and replaces it with another
+     * CellML element.
+     * @raises CellMLException if the new element is of a type not allowed in
+     *                         this Element type, or belongs to the wrong Model.
+     * @param x The CellMLElement to remove.
+     * @param y The CellMLElement to add.
+     */
+    void replaceElement(in CellMLElement x, in CellMLElement y)
+      raises(CellMLException);
+
+    /**
+     * Remove a CellML element by name, or do nothing if that element is not
+     * found.
+     * @param type The type of element("variable", "component", etc...)
+     * @param name The name to remove.
+     */
+    void removeByName(in CellMLAttributeString type,
+                      in CellMLAttributeString name);
+
+    /**
+     * The parent element of this model...
+     */
+    readonly attribute CellMLElement parentElement;
+
+    /**
+     * The underlying model element.
+     */
+    readonly attribute Model modelElement;
+
+    /**
+     * Sets user-supplied annotations on this element. These annotations are
+     * never read from an XML file or written out, but are for the application
+     * to use for any purpose it likes.
+     * Implementations in languages in which the ability to do this on any
+     * object is built in may choose not to implement this, provided that the
+     * implementation does not offer the possibility of remote access to the
+     * object.
+     * If the key already exists, then the existing user-data should be removed
+     * and the new user-data added.
+     * @param key  A string to identify the annotation.
+     * @param data The data to set, or nil to clear the UserData for a key.
+     */
+    void setUserData(in wstring key, in UserData data);
+
+    /**
+     * Retrieves user-supplied annotations previously set on this element.
+     * @param key A string to identify the annotation.
+     * @return The user-data associated with the key.
+     * @raises CellMLException if no UserData is set for the given key.
+     */
+    UserData getUserData(in wstring key) raises(CellMLException);
+  };
+
+  /**
+   * This is a general interface from which all CellML elements which have a
+   * name attribute inherit.
+   */
+  interface NamedCellMLElement
+    : CellMLElement
+  {
+    /**
+     * The name associated with this CellML element.
+     */
+    attribute CellMLAttributeString name;
+  };
+
+  /**
+   * This interface represents a <model> element in the XML.
+   */
+  interface Model
+    : NamedCellMLElement
+  {
+    /**
+     * This allows a model with a different cellmlVersion to be returned. This
+     * function changes the namespace of the CellML attributes, but it does not
+     * change the model structure(even if, for example, this produces a model
+     * with import elements in the CellML 1.0 namespace). Applications should
+     * use a flattening ModelTransformationService if they wish to change
+     * CellML 1.1 import structures into valid CellML 1.0 constructs.
+     * @param cellmlVersion The new version of CellML. The string should be 1.0
+     *                      or 1.1
+     * @raises CellMLException if the version is not supported by the API.
+     */
+    Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
+    
+    /**
+     * The collection of groups described in this model document.
+     */
+    readonly attribute GroupSet groups;
+
+    /**
+     * The collection of imports described in this model document.
+     */
+    readonly attribute CellMLImportSet imports;
+
+    /**
+     * Models should really set an 'xml:base' attribute in the model element as
+     * we need to be able to unambiguously and uniquely reference a model
+     * independent of its location. If this is not set, the base_uri could be
+     * set to the URI used to obtain it.
+     */
+    readonly attribute URI base_uri;
+
+    /**
+     * The collection of units defined within this model.
+     */
+    readonly attribute UnitsSet localUnits;
+
+    /**
+     * The collection of units. This will fetch all the units retrieved by
+     * localUnits, but in addition will also fetch all the ImportUnits
+     * declared in this model.
+     */
+    readonly attribute UnitsSet modelUnits;
+
+    /**
+     * The collection of units. Provided that the imports are instantiated,
+     * this will fetch units in both direct and indirect imports. If the
+     * import containing the unit definition has been instantiated, iterating
+     * the set will return the unit definition, otherwise it will return
+     * the ImportUnit. If an import containing unit definitions is instantiated
+     * after iterator creation but before unit retrieval, the implementation
+     * may choose to return either the ImportUnit or the unit definition.
+     * Applications must not rely upon the behaviour of any particular
+     * implementation in this case.
+     */
+    readonly attribute UnitsSet allUnits;
+
+    /**
+     * Returns a list of all components which are defined in this model.
+     */
+    readonly attribute CellMLComponentSet localComponents;
+
+
+    /**
+     * The collection of components. This will fetch all the components retrieved by
+     * localComponents, but in addition will also fetch all the ImportComponents
+     * declared in this model.
+     */
+    readonly attribute CellMLComponentSet modelComponents;
+
+    /**
+     * Returns all components with interface 'CellMLComponent' in the model.
+     * Provided that the imports are instantiated, this will fetch components
+     * in both direct and indirect imports. If the import containing the
+     * component definition has been instantiated, iterating the set will
+     * return the component definition, otherwise it will return the
+     * ImportComponent. If an import containing component definitions is
+     * instantiated after iterator creation but before component retrieval,
+     * the implementation may choose to return either the ImportComponent or
+     * the component definition. Applications must not rely upon the behaviour
+     * of any particular implementation in this case.
+     */
+    readonly attribute CellMLComponentSet allComponents;
+
+    /**
+     * The set of all connections defined in this model document.
+     */
+    readonly attribute ConnectionSet connections;
+
+    /**
+     * The following also searches user-defined relationships.
+     * @param name The name of the relationship to search for.
+     */
+    GroupSet findGroupsWithRelationshipRefName
+    (
+     in CellMLAttributeString name
+    );
+
+    /**
+     * This fully instantiates the import definitions. It will then recursively
+     * instantiate all imports in the imported models.
+     */
+    void fullyInstantiateImports();
+
+    /**
+     * This starts an asynchronous full instantiatation of the import
+     * definitions. It will then recursively instantiate all imports in the
+     * imported models.
+     * @param listener A listener which will be notified when imports are instantiated.
+     */
+    void asyncFullyInstantiateImports(in ImportInstantiationListener listener);
+
+    /**
+     * Creates a new (local) CellMLComponent
+     */
+    CellMLComponent createComponent();
+
+    /**
+     * Creates a new ImportComponent
+     */
+    ImportComponent createImportComponent();
+
+    /**
+     * Creates a new (local) Units
+     */
+    Units createUnits();
+
+    /**
+     * Creates a new (import) Units
+     */
+    ImportUnits createImportUnits();
+
+    /**
+     * Creates a new Unit
+     */
+    Unit createUnit();
+
+    /**
+     * Creates a new CellMLImport
+     */
+    CellMLImport createCellMLImport();
+
+    /**
+     * Creates a new CellMLVariable
+     */
+    CellMLVariable createCellMLVariable();
+
+    /**
+     * Creates a new ComponentRef.
+     */
+    ComponentRef createComponentRef();
+
+    /**
+     * Creates a new RelationshipRef.
+     */
+    RelationshipRef createRelationshipRef();
+
+    /**
+     * Creates a new Group.
+     */
+    Group createGroup();
+
+    /**
+     * Creates a new Connection. This also creates the MapComponents.
+     */
+    Connection createConnection();
+
+    /**
+     * Creates a new MapVariables.
+     */
+    MapVariables createMapVariables();
+
+    /**
+     * Creates a new Reaction
+     */
+    Reaction createReaction();
+
+    /**
+     * Creates a new VariableRef
+     */
+    VariableRef createVariableRef();
+
+    /**
+     * Creates a new Role
+     */
+    Role createRole();
+
+    /**
+     * Creates a new MathMLMathElement...
+     * @return The new MathML math element.
+     */
+    mathml_dom::MathMLMathElement createMathElement();
+
+    /**
+     * Creates a new extension element...
+     * @param namespaceURI The new namespace URI.
+     * @param qualifiedName The new (optionally) qualified name.
+     */
+    dom::Element createExtensionElement(in dom::DOMString namespaceURI,
+                                        in dom::DOMString qualifiedName);
+  };
+
+  interface MathContainer : XPCOM::IObject
+  {
+    /**
+     * The set of all math defined here.
+     */
+    readonly attribute MathList math;
+
+    /**
+     * Add an element to this collection.
+     * @param x The element to add.
+     */
+    void addMath(in MathMLElement x);
+
+    /**
+     * Remove an element from this collection. If the element is not found,
+     * do nothing.
+     * @param x The element to remove.
+     */
+    void removeMath(in MathMLElement x);
+
+    /**
+     * Find an element in this collection, and if it is found, replace it
+     * with another element.
+     * @param x The element to find.
+     * @param y The element to replace x with.
+     * @raises CellMLException If y is not valid according to the constraints
+     *                         on this collection(check optional).
+     */
+    void replaceMath(in MathMLElement x, in MathMLElement y);
+
+    /**
+     * Remove all elements in this collection.
+     */
+    void clearMath();
+  };
+
+  /**
+   * This interface represents a component element in the CellML document.
+   */
+  interface CellMLComponent
+    : NamedCellMLElement, MathContainer
+  {
+    /**
+     * The set of all variables defined in this component.
+     */
+    readonly attribute CellMLVariableSet variables;
+
+    /**
+     * The set of all units defined in this component.
+     */
+    readonly attribute UnitsSet units;
+
+    /**
+     * The set of all connections which involve this component.
+     */
+    readonly attribute ConnectionSet connections;
+    
+    /**
+     * The component which, in the encapsulation hierarchy defined in this
+     * model, encapsulates this component. When this component is
+     * an imported component, an implementation must return
+     * any encapsulation parent defined in the importing model.
+     * When the same component is imported twice under different
+     * names, the implementation must return the correct encapsulation
+     * parent for each component instance.
+     * This attribute is nil if there is no encapsulation parent.
+     */
+    readonly attribute CellMLComponent encapsulationParent;
+
+    /**
+     * The set of all children of this component.
+     */
+    readonly attribute CellMLComponentSet encapsulationChildren;
+
+    /**
+     * The containment parent for this component. This must work correctly
+     * across imports if imports have been instantiated.
+     */
+    readonly attribute CellMLComponent containmentParent;
+
+    /**
+     * The containment parent for this component. This must work correctly
+     * across imports if imports have been instantiated.
+     */
+    readonly attribute CellMLComponentSet containmentChildren;
+
+    /**
+     * A set of all reaction elements contained within this component.
+     */
+    readonly attribute ReactionSet reactions;
+
+    /**
+     * Gets the 'import number' in which this component is contained.
+     * 0 means it is in the parent, and all other numbers are those allocated
+     * for each import. This must match the uniqueIdentifier on the import
+     * element which causes the importation of this model.
+     */
+    readonly attribute unsigned long importNumber;
+  };
+
+  interface Units
+    : NamedCellMLElement
+  {
+    /**
+     * True if this units element defines a base unit, or false otherwise.
+     */
+    attribute boolean isBaseUnits;
+
+    /**
+     * A collection of all the <unit> elements making up this <units> element.
+     */
+    readonly attribute UnitSet unitCollection;
+  };
+
+  /**
+   * Interface to a <unit> element.
+   */
+  interface Unit
+    : CellMLElement
+  {
+    /**
+     * The value of the prefix attribute in the unit element. This is
+     * automatically converted to or from the text name of the SI prefix when
+     * converting to a DOM view.
+     */
+    attribute long prefix;
+
+    /**
+     * The value of the multiplier attribute in the unit element.
+     */
+    attribute double multiplier;
+
+    /**
+     * The value of the offset attribute in the unit element.
+     */
+    attribute double offset;
+
+    /**
+     * The value of the exponent attribute in unit element.
+     */
+    attribute double exponent;
+
+    /**
+     * The name of the units attribute.
+     */
+    attribute CellMLAttributeString units;
+  };
+
+  /**
+   * This interface represents a CellML import element.
+   */
+  interface CellMLImport
+    : CellMLElement
+  {
+    /**
+     * The URI in the xlink:href attribute. Changing the URL in the xlinkHref
+     * on an instantiated import will cause the import to become
+     * uninstantiated. If there are any iterators(of a kind which is required
+     * to return elements from more than one model) which were created from the
+     * sets prior to changing xlinkHref, an implementation may choose to
+     * continue to provide elements from the previously instantiated import.
+     * Applications must not rely upon the behaviour of any particular
+     * implementation in this case.
+     */
+    readonly attribute URI xlinkHref;
+
+    /**
+     * The collection of all <component> elements inside this element.
+     */
+    readonly attribute ImportComponentSet components;
+
+    /**
+     * The collection of all <units> elements inside this element.
+     */
+    readonly attribute ImportUnitsSet units;
+
+    /**
+     * The collection of all connections defined in the import or in components
+     * which are imported by the import(and so on) and which involve only
+     * the imported component or other components beneath the same imported
+     * component in the encapsulation hierarchy.
+     */
+    readonly attribute ConnectionSet importedConnections;
+
+    /**
+     * Causes the model referenced by the href attribute to be loaded using the
+     * same model loader used to load this model.
+     */
+    void instantiate();
+
+    /**
+     * Causes the model referenced by the href attribute to be asynchronously
+     * loaded using the same model loader used to load this model.
+     * @param listener The listener to load the model with.
+     */
+    void asyncInstantiate(in ImportInstantiationListener listener);
+
+    /**
+     * Returns true if fullyInstantiate has previously been called on this
+     * import, or false otherwise. Note that a call to fullyInstantiateImports()
+     * on a model which is an ancestor of this one in the import tree shall be
+     * treated as if it were a call to fullyInstantiate() on all imports.
+     */
+    readonly attribute boolean wasInstantiated;
+
+    /**
+     * A number that, within the parent model, uniquely represents the CellMLImport.
+     */
+    readonly attribute unsigned long uniqueIdentifier;
+
+
+    /**
+     * Returns NULL if imports have not been fully instantiated. Otherwise returns
+     * the imported Model corresponding to this CellMLImport.
+     */
+    readonly attribute Model importedModel;
+  };
+
+  /**
+   * This interface represents a <component> element inside an <import>
+   * element.
+   */
+  interface ImportComponent
+    : CellMLComponent
+  {
+    /**
+     * The name of the component referenced by this import component.
+     */
+    attribute CellMLAttributeString componentRef;
+  };
+
+  /**
+   * This interface represents a <units> found in <import>
+   */
+  interface ImportUnits
+    : Units
+  {
+    /**
+     * The name of the units referenced by this import component.
+     */
+    attribute CellMLAttributeString unitsRef;
+  };
+
+  /**
+   * An enumeration representing the direction of the variable interface.
+   */
+  enum VariableInterface
+  {
+    /**
+     * The interface is in.
+     */
+    INTERFACE_IN,
+    /**
+     * The interface is out.
+     */
+    INTERFACE_OUT,
+    /**
+     * No interface is defined.
+     */
+    INTERFACE_NONE
+  };
+
+  /**
+   * Represents a <variable> element in a CellML document.
+   */
+  interface CellMLVariable
+    : NamedCellMLElement
+  {
+    /**
+     * The initial value of this variable.
+     */
+    attribute CellMLAttributeString initialValue;
+
+    /**
+     * The private interface direction of this variable.
+     */
+    attribute VariableInterface privateInterface;
+
+    /**
+     * The public interface direction of this variable.
+     */
+    attribute VariableInterface publicInterface;
+
+    /**
+     * The collection of all variables connected to this variable.
+     */
+    readonly attribute CellMLVariableSet connectedVariables;
+
+    /**
+     * The source variable is always a variable on which f(v) holds, and is
+     * this variable, or a variable which is(directly or indirectly) connected
+     * to this variable. If no such variable exists, sourceVariable is nil.
+     * This must work correctly across import boundaries, if those imports
+     * have been fully instantiated.
+     * f(v) is defined as meaning
+     *   (v.public_interface == INTERFACE_OUT ||
+     *    v.public_interface == INTERFACE_NONE) &&
+     *   (v.private_interface == INTERFACE_OUT ||
+     *    v.private_interface == INTERFACE_NONE)
+     * 
+     */
+    readonly attribute CellMLVariable sourceVariable;
+
+    /**
+     * The name of the component containing this CellMLVariable.
+     */
+    readonly attribute CellMLAttributeString componentName;
+  };
+
+  /**
+   * Represents a <component_ref> element in a group element or in another
+   * <component_ref> element.
+   */
+  interface ComponentRef
+    : CellMLElement
+
+  {
+    /**
+     * The name of the component being referenced.
+     */
+    attribute CellMLAttributeString componentName;
+
+    /**
+     * A collection of component references which are beneath this one in the
+     * group tree.
+     */
+    readonly attribute ComponentRefSet componentRefs;
+
+    /**
+     * The parent component reference, or nil if this is the toplevel
+     * component reference.
+     */
+    readonly attribute ComponentRef parentComponentRef;
+
+    /**
+     * The parent group in which the component reference is found.
+     */
+    readonly attribute Group parentGroup;
+  };
+
+  /**
+   * Represents a relationship_ref element in a group element.
+   */
+  interface RelationshipRef
+    : CellMLElement
+  {
+    /**
+     * The name of this relationship_ref, or the empty string if no such name
+     * is defined.
+     */
+    attribute CellMLAttributeString name;
+
+    /**
+     * The name of the relationship referenced by this element.
+     */
+    readonly attribute CellMLAttributeString relationship;
+
+    /**
+     * The namespace in which the relationship attribute belongs.
+     */
+    readonly attribute CellMLAttributeString relationshipNamespace;
+
+    /**
+     * Sets the namespace and relationship name. This will remove any other
+     * relationship attributes in any namespace.
+     * @param namespaceURI The URI of the namespace 
+     * @param name The name of the relationship.
+     */
+    void setRelationshipName(in CellMLAttributeString namespaceURI,
+                             in CellMLAttributeString name);
+  };
+
+  /**
+   * Represents a <group> element.
+   */
+  interface Group : CellMLElement
+  {
+    /**
+     * The collection of relationship references.
+     */
+    readonly attribute RelationshipRefSet relationshipRefs;
+
+    /**
+     * The collection of component references.
+     */
+    readonly attribute ComponentRefSet componentRefs;
+
+    /**
+     * True if this is an encapsulation relationship
+     * (with relationship on relationship_ref in the CellML namespace)
+     * and false otherwise.
+     */
+    readonly attribute boolean isEncapsulation;
+
+    /**
+     * True if this is a containment relationship
+     * (with relationship on relationship_ref in the CellML namespace)
+     * and false otherwise.
+     */
+    readonly attribute boolean isContainment;
+  };
+
+  /**
+   * Represents a <connection> element.
+   */
+  interface Connection
+    : CellMLElement
+  {
+    /**
+     * The map_components element in this connection.
+     */
+    readonly attribute MapComponents componentMapping;
+
+    /**
+     * A collection of the map_variables elements in this connection.
+     */
+    readonly attribute MapVariablesSet variableMappings;
+  };
+
+  /**
+   * An interface the map_components element.
+   */
+  interface MapComponents
+    : CellMLElement
+  {
+    /**
+     * The name of the first component. The returned name shall be the same
+     * name as found in the component_1 attribute(that is, the implementation
+     * shall not translate the name of imported components).
+     */
+    attribute CellMLAttributeString firstComponentName;
+
+    /**
+     * The name of the second component. The returned name shall be the same
+     * name as found in the component_2 attribute(that is, the implementation
+     * shall not translate the name of imported components).
+     */
+    attribute CellMLAttributeString secondComponentName;
+
+    /**
+     * The first component. This component shall be the component definition if
+     * imports have been instantiated, and otherwise shall be the ImportComponent.
+     */
+    attribute CellMLComponent firstComponent;
+
+    /**
+     * The second component. This component shall be the component definition if
+     * imports have been instantiated, and otherwise shall be the ImportComponent.
+     */
+    attribute CellMLComponent secondComponent;
+  };
+
+  /**
+   * An interface the map_variables element.
+   */
+  interface MapVariables
+    : CellMLElement
+  {
+    /**
+     * The name of the first variable. The variable name is interpreted only in
+     * the context of MapComponents, and so may only be read or set after the
+     * MapVariables is added to a Connection, and the Connection has in turn
+     * been added to a model. It also requires that the component name has
+     * already been set.
+     * @raises CellMLException if the MapVariables has not been added to a
+     *                         Connection, or the Connection has not been added
+     *                         to the Model.
+     */
+    attribute CellMLAttributeString firstVariableName;
+
+    /**
+     * The name of the second variable. The variable name is interpreted only in
+     * the context of MapComponents, and so may only be read or set after the
+     * MapVariables is added to a Connection, and the Connection has in turn
+     * been added to a model. It also requires that the component name has
+     * already been set.
+     * @raises CellMLException if the MapVariables has not been added to a
+     *                         Connection, or the Connection has not been added
+     *                         to the Model.
+     */
+    attribute CellMLAttributeString secondVariableName;
+
+    /**
+     * The first variable. If this has already been added to a Connection, it
+     * must refer to the same Component as firstComponent(if it is set). If the
+     * component in the MapComponents has not been set, this implicitly sets it.
+     * If this has not been added to the Connection, the checks are performed
+     * at the time it is added.
+     */
+    attribute CellMLVariable firstVariable;
+
+    /**
+     * The second variable. If this has already been added to a Connection, it
+     * must refer to the same Component as secondComponent(if it is set). If the
+     * component in the MapComponents has not been set, this implicitly sets it.
+     * If this has not been added to the Connection, the checks are performed
+     * at the time it is added.
+     */
+    attribute CellMLVariable secondVariable;
+  };
+
+  interface VariableRef;
+  interface Role;
+
+  /**
+   * An interface to a <reaction> element.
+   */
+  interface Reaction
+    : CellMLElement
+  {
+    /**
+     * A collection of all the reactants involved in this reaction.
+     */
+    readonly attribute VariableRefSet variableReferences;
+
+    /**
+     * Whether or not the reaction is reversible. May be yes, no,
+     * or the empty string(if the attribute is absent).
+     */
+    attribute boolean reversible;
+
+    /**
+     * Fetches a VariableRef by the variable name.
+     * @param varName The name of the variable, within this component.
+     * @param create Whether or not to create a VariableRef if not found.
+     * @return The variable reference corresponding to this variable.
+     *   If no such VariableRef exists, then:
+     *     i) If create is true, a new one is created and added to this
+     *        reaction.
+     *    ii) If create is false, NULL is returned.
+     */
+    VariableRef getVariableRef(in wstring varName, in boolean create);
+
+    /**
+     * Fetches a Role by the delta variable name.
+     * @param varName The name of the delta variable, within this component.
+     * @return The Role corresponding to this delta variable.
+     * If no such Role exists, then NULL is returned.
+     */
+    Role getRoleByDeltaVariable(in wstring varName);
+  };
+
+  /**
+   * An interface to the <variable_ref> element.
+   */
+  interface VariableRef
+    : CellMLElement
+  {
+    /**
+     * The variable being referenced. This may be assigned to a variable in the
+     * same component.
+     */
+    attribute CellMLVariable variable;
+
+    /**
+     * The name of the variable being referenced.
+     */
+    attribute wstring variableName;
+
+    /**
+     * A collection of all the Roles that this VariableRef plays in this reaction.
+     */
+    readonly attribute RoleSet roles;
+  };
+
+  /**
+   * An interface to the <role> element.
+   */
+  interface Role
+    : CellMLElement, MathContainer
+  {
+    enum RoleType
+    {
+      REACTANT, PRODUCT, RATE, CATALYST, ACTIVATOR, INHIBITOR, MODIFIER
+    };
+
+    enum DirectionType
+    {
+      FORWARD, REVERSE, BOTH
+    };
+
+    /**
+     * The role this variable plays.
+     */
+    attribute RoleType variableRole;
+    
+    /**
+     * The direction of the reaction for which this role applies.
+     */
+    attribute DirectionType direction;
+
+    /**
+     * The stoichiometry for this role.
+     */
+    attribute double stoichiometry;
+
+    /**
+     * The variable represented by the delta_variable attribute.
+     */
+    attribute CellMLVariable deltaVariable;
+
+    /**
+     * The name of the variable represented by the delta_variable attribute.
+     */
+    attribute wstring deltaVariableName;
+  };
+
+  /**
+   * An interface allowing CellMLElements to be iterated.
+   */
+  interface CellMLElementIterator : XPCOM::IObject
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    CellMLElement next();
+  };
+
+  /**
+   * An interface allowing MathMLElements to be iterated.
+   */
+  interface MathMLElementIterator : XPCOM::IObject
+  {
+    /**
+     * Fetches the next MathML element, and advances the iterator.
+     * @return The next MathML element, or nil if there are no more MathML
+     *         elements.
+     */
+    MathMLElement next();
+  };
+
+  /**
+   * A collection of extension elements.
+   */
+  interface ExtensionElementList : XPCOM::IObject
+  {
+    /**
+     * The length of the collection.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Tests for the existance of an element in the set.
+     * @param x The element to test for.
+     * @return true if the element is present, or false otherwise.
+     */
+    boolean contains(in ExtensionElement x);
+
+    /**
+     * Finds the index of the given extension element.
+     * @param x The extension element to find.
+     * @return The index(first is 0) of the extension element, or -1 if the
+     *         element is not found.
+     */
+    long getIndexOf(in ExtensionElement x);
+
+    /**
+     * Fetches the extension element at a certain index(starting from 0).
+     * @param index The index at which to fetch the extension element.
+     */
+    ExtensionElement getAt(in unsigned long index);
+  };
+
+  /**
+   * A collection of math.
+   */
+  interface MathList : XPCOM::IObject
+  {
+    /**
+     * The length of the collection.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Tests for the existance of an element in the set.
+     * @param x The element to test for.
+     * @return true if the element is present, or false otherwise.
+     */
+    boolean contains(in MathMLElement x);
+
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    MathMLElementIterator iterate();
+  };
+
+  /**
+   * An immutable collection of CellML elements.
+   */
+  interface CellMLElementSet : XPCOM::IObject
+  {
+    /**
+     * The length of the collection.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Tests for the existance of an element in the set.
+     * @param x The element to test for.
+     * @return true if the element is present, or false otherwise.
+     */
+    boolean contains(in CellMLElement x);
+
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    CellMLElementIterator iterate();
+  };
+
+  /**
+   * An interface for accessing a collection of NamedCellMLElements. It is
+   * an error if any element in this collection does not inherit from
+   * NamedCellMLElement.
+   */
+  interface NamedCellMLElementSet : CellMLElementSet
+  {
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    NamedCellMLElement get(in CellMLAttributeString name);
+  };
+
+  /**
+   * An interface allowing Models to be iterated.
+   */
+  interface ModelIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Model nextModel();
+  };
+
+  /**
+   * An interface for accessing a collection of models.
+   */
+  interface ModelSet
+    : NamedCellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    ModelIterator iterateModels();
+
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    Model getModel(in CellMLAttributeString name);
+  };
+
+  /**
+   * An interface allowing CellMLComponents to be iterated.
+   */
+  interface CellMLComponentIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    CellMLComponent nextComponent();
+  };
+
+  /**
+   * An interface for accessing a set of CellMLComponents
+   */
+  interface CellMLComponentSet
+    : NamedCellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    CellMLComponentIterator iterateComponents();
+
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    CellMLComponent getComponent(in CellMLAttributeString name);
+  };
+
+
+  /**
+   * An interface allowing ImportComponents to be iterated.
+   */
+  interface ImportComponentIterator : CellMLComponentIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    ImportComponent nextImportComponent();
+  };
+
+  /**
+   * An interface for accessing a set of ImportComponents
+   */
+  interface ImportComponentSet
+    : CellMLComponentSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    ImportComponentIterator iterateImportComponents();
+
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    ImportComponent getImportComponent(in CellMLAttributeString name);
+  };
+
+  /**
+   * An interface allowing CellMLVariables to be iterated.
+   */
+  interface CellMLVariableIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    CellMLVariable nextVariable();
+  };
+
+  /**
+   * An interface for accessing a set of ImportComponents
+   */
+  interface CellMLVariableSet
+    : NamedCellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    CellMLVariableIterator iterateVariables();
+
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    CellMLVariable getVariable(in CellMLAttributeString name);
+  };
+
+  /**
+   * An interface allowing Units to be iterated.
+   */
+  interface UnitsIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Units nextUnits();
+  };
+
+  /**
+   * An interface for accessing a set of Units
+   */
+  interface UnitsSet
+    : NamedCellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    UnitsIterator iterateUnits();
+
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    Units getUnits(in CellMLAttributeString name);
+  };
+
+  /**
+   * An interface allowing ImportUnits to be iterated.
+   */
+  interface ImportUnitsIterator : UnitsIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    ImportUnits nextImportUnits();
+  };
+
+  /**
+   * An interface for accessing a set of ImportUnits
+   */
+  interface ImportUnitsSet
+    : UnitsSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    ImportUnitsIterator iterateImportUnits();
+
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    ImportUnits getImportUnits(in CellMLAttributeString name);
+  };
+
+  /**
+   * An interface allowing Imports to be iterated.
+   */
+  interface CellMLImportIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    CellMLImport nextImport();
+  };
+
+  /**
+   * An interface for accessing a set of Imports
+   */
+  interface CellMLImportSet
+    : NamedCellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    CellMLImportIterator iterateImports();
+
+    /**
+     * Fetch a NamedCellMLElement by name.
+     * @param name The name of the element
+     * @return The element, or nil if not found.
+     */
+    CellMLImport getImport(in CellMLAttributeString name);
+  };
+
+  interface UnitIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Unit nextUnit();
+  };
+
+  /**
+   * An interface for accessing a set of Imports
+   */
+  interface UnitSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    UnitIterator iterateUnits();
+  };
+
+  interface ConnectionIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Connection nextConnection();
+  };
+
+  /**
+   * An interface for accessing a set of Imports
+   */
+  interface ConnectionSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    ConnectionIterator iterateConnections();
+  };
+
+  interface GroupIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Group nextGroup();
+  };
+
+  /**
+   * An interface for accessing a set of Imports
+   */
+  interface GroupSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    GroupIterator iterateGroups();
+
+    /**
+     * Returns the subset of this set containing groups involving a particular
+     * relationship.
+     * @param relName The relationship groups must contain to be in the returned set.
+     * @return GroupSet The new set of groups.
+     */
+    GroupSet getSubsetInvolvingRelationship(in CellMLAttributeString relName);
+
+    /**
+     * The subset of all connections in this collection involving
+     * encapsulation.
+     */
+    readonly attribute GroupSet subsetInvolvingEncapsulation;
+
+    /**
+     * The subset of all connections in this collection involving
+     * containment.
+     */
+    readonly attribute GroupSet subsetInvolvingContainment;
+  };
+
+  
+  interface RelationshipRefIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    RelationshipRef nextRelationshipRef();
+  };
+
+  /**
+   * An interface for accessing a set of RelationshipRefs
+   */
+  interface RelationshipRefSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    RelationshipRefIterator iterateRelationshipRefs();
+  };
+
+  interface ComponentRefIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    ComponentRef nextComponentRef();
+  };
+
+  /**
+   * An interface for accessing a set of RelationshipRefs
+   */
+  interface ComponentRefSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    ComponentRefIterator iterateComponentRefs();
+  };
+
+  interface MapVariablesIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    MapVariables nextMapVariable();
+  };
+
+  /**
+   * An interface for accessing a set of MapVariables
+   */
+  interface MapVariablesSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    MapVariablesIterator iterateMapVariables();
+  };
+
+  interface ReactionIterator
+    : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Reaction nextReaction();
+  };
+
+  /**
+   * An interface for accessing a set of Reactions
+   */
+  interface ReactionSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    ReactionIterator iterateReactions();
+  };
+
+  interface VariableRefIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    VariableRef nextVariableRef();
+  };
+
+  /**
+   * An interface for accessing a set of VariableRefs
+   */
+  interface VariableRefSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    VariableRefIterator iterateVariableRefs();
+  };
+
+  interface RoleIterator : CellMLElementIterator
+  {
+    /**
+     * Fetches the next CellML element, and advances the iterator.
+     * @return The next CellML element, or nil if there are no more CellML
+     *         elements.
+     */
+    Role nextRole();
+  };
+
+  /**
+   * An interface for accessing a set of VariableRefs
+   */
+  interface RoleSet
+    : CellMLElementSet
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    RoleIterator iterateRoles();
+  };
+
+  /**
+   * An interface allowing notifications that model loading has completed to
+   * be delivered. This is implemented by the application and not the API.
+   */
+  interface ModelLoadedListener
+    : XPCOM::IObject
+  {
+    /**
+     * Called when the model has been loaded.
+     * @param m The model which has just been loaded.
+     */
+    void loadCompleted(in Model m);
+  };
+
+  /**
+   * An interface allowing notifications that document loading has completed
+   * to be delivered.
+   */
+  interface DocumentLoadedListener
+    : XPCOM::IObject
+  {
+    /**
+     * Called when the document has been loaded.
+     * @param doc The document which has just been loaded.
+     */
+    void loadCompleted(in dom::Document doc);
+  };
+
+  /**
+   * An interface for loading a CellML model by URL.
+   */
+  interface ModelLoader
+    : XPCOM::IObject
+  {
+    /**
+     * Loads a model from the given URL, using the local URL loader.
+     * Note that this operation may be unavailable(or restricted to certain
+     * URLs) due to security restrictions on some remotely hosted model
+     * loaders.
+     * @param URL The URL from which to load the model.
+     * @return The loaded CellML model.
+     * @raises CellMLException if the model cannot be loaded.
+     */
+    Model loadFromURL(in dom::DOMString URL)
+      raises(CellMLException);
+
+    /**
+     * Loads a model from the given URL asynchronously, using the local URL
+     * loader. Note that this operation may be unavailable(or restricted to
+     * certain URLs) due to security restrictions on some remotely hosted model
+     * loaders. Applications should be aware that the loadCompleted operation on
+     * listener may be called prior to the return on this operation.
+     * @param URL The URL from which to load the model.
+     * @param listener A ModelLoadedListener to inform when loading completes.
+     * @raises CellMLException if the model cannot be loaded.
+     */
+    void asyncLoadFromURL(in dom::DOMString URL,
+                          in ModelLoadedListener listener);
+
+    /**
+     * An error message describing the cause of the last CellMLException.
+     * The error message is formatted code/param1/param2/.../paramn
+     * Valid error codes are...
+     * noperm (The user does not have permission to load URLs of this kind).
+     * badurl (The URL was malformed).
+     * servererror/info A server error occurred. Info is an optional, method
+     *   specific parameter, and for HTTP it should be the server error number.
+     * badxml/line/column/msg The XML was malformed. Line an column give the
+     *   location in the file at which the error occurred. msg is the message
+     *   from the processor stating what is wrong.
+     * notcellml The model did not have a cellml::model document element in
+     *   either the CellML 1.0 or CellML 1.1 namespace.
+     */
+    readonly attribute dom::DOMString lastErrorMessage;
+  };
+
+  /**
+   * A DOM specific interface for loading a Document by URL.
+   */
+  interface DOMURLLoader
+    : XPCOM::IObject
+  {
+    /**
+     * Loads an XML formatted document from a given URL into a DOM. This may
+     * be restricted to certain URLs due to security restrictions on some
+     * remotely hosted URL loaders.
+     * @param URL The URL from which to load the document.
+     * @return The loaded document.
+     * @raises CellMLException if the model cannot be loaded.
+     */
+    dom::Document loadDocument(in dom::DOMString URL)
+      raises(CellMLException);
+
+    /**
+     * Asynchronously loads an XML formatted document from a given URL into a
+     * DOM. This may be restricted to certain URLs due to security restrictions
+     * on some remotely hosted URL loaders.
+     * @param URL The URL from which to load the document.
+     * @param listener The listener to notify when the load completes.
+     * @raises CellMLException if the model cannot be loaded.
+     */
+    void asyncLoadDocument(in dom::DOMString URL, in DocumentLoadedListener listener)
+      raises(CellMLException);
+
+    /**
+     * An error message describing the cause of the last CellMLException.
+     * The error message is formatted code/param1/param2/.../paramn
+     * Any error message the application desires may be placed in
+     * lastErrorMessage and it will be passed on to other API
+     * lastErrorMessage attributes.
+     *
+     * An API provided implementation may return the following error message
+     *  types:
+     * noperm (The user does not have permission to load URLs of this kind).
+     * badurl (The URL was malformed).
+     * servererror/info A server error occurred. Info is an optional, method
+     *   specific parameter, and for HTTP it should be the server error number.
+     * badxml/line/column/msg The XML was malformed. Line an column give the
+     *   location in the file at which the error occurred. msg is the message
+     *   from the processor stating what is wrong.
+     */
+    readonly attribute dom::DOMString lastErrorMessage;
+  };
+
+  /**
+   * A DOM specific interface for loading a CellML model with more control.
+   */
+  interface DOMModelLoader
+    : ModelLoader
+  {
+    /**
+     * Loads the DOM for the model from the specified URL using the supplied
+     * DOMURLLoader. If further URLs need to be loaded(for example, to satisfy
+     * imports), the supplied loader will be used.
+     * @param url The URL from which to load.
+     * @param loader The URL loader to load the model and any imports needed.
+     * @return The loaded model.
+     * @raises CellMLException if there is an error loading the model or the
+     *           DOM document.
+     */
+    Model createFromDOM(in dom::DOMString url, in DOMURLLoader loader)
+      raises(CellMLException);
+
+    /**
+     * Loads the DOM for the model from the specified URL using the supplied
+     * DOMURLLoader. If further URLs need to be loaded(for example, to satisfy
+     * imports), the supplied loader will be used.
+     * @param url The URL from which to load.
+     * @param loader The URL loader to load the model and any imports needed.
+     * @param listener A listener to notify when the model is fully loaded.
+     * @raises CellMLException if there is an error loading the model or the
+     *           DOM document.
+     */
+    void asyncCreateFromDOM(in dom::DOMString url, in DOMURLLoader loader,
+                       in ModelLoadedListener listener)
+      raises(CellMLException);
+  };
+
+  /**
+   * A DOM specific interface that provides everything an application needs to
+   * bootstrap the CellML API.
+   */
+  interface CellMLBootstrap
+    : XPCOM::IObject
+  {
+    /**
+     * The model loader used to load models.
+     */
+    readonly attribute DOMModelLoader modelLoader;
+
+    /**
+     * The local DOMImplementation. This may not always be available, and when
+     * it isn't, nil should be returned.
+     */
+    readonly attribute dom::DOMImplementation domImplementation;
+
+    /**
+     * The local URL loader. This may not always be available, and when it
+     * isn't, nil should be returned.
+     */
+    readonly attribute DOMURLLoader localURLLoader;
+  };
+};

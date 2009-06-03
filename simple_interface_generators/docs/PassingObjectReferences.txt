@@ -1,0 +1,118 @@
+Object references(ORs) are ways of refering to an object, which may or may
+not reside in the same virtual address space.
+
+1) What does an object reference typically consist of:
+1.A)
+In the CORBA C++ binding:
+
+Object references are an in-memory structure which contains ORB
+specific information. Object references contain member functions for
+every operation the object supports.
+
+Object references will leak if they are not properly managed. Object
+references can be duplicated using
+interfaceName::_duplicate(objref). They can be released using
+CORBA::release(objref). Once an object reference has been released, it
+should not be used any more.
+
+The lifetime of an object reference is independent of the lifetime of
+the servant. When all copies of an object reference are released, they
+no longer exist in memory at the client, but this has not effect on
+the servant.
+
+There are two data types for accessing object references,
+interfaceName_ptr and interfaceName_var. The former type is a simple
+pointer, the lifetime of which must be manually managed. The latter is
+a class which will duplicate object references at assignment or
+construction, and release it at destruction.
+
+1.B)
+In standard C and C++:
+
+Object references consist of a pointer to the address of the
+object(struct, class) in memory.
+
+2)
+How do you pass object references around?
+
+In the CORBA C++ binding(X represents the interface name):
+When calling a function, the *_ptr is passed to each
+function. Ownership remains with the caller, but the object reference
+must not be released until the function has returned.
+
+For out parameters, a pointer to an X_ptr is passed, and this is
+assigned to a new X_ptr. Ownership passes to the caller, so the callee
+must duplicate first if it wants to keep the pointer. If an exception
+is raised, ownership is not transferred and the out parameters may be invalid.
+
+For inout parameters, a pointer to a X_ptr is passed. Ownership of the
+incoming parameter passes to the callee, and ownership of the outgoing
+parameter passes to the caller. It is okay not to touch a variable,
+and let it pass implicitly from the caller to the callee and back to
+the caller. However, special care needs to be taken if an exception is
+raised by the callee, in which case ownership remains with the callee
+and it must take special action to release the object reference first.
+
+For returning object references, the return type is X_ptr. Ownership
+of the object reference goes to the caller. If an exception is raised,
+nothing can be returned.
+
+3)
+How do the generated interfaces deal with object references?
+
+In the extern "C":
+  typedef struct moduleName_interfaceName_struct moduleName_interfaceName;
+
+The implementation of the extern "C" interface will cast from
+moduleName_interfaceName* to iface::moduleName::interfaceName*. This
+is a C++ class with all virtual methods. The base class
+iface::XPCOM::IObject defines methods add_ref() and
+release_ref().
+
+When native C++ is being used, iface::moduleName::interfaceName is
+implemented directly by the calling C++. Using the same ownership
+rules as for the CORBA C++ mapping, it can create object
+references. Once release_ref has been used to release all object
+ownerships, the object and all implementation resources associated
+with it are released.
+
+The CORBA calling implementation calls add_ref on the CORBA interface
+once when it is created, and calls release_ref on the CORBA interface
+when release_ref one the CORBA calling implementation(CCI) causes the last
+reference to that CCI to be released. The CCI then calls
+CORBA::release on the underlying object reference.
+
+The CCI also automatically wraps all arguments to CORBA calls in a
+forwarder class. Returned/out values are wrapped in CCI classes.
+
+The forwarder class automatically wraps arguments to native calls in a
+CCI, and wraps return/out values in a forwarder class.
+
+Without special cases to avoid it, double wrapping could occur
+because:
+Forwarder: Makes a simple C++ interface act like a CORBA servant.
+ORB(POA): Makes a CORBA servant act like an object reference.
+CCI: Makes a CORBA object reference act like a Simple C++ interface.
+So CCI->ORB->Forwarder->Obj is equivalent to Obj but slower, and
+Forwarder->CCI->ORB is equivalent to an object reference but
+slower.
+
+In both double wrapping cases, this is not a problem if we are
+actually crossing process boundaries, because it is both normal and
+unavoidable. However, if we are not crossing any process boundaries,
+we can do better by unwrapping existing layers instead of adding new
+layers of translation.
+
+To avoid double wrapping, RTTI(run-time type information, a C++
+feature mandated by ISO/IEC 14882-1998, but not supported in some
+older C++ compilers) is used(via dynamic_cast).
+
+Before anything is wrapped in a CCI, reference_to_servant is called on
+the POA. If it raises an exception, wrapping continues as
+normal. Otherwise, the servant is dynamic_cast to the Forwarder
+class. If this fails, wrapping continues as normal. Otherwise, the
+simple C++ interface is extracted from the Forwarder.
+
+Before anything is wrapped in a Forwarder, the simple C++ interface
+being wrapped is dynamic_cast to the CCI class. If it fails, wrapping
+continues as normal. Otherwise, the OR extracted from the CCI.

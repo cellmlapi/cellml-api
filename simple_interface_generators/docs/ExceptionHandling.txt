@@ -1,0 +1,57 @@
+Exception handling by the simple interfaces:
+
+1) What information is carried by an exception:
+In CORBA, exceptions act like structures, in that they can carry
+arbitrary information. The information is actually passed around with
+the exception, rather than being lazily requested from the remote
+end. Operations on exceptions are not allowed.
+
+In C++ exception handling, exceptions can be arbitrary classes or structures.
+
+In the CORBA C++ mapping, exceptions are mapped to C++ classes which
+inherit from a CORBA specific class.
+
+In the C code currently used in CMISS, exceptions are signalled by a
+return value of 0, while non-zero return values signal that an
+exception has not occurred.
+
+In order to support everything, we need to design to the lowest common
+denominator, which means that we cannot attach any information to
+exceptions, and instead need to restrict exception to the IDL
+definition:
+exception nameOfException {};
+
+Any other members are not guaranteed to be initialised, as the exception may
+have flowed through C code, at which point this information is not transmitted.
+
+Similarly, only one exception may be raised by each operation, so, for
+example, IDL definitions like
+
+  void foo(in string bar) raises(FooException, BarException);
+
+are not robust. If such a definition is used, and foo raises
+BarException, the interface code may map this back to FooException(the
+first exception listed).
+
+2) How do the generated interfaces deal with exceptions:
+A) CORBA C++ classes define a class for each exception, which derives
+from CORBA::UserException. They throw an instance of this class every
+time an exception arises, as a C++ reference.
+
+B) The simple C++ also defines a class for each exception, which is
+distinct from the CORBA class, and an instance of this can also be
+thrown every time an exception arises, as a C++ reference.
+
+C) The simple C remaps all operations(and getter/setter functions,
+which are referred to as if they were operations in this section),
+including those which do not raise any exceptions according to the
+IDL, as follows:
+
+i) Operations which don't return anything in the IDL return an int in
+   the simple C. The return value shall be 0 if no exceptions are
+   raised, or 1 otherwise.
+
+ii) Operations which return a value in the IDL have a pointer to the
+    IDL return type added to their prototype. The return type is
+    int. The return value shall be 0 if no exceptions are raised, or 1
+    otherwise.

@@ -1,0 +1,44 @@
+/*	-*- IDL -*-
+ * Copyright (C) 2001,  Christof Meerwald <cmeerw@web.de>
+ * http://xpcom2corba.sunsite.dk/
+ */
+
+/*
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License
+ * at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and
+ * limitations under the License.
+ *
+ * The Original Code is the XPCOM-CORBA Bridge package.
+ *
+ * The Initial Developer of the Original Code is Christof Meerwald.
+ * Portions created by Christof Meerwald are Copyright (C) 2001
+ * Christof Meerwald.  All Rights Reserved.
+ *
+ * Contributor(s): Christof Meerwald <cmeerw@web.de> (original author)
+ */
+#ifndef IDL__XPCOM__INCLUDED
+#define IDL__XPCOM__INCLUDED
+
+module XPCOM
+{
+  typedef string utf8string;
+  typedef wstring utf8wstring;
+
+  interface IObject
+  {
+    oneway void add_ref();
+    oneway void release_ref();
+    IObject query_interface(in utf8string id);
+    long compare(in IObject compareTo);
+  };
+#pragma flat_name CORBA_IObject
+#pragma ID IObject "DCE:00000000-0000-0000-c000-000000000046:1"
+};
+
+#endif

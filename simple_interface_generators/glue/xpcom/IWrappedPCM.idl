@@ -1,0 +1,11 @@
+#include "nsISupports.idl"
+
+native PCMIObject(iface::XPCOM::IObject*);
+
+[scriptable, uuid(81b2baf5-f80a-49d1-bc1f-9f3dacbdcca8)]
+interface IWrappedPCM
+  : nsISupports
+{
+  [noscript] readonly attribute PCMIObject pcmObj;
+  readonly attribute ACString objid;
+};
