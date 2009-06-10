@@ -10,6 +10,10 @@
  * Document Object Model for (content) MathML.
  *
  * @see http://www.w3.org/TR/MathML2/chapter8.html
+ * @note get and set member functions that require an index need that index to
+ *       be one-based as opposed to zero-based (it is, unfortunately, something
+ *       that we have no control over, since it is W3C-specific)
+ * @see http://www.w3.org/TR/MathML2/appendixd.html#dom.Container
  */
 module mathml_dom
 {
