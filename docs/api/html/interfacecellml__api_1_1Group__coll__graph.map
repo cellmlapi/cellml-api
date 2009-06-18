@@ -1,0 +1,15 @@
+<area shape="rect" href="$interfacecellml__api_1_1CellMLElement.html" title="cellml_api::CellMLElement" alt="" coords="583,85,759,112">
+<area shape="rect" href="$interfacecellml__api_1_1NamedCellMLElement.html" title="cellml_api::NamedCellMLElement" alt="" coords="1021,5,1237,32">
+<area shape="rect" href="$interfaceXPCOM_1_1IObject.html" title="XPCOM::IObject" alt="" coords="5,216,125,243">
+<area shape="rect" href="$interfacecellml__api_1_1URI.html" title="cellml_api::URI" alt="" coords="417,476,527,503">
+<area shape="rect" href="$interfacecellml__api_1_1CellMLElementSet.html" title="cellml_api::CellMLElementSet" alt="" coords="187,256,381,283">
+<area shape="rect" href="$interfacecellml__api_1_1ExtensionElementList.html" title="cellml_api::ExtensionElementList" alt="" coords="177,160,391,187">
+<area shape="rect" href="$interfacecellml__api_1_1Model.html" title="cellml_api::Model" alt="" coords="1395,291,1517,317">
+<area shape="rect" href="$interfacecellml__api_1_1GroupSet.html" title="cellml_api::GroupSet" alt="" coords="835,275,976,301">
+<area shape="rect" href="$interfacecellml__api_1_1NamedCellMLElementSet.html" title="cellml_api::NamedCellMLElementSet" alt="" coords="553,324,788,351">
+<area shape="rect" href="$interfacecellml__api_1_1CellMLImportSet.html" title="cellml_api::CellMLImportSet" alt="" coords="813,375,997,401">
+<area shape="rect" href="$interfacecellml__api_1_1ConnectionSet.html" title="cellml_api::ConnectionSet" alt="" coords="820,435,991,461">
+<area shape="rect" href="$interfacecellml__api_1_1ComponentRefSet.html" title="cellml_api::ComponentRefSet" alt="" coords="575,217,767,244">
+<area shape="rect" href="$interfacecellml__api_1_1RelationshipRefSet.html" title="cellml_api::RelationshipRefSet" alt="" coords="572,147,769,173">
+<area shape="rect" href="$interfacecellml__api_1_1CellMLComponentSet.html" title="cellml_api::CellMLComponentSet" alt="" coords="1024,320,1235,347">
+<area shape="rect" href="$interfacecellml__api_1_1UnitsSet.html" title="cellml_api::UnitsSet" alt="" coords="1061,260,1197,287">

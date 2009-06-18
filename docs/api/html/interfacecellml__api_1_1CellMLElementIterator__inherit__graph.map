@@ -1,0 +1,17 @@
+<area shape="rect" href="$interfacecellml__api_1_1CellMLComponentIterator.html" title="cellml_api::CellMLComponentIterator" alt="" coords="439,5,671,32">
+<area shape="rect" href="$interfacecellml__api_1_1CellMLImportIterator.html" title="cellml_api::CellMLImportIterator" alt="" coords="452,56,657,83">
+<area shape="rect" href="$interfacecellml__api_1_1CellMLVariableIterator.html" title="cellml_api::CellMLVariableIterator" alt="" coords="448,107,661,133">
+<area shape="rect" href="$interfacecellml__api_1_1ComponentRefIterator.html" title="cellml_api::ComponentRefIterator" alt="" coords="448,157,661,184">
+<area shape="rect" href="$interfacecellml__api_1_1ConnectionIterator.html" title="cellml_api::ConnectionIterator" alt="" coords="459,208,651,235">
+<area shape="rect" href="$interfacecellml__api_1_1GroupIterator.html" title="cellml_api::GroupIterator" alt="" coords="473,259,636,285">
+<area shape="rect" href="$interfacecellml__api_1_1MapVariablesIterator.html" title="cellml_api::MapVariablesIterator" alt="" coords="452,309,657,336">
+<area shape="rect" href="$interfacecellml__api_1_1ModelIterator.html" title="cellml_api::ModelIterator" alt="" coords="473,360,636,387">
+<area shape="rect" href="$interfacecellml__api_1_1ReactionIterator.html" title="cellml_api::ReactionIterator" alt="" coords="465,411,644,437">
+<area shape="rect" href="$interfacecellml__api_1_1RelationshipRefIterator.html" title="cellml_api::RelationshipRefIterator" alt="" coords="445,461,664,488">
+<area shape="rect" href="$interfacecellml__api_1_1RoleIterator.html" title="cellml_api::RoleIterator" alt="" coords="477,512,632,539">
+<area shape="rect" href="$interfacecellml__api_1_1UnitIterator.html" title="cellml_api::UnitIterator" alt="" coords="479,563,631,589">
+<area shape="rect" href="$interfacecellml__api_1_1UnitsIterator.html" title="cellml_api::UnitsIterator" alt="" coords="476,613,633,640">
+<area shape="rect" href="$interfacecellml__api_1_1VariableRefIterator.html" title="cellml_api::VariableRefIterator" alt="" coords="457,664,652,691">
+<area shape="rect" href="$interfaceXPCOM_1_1IObject.html" title="XPCOM::IObject" alt="" coords="5,335,125,361">
+<area shape="rect" href="$interfacecellml__api_1_1ImportComponentIterator.html" title="cellml_api::ImportComponentIterator" alt="" coords="720,5,952,32">
+<area shape="rect" href="$interfacecellml__api_1_1ImportUnitsIterator.html" title="cellml_api::ImportUnitsIterator" alt="" coords="739,613,933,640">
