@@ -22,8 +22,8 @@ Required Linux packages
 - libgsl0-dev      GNU Scientific Library (GSL) – development package
 - libtool          Generic library support script
 - libxml2-dev      Development files for the GNOME XML library
+- mercurial        Scalable distributed version control system
 - omniidl4         omniORB idl to C++ and Python compiler
-- subversion       Advanced version control system
 
 
 Check out the source code
@@ -33,10 +33,15 @@ From a shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~
-svn co https://svn.physiomeproject.org/svn/physiome/CellML_DOM_API/trunk/ CellML_DOM_API
+hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api cellml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note: you will be told that the certificate is invalid, so you may want to ignore that message and accept the certificate permanently.
+or the following, if you want to be able to push things to the official Mercurial repository:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cd ~
+hg clone ssh://[Username]@cellml-api.hg.sourceforge.net/hgroot/cellml-api cellml
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Java (only required if you want the Java binding to the CellML DOM API)
@@ -74,7 +79,7 @@ Build the CellML DOM API
 From a shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd ~/CellML_DOM_API
+cd ~/cellml
 aclocal && autoconf && automake
 ./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds
 libtoolize
@@ -95,7 +100,7 @@ Test the CellML API
 From a shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd ~/CellML_DOM_API
+cd ~/cellml
 make check
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -106,6 +111,6 @@ Install the CellML API
 From a shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cd ~/CellML_DOM_API
+cd ~/cellml
 sudo make install
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
