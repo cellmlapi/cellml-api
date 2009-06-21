@@ -1,0 +1,12 @@
+/*! 
+\mainpage CellML API Documentation
+
+\section intro_sec Introduction
+
+CellML Application Programming Interface (CellML API) provides an interface that applications can use to manipulate and process CellML documents. The interfaces are designed to be independent of any programming language, platform, or vendor, and are expressed in the OMG Interface Definition Language (IDL). It addresses both CellML 1.0 and CellML 1.1.
+
+\section install_sec Installation
+
+\subpage ubuntu_9_04
+
+*/
