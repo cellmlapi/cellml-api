@@ -20,6 +20,9 @@ import cellml_api.RDFRepresentation;
 import cellml_api.RDFXMLStringRepresentation;
 import cellml_api.VariableInterface;
 
+/**
+ * Example java code which uses the CellML API to construct models.
+ */
 public class CellMLJavaTest{
 	private CellMLBootstrap cb;
 	
@@ -38,54 +41,65 @@ public class CellMLJavaTest{
     	
     }
     
-    //creating an example CellML 1.1 model with two components 
+    /**
+     * creating an example CellML 1.1 model with two components
+     */
     private void createCellMLModel(){
         Model m = cb.createModel("1.1");
         m.setName("example1");
         
         //creating component 1
-        CellMLComponent comp1 = m.createComponent();        
-        comp1.setName("component1");           
+        CellMLComponent comp1 = m.createComponent(); 
         m.addElement(comp1);
+        comp1.setName("component1");        
         
         //adding a variable to component 1
         CellMLVariable var1 = m.createCellMLVariable();
+        comp1.addElement(var1);
         var1.setName("variable1");
         var1.setUnitsName("cm");
     	var1.setInitialValue("10");            	
-    	var1.setPublicInterface(VariableInterface.INTERFACE_OUT); 
-    	comp1.addElement(var1);
+    	var1.setPublicInterface(VariableInterface.INTERFACE_OUT);     	
             
         //creating component 2
-        CellMLComponent comp2 = m.createComponent();        
-        comp2.setName("component2");          
+        CellMLComponent comp2 = m.createComponent(); 
         m.addElement(comp2);
+        comp2.setName("component2");          
+        
         
         //adding a variable to component 2
         CellMLVariable var2 = m.createCellMLVariable();
+        comp2.addElement(var2);
         var2.setUnitsName("cm");
       	var2.setPublicInterface(VariableInterface.INTERFACE_IN);
-      	comp2.addElement(var2);
+      	
       	
       	//connecting the two variables (Creating a connection also creates a MapComponent)
       	Connection con = m.createConnection();
       	m.addElement(con);
-      	MapComponents mapComp = con.getComponentMapping();      	
+
+      	MapComponents mapComp = con.getComponentMapping();      
       	mapComp.setFirstComponent(comp1);
       	mapComp.setSecondComponent(comp2);      	
+      
       	MapVariables mapvar = m.createMapVariables();
-      	mapComp.addElement(mapvar);
+      	con.addElement(mapvar);
+      	
+      	mapvar.setFirstVariable(var1);
+     	mapvar.setSecondVariable(var2);      	
 
         System.out.println(m.getSerialisedText());
     }
     
-    //loading an existing CellML model
+    /**
+     * loading an existing CellML model
+     */
     private void loadCellMLModel(){
     	DOMModelLoader modelLoader = cb.getModelLoader();
     	
     	//loading the Hodgkin Huxley model from the repository
     	Model model = modelLoader.loadFromURL("http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
-    	
+     	
     	System.out.println("Model Name:" + model.getName() + "\n");
     	
     	//Iterating components and their variables
@@ -126,6 +140,8 @@ public class CellMLJavaTest{
     	}
     	
     	RDFRepresentation rep = model.getRDFRepresentation("http://www.cellml.org/RDFXML/string");
+//    	RDFXMLStringRepresentation stringRep = (RDFXMLStringRepresentation)rep;
+
    	
      }
 }

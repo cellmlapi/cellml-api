@@ -1,0 +1,12 @@
+Generating Doxygen documentation
+
+1. Download and install Doxygen from http://www.stack.nl/~dimitri/doxygen/install.html
+
+2. Go to cellml-api/docs/api folder
+
+cd [pathToCellMLAPI]/cellml-api/docs/api 
+
+3. To generate API documentation type
+
+doxygen config-file
+
