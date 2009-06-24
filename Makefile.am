@@ -26,6 +26,16 @@ libcellml_java_bridge_la_LIBADD =
 cellml_jar_java =
 cellml_jar_classes =
 
+# This saves repeating this everywhere...
+XPCOM_LDFLAGS =  -no-undefined -module -L$(MOZILLA_DIR)/lib -lxpcomglue_s -lxpcom -lnspr4
+XPCOM_CXXFLAGS = -I$(MOZILLA_DIR)/include \
+  -I$(MOZILLA_DIR)/include/nspr -I$(MOZILLA_DIR)/include/xpcom \
+  -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
+  -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
+  -I$(top_srcdir)/simple_interface_generators/glue/xpcom \
+  -I$(top_builddir)/simple_interface_generators/glue/xpcom \
+  $(AM_CXXFLAGS)
+
 # Parts needed to build the interface generates...
 include $(top_srcdir)/simple_interface_generators/build.mk
 

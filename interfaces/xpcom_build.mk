@@ -21,17 +21,11 @@ libcellml_xpcom_bridge_la_LIBADD = \
   $(STLLINK) \
   $(top_builddir)/libcellml.la \
   $(top_builddir)/libXPCOMSupport.la
-libcellml_xpcom_bridge_la_LDFLAGS = \
-  -no-undefined -module -L$(MOZILLA_DIR)/lib -lxpcomglue_s -lxpcom -lnspr4
+libcellml_xpcom_bridge_la_LDFLAGS = $(XPCOM_LDFLAGS)
 
 libcellml_xpcom_bridge_la_CXXFLAGS = \
-  -I$(MOZILLA_DIR)/include \
-  -I$(MOZILLA_DIR)/include/nspr -I$(MOZILLA_DIR)/include/xpcom \
-  -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
-  -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
-  -I$(top_srcdir)/simple_interface_generators/glue/xpcom \
-  -I$(top_builddir)/simple_interface_generators/glue/xpcom \
-  $(AM_CXXFLAGS) -DMODULE_CONTAINS_xpcom -DMODULE_CONTAINS_DOMAPISPEC \
+  $(XPCOM_CXXFLAGS) \
+  -DMODULE_CONTAINS_xpcom -DMODULE_CONTAINS_DOMAPISPEC \
   -DMODULE_CONTAINS_MathMLcontentAPISPEC -DMODULE_CONTAINS_CellMLAPISPEC \
   -DMODULE_CONTAINS_CellMLevents -DMODULE_CONTAINS_RDFAPISPEC
 
