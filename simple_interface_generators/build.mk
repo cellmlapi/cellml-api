@@ -13,7 +13,7 @@ libXPCOMSupport_la_SOURCES = \
   $(top_srcdir)/simple_interface_generators/glue/xpcom/WideCharSupport.cpp
 libXPCOMSupport_la_CXXFLAGS = \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources \
-  -I$(MOZILLA_DIR)/include/xpcom -I$(MOZILLA_DIR)/include/nspr \
+  -I$(MOZILLA_DIR)/include -I$(MOZILLA_DIR)/include/xpcom -I$(MOZILLA_DIR)/include/nspr \
   -I$(MOZILLA_DIR)/include/string \
   -I$(top_builddir)/simple_interface_generators/glue/xpcom -DIN_MODULE_XPCOMSupport \
   $(AM_CXXFLAGS)
