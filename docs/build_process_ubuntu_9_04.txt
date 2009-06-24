@@ -49,21 +49,21 @@ Java (only required if you want the Java binding to the CellML DOM API)
 
 Java is (obviously) required to build the Java binding to the CellML DOM API.
 
-Java SE Development Kit 6 Update 13 can be downloaded from http://java.sun.com/javase/downloads/index.jsp. You need to click on the "Download" button next to Java SE "Development Kit (JDK) 6 Update 10". From there, select "Linux" as the platform, tick the "I agree to the  Java SE Development Kit 6 License Agreement" checkbox, and click on the "Continue" button. A new page will open, giving you access to the download itself: jdk-6u13-linux-i586.bin. Once downloaded, do the following from a shell prompt:
+Java SE Development Kit 6 Update 14 can be downloaded from http://java.sun.com/javase/downloads/index.jsp. You need to click on the "Download" button under the "Java SE Development Kit" section. From there, select "Linux" as the platform, tick the "I agree to the Java SE Development Kit 6u14 License Agreement" checkbox, and click on the "Continue" button. A new page will open, giving you access to the download itself: jdk-6u14-linux-i586.bin. Once downloaded, do the following from a shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~
-sudo mv jdk-6u13-linux-i586.bin /usr/local/share
+sudo mv jdk-6u14-linux-i586.bin /usr/local/share
 cd /usr/local/share
-chmod +x jdk-6u13-linux-i586.bin
-sudo ./jdk-6u13-linux-i586.bin
-sudo rm jdk-6u13-linux-i586.bin
+chmod +x jdk-6u14-linux-i586.bin
+sudo ./jdk-6u14-linux-i586.bin
+sudo rm jdk-6u14-linux-i586.bin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, add the following to /home/[Username]/.bashrc:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-export JAVA_HOME=/usr/local/share/jdk1.6.0_10
+export JAVA_HOME=/usr/local/share/jdk1.6.0_14
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 and then restart it:
@@ -82,9 +82,6 @@ From a shell prompt:
 cd ~/cellml
 aclocal && autoconf && automake
 ./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds
-libtoolize
-mv libtool libtool.backup
-ln -s /usr/bin/libtool
 make
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
