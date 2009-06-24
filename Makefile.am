@@ -19,6 +19,7 @@ LIBXML_CFLAGS ?= @LIBXML_CFLAGS@
 MOZILLA_DIR ?= @XPCOM@
 PRE_NON_AS_NEEDED := @PRE_NON_AS_NEEDED@
 POST_NON_AS_NEEDED := @POST_NON_AS_NEEDED@
+LIBADD_DL := @lt_cv_dlopen_libs@
 
 # Avoid bogus error...
 libcellml_java_bridge_la_SOURCES =
