@@ -8,6 +8,7 @@
 // the guard include, and set PR_STATIC_ASSERT to do nothing.
 #define prlog_h___
 #define PR_STATIC_ASSERT(x)
+#undef __STDC__
 #include <string.h>
 #include <nsStringAPI.h>
 
