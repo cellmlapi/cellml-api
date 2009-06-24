@@ -3,6 +3,9 @@
 /* Is the CellML Context enabled? */
 #undef ENABLE_CONTEXT
 
+/* Are the GSL integrators enabled? */
+#undef ENABLE_GSL_INTEGRATORS
+
 /* Is RDF enabled? */
 #undef ENABLE_RDF
 

@@ -172,7 +172,11 @@ endif
 
 if ENABLE_CIS
 include $(top_srcdir)/CIS/build.mk
+if ENABLE_GSL_INTEGRATORS
+RunCellML_LDADD += -lgsl
 endif
+endif
+
 if ENABLE_CONTEXT_AND_CORBA_AND_CIS
 include $(top_srcdir)/CIS/corba_build.mk
 endif
