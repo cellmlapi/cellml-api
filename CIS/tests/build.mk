@@ -4,7 +4,7 @@ RunCellML_LDADD=\
   $(top_builddir)/libcellml.la \
   $(top_builddir)/libccgs.la \
   $(top_builddir)/libcis.la \
-  -lxml2 -lgsl $(THREADFLAGS)
+  -lxml2 $(THREADFLAGS)
 RunCellML_LDFLAGS=-O0 -$(PRE_NON_AS_NEEDED)gslcblas$(POST_NON_AS_NEEDED)
 RunCellML_CXXFLAGS=\
   -I$(top_srcdir)/sources \

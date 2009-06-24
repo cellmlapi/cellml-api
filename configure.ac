@@ -181,6 +181,16 @@ AC_ARG_ENABLE(cis,
 esac],[cis=false])
 AM_CONDITIONAL(ENABLE_CIS, test x$cis = xtrue)
 
+AC_ARG_ENABLE(gsl-integrators,
+[  --enable-gsl-integrators Build integrators that use GSL (incompatible with non-GPL code)],
+[case "${enableval}" in
+  no) gslintegrators=false ;;
+  *) gslintegrators=true
+  AC_DEFINE(ENABLE_GSL_INTEGRATORS, 1, [Are the GSL integrators enabled?])
+  ;;
+esac], [gslintegrators=false])
+AM_CONDITIONAL(ENABLE_GSL_INTEGRATORS, test x$gslintegrators = xtrue -a x$cis = xtrue)
+
 if test x$ccgs = xfalse -a x$cis = xtrue; then
    AC_MSG_ERROR(You must enable CCGS if you want CIS)
 fi
@@ -403,8 +413,7 @@ AC_LIBLTDL_CONVENIENCE
 AC_DISABLE_STATIC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-AC_LIB_LTDL
-LT_LANG(C++)
+AC_LIBTOOL_CXX
 AC_SUBST([LIBTOOL_DEPS])
 
 # Checks for types...
@@ -547,7 +556,7 @@ case "$host-$CXX" in
         LIBXML_CFLAGS=`xml2-config --cflags`
 esac
 
-if test x$cis = xtrue; then
+if test x$cis = xtrue -a x$gslintegrators = xtrue; then
      LIBS=
      AC_CHECK_LIB([gslcblas],[cblas_dgemm], [], [AC_MSG_ERROR(GSL CBLAS library required)])
      LIBS="$NO_AS_NEEDED -lgslcblas"
@@ -565,6 +574,7 @@ AC_SUBST([THREADFLAGS])
 AC_SUBST([LIBXML_CFLAGS])
 AC_SUBST([PRE_NON_AS_NEEDED])
 AC_SUBST([POST_NON_AS_NEEDED])
+AC_SUBST([lt_cv_dlopen_libs])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])

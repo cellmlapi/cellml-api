@@ -258,6 +258,11 @@ HEADER_INLINE unsigned long mersenne_genrand_int32(void)
 
     return y;
 }
+#undef N
+#undef M
+#undef MATRIX_A
+#undef UPPER_MASK
+#undef LOWER_MASK
 
 HEADER_INLINE int
 CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
