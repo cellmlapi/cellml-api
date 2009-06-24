@@ -22,9 +22,10 @@ libcellml_xpcom_bridge_la_LIBADD = \
   $(top_builddir)/libcellml.la \
   $(top_builddir)/libXPCOMSupport.la
 libcellml_xpcom_bridge_la_LDFLAGS = \
-  -no-undefined -module
+  -no-undefined -module -L$(MOZILLA_DIR)/lib -lxpcomglue_s -lxpcom -lnspr4
 
 libcellml_xpcom_bridge_la_CXXFLAGS = \
+  -I$(MOZILLA_DIR)/include \
   -I$(MOZILLA_DIR)/include/nspr -I$(MOZILLA_DIR)/include/xpcom \
   -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
