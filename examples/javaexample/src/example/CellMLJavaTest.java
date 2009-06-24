@@ -1,5 +1,9 @@
 package example;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import cellml_api.CellMLBootstrap;
 import cellml_api.CellMLComponent;
 import cellml_api.CellMLComponentIterator;
@@ -37,7 +41,7 @@ public class CellMLJavaTest{
     	CellMLJavaTest cjtest = new CellMLJavaTest(); 
     	
     	cjtest.createCellMLModel();
-    	cjtest.loadCellMLModel();
+    	cjtest.iterateModelElements();
     	
     }
     
@@ -70,6 +74,7 @@ public class CellMLJavaTest{
         //adding a variable to component 2
         CellMLVariable var2 = m.createCellMLVariable();
         comp2.addElement(var2);
+        var2.setName("variable2");
         var2.setUnitsName("cm");
       	var2.setPublicInterface(VariableInterface.INTERFACE_IN);
       	
@@ -87,18 +92,16 @@ public class CellMLJavaTest{
       	
       	mapvar.setFirstVariable(var1);
      	mapvar.setSecondVariable(var2);      	
-
-        System.out.println(m.getSerialisedText());
+      
+        writeToFile(m, m.getName()+ ".cellml");
     }
     
     /**
-     * loading an existing CellML model
+     * Iterating elements of a model
      */
-    private void loadCellMLModel(){
-    	DOMModelLoader modelLoader = cb.getModelLoader();
-    	
-    	//loading the Hodgkin Huxley model from the repository
-    	Model model = modelLoader.loadFromURL("http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
+    private void iterateModelElements(){   	
+    	//load the Hodgkin Huxley model from the repository
+    	Model model = readFromFile("http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
      	
     	System.out.println("Model Name:" + model.getName() + "\n");
     	
@@ -138,10 +141,35 @@ public class CellMLJavaTest{
     		}
     		System.out.println();
     	}
-    	
-    	RDFRepresentation rep = model.getRDFRepresentation("http://www.cellml.org/RDFXML/string");
-//    	RDFXMLStringRepresentation stringRep = (RDFXMLStringRepresentation)rep;
-
    	
      }
+    
+    public void iterateRDF(Model model){
+    	RDFRepresentation rep = model.getRDFRepresentation("http://www.cellml.org/RDFXML/string");
+//    	RDFXMLStringRepresentation stringRep = (RDFXMLStringRepresentation)rep;
+	
+    }
+    
+    /**
+     * Loading a CellML file
+     */
+    public Model readFromFile(String fileName){
+    	return cb.getModelLoader().loadFromURL(fileName);
+	
+    }
+
+    /**
+     * Writing to a file
+     */
+    public void writeToFile(Model model, String outputFileName ){
+        try{
+            PrintWriter writer = new PrintWriter(new FileWriter(outputFileName));
+            writer.println(model.getSerialisedText());
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
 }
