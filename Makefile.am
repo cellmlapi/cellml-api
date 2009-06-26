@@ -28,7 +28,7 @@ cellml_jar_java =
 cellml_jar_classes =
 
 # This saves repeating this everywhere...
-XPCOM_LDFLAGS =  -no-undefined -module -L$(MOZILLA_DIR)/lib -lxpcomglue_s -lxpcom -lnspr4
+XPCOM_LDFLAGS =  -no-undefined -module -L$(MOZILLA_DIR)/lib -L$(MOZILLA_DIR)/bin -lxpcomglue_s -lxpcom -lnspr4
 XPCOM_CXXFLAGS = -I$(MOZILLA_DIR)/include \
   -I$(MOZILLA_DIR)/include/nspr -I$(MOZILLA_DIR)/include/xpcom \
   -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
