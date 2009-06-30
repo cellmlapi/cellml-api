@@ -17,7 +17,7 @@ libXPCOMSupport_la_CXXFLAGS = \
   -I$(top_builddir)/simple_interface_generators/glue/xpcom -DIN_MODULE_XPCOMSupport \
   $(AM_CXXFLAGS)
 libXPCOMSupport_la_LIBADD = $(STLLINK)
-libXPCOMSupport_la_LDFLAGS = $(XPCOM_LDFLAGS)
+libXPCOMSupport_la_LDFLAGS = $(XPCOM_LDFLAGS_NOTMOD)
 
 BUILT_SOURCES += \
   $(top_builddir)/simple_interface_generators/glue/xpcom/IWrappedPCM.h
