@@ -106,7 +106,12 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cpp.out('jobject wrapper = env->AllocObject(clazz);')
         self.cpp.out('jfieldID fid = env->GetFieldID(clazz, "nativePtr", "J");')
         self.cpp.out('obj->add_ref();')
-        self.cpp.out('env->SetLongField(wrapper, fid, reinterpret_cast<int64_t>(obj));')
+        self.cpp.out('jlong field = reinterpret_cast<int64_t>(obj);')
+        self.cpp.out('env->SetLongField(wrapper, fid, field);')
+
+        self.cpp.out('fid = env->GetFieldID(clazz, "nativePtr_xpcom_iobject", "J");')
+        self.cpp.out('field = reinterpret_cast<int64_t>(static_cast<iface::XPCOM::IObject*>(obj));')
+        self.cpp.out('env->SetLongField(wrapper, fid, field);')
 
         self.recurseBuildInheritedFieldSetup(node)
 
@@ -130,50 +135,21 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cpp.out('}')
         self.popManglePart()
 
-        self.pushManglePart('compareTo')
+        self.pushManglePart('nqueryInterface')
         self.calculateMangled()
-        self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE jint ' + self.mangled +
-                     '(JNIEnv* env, jobject thisptr, jobject thatptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('jint ' + self.mangled + '(JNIEnv* env, jobject thisptr, jobject thatptr)')
+        self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE jobject ' + self.mangled +
+                     '(JNIEnv* env, jclass* clazz, jlong fromptr) JWRAP_PUBLIC_POST; }')
+        self.cpp.out('jobject ' + self.mangled + '(JNIEnv* env, jclass* clazz, jlong fromptr)')
         self.cpp.out('{')
         self.cpp.inc_indent()
-        self.cpp.out('jclass thisclazz = env->GetObjectClass(thisptr);')
-        self.cpp.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cpp.out('char* oid1 = reinterpret_cast<' + self.cxxclass +
-                     '*>(env->GetLongField(thisptr, fid))->objid();')
-        self.cpp.out('jclass thatclazz = env->GetObjectClass(thatptr);')
-        self.cpp.out('jfieldID fid2 = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cpp.out('if (fid2 == NULL) { env->ExceptionClear(); free(oid1); return -1; }')
-        self.cpp.out('char* oid2 = reinterpret_cast<' + self.cxxclass +
-                     '*>(env->GetLongField(thatptr, fid2))->objid();')
-        self.cpp.out('int ret = strcmp(oid1, oid2);')
-        self.cpp.out('free(oid1);')
-        self.cpp.out('free(oid2);')
-        self.cpp.out('return ret;')
-        self.cpp.dec_indent()
-        self.cpp.out('}')
-        self.popManglePart()
-
-        self.pushManglePart('equals')
-        self.calculateMangled()
-        self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE jboolean ' + self.mangled +
-                     '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('jboolean ' + self.mangled + '(JNIEnv* env, jobject thisptr, jobject thatptr)')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out('jclass thisclazz = env->GetObjectClass(thisptr);')
-        self.cpp.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cpp.out('char* oid1 = reinterpret_cast<' + self.cxxclass +
-                     '*>(env->GetLongField(thisptr, fid))->objid();')
-        self.cpp.out('jclass thatclazz = env->GetObjectClass(thatptr);')
-        self.cpp.out('jfieldID fid2 = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cpp.out('if (fid2 == NULL) { env->ExceptionClear(); free(oid1); return -1; }')
-        self.cpp.out('char * oid2 = reinterpret_cast<' + self.cxxclass +
-                     '*>(env->GetLongField(thatptr, fid2))->objid();')
-        self.cpp.out('int ret = (strcmp(oid1, oid2) == 0);')
-        self.cpp.out('free(oid1);')
-        self.cpp.out('free(oid2);')
-        self.cpp.out('return ret;')
+        self.cpp.out('iface::XPCOM::IObject * obj = reinterpret_cast<iface::XPCOM::IObject*>' +
+                     '(fromptr);')
+        self.cpp.out('if (obj == NULL) { env->ExceptionClear(); return NULL; }')
+        self.cpp.out('DECLARE_QUERY_INTERFACE_OBJREF(qiobj, obj, ' + scopedn + ');')
+        # If qiobj is null, it doesn't implement the requested interface...
+        self.cpp.out('if (qiobj == NULL) return NULL;')
+        self.cpp.out('jobject objj = ' + constructor + '(env, qiobj);')
+        self.cpp.out('return objj;')
         self.cpp.dec_indent()
         self.cpp.out('}')
         self.popManglePart()
@@ -216,8 +192,9 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         fieldName = 'nativePtr_' + string.join(node.scopedName(), '_')
         self.cpp.out('jfieldID fid = env->GetFieldID(clazz, "' + fieldName + '", "J");')
         className = string.join(node.scopedName(), '::')
-        self.cpp.out('env->SetLongField(wrapper, fid, reinterpret_cast<int64_t>' +\
-                     '(static_cast<iface::' + className + '*>(obj)));')
+        self.cpp.out('field = reinterpret_cast<int64_t>' +\
+                     '(static_cast<iface::' + className + '*>(obj));')
+        self.cpp.out('env->SetLongField(wrapper, fid, field);')
         
         self.cpp.dec_indent()
         self.cpp.out('}')

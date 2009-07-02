@@ -37,7 +37,7 @@ $(top_builddir)/interfaces/p2j%.cpp \
 $(top_builddir)/interfaces/p2j%.hxx \
 $(top_builddir)/interfaces/j2p%.cpp \
 $(top_builddir)/interfaces/j2p%.hxx: \
-$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx
+$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx $(top_srcdir)/simple_interface_generators/omniidl_be/java/j2pcm.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/pcm2j.py
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
@@ -47,6 +47,7 @@ $(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx
 
 cellml_jar_java += \
   $(top_srcdir)/simple_interface_generators/glue/java/pjm/Reference.java \
+  $(top_srcdir)/simple_interface_generators/glue/java/pjm/XPCOMDerived.java \
   $(top_srcdir)/java/cellml_bootstrap/CellMLBootstrap.java \
   $(top_builddir)/interfaces/rdf_api/DataSource.java \
   $(top_builddir)/interfaces/rdf_api/Node.java \
@@ -198,6 +199,7 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/pjm2pcm/rdf_api/RDFAPIRepresentation.java
 
 cellml_jar_classes += \
+  $(top_builddir)/javacp/pjm/XPCOMDerived.class \
   $(top_builddir)/javacp/pjm/Reference.class \
   $(top_builddir)/javacp/cellml_bootstrap/CellMLBootstrap.class \
   $(top_builddir)/javacp/rdf_api/DataSource.class \
