@@ -13,11 +13,11 @@ libXPCOMSupport_la_SOURCES = \
   $(top_srcdir)/simple_interface_generators/glue/xpcom/WideCharSupport.cpp
 libXPCOMSupport_la_CXXFLAGS = \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources \
-  -I$(MOZILLA_DIR)/include/xpcom -I$(MOZILLA_DIR)/include/nspr \
-  -I$(MOZILLA_DIR)/include/string \
+  $(XPCOM_CXXFLAGS) \
   -I$(top_builddir)/simple_interface_generators/glue/xpcom -DIN_MODULE_XPCOMSupport \
   $(AM_CXXFLAGS)
-libXPCOMSupport_la_LIBADD = $(STLLINK) -L$(MOZILLA_DIR)/lib -lxpcom -lxpcomglue_s -lnspr4
+libXPCOMSupport_la_LIBADD = $(STLLINK)
+libXPCOMSupport_la_LDFLAGS = $(XPCOM_LDFLAGS_NOTMOD)
 
 BUILT_SOURCES += \
   $(top_builddir)/simple_interface_generators/glue/xpcom/IWrappedPCM.h

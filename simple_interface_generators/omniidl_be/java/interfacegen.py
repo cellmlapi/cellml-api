@@ -37,7 +37,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
         self.out.out('package ' + self.package + ';')
         self.out.out('public interface ' + jnutils.JavaName(node))
         inh = node.inherits()
-        extends = 'extends Comparable<Object>'
+        extends = 'extends pjm.XPCOMDerived'
         if len(inh) != 0:
             for inherit in inh:
                 if inherit.scopedName() == ['XPCOM', 'IObject']:

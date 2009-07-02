@@ -7,13 +7,17 @@
 #include <limits>
 #include "Utilities.hxx"
 #include "CISImplementation.hxx"
+#ifdef ENABLE_GSL_INTEGRATORS
 #include <gsl/gsl_odeiv.h>
 #include <gsl/gsl_errno.h>
+#endif
 #include <math.h>
 #include <stdarg.h>
 #include <assert.h>
+#ifdef ENABLE_GSL_INTEGRATORS
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multiroots.h>
+#endif
 #ifdef _MSC_VER
 #include <time.h>
 #endif
@@ -43,6 +47,7 @@ struct EvaluationInformation
                           double* STATES, double* ALGEBRAIC);
 };
 
+#ifdef ENABLE_GSL_INTEGRATORS
 int
 EvaluateRatesGSL(double voi, const double vars[],
                  double rates[], void* params)
@@ -122,6 +127,7 @@ EvaluateJacobianGSL
 
   return GSL_SUCCESS;
 }
+#endif
 
 #define tabulationRelativeTolerance 1E-20
 
@@ -156,6 +162,7 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 // Don't cache for more than 1 second...
 #define VARIABLE_TIME_LIMIT 1
 
+#ifdef ENABLE_GSL_INTEGRATORS
 void
 CDA_CellMLIntegrationRun::SolveODEProblemGSL
 (
@@ -313,6 +320,7 @@ CDA_CellMLIntegrationRun::SolveODEProblemGSL
   gsl_odeiv_control_free(c);
   gsl_odeiv_step_free(s);
 }
+#endif
 
 void
 cda_cvode_error_handler(int error_code, const char* module,
@@ -483,9 +491,13 @@ CDA_CellMLIntegrationRun::SolveODEProblem
       mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
     SolveODEProblemCVODE(f, constSize, constants, rateSize, rates, states,
                          algSize, algebraic);
+#ifdef ENABLE_GSL_INTEGRATORS
   else
     SolveODEProblemGSL(f, constSize, constants, rateSize, rates, states,
                          algSize, algebraic);
+#else
+  mObserver->failed("GSL integrators are disabled.");
+#endif
 }
 
 extern "C"
