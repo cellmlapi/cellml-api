@@ -23,3 +23,11 @@ interfaces/I.*\.(idl|h)
 simple_interface_generators/glue/xpcom/IWrappedPCM.h
 .dirstamp
 tests/RunTestBin
+
+docs/api/html
+javacp
+libltdl
+interfaces.*\.(java|cpp|hxx)
+examples/.metadata
+examples/javaexample.*\.(class|classpath|project|cellml)
+cellml.jar
