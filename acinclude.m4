@@ -1452,6 +1452,7 @@ cygwin* | mingw* | pw32*)
   shrext_cmds=".dll"
   need_version=no
   need_lib_prefix=no
+  libname_spec='$name'
 
   case $GCC,$host_os in
   yes,cygwin* | yes,mingw* | yes,pw32*)
