@@ -54,8 +54,8 @@ class X2PVisitor(idlvisitor.AstVisitor):
         guardname='X2P__' + string.upper(gbasename) + '__INCLUDED'
         self.hxx.out('#ifndef ' + guardname)
         self.hxx.out("#define " + guardname)
-        self.hxx.out('#include "I' + basename + '.h"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
+        self.hxx.out('#include "I' + basename + '.h"')
         self.hxx.out('#include "x2pxpcom.hxx"')
         self.cpp.out('#include <exception>')
         self.cpp.out('#include "cda_compiler_support.h"')

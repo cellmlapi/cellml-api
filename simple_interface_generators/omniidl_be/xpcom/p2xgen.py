@@ -55,8 +55,8 @@ class P2XVisitor(idlvisitor.AstVisitor):
         guardname='P2X__' + self.modname + '__INCLUDED'
         self.hxx.out('#ifndef ' + guardname)
         self.hxx.out("#define " + guardname)
-        self.hxx.out('#include "I' + basename + '.h"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
+        self.hxx.out('#include "I' + basename + '.h"')
         self.hxx.out('#include "p2xxpcom.hxx"')
         self.cpp.out('#include <exception>')
         self.cpp.out('#include "cda_compiler_support.h"')

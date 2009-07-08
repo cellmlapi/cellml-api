@@ -8,6 +8,8 @@
 #endif
 #ifdef _MSC_VER
 #define WIN32
+#undef __STDC__
+#include <stdio.h>
 #endif
 #ifdef __BORLANDC__
 #define WIN32

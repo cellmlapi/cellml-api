@@ -42,8 +42,6 @@
 #undef GetObject
 #undef GetClassName
 #undef AddMonitor
-#undef __STDC__
-#include <stdio.h>
 #define swprintf _snwprintf
 #endif
 
