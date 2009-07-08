@@ -1,7 +1,7 @@
 #define IN_CIS_MODULE
+#include "Utilities.hxx"
 #include <stdlib.h>
 #include <string>
-#include "Utilities.hxx"
 #ifndef WIN32
 #include <sys/stat.h>
 #include <sys/types.h>
