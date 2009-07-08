@@ -1453,6 +1453,7 @@ cygwin* | mingw* | pw32*)
   need_version=no
   need_lib_prefix=no
   libname_spec='$name'
+  LN_S=cp
 
   case $GCC,$host_os in
   yes,cygwin* | yes,mingw* | yes,pw32*)
