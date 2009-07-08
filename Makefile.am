@@ -186,7 +186,8 @@ if ENABLE_CIS
 include $(top_srcdir)/CIS/build.mk
 if ENABLE_GSL_INTEGRATORS
 libcis_la_LIBADD += -lgsl
-RunCellML_LDADD += -lgsl -$(PRE_NON_AS_NEEDED)gslcblas$(POST_NON_AS_NEEDED)
+RunCellML_LDADD += -lgsl
+RunCellML_LDFLAGS += -$(PRE_NON_AS_NEEDED)gslcblas$(POST_NON_AS_NEEDED)
 endif
 endif
 
