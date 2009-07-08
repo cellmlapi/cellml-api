@@ -1499,7 +1499,7 @@ cygwin* | mingw* | pw32*)
     ;;
 
   *)
-    library_names_spec='${libname}`echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext} $libname.lib'
+    library_names_spec='${libname}`echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext} $libname${shared_ext}'
     ;;
   esac
   dynamic_linker='Win32 ld.exe'
