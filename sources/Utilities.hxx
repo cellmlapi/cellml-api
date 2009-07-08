@@ -2,6 +2,8 @@
 #define _UTILITIES_HXX
 
 #include "cda_config.h"
+#include "cda_compiler_support.h"
+
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -48,7 +50,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cda_compiler_support.h"
 #include <locale.h>
 
 // A dynamic_cast which can efficiently convert to the most derived type, but
