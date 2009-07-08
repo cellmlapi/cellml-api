@@ -9,7 +9,7 @@
  *  [2] https://tracker.physiomeproject.org/show_bug.cgi?id=1514#c16
  *  [3] http://www.cellml.org/pipermail/cellml-tools-developers/2009-January/000140.html
  */
-#include "cda_config.h"
+#include "Utilities.hxx"
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -30,7 +30,6 @@
 #include <vector>
 #include <algorithm>
 #include <string>
-#include "Utilities.hxx"
 
 #ifdef _WIN32
 #define swprintf _snwprintf
