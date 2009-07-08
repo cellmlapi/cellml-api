@@ -185,6 +185,7 @@ endif
 if ENABLE_CIS
 include $(top_srcdir)/CIS/build.mk
 if ENABLE_GSL_INTEGRATORS
+libcis_la_LIBADD += -lgsl
 RunCellML_LDADD += -lgsl
 endif
 endif
