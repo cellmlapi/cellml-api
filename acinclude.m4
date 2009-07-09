@@ -1452,6 +1452,8 @@ cygwin* | mingw* | pw32*)
   shrext_cmds=".dll"
   need_version=no
   need_lib_prefix=no
+  libname_spec='$name'
+  LN_S=cp
 
   case $GCC,$host_os in
   yes,cygwin* | yes,mingw* | yes,pw32*)
@@ -1498,7 +1500,7 @@ cygwin* | mingw* | pw32*)
     ;;
 
   *)
-    library_names_spec='${libname}`echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext} $libname.lib'
+    library_names_spec='${libname}`echo ${release} | $SED -e 's/[[.]]/-/g'`${versuffix}${shared_ext} $libname${shared_ext}'
     ;;
   esac
   dynamic_linker='Win32 ld.exe'
@@ -2432,21 +2434,23 @@ bsdi[[45]]*)
 
 cygwin*)
   # func_win32_libid is a shell function defined in ltmain.sh
-  lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
-  lt_cv_file_magic_cmd='func_win32_libid'
+  #lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
+  #lt_cv_file_magic_cmd='func_win32_libid'
+  lt_cv_deplibs_check_method=pass_all
   ;;
 
 mingw* | pw32*)
+  lt_cv_deplibs_check_method=pass_all
   # Base MSYS/MinGW do not provide the 'file' command needed by
   # func_win32_libid shell function, so use a weaker test based on 'objdump',
   # unless we find 'file', for example because we are cross-compiling.
-  if ( file / ) >/dev/null 2>&1; then
-    lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
-    lt_cv_file_magic_cmd='func_win32_libid'
-  else
-    lt_cv_deplibs_check_method='file_magic file format pei*-i386(.*architecture: i386)?'
-    lt_cv_file_magic_cmd='$OBJDUMP -f'
-  fi
+  #if ( file / ) >/dev/null 2>&1; then
+  #  lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
+  #  lt_cv_file_magic_cmd='func_win32_libid'
+  #else
+  #  lt_cv_deplibs_check_method='file_magic file format pei*-i386(.*architecture: i386)?'
+  #  lt_cv_file_magic_cmd='$OBJDUMP -f'
+  #fi
   ;;
 
 darwin* | rhapsody*)

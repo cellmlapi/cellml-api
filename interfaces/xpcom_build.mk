@@ -35,7 +35,9 @@ $(top_builddir)/interfaces/x2p%.cpp \
 $(top_builddir)/interfaces/x2p%.hxx \
 $(top_builddir)/interfaces/I%.h \
 $(top_builddir)/interfaces/I%.xpt: \
-$(top_srcdir)/interfaces/%.idl
+$(top_srcdir)/interfaces/%.idl \
+$(top_srcdir)/simple_interface_generators/omniidl_be/xpcom/p2xgen.py \
+$(top_srcdir)/simple_interface_generators/omniidl_be/xpcom/x2pgen.py
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \

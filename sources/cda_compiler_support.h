@@ -6,9 +6,12 @@
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
+
 #ifdef _MSC_VER
 #define WIN32
+#undef __STDC__
 #endif
+
 #ifdef __BORLANDC__
 #define WIN32
 #define HEADER_INLINE
