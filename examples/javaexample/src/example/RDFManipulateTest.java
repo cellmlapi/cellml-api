@@ -1,5 +1,6 @@
 package example;
 
+import pjm.XPCOMDerived;
 import cellml_api.Model;
 import cellml_api.RDFRepresentation;
 import cellml_api.RDFXMLDOMRepresentation;
@@ -16,10 +17,13 @@ public class RDFManipulateTest {
 		//load the Hodgkin Huxley model from the repository
 		Model model = CellMLReader.loadFromURL(cLoader.getCellMLBootstrap(), "http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
 
-		RDFRepresentation rep = model.getRDFRepresentation("http://www.cellml.org/RDFXML/string");
+		RDFRepresentation rdfStringRep = model.getRDFRepresentation("http://www.cellml.org/RDFXML/string");
+		pjm2pcm.cellml_api.RDFXMLStringRepresentation rep =  pjm2pcm.cellml_api.RDFXMLStringRepresentation.queryInterface((XPCOMDerived)rdfStringRep);
+		System.out.print(rep.getSerialisedData());
 		
-//		RDFXMLStringRepresentation stringRep = (RDFXMLStringRepresentation)rep;
-		RDFXMLDOMRepresentation stringRep = (RDFXMLDOMRepresentation)rep;
+//		RDFRepresentation rdfDomRep = model.getRDFRepresentation("http://www.cellml.org/RDFXML/DOM");
+//		pjm2pcm.cellml_api.RDFXMLDOMRepresentation domRep =  pjm2pcm.cellml_api.RDFXMLDOMRepresentation.queryInterface((XPCOMDerived)rdfDomRep);
+//		System.out.print(domRep.getData());		
 
 	}
 	
