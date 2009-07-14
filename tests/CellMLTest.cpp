@@ -1,8 +1,8 @@
+#include "cda_compiler_support.h"
 #include "CellMLTest.hpp"
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
 
-#include "cda_config.h"
 #ifndef BASE_DIRECTORY
 #ifdef WIN32
 #define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"

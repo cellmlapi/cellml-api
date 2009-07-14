@@ -4985,12 +4985,12 @@ EOF
 	    cat >> $cwrappersource<<"EOF"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <malloc.h>
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#undef __STDC__
 #include <sys/stat.h>
 
 #if defined(PATH_MAX)
@@ -5158,8 +5158,13 @@ check_executable(const char * path)
 #if defined (S_IXGRP)
        ((st.st_mode & S_IXGRP) == S_IXGRP) ||
 #endif
-       ((st.st_mode & S_IXUSR) == S_IXUSR))
+#if defined (S_IXUSR)
+       ((st.st_mode & S_IXUSR) == S_IXUSR)
+#else
+       ((st.st_mode & S_IEXEC) == S_IEXEC)
+#endif
       )
+     )
     return 1;
   else
     return 0;
