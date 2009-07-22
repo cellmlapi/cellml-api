@@ -4990,6 +4990,7 @@ EOF
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#include <process.h>
 #undef __STDC__
 #include <sys/stat.h>
 
@@ -5097,7 +5098,7 @@ EOF
               ;;
               *)
                 cat >> $cwrappersource <<EOF
-  execv("$SHELL",newargz);
+  return _spawnv(_P_WAIT, "$SHELL",newargz);
 EOF
               ;;
             esac
