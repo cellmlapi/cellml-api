@@ -37,7 +37,7 @@ $(top_builddir)/interfaces/p2j%.cpp \
 $(top_builddir)/interfaces/p2j%.hxx \
 $(top_builddir)/interfaces/j2p%.cpp \
 $(top_builddir)/interfaces/j2p%.hxx: \
-$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx $(top_srcdir)/simple_interface_generators/omniidl_be/java/j2pcm.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/pcm2j.py
+$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx $(top_srcdir)/simple_interface_generators/omniidl_be/java/j2pcm.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/pcm2j.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/jnutils.py
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \

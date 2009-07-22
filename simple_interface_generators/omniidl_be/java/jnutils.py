@@ -500,7 +500,10 @@ class Objref(Declared):
         else:
             oname = pcmname
 
-        return "{\n" +\
+        return "if (" + jniname + " == NULL)\n" +\
+               "  " + oname + " = NULL;\n" +\
+               "else\n" +\
+               "{\n" +\
                "  jclass outerclazz = env->GetObjectClass(" + jniname + ");\n" +\
                "  jfieldID nmid = env->GetFieldID(outerclazz, \"" + self.field_name + "\", \"J\");\n" +\
                "  if (nmid != NULL)\n" +\
