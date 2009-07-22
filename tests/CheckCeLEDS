@@ -1,9 +1,11 @@
 #!/bin/bash
 
-BINDIR=`pwd`
-BASEDIR=`dirname $0`
+BASEDIR=`dirname $0`/..
+
+cd $BASEDIR
+
 DIFF=diff
-TESTCELEDS=$BINDIR/testCeLEDS
+TESTCELEDS=./testCeLEDS
 TEMPFILE=test_celeds_output
 LANGUAGE=C
 
@@ -20,18 +22,18 @@ function runtest()
 {
   name=$1;
   rm -f $TEMPFILE;
-  $TESTCELEDS $BASEDIR/test_xml/$name.xml $BINDIR/CeLEDS/languages/$LANGUAGE.xml > $TEMPFILE
+  $TESTCELEDS ./tests/test_xml/$name.xml ./CeLEDS/languages/$LANGUAGE.xml > $TEMPFILE
   FAIL=0
-  $DIFF -bu $TEMPFILE $BASEDIR/test_celeds_expected/$name.c
+  $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name.c
   if [[ $? -ne 0 ]]; then
-    if [[ -f $BASEDIR/test_celeds_expected/$name-alt1.c ]]; then
-        $DIFF -bu $TEMPFILE $BASEDIR/test_celeds_expected/$name-alt1.c
+    if [[ -f tests/test_celeds_expected/$name-alt1.c ]]; then
+        $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt1.c
         if [[ $? -ne 0 ]]; then
-            if [[ -f $BASEDIR/test_celeds_expected/$name-alt2.c ]]; then
-                $DIFF -bu $TEMPFILE $BASEDIR/test_celeds_expected/$name-alt2.c
+            if [[ -f tests/test_celeds_expected/$name-alt2.c ]]; then
+                $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt2.c
                 if [[ $? -ne 0 ]]; then
-                    if [[ -f $BASEDIR/test_celeds_expected/$name-alt3.c ]]; then
-                        $DIFF -bu $TEMPFILE $BASEDIR/test_celeds_expected/$name-alt3.c
+                    if [[ -f tests/test_celeds_expected/$name-alt3.c ]]; then
+                        $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt3.c
                         FAIL=$?
                     else
                         FAIL=1
