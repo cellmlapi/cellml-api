@@ -19,7 +19,7 @@ function runtest()
 {
   name=$1;
   rm -f $TEMPFILE;
-  $CELLML2C $BASEDIR/test_xml/$name.xml | tr -d "\r" >$TEMPFILE
+  $CELLML2C $BASEDIR/test_xml/$name.xml | tr -d "\r" | sed -e "s/0.000000/0.00000/" >$TEMPFILE
   FAIL=0
   $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name.c
   if [[ $? -ne 0 ]]; then
