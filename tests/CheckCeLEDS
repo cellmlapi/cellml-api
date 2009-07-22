@@ -22,7 +22,7 @@ function runtest()
 {
   name=$1;
   rm -f $TEMPFILE;
-  $TESTCELEDS ./tests/test_xml/$name.xml ./CeLEDS/languages/$LANGUAGE.xml > $TEMPFILE
+  $TESTCELEDS ./tests/test_xml/$name.xml ./CeLEDS/languages/$LANGUAGE.xml | tr -d "\r" > $TEMPFILE
   FAIL=0
   $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name.c
   if [[ $? -ne 0 ]]; then
