@@ -326,7 +326,7 @@ CDA_CodeExporter::listFlaggedEquations(iface::cellml_services::CodeInformation *
     mathId = mathElement->getAttribute(L"id");
     if (!applyId.empty()) {
       str += L" in apply element with id ";
-      str + applyId;
+      str += applyId;
     }
     if (!mathId.empty()) {
       str += L" in math element with id ";
