@@ -1796,7 +1796,10 @@ CDA_Model::createConnection()
     RETURN_INTO_OBJREF(newNode, iface::dom::Element,
                        mDoc->createElementNS(myNamespace.c_str(),
                                              L"connection"));
-    return new CDA_Connection(NULL, newNode);
+    CDA_Connection* c = new CDA_Connection(NULL, newNode);
+    RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents, createMapComponents());
+    c->addElement(mc);
+    return c;
   }
   catch (iface::dom::DOMException& de)
   {

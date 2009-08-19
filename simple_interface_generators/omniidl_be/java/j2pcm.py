@@ -93,6 +93,10 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cpp.out('jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj)')
         self.cpp.out('{')
         self.cpp.inc_indent()
+        self.cpp.out("if (obj == NULL)")
+        self.cpp.inc_indent()
+        self.cpp.out('return NULL;')
+        self.cpp.dec_indent()
         # If it is a p2j object, unwrap it...
         self.cpp.out('p2j::' + scopedn + ' * wrap = dynamic_cast<p2j::' + scopedn + '*>(obj);')
         self.cpp.out('if (wrap != NULL)')

@@ -53,7 +53,7 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
       L"At the time of the error, the following variables "
       L"were defined:\n";
     output += listVariablesByState(codeinfo, 1);
-    output += L"The follow equation was unneeded:\n";
+    output += L"The following equation was unneeded:\n";
     output += listFlaggedEquations(codeinfo);
     return CDA_wcsdup(output.c_str());
   }
@@ -326,7 +326,7 @@ CDA_CodeExporter::listFlaggedEquations(iface::cellml_services::CodeInformation *
     mathId = mathElement->getAttribute(L"id");
     if (!applyId.empty()) {
       str += L" in apply element with id ";
-      str + applyId;
+      str += applyId;
     }
     if (!mathId.empty()) {
       str += L" in math element with id ";
