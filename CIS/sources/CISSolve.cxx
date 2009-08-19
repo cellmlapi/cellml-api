@@ -491,12 +491,12 @@ CDA_CellMLIntegrationRun::SolveODEProblem
       mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
     SolveODEProblemCVODE(f, constSize, constants, rateSize, rates, states,
                          algSize, algebraic);
-#ifdef ENABLE_GSL_INTEGRATORS
   else
+#ifdef ENABLE_GSL_INTEGRATORS
     SolveODEProblemGSL(f, constSize, constants, rateSize, rates, states,
                          algSize, algebraic);
 #else
-  mObserver->failed("GSL integrators are disabled.");
+    mObserver->failed("GSL integrators are disabled.");
 #endif
 }
 
