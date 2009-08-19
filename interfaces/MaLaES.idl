@@ -32,6 +32,13 @@ module cellml_services
      * ...
      */
     readonly attribute unsigned long degree;
+
+    /**
+     * Whether or not the variable appeared in its infinitesimally delayed form
+     * in the equation. This is true even if it also appears in the non-delayed
+     * form as well (and there is only one entry, per degree, per variable).
+     */
+    readonly attribute boolean wasInfinitesimallyDelayed;
   };
 
   /**

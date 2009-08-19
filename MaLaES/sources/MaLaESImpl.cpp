@@ -5,6 +5,7 @@
 #include <sstream>
 
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
+#define INFDELAY L"http://www.cellml.org/cellml/infinitesimal-delay"
 
 class MaLaESError
 {
@@ -25,7 +26,7 @@ CDAMaLaESResult::CDAMaLaESResult
  bool aVariablesFromSource
 )
   : _cda_refcount(1), mTransform(aTransform), mCeVAS(aCeVAS), mCUSES(aCUSES),
-    mAnnos(aAnnos), mLastUnique(0), boundVariable(false), degree(0),
+    mAnnos(aAnnos), mLastUnique(0), boundVariable(false), infdelayed(false), degree(0),
     mVariablesFromSource(aVariablesFromSource), mInvolvesExternalCode(false)
 {
   mPrec.push_back(std::pair<uint32_t, bool>(0, true));
@@ -176,8 +177,10 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::DegreeVariable);
 
-  CDAMaLaESDegreeVariable(uint32_t aDeg, iface::cellml_api::CellMLVariable* aVar)
-    : _cda_refcount(1), mDeg(aDeg), mVar(aVar)
+  CDAMaLaESDegreeVariable(uint32_t aDeg, bool aWasInfinitesimallyDelayed,
+                          iface::cellml_api::CellMLVariable* aVar)
+    : _cda_refcount(1), mDeg(aDeg), mWasInfinitesimallyDelayed(aWasInfinitesimallyDelayed),
+      mVar(aVar)
   {
   }
 
@@ -194,8 +197,15 @@ public:
     return mDeg;
   }
 
+  bool
+  wasInfinitesimallyDelayed() throw(std::exception&)
+  {
+    return mWasInfinitesimallyDelayed;
+  }
+
 private:
   uint32_t mDeg;
+  bool mWasInfinitesimallyDelayed;
   ObjRef<iface::cellml_api::CellMLVariable> mVar;
 };
 
@@ -210,7 +220,7 @@ public:
   CDAMaLaESInvolvedVariableDegIterator
   (
    CDAMaLaESResult* aResult,
-   std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> >& aVars
+   std::vector<DegreeVariableInformation>& aVars
   )
     : _cda_refcount(1), mResult(aResult), mVars(aVars)
   {
@@ -228,18 +238,19 @@ public:
     if (mIt == mVars.end())
       return NULL;
 
-    uint32_t deg = (*mIt).first;
-    iface::cellml_api::CellMLVariable* var = (*mIt).second;
+    uint32_t deg = (*mIt).mDegree;
+    bool wasInfDel = (*mIt).mWasInfDelay;
+    iface::cellml_api::CellMLVariable* var = (*mIt).mVar;
     
     mIt++;
 
-    return new CDAMaLaESDegreeVariable(deg, var);
+    return new CDAMaLaESDegreeVariable(deg, wasInfDel, var);
   }
 
 private:
   ObjRef<CDAMaLaESResult> mResult;
-  std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> >& mVars;
-  std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> >::
+  std::vector<DegreeVariableInformation>& mVars;
+  std::vector<DegreeVariableInformation>::
     iterator mIt;
 };
 
@@ -359,12 +370,11 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
 
     if (!aIsBound)
     {
-      std::pair<uint32_t, iface::cellml_api::CellMLVariable*>
-        dvp(degree, sv);
-      if (mInvolvedDegSet.count(dvp) == 0)
+      DegreeVariableInformation dvi(degree, infdelayed, sv);
+      if (mInvolvedDegSet.count(dvi) == 0)
       {
-        mInvolvedDegSet.insert(dvp);
-        mInvolvedDeg.push_back(dvp);
+        mInvolvedDegSet.insert(dvi);
+        mInvolvedDeg.push_back(dvi);
       }
 
       if (degree > 0)
@@ -408,9 +418,9 @@ CDAMaLaESResult::writeConvertedVariable()
     else if ((*i).second < degree)
       (*i).second = degree;
 
-    const unsigned int bufferSize=30;
+    const unsigned int bufferSize=40;
     wchar_t buf[bufferSize];
-    swprintf(buf, bufferSize, L"expression_d%d", degree);
+    swprintf(buf, bufferSize, infdelayed ? L"delayed_expression_d%d" : L"expression_d%d", degree);
     RETURN_INTO_WSTRING(expr,
                         mAnnos->getStringAnnotation(processingVariable, buf));
     mActive += expr;
@@ -420,7 +430,7 @@ CDAMaLaESResult::writeConvertedVariable()
   {
     RETURN_INTO_WSTRING(expr,
                         mAnnos->getStringAnnotation(processingVariable,
-                                                    L"expression"));
+                                                    infdelayed ? L"delayed_expression" : L"expression"));
     mActive += expr;
   }
 
@@ -656,7 +666,7 @@ CDAMaLaESResult::appendDiffVariable
       RETURN_INTO_WSTRING(ln, bdeg->localName());
       if (ln == L"degree")
       {
-        RETURN_INTO_WSTRING(ns, bdeg->namespaceURI());        
+        RETURN_INTO_WSTRING(ns, bdeg->namespaceURI());
         if (ns == MATHML_NS)
           break;
       }
@@ -1627,7 +1637,29 @@ CDAMaLaESTransform::RunTransformOnOperator
     wchar_t* str = csym->definitionURL();
     opName = str;
     free(str);
-    aResult->setInvolvesExternalCode();
+
+    if (opName != INFDELAY)
+    {
+      aResult->setInvolvesExternalCode();
+    }
+    else
+    {
+      if (aResult->infdelayed)
+        throw MaLaESError(L"Cannot nest infinitesimal delays.");
+
+      if (apply->nArguments() != 2)
+        throw MaLaESError(L"Infinitesimal delay operator should have exactly one argument.");
+
+      RETURN_INTO_OBJREF(delayed, iface::mathml_dom::MathMLElement,
+                         apply->getArgument(2));
+
+      aResult->infdelayed = true;
+
+      RunTransformOnOperator(aResult, delayed);
+
+      aResult->infdelayed = false;
+      return;
+    }
   }
   else
   {

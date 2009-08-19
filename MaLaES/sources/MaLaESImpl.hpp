@@ -30,6 +30,33 @@ public:
 
 class CDAMaLaESTransform;
 
+struct DegreeVariableInformation
+{
+public:
+  DegreeVariableInformation(uint32_t aDegree, bool aWasInfDelay, iface::cellml_api::CellMLVariable* aVar)
+    : mDegree(aDegree), mWasInfDelay(aWasInfDelay), mVar(aVar)
+  {}
+
+  uint32_t mDegree;
+  bool mWasInfDelay;
+  iface::cellml_api::CellMLVariable* mVar;
+
+  bool
+  operator<(const DegreeVariableInformation& aDVI) const
+  {
+    if (mDegree < aDVI.mDegree)
+      return true;
+    else if (mDegree > aDVI.mDegree)
+      return false;
+
+    if (CDA_objcmp(mVar, aDVI.mVar) < 0)
+      return true;
+
+    // wasInfDelay is metadata, it isn't used in the comparison.
+    return false;
+  }
+};
+
 class CDAMaLaESResult
   : public iface::cellml_services::MaLaESResult
 {
@@ -149,14 +176,17 @@ private:
   std::map<std::wstring, uint32_t> mUniqueAssignments;
   uint32_t mLastUnique;
   std::set<iface::cellml_api::CellMLVariable*,XPCOMComparator> mInvolvedSet;
-  std::set<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> > mInvolvedDegSet;
+  std::set<DegreeVariableInformation> mInvolvedDegSet;
   CleanupVector<iface::cellml_api::CellMLVariable*> mInvolved;
-  std::vector<std::pair<uint32_t, iface::cellml_api::CellMLVariable*> > mInvolvedDeg;
+  std::vector<DegreeVariableInformation> mInvolvedDeg;
 
   std::vector<iface::cellml_api::CellMLVariable*> mBoundVars;
   std::map<iface::cellml_api::CellMLVariable*, uint32_t> mHighestDegree;
   ObjRef<iface::cellml_api::CellMLVariable> processingVariable;
   bool boundVariable;
+public:
+  bool infdelayed;
+private:
   uint32_t degree;
   double boundMup;
   bool mVariablesFromSource, mInvolvesExternalCode;
