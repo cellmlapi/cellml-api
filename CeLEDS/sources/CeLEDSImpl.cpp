@@ -176,7 +176,7 @@ CDA_CeLEDSBootstrap::createDictGenerator(const wchar_t* URL)
     RETURN_INTO_OBJREF(langDoc, iface::dom::Document,
       URLLoader->loadDocument(URL));
     return new CDA_DictionaryGenerator(langDoc);
-  } 
+  }
   catch (...) {
     mLoadError = URLLoader->lastErrorMessage();
     return NULL;

@@ -137,7 +137,7 @@ def residualSN_<ID>(algebraicCandidate, algebraic, voi, constants, states):
     resid = array([0.0] * <COUNT>)
     <EQUATIONS><VAR> = algebraicCandidate[<INDEX>]<JOIN>
     </EQUATIONS>
-    <EQUATIONS>resid[<INDEX>] = (<LHS>) - (<RHS>)<JOIN>
+    <EQUATIONS>resid[<INDEX>] = (<EXPR>)<JOIN>
     </EQUATIONS>
     return resid
 

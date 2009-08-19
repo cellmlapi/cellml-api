@@ -410,6 +410,12 @@ CDA_CodeExporter::getCodeGenerator()
   if (!pattern.empty()) cg->solvePattern(pattern.c_str());
   pattern=ccgsDict->getValue(L"solveNLSystemPattern");
   if (!pattern.empty()) cg->solveNLSystemPattern(pattern.c_str());
+  pattern=ccgsDict->getValue(L"temporaryVariablePattern");
+  if (!pattern.empty()) cg->temporaryVariablePattern(pattern.c_str());
+  pattern=ccgsDict->getValue(L"declareTemporaryPattern");
+  if (!pattern.empty()) cg->declareTemporaryPattern(pattern.c_str());
+  pattern=ccgsDict->getValue(L"conditionalAssignmentPattern");
+  if (!pattern.empty()) cg->conditionalAssignmentPattern(pattern.c_str());
 
   pattern=ccgsDict->getValue(L"arrayOffset");
   // convert string to integer

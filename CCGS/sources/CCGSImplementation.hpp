@@ -43,6 +43,7 @@ public:
 
   // CCGS implementation access only...
   void setNameAndIndex(uint32_t aIndex, const wchar_t* aName) throw();
+  void setDelayedName(const wchar_t* aSetTo) throw();
   ObjRef<iface::cellml_api::CellMLVariable> mVariable;
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
   uint32_t mDegree, mAssignedIndex;
@@ -177,6 +178,13 @@ public:
   void solvePattern(const wchar_t* aPattern) throw();
   wchar_t* solveNLSystemPattern() throw();
   void solveNLSystemPattern(const wchar_t* aPattern) throw();
+  wchar_t* temporaryVariablePattern() throw();
+  void temporaryVariablePattern(const wchar_t* aPattern) throw();
+  wchar_t* declareTemporaryPattern() throw();
+  void declareTemporaryPattern(const wchar_t* aPattern) throw();
+  wchar_t* conditionalAssignmentPattern() throw();
+  void conditionalAssignmentPattern(const wchar_t* aPattern) throw();
+
   iface::cellml_services::MaLaESTransform* transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
      throw();
@@ -194,7 +202,8 @@ private:
   std::wstring mConstantPattern, mStateVariableNamePattern,
     mAlgebraicVariableNamePattern,
     mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
-    mSolveNLSystemPattern;
+    mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
+    mConditionalAssignmentPattern;
   uint32_t mArrayOffset;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;

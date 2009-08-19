@@ -58,6 +58,38 @@ CDA_ComputationTarget::assignedIndex() throw()
 }
 
 void
+CDA_ComputationTarget::setDelayedName(const wchar_t* aSetTo)
+  throw()
+{
+  // Scoped locale change.
+  CNumericLocale locobj;
+
+  wchar_t buf[30], dbuf[40];
+  const wchar_t* annoname, *dannoname;
+
+  if (mDegree == 0)
+  {
+    annoname = L"expression";
+    dannoname = L"delayed_expression";
+  }
+  else
+  {
+    swprintf(buf, 30, L"expression_d%u", mDegree);
+    swprintf(dbuf, 40, L"delayed_expression_d%u", mDegree);
+    annoname = buf;
+    dannoname = dbuf;
+  }
+
+  if (aSetTo == NULL)
+  {
+    RETURN_INTO_WSTRING(n, mAnnoSet->getStringAnnotation(mVariable, annoname));
+    mAnnoSet->setStringAnnotation(mVariable, dannoname, n.c_str());
+  }
+  else
+    mAnnoSet->setStringAnnotation(mVariable, dannoname, aSetTo);
+}
+
+void
 CDA_ComputationTarget::setNameAndIndex
 (
  uint32_t aIndex,
@@ -268,7 +300,7 @@ CDA_CodeGenerator::CDA_CodeGenerator()
     L"#define pret rfi->aPRET\r\n"
     L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
     L"  </EQUATIONS>\r\n"
-    L"  <EQUATIONS>hx[<INDEX>] = fixnans((<LHS>) - (<RHS>));<JOIN>\r\n"
+    L"  <EQUATIONS>hx[<INDEX>] = fixnans(<EXPR>);<JOIN>\r\n"
     L"  </EQUATIONS>\r\n"
     L"#undef VOI\r\n"
     L"#undef CONSTANTS\r\n"
@@ -293,6 +325,20 @@ CDA_CodeGenerator::CDA_CodeGenerator()
     L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
     L"  </EQUATIONS>\r\n"
     L"}\r\n"
+   ),
+   mTemporaryVariablePattern(L"temp%"),
+   mDeclareTemporaryPattern(L"double %;\r\n"),
+   mConditionalAssignmentPattern
+   (
+    L"if (<CONDITION>)\r\n"
+    L"{\r\n"
+    L"  <STATEMENT>"
+    L"}\r\n"
+    L"<CASES>else if (<CONDITION>)\r\n"
+    L"{\r\n"
+    L"  <STATEMENT>"
+    L"}\r\n"
+    L"</CASES>"
    ),
    mArrayOffset(0)
 {
@@ -406,6 +452,48 @@ CDA_CodeGenerator::solveNLSystemPattern(const wchar_t* aPattern) throw()
   mSolveNLSystemPattern = aPattern;
 }
 
+wchar_t*
+CDA_CodeGenerator::temporaryVariablePattern()
+  throw()
+{
+  return CDA_wcsdup(mTemporaryVariablePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::temporaryVariablePattern(const wchar_t* aPattern)
+  throw()
+{
+  mTemporaryVariablePattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::declareTemporaryPattern()
+  throw()
+{
+  return CDA_wcsdup(mDeclareTemporaryPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::declareTemporaryPattern(const wchar_t* aPattern)
+  throw()
+{
+  mDeclareTemporaryPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::conditionalAssignmentPattern()
+  throw()
+{
+  return CDA_wcsdup(mConditionalAssignmentPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::conditionalAssignmentPattern(const wchar_t* aPattern)
+  throw()
+{
+  mConditionalAssignmentPattern = aPattern;
+}
+
 iface::cellml_services::MaLaESTransform*
 CDA_CodeGenerator::transform() throw()
 {
@@ -476,7 +564,11 @@ CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
                           mConstantPattern, mStateVariableNamePattern,
                           mAlgebraicVariableNamePattern,
                           mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
-                          mSolveNLSystemPattern, mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet);
+                          mSolveNLSystemPattern, mTemporaryVariablePattern,
+                          mDeclareTemporaryPattern, mConditionalAssignmentPattern,
+                          mArrayOffset, mTransform,
+                          mCeVAS, mCUSES, mAnnoSet
+                         );
 
   if (cgs.mAnnoSet == NULL)
   {

@@ -7,28 +7,82 @@
 #include <map>
 #include "IfaceCellML_APISPEC.hxx"
 
-/*
- * An equation, which relates its targets to each other.
- */
-struct Equation
+class MathStatement
 {
 public:
-  Equation() {}
-  ~Equation() {}
-  
-  std::list<ptr_tag<CDA_ComputationTarget> > mTargets;
-  // If mMaths == null, this is a special variable edge which is created when
-  // an initial_value="name" construct is found. It can only be used to compute
-  // the first target from the second (must have exactly two targets).
-  ObjRef<iface::mathml_dom::MathMLApplyElement> mMaths;
+  typedef enum
+    {
+      INITIAL_ASSIGNMENT,
+      EQUATION,
+      INEQUALITY,
+      PIECEWISE,
+      UNCLASSIFIED_MATHML
+    } StatementType;
+
+  MathStatement(StatementType aType) : mType(aType) {}
+  virtual ~MathStatement() {}
+
   ObjRef<iface::cellml_api::CellMLComponent> mContext;
+  std::list<ptr_tag<CDA_ComputationTarget> > mTargets;
+
+  StatementType mType;
+  // Temporary annotations used in code generation...
+  std::wstring mCode, mVarName;
+};
+
+// This is a special variable edge which is created when an initial_value="name"
+// construct is found. It can only be used to compute the first target from the
+// second (must have exactly two targets).
+class InitialAssignment
+  : public MathStatement
+{
+public:
+  InitialAssignment() : MathStatement(MathStatement::INITIAL_ASSIGNMENT) {}
+};
+
+class MathMLMathStatement : public MathStatement
+{
+public:
+  MathMLMathStatement(MathStatement::StatementType st) : MathStatement(st) {}
+  ObjRef<iface::mathml_dom::MathMLElement> mMaths;
+};
+
+class Equation : public MathMLMathStatement
+{
+public:
+  Equation() : MathMLMathStatement(MathStatement::EQUATION) {}
 
   // The left-hand side. NULL if mRHS has to be minimised.
   ObjRef<iface::mathml_dom::MathMLElement> mLHS;
   // The right-hand side.
   ObjRef<iface::mathml_dom::MathMLElement> mRHS;
+};
 
-  std::wstring mVarName, mLHSCode, mRHSCode;
+class Inequality : public MathMLMathStatement
+{
+public:
+  Inequality() : MathMLMathStatement(MathStatement::INEQUALITY) {}
+};
+
+class Piecewise : public MathMLMathStatement
+{
+public:
+  Piecewise() : MathMLMathStatement(MathStatement::PIECEWISE) {}
+  ~Piecewise()
+  {
+    std::list<std::pair<Equation*, MathMLMathStatement*> >::iterator i;
+    for (i = mPieces.begin(); i != mPieces.end(); i++)
+    {
+      delete (*i).first;
+      delete (*i).second;
+    }
+  }
+
+  std::list<std::pair<Equation*, MathMLMathStatement*> > mPieces;
+  // We provide for the possibility that only some of the pieces are active at
+  // any one time, so the state and rate setting parts of an override rule can
+  // be separated out.
+  std::list<std::pair<Equation*, MathMLMathStatement*> > mActivePieces;
 };
 
 /*
@@ -38,15 +92,15 @@ public:
 struct System
 {
 public:
-  System(std::set<ptr_tag<Equation> >& aEquations,
+  System(std::set<ptr_tag<MathStatement> >& aMathStatements,
          std::set<ptr_tag<CDA_ComputationTarget> >& aKnowns,
          std::set<ptr_tag<CDA_ComputationTarget> >& aUnknowns)
-    : mEquations(aEquations), mKnowns(aKnowns), mUnknowns(aUnknowns)
+    : mMathStatements(aMathStatements), mKnowns(aKnowns), mUnknowns(aUnknowns)
   {
   }
   ~System() {}
 
-  std::set<ptr_tag<Equation> > mEquations;
+  std::set<ptr_tag<MathStatement> > mMathStatements;
   std::set<ptr_tag<CDA_ComputationTarget> > mKnowns;
   // The targets which are actually computed (determined by connectivity
   // analysis).
@@ -65,6 +119,9 @@ public:
                       std::wstring& aAssignPattern,
                       std::wstring& aSolvePattern,
                       std::wstring& aSolveNLSystemPattern,
+                      std::wstring& aTemporaryVariablePattern,
+                      std::wstring& aDeclareTemporaryPattern,
+                      std::wstring& aConditionalAssignmentPattern,
                       uint32_t aArrayOffset,
                       iface::cellml_services::MaLaESTransform* aTransform,
                       iface::cellml_services::CeVAS* aCeVAS,
@@ -78,6 +135,9 @@ public:
       mAssignPattern(aAssignPattern),
       mSolvePattern(aSolvePattern),
       mSolveNLSystemPattern(aSolveNLSystemPattern),
+      mTemporaryVariablePattern(aTemporaryVariablePattern),
+      mDeclareTemporaryPattern(aDeclareTemporaryPattern),
+      mConditionalAssignmentPattern(aConditionalAssignmentPattern),
       mArrayOffset(aArrayOffset),
       mTransform(aTransform),
       mCeVAS(aCeVAS),
@@ -97,7 +157,8 @@ public:
   void CreateBaseComputationTargets();
   ptr_tag<CDA_ComputationTarget>  GetTargetOfDegree(ptr_tag<CDA_ComputationTarget>  aBase,
                                            uint32_t aDegree);
-  void CreateEquations();
+  void CreateMathStatements();
+  void ActivateAllPiecewise();
   void ContextError(const std::wstring& details,
                     iface::mathml_dom::MathMLElement* context1,
                     iface::cellml_api::CellMLElement* context2);
@@ -116,6 +177,7 @@ public:
   void AllocateStateVariable(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr);
   void AllocateAlgebraicVariable(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr);
   void AllocateVOI(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr);
+  void CloneNamesIntoDelayedNames();
   void AppendAssign(std::wstring& aAppendTo,
                     const std::wstring& aLHS,
                     const std::wstring& aRHS);
@@ -131,7 +193,7 @@ public:
                             std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
                             std::list<System*>& aSystems);
   bool FindSmallSystem(
-                       std::set<ptr_tag<Equation> >& aUseEquations,
+                       std::set<ptr_tag<MathStatement> >& aUseEquations,
                        std::set<ptr_tag<CDA_ComputationTarget> >& aUseVars,
                        std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                        std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
@@ -139,7 +201,7 @@ public:
                       );
 
   bool FindBigSystem(
-                     std::set<ptr_tag<Equation> >& aUseEquations,
+                     std::set<ptr_tag<MathStatement> >& aUseMathStatements,
                      std::set<ptr_tag<CDA_ComputationTarget> >& aUseVars,
                      std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                      std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
@@ -147,10 +209,10 @@ public:
                     );
 
   bool RecursivelyTestSmallSystem(
-                                  std::set<ptr_tag<Equation> >& aSystem,
-                                  std::set<ptr_tag<Equation> >::iterator& aEqIt,
+                                  std::set<ptr_tag<MathStatement> >& aSystem,
+                                  std::set<ptr_tag<MathStatement> >::iterator& aEqIt,
                                   uint32_t aNeedToAdd,
-                                  std::set<ptr_tag<Equation> >& aUseEquations,
+                                  std::set<ptr_tag<MathStatement> >& aUseMathStatements,
                                   std::set<ptr_tag<CDA_ComputationTarget> >& aUseVars,
                                   std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                                   std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
@@ -158,10 +220,10 @@ public:
                                  );
 
   bool RecursivelyTestBigSystem(
-                                std::set<ptr_tag<Equation> >& aNonSystem,
-                                std::set<ptr_tag<Equation> >::iterator& aEqIt,
+                                std::set<ptr_tag<MathStatement> >& aNonSystem,
+                                std::set<ptr_tag<MathStatement> >::iterator& aEqIt,
                                 uint32_t aNeedToRemove,
-                                std::set<ptr_tag<Equation> >& aUseEquations,
+                                std::set<ptr_tag<MathStatement> >& aUseMathStatements,
                                 std::set<ptr_tag<CDA_ComputationTarget> >& aUseVars,
                                 std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                                 std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates
@@ -185,12 +247,17 @@ public:
      aSysByTargReq
   );
   void GenerateStateToRateCascades();
+  void GenerateCasesIntoTemplate(std::wstring& aCodeTo,
+                                 std::list<std::pair<std::wstring, std::wstring> >& aCases);
   void GenerateCodeForSystem(std::wstring& aCodeTo, System* aSys);
   iface::cellml_api::CellMLVariable* GetVariableInComponent
   (
    iface::cellml_api::CellMLComponent* aComp,
    iface::cellml_api::CellMLVariable* aVar
   );
+
+  void GenerateCodeForEquation(std::wstring& aCodeTo, Equation* aEq, ptr_tag<CDA_ComputationTarget> aComputedTarget);
+
   void GenerateAssignmentMaLaESResult
   (
    std::wstring& aCodeTo,
@@ -200,7 +267,7 @@ public:
   void GenerateSolveCode
   (
    std::wstring& aCodeTo,
-   ptr_tag<Equation> aVE,
+   Equation* aEq,
    ptr_tag<CDA_ComputationTarget>  aComputedTarget
   );
   void GenerateMultivariateSolveCode
@@ -218,7 +285,7 @@ public:
   void GenerateMultivariateSolveCodeEq
   (
    std::wstring& aCodeTo,
-   ptr_tag<Equation> aEq,
+   ptr_tag<MathStatement> aMS,
    const std::wstring& aPattern,
    const wchar_t* aId,
    const wchar_t* aIndex,
@@ -241,7 +308,8 @@ public:
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
     & mAlgebraicVariableNamePattern, & mRateNamePattern,
     & mVOIPattern, & mAssignPattern, & mSolvePattern,
-    & mSolveNLSystemPattern;
+    & mSolveNLSystemPattern, & mTemporaryVariablePattern,
+    & mDeclareTemporaryPattern, & mConditionalAssignmentPattern;
   uint32_t mArrayOffset;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;
@@ -251,10 +319,10 @@ public:
   std::list<ptr_tag<CDA_ComputationTarget> > mBaseTargets;
   std::set<ptr_tag<CDA_ComputationTarget> > mKnown, mFloating, mUnwanted;
   std::map<ptr_tag<CDA_ComputationTarget>, double> mInitialOverrides;
-  std::list<ptr_tag<Equation> > mEquations;
+  std::list<ptr_tag<MathStatement> > mMathStatements;
   std::list<System*> mSystems;
-  std::set<ptr_tag<Equation> > mUnusedEquations;
-  std::map<std::set<ptr_tag<CDA_ComputationTarget> >, std::set<ptr_tag<Equation> > > mEdgesInto;
+  std::set<ptr_tag<MathStatement> > mUnusedMathStatements;
+  std::map<std::set<ptr_tag<CDA_ComputationTarget> >, std::set<ptr_tag<MathStatement> > > mEdgesInto;
   std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
     mTargetsBySource;
   std::set<ptr_tag<CDA_ComputationTarget> > mBoundTargs;

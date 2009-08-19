@@ -104,7 +104,7 @@
   <ccgs:mapping keyname="solveNLSystemPattern"><![CDATA[CALL minimize(minfunc_<ID>, CONSTS, VARIABLES, <VAR>)
 <SUP>REAL FUNCTION minfunc_<ID>(CONSTS, VARIABLES)
             REAL CONSTS(*), VARIABLES(*) 
-      <EQUATIONS>minfunc_<ID>[<INDEX>] = abs((<LHS>) - (<RHS>))<JOIN>
+      <EQUATIONS>minfunc_<ID>[<INDEX>] = abs(<EXPR>)<JOIN>
       </EQUATIONS>
       RETURN
       END

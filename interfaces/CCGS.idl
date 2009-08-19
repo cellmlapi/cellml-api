@@ -325,16 +325,39 @@ module cellml_services
 
    /**
     * The pattern which is used to solve a system of n equations in n unknowns.
-    * <LHS> is replaced by the expression for the first argument to the
-    *       equality.
-    * <RHS> is replaced by the expression for the second argument to the
-    *       equality.
+    * <EXPR> is replaced by the expression for the difference between the two sides
+    *        of the equality.
     * <SUP> causes the following text to go into the supplementary function
     *       array instead of the main code list.
     * <VAR> gives the name to the variable to compute.
     * <ID> is replaced with a numeric ID unique to this equation.
     */
    attribute wstring solveNLSystemPattern;
+
+   /**
+    * The pattern which is used to determine the name of temporary variables
+    * when they are required for infinitesimally expressions. The % is replaced
+    * with a number unique to the temporary variable.
+    * Default: temp%
+    */
+   attribute wstring temporaryVariablePattern;
+
+   /**
+    * The pattern used to declare that a temporary variable is in use.
+    * The % is replaced with the temporary variable name.
+    * Default: double %;
+    */
+   attribute wstring declareTemporaryPattern;
+
+   /**
+    * The pattern used when a top-level piecewise statement is encountered.
+    * The generated output treats the first case specially, and this case has
+    * the condition and statement outside of <CASES>. The generated output for
+    * the remaining cases is produced by repeating the pattern between <CASES>
+    * and </CASES>.
+    * Default: if (<CONDITION>)\r\n{\r\n  <STATEMENT>\r\n}\r\n<CASES>else if (<CONDITION>)\r\n{\r\n  <STATEMENT>\r\n}\r\n</CASES>
+    */
+   attribute wstring conditionalAssignmentPattern;
 
    /**
     * A MaLaES transform to use. If will be null if it has not been set, and

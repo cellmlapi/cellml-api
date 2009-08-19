@@ -140,7 +140,7 @@ void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)
 #define pret rfi->aPRET
   <EQUATIONS><VAR> = p[<INDEX>];<JOIN>
   </EQUATIONS>
-  <EQUATIONS>hx[<INDEX>] = fixnans((<LHS>) - (<RHS>));<JOIN>
+  <EQUATIONS>hx[<INDEX>] = fixnans(<EXPR>);<JOIN>
   </EQUATIONS>
 #undef VOI
 #undef CONSTANTS
@@ -166,6 +166,16 @@ double* STATES, double* ALGEBRAIC, int* pret)
   </EQUATIONS>
 }
 ]]></ccgs:mapping>
+  <ccgs:mapping keyname="temporaryVariablePattern">temp%</ccgs:mapping>
+  <ccgs:mapping keyname="declareTemporaryPattern">double %;
+</ccgs:mapping>
+  <ccgs:mapping keyname="conditionalAssignmentPattern"><![CDATA[if (<CONDITION>)
+{
+  <STATEMENT>}
+<CASES>else if (<CONDITION>)
+{
+  <STATEMENT>}
+</CASES>]]></ccgs:mapping>
 </ccgs:dictionary>
 
 <dictionary>

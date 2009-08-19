@@ -147,7 +147,7 @@ end
 function resid = residualSN_<ID>(algebraicCandidate, ALGEBRAIC, VOI, CONSTANTS, STATES)
     <EQUATIONS><VAR> = algebraicCandidate(<INDEX>);<JOIN>
     </EQUATIONS>
-    <EQUATIONS>resid(<INDEX>) = (<LHS>) - (<RHS>);<JOIN>
+    <EQUATIONS>resid(<INDEX>) = <EXPR>;<JOIN>
     </EQUATIONS>
 end
 
