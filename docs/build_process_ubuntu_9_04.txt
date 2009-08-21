@@ -33,14 +33,14 @@ From a shell prompt:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~
-hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api cellml
+hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api/cellml-api cellml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 or the following, if you want to be able to push things to the official Mercurial repository:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~
-hg clone ssh://[Username]@cellml-api.hg.sourceforge.net/hgroot/cellml-api cellml
+hg clone ssh://[Username]@cellml-api.hg.sourceforge.net/hgroot/cellml-api/cellml-api cellml
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
