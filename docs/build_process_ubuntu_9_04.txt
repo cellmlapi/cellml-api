@@ -60,18 +60,6 @@ sudo ./jdk-6u14-linux-i586.bin
 sudo rm jdk-6u14-linux-i586.bin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Finally, add the following to /home/[Username]/.bashrc:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-export JAVA_HOME=/usr/local/share/jdk1.6.0_14
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-and then restart it:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-. ./.bashrc
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 Build the CellML DOM API
 ------------------------

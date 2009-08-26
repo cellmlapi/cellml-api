@@ -5,7 +5,7 @@
 
 \subsection step1 Step 1: Download the current development branch via Mercurial
 
-hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api
+hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api/cellml-api
 
 \subsection step2 Step 2: Install external packages
 
@@ -24,12 +24,6 @@ Install the packages:
 
 sudo apt-get install <package-name>
 
-Set JAVA_HOME path in the /home/[Username]/.bashrc:
-
-export JAVA_HOME=/<pathToJavaInstallationFolder>
-
-Restart the shell
-
 
 \subsection step3 Step 3: Build the CellML DOM API from its source code
 
@@ -38,12 +32,6 @@ cd cellml-api/
 aclocal && autoconf && automake
 
 ./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds
-
-libtoolize
-
-mv libtool libtool.backup
-
-ln -s /usr/bin/libtool
 
 make
 
