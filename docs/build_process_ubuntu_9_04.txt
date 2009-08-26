@@ -76,7 +76,7 @@ make
 Note #1: "aclocal && autoconf && automake" is not required if building from a source tar.
 Note #2: if the CellML DOM API is to be used within OpenCell, then add "--enable-xpcom=/home/[Username]/xulrunner-sdk" to the "configure" command line.
 Note #3: if the examples are required (e.g. CellML2C, RunCellML and ValidateCellML), then add "--enable-examples=yes" to the "configure" command line. NOTE: THIS OPTION SHOULD WORK, BUT FOR SOME REASON IS NOT RECOGNISED UNDER UBUNTU 9.04...
-Note #4: if you want the Java binding to the CellML DOM API, then add "--enable-java" to the "configure" command line.
+Note #4: if you want the Java binding to the CellML DOM API, then add '--enable-java CPPFLAGS="-I/usr/local/share/jdk1.6.0_14/include -I/usr/local/share/jdk1.6.0_14/include/linux' to the "configure" command line.
 
 
 Test the CellML API
