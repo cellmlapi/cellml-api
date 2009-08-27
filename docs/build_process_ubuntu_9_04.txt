@@ -1,12 +1,12 @@
 Download and uncompress the XUL Runner SDK (only if the CellML API is to be used within OpenCell)
 =================================================================================================
 
-The latest release of the XUL Runner SDK can be downloaded from http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/, e.g. http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.0.7/sdk/xulrunner-1.9.0.7.en-US.linux-i686.sdk.tar.bz2. From there, do the following to make it available in /home/[Username]/xulrunner-sdk:
+The latest release of the XUL Runner SDK can be downloaded from http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/, e.g. http://releases.mozilla.org/pub/mozilla.org/xulrunner/releases/1.9.1.2/sdk/xulrunner-1.9.1.2.en-US.linux-i686.sdk.tar.bz2. From there, do the following to make it available in /home/[Username]/xulrunner-sdk:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cd ~
-tar -xvf xulrunner-1.9.0.7.en-US.linux-i686.sdk.tar.bz2
-rm xulrunner-1.9.0.7.en-US.linux-i686.sdk.tar.bz2
+tar -xvf xulrunner-1.9.1.2.en-US.linux-i686.sdk.tar.bz2
+rm xulrunner-1.9.1.2.en-US.linux-i686.sdk.tar.bz2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
