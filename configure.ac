@@ -12,6 +12,14 @@ AC_CONFIG_HEADER([cda_config.h])
 AM_INIT_AUTOMAKE([-Wno-portability])
 PKG_PROG_PKG_CONFIG
 
+AC_ARG_ENABLE(examples,
+[  --enable-examples Build example programs],
+[case "${enableval}" in
+  yes) enable_examples=true ;;
+  no) enable_examples=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-examples) ;;
+esac], [enable_examples=true])
+
 AC_ARG_ENABLE(corba,
 [  --enable-corba    Build CORBA glue],
 [case "${enableval}" in
@@ -401,6 +409,7 @@ AM_CONDITIONAL(ENABLE_CELEDSEXPORT_AND_JAVA, test x$celedsexportandjava = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_JAVA, test x$cisandjava = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_JAVA, test x$vacssandjava = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_JAVA, test x$rdfandjava = xtrue)
+AM_CONDITIONAL(ENABLE_EXAMPLES, test x$enable_examples = xtrue)
 
 # Checks for programs.
 AC_PROG_CXX
