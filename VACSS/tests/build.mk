@@ -1,4 +1,7 @@
+if ENABLE_EXAMPLES
 bin_PROGRAMS += ValidateCellML
+endif
+
 ValidateCellML_SOURCES=$(top_srcdir)/VACSS/tests/ValidateCellML.cpp
 ValidateCellML_LDADD=\
   $(top_builddir)/libcellml.la \

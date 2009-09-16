@@ -1,4 +1,7 @@
+if ENABLE_EXAMPLES
 bin_PROGRAMS += RunCellML
+endif
+
 RunCellML_SOURCES=$(top_srcdir)/CIS/tests/RunCellML.cpp
 RunCellML_LDADD=\
   $(top_builddir)/libcellml.la \

@@ -7,7 +7,11 @@
 #  [1] https://tracker.physiomeproject.org/show_bug.cgi?id=1279
 #  [2] https://tracker.physiomeproject.org/show_bug.cgi?id=1514#c16
 #  [3] http://www.cellml.org/pipermail/cellml-tools-developers/2009-January/000140.html
+
+if ENABLE_EXAMPLES
 bin_PROGRAMS += CellML2C CellML2Python CellML2Matlab
+endif
+
 CellML2C_SOURCES=$(top_srcdir)/CCGS/tests/CellML2C.cpp
 CellML2C_LDADD=\
   $(top_builddir)/libcellml.la \
