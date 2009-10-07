@@ -1041,27 +1041,26 @@ CDA_Model::RecursivelyChangeVersionCopy
 )
   throw(std::exception&)
 {
-  //ObjRef<iface::dom::NamedNodeMap> nnm(already_AddRefd<iface::dom::NamedNodeMap>
-  //                                     (aOriginal->attributes()));
-  //uint32_t i, l;
-  //if (nnm)
-  //{
-  //  DECLARE_QUERY_INTERFACE_OBJREF(aCopyEl, aCopy, dom::Element);
+  ObjRef<iface::dom::NamedNodeMap> nnm(already_AddRefd<iface::dom::NamedNodeMap>
+                                       (aOriginal->attributes()));
+  if (nnm)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(aCopyEl, aCopy, dom::Element);
 
-    //l = nnm->length();
-    //for (i = 0; i < l; i++)
-    //{
-    //  RETURN_INTO_OBJREF(origItemN, iface::dom::Node, nnm->item(i));
-    //  DECLARE_QUERY_INTERFACE_OBJREF(origItem, origItemN, dom::Attr);
-    //  RETURN_INTO_WSTRING(ln, origItem->nodeName());
-    //  RETURN_INTO_WSTRING(nsuri, origItem->namespaceURI());
-    //  RETURN_INTO_WSTRING(v, origItem->nodeValue());
-    //  if (nsuri == CELLML_1_0_NS || nsuri == CELLML_1_1_NS)
-    //    nsuri = aNewNamespace;
+    uint32_t i, l = nnm->length();
+    for (i = 0; i < l; i++)
+    {
+      RETURN_INTO_OBJREF(origItemN, iface::dom::Node, nnm->item(i));
+      DECLARE_QUERY_INTERFACE_OBJREF(origItem, origItemN, dom::Attr);
+      RETURN_INTO_WSTRING(ln, origItem->nodeName());
+      RETURN_INTO_WSTRING(nsuri, origItem->namespaceURI());
+      RETURN_INTO_WSTRING(v, origItem->nodeValue());
+      if (nsuri == CELLML_1_0_NS || nsuri == CELLML_1_1_NS)
+        nsuri = aNewNamespace;
       
-      // aCopyEl->setAttributeNS(ln.c_str(), nsuri.c_str(), v.c_str());
-    //}
-  //}  
+      aCopyEl->setAttributeNS(nsuri.c_str(), ln.c_str(), v.c_str());
+    }
+  }  
 
   ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
                                   (aOriginal->childNodes()));
