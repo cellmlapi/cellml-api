@@ -22,7 +22,7 @@
     <variable name="x" units="dimensionless" cmeta:id="x" />
     <variable name="y" units="dimensionless" initial_value="offset"/>
     <variable name="z" units="dimensionless"/>
-    <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="eq1">
+    <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq1">
       <apply><eq/>
         <apply><diff/>
           <bvar><ci>time</ci></bvar>
@@ -34,7 +34,7 @@
         </apply>
       </apply>
     </math>
-    <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="eq2">
+    <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq2">
       <apply><eq/>
         <apply><minus/>
           <ci>x</ci>
@@ -46,7 +46,7 @@
         </apply>
       </apply>
     </math>
-    <math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="eq3">
+    <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq3">
       <apply><eq/>
         <ci>z</ci>
         <piecewise>

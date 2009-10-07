@@ -29,7 +29,9 @@ public:
   CDA_IMPL_QI1(cellml_services::ComputationTarget);
 
   CDA_ComputationTarget() : self(this), _cda_refcount(1), mDegree(0), mAssignedIndex(0),
-                            mEvaluationType(iface::cellml_services::FLOATING)
+                            mIsReset(false),
+                            mEvaluationType(iface::cellml_services::FLOATING),
+                            mInfDelayedAssignedIndex(-1)
   {};
   ~CDA_ComputationTarget() {};
 
@@ -47,10 +49,13 @@ public:
   ObjRef<iface::cellml_api::CellMLVariable> mVariable;
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
   uint32_t mDegree, mAssignedIndex;
+  bool mIsReset;
   iface::cellml_services::VariableEvaluationType mEvaluationType;
   // Only available during code generation...
-  ptr_tag<CDA_ComputationTarget> mUpDegree;
+  ptr_tag<CDA_ComputationTarget> mUpDegree, mDownDegree;
   uint32_t mHighestDegree;
+  // -1 if there is no index for the infinitesimally delayed version.
+  int32_t mInfDelayedAssignedIndex;
 
   // Disjoint set utilities...
   uint32_t rank;

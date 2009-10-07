@@ -75,7 +75,7 @@ CDAMaLaESResult::CDAMaLaESResult
       throw MaLaESError(msg);
     }
 
-    QUERY_INTERFACE(impComp, mContext, cellml_api::ImportComponent);    
+    QUERY_INTERFACE(impComp, mContext, cellml_api::ImportComponent);
   }
 }
 
@@ -178,9 +178,10 @@ public:
   CDA_IMPL_QI1(cellml_services::DegreeVariable);
 
   CDAMaLaESDegreeVariable(uint32_t aDeg, bool aWasInfinitesimallyDelayed,
+                          bool aWasUndelayed,
                           iface::cellml_api::CellMLVariable* aVar)
     : _cda_refcount(1), mDeg(aDeg), mWasInfinitesimallyDelayed(aWasInfinitesimallyDelayed),
-      mVar(aVar)
+      mWasUndelayed(aWasUndelayed), mVar(aVar)
   {
   }
 
@@ -198,14 +199,20 @@ public:
   }
 
   bool
-  wasInfinitesimallyDelayed() throw(std::exception&)
+  appearedInfinitesimallyDelayed() throw(std::exception&)
   {
     return mWasInfinitesimallyDelayed;
   }
 
+  bool
+  appearedUndelayed() throw(std::exception&)
+  {
+    return mWasUndelayed;
+  }
+
 private:
   uint32_t mDeg;
-  bool mWasInfinitesimallyDelayed;
+  bool mWasInfinitesimallyDelayed, mWasUndelayed;
   ObjRef<iface::cellml_api::CellMLVariable> mVar;
 };
 
@@ -239,12 +246,13 @@ public:
       return NULL;
 
     uint32_t deg = (*mIt).mDegree;
-    bool wasInfDel = (*mIt).mWasInfDelay;
+    bool wasInfDel = (*mIt).mMetadata->mWasInfDelayed;
+    bool wasUndelayed = (*mIt).mMetadata->mWasUndelayed;
     iface::cellml_api::CellMLVariable* var = (*mIt).mVar;
     
     mIt++;
 
-    return new CDAMaLaESDegreeVariable(deg, wasInfDel, var);
+    return new CDAMaLaESDegreeVariable(deg, wasInfDel, wasUndelayed, var);
   }
 
 private:
@@ -370,11 +378,17 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
 
     if (!aIsBound)
     {
-      DegreeVariableInformation dvi(degree, infdelayed, sv);
-      if (mInvolvedDegSet.count(dvi) == 0)
+      DegreeVariableInformation dvi(degree, infdelayed, !infdelayed, sv);
+      std::set<DegreeVariableInformation>::iterator dvsi;
+      if ((dvsi = mInvolvedDegSet.find(dvi)) == mInvolvedDegSet.end())
       {
         mInvolvedDegSet.insert(dvi);
         mInvolvedDeg.push_back(dvi);
+      }
+      else
+      {
+        (*dvsi).mMetadata->mWasInfDelayed |= infdelayed;
+        (*dvsi).mMetadata->mWasUndelayed |= !infdelayed;
       }
 
       if (degree > 0)

@@ -5,4 +5,4 @@ At the time of the error, the following variables were defined:
  * y in component main in model ./tests/test_xml/overconstrained_1.xml
  * z in component main in model ./tests/test_xml/overconstrained_1.xml
 The following equation was unneeded:
- * Equation with no id on the apply or math element.
+ * Equation in math element with id eq2_dup.

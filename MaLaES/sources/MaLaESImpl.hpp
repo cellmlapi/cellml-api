@@ -33,12 +33,51 @@ class CDAMaLaESTransform;
 struct DegreeVariableInformation
 {
 public:
-  DegreeVariableInformation(uint32_t aDegree, bool aWasInfDelay, iface::cellml_api::CellMLVariable* aVar)
-    : mDegree(aDegree), mWasInfDelay(aWasInfDelay), mVar(aVar)
+  DegreeVariableInformation(uint32_t aDegree, bool aWasInfDelay,
+                            bool aWasUndelayed,
+                            iface::cellml_api::CellMLVariable* aVar)
+    : mDegree(aDegree), mMetadata(new Metadata(aWasInfDelay, aWasUndelayed)),
+      mVar(aVar)
   {}
 
+  ~DegreeVariableInformation()
+  {
+    mMetadata->release_ref();
+  }
+
+  DegreeVariableInformation(const DegreeVariableInformation& aCopy)
+    : mDegree(aCopy.mDegree), mMetadata(aCopy.mMetadata), mVar(aCopy.mVar)
+  {
+    mMetadata->add_ref();
+  }
+
   uint32_t mDegree;
-  bool mWasInfDelay;
+
+  struct Metadata
+  {
+    Metadata(bool aWasInfDelayed, bool aWasUndelayed)
+      : mWasInfDelayed(aWasInfDelayed), mWasUndelayed(aWasUndelayed), refcount(1)
+    {
+    }
+
+    void add_ref()
+    {
+      refcount++;
+    }
+
+    void release_ref()
+    {
+      refcount--;
+      if (refcount == 0)
+        delete this;
+    }
+
+    bool mWasInfDelayed;
+    bool mWasUndelayed;
+    uint32_t refcount;
+  };
+  Metadata* mMetadata;
+
   iface::cellml_api::CellMLVariable* mVar;
 
   bool

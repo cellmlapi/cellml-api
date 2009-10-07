@@ -167,8 +167,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       reinterpret_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
     n->release_ref();
 
-    wchar_t* cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#",
-                                        L"id");
+    wchar_t* cmeta = el->getAttribute(L"id");
     if (!wcscmp(cmeta, L""))
       printf(" *   <equation with no cmeta ID>\n");
     else
@@ -178,17 +177,21 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
     n = el->parentNode();
     el->release_ref();
 
-    el = reinterpret_cast<iface::dom::Element*>
-      (n->query_interface("dom::Element"));
-    n->release_ref();
+    if (n != NULL)
+    {
+      el = reinterpret_cast<iface::dom::Element*>
+        (n->query_interface("dom::Element"));
+      n->release_ref();
 
-    cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#", L"id");
-    if (!wcscmp(cmeta, L""))
-      printf(" *   in <math with no cmeta ID>\n");
-    else
-      printf(" *   in math with cmeta:id %S\n", cmeta);
-    free(cmeta);
-    el->release_ref();
+      cmeta = el->getAttribute(L"id");
+      if (!wcscmp(cmeta, L""))
+        printf(" *   in <math with no cmeta ID>\n");
+      else
+        printf(" *   in math with cmeta:id %S\n", cmeta);
+      free(cmeta);
+
+      el->release_ref();
+    }
 
     printf(" */\n");
     return;
@@ -260,8 +263,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       reinterpret_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
     n->release_ref();
 
-    wchar_t* cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#",
-                                        L"id");
+    wchar_t* cmeta = el->getAttribute(L"id");
     std::wstring str;
     if (!wcscmp(cmeta, L""))
       str += L" *   <equation with no cmeta ID>\n";
@@ -280,7 +282,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       (n->query_interface("dom::Element"));
     n->release_ref();
 
-    cmeta = el->getAttributeNS(L"http://www.cellml.org/metadata/1.0#", L"id");
+    cmeta = el->getAttribute(L"id");
     if (!wcscmp(cmeta, L""))
       str += L" *   in <math with no cmeta ID>\n";
     else

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<model
+    name="reset"
+    cmeta:id="reset"
+    xmlns="http://www.cellml.org/cellml/1.1#"
+    xmlns:cellml="http://www.cellml.org/cellml/1.1#"
+    xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
+  <component name="main" cmeta:id="main">
+    <variable name="time" units="dimensionless"/>
+    <variable name="x" units="dimensionless"/>
+    <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq1">
+      <piecewise id="the_piecewsie">
+        <piece id="the_piece">
+          <apply id="reset_x"><eq/>
+            <ci>x</ci>
+            <cn cellml:units="dimensionless">0</cn>
+          </apply>
+          <apply id="x_condition"><gt/>
+            <ci>x</ci>
+            <cn cellml:units="dimensionless">10</cn>
+          </apply>
+        </piece>
+        <otherwise id="the_otherwise">
+          <apply id="time_rate">
+            <eq/>
+            <apply>
+              <diff/>
+              <ci>x</ci>
+              <bvar><ci>time</ci></bvar>
+            </apply>
+            <cn cellml:units="dimensionless">1</cn>
+          </apply>
+        </otherwise>
+      </piecewise>
+    </math>
+  </component>
+</model>

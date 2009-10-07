@@ -85,5 +85,6 @@ runtest SimpleDAE_NonLinear
 runtest newton_raphson_parabola_overrideiv
 runtest_usenames modified_parabola
 runtest StateModel
+runtest reset_rule
 
 exit 0

@@ -19,11 +19,12 @@ public:
       UNCLASSIFIED_MATHML
     } StatementType;
 
-  MathStatement(StatementType aType) : mType(aType) {}
+  MathStatement(StatementType aType) : mInvolvesDelays(false), mType(aType) {}
   virtual ~MathStatement() {}
 
   ObjRef<iface::cellml_api::CellMLComponent> mContext;
-  std::list<ptr_tag<CDA_ComputationTarget> > mTargets;
+  std::list<ptr_tag<CDA_ComputationTarget> > mTargets, mDelayedTargets;
+  bool mInvolvesDelays;
 
   StatementType mType;
   // Temporary annotations used in code generation...
@@ -68,9 +69,10 @@ class Piecewise : public MathMLMathStatement
 {
 public:
   Piecewise() : MathMLMathStatement(MathStatement::PIECEWISE) {}
+
   ~Piecewise()
   {
-    std::list<std::pair<Equation*, MathMLMathStatement*> >::iterator i;
+    std::list<std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> > >::iterator i;
     for (i = mPieces.begin(); i != mPieces.end(); i++)
     {
       delete (*i).first;
@@ -78,11 +80,7 @@ public:
     }
   }
 
-  std::list<std::pair<Equation*, MathMLMathStatement*> > mPieces;
-  // We provide for the possibility that only some of the pieces are active at
-  // any one time, so the state and rate setting parts of an override rule can
-  // be separated out.
-  std::list<std::pair<Equation*, MathMLMathStatement*> > mActivePieces;
+  std::list<std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> > > mPieces;
 };
 
 /*
@@ -158,7 +156,15 @@ public:
   ptr_tag<CDA_ComputationTarget>  GetTargetOfDegree(ptr_tag<CDA_ComputationTarget>  aBase,
                                            uint32_t aDegree);
   void CreateMathStatements();
-  void ActivateAllPiecewise();
+  void MakeSystemsForResetRulesAndClearKnown
+    (
+     std::set<std::pair<ptr_tag<CDA_ComputationTarget>, ptr_tag<MathStatement> > >&
+       aResets,
+     std::list<System*>& aSystems,
+     std::set<ptr_tag<CDA_ComputationTarget> >& aKnown,
+     std::set<ptr_tag<CDA_ComputationTarget> >& aFloating
+    );
+  void SplitPiecewiseByResetRule();
   void ContextError(const std::wstring& details,
                     iface::mathml_dom::MathMLElement* context1,
                     iface::cellml_api::CellMLElement* context2);
@@ -173,9 +179,9 @@ public:
                               std::wstring& aPattern,
                               uint32_t& aNextIndex,
                               uint32_t& aCountVar);
-  void AllocateConstant(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr);
-  void AllocateStateVariable(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr);
-  void AllocateAlgebraicVariable(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr);
+  void AllocateConstant(ptr_tag<CDA_ComputationTarget> aCT, std::wstring& aStr);
+  void AllocateStateVariable(ptr_tag<CDA_ComputationTarget> aCT, std::wstring& aStr);
+  void AllocateAlgebraicVariable(ptr_tag<CDA_ComputationTarget> aCT, std::wstring& aStr);
   void AllocateVOI(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr);
   void CloneNamesIntoDelayedNames();
   void AppendAssign(std::wstring& aAppendTo,
@@ -191,7 +197,8 @@ public:
   bool DecomposeIntoSystems(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                             std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
                             std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
-                            std::list<System*>& aSystems);
+                            std::list<System*>& aSystems,
+                            bool aIgnoreInfdelayed = false);
   bool FindSmallSystem(
                        std::set<ptr_tag<MathStatement> >& aUseEquations,
                        std::set<ptr_tag<CDA_ComputationTarget> >& aUseVars,
@@ -230,23 +237,24 @@ public:
                                );
 
   void BuildSystemsByTargetsRequired(std::list<System*>& aSystems,
-                                     std::map<ptr_tag<CDA_ComputationTarget> , System*>&
+                                     std::map<ptr_tag<CDA_ComputationTarget>, System*>&
                                      aSysByTargReq);
 
   void GenerateCodeForSet(std::wstring& aCodeTo,
                           std::set<ptr_tag<CDA_ComputationTarget> >& aKnown,
                           std::list<System*>& aTargets,
-                          std::map<ptr_tag<CDA_ComputationTarget> , System*>&
+                          std::map<ptr_tag<CDA_ComputationTarget>, System*>&
                             aSysByTargReq
                          );
   void GenerateCodeForSetByType
   (
    std::set<ptr_tag<CDA_ComputationTarget> >& aKnown,
    std::list<System*>& aSystems,
-   std::map<ptr_tag<CDA_ComputationTarget> , System*>&
+   std::map<ptr_tag<CDA_ComputationTarget>, System*>&
      aSysByTargReq
   );
   void GenerateStateToRateCascades();
+  void GenerateInfDelayUpdates();
   void GenerateCasesIntoTemplate(std::wstring& aCodeTo,
                                  std::list<std::pair<std::wstring, std::wstring> >& aCases);
   void GenerateCodeForSystem(std::wstring& aCodeTo, System* aSys);
@@ -261,14 +269,14 @@ public:
   void GenerateAssignmentMaLaESResult
   (
    std::wstring& aCodeTo,
-   ptr_tag<CDA_ComputationTarget>  aTarget,
+   ptr_tag<CDA_ComputationTarget> aTarget,
    iface::cellml_services::MaLaESResult* aMR
   );
   void GenerateSolveCode
   (
    std::wstring& aCodeTo,
    Equation* aEq,
-   ptr_tag<CDA_ComputationTarget>  aComputedTarget
+   ptr_tag<CDA_ComputationTarget> aComputedTarget
   );
   void GenerateMultivariateSolveCode
   (
@@ -303,6 +311,9 @@ public:
   void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
   void RestoreSavedRates(std::wstring& aCode);
   void ProcessModellerSuppliedIVHints();
+  void ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT, std::wstring& aStr);
+  void SetupMathMLMathStatement(MathMLMathStatement* mms, iface::mathml_dom::MathMLElement* mn,
+                                iface::cellml_api::CellMLComponent* c);
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
@@ -320,15 +331,17 @@ public:
   std::set<ptr_tag<CDA_ComputationTarget> > mKnown, mFloating, mUnwanted;
   std::map<ptr_tag<CDA_ComputationTarget>, double> mInitialOverrides;
   std::list<ptr_tag<MathStatement> > mMathStatements;
+  std::set<std::pair<ptr_tag<CDA_ComputationTarget>, ptr_tag<MathStatement> > > mResets;
   std::list<System*> mSystems;
   std::set<ptr_tag<MathStatement> > mUnusedMathStatements;
   std::map<std::set<ptr_tag<CDA_ComputationTarget> >, std::set<ptr_tag<MathStatement> > > mEdgesInto;
   std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
     mTargetsBySource;
-  std::set<ptr_tag<CDA_ComputationTarget> > mBoundTargs;
+  std::set<ptr_tag<CDA_ComputationTarget> > mBoundTargs, mDelayedTargs;
   uint32_t mNextConstantIndex, mNextStateVariableIndex,
     mNextAlgebraicVariableIndex, mNextVOI, mNextSolveId;
   std::list<std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> > mRateNameBackup;
+  std::list<ptr_tag<CDA_ComputationTarget> > mInfDelayedTargets;
 };
 
 #endif // _CodeGenerationState_hxx

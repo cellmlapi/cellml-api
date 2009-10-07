@@ -69,5 +69,6 @@ runtest units-import-import
 runtest units-in-imported-component
 runtest SimpleDAE_NonLinear
 runtest StateModel
+runtest reset_rule
 
 exit 0

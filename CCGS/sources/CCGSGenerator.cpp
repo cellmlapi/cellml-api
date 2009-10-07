@@ -29,6 +29,10 @@ CodeGenerationState::~CodeGenerationState()
        i != mMathStatements.end(); i++)
     delete *i;
 
+  for (std::set<std::pair<ptr_tag<CDA_ComputationTarget>, ptr_tag<MathStatement> > >::iterator i = mResets.begin();
+       i != mResets.end(); i++)
+    delete (*i).second;
+
   for (std::list<System*>::iterator i = mSystems.begin();
        i != mSystems.end(); i++)
     delete *i;
@@ -60,7 +64,7 @@ CodeGenerationState::GenerateCode()
     // Create all variable edges (this creates derived computation targets as a
     //   side-effect)...
     CreateMathStatements();
-    ActivateAllPiecewise();
+    SplitPiecewiseByResetRule();
 
     // Next, set starting classification for all targets...
     FirstPassTargetClassification();
@@ -75,7 +79,7 @@ CodeGenerationState::GenerateCode()
     std::list<System*> systems;
 
     // Now, determine all constants computable from the current constants...
-    DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
+    DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems, true);
 
     mUnwanted.clear();
 
@@ -116,6 +120,7 @@ CodeGenerationState::GenerateCode()
     systems.clear();
 
     bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
+    MakeSystemsForResetRulesAndClearKnown(mResets, systems, mKnown, mFloating);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
 
     // Assign algebraic variables for set...
@@ -154,6 +159,8 @@ CodeGenerationState::GenerateCode()
     // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
     //  above equation, but also it is a rate for y).
     GenerateStateToRateCascades();
+
+    GenerateInfDelayUpdates();
   }
   catch (UnderconstrainedError uce)
   {
@@ -213,17 +220,235 @@ CodeGenerationState::GenerateCode()
 #define HINTS_NS L"http://www.cellml.org/metadata/simulation/solverhints/1.0#"
 
 void
-CodeGenerationState::ActivateAllPiecewise()
+CodeGenerationState::MakeSystemsForResetRulesAndClearKnown
+(
+ std::set<std::pair<ptr_tag<CDA_ComputationTarget>, ptr_tag<MathStatement> > >& aResets,
+ std::list<System*>& aSystems,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aKnown,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aFloating
+)
+{
+  for (
+       std::set<std::pair<ptr_tag<CDA_ComputationTarget>, ptr_tag<MathStatement> > >::iterator i
+         = aResets.begin();
+       i != aResets.end();
+       i++
+      )
+  {
+    ptr_tag<CDA_ComputationTarget> ct = (*i).first;
+    ptr_tag<MathStatement> ms = (*i).second;
+
+    std::set<ptr_tag<MathStatement> > mss;
+    mss.insert(ms);
+    std::set<ptr_tag<CDA_ComputationTarget> > mk, mu;
+    aKnown.erase(ct);
+    aFloating.insert(ct);
+    mu.insert(ct);
+    std::set_difference(ms->mTargets.begin(), ms->mTargets.end(),
+                        mu.begin(), mu.end(),
+                        std::inserter(mk, mk.end()));
+
+    System* syst = new System(mss, mk, mu);
+    aSystems.push_back(syst);
+    mSystems.push_back(syst);
+  }
+}
+
+void
+CodeGenerationState::SplitPiecewiseByResetRule()
 {
   for (std::list<ptr_tag<MathStatement> >::iterator i = mMathStatements.begin();
        i != mMathStatements.end();
        i++)
-    if ((*i)->mType == MathStatement::PIECEWISE)
+  {
+    MathStatement* ms = *i;
+    if (ms->mType != MathStatement::PIECEWISE)
+      continue;
+
+    Piecewise* pw = static_cast<Piecewise*>(ms);
+
+    std::set<ptr_tag<CDA_ComputationTarget> > undelayed_derivs;
     {
-      MathStatement* ms = *i;
-      Piecewise* pw = static_cast<Piecewise*>(ms);
-      pw->mActivePieces = pw->mPieces;
+      assert(pw->mContext);
+      RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                         mTransform->transform(mCeVAS, mCUSES, mAnnoSet, pw->mMaths,
+                                               pw->mContext, NULL, NULL, 0));
+      RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                         mr->iterateInvolvedVariablesByDegree());
+
+      while (true)
+      {
+        RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
+        if (dv == NULL)
+          break;
+        
+        if (dv->degree() == 0)
+          continue;
+        if (!dv->appearedUndelayed())
+          continue;
+        
+        RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                           dv->variable());
+        
+        std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+          ::iterator  mi = mTargetsBySource.find(cv);
+        undelayed_derivs.insert(GetTargetOfDegree((*mi).second, dv->degree()));
+      }
     }
+
+    if (undelayed_derivs.size() == 0)
+      continue;
+
+    std::set<ptr_tag<CDA_ComputationTarget> > undelayed_derivs_someloweronly;
+    std::map<std::pair<ptr_tag<Equation>, std::string >, uint32_t > maxDegreeByEquationVariableID;
+    for (
+         std::list<std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> > >::iterator j =
+           pw->mPieces.begin();
+         j != pw->mPieces.end();
+         j++
+        )
+    {
+      RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                         mTransform->transform(mCeVAS, mCUSES, mAnnoSet, (*j).first->mMaths,
+                                               (*j).first->mContext, NULL, NULL, 0));
+
+      RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                         mr->iterateInvolvedVariablesByDegree());
+
+      std::map<std::string, uint32_t> maxDegreeByVariableID;
+      while (true)
+      {
+        RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
+        if (dv == NULL)
+          break;
+        
+        RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                           dv->variable());
+        char* objidp = cv->objid();
+        std::string objid(objidp);
+        free(objidp);
+        uint32_t deg(dv->degree());
+
+        std::map<std::string, uint32_t>::iterator mdi = maxDegreeByVariableID.find(objid);
+        if (mdi == maxDegreeByVariableID.end())
+        {
+          maxDegreeByVariableID.insert(std::pair<std::string, uint32_t>(objid, deg));
+          maxDegreeByEquationVariableID.insert(std::pair<std::pair<ptr_tag<Equation>, std::string>, uint32_t>
+                                               (std::pair<ptr_tag<Equation>, std::string>
+                                                ((*j).first, objid), deg));
+        }
+        else if ((*mdi).second < deg)
+        {
+          (*mdi).second = deg;
+          (*(maxDegreeByEquationVariableID.find(std::pair<ptr_tag<Equation>, std::string>
+                                                ((*j).first, objid)))).second = deg;
+        }
+      }
+
+      for (
+           std::set<ptr_tag<CDA_ComputationTarget> >::iterator k = undelayed_derivs.begin();
+           k != undelayed_derivs.end();
+           k++
+          )
+      {
+        char * objidp = (*k)->mVariable->objid();
+        std::string objid(objidp);
+        free(objidp);
+
+        std::map<std::string, uint32_t>::iterator mdi = maxDegreeByVariableID.find(objid);
+        if (mdi == maxDegreeByVariableID.end())
+          continue;
+
+        if ((*mdi).second < (*k)->mDegree)
+          undelayed_derivs_someloweronly.insert(*k);
+      }
+    }
+
+    size_t sz = undelayed_derivs_someloweronly.size();
+    if (sz == 0)
+      continue;
+    if (sz > 1)
+      ContextError(L"Piecewise with more than one variable differing in "
+                   L"maximum derivative degree not yet supported by reset "
+                   L"rule recognition code.", pw->mMaths, pw->mContext);
+    ptr_tag<CDA_ComputationTarget> resetCT = (*(undelayed_derivs_someloweronly.begin()))->mDownDegree;
+
+    resetCT->mIsReset = true;
+
+    char * vobjidp = resetCT->mVariable->objid();
+    std::string vobjid(vobjidp);
+    free(vobjidp);
+    uint32_t deg(resetCT->degree());
+
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, pw->mMaths->ownerDocument());
+    RETURN_INTO_OBJREF(apoEl, iface::dom::Element, doc->createElementNS(MATHML_NS, L"apply"));
+    DECLARE_QUERY_INTERFACE_OBJREF(otherwiseExclusion, apoEl, mathml_dom::MathMLElement);
+    RETURN_INTO_OBJREF(orEl, iface::dom::Element, doc->createElementNS(MATHML_NS, L"or"));
+    apoEl->appendChild(orEl)->release_ref();
+
+    // Make a new piecewise for the lower order entries...
+    ptr_tag<Piecewise> pwreset(new Piecewise());
+
+    mResets.insert(std::pair<ptr_tag<CDA_ComputationTarget>, ptr_tag<MathStatement> >(resetCT, pwreset));
+
+    RETURN_INTO_OBJREF(pwEl, iface::dom::Element, doc->createElementNS(MATHML_NS, L"piecewise"));
+    QUERY_INTERFACE(pwreset->mMaths, pwEl, mathml_dom::MathMLElement);
+
+    for (
+         std::list<std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> > >::iterator k, j =
+           pw->mPieces.begin();
+         j != pw->mPieces.end();
+         j = k
+        )
+    {
+      k = j;
+      k++;
+
+      std::map<std::pair<ptr_tag<Equation>, std::string >, uint32_t >::iterator i =
+        maxDegreeByEquationVariableID.find(std::pair<ptr_tag<Equation>, std::string>
+                                           ((*j).first, vobjid));
+
+      if (i == maxDegreeByEquationVariableID.end())
+        ContextError(L"Piece not involving reset rule variable not supported in reset rule piecewise",
+                     (*j).first->mMaths, (*j).first->mContext);
+
+      // See if this is 'otherwise'. If it is, we need to exclude the other
+      // cases explicitly, as they may have been split out to a different piecewise.
+      if (k == pw->mPieces.end())
+      {
+        RETURN_INTO_WSTRING(ln, (*j).second->mMaths->localName());
+        if (ln == L"true")
+        {
+          RETURN_INTO_OBJREF(apn, iface::dom::Element, doc->createElementNS(MATHML_NS, L"apply"));
+          RETURN_INTO_OBJREF(notel, iface::dom::Element,
+                             doc->createElementNS(MATHML_NS, L"not"));
+          apn->appendChild(notel)->release_ref();
+          apn->appendChild(otherwiseExclusion)->release_ref();
+          
+          QUERY_INTERFACE((*j).second->mMaths, apn, mathml_dom::MathMLElement);
+        }
+      }
+      else
+      {
+        RETURN_INTO_OBJREF(mc, iface::dom::Node, (*j).second->mMaths->cloneNode(true));
+        otherwiseExclusion->appendChild(mc)->release_ref();
+      }
+
+      if ((*i).second <= deg)
+      {
+        RETURN_INTO_OBJREF(pieceEl, iface::dom::Element,
+                           doc->createElementNS(MATHML_NS, L"piece"));
+        pieceEl->appendChild((*j).first->mMaths)->release_ref();
+        pieceEl->appendChild((*j).second->mMaths)->release_ref();
+        pwEl->appendChild(pieceEl)->release_ref();
+
+        pwreset->mPieces.push_back(*j);
+        pw->mPieces.erase(j);
+      }
+    }
+
+    SetupMathMLMathStatement(pwreset, pwreset->mMaths, pw->mContext);
+  }
 }
 
 void
@@ -366,6 +591,7 @@ CodeGenerationState::GetTargetOfDegree(ptr_tag<CDA_ComputationTarget> aBase,
     {
       aBase->mHighestDegree++;
       t->mUpDegree = (new CDA_ComputationTarget())->getSelf();
+      t->mUpDegree->mDownDegree = t;
       t = t->mUpDegree;
       mCodeInfo->mTargets.push_back(t);
       t->mVariable = aBase->mVariable;
@@ -617,8 +843,12 @@ CodeGenerationState::CreateMathStatements()
 
             DECLARE_QUERY_INTERFACE_OBJREF(mae, val, mathml_dom::MathMLApplyElement);
             if (mae == NULL)
+            {
+              delete pw;
+              delete eq;
               ContextError(L"Unexpected MathML element; was expecting an apply",
                            mn, c);
+            }
 
             ObjRef<iface::mathml_dom::MathMLElement> op;
             try
@@ -628,6 +858,8 @@ CodeGenerationState::CreateMathStatements()
             }
             catch (...)
             {
+              delete pw;
+              delete eq;
               ContextError(L"Unexpected MathML apply element with no MathML children",
                            mae, c);
             }
@@ -641,8 +873,12 @@ CodeGenerationState::CreateMathStatements()
             eq->mMaths = mae;
             
             if (mae->nArguments() != 3)
+            {
+              delete pw;
+              delete eq;
               ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
                            mae, c);
+            }
           
             eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
               (mae->getArgument(2));
@@ -688,8 +924,11 @@ CodeGenerationState::CreateMathStatements()
           mms = eq;
                   
           if (mae->nArguments() != 3)
+          {
+            delete eq;
             ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
                          mae, c);
+          }
           
           eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
             (mae->getArgument(2));
@@ -697,61 +936,83 @@ CodeGenerationState::CreateMathStatements()
             (mae->getArgument(3));
         }
 
-        mms->mMaths = mn;
-        mms->mContext = c;
+        SetupMathMLMathStatement(mms, mn, c);
         mMathStatements.push_back(ptr_tag<MathStatement>(mms));
-        RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
-                           mTransform->transform(mCeVAS, mCUSES, mAnnoSet, mn, c,
-                                                 NULL, NULL, 0));
-        
-        RETURN_INTO_WSTRING(compErr, mr->compileErrors());
-        if (compErr != L"")
-          ContextError(compErr.c_str(), mn, c);
-
-        RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
-                           mr->iterateInvolvedVariablesByDegree());
-        
-        while (true)
-        {
-          RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
-                             dvi->nextDegreeVariable());
-          if (dv == NULL)
-            break;
-          
-          RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
-                             dv->variable());
-          
-          std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
-            ::iterator  mi = mTargetsBySource.find(cv);
-          if (mi != mTargetsBySource.end())
-          {
-            mms->mTargets.push_back(GetTargetOfDegree((*mi).second, dv->degree()));
-          }
-        }
-
-        RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
-                           mr->iterateBoundVariables());
-
-        while (true)
-        {
-          RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
-                             bvi->nextVariable());
-          if (bv == NULL)
-            break;
-
-          std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
-            ::iterator  mi = mTargetsBySource.find(bv);
-          if (mi != mTargetsBySource.end())
-          {
-            if (mBoundTargs.count((*mi).second) == 0)
-              mBoundTargs.insert((*mi).second);
-          }
-        }
       }
     }
   }
 }
 
+void
+CodeGenerationState::SetupMathMLMathStatement
+(
+ MathMLMathStatement* mms,
+ iface::mathml_dom::MathMLElement* mn,
+ iface::cellml_api::CellMLComponent* c
+)
+{
+  assert(mn != NULL);
+  assert(c != NULL);
+  mms->mMaths = mn;
+  mms->mContext = c;
+  RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, mn, c,
+                                           NULL, NULL, 0));
+  
+  RETURN_INTO_WSTRING(compErr, mr->compileErrors());
+  if (compErr != L"")
+    ContextError(compErr.c_str(), mn, c);
+  
+  RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                     mr->iterateInvolvedVariablesByDegree());
+  
+  while (true)
+  {
+    RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
+                       dvi->nextDegreeVariable());
+    if (dv == NULL)
+      break;
+    
+    RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                       dv->variable());
+    
+    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+      ::iterator  mi = mTargetsBySource.find(cv);
+    if (mi != mTargetsBySource.end())
+    {
+      ptr_tag<CDA_ComputationTarget> targ(GetTargetOfDegree((*mi).second, dv->degree()));
+      if (dv->appearedInfinitesimallyDelayed())
+      {
+        mms->mDelayedTargets.push_back(targ);
+        mms->mInvolvesDelays = true;
+        
+        if (!mDelayedTargs.count(targ))
+          mDelayedTargs.insert(targ);
+      }
+      else
+        mms->mTargets.push_back(targ);
+    }
+  }
+
+  RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
+                     mr->iterateBoundVariables());
+  
+  while (true)
+  {
+    RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
+                       bvi->nextVariable());
+    if (bv == NULL)
+      break;
+
+    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+      ::iterator  mi = mTargetsBySource.find(bv);
+    if (mi != mTargetsBySource.end())
+    {
+      if (mBoundTargs.count((*mi).second) == 0)
+        mBoundTargs.insert((*mi).second);
+    }
+  }
+}
 
 void
 CodeGenerationState::FirstPassTargetClassification()
@@ -819,7 +1080,7 @@ CodeGenerationState::FirstPassTargetClassification()
     }
     else
     {
-      if (hasImmedIV)
+      if (hasImmedIV && !mDelayedTargs.count(ct))
         ct->mEvaluationType = iface::cellml_services::CONSTANT;
       else
         ct->mEvaluationType = iface::cellml_services::FLOATING;
@@ -900,6 +1161,24 @@ CodeGenerationState::AllocateVariable(ptr_tag<CDA_ComputationTarget> aCT,
   }
   else
     aStr = n;
+}
+
+void
+CodeGenerationState::ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT,
+                                           std::wstring& aStr)
+{
+  uint32_t index = 0;
+  if (aCT->mInfDelayedAssignedIndex < 0)
+  {
+    index = mNextAlgebraicVariableIndex++;
+    aCT->mInfDelayedAssignedIndex = index;
+    mInfDelayedTargets.push_back(aCT);
+  }
+  else
+    index = aCT->mInfDelayedAssignedIndex;
+
+  GenerateVariableName(aCT, aStr, mAlgebraicVariableNamePattern, index);
+  aCT->setDelayedName(aStr.c_str());
 }
 
 void
@@ -1084,8 +1363,13 @@ CodeGenerationState::BuildFloatingAndConstantLists()
       mKnown.insert(*i);
       break;
     case iface::cellml_services::FLOATING:
-      mFloating.insert(*i);
-      break;
+      if (!(*i)->mIsReset)
+      {
+        mFloating.insert(*i);
+        break;
+      }
+
+      // fall through...
     case iface::cellml_services::STATE_VARIABLE:
     case iface::cellml_services::VARIABLE_OF_INTEGRATION:
       mUnwanted.insert(*i);
@@ -1189,7 +1473,8 @@ CodeGenerationState::DecomposeIntoSystems
  std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
  std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
  std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
- std::list<System*>& aSystems
+ std::list<System*>& aSystems,
+ bool aIgnoreInfdelayed
 )
 {
   std::set<ptr_tag<CDA_ComputationTarget> > start(aStart);
@@ -1212,6 +1497,9 @@ CodeGenerationState::DecomposeIntoSystems
          i != mUnusedMathStatements.end(); i++)
     {
       std::list<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mTargets.begin(), f;
+
+      if (aIgnoreInfdelayed && (*i)->mInvolvesDelays)
+        continue;
 
       ptr_tag<CDA_ComputationTarget> linkWith;
       // See if we should ignore this math statement.
@@ -1293,6 +1581,9 @@ CodeGenerationState::DecomposeIntoSystems
          i++
         )
     {
+      if (aIgnoreInfdelayed && (*i)->mInvolvesDelays)
+        continue;
+
       // See if we should ignore this equation.
       bool ignoreMathStatement(false);
       ptr_tag<CDA_ComputationTarget> first;
@@ -1699,6 +1990,30 @@ CodeGenerationState::GenerateCodeForSet
 
     aKnown.insert(sys->mUnknowns.begin(), sys->mUnknowns.end());
 
+    // Assign names to any infinitesimally delayed variables...
+    for (std::set<ptr_tag<MathStatement> >::iterator i =
+           sys->mMathStatements.begin();
+         i != sys->mMathStatements.end();
+         i++)
+      for (
+           std::list<ptr_tag<CDA_ComputationTarget> >::iterator dcti =
+             (*i)->mDelayedTargets.begin();
+           dcti != (*i)->mDelayedTargets.end();
+           dcti++
+          )
+        /* XXX should we special case the situation where we are doing an
+         * assign, and the delayed target is only overwritten after the assign?
+         * What we have here is correct, but means we copy unnecessarily in that
+         * particular case. We can't simply move this before the aKnown.insert
+         * above, however, because that would break the case where we have to
+         * solve for the non-delayed version of a delayed target.
+         */
+        if (aKnown.count(*dcti))
+        {
+          std::wstring ignore;
+          ComputeInfDelayedName(*dcti, ignore);
+        }
+
     GenerateCodeForSet(aCodeTo, aKnown, subtargets, aSysByTargReq);
     GenerateCodeForSystem(aCodeTo, sys);
   }
@@ -1734,19 +2049,19 @@ CodeGenerationState::GenerateCodeForSetByType
     if (aKnown.count(*sys->mUnknowns.begin()))
       continue;
 
-    // See if this system has a rate variable...
-    bool hasRate(false);
+    // See if this system has a rate or infdelayed variable...
+    bool hasRateOrInfdel(false);
 
     for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j(sys->mUnknowns.begin());
          j != sys->mUnknowns.end();
          j++)
-      if ((*j)->mDegree != 0)
+      if ((*j)->mDegree != 0 || mDelayedTargs.count(*j) != 0 || (*j)->mIsReset)
       {
-        hasRate = true;
+        hasRateOrInfdel = true;
         break;
       }
 
-    if (hasRate)
+    if (hasRateOrInfdel)
       rateSys.push_back(sys);
   }
 
@@ -1839,6 +2154,7 @@ CodeGenerationState::GenerateCasesIntoTemplate
   std::wstring each = mConditionalAssignmentPattern.substr(caseStart, caseEnd - caseStart);
   std::wstring fini = mConditionalAssignmentPattern.substr(finiStart);
 
+  assert(aCases.begin() != aCases.end());
   aCodeTo += SubstituteCase(*(aCases.begin()), init);
   for (std::list<std::pair<std::wstring, std::wstring> >::iterator i = ++aCases.begin();
        i != aCases.end();
@@ -1906,9 +2222,10 @@ CodeGenerationState::GenerateCodeForSystem
   if (ms->mType == MathStatement::PIECEWISE)
   {
     Piecewise* pw = static_cast<Piecewise*>(ms);
-    std::list<std::pair<Equation*, MathMLMathStatement*> >::iterator i;
+    std::list<std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> > >::iterator i;
     std::list<std::pair<std::wstring, std::wstring> > cases;
-    for (i = pw->mActivePieces.begin(); i != pw->mActivePieces.end(); i++)
+    assert(!pw->mPieces.empty());
+    for (i = pw->mPieces.begin(); i != pw->mPieces.end(); i++)
     {
       std::wstring statement;
       GenerateCodeForEquation(statement, (*i).first, computedTarget);
@@ -2128,6 +2445,29 @@ CodeGenerationState::GenerateStateToRateCascades()
       ct = ct->mUpDegree;
     }
   }
+}
+
+void
+CodeGenerationState::GenerateInfDelayUpdates()
+{
+  if (mInfDelayedTargets.empty())
+    return;
+
+  std::wstring oldRates = mCodeInfo->mRatesStr;
+  mCodeInfo->mRatesStr = L"";
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
+         mInfDelayedTargets.begin();
+       i != mInfDelayedTargets.end();
+       i++)
+  {
+    std::wstring delname;
+    ComputeInfDelayedName(*i, delname);
+    RETURN_INTO_WSTRING(name, (*i)->name());
+
+    AppendAssign(mCodeInfo->mRatesStr, delname, name);
+  }
+
+  mCodeInfo->mRatesStr += oldRates;
 }
 
 iface::cellml_api::CellMLVariable*
@@ -2458,8 +2798,8 @@ CodeGenerationState::GenerateMultivariateSolveCode
       QUERY_INTERFACE(topel, el, mathml_dom::MathMLElement);
 
       Piecewise* pw = static_cast<Piecewise*>(mms);
-      for (std::list<std::pair<Equation*, MathMLMathStatement*> >::iterator j = pw->mActivePieces.begin();
-           j != pw->mActivePieces.end();
+      for (std::list<std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> > >::iterator j = pw->mPieces.begin();
+           j != pw->mPieces.end();
            j++)
       {
         RETURN_INTO_OBJREF(piece, iface::dom::Element, doc->createElementNS(MATHML_NS, L"piece"));
