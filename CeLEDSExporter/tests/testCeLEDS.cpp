@@ -56,8 +56,9 @@ main(int argc, char** argv)
   ObjRef<iface::cellml_api::Model> mod;
   try
   {
-    mod = ml->loadFromURL(modelURL);
-    if (mod == NULL) throw L"";
+    mod = already_AddRefd<iface::cellml_api::Model>(ml->loadFromURL(modelURL));
+    if (mod == NULL)
+      throw L"";
   }
   catch (...)
   {
@@ -73,7 +74,8 @@ main(int argc, char** argv)
     CreateCeLEDSExporterBootstrap());
   RETURN_INTO_OBJREF(ce, iface::cellml_services::CodeExporter,
       ceb->createExporter(languageURL));
-  std::wstring le(ceb->loadError());
+
+  RETURN_INTO_WSTRING(le, ceb->loadError());
   if (!le.empty()) {
     wprintf(L"Could not load language definition file:\n");
     wprintf(L"    %ls\n",le.c_str());
@@ -81,7 +83,9 @@ main(int argc, char** argv)
   }
   delete [] languageURL;
 
-  wprintf(L"%ls",ce->generateCode(mod));
+  wchar_t * code = ce->generateCode(mod);
+  wprintf(L"%ls", code);
+  free(code);
 
   return 0;
 }

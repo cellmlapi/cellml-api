@@ -30,18 +30,22 @@ CDA_LanguageDictionary::getValue(const wchar_t* keyName)
   // Return a value from the dictionary
   uint32_t i;
   RETURN_INTO_OBJREF(entries, iface::dom::NodeList,
-      getMappings());
-  ObjRef<iface::dom::Node> currentNode;
-  for (i=0; i < entries->length(); i++) {
-    currentNode = entries->item(i);
+                     getMappings());
+
+  for (i=0; i < entries->length(); i++)
+  {
+    RETURN_INTO_OBJREF(currentNode, iface::dom::Node, entries->item(i));
+    DECLARE_QUERY_INTERFACE_OBJREF(currentEl, currentNode, dom::Element);
+    if (currentEl == NULL)
+      continue;
+
     // If keyname matches then return node
-    RETURN_INTO_OBJREF(keyAttribute, iface::dom::Node,
-        currentNode->attributes()->getNamedItem(L"keyname"));
-    std::wstring mapKeyName(keyAttribute->nodeValue());
-    if (mapKeyName.compare(keyName) == 0) {
-      return getTextContents(currentNode);}
+    RETURN_INTO_WSTRING(mapKeyName, currentEl->getAttribute(L"keyname"));
+    if (mapKeyName == keyName)
+      return getTextContents(currentNode);
   }
-  return L"";
+
+  return CDA_wcsdup(L"");
 }
 
 wchar_t*
@@ -50,13 +54,16 @@ getTextContents(iface::dom::Node* inNode)
 {
   uint32_t i;
   RETURN_INTO_OBJREF(children, iface::dom::NodeList, inNode->childNodes());
-  for(i = 0; i < children->length(); i++) {
-    if (children->item(i)->nodeType() == 3 || // Text node or CDATA
-        children->item(i)->nodeType() == 4) {
-      return children->item(i)->nodeValue();
-    }
+  for (i = 0; i < children->length(); i++)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, children->item(i));
+    DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+
+    if (tn != NULL)
+      return tn->data();
   }
-  return L"";
+
+  return CDA_wcsdup(L"");
 }
 
 CDA_DictionaryGenerator::CDA_DictionaryGenerator(iface::dom::Document* LangXML)
@@ -72,13 +79,12 @@ CDA_DictionaryGenerator::getDictionary(const wchar_t* dictionaryNameSpace)
   // Use XML element dictionary corresponding to 
   // supplied namespace to create new language definition component
   RETURN_INTO_OBJREF(dictionary, iface::dom::Element,
-      getElementNS(dictionaryNameSpace, L"dictionary"));
-  if (dictionary != NULL) {
+                     getElementNS(dictionaryNameSpace, L"dictionary"));
+
+  if (dictionary != NULL)
     return new CDA_LanguageDictionary(dictionaryNameSpace, dictionary);
-  }
-  else {
+  else
     return NULL;
-  }
 }
 
 iface::dom::Element* 
@@ -86,15 +92,17 @@ CDA_DictionaryGenerator::getElementNS(const wchar_t* nameSpace, const wchar_t* e
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(elements, iface::dom::NodeList,
-    mLangXML->getElementsByTagNameNS(nameSpace, elementName));
-  if (elements->length() > 0) {
+                     mLangXML->getElementsByTagNameNS(nameSpace, elementName));
+  if (elements->length() > 0)
+  {
     RETURN_INTO_OBJREF(element, iface::dom::Node, elements->item(0));
     DECLARE_QUERY_INTERFACE_OBJREF(returnElement, element, dom::Element);
+
+    returnElement->add_ref();
     return returnElement;
   }
-  else {
+  else
     return NULL;
-  }
 }
 
 iface::cellml_services::MaLaESTransform*
@@ -102,45 +110,55 @@ CDA_DictionaryGenerator::getMalTransform()
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(malDict, iface::cellml_services::LanguageDictionary, 
-      getDictionary(L"http://www.cellml.org/CeLEDS/MaLaES/1.0#"));
-  if (malDict == NULL) {return NULL;}
+                     getDictionary(L"http://www.cellml.org/CeLEDS/MaLaES/1.0#"));
+  if (malDict == NULL)
+    return NULL;
 
   uint32_t i;
   std::wstring MalString(L"");
 
   RETURN_INTO_OBJREF(entries, iface::dom::NodeList,
-      malDict->getMappings());
-  ObjRef<iface::dom::Node> currentNode;
-  for (i=0; i < entries->length(); i++) {
-    currentNode = entries->item(i);
+                     malDict->getMappings());
+
+  for (i=0; i < entries->length(); i++)
+  {
+    RETURN_INTO_OBJREF(currentNode, iface::dom::Node, entries->item(i));
+    DECLARE_QUERY_INTERFACE_OBJREF(currentEl, currentNode, dom::Element);
+    if (currentEl == NULL)
+      continue;
+
     // Get attributes
-    RETURN_INTO_OBJREF(keyName, iface::dom::Node,
-        currentNode->attributes()->getNamedItem(L"keyname"));
-    RETURN_INTO_OBJREF(precedence, iface::dom::Node,
-        currentNode->attributes()->getNamedItem(L"precedence"));
+    RETURN_INTO_WSTRING(keyName,
+                       currentEl->getAttribute(L"keyname"));
+    RETURN_INTO_WSTRING(precedence,
+                       currentEl->getAttribute(L"precedence"));
 
     // Create Mal string
-    MalString.append(keyName->nodeValue());
+    MalString.append(keyName);
     MalString.append(L": ");
-    if (precedence != NULL) {
+    if (precedence != L"")
+    {
       MalString.append(L"#prec[");
-      MalString.append(precedence->nodeValue());
+      MalString.append(precedence);
       MalString.append(L"]");
     }
-    MalString.append(padMalString(getTextContents(currentNode)));
+
+    RETURN_INTO_WSTRING(tc, getTextContents(currentNode));
+    RETURN_INTO_WSTRING(ptc, padMalString(tc.c_str()));
+    MalString.append(ptc);
     MalString.append(L"\r\n");
   }
 
   // create transformer
   RETURN_INTO_OBJREF(mb, iface::cellml_services::MaLaESBootstrap, 
-      CreateMaLaESBootstrap());
+                     CreateMaLaESBootstrap());
 
-  try {
-    RETURN_INTO_OBJREF(MalTransform, iface::cellml_services::MaLaESTransform, 
-        mb->compileTransformer(MalString.c_str()));
-    MalTransform->add_ref();
-    return MalTransform;
-  } catch (...) {
+  try
+  {
+    return mb->compileTransformer(MalString.c_str());
+  }
+  catch (...)
+  {
     return NULL;
   }
 }
@@ -152,13 +170,16 @@ CDA_DictionaryGenerator::padMalString(const wchar_t* inString)
   // Insert two spaces at beginning of new lines
   std::wstring valueString(inString);
   size_t pos = 0;
-  while(pos != std::string::npos) {
+  while(pos != std::string::npos)
+  {
     pos = valueString.find(L"\n", pos);
-    if (pos != std::string::npos) {
+    if (pos != std::string::npos)
+    {
       valueString.insert(pos+1, L"  ");
       pos += 2;
     }
   }
+
   return CDA_wcsdup(valueString.c_str());
 }
 
@@ -168,17 +189,20 @@ CDA_CeLEDSBootstrap::createDictGenerator(const wchar_t* URL)
 {
   mLoadError = L"";
   RETURN_INTO_OBJREF(cb, iface::cellml_api::CellMLBootstrap,
-    CreateCellMLBootstrap());
+                     CreateCellMLBootstrap());
   RETURN_INTO_OBJREF(URLLoader, iface::cellml_api::DOMURLLoader,
-    cb->localURLLoader());
+                     cb->localURLLoader());
 
-  try {
+  try
+  {
     RETURN_INTO_OBJREF(langDoc, iface::dom::Document,
-      URLLoader->loadDocument(URL));
+                       URLLoader->loadDocument(URL));
     return new CDA_DictionaryGenerator(langDoc);
   }
-  catch (...) {
-    mLoadError = URLLoader->lastErrorMessage();
+  catch (...)
+  {
+    RETURN_INTO_WSTRING(lem, URLLoader->lastErrorMessage());
+    mLoadError = lem;
     return NULL;
   }
 }
@@ -189,17 +213,20 @@ CDA_CeLEDSBootstrap::createDictGeneratorFromText(const wchar_t* XMLText)
 {
   mLoadError = L"";
   RETURN_INTO_OBJREF(cb, iface::cellml_api::CellMLBootstrap,
-    CreateCellMLBootstrap());
+                     CreateCellMLBootstrap());
   RETURN_INTO_OBJREF(URLLoader, iface::cellml_api::DOMURLLoader,
-    cb->localURLLoader());
+                     cb->localURLLoader());
 
-  try {
+  try
+  {
     RETURN_INTO_OBJREF(langDoc, iface::dom::Document,
-      URLLoader->loadDocumentFromText(XMLText));
+                       URLLoader->loadDocumentFromText(XMLText));
     return new CDA_DictionaryGenerator(langDoc);
-  } 
-  catch (...) {
-    mLoadError = URLLoader->lastErrorMessage();
+  }
+  catch (...)
+  {
+    RETURN_INTO_WSTRING(lem, URLLoader->lastErrorMessage());
+    mLoadError = lem;
     return NULL;
   }
 }
