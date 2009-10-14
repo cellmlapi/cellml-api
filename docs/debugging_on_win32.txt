@@ -1,3 +1,7 @@
 Build using the following:
 CXXFLAGS="-ggdb -O0" CFLAGS="-ggdb -O0" LDFLAGS="-Wl,-g" ./configure --enable-annotools --enable-cuses --enable-cevas --enable-vacss --enable-malaes --enable-ccgs --enable-celeds --enable-cis --enable-rdf && rm *.la && make
 This produces a debug build.
+
+Tip: use something like
+export _NT_SYMBOL_PATH="SRV*c:\websymbols*http://msdl.microsoft.com/download/symbols"
+when debugging to get proper traces.
