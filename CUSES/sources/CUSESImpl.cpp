@@ -147,6 +147,8 @@ CDACanonicalUnitRepresentation::compatibleWith
   if (l != aCompareWith->length())
     return false;
 
+  double mup1 = 1.0, mup2 = 1.0;
+
   uint32_t i;
   for (i = 0; i < l; i++)
   {
@@ -164,9 +166,18 @@ CDACanonicalUnitRepresentation::compatibleWith
     if (bui1->exponent() != bui2->exponent())
       return false;
 
-    if (mStrict &&
-        (bui1->offset() != bui2->offset() ||
-         bui1->prefix() != bui2->prefix()))
+    if (mStrict && (bui1->offset() != bui2->offset()))
+      return false;
+
+    mup1 *= pow(bui1->prefix(), bui1->exponent());
+    mup2 *= pow(bui2->prefix(), bui2->exponent());
+  }
+
+  if (mStrict)
+  {
+    double mupRat = mup1 / mup2;
+    double normMupRat = fabs((1.0 - mupRat) / std::max(mup1, mup2));
+    if (normMupRat > 1E-20)
       return false;
   }
 
