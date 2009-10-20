@@ -5,6 +5,7 @@
 #include "AnnoToolsBootstrap.hpp"
 #include <algorithm>
 #include <math.h>
+#undef max
 
 CDAUserBaseUnit::CDAUserBaseUnit(iface::cellml_api::Units* aBaseUnits)
   throw()
