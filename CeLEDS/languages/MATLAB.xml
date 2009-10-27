@@ -89,12 +89,14 @@
   <ccgs:mapping keyname="arrayOffset">1</ccgs:mapping>
   <ccgs:mapping keyname="assignPattern">    &lt;LHS&gt; = &lt;RHS&gt;;
 </ccgs:mapping>
-  <ccgs:mapping keyname="solvePattern"><![CDATA[    ALGEBRAIC = rootfind_<ID>(VOI, CONSTANTS, STATES, ALGEBRAIC);
+  <ccgs:mapping keyname="solvePattern"><![CDATA[    [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS, STATES, ALGEBRAIC);
 <SUP>% Functions required for solving differential algebraic equation
-function ALGEBRAIC = rootfind_<ID>(VOI, CONSTANTS, STATES, ALGEBRAIC_IN)
+function [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS_IN, STATES_IN, ALGEBRAIC_IN)
+    CONSTANTS = CONSTANTS_IN;
+    STATES = STATES_IN;
     ALGEBRAIC = ALGEBRAIC_IN;
     global initialGuess;
-    if (length(initialGuess) ~= 1), initialGuess = 0.1;, end
+    if (length(initialGuess) ~= 1), initialGuess = <IV>;, end
     options = optimset('Display', 'off', 'TolX', 1E-6);
     if length(VOI) == 1
         residualfn = @(algebraicCandidate)residualSN_<ID>(algebraicCandidate, ALGEBRAIC, VOI, CONSTANTS, STATES);
@@ -117,12 +119,14 @@ function resid = residualSN_<ID>(algebraicCandidate, ALGEBRAIC, VOI, CONSTANTS, 
 end
 
 ]]></ccgs:mapping>
-  <ccgs:mapping keyname="solveNLSystemPattern"><![CDATA[    ALGEBRAIC = rootfind_<ID>(VOI, CONSTANTS, STATES, ALGEBRAIC);
+  <ccgs:mapping keyname="solveNLSystemPattern"><![CDATA[    [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS, STATES, ALGEBRAIC);
 <SUP>% Functions required for solving differential algebraic equation
-function ALGEBRAIC = rootfind_<ID>(VOI, CONSTANTS, STATES, ALGEBRAIC_IN)
+function [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS_IN, STATES_IN, ALGEBRAIC_IN)
     ALGEBRAIC = ALGEBRAIC_IN;
+    CONSTANTS = CONSTANTS_IN;
+    STATES = STATES_IN;
     global initialGuess;
-    if (length(initialGuess) ~= <COUNT>), initialGuess = ones(<COUNT>,1) * 0.1;, end
+    if (length(initialGuess) ~= <COUNT>), initialGuess = [<EQUATIONS><IV><JOIN>,</EQUATIONS>];, end
     options = optimset('Display', 'off', 'TolX', 1E-6);
     if length(VOI) == 1
         residualfn = @(algebraicCandidate)residualSN_<ID>(algebraicCandidate, ALGEBRAIC, VOI, CONSTANTS, STATES);
