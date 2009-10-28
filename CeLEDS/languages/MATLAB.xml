@@ -198,7 +198,7 @@ end
 
 ]]></mapping>
   <mapping keyname="preInitConsts">function [STATES, CONSTANTS] = initConsts()
-    VOI = 0; CONSTANTS = []; STATES = [];
+    VOI = 0; CONSTANTS = []; STATES = []; ALGEBRAIC = [];
 </mapping>
   <mapping keyname="postInitConsts">    if (isempty(STATES)), warning('Initial values for states not set');, end
 end
