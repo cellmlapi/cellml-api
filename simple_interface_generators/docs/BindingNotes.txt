@@ -1,0 +1,16 @@
+Notes on various bindings generated from the IDL:
+  PCM (Physiome C++ Mapping):
+    This mapping is generally more or less straightforward mapping from the
+    IDL into C++ headers. However, there are a few things worth noting:
+      * The qualified names of interfaces are always prefixed by iface::, to
+        help distinguish them from implementations.
+      * There are some identifiers in the IDL which are valid IDL, but reserved
+        words in C++ (for example, operator is used in the MathML DOM). We
+        work around this by prefixing the name with _cxx_, e.g. _cxx_operator.
+        Because IDL doesn't allow identifiers to start with _, there is no risk
+        of conflicting identifiers.
+      * A typedef in IDL will map to typedef which you can use directly without
+        needing to use '*' to indicate a pointer. For example, ExtensionElement
+        in the CellML API is an alias for dom::Element. Although you would use
+        iface::dom::Element*, you use iface::cellml_api::ExtensionElement, which
+        is already a pointer.
