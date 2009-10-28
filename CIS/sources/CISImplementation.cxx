@@ -567,6 +567,9 @@ CDA_CellMLIntegrationService::compileModel
      << "  double aVOI, * aCONSTANTS, * aRATES, * aSTATES, * aALGEBRAIC;" << std::endl
      << "  int* aPRET;" << std::endl
      << "};" << std::endl
+     << "extern double defint(double (*f)(double VOI,double *C,double *R,double *S,"
+     << "double *A, int* pret), double VOI,double *C,double *R,double *S,double *A,double *V,"
+     << "double lowV, double highV, int* pret);" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
     "(nmeas)*(npar) + (npar)*(npar))" << std::endl
      << "extern void do_levmar(void (*)(double *, double *, int, int, void*), "

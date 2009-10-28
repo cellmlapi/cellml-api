@@ -37,6 +37,9 @@
 
 #include "levmar/lm.h"
 
+// It would be good to one day make this configurable by the user.
+#define SUBSOL_TOLERANCE 1E-6
+
 struct EvaluationInformation
 {
   double* constants, * rates, * algebraic, * states;
@@ -517,11 +520,77 @@ extern "C"
                                          void *adata),
                                 double* params, double* bp, double* work, int* pret,
                                 uint32_t size, void* adata) CDA_EXPORT_POST;
-  CDA_EXPORT_PRE double defint(double (*f)(double VOI,double *C,double *R,double *S,double *A),
+  CDA_EXPORT_PRE double defint(double (*f)(double VOI,double *C,double *R,double *S,double *A, int* pret),
                                double VOI,double *C,double *R,double *S,double *A,double *V,
+                               double lowV, double highV,
                                int* pret)
     CDA_EXPORT_POST;
 
+}
+
+struct DefintInformation
+{
+  double voi;
+  double* constants, * rates, * algebraic, * states, * var;
+  double (*f)(double VOI,double *C,double *R,double *S,double *A, int*);
+};
+
+int
+EvaluateDefintCVODE(double x, N_Vector varsV, N_Vector ratesV, void* params)
+{
+  DefintInformation* ei = reinterpret_cast<DefintInformation*>(params);
+  *(ei->var) = x;
+  int ret = 0;
+  *N_VGetArrayPointer_Serial(ratesV) = ei->f(ei->voi, ei->constants, ei->rates, ei->states,
+                                             ei->algebraic, &ret);
+  return ret;
+}
+
+double
+defint(
+       double (*f)(double VOI,double *C,double *R,double *S,double *A, int* pret),
+       double VOI,double *C,double *R,double *S,double *A,double *V,
+       double lowV, double highV,
+       int* pret
+      )
+{
+  if (lowV == highV)
+    return 0.0;
+
+  double zero = 0;
+  N_Vector y = N_VMake_Serial(1, &zero);
+  void* subsolver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
+  double epsAbs = SUBSOL_TOLERANCE;
+  CVodeMalloc(subsolver, EvaluateDefintCVODE, lowV, y, CV_SS, SUBSOL_TOLERANCE,
+            &epsAbs);
+  CVDense(subsolver, 1);
+
+  DefintInformation ei;
+  ei.voi = VOI;
+  ei.constants = C;
+  ei.rates = R;
+  ei.states = S;
+  ei.algebraic = A;
+  ei.f = f;
+  ei.var = V;
+  CVodeSetFdata(subsolver, &ei);
+
+  *V = lowV;
+  double ret, tret;
+  if (CVode(subsolver, highV, y, &tret, CV_NORMAL) < 0)
+  {
+    *pret = -1;
+    ret = 0.0;
+  }
+  else
+  {
+    ret = N_VGetArrayPointer_Serial(y)[0];
+  }
+
+  CVodeFree(&subsolver);
+  N_VDestroy_Serial(y);
+
+  return ret;
 }
 
 double
@@ -816,7 +885,7 @@ do_levmar
 {
   double info[9], best = INFINITY;
   uint32_t i = 0, k;
-  double tolerance = 1E-6 * size;
+  double tolerance = SUBSOL_TOLERANCE * size;
 
   memcpy(bp, params, sizeof(double) * size);
 

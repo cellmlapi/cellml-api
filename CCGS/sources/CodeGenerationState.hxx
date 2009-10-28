@@ -337,7 +337,7 @@ public:
   std::map<std::set<ptr_tag<CDA_ComputationTarget> >, std::set<ptr_tag<MathStatement> > > mEdgesInto;
   std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
     mTargetsBySource;
-  std::set<ptr_tag<CDA_ComputationTarget> > mBoundTargs, mDelayedTargs;
+  std::set<ptr_tag<CDA_ComputationTarget> > mBoundTargs, mLocallyBoundTargs, mDelayedTargs;
   uint32_t mNextConstantIndex, mNextStateVariableIndex,
     mNextAlgebraicVariableIndex, mNextVOI, mNextSolveId;
   std::list<std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> > mRateNameBackup;
