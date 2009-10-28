@@ -340,7 +340,7 @@ class CDA_EmptyNamedNodeMap
   : public iface::dom::NamedNodeMap
 {
 public:
-  CDA_EmptyNamedNodeMap() {};
+  CDA_EmptyNamedNodeMap() : _cda_refcount(1) {};
   ~CDA_EmptyNamedNodeMap() {}
 
   CDA_IMPL_QI1(dom::NamedNodeMap);
