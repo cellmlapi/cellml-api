@@ -95,20 +95,20 @@ function [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS_IN, STATE
     CONSTANTS = CONSTANTS_IN;
     STATES = STATES_IN;
     ALGEBRAIC = ALGEBRAIC_IN;
-    global initialGuess;
-    if (length(initialGuess) ~= 1), initialGuess = <IV>;, end
+    global initialGuess_<ID>;
+    if (length(initialGuess_<ID>) ~= 1), initialGuess_<ID> = <IV>;, end
     options = optimset('Display', 'off', 'TolX', 1E-6);
     if length(VOI) == 1
         residualfn = @(algebraicCandidate)residualSN_<ID>(algebraicCandidate, ALGEBRAIC, VOI, CONSTANTS, STATES);
-        <VAR> = fsolve(residualfn, initialGuess, options);
-        initialGuess = <VAR>;
+        <VAR> = fsolve(residualfn, initialGuess_<ID>, options);
+        initialGuess_<ID> = <VAR>;
     else
         SET_<VAR> = logical(1);
         for i=1:length(VOI)
             residualfn = @(algebraicCandidate)residualSN_<ID>(algebraicCandidate, ALGEBRAIC(i,:), VOI(i), CONSTANTS, STATES(i,:));
-            TEMP_<VAR> = fsolve(residualfn, initialGuess, options);
+            TEMP_<VAR> = fsolve(residualfn, initialGuess_<ID>, options);
             ALGEBRAIC(i,SET_ALGEBRAIC) = TEMP_ALGEBRAIC(SET_ALGEBRAIC);
-            initialGuess = TEMP_<VAR>;
+            initialGuess_<ID> = TEMP_<VAR>;
         end
     end
 end
@@ -125,13 +125,13 @@ function [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS_IN, STATE
     ALGEBRAIC = ALGEBRAIC_IN;
     CONSTANTS = CONSTANTS_IN;
     STATES = STATES_IN;
-    global initialGuess;
-    if (length(initialGuess) ~= <COUNT>), initialGuess = [<EQUATIONS><IV><JOIN>,</EQUATIONS>];, end
+    global initialGuess_<ID>;
+    if (length(initialGuess_<ID>) ~= <COUNT>), initialGuess_<ID> = [<EQUATIONS><IV><JOIN>,</EQUATIONS>];, end
     options = optimset('Display', 'off', 'TolX', 1E-6);
     if length(VOI) == 1
         residualfn = @(algebraicCandidate)residualSN_<ID>(algebraicCandidate, ALGEBRAIC, VOI, CONSTANTS, STATES);
-        soln = fsolve(residualfn, initialGuess, options);
-        initialGuess = soln;
+        soln = fsolve(residualfn, initialGuess_<ID>, options);
+        initialGuess_<ID> = soln;
         <EQUATIONS><VAR> = soln(<INDEX>);<JOIN>
         </EQUATIONS>
     else
@@ -139,8 +139,8 @@ function [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS_IN, STATE
         </EQUATIONS>
         for i=1:length(VOI)
             residualfn = @(algebraicCandidate)residualSN_<ID>(algebraicCandidate, ALGEBRAIC(i,:), VOI(i), CONSTANTS, STATES(i,:));
-            soln = fsolve(residualfn, initialGuess, options);
-            initialGuess = soln;
+            soln = fsolve(residualfn, initialGuess_<ID>, options);
+            initialGuess_<ID> = soln;
             <EQUATIONS>TEMP_<VAR> = soln(<INDEX>);<JOIN>
             </EQUATIONS>
             ALGEBRAIC(i,SET_ALGEBRAIC) = TEMP_ALGEBRAIC(SET_ALGEBRAIC);
