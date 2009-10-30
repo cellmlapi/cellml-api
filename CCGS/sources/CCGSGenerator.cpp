@@ -953,6 +953,7 @@ CodeGenerationState::SetupMathMLMathStatement
 {
   assert(mn != NULL);
   assert(c != NULL);
+
   mms->mMaths = mn;
   mms->mContext = c;
   RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
@@ -962,6 +963,43 @@ CodeGenerationState::SetupMathMLMathStatement
   RETURN_INTO_WSTRING(compErr, mr->compileErrors());
   if (compErr != L"")
     ContextError(compErr.c_str(), mn, c);
+
+  RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
+                     mr->iterateBoundVariables());  
+  while (true)
+  {
+    RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
+                       bvi->nextVariable());
+    if (bv == NULL)
+      break;
+
+    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+      ::iterator  mi = mTargetsBySource.find(bv);
+    if (mi != mTargetsBySource.end())
+    {
+      if (mBoundTargs.count((*mi).second) == 0)
+        mBoundTargs.insert((*mi).second);
+    }
+  }
+
+  bvi = already_AddRefd<iface::cellml_api::CellMLVariableIterator>
+    (mr->iterateLocallyBoundVariables());
+  
+  while (true)
+  {
+    RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
+                       bvi->nextVariable());
+    if (bv == NULL)
+      break;
+
+    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+      ::iterator  mi = mTargetsBySource.find(bv);
+    if (mi != mTargetsBySource.end())
+    {
+      if (mLocallyBoundTargs.count((*mi).second) == 0)
+        mLocallyBoundTargs.insert((*mi).second);
+    }
+  }
   
   RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
                      mr->iterateInvolvedVariablesByDegree());
@@ -980,6 +1018,9 @@ CodeGenerationState::SetupMathMLMathStatement
       ::iterator  mi = mTargetsBySource.find(cv);
     if (mi != mTargetsBySource.end())
     {
+      if (mLocallyBoundTargs.count((*mi).second))
+        continue;
+
       ptr_tag<CDA_ComputationTarget> targ(GetTargetOfDegree((*mi).second, dv->degree()));
       if (dv->appearedInfinitesimallyDelayed())
       {
@@ -994,24 +1035,6 @@ CodeGenerationState::SetupMathMLMathStatement
     }
   }
 
-  RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
-                     mr->iterateBoundVariables());
-  
-  while (true)
-  {
-    RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
-                       bvi->nextVariable());
-    if (bv == NULL)
-      break;
-
-    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
-      ::iterator  mi = mTargetsBySource.find(bv);
-    if (mi != mTargetsBySource.end())
-    {
-      if (mBoundTargs.count((*mi).second) == 0)
-        mBoundTargs.insert((*mi).second);
-    }
-  }
 }
 
 void
@@ -1077,6 +1100,13 @@ CodeGenerationState::FirstPassTargetClassification()
       ct->mEvaluationType = iface::cellml_services::VARIABLE_OF_INTEGRATION;
       std::wstring ignore;
       AllocateVOI(ct, ignore);
+    }
+    else if (mLocallyBoundTargs.count(ct))
+    {
+      ct->mEvaluationType = iface::cellml_services::LOCALLY_BOUND;
+      std::wstring name;
+      AllocateAlgebraicVariable(ct, name);
+      mAnnoSet->setStringAnnotation(ct->mVariable, L"bvarIndex", name.c_str());
     }
     else
     {
@@ -1408,6 +1438,8 @@ CodeGenerationState::BuildFloatingAndKnownLists()
   for (; i != mCodeInfo->mTargets.end(); i++)
     switch ((*i)->mEvaluationType)
     {
+    case iface::cellml_services::LOCALLY_BOUND:
+      break;
     case iface::cellml_services::FLOATING:
       mFloating.insert(*i);
       break;
@@ -2511,7 +2543,7 @@ CodeGenerationState::GenerateAssignmentMaLaESResult
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_WSTRING(s, aMR->getSupplementary(i));
-    mCodeInfo->mFuncsStr += s;
+    mCodeInfo->mFuncsStr += s + L"\r\n";
   }
 
   AppendAssign(aCodeTo, lhs, rhs);

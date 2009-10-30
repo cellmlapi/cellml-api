@@ -16,6 +16,17 @@
 #include <map>
 #include <set>
 
+template<class C> class CleanupSet
+  : public std::set<C, XPCOMComparator>
+{
+public:
+  ~CleanupSet()
+  {
+    typename CleanupSet<C>::iterator i;
+    for (i = CleanupSet<C>::begin(); i != CleanupSet<C>::end(); i++)
+      (*i)->release_ref();
+  }
+};
 template<class C> class CleanupVector
   : public std::vector<C>
 {
@@ -96,6 +107,11 @@ public:
   }
 };
 
+struct MaLaESQualifiers
+{
+  ObjRef<iface::mathml_dom::MathMLElement> degree, logbase, uplimit, lowlimit;
+};
+
 class CDAMaLaESResult
   : public iface::cellml_services::MaLaESResult
 {
@@ -120,6 +136,8 @@ public:
     throw(std::exception&);
   iface::cellml_api::CellMLVariableIterator* iterateBoundVariables()
     throw(std::exception&);
+  iface::cellml_api::CellMLVariableIterator* iterateLocallyBoundVariables()
+    throw(std::exception&);
   iface::cellml_services::DegreeVariableIterator*
     iterateInvolvedVariablesByDegree() throw(std::exception&);
   bool involvesExternalCode() throw(std::exception&);
@@ -137,58 +155,55 @@ public:
   void appendString(const std::wstring& aArg,
                     std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                     std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                    iface::mathml_dom::MathMLElement* degree,
-                    iface::mathml_dom::MathMLElement* logbase);
+                    const MaLaESQualifiers& mq);
   void appendExprs(const std::wstring& aArg,
                    std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                    std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                   iface::mathml_dom::MathMLElement* degree,
-                   iface::mathml_dom::MathMLElement* logbase);
+                   const MaLaESQualifiers& mq);
   void appendExpr(const std::wstring& aArg,
                   std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                   std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                  iface::mathml_dom::MathMLElement* degree,
-                  iface::mathml_dom::MathMLElement* logbase);
+                  const MaLaESQualifiers& mq);
   void appendDegree(const std::wstring& aArg,
                     std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                     std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                    iface::mathml_dom::MathMLElement* degree,
-                    iface::mathml_dom::MathMLElement* logbase);
+                    const MaLaESQualifiers& mq);
   void appendLogbase(const std::wstring& aArg,
                      std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                      std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                     iface::mathml_dom::MathMLElement* degree,
-                     iface::mathml_dom::MathMLElement* logbase);
+                     const MaLaESQualifiers& mq);
+  void appendLowlimit(const std::wstring& aArg,
+                      std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
+                      std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
+                      const MaLaESQualifiers& mq);
+  void appendUplimit(const std::wstring& aArg,
+                     std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
+                     std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
+                     const MaLaESQualifiers& mq);
   void appendBvarIndex(const std::wstring& aArg,
                        std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                        std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                       iface::mathml_dom::MathMLElement* degree,
-                       iface::mathml_dom::MathMLElement* logbase);
+                       const MaLaESQualifiers& mq);
   void appendDiffVariable(const std::wstring& aArg,
                           std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                           std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                          iface::mathml_dom::MathMLElement* degree,
-                          iface::mathml_dom::MathMLElement* logbase);
+                          const MaLaESQualifiers& mq);
   void pushSupplement(const std::wstring& aArg,
                       std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                       std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                      iface::mathml_dom::MathMLElement* degree,
-                      iface::mathml_dom::MathMLElement* logbase);
+                      const MaLaESQualifiers& mq);
   void popSupplement(const std::wstring& aArg,
                      std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                      std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                     iface::mathml_dom::MathMLElement* degree,
-                     iface::mathml_dom::MathMLElement* logbase);
+                     const MaLaESQualifiers& mq);
   void appendUnique(const std::wstring& aArg,
                     std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                     std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                    iface::mathml_dom::MathMLElement* degree,
-                    iface::mathml_dom::MathMLElement* logbase);
+                    const MaLaESQualifiers& mq);
   void appendCount(const std::wstring& aArg,
                    std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                    std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
-                   iface::mathml_dom::MathMLElement* degree,
-                   iface::mathml_dom::MathMLElement* logbase);
+                   const MaLaESQualifiers& mq);
   
   double parseConstant(iface::mathml_dom::MathMLCnElement* cnEl);
   void appendConstant(iface::mathml_dom::MathMLCnElement* cnEl);
@@ -214,12 +229,11 @@ private:
   std::vector<std::wstring> mSupplementaries;
   std::map<std::wstring, uint32_t> mUniqueAssignments;
   uint32_t mLastUnique;
-  std::set<iface::cellml_api::CellMLVariable*,XPCOMComparator> mInvolvedSet;
   std::set<DegreeVariableInformation> mInvolvedDegSet;
-  CleanupVector<iface::cellml_api::CellMLVariable*> mInvolved;
+  CleanupSet<iface::cellml_api::CellMLVariable*> mInvolved;
   std::vector<DegreeVariableInformation> mInvolvedDeg;
-
-  std::vector<iface::cellml_api::CellMLVariable*> mBoundVars;
+  
+  std::set<iface::cellml_api::CellMLVariable*, XPCOMComparator> mBoundVars, mLocallyBoundVars;
   std::map<iface::cellml_api::CellMLVariable*, uint32_t> mHighestDegree;
   ObjRef<iface::cellml_api::CellMLVariable> processingVariable;
   bool boundVariable;
@@ -265,7 +279,7 @@ private:
   typedef void (CDAMaLaESResult::* appender)
     (const std::wstring&, std::vector<iface::mathml_dom::MathMLElement*>&,
      std::vector<iface::mathml_dom::MathMLBvarElement*>&,
-     iface::mathml_dom::MathMLElement*, iface::mathml_dom::MathMLElement*);
+     const MaLaESQualifiers&);
   typedef std::pair<appender,std::wstring> command;
   typedef std::list<command> commandlist;
 
@@ -293,8 +307,7 @@ private:
                         const std::wstring& aOpName,
                         std::vector<iface::mathml_dom::MathMLElement*>& args,
                         std::vector<iface::mathml_dom::MathMLBvarElement*>& bvars,
-                        iface::mathml_dom::MathMLElement* degree,
-                        iface::mathml_dom::MathMLElement* logbase);
+                        const MaLaESQualifiers& mq);
 
   std::wstring mMessage, openGroup, closeGroup;
   bool mVariablesFromSource;

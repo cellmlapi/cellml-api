@@ -1,0 +1,185 @@
+<!--
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the mozCellML code.
+ *
+ * The Initial Developer of the Original Code is
+ * The Bioengineering Institute, University of Auckland.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Andrew Miller <ak.miller@auckland.ac.nz> (original developer)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+  -->
+<model
+    name="DefiniteIntegral"
+    xmlns="http://www.cellml.org/cellml/1.1#"
+    xmlns:cmeta="http://www.cellml.org/metadata/1.0#"
+    xmlns:cellml="http://www.cellml.org/cellml/1.1#"
+    cmeta:id="DefiniteIntegral">
+  <rdf:RDF
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:cmeta="http://www.cellml.org/metadata/1.0#"
+      xmlns:dcterms="http://purl.org/dc/terms/"
+      xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#"
+      xmlns:bqs="http://www.cellml.org/bqs/1.0#">
+    <rdf:Description rdf:about="">
+      <dc:creator rdf:parseType="Resource">
+        <vCard:N rdf:parseType="Resource">
+          <vCard:Family>Miller</vCard:Family>
+          <vCard:Given>Andrew</vCard:Given>
+          <vCard:Other>Keith</vCard:Other>
+        </vCard:N>
+        <vCard:EMAIL rdf:parseType="Resource">
+          <rdf:value>ak.miller@auckland.ac.nz</rdf:value>
+          <rdf:type rdf:resource="http://imc.org/vCard/3.0#internet" />
+        </vCard:EMAIL>
+
+        <vCard:ORG rdf:parseType="Resource">
+          <vCard:Orgname>The University of Auckland</vCard:Orgname>
+          <vCard:Orgunit>The Bioengineering Institute</vCard:Orgunit>
+        </vCard:ORG>
+      </dc:creator>
+      
+      <dcterms:created rdf:parseType="Resource">
+        <dcterms:W3CDTF>2004-12-09</dcterms:W3CDTF>
+      </dcterms:created>
+
+      <dc:publisher>
+        The University of Auckland, The Bioengineering Institute
+      </dc:publisher>
+    </rdf:Description>
+    <rdf:Description rdf:about="#DefiniteIntegral">
+      <dc:title>Definite integral model</dc:title>
+      <bqs:WebResource rdf:parseType="Resource">
+        <bqs:url>http://www.cs.wisc.edu/~hasti/cs310/notes/ODE1/ODE1Notes.html</bqs:url>
+      </bqs:WebResource>
+    </rdf:Description>
+  </rdf:RDF>
+  <units name="year">
+    <unit units="second" multipler="3.1688765e-08"/>
+  </units>
+  <units name="m_per_year">
+    <unit units="second" exponent="-1" multiplier="3.1688765e-08" />
+    <unit units="metre" />
+  </units>
+  <component name="Height">
+    <variable name="meanHeight" units="metre"
+              initial_value="1.7"/>
+    <variable name="heightStdDev" units="metre"
+              initial_value="0.1"/>
+    <variable name="height" units="metre"
+              initial_value="1.7"/>
+    <variable name="growthRate" units="m_per_year"
+              initial_value="0.01"/>
+    <variable name="pvalue" units="dimensionless"/>
+    <variable name="time" units="year"/>
+
+    <!-- This is just used for int -->
+    <variable name="boundheight" units="metre" />
+
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply>
+        <eq/>
+        <apply>
+          <diff/>
+          <bvar><ci>time</ci></bvar>
+          <ci>height</ci>
+        </apply>
+        <ci>growthRate</ci>
+      </apply>
+      <apply>
+        <eq/>
+        <ci>pvalue</ci>
+        <apply>
+          <minus/>
+          <cn cellml:units="dimensionless">1.0</cn>
+          <apply>
+            <int/>
+            <bvar><ci>boundheight</ci></bvar>
+            <lowlimit>
+              <apply>
+                <minus/>
+                <apply>
+                  <times/>
+                  <cn cellml:units="dimensionless">2.0</cn>
+                  <ci>meanHeight</ci>
+                </apply>
+                <ci>height</ci>
+              </apply>
+            </lowlimit>
+            <uplimit>
+              <ci>height</ci>
+            </uplimit>
+            <apply>
+              <times/>
+              <apply>
+                <divide/>
+                <cn cellml:units="dimensionless">1.0</cn>
+                <apply>
+                  <root/>
+                  <apply>
+                    <times/>
+                    <cn cellml:units="dimensionless">2.0</cn>
+                    <pi />
+                    <apply>
+                      <power />
+                      <ci>heightStdDev</ci>
+                      <cn cellml:units="dimensionless">2.0</cn>
+                    </apply>
+                  </apply>
+                </apply>
+              </apply>
+              <apply>
+                <exp/>
+                <apply>
+                  <times/>
+                  <apply>
+                    <divide/>
+                    <cn cellml:units="dimensionless">-0.5</cn>
+                    <apply>
+                      <power/>
+                      <ci>heightStdDev</ci>
+                      <cn cellml:units="dimensionless">2</cn>
+                    </apply>
+                  </apply>
+                  <apply>
+                    <power/>
+                    <apply>
+                      <minus/>
+                      <ci>boundheight</ci>
+                      <ci>meanHeight</ci>
+                    </apply>
+                    <cn cellml:units="dimensionless">2</cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </apply>
+      </apply>
+    </math>
+  </component>
+</model>
