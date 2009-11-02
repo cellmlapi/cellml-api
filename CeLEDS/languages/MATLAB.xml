@@ -172,6 +172,8 @@ end
 </mapping>
   <mapping keyname="topSection" solverparameters="true"><![CDATA[
 function [VOI, STATES, ALGEBRAIC, CONSTANTS] = solveModel()
+    % Create ALGEBRAIC of correct size
+	global algebraicVariableCount;  algebraicVariableCount = YOU_NEED_TO_PUT_THE_CORRECT_NUMBER_HERE_BY_HAND; %See comment at top of file for number of algebraic variables.
     % Initialise constants and state variables
     [INIT_STATES, CONSTANTS] = initConsts;
 
@@ -206,10 +208,17 @@ end
 
 </mapping>
   <mapping keyname="preRates">function [RATES, ALGEBRAIC] = computeRates(VOI, STATES, CONSTANTS)
+    global algebraicVariableCount;
     statesSize = size(STATES);
     statesColumnCount = statesSize(2);
-    if ( statesColumnCount == 1), STATES = STATES'; end
-    RATES = []; 
+    if ( statesColumnCount == 1)
+        STATES = STATES';
+        ALGEBRAIC = zeros(1, algebraicVariableCount);
+    else
+        statesRowCount = statesSize(1);
+        ALGEBRAIC = zeros(statesRowCount, algebraicVariableCount);
+        RATES = zeros(statesRowCount, statesColumnCount);
+    end
 </mapping>
   <mapping keyname="postRates">   RATES = RATES';
 end
