@@ -1807,8 +1807,8 @@ CDA_Element::removeAttribute(const wchar_t* name)
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   LocalName ln((*i).first);
-  attributeMap.erase(i);
   ln.release();
+  attributeMap.erase(i);
 
   std::map<QualifiedName, CDA_Attr*>::iterator j;
   if (at->mLocalName != L"")
@@ -1866,6 +1866,9 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   RETURN_INTO_THINSTRING(name, newAttr->name());
   std::map<LocalName, CDA_Attr*>::iterator
     i = attributeMap.find(LocalName(const_cast<wchar_t*>(name.getPointer())));
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    j = attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(L""),
+                                          const_cast<wchar_t*>(name.getPointer())));
 
   CDA_DOM_SomethingChanged();
 
@@ -1893,7 +1896,15 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   }
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
+  LocalName((*i).first).release();
   attributeMap.erase(i);
+
+  if (j != attributeMapNS.end())
+  {
+    QualifiedName((*j).first).release();
+    attributeMapNS.erase(j);
+  }
+
   insertBeforePrivate(newAttr, NULL)->release_ref();
   attributeMap.insert(std::pair<LocalName, CDA_Attr*>
                       (LocalName(CDA_wcsdup(name)), newAttr));
@@ -2027,6 +2038,16 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
                                          CDA_wcsdup(localName)), a
                           )
                          );
+
+
+    std::map<LocalName, CDA_Attr*>::iterator
+      j = attributeMap.find(LocalName(const_cast<wchar_t*>(qualifiedName)));
+    if (j != attributeMap.end())
+    {
+      LocalName((*j).first).release();
+      attributeMap.erase(j);
+    }
+
     attributeMap.insert(std::pair<LocalName,CDA_Attr*>
                         (LocalName(CDA_wcsdup(qualifiedName)), a));
 
