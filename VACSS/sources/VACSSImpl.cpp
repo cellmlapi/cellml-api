@@ -3418,7 +3418,7 @@ ModelValidation::validateMathMLApply
   // This simplifies the logic later...
   if (unitsList.empty())
   {
-    REPR_ERROR(L"Expected operator to have at least one argument",
+    REPR_ERROR(std::wstring(L"Expected \"") + opinfo->mName + L"\" operator to have at least one argument",
                op);
     return NULL;
   }
@@ -3442,8 +3442,8 @@ ModelValidation::validateMathMLApply
               (!CDA_objcmp(thisUnits, mBooleanUnits))))
            )
         {
-          REPR_WARNING(L"Expected all arguments to MathML apply to have the same "
-                       L"units", op);
+          REPR_WARNING(std::wstring(L"Expected all arguments to operator \"") +
+                       opinfo->mName + L"\" to have the same units", op);
         }
       }
     }
@@ -3456,8 +3456,9 @@ ModelValidation::validateMathMLApply
       if (!(*ui)->compatibleWith(mDimensionlessUnits) ||
           !CDA_objcmp(*ui, mBooleanUnits))
       {
-        REPR_WARNING(L"Expected arguments to MathML apply to have dimensionless "
-                     L"units", op);
+        REPR_WARNING(std::wstring(L"Expected arguments to operator \"") +
+                     opinfo->mName +
+                     L"\" to be dimensionless", op);
       }
   }
   else if (opinfo->mInput == AI_BOOLEAN)
@@ -3467,8 +3468,9 @@ ModelValidation::validateMathMLApply
     for (; ui != unitsList.end(); ui++)
       if (CDA_objcmp(*ui, mBooleanUnits))
       {
-        REPR_WARNING(L"Expected arguments to MathML apply to have boolean "
-                     L"units", op);
+        REPR_WARNING(std::wstring(L"Expected arguments to operator \"") +
+                     opinfo->mName +
+                     L"\" to be boolean (i.e. true or false)", op);
       }
   }
 
@@ -3476,7 +3478,10 @@ ModelValidation::validateMathMLApply
   {
     if (unitsList.size() != 1)
     {
-      REPR_ERROR(L"Expected operator to be unary (i.e. have exactly one argument)",
+      wchar_t buf[30];
+      swprintf(buf, 30, L"%d", unitsList.size());
+      REPR_ERROR(std::wstring(L"Operator \"") +
+                 opinfo->mName + L"\" is unary (i.e. takes exactly one argument), but was given " + buf + L" arguments.",
                  op);
       return NULL;
     }
@@ -3489,15 +3494,21 @@ ModelValidation::validateMathMLApply
       {
         if (unitsList.size() != 1)
         {
-          REPR_ERROR(L"Expected minus operator to be unary or binary (i.e. "
-                     L"have one or two arguments)", op);
+          wchar_t buf[30];
+          swprintf(buf, 30, L"%d", unitsList.size());
+          REPR_ERROR(std::wstring(
+                       L"Expected operator \"minus\" to be unary or binary (i.e. "
+                       L"have one or two arguments), not ") + buf, op);
           return NULL;
         }
       }
       else
       {
-        REPR_ERROR(L"Expected operator to be binary (i.e. have exactly "
-                   L"two arguments)", op);
+        wchar_t buf[30];
+        swprintf(buf, 30, L"%d", unitsList.size());
+        REPR_ERROR(std::wstring(L"Expected operator \"") + opinfo->mName +
+                   L"\" to be binary (i.e. have exactly "
+                   L"two arguments), not " + buf, op);
         return NULL;
       }
     }
@@ -3514,8 +3525,7 @@ ModelValidation::validateMathMLApply
     if (!uexp->compatibleWith(mDimensionlessUnits) ||
         !CDA_objcmp(uexp, mBooleanUnits))
     {
-      REPR_ERROR(L"Expected exponent to MathML apply pow to have dimensionless "
-                 L"units", op);
+      REPR_ERROR(L"Expected exponent to pow operator to be dimensionless", op);
     }
 
     double expVal;
@@ -3524,7 +3534,7 @@ ModelValidation::validateMathMLApply
 
     if (!CDA_objcmp(mBooleanUnits, ubase))
     {
-      REPR_WARNING(L"It is not valid to take a power of boolean units", op);
+      REPR_WARNING(L"It is not valid to take a power of a boolean value", op);
     }
 
     // Don't require exponent to be constant if the base is dimensionless.
@@ -3553,7 +3563,7 @@ ModelValidation::validateMathMLApply
 
     if (!CDA_objcmp(mBooleanUnits, ubase))
     {
-      REPR_WARNING(L"It is not valid to take a root of boolean units", op);
+      REPR_WARNING(L"It is not valid to take the root of a boolean value", op);
     }
 
     return ubase->mergeWith(1.0 / rootDegree, NULL, 0.0);
@@ -3570,7 +3580,7 @@ ModelValidation::validateMathMLApply
     {
       if (!CDA_objcmp((*i), mBooleanUnits))
       {
-        REPR_WARNING(L"It is not valid to multiply boolean units", op);
+        REPR_WARNING(L"It is not valid to multiply with a boolean value", op);
       }
 
       finalUnits = already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
@@ -3590,11 +3600,11 @@ ModelValidation::validateMathMLApply
 
     if (!CDA_objcmp(udividend, mBooleanUnits))
     {
-      REPR_WARNING(L"It is not valid to divide boolean units", op);
+      REPR_WARNING(L"It is not valid to divide a boolean value", op);
     }
     if (!CDA_objcmp(udivisor, mBooleanUnits))
     {
-      REPR_WARNING(L"It is not valid to divide boolean units", op);
+      REPR_WARNING(L"It is not valid to divide by a boolean value", op);
     }
     
     return udividend->mergeWith(1.0, udivisor, -1.0);
