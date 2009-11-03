@@ -9,6 +9,7 @@
 #include "VACSSBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
 #include <string>
+#include <stdio.h>
 
 #ifdef _WIN32
 #define swprintf _snwprintf

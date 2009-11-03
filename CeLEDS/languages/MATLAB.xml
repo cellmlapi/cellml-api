@@ -172,6 +172,8 @@ end
 </mapping>
   <mapping keyname="topSection" solverparameters="true"><![CDATA[
 function [VOI, STATES, ALGEBRAIC, CONSTANTS] = solveModel()
+    % Create ALGEBRAIC of correct size
+	global algebraicVariableCount;  algebraicVariableCount = YOU_NEED_TO_PUT_THE_CORRECT_NUMBER_HERE_BY_HAND; %See comment at top of file for number of algebraic variables.
     % Initialise constants and state variables
     [INIT_STATES, CONSTANTS] = initConsts;
 
@@ -185,7 +187,8 @@ function [VOI, STATES, ALGEBRAIC, CONSTANTS] = solveModel()
     [VOI, STATES] = ode15s(@(VOI, STATES)computeRates(VOI, STATES, CONSTANTS), tspan, INIT_STATES, options);
 
     % Compute algebraic variables
-    ALGEBRAIC = computeAlgebraic(CONSTANTS, STATES, VOI);
+    [RATES, ALGEBRAIC] = computeRates(VOI, STATES, CONSTANTS);
+    ALGEBRAIC = computeAlgebraic(ALGEBRAIC, CONSTANTS, STATES, VOI);
 
     % Plot state variables against variable of integration
     [LEGEND_STATES, LEGEND_ALGEBRAIC, LEGEND_VOI, LEGEND_CONSTANTS] = createLegends();
@@ -204,16 +207,25 @@ end
 end
 
 </mapping>
-  <mapping keyname="preRates">function RATES = computeRates(VOI, STATES, CONSTANTS)
-    STATES = STATES'; RATES = []; ALGEBRAIC = [0];
+  <mapping keyname="preRates">function [RATES, ALGEBRAIC] = computeRates(VOI, STATES, CONSTANTS)
+    global algebraicVariableCount;
+    statesSize = size(STATES);
+    statesColumnCount = statesSize(2);
+    if ( statesColumnCount == 1)
+        STATES = STATES';
+        ALGEBRAIC = zeros(1, algebraicVariableCount);
+    else
+        statesRowCount = statesSize(1);
+        ALGEBRAIC = zeros(statesRowCount, algebraicVariableCount);
+        RATES = zeros(statesRowCount, statesColumnCount);
+    end
 </mapping>
   <mapping keyname="postRates">   RATES = RATES';
 end
 
 </mapping>
   <mapping keyname="preVariables">% Calculate algebraic variables
-function ALGEBRAIC = computeAlgebraic(CONSTANTS, STATES, VOI)
-    ALGEBRAIC = zeros(length(VOI),1);
+function ALGEBRAIC = computeAlgebraic(ALGEBRAIC, CONSTANTS, STATES, VOI)
 </mapping>
   <mapping keyname="postVariables">end
 
