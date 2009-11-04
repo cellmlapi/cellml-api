@@ -16,7 +16,7 @@ $(top_builddir)/interfaces/SCI%.cxx: $(top_srcdir)/interfaces/%.idl
 	SAVEDIR=`pwd` && \
         SRCDIR=$(top_srcdir); \
         if [[ $${SRCDIR:0:1} == "/" ]]; then \
-          SRCBASE=; \
+          SRCBASE=/; \
         else \
           SRCBASE=`pwd`/; \
         fi; \
