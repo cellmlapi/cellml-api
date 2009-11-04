@@ -2242,8 +2242,8 @@ ModelValidation::validateMathMLConstant
 {
   // Check for any inappropriate children...
   RETURN_INTO_OBJREF(child, iface::dom::Node, aEl->firstChild());
-  std::wstring txt, type, name;
-  type = aEl->getAttributeNS(L"", L"type");
+  std::wstring txt, name;
+  RETURN_INTO_WSTRING(type, aEl->getAttributeNS(L"", L"type"));
   for (; child != NULL;
        child = already_AddRefd<iface::dom::Node>(child->nextSibling()))
   {
