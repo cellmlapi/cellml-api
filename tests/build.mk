@@ -2,6 +2,11 @@
 check_PROGRAMS=tests/RunTestBin
 
 TESTS=tests/RunTestBin tests/CheckCodeGenerator tests/CheckCeLEDS
+
+if ENABLE_VACSS
+TESTS += tests/CheckVACSS
+endif
+
 tests_RunTestBin_SOURCES=\
 	tests/TestOutput.cpp \
 	tests/DOMTest.cpp \

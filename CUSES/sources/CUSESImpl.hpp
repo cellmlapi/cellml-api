@@ -77,7 +77,7 @@ public:
   double siConversion(double* aOffset)
     throw(std::exception&);
 
-  void canonicalise(bool strictKeep) throw(std::exception&);
+  void canonicalise() throw(std::exception&);
   void addBaseUnit(iface::cellml_services::BaseUnitInstance* baseUnit) throw();
   iface::cellml_services::CanonicalUnitRepresentation*
   mergeWith(double aThisExponent,
@@ -85,8 +85,12 @@ public:
             double aOtherExponent)
     throw(std::exception&);
 
+  double carry() const { return mCarry; }
+  void carry(double c) { mCarry = c; }
+
 private:
   bool mStrict;
+  double mCarry;
   std::vector<iface::cellml_services::BaseUnitInstance*> baseUnits;
 };
 

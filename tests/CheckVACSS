@@ -1,0 +1,39 @@
+#!/bin/bash
+
+BINDIR=`pwd`
+BASEDIR=`dirname $0`
+DIFF=diff
+VACSS=$BINDIR/ValidateCellML
+TEMPFILE=test_output
+
+if [[ ! -f "$VACSS" ]]; then
+        echo ValidateCellML not found. Not testing it.
+        exit 77
+fi
+
+if [[ -n $RUNNER ]]; then
+    VACSS="$RUNNER $BINDIR/.libs/CellML2C.exe"
+fi
+
+function runtest()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $VACSS $BASEDIR/test_xml/$name.cellml | tr -d "\r" >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/validate_expected/$name.out
+  if [[ $? -ne 0 ]]; then
+    FAIL=1
+  fi
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: validate $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: validate $name generated correct output.
+  rm -f $TEMPFILE
+}
+
+runtest valid_cellml_1
+
+exit 0
