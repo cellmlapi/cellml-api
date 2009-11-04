@@ -37,8 +37,8 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 #define pret rfi->aPRET
   ALGEBRAIC[0] = p[0];
   ALGEBRAIC[1] = p[1];
-  hx[0] = fixnans( 2.00000*( -1.00000*STATES[0]+(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1]) - 0.00000);
-  hx[1] = fixnans( 3.00000*((pow(ALGEBRAIC[0], 3.00000))+ -1.00000*( 3.00000*ALGEBRAIC[1])) - 0.00000);
+  hx[0] =  2.00000*( -1.00000*STATES[0]+(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1]) - 0.00000;
+  hx[1] =  3.00000*((pow(ALGEBRAIC[0], 3.00000))+ -1.00000*( 3.00000*ALGEBRAIC[1])) - 0.00000;
 #undef VOI
 #undef CONSTANTS
 #undef RATES

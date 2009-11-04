@@ -39,7 +39,7 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 #define ALGEBRAIC rfi->aALGEBRAIC
 #define pret rfi->aPRET
   ALGEBRAIC[0] = *p;
-  *hx = fixnans((ALGEBRAIC[0] - CONSTANTS[0]) - (pow(VOI, 2.00000)));
+  *hx = (ALGEBRAIC[0] - CONSTANTS[0]) - (pow(VOI, 2.00000));
 #undef VOI
 #undef CONSTANTS
 #undef RATES
