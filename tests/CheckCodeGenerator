@@ -87,5 +87,6 @@ runtest_usenames modified_parabola
 runtest StateModel
 runtest reset_rule
 runtest definite_integral
+runtest TestParameterIVAmbiguity
 
 exit 0

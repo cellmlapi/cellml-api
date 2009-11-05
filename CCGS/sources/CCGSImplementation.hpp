@@ -56,6 +56,7 @@ public:
   uint32_t mHighestDegree;
   // -1 if there is no index for the infinitesimally delayed version.
   int32_t mInfDelayedAssignedIndex;
+  bool mStateHasIV;
 
   // Disjoint set utilities...
   uint32_t rank;

@@ -107,6 +107,7 @@ CodeGenerationState::GenerateCode()
     BuildStateAndConstantLists();
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
+    CheckStateVariableIVConstraints(systems);
 
     tmp = L"";
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
@@ -218,6 +219,45 @@ CodeGenerationState::GenerateCode()
 }
 
 #define HINTS_NS L"http://www.cellml.org/metadata/simulation/solverhints/1.0#"
+
+void
+CodeGenerationState::CheckStateVariableIVConstraints(const std::list<System*>& aSystems)
+{
+  // Step one: check aSystems for overconstraints...
+  for (std::list<System*>::const_iterator i = aSystems.begin();
+       i != aSystems.end();
+       i++)
+  {
+    for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j =
+           (*i)->mUnknowns.begin();
+         j != (*i)->mUnknowns.end();
+         j++)
+      if ((*j)->type() == iface::cellml_services::STATE_VARIABLE)
+      {
+        if ((*j)->mStateHasIV)
+        {
+          MathStatement *ms =
+            *((*i)->mMathStatements.begin());
+          if (ms->mType == MathStatement::INITIAL_ASSIGNMENT)
+            throw OverconstrainedError(NULL);
+          else
+            throw OverconstrainedError((static_cast<MathMLMathStatement*>(ms))->mMaths);
+        }
+        (*j)->mStateHasIV = true;
+      }
+  }
+
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i = mBaseTargets.begin();
+       i != mBaseTargets.end(); i++)
+  {
+    for (CDA_ComputationTarget* ct = (*i); ct->mUpDegree; ct = ct->mUpDegree)
+    {
+      // If it has an updegree, it is a state variable, so it must have an IV...
+      if (!ct->mStateHasIV)
+        throw UnderconstrainedError();
+    }
+  }
+}
 
 void
 CodeGenerationState::MakeSystemsForResetRulesAndClearKnown
@@ -1121,13 +1161,16 @@ CodeGenerationState::FirstPassTargetClassification()
       while (tct->mUpDegree)
       {
         tct->mEvaluationType = iface::cellml_services::STATE_VARIABLE;
+        tct->mStateHasIV = false;
         AllocateStateVariable(tct, cname);
         if (tct == ct && hasImmedIV)
         {
+          tct->mStateHasIV = true;
           AppendAssign(mCodeInfo->mInitConstsStr, cname, iv);
         }
         else if (tct != ct)
         {
+          tct->mStateHasIV = true;
           AppendAssign(mCodeInfo->mInitConstsStr, cname, L"0.0");
         }
         tct = tct->mUpDegree;

@@ -156,6 +156,7 @@ public:
   ptr_tag<CDA_ComputationTarget>  GetTargetOfDegree(ptr_tag<CDA_ComputationTarget>  aBase,
                                            uint32_t aDegree);
   void CreateMathStatements();
+  void CheckStateVariableIVConstraints(const std::list<System*>& aSystems);
   void MakeSystemsForResetRulesAndClearKnown
     (
      std::set<std::pair<ptr_tag<CDA_ComputationTarget>, ptr_tag<MathStatement> > >&
