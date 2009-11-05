@@ -39,16 +39,22 @@ $(top_srcdir)/interfaces/%.idl \
 $(top_srcdir)/simple_interface_generators/omniidl_be/xpcom/p2xgen.py \
 $(top_srcdir)/simple_interface_generators/omniidl_be/xpcom/x2pgen.py
 	SAVEDIR=`pwd` && \
+        SRCDIR=$(top_srcdir); \
+        if [[ $${SRCDIR:0:1} == "/" ]]; then \
+          SRCBASE=/; \
+        else \
+          SRCBASE=`pwd`/; \
+        fi; \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
-	$(CYGWIN_WRAPPER) omniidl -p$$SAVEDIR/$(top_srcdir)/simple_interface_generators/omniidl_be \
-         -bxpcom $$SAVEDIR/$< && \
+	$(CYGWIN_WRAPPER) omniidl -p$$SRCBASE$(top_srcdir)/simple_interface_generators/omniidl_be \
+         -bxpcom $$SRCBASE./$< && \
         $(CYGWIN_WRAPPER) $(MOZILLA_DIR)/bin/xpidl -m header \
           -I$(MOZILLA_DIR)/idl \
-          $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
+          $$SRCBASE/$(top_builddir)/interfaces/I$(notdir $<) && \
         $(CYGWIN_WRAPPER) $(MOZILLA_DIR)/bin/xpidl -m typelib \
           -I$(MOZILLA_DIR)/idl \
-          $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
+          $$SRCBASE/$(top_builddir)/interfaces/I$(notdir $<) && \
 	cd $$SAVEDIR
 
 BUILT_SOURCES += \

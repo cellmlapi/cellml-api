@@ -104,7 +104,7 @@ void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)
 #define ALGEBRAIC rfi->aALGEBRAIC
 #define pret rfi->aPRET
   <VAR> = *p;
-  *hx = fixnans((<LHS>) - (<RHS>));
+  *hx = (<LHS>) - (<RHS>);
 #undef VOI
 #undef CONSTANTS
 #undef RATES
@@ -141,7 +141,7 @@ void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)
 #define pret rfi->aPRET
   <EQUATIONS><VAR> = p[<INDEX>];<JOIN>
   </EQUATIONS>
-  <EQUATIONS>hx[<INDEX>] = fixnans(<EXPR>);<JOIN>
+  <EQUATIONS>hx[<INDEX>] = <EXPR>;<JOIN>
   </EQUATIONS>
 #undef VOI
 #undef CONSTANTS
