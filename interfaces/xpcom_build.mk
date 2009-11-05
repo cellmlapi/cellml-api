@@ -51,10 +51,10 @@ $(top_srcdir)/simple_interface_generators/omniidl_be/xpcom/x2pgen.py
          -bxpcom $$SRCBASE./$< && \
         $(CYGWIN_WRAPPER) $(MOZILLA_DIR)/bin/xpidl -m header \
           -I$(MOZILLA_DIR)/idl \
-          $$SRCBASE/$(top_builddir)/interfaces/I$(notdir $<) && \
+          $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
         $(CYGWIN_WRAPPER) $(MOZILLA_DIR)/bin/xpidl -m typelib \
           -I$(MOZILLA_DIR)/idl \
-          $$SRCBASE/$(top_builddir)/interfaces/I$(notdir $<) && \
+          $$SAVEDIR/$(top_builddir)/interfaces/I$(notdir $<) && \
 	cd $$SAVEDIR
 
 BUILT_SOURCES += \
