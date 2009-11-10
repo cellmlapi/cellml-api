@@ -555,6 +555,14 @@ CDA_CodeGenerator::useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet)
   mAnnoSet = aAnnoSet;
 }
 
+static iface::cellml_services::CodeInformation*
+CDA_ErrorCodeInformation(const wchar_t* aMessage)
+{
+  CDA_CodeInformation* ci = new CDA_CodeInformation();
+  ci->mErrorMessage = aMessage;
+  return ci;
+}
+
 iface::cellml_services::CodeInformation*
 CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
  throw()
@@ -572,11 +580,18 @@ CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
 
   if (cgs.mAnnoSet == NULL)
   {
-    RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
-                       CreateAnnotationToolService());
-    cgs.mAnnoSet =
-      already_AddRefd<iface::cellml_services::AnnotationSet>
-      (ats->createAnnotationSet());
+    try
+    {
+      RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
+                         CreateAnnotationToolService());
+      cgs.mAnnoSet =
+        already_AddRefd<iface::cellml_services::AnnotationSet>
+        (ats->createAnnotationSet());
+    }
+    catch (...)
+    {
+      return CDA_ErrorCodeInformation(L"Error processing CellML model.");
+    }
   }
 
   if (cgs.mTransform == NULL)
