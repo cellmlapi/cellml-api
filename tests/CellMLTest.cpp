@@ -293,7 +293,7 @@ CellMLTest::testRDFRepresentation()
 //      * RDFRepresentation it may cast the object to.
 //      */
 //     readonly attribute wstring type;
-  iface::cellml_api::RDFRepresentation* rr;
+  iface::cellml_api::RDFRepresentation* rr = NULL;
   CPPUNIT_ASSERT_NO_THROW
     (
      rr = mAchCascade->getRDFRepresentation(L"http://www.cellml.org/RDFXML/DOM")
@@ -338,7 +338,7 @@ CellMLTest::testRDFXMLDOMRepresentation()
 //     */
 //    attribute dom::Document data;
 
-  iface::cellml_api::RDFRepresentation* rr;
+  iface::cellml_api::RDFRepresentation* rr = 0;
   CPPUNIT_ASSERT_NO_THROW
     (
      rr = mAchCascade->getRDFRepresentation(L"http://www.cellml.org/RDFXML/DOM")
@@ -392,7 +392,7 @@ CellMLTest::testRDFXMLStringRepresentation()
 //      * The RDF/XML as a serialised string.
 //      */
 //     attribute wstring serialisedData;
-  iface::cellml_api::RDFRepresentation* rr;
+  iface::cellml_api::RDFRepresentation* rr = NULL;
   CPPUNIT_ASSERT_NO_THROW
     (
      rr = mAchCascade->getRDFRepresentation(L"http://www.cellml.org/RDFXML/string")
@@ -401,7 +401,7 @@ CellMLTest::testRDFXMLStringRepresentation()
 
   DECLARE_QUERY_INTERFACE_REPLACE(rrs, rr,
                                   cellml_api::RDFXMLStringRepresentation);
-  wchar_t* correctValue =
+  const wchar_t* correctValue =
 L"<?xml version=\"1.0\"?>\n"
 L"<RDF xmlns=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" rdf:about=\"\">\n"
 L"      <!--\n"
@@ -804,7 +804,7 @@ CellMLTest::testCellMLElement()
 //      * Get a list of all the child CellMLElements in this element.
 //      */
 //     readonly attribute CellMLElementSet childElements;
-  iface::cellml_api::CellMLElementSet* els;
+  iface::cellml_api::CellMLElementSet* els = NULL;
   CPPUNIT_ASSERT_NO_THROW(els = mAchCascade->childElements());
   CPPUNIT_ASSERT_EQUAL(113, (int)els->length());
 
@@ -1096,9 +1096,9 @@ CellMLTest::testModel()
   loadBeelerReuter();
   loadTenTusscher();
   //  Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
-  iface::cellml_api::Model* m;
+  iface::cellml_api::Model* m = NULL;
   CPPUNIT_ASSERT_NO_THROW(m = mBeelerReuter->getAlternateVersion(L"1.1"));
-  wchar_t* str;
+  wchar_t* str = NULL;
   CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
   CPPUNIT_ASSERT(!wcscmp(str, L"1.1"));
   free(str);
@@ -1115,7 +1115,7 @@ CellMLTest::testModel()
 //     readonly attribute GroupSet groups;
   // Get groups...
 
-  iface::cellml_api::GroupSet* gs;
+  iface::cellml_api::GroupSet* gs = NULL;
   CPPUNIT_ASSERT_NO_THROW(gs = mBeelerReuter->groups());
   int l;
   CPPUNIT_ASSERT_NO_THROW(l = (int)gs->length());
@@ -1134,9 +1134,9 @@ CellMLTest::testModel()
 //      */
 //     GroupIterator iterateGroups();
 
-  iface::cellml_api::GroupIterator* gi;
+  iface::cellml_api::GroupIterator* gi = NULL;
   CPPUNIT_ASSERT_NO_THROW(gi = gs->iterateGroups());
-  iface::cellml_api::Group* grp;
+  iface::cellml_api::Group* grp = NULL;
   CPPUNIT_ASSERT_NO_THROW(grp = gi->nextGroup());
 
   // Warning: This is order dependent, but the CellML API doesn't specify
@@ -1159,7 +1159,7 @@ CellMLTest::testModel()
 //      * @return GroupSet The new set of groups.
 //      */
 //     GroupSet getSubsetInvolvingRelationship(in CellMLAttributeString relName);
-  iface::cellml_api::GroupSet* gs2;
+  iface::cellml_api::GroupSet* gs2 = NULL;
   CPPUNIT_ASSERT_NO_THROW(gs2 = gs->getSubsetInvolvingRelationship
                           (L"encapsulation"));
   l = (int)gs2->length();
@@ -1210,7 +1210,7 @@ CellMLTest::testModel()
 //      * The collection of imports described in this model document.
 //      */
 //     readonly attribute CellMLImportSet imports;
-  iface::cellml_api::CellMLImportSet* cis;
+  iface::cellml_api::CellMLImportSet* cis = NULL;
   CPPUNIT_ASSERT_NO_THROW(cis = mTenTusscher->imports());
   l = (int)cis->length();
   CPPUNIT_ASSERT_NO_THROW(CPPUNIT_ASSERT_EQUAL(2, l));
@@ -1226,11 +1226,11 @@ CellMLTest::testModel()
 //      * elements. The iteration order is undefined.
 //      */
 //     CellMLImportIterator iterateImports();
-  iface::cellml_api::CellMLImportIterator* cii;
+  iface::cellml_api::CellMLImportIterator* cii = NULL;
   CPPUNIT_ASSERT_NO_THROW(cii = cis->iterateImports());
-  iface::cellml_api::CellMLImport* ci;
+  iface::cellml_api::CellMLImport* ci = NULL;
   CPPUNIT_ASSERT_NO_THROW(ci = cii->nextImport());
-  iface::cellml_api::URI* xh;
+  iface::cellml_api::URI* xh = NULL;
   CPPUNIT_ASSERT_NO_THROW(xh = ci->xlinkHref());
   CPPUNIT_ASSERT_NO_THROW(str = xh->asText());
   CPPUNIT_ASSERT(!wcscmp(str, L"../../common/units.xml"));
@@ -1267,7 +1267,7 @@ CellMLTest::testModel()
 //      * The collection of units defined within this model.
 //      */
 //     readonly attribute UnitsSet localUnits;
-  iface::cellml_api::UnitsSet* us;
+  iface::cellml_api::UnitsSet* us = NULL;
   CPPUNIT_ASSERT_NO_THROW(us = mBeelerReuter->localUnits());
   CPPUNIT_ASSERT_NO_THROW(l = (int)us->length());
   CPPUNIT_ASSERT_EQUAL(10, l);
@@ -1292,9 +1292,9 @@ CellMLTest::testModel()
   CPPUNIT_ASSERT_NO_THROW(us = mTenTusscher->modelUnits());
   CPPUNIT_ASSERT_NO_THROW(l = (int)us->length());
   CPPUNIT_ASSERT_EQUAL(13, l);
-  iface::cellml_api::UnitsIterator* ui;
+  iface::cellml_api::UnitsIterator* ui = NULL;
   CPPUNIT_ASSERT_NO_THROW(ui = us->iterateUnits());
-  iface::cellml_api::Units* cu;
+  iface::cellml_api::Units* cu = NULL;
   CPPUNIT_ASSERT_NO_THROW(cu = ui->nextUnits());
   CPPUNIT_ASSERT(cu);
   DECLARE_QUERY_INTERFACE_REPLACE(icu, cu, cellml_api::ImportUnits);
@@ -1364,7 +1364,7 @@ CellMLTest::testModel()
 //      * Returns a list of all components which are defined in this model.
 //      */
 //     readonly attribute CellMLComponentSet localComponents;
-  iface::cellml_api::CellMLComponentSet* cs;
+  iface::cellml_api::CellMLComponentSet* cs = NULL;
   CPPUNIT_ASSERT_NO_THROW(cs = mTenTusscher->localComponents());
   CPPUNIT_ASSERT_NO_THROW(l = (int)cs->length());
   CPPUNIT_ASSERT_EQUAL(4, l);
@@ -1413,7 +1413,7 @@ CellMLTest::testModel()
 //      * The set of all connections defined in this model document.
 //      */
 //     readonly attribute ConnectionSet connections;
-  iface::cellml_api::ConnectionSet* connset;
+  iface::cellml_api::ConnectionSet* connset = NULL;
   CPPUNIT_ASSERT_NO_THROW(connset = mTenTusscher->connections());
   CPPUNIT_ASSERT_NO_THROW(l = (int)connset->length());
   CPPUNIT_ASSERT_EQUAL(6, l);
@@ -1432,17 +1432,17 @@ CellMLTest::testModel()
   CPPUNIT_ASSERT_NO_THROW(l = (int)gs->length());
   CPPUNIT_ASSERT_EQUAL(1, l);
   CPPUNIT_ASSERT_NO_THROW(gi = gs->iterateGroups());
-  iface::cellml_api::Group* g;
+  iface::cellml_api::Group* g = NULL;
   CPPUNIT_ASSERT_NO_THROW(g = gi->nextGroup());
   gi->release_ref();
-  iface::cellml_api::RelationshipRefSet* rrs;
+  iface::cellml_api::RelationshipRefSet* rrs = NULL;
   CPPUNIT_ASSERT_NO_THROW(rrs = g->relationshipRefs());
   g->release_ref();
   CPPUNIT_ASSERT_NO_THROW(l = (int)rrs->length());
   CPPUNIT_ASSERT_EQUAL(1, l);
-  iface::cellml_api::RelationshipRefIterator* rri;
+  iface::cellml_api::RelationshipRefIterator* rri = NULL;
   CPPUNIT_ASSERT_NO_THROW(rri = rrs->iterateRelationshipRefs());
-  iface::cellml_api::RelationshipRef* rr;
+  iface::cellml_api::RelationshipRef* rr = NULL;
   CPPUNIT_ASSERT_NO_THROW(rr = rri->nextRelationshipRef());
   rri->release_ref();
   CPPUNIT_ASSERT_NO_THROW(str = rr->relationship());
@@ -1464,7 +1464,7 @@ CellMLTest::testModel()
 //      * Creates a new (local) CellMLComponent
 //      */
 //     CellMLComponent createComponent();
-  iface::cellml_api::CellMLComponent* c;
+  iface::cellml_api::CellMLComponent* c = NULL;
   CPPUNIT_ASSERT_NO_THROW(c = mBeelerReuter->createComponent());
   CPPUNIT_ASSERT(c);
   c->release_ref();
@@ -1473,7 +1473,7 @@ CellMLTest::testModel()
 //      * Creates a new ImportComponent
 //      */
 //     ImportComponent createImportComponent();
-  iface::cellml_api::ImportComponent* ic;
+  iface::cellml_api::ImportComponent* ic = NULL;
   CPPUNIT_ASSERT_NO_THROW(ic = mBeelerReuter->createImportComponent());
   CPPUNIT_ASSERT(ic);
   ic->release_ref();
@@ -1498,7 +1498,7 @@ CellMLTest::testModel()
 //      * Creates a new Unit
 //      */
 //     Unit createUnit();
-  iface::cellml_api::Unit* unit;
+  iface::cellml_api::Unit* unit = NULL;
   CPPUNIT_ASSERT_NO_THROW(unit = mBeelerReuter->createUnit());
   CPPUNIT_ASSERT(unit);
   unit->release_ref();
@@ -1515,7 +1515,7 @@ CellMLTest::testModel()
 //      * Creates a new CellMLVariable
 //      */
 //     CellMLVariable createCellMLVariable();
-  iface::cellml_api::CellMLVariable* cv;
+  iface::cellml_api::CellMLVariable* cv = NULL;
   CPPUNIT_ASSERT_NO_THROW(cv = mBeelerReuter->createCellMLVariable());
   CPPUNIT_ASSERT(cv);
   cv->release_ref();
@@ -1549,12 +1549,12 @@ CellMLTest::testModel()
 //      * Creates a new Connection. This also creates the MapComponents.
 //      */
 //     Connection createConnection();
-  iface::cellml_api::Connection* conn;
+  iface::cellml_api::Connection* conn = NULL;
   CPPUNIT_ASSERT_NO_THROW(conn = mBeelerReuter->createConnection());
   CPPUNIT_ASSERT(conn);
 
   // Test implicit map component creation...
-  iface::cellml_api::MapComponents* mc;
+  iface::cellml_api::MapComponents* mc = NULL;
   mBeelerReuter->addElement(conn);
   CPPUNIT_ASSERT_NO_THROW(mc = conn->componentMapping());
   CPPUNIT_ASSERT(mc);
@@ -1565,7 +1565,7 @@ CellMLTest::testModel()
 //      * Creates a new MapVariables.
 //      */
 //     MapVariables createMapVariables();
-  iface::cellml_api::MapVariables* mv;
+  iface::cellml_api::MapVariables* mv = NULL;
   CPPUNIT_ASSERT_NO_THROW(mv = mBeelerReuter->createMapVariables());
   CPPUNIT_ASSERT(mv);
   mv->release_ref();
@@ -1574,7 +1574,7 @@ CellMLTest::testModel()
 //      * Creates a new Reaction
 //      */
 //     Reaction createReaction();
-  iface::cellml_api::Reaction* rea;
+  iface::cellml_api::Reaction* rea = NULL;
   CPPUNIT_ASSERT_NO_THROW(rea = mBeelerReuter->createReaction());
   CPPUNIT_ASSERT(rea);
   rea->release_ref();
@@ -1583,7 +1583,7 @@ CellMLTest::testModel()
 //        * Creates a new VariableRef
 //        */
 //       VariableRef createVariableRef();
-  iface::cellml_api::VariableRef* vr;
+  iface::cellml_api::VariableRef* vr = NULL;
   CPPUNIT_ASSERT_NO_THROW(vr = mBeelerReuter->createVariableRef());
   CPPUNIT_ASSERT(vr);
   vr->release_ref();
@@ -1592,7 +1592,7 @@ CellMLTest::testModel()
 //          * Creates a new Role
 //          */
 //         Role createRole();
-  iface::cellml_api::Role* role;
+  iface::cellml_api::Role* role = NULL;
   CPPUNIT_ASSERT_NO_THROW(role = mBeelerReuter->createRole());
   CPPUNIT_ASSERT(role);
   role->release_ref();
@@ -1827,7 +1827,7 @@ CellMLTest::testCellMLComponent()
   CPPUNIT_ASSERT(!wcscmp(str, L"membrane_potential"));
   free(str);
   // We haven't really tested encapsulationParent() properly yet, so test...
-  iface::cellml_api::CellMLComponent* c4;
+  iface::cellml_api::CellMLComponent* c4 = NULL;
   CPPUNIT_ASSERT_NO_THROW(c4 = c3->encapsulationParent());
   str = c4->name();
   CPPUNIT_ASSERT(!wcscmp(str, L"interface"));
@@ -2168,7 +2168,7 @@ CellMLTest::testCellMLImport()
 //      * component in the encapsulation hierarchy.
 //      */
 //     readonly attribute ConnectionSet importedConnections;
-  iface::cellml_api::ConnectionSet* cs;
+  iface::cellml_api::ConnectionSet* cs = NULL;
   CPPUNIT_ASSERT_NO_THROW(cs = ci2->importedConnections());
   int l;
   CPPUNIT_ASSERT_NO_THROW(l = (int)cs->length());
@@ -2773,7 +2773,7 @@ CellMLTest::testConnection()
   CPPUNIT_ASSERT_NO_THROW(mc->firstComponent(comp2));
   CPPUNIT_ASSERT_NO_THROW(mc->secondComponent(comp));
 
-  iface::cellml_api::CellMLComponent* comp3;
+  iface::cellml_api::CellMLComponent* comp3 = NULL;
   CPPUNIT_ASSERT_NO_THROW(comp3 = mc->firstComponent());
   str = comp3->name();
   CPPUNIT_ASSERT(!wcscmp(str, L"environment"));
@@ -2889,7 +2889,7 @@ CellMLTest::testConnection()
   v->release_ref();
   v2->release_ref();
 
-  iface::cellml_api::CellMLVariable* v3;
+  iface::cellml_api::CellMLVariable* v3 = NULL;
   CPPUNIT_ASSERT_NO_THROW(v3 = mv->firstVariable());
   str = v3->name();
   CPPUNIT_ASSERT(!wcscmp(str, L"footime"));
@@ -2936,7 +2936,7 @@ CellMLTest::testReaction()
 //     * A collection of all the reactants involved in this reaction.
 //     */
 //    readonly attribute VariableRefSet variableReferences;
-  iface::cellml_api::VariableRefSet* vrs;
+  iface::cellml_api::VariableRefSet* vrs = NULL;
   CPPUNIT_ASSERT_NO_THROW(vrs = r->variableReferences());
   int l;
   CPPUNIT_ASSERT_NO_THROW(l = (int)vrs->length());
@@ -2964,7 +2964,7 @@ CellMLTest::testReaction()
 //      *    ii) If create is false, NULL is returned.
 //      */
 //     VariableRef getVariableRef(in wstring varName, in boolean create);
-  iface::cellml_api::VariableRef* vr;
+  iface::cellml_api::VariableRef* vr = NULL;
   CPPUNIT_ASSERT_NO_THROW(vr = r->getVariableRef(L"G6P", false));
 
   // Now test VariableRef...

@@ -5,7 +5,7 @@
  * The constant array needs 4 entries.
  * Variable storage is as follows:
  * * Target boundheight in component Height
- * * * Variable type: invalid type
+ * * * Variable type: locally bound
  * * * Variable index: 0
  * * * Variable storage: ALGEBRAIC[0]
  * * Target d^1/dt^1 height in component Height

@@ -434,16 +434,24 @@ void
 CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
                                            xmlParserCtxtPtr ctxt)
 {
-  wchar_t buf[20];
-
   xmlErrorPtr err = xmlCtxtGetLastError(ctxt);
-  std::wstring fname, msg;
   if (err == NULL)
   {
     xmlFreeParserCtxt(ctxt);
     aErrorMessage = L"Could not fetch the error message.";
     return;
   }
+  
+  ProcessXMLError(aErrorMessage, err);
+
+  xmlFreeParserCtxt(ctxt);
+}
+
+void
+CDA_DOMImplementation::ProcessXMLError(std::wstring& aErrorMessage, _xmlError* err)
+{
+  std::wstring fname, msg;
+  wchar_t buf[20];
   if (err->file)
   {
     std::wstring fname;
@@ -1168,7 +1176,22 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
   default:
     aErrorMessage = L"unexpectedxml2error";
   }
-  xmlFreeParserCtxt(ctxt);
+}
+
+struct CDA_PartialLoad
+{
+  CDA_DOMImplementation * mImpl;
+  std::wstring& mMsgTo;
+};
+
+static void CDA_XMLStructuredHandler
+(
+ void *userData, 
+ xmlErrorPtr error
+)
+{
+  CDA_PartialLoad* pl = reinterpret_cast<CDA_PartialLoad*>(userData);
+  pl->mImpl->ProcessXMLError(pl->mMsgTo, error);
 }
 
 iface::dom::Document*
@@ -1215,14 +1238,17 @@ CDA_DOMImplementation::loadDocument
   std::string sURL = URL;
   free(URL);
 
-
+  CDA_PartialLoad pl = { this, aErrorMessage };
   xmlParserCtxtPtr ctxt =
     xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, sURL.c_str());
+
   if (ctxt == NULL)
   {
     aErrorMessage = L"nomemory";
     return NULL;
   }
+
+  xmlSetStructuredErrorFunc(reinterpret_cast<void*>(&pl), CDA_XMLStructuredHandler);
   
   xmlDocPtr xdp =
     xmlCtxtReadFile(ctxt, sURL.c_str(), NULL,
@@ -1252,14 +1278,18 @@ CDA_DOMImplementation::loadDocumentFromText
 {
   char* text = CDA_wchar_to_UTF8(aText);
 
+  CDA_PartialLoad pl = { this, aErrorMessage };
   xmlParserCtxtPtr ctxt =
     xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, NULL);
+
   if (ctxt == NULL)
   {
     aErrorMessage = L"nomemory";
     free(text);
     return NULL;
   }
+
+  xmlSetStructuredErrorFunc(reinterpret_cast<void*>(&pl), CDA_XMLStructuredHandler);
   
   xmlDocPtr xdp =
     xmlCtxtReadMemory(ctxt, text, strlen(text), NULL, NULL,
