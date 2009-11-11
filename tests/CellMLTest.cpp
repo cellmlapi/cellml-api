@@ -1524,7 +1524,7 @@ CellMLTest::testModel()
 //      * Creates a new ComponentRef.
 //      */
 //     ComponentRef createComponentRef();
-  iface::cellml_api::ComponentRef* cr;
+  iface::cellml_api::ComponentRef* cr = NULL;
   CPPUNIT_ASSERT_NO_THROW(cr = mBeelerReuter->createComponentRef());
   CPPUNIT_ASSERT(cr);
   cr->release_ref();
