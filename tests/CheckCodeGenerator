@@ -15,6 +15,9 @@ if [[ -n $RUNNER ]]; then
     CELLML2C="$RUNNER $BINDIR/.libs/CellML2C.exe"
 fi
 
+grep -q "s,@ENABLE_RDF_TRUE@,|#_!!_#|#,g" $BINDIR/config.status
+RDF_ENABLED=$?
+
 function runtest()
 {
   name=$1;
@@ -70,6 +73,15 @@ function runtest_usenames()
   rm -f $TEMPFILE
 }
 
+function runtest_rdf()
+{
+  name=$1
+  if [[ $RDF_ENABLED == 1 ]];
+  then
+    runtest $name
+  fi
+}
+
 runtest cellml_simple_test
 runtest modified_parabola
 runtest underconstrained_1
@@ -82,7 +94,7 @@ runtest units-import
 runtest units-import-import
 runtest units-in-imported-component
 runtest SimpleDAE_NonLinear
-runtest newton_raphson_parabola_overrideiv
+runtest_rdf newton_raphson_parabola_overrideiv
 runtest_usenames modified_parabola
 runtest StateModel
 runtest reset_rule

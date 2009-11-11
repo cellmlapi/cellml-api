@@ -1,8 +1,14 @@
 # Tests...
 check_PROGRAMS=tests/RunTestBin
 
-TESTS=tests/RunTestBin tests/CheckCodeGenerator tests/CheckCeLEDS
+TESTS=tests/RunTestBin
 
+if ENABLE_CCGS
+TESTS+=tests/CheckCodeGenerator
+endif
+if ENABLE_CELEDS
+TESTS+=tests/CheckCeLEDS
+endif
 if ENABLE_VACSS
 TESTS += tests/CheckVACSS
 endif
