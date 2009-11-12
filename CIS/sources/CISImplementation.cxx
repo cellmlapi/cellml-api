@@ -219,7 +219,7 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
   struct _finddata_t d;
   intptr_t hd;
   std::string pat = mDirname;
-  pat += "\*.*";
+  pat += "*.*";
   hd = _findfirst(pat.c_str(), &d);
   if (hd != -1)
   {

@@ -614,7 +614,7 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
   {
     cci = cg->generateCode(mod);
   }
-  catch (iface::cellml_api::CellMLException& ce)
+  catch (iface::cellml_api::CellMLException&)
   {
     printf("Caught a CellMLException while generating code.\n");
     cg->release_ref();

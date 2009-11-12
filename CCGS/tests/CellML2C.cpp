@@ -513,7 +513,7 @@ main(int argc, char** argv)
   {
     cci = cg->generateCode(mod);
   }
-  catch (iface::cellml_api::CellMLException& ce)
+  catch (iface::cellml_api::CellMLException&)
   {
     printf("Caught a CellMLException while generating code.\n");
     cg->release_ref();

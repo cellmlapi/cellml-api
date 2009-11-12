@@ -408,7 +408,7 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
 
     return mup;
   }
-  catch (iface::dom::DOMException& de)
+  catch (iface::dom::DOMException&)
   {
     throw MaLaESError(L"CI Element with no text inside.");
   }
@@ -468,7 +468,7 @@ CDAMaLaESResult::endConversionMode()
 bool
 CDAMaLaESResult::pushPrecedence(uint32_t outer, uint32_t inner)
 {
-  bool eqNeed = outer > mPrec.back().second;
+  bool eqNeed = (outer > static_cast<uint32_t>(mPrec.back().second));
   if (!eqNeed)
     mPrec.back().second = true;
   bool ret;
