@@ -159,9 +159,18 @@ end
 </ccgs:dictionary>
 
 <dictionary>
-  <mapping keyname="preAlgebraicCount">%
-% There are a total of </mapping>
-  <mapping keyname="postAlgebraicCount"> entries in the algebraic variable array.
+  <mapping keyname="preAlgebraicCount">
+function [VOI, STATES, ALGEBRAIC, CONSTANTS] = mainFunction()
+    % This is the "main function".  In Matlab, things work best if you rename this function to match the filename.
+   [VOI, STATES, ALGEBRAIC, CONSTANTS] = solveModel();
+end
+
+function [algebraicVariableCount] = getAlgebraicVariableCount() 
+    % Used later when setting a global variable with the number of algebraic variables.
+    % Note: This is not the "main method".  
+    algebraicVariableCount =</mapping>
+<mapping keyname="postAlgebraicCount">;
+end
 </mapping>
   <mapping keyname="preStateCount">% There are a total of </mapping>
   <mapping keyname="postStateCount"> entries in each of the rate and state variable arrays.
@@ -173,7 +182,7 @@ end
   <mapping keyname="topSection" solverparameters="true"><![CDATA[
 function [VOI, STATES, ALGEBRAIC, CONSTANTS] = solveModel()
     % Create ALGEBRAIC of correct size
-	global algebraicVariableCount;  algebraicVariableCount = YOU_NEED_TO_PUT_THE_CORRECT_NUMBER_HERE_BY_HAND; %See comment at top of file for number of algebraic variables.
+    global algebraicVariableCount;  algebraicVariableCount = getAlgebraicVariableCount();
     % Initialise constants and state variables
     [INIT_STATES, CONSTANTS] = initConsts;
 
