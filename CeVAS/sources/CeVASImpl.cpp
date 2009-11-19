@@ -424,7 +424,15 @@ CDACeVAS::CDACeVAS(iface::cellml_api::Model* aModel)
   throw()
   : _cda_refcount(1)
 {
-  aModel->fullyInstantiateImports();
+  try
+  {
+    aModel->fullyInstantiateImports();
+  }
+  catch (...)
+  {
+    mErrorDescription += L"Could not fully instantiate imports.";
+    return;
+  }
 
   CleanupList<iface::cellml_api::Model*> relevantModels;
 
