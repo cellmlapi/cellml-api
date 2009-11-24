@@ -4518,6 +4518,9 @@ ModelValidation::validateGroupComponentRefs
 
       RETURN_INTO_OBJREF(m, iface::cellml_api::Model, imp->importedModel());
 
+      if (m == NULL)
+        break;
+
       RETURN_INTO_OBJREF(iccs,
                          iface::cellml_api::CellMLComponentSet,
                          m->modelComponents());
