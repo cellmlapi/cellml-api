@@ -3329,6 +3329,10 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
     return;
   }
 
+  // No point trying to deal with a zero-length base URI.
+  if (base.length() == 0)
+    return;
+
   // It is a completely relative URL.
   // See if base ends in a /...
   size_t pos = base.find(L"://");
