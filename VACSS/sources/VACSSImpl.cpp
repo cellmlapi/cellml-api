@@ -3174,78 +3174,100 @@ ModelValidation::validateMathMLApply
       }
       seenDegree = true;
 
-      RETURN_INTO_OBJREF(degreeUnits,
-                         iface::cellml_services::CanonicalUnitRepresentation,
-                         validateMathMLExpression(aContext, el2));
-      if (degreeUnits)
+      ObjRef<iface::cellml_services::CanonicalUnitRepresentation> degreeUnits;
+
       {
-        if (!degreeUnits->compatibleWith(mDimensionlessUnits) ||
-            (!CDA_objcmp(degreeUnits, mBooleanUnits)))
-        {
-          REPR_ERROR(L"degree qualifier should be in dimensionless units",
-                     el2);
-        }
-      }
-      
-      if (degreeUnits)
-      {
-        // To work out the units properly, we actually need a number for the
-        // degree...
         ObjRef<iface::dom::Node> n3;
         for (n3 = already_AddRefd<iface::dom::Node>(el2->firstChild());
              n3;
              n3 = already_AddRefd<iface::dom::Node>(n3->nextSibling()))
         {
-          DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, dom::Element);
+          DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, mathml_dom::MathMLElement);
           if (el3 == NULL)
             continue;
-        
-          RETURN_INTO_WSTRING(ns3, el3->namespaceURI());
-          if (ns3 != MATHML_NS)
+
+          if (degreeUnits)
+          {
+            REPR_ERROR(L"There should only be one MathML element inside degree",
+                       el3);
             continue;
-
-          RETURN_INTO_WSTRING(ln3, el3->localName());
-          if (ln3 == L"semantics")
-          {
-            el3 = already_AddRefd<iface::dom::Element>
-              (extractSemanticsValidateAnnotation(el3));
-            wchar_t* str = el3->localName();
-            ln3 = str;
-            free(str);
           }
+          degreeUnits =
+            already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
+            (validateMathMLExpression(aContext, el3));
+        }
 
-          if (ln3 != L"cn")
+        if (degreeUnits == NULL)
+        {
+          REPR_ERROR(L"Degree element does not content MathML child",
+                     el2);
+          continue;
+        }
+      }
+
+      if (!degreeUnits->compatibleWith(mDimensionlessUnits) ||
+          (!CDA_objcmp(degreeUnits, mBooleanUnits)))
+      {
+        REPR_ERROR(L"degree qualifier should be in dimensionless units",
+                   el2);
+      }
+      
+      // To work out the units properly, we actually need a number for the
+      // degree...
+      ObjRef<iface::dom::Node> n3;
+      for (n3 = already_AddRefd<iface::dom::Node>(el2->firstChild());
+           n3;
+           n3 = already_AddRefd<iface::dom::Node>(n3->nextSibling()))
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, dom::Element);
+        if (el3 == NULL)
+          continue;
+        
+        RETURN_INTO_WSTRING(ns3, el3->namespaceURI());
+        if (ns3 != MATHML_NS)
+          continue;
+        
+        RETURN_INTO_WSTRING(ln3, el3->localName());
+        if (ln3 == L"semantics")
+        {
+          el3 = already_AddRefd<iface::dom::Element>
+            (extractSemanticsValidateAnnotation(el3));
+          wchar_t* str = el3->localName();
+          ln3 = str;
+          free(str);
+        }
+
+        if (ln3 != L"cn")
+        {
+          REPR_WARNING(L"Units validation results may be incorrect because the "
+                       L"degree of differentiation is not a constant", el3);
+          break;
+        }
+
+        // This is safe because degreeUnits is non-null...
+        DECLARE_QUERY_INTERFACE_OBJREF(cn, el3, mathml_dom::MathMLCnElement);
+        RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
+        
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
+        if (tn != NULL)
+        {
+          RETURN_INTO_WSTRING(tns, tn->data());
+          int i = 0, j = tns.length() - 1;
+          wchar_t c;
+          while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+            i++;
+          while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+            j--;
+          if (j < i)
+            j = i - 1;
+          tns = tns.substr(i, j - i + 1);
+
+          wchar_t* e;
+          overallDegree = wcstoul(tns.c_str(), &e, 10);
+          if (*e != 0 || overallDegree == 0)
           {
-            REPR_WARNING(L"Units validation results may be incorrect because the "
-                         L"degree of differentiation is not a constant", el3);
-            break;
-          }
-
-          // This is safe because degreeUnits is non-null...
-          DECLARE_QUERY_INTERFACE_OBJREF(cn, el3, mathml_dom::MathMLCnElement);
-          RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
-
-          DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
-          if (tn != NULL)
-          {
-            RETURN_INTO_WSTRING(tns, tn->data());
-            int i = 0, j = tns.length() - 1;
-            wchar_t c;
-            while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-              i++;
-            while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-              j--;
-            if (j < i)
-              j = i - 1;
-            tns = tns.substr(i, j - i + 1);
-
-            wchar_t* e;
-            overallDegree = wcstoul(tns.c_str(), &e, 10);
-            if (*e != 0 || overallDegree == 0)
-            {
-              REPR_WARNING(L"Degree of differentiation should be integral", el2);
-              overallDegree = 1;
-            }
+            REPR_WARNING(L"Degree of differentiation should be integral", el2);
+            overallDegree = 1;
           }
         }
       }
