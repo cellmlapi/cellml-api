@@ -281,7 +281,8 @@ CDACanonicalUnitRepresentation::canonicalise()
   uint32_t l = length();
   uint32_t i;
 
-  iface::cellml_services::BaseUnitInstance *uThis, *uLast = NULL;
+  iface::cellml_services::BaseUnitInstance *uThis;
+  ObjRef<iface::cellml_services::BaseUnitInstance> uLast;
 
 #ifdef DEBUG_UNITS
   if (mCarry != 1.0)
@@ -309,7 +310,6 @@ CDACanonicalUnitRepresentation::canonicalise()
         if (newExp != 0)
         {
           uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
-          uLast->add_ref();
           newBaseUnits.push_back(uLast);
         }
         else
@@ -320,7 +320,6 @@ CDACanonicalUnitRepresentation::canonicalise()
     }
 
     uThis->add_ref();
-
     newBaseUnits.push_back(uThis);
     uLast = uThis;
   }
