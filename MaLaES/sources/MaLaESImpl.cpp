@@ -827,7 +827,7 @@ CDAMaLaESResult::parseConstant
     while ((c = txtn[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
       j--;
     if (j < i)
-      throw MaLaESError(L"CN element with only spaces inside.");
+      throw MaLaESError(L"CN argument with only spaces inside (exponent of e-notation)");
     txtn = txtn.substr(i, j - i + 1);
     i = 0;
     j = txtm.length() - 1;
@@ -836,7 +836,7 @@ CDAMaLaESResult::parseConstant
     while ((c = txtm[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
       j--;
     if (j < i)
-      throw MaLaESError(L"CN element with only spaces inside.");
+      throw MaLaESError(L"CN argument with only spaces inside (mantissa of e-notation)");
     txtm = txtm.substr(i, j - i + 1);
 
     // Scoped locale change.
@@ -860,7 +860,7 @@ CDAMaLaESResult::parseConstant
     while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
       j--;
     if (j < i)
-      throw MaLaESError(L"CN element with only spaces inside.");
+      throw MaLaESError(L"CN element with only spaces inside (expected decimal)");
     txt = txt.substr(i, j - i + 1);
 
     // Scoped locale change.
