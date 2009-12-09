@@ -53,7 +53,11 @@ p2x::XPCOM::IObject::objid()
 {
   // We are never double wrapped, so this is a local XPCOM object.
   nsISupports* isupports = mObj;
+#ifndef ASSUME_UNBROKEN_DYNAMIC_CAST_VOID
+  void* p = reinterpret_cast<void*>(isupports);
+#else
   void* p = dynamic_cast<void*>(isupports);
+#endif
   char buf[15];
   sprintf(buf, "xpcom:%08X", p);
   return strdup(buf);
