@@ -38,7 +38,7 @@ CodeGenerationState::~CodeGenerationState()
     delete *i;
 }
 
-iface::cellml_services::CodeInformation*
+iface::cellml_services::IDACodeInformation*
 CodeGenerationState::GenerateCode()
 {
   // Create a new code information object...
@@ -65,103 +65,57 @@ CodeGenerationState::GenerateCode()
     //   side-effect)...
     CreateMathStatements();
     SplitPiecewiseByResetRule();
+    ProcessModellerSuppliedIVHints();
 
     // Next, set starting classification for all targets...
     FirstPassTargetClassification();
 
     mUnusedMathStatements.insert(mMathStatements.begin(), mMathStatements.end());
 
-    ProcessModellerSuppliedIVHints();
-
     // Put all targets into lists based on their classification...
     BuildFloatingAndConstantLists();
-
+  
     std::list<System*> systems;
-
+    
     // Now, determine all constants computable from the current constants...
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems, true);
-
+    
     mUnwanted.clear();
-
+    
     // Assign constant variables for set...
     AllocateVariablesInSet(systems, iface::cellml_services::CONSTANT,
                            mConstantPattern, mNextConstantIndex,
                            mCodeInfo->mConstantIndexCount);
-
+    
     // Allocate temporary names in constants for the rates...
     AllocateRateNamesAsConstants(systems);
-
+    
     std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
     // Build an index from variables required to systems...
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     CloneNamesIntoDelayedNames();
-
+  
     // Write evaluations for all constants we just worked out how to compute...
     std::wstring tmp;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mCodeInfo->mInitConstsStr += tmp;
-
+  
     // Also we need to initialise state variable IVs...
     systems.clear();
-
+    
     BuildStateAndConstantLists();
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     CheckStateVariableIVConstraints(systems);
-
+    
     tmp = L"";
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mCodeInfo->mInitConstsStr += tmp;
-
-    // Put all targets into lists based on their classification...
-    BuildFloatingAndKnownLists();
-
-    // Now, determine all algebraic variables / rates computable from the
-    // known variables (constants, state variables, and bound variable)...
-    systems.clear();
-
-    bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
-    MakeSystemsForResetRulesAndClearKnown(mResets, systems, mKnown, mFloating);
-    BuildSystemsByTargetsRequired(systems, sysByTargReq);
-
-    // Assign algebraic variables for set...
-    AllocateVariablesInSet(systems, iface::cellml_services::ALGEBRAIC,
-                           mAlgebraicVariableNamePattern,
-                           mNextAlgebraicVariableIndex,
-                           mCodeInfo->mAlgebraicIndexCount);
-
-    if (wasError)
-    {
-      if (mUnusedMathStatements.size() != 0)
-      {
-        if (mFloating.size() != 0)
-          throw UnsuitablyConstrainedError();
-        else
-        {
-          MathStatement * ms = *(mUnusedMathStatements.begin());
-          if (ms->mType != MathStatement::INITIAL_ASSIGNMENT)
-            throw OverconstrainedError
-              ((static_cast<MathMLMathStatement*>(ms))->mMaths);
-          // It is overconstrained because of an initial_value...
-          throw OverconstrainedError(NULL);
-        }
-      }
-      else
-        throw UnderconstrainedError();
-    }
-
-    // Restore the saved rates...
-    RestoreSavedRates(mCodeInfo->mRatesStr);
-
-    // Write evaluations for all rates & algebraic variables in reachabletargets
-    GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
-
-    // Also cascade state variables to rate variables where they are the same
-    // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
-    //  above equation, but also it is a rate for y).
-    GenerateStateToRateCascades();
-
-    GenerateInfDelayUpdates();
+    
+    if (mIDAStyle)
+      IDAStyleCodeGeneration();
+    else
+      ODESolverStyleCodeGeneration();
   }
   catch (UnderconstrainedError uce)
   {
@@ -219,6 +173,78 @@ CodeGenerationState::GenerateCode()
 }
 
 #define HINTS_NS L"http://www.cellml.org/metadata/simulation/solverhints/1.0#"
+
+void
+CodeGenerationState::IDAStyleCodeGeneration()
+{
+  // We now want to identify variables which are currently marked as floating,
+  // which can be computed from the constants, states, and VOI. However, we are
+  // not aiming to solve systems here...
+  
+  // Put all targets into lists based on their classification...
+  BuildFloatingAndKnownLists();
+
+  // Now, determine all algebraic variables / rates computable from the
+  // known variables (constants, state variables, and bound variable)...
+  std::list<System*> systems;
+  
+  bool wasError = DecomposeIntoAssignments(mKnown, mFloating, mUnwanted, systems);
+}
+
+void
+CodeGenerationState::ODESolverStyleCodeGeneration()
+{
+  // Put all targets into lists based on their classification...
+  BuildFloatingAndKnownLists();
+  
+  // Now, determine all algebraic variables / rates computable from the
+  // known variables (constants, state variables, and bound variable)...
+  std::list<System*> systems;
+  
+  bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
+  MakeSystemsForResetRulesAndClearKnown(mResets, systems, mKnown, mFloating);
+  std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
+  BuildSystemsByTargetsRequired(systems, sysByTargReq);
+  
+  // Assign algebraic variables for set...
+  AllocateVariablesInSet(systems, iface::cellml_services::ALGEBRAIC,
+                         mAlgebraicVariableNamePattern,
+                         mNextAlgebraicVariableIndex,
+                         mCodeInfo->mAlgebraicIndexCount);
+  
+  if (wasError)
+  {
+    if (mUnusedMathStatements.size() != 0)
+    {
+      if (mFloating.size() != 0)
+        throw UnsuitablyConstrainedError();
+      else
+      {
+        MathStatement * ms = *(mUnusedMathStatements.begin());
+        if (ms->mType != MathStatement::INITIAL_ASSIGNMENT)
+          throw OverconstrainedError
+            ((static_cast<MathMLMathStatement*>(ms))->mMaths);
+        // It is overconstrained because of an initial_value...
+        throw OverconstrainedError(NULL);
+      }
+    }
+    else
+      throw UnderconstrainedError();
+  }
+  
+  // Restore the saved rates...
+  RestoreSavedRates(mCodeInfo->mRatesStr);
+  
+  // Write evaluations for all rates & algebraic variables in reachabletargets
+  GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
+  
+  // Also cascade state variables to rate variables where they are the same
+  // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
+  //  above equation, but also it is a rate for y).
+  GenerateStateToRateCascades();
+  
+  GenerateInfDelayUpdates();
+}
 
 void
 CodeGenerationState::CheckStateVariableIVConstraints(const std::list<System*>& aSystems)
@@ -1538,6 +1564,31 @@ CodeGenerationState::RuleOutCandidates
         aCandidates.erase(*f);
         aUnwanted.insert(*f);
       }
+    }
+  }
+}
+
+bool
+CodeGenerationState::DecomposeIntoAssignments
+(
+ std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
+ std::list<System*>& aSystems,
+ bool aIgnoreInfdelayed
+)
+{
+  std::set<ptr_tag<CDA_ComputationTarget> > start(aStart);
+
+  bool progress = true;
+  while (progress)
+  {
+    progress = false;
+
+    for (std::set<ptr_tag<MathStatement> >::iterator i = mUnusedMathStatements.begin();
+         i != mUnusedMathStatements.end(); i++)
+    {
+      
     }
   }
 }

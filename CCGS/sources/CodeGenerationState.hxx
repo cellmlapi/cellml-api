@@ -124,7 +124,8 @@ public:
                       iface::cellml_services::MaLaESTransform* aTransform,
                       iface::cellml_services::CeVAS* aCeVAS,
                       iface::cellml_services::CUSES* aCUSES,
-                      iface::cellml_services::AnnotationSet* aAnnoSet)
+                      iface::cellml_services::AnnotationSet* aAnnoSet,
+                      bool aIDAStyle)
     : mModel(aModel), mConstantPattern(aConstantPattern),
       mStateVariableNamePattern(aStateVariableNamePattern),
       mAlgebraicVariableNamePattern(aAlgebraicVariableNamePattern),
@@ -145,13 +146,17 @@ public:
       mNextStateVariableIndex(aArrayOffset),
       mNextAlgebraicVariableIndex(aArrayOffset),
       mNextVOI(aArrayOffset),
-      mNextSolveId(0)
+      mNextSolveId(0),
+      mIDAStyle(aIDAStyle)
   {
   }
 
   ~CodeGenerationState();
 
-  iface::cellml_services::CodeInformation* GenerateCode();
+  iface::cellml_services::IDACodeInformation* GenerateCode();
+  void IDAStyleCodeGeneration();
+  void ODESolverStyleCodeGeneration();
+
   void CreateBaseComputationTargets();
   ptr_tag<CDA_ComputationTarget>  GetTargetOfDegree(ptr_tag<CDA_ComputationTarget>  aBase,
                                            uint32_t aDegree);
@@ -200,6 +205,11 @@ public:
                             std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
                             std::list<System*>& aSystems,
                             bool aIgnoreInfdelayed = false);
+  bool DecomposeIntoAssignments(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
+                                std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
+                                std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
+                                std::list<System*>& aSystems,
+                                bool aIgnoreInfdelayed = false);
   bool FindSmallSystem(
                        std::set<ptr_tag<MathStatement> >& aUseEquations,
                        std::set<ptr_tag<CDA_ComputationTarget> >& aUseVars,
@@ -343,6 +353,7 @@ public:
     mNextAlgebraicVariableIndex, mNextVOI, mNextSolveId;
   std::list<std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> > mRateNameBackup;
   std::list<ptr_tag<CDA_ComputationTarget> > mInfDelayedTargets;
+  bool mIDAStyle;
 };
 
 #endif // _CodeGenerationState_hxx

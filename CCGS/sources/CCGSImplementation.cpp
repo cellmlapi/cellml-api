@@ -193,6 +193,12 @@ CDA_CodeInformation::functionsString() throw()
   return CDA_wcsdup(mFuncsStr.c_str());
 }
 
+wchar_t*
+CDA_CodeInformation::essentialVariablesString() throw()
+{
+  return CDA_wcsdup(mEssentialVarsStr.c_str());
+}
+
 iface::cellml_services::ComputationTargetIterator*
 CDA_CodeInformation::iterateTargets() throw()
 {
@@ -239,7 +245,7 @@ CDA_CodeInformation::flaggedEquations() throw()
   return new CDA_FlaggedEquationsNodeList(this, mFlaggedEquations);
 }
 
-CDA_CodeGenerator::CDA_CodeGenerator()
+CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
  : _cda_refcount(1),
    mConstantPattern(L"CONSTANTS[%]"),
    mStateVariableNamePattern(L"STATES[%]"),
@@ -340,7 +346,8 @@ CDA_CodeGenerator::CDA_CodeGenerator()
     L"}\r\n"
     L"</CASES>"
    ),
-   mArrayOffset(0)
+   mArrayOffset(0),
+   mIDAStyle(aIDAStyle)
 {
 }
 
@@ -555,7 +562,7 @@ CDA_CodeGenerator::useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet)
   mAnnoSet = aAnnoSet;
 }
 
-static iface::cellml_services::CodeInformation*
+static iface::cellml_services::IDACodeInformation*
 CDA_ErrorCodeInformation(const wchar_t* aMessage)
 {
   CDA_CodeInformation* ci = new CDA_CodeInformation();
@@ -563,8 +570,12 @@ CDA_ErrorCodeInformation(const wchar_t* aMessage)
   return ci;
 }
 
-iface::cellml_services::CodeInformation*
-CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
+/* Note: this generates both IDA and normal code - we implement it as
+ * GenerateIDACode to avoid the need to QueryInterface in the case where we
+ * are generating IDA code.
+ */
+iface::cellml_services::IDACodeInformation*
+CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
  throw()
 {
   CodeGenerationState cgs(
@@ -575,7 +586,7 @@ CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
                           mSolveNLSystemPattern, mTemporaryVariablePattern,
                           mDeclareTemporaryPattern, mConditionalAssignmentPattern,
                           mArrayOffset, mTransform,
-                          mCeVAS, mCUSES, mAnnoSet
+                          mCeVAS, mCUSES, mAnnoSet, mIDAStyle
                          );
 
   if (cgs.mAnnoSet == NULL)
