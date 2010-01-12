@@ -2,6 +2,7 @@
 #include "VACSSImpl.hpp"
 #include "VACSSBootstrap.hpp"
 #include "CUSESBootstrap.hpp"
+#include <cstdio>
 #include <string>
 #include <set>
 #include <assert.h>
