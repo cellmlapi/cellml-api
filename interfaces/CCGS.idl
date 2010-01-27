@@ -473,6 +473,15 @@ module cellml_services
     * @param sourceModel The model for which to generate the IDACodeInformation.
     */
    IDACodeInformation generateIDACode(in cellml_api::Model sourceModel);
+
+   /**
+    * The pattern used when generating the residual computations for IDA.
+    * <RNO> is replaced with the index of the residual.
+    * <LHS> is replaced with the left-hand side of the equation.
+    * <RHS> is replaced with the right-hand side of the equation.
+    * Default: resid[<RNO>] = <LHS> - <RHS>;\r\n
+    */
+   attribute wstring residualPattern;
  };
 #pragma terminal-interface
 #pragma cross-module-argument

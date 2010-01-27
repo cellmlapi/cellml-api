@@ -127,7 +127,7 @@ class CDA_CodeInformation
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_services::CodeInformation);
+  CDA_IMPL_QI2(cellml_services::CodeInformation, cellml_services::IDACodeInformation);
 
   CDA_CodeInformation() : _cda_refcount(1) {};
   ~CDA_CodeInformation();
@@ -162,7 +162,7 @@ class CDA_CodeGenerator
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_services::CodeGenerator);
+  CDA_IMPL_QI2(cellml_services::CodeGenerator, cellml_services::IDACodeGenerator);
 
   CDA_CodeGenerator(bool aIDAStyle);
   ~CDA_CodeGenerator() {};
@@ -191,6 +191,8 @@ public:
   void declareTemporaryPattern(const wchar_t* aPattern) throw();
   wchar_t* conditionalAssignmentPattern() throw();
   void conditionalAssignmentPattern(const wchar_t* aPattern) throw();
+  wchar_t* residualPattern() throw();
+  void residualPattern(const wchar_t* aPattern) throw();
 
   iface::cellml_services::MaLaESTransform* transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
@@ -218,7 +220,7 @@ private:
     mAlgebraicVariableNamePattern,
     mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
     mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
-    mConditionalAssignmentPattern;
+    mConditionalAssignmentPattern, mResidualPattern;
   uint32_t mArrayOffset;
   bool mIDAStyle;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;

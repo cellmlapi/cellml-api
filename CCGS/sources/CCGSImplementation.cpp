@@ -346,6 +346,10 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
     L"}\r\n"
     L"</CASES>"
    ),
+   mResidualPattern
+   (
+    L"resid[<RNO>] = <LHS> - <RHS>;\r\n"
+   ),
    mArrayOffset(0),
    mIDAStyle(aIDAStyle)
 {
@@ -501,6 +505,20 @@ CDA_CodeGenerator::conditionalAssignmentPattern(const wchar_t* aPattern)
   mConditionalAssignmentPattern = aPattern;
 }
 
+wchar_t*
+CDA_CodeGenerator::residualPattern()
+  throw()
+{
+  return CDA_wcsdup(mResidualPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::residualPattern(const wchar_t* aPattern)
+  throw()
+{
+  mResidualPattern = aPattern;
+}
+
 iface::cellml_services::MaLaESTransform*
 CDA_CodeGenerator::transform() throw()
 {
@@ -585,7 +603,7 @@ CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
                           mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
                           mSolveNLSystemPattern, mTemporaryVariablePattern,
                           mDeclareTemporaryPattern, mConditionalAssignmentPattern,
-                          mArrayOffset, mTransform,
+                          mResidualPattern, mArrayOffset, mTransform,
                           mCeVAS, mCUSES, mAnnoSet, mIDAStyle
                          );
 

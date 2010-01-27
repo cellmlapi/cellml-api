@@ -105,6 +105,14 @@ public:
   std::set<ptr_tag<CDA_ComputationTarget> > mUnknowns;
 };
 
+class AssignmentOnlyRequestedNeedSolve
+  : public std::exception
+{
+public:
+  AssignmentOnlyRequestedNeedSolve() {}
+  const char* why() { return "assignmentOnly requested, but solve is required."; }
+};
+
 class CodeGenerationState
 {
 public:
@@ -120,6 +128,7 @@ public:
                       std::wstring& aTemporaryVariablePattern,
                       std::wstring& aDeclareTemporaryPattern,
                       std::wstring& aConditionalAssignmentPattern,
+                      std::wstring& aResidualPattern,
                       uint32_t aArrayOffset,
                       iface::cellml_services::MaLaESTransform* aTransform,
                       iface::cellml_services::CeVAS* aCeVAS,
@@ -137,6 +146,7 @@ public:
       mTemporaryVariablePattern(aTemporaryVariablePattern),
       mDeclareTemporaryPattern(aDeclareTemporaryPattern),
       mConditionalAssignmentPattern(aConditionalAssignmentPattern),
+      mResidualPattern(aResidualPattern),
       mArrayOffset(aArrayOffset),
       mTransform(aTransform),
       mCeVAS(aCeVAS),
@@ -194,7 +204,7 @@ public:
                     const std::wstring& aLHS,
                     const std::wstring& aRHS);
   void BuildFloatingAndConstantLists();
-  void BuildFloatingAndKnownLists();
+  void BuildFloatingAndKnownLists(bool includeRates = true);
   void WriteForcedInitialVariables();
   void BuildStateAndConstantLists();
   void RuleOutCandidates(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
@@ -205,11 +215,10 @@ public:
                             std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
                             std::list<System*>& aSystems,
                             bool aIgnoreInfdelayed = false);
-  bool DecomposeIntoAssignments(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
+  void DecomposeIntoAssignments(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                                 std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
                                 std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
-                                std::list<System*>& aSystems,
-                                bool aIgnoreInfdelayed = false);
+                                std::list<System*>& aSystems);
   bool FindSmallSystem(
                        std::set<ptr_tag<MathStatement> >& aUseEquations,
                        std::set<ptr_tag<CDA_ComputationTarget> >& aUseVars,
@@ -275,7 +284,8 @@ public:
    iface::cellml_api::CellMLVariable* aVar
   );
 
-  void GenerateCodeForEquation(std::wstring& aCodeTo, Equation* aEq, ptr_tag<CDA_ComputationTarget> aComputedTarget);
+  void GenerateCodeForEquation(std::wstring& aCodeTo, Equation* aEq, ptr_tag<CDA_ComputationTarget> aComputedTarget,
+                               bool aAssignmentOnly = false);
 
   void GenerateAssignmentMaLaESResult
   (
@@ -322,16 +332,23 @@ public:
   void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
   void RestoreSavedRates(std::wstring& aCode);
   void ProcessModellerSuppliedIVHints();
+  void FindSystemsForResiduals(std::list<System*>& aSystems,
+                               std::list<System*>& aSysForResid);
   void ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT, std::wstring& aStr);
   void SetupMathMLMathStatement(MathMLMathStatement* mms, iface::mathml_dom::MathMLElement* mn,
                                 iface::cellml_api::CellMLComponent* c);
+  void MarkRemainingVariablesAsPseudoState();
+  void GenerateResiduals(std::wstring& aCode);
+  void GenerateResidualForEquation(std::wstring& aCode, uint32_t aResidNo, Equation* aEq);
+  void GenerateResidualForString(std::wstring& aCode, uint32_t aResidNo,
+                                 const std::wstring& e1, const std::wstring& e2);
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
     & mAlgebraicVariableNamePattern, & mRateNamePattern,
     & mVOIPattern, & mAssignPattern, & mSolvePattern,
     & mSolveNLSystemPattern, & mTemporaryVariablePattern,
-    & mDeclareTemporaryPattern, & mConditionalAssignmentPattern;
+    & mDeclareTemporaryPattern, & mConditionalAssignmentPattern, & mResidualPattern;
   uint32_t mArrayOffset;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;
