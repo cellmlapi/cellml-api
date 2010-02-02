@@ -55,7 +55,14 @@ module cellml_services
     * The variable is used only locally, for example as the bound variable of a
     * definite integral.
     */
-   LOCALLY_BOUND
+   LOCALLY_BOUND,
+
+   /**
+    * IDA-type only: A variable which changes with time, but is not driven by a
+    * higher derivative. In non-IDA type code generation, this would be an
+    * algebraic variable which makes up part of a system of equations.
+    */
+   PSEUDOSTATE_VARIABLE
  };
 
  enum ModelConstraintLevel
@@ -258,7 +265,6 @@ module cellml_services
     */
    readonly attribute mathml_dom::MathMLNodeList flaggedEquations;
  };
-#pragma terminal-interface
 #pragma cross-module-argument
 
  interface CodeGenerator
@@ -406,6 +412,77 @@ module cellml_services
     */
    CodeInformation generateCode(in cellml_api::Model sourceModel);
  };
+#pragma cross-module-argument
+
+ interface IDACodeInformation
+   : CodeInformation
+ {
+   /**
+    * There are three types of code strings that can be obtained, each for a
+    * different purpose. Note that as variables are computed, they are added
+    * into 'Known variables'. This table differs slightly from CodeInformation
+    * even for the common inherited strings.
+    *
+    * Definitions:
+    *   State variable: A variable of which the first or higher derivative
+    *     is taken.
+    *   VOI or Variable of Integration: A variable with respect to which the
+    *     model is being integrated.
+    * +----------+--------------------+-----------------+--------------+------------------+
+    * |  String  | Targeted Variables |Possibly computed|    Known     |     Purpose      |
+    * |          |                    |    variables    |  Variables   |                  |
+    * +----------+--------------------+-----------------+--------------+------------------+
+    * |initConsts|All variables which |   Any variable  |   None       |Setting up        |
+    * |          |aren't state        |    or rate      |              |constants and     |
+    * |          |variables but have  | except VOIs &   |              |values computed   |
+    * |          |an initial_value    |  state variables|              |from them.        |
+    * |          |attribute, and any  | & pseudostate   |              |                  |
+    * |          |variables & rates   | variables.      |              |                  |
+    * |          |which follow.       |                 |              |                  |
+    * +----------+--------------------+-----------------+--------------+------------------+
+    * |essential |All variables which |Any variable     |Everything set|Computing variable|
+    * |Variables |are not rates, have |                 |above, VOIs,  |s other than state|
+    * |          |analytic solution, &|                 |and state     |variables.        |
+    * |          |needed for rates.   |                 |variables     |                  |
+    * +----------+--------------------+-----------------+--------------+------------------+
+    * |  rates   |The residuals of all|Any variable or  |Everything set|Efficiently       |
+    * |          |rates and states and|rate             |above, VOIs,  |computing rates   |
+    * |          |pseudostate variable|                 |& state       |for the ODE solver|
+    * |          |s.                  |                 |variables     |                  |
+    * +----------+--------------------+-----------------+--------------+------------------+
+    * |variables |All variables not   |Any variable     |Everything set|Computing the     |
+    * |          |are not rates, have |                 |above, VOIs,  |remaining         |
+    * |          |analytic solution, &|                 |and state     |variables.        |
+    * |          |needed for rates.   |                 |variables     |                  |
+    * +----------+--------------------+-----------------+--------------+------------------+
+    */
+
+   /**
+    * The essential variables string, as described in the table above.
+    */
+   readonly attribute wstring essentialVariablesString;
+ };
+#pragma terminal-interface
+#pragma cross-module-argument
+
+ interface IDACodeGenerator
+   : CodeGenerator
+ {
+   /**
+    * Generates an IDACodeInformation object for a model.
+    * @param sourceModel The model for which to generate the IDACodeInformation.
+    */
+   IDACodeInformation generateIDACode(in cellml_api::Model sourceModel);
+
+   /**
+    * The pattern used when generating the residual computations for IDA.
+    * <RNO> is replaced with the index of the residual.
+    * <LHS> is replaced with the left-hand side of the equation.
+    * <RHS> is replaced with the right-hand side of the equation.
+    * Default: resid[<RNO>] = <LHS> - <RHS>;\r\n
+    */
+   attribute wstring residualPattern;
+ };
 #pragma terminal-interface
 #pragma cross-module-argument
 
@@ -413,6 +490,7 @@ module cellml_services
    : XPCOM::IObject
  {
    CodeGenerator createCodeGenerator();
+   IDACodeGenerator createIDACodeGenerator();
  };
 #pragma terminal-interface
 #pragma cross-module-argument
