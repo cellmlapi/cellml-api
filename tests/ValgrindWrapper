@@ -3,11 +3,13 @@
 do_valgrind() {
     rm /tmp/valgrind-log.txt
     valgrind -q --leak-check=full --log-file=/tmp/valgrind-log.txt $1
+    valgrind_exit=$?
     errors=$(cat /tmp/valgrind-log.txt)
     if test "$errors" != ""; then
         echo $errors
         exit 1
     fi
+    exit $valgrind_exit
 }
 
 case $(file $1) in
@@ -21,6 +23,7 @@ case $(file $1) in
         do_valgrind "$ltcmd $*"
     else
         TESTS_ENVIRONMENT="$0" $*
+        exit $?
     fi
     ;;
   default)
@@ -28,5 +31,3 @@ case $(file $1) in
     exit 1
     ;;
 esac
-
-is_wrapper=$?
