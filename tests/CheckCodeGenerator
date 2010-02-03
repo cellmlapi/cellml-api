@@ -14,6 +14,7 @@ fi
 if [[ -n $RUNNER ]]; then
     CELLML2C="$RUNNER $BINDIR/.libs/CellML2C.exe"
 fi
+CELLML2C="$TESTS_ENVIRONMENT $CELLML2C"
 
 grep -q "s,@ENABLE_RDF_TRUE@,|#_!!_#|#,g" $BINDIR/config.status
 RDF_ENABLED=$?

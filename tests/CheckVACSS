@@ -12,8 +12,9 @@ if [[ ! -f "$VACSS" ]]; then
 fi
 
 if [[ -n $RUNNER ]]; then
-    VACSS="$RUNNER $BINDIR/.libs/CellML2C.exe"
+    VACSS="$RUNNER $BINDIR/.libs/VACSS.exe"
 fi
+VACSS="$TESTS_ENVIRONMENT $VACSS"
 
 function runtest()
 {

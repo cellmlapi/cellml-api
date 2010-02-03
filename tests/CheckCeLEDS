@@ -17,6 +17,7 @@ fi
 if [[ -n $RUNNER ]]; then
     TESTCELEDS="$RUNNER $BINDIR/.libs/testCeLEDS.exe"
 fi
+TESTCELEDS="$TESTS_ENVIRONMENT $TESTCELEDS"
 
 function runtest()
 {

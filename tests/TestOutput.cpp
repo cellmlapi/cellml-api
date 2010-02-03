@@ -89,6 +89,12 @@ void (*__malloc_initialize_hook)(void) = tests_init_hook;
 
 int main(int argc, char* argv[])
 {
+  if (argc > 1 && !strcmp(argv[1], "--help"))
+  {
+    printf("This program takes no arguments.\n");
+    exit(0);
+  }
+
 #ifdef SHOW_MEMORY_BREAK
   void* initialbreak = sbrk(0);
 #endif
