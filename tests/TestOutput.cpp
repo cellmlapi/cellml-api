@@ -2,6 +2,9 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef USE_MEMORY_DEBUGGER
 #include <malloc.h>
 #include <assert.h>
