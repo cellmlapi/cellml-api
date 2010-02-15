@@ -33,7 +33,7 @@
 #define swprintf _snwprintf
 #endif
 
-wchar_t*
+const wchar_t*
 TypeToString(iface::cellml_services::VariableEvaluationType vet)
 {
   switch (vet)
@@ -44,17 +44,21 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
     return L"constant";
   case iface::cellml_services::STATE_VARIABLE:
     return L"state variable";
+  case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+    return L"pseudo-state variable";
   case iface::cellml_services::ALGEBRAIC:
     return L"algebraic variable";
   case iface::cellml_services::FLOATING:
     return L"uncomputed";
+  case iface::cellml_services::LOCALLY_BOUND:
+    return L"locally bound";
   }
 
   return L"invalid type";
 }
 
 void
-WriteCode(iface::cellml_services::CodeInformation* cci)
+WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
 {
   // Scoped locale change.
   CNumericLocale locobj;
@@ -388,11 +392,32 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
          "{\n%S}\n", frag);
   free(frag);
 
-  frag = cci->ratesString();
-  printf("void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, "
-         "double* ALGEBRAIC)\n"
-         "{\n%S}\n", frag);
-  free(frag);
+  if (useida)
+  {
+    iface::cellml_services::IDACodeInformation* icci
+      = reinterpret_cast<iface::cellml_services::IDACodeInformation*>(cci->query_interface("cellml_services::IDACodeInformation"));
+
+    frag = icci->essentialVariablesString();
+    printf("void EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\n"
+           "{\n%S}\n", frag);
+    free(frag);
+
+    frag = cci->ratesString();
+    printf("void ComputeResiduals(double VOI, double* STATES, double* RATES, double* CONSTANTS, "
+           "double* ALGEBRAIC)\n"
+           "{\n%S}\n", frag);
+    free(frag);
+
+    icci->release_ref();
+  }
+  else
+  {
+    frag = cci->ratesString();
+    printf("void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, "
+           "double* ALGEBRAIC)\n"
+           "{\n%S}\n", frag);
+    free(frag);
+  }
 }
 
 void
@@ -457,12 +482,14 @@ main(int argc, char** argv)
     return -1;
   }
 
-  uint32_t usenames = 0;
+  uint32_t usenames = 0, useida = 0;
 
-  if (argc > 2)
+  for (int32_t i = 2; i < argc; i++)
   {
-    if (!strcmp(argv[2], "usenames"))
+    if (!strcmp(argv[i], "usenames"))
       usenames = 1;
+    else if (!strcmp(argv[i], "useida"))
+      useida = 1;
   }
 
   wchar_t* URL;
@@ -499,8 +526,13 @@ main(int argc, char** argv)
 
   iface::cellml_services::CodeGeneratorBootstrap* cgb =
     CreateCodeGeneratorBootstrap();
-  iface::cellml_services::CodeGenerator* cg =
-    cgb->createCodeGenerator();
+  iface::cellml_services::CodeGenerator* cg;
+  iface::cellml_services::IDACodeGenerator* icg;
+
+  if (useida)
+    cg = icg = cgb->createIDACodeGenerator();
+  else
+    cg = cgb->createCodeGenerator();
   cgb->release_ref();
 
   if (usenames)
@@ -511,7 +543,7 @@ main(int argc, char** argv)
   {
     cci = cg->generateCode(mod);
   }
-  catch (iface::cellml_api::CellMLException& ce)
+  catch (iface::cellml_api::CellMLException&)
   {
     printf("Caught a CellMLException while generating code.\n");
     cg->release_ref();
@@ -538,7 +570,7 @@ main(int argc, char** argv)
   free(m);
 
   // We now have the code information...
-  WriteCode(cci);
+  WriteCode(cci, useida);
   cci->release_ref();
 
   return 0;

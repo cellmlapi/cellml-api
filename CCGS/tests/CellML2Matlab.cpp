@@ -36,7 +36,7 @@
 #define swprintf _snwprintf
 #endif
 
-wchar_t*
+const wchar_t*
 TypeToString(iface::cellml_services::VariableEvaluationType vet)
 {
   switch (vet)
@@ -51,6 +51,8 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
     return L"algebraic variable";
   case iface::cellml_services::FLOATING:
     return L"uncomputed";
+  case iface::cellml_services::LOCALLY_BOUND:
+    return L"locally bound";
   }
 
   return L"invalid type";
@@ -778,7 +780,7 @@ main(int argc, char** argv)
   {
     cci = cg->generateCode(mod);
   }
-  catch (iface::cellml_api::CellMLException& ce)
+  catch (iface::cellml_api::CellMLException&)
   {
     printf("Caught a CellMLException while generating code.\n");
     cg->release_ref();

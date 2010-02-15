@@ -38,6 +38,7 @@ CDA_Document* CDA_NewDocument
 );
 
 struct _xmlParserCtxt;
+struct _xmlError;
 
 class CDA_DOMImplementation
   : public CellML_DOMImplementationBase,
@@ -78,6 +79,8 @@ public:
   iface::mathml_dom::MathMLDocument* createMathMLDocument()
     throw(std::exception&);
 
+  void ProcessXMLError(std::wstring& aErrorMessage,
+                       _xmlError* aErr);
 private:
   void ProcessContextError(std::wstring& aErrorMessage,
                            _xmlParserCtxt* ctxt);
@@ -340,7 +343,7 @@ class CDA_EmptyNamedNodeMap
   : public iface::dom::NamedNodeMap
 {
 public:
-  CDA_EmptyNamedNodeMap() {};
+  CDA_EmptyNamedNodeMap() : _cda_refcount(1) {};
   ~CDA_EmptyNamedNodeMap() {}
 
   CDA_IMPL_QI1(dom::NamedNodeMap);

@@ -7,7 +7,7 @@
     xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
   <component name="main" cmeta:id="main">
     <variable name="time" units="dimensionless"/>
-    <variable name="x" units="dimensionless"/>
+    <variable name="x" initial_value="0" units="dimensionless"/>
     <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq1">
       <piecewise id="the_piecewsie">
         <piece id="the_piece">

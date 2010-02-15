@@ -1,0 +1,33 @@
+#!/bin/bash
+
+do_valgrind() {
+    rm /tmp/valgrind-log.txt
+    valgrind -q --leak-check=full --log-file=/tmp/valgrind-log.txt $1
+    valgrind_exit=$?
+    errors=$(cat /tmp/valgrind-log.txt)
+    if test "$errors" != ""; then
+        echo $errors
+        exit 1
+    fi
+    exit $valgrind_exit
+}
+
+case $(file $1) in
+  *ELF*) do_valgrind "$*" ;;
+  *shell*)
+    grep "temporary wrapper script" $1 >/dev/null
+    if [[ $? == 0 ]]; then
+        rawcmd=$1; shift
+        $rawcmd --help >/dev/null
+        ltcmd=$(dirname $rawcmd)/.libs/lt-$(basename $rawcmd)
+        do_valgrind "$ltcmd $*"
+    else
+        TESTS_ENVIRONMENT="$0" $*
+        exit $?
+    fi
+    ;;
+  default)
+    echo "Unknown file type passed to ValgrindWrapper - failing"
+    exit 1
+    ;;
+esac

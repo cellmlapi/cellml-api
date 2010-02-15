@@ -106,11 +106,25 @@ module cellml_services
 
     /**
      * Iterates through the list of 'source' variables which are used as a
-     * bound variable in this result.
-     * Be aware that this only works if the bvarIndex command is used in the
+     * globally bound variable in this result. Globally bound variables are
+     * those which are bound across the entire model (e.g. time).
+     * Locally bound variables, such as those used inside definite integrals,
+     * are not included in this set.
+     * Be aware that this only works if the lookupDiffVariable command is used in the
      * MAL specification.
      */
     cellml_api::CellMLVariableIterator iterateBoundVariables();
+
+    /**
+     * Iterates through the list of 'source' variables which are used as a
+     * locally bound variable in this result. Locally bound variables are
+     * those which are bound within a single expression (e.g. definite integrals).
+     * Globally bound variables, e.g. time in a time-varying model, are not
+     * included in this set.
+     * Be aware that this only works if the bvarIndex command is used in the
+     * MAL specification.
+     */
+    cellml_api::CellMLVariableIterator iterateLocallyBoundVariables();
 
     /**
      * Retrieves the highest degree on any diff application / binding.

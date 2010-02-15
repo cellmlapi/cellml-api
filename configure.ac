@@ -5,6 +5,13 @@ AM_CXXFLAGS=
 
 AC_INIT(CellMLAPI, 0.1, [[ak.miller@auckland.ac.nz]])
 AC_PREREQ(2.59)
+
+command -v omniidl >/dev/null
+has_omniidl=$?
+if test $has_omniidl != 0; then
+   AC_MSG_ERROR(omniidl from omniORB is required to build the CellML API)
+fi
+
 AC_CONFIG_SRCDIR([sources/cellml/CellMLBootstrap.cpp])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_HEADER([cda_config.h])

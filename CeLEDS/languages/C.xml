@@ -44,7 +44,8 @@
   <mal:mapping keyname="geq" precedence="30">#exprs[&gt;=]</mal:mapping>
   <mal:mapping keyname="gt" precedence="30">#exprs[&gt;]</mal:mapping>
   <mal:mapping keyname="implies" precedence="10(950)"> !#expr1 || #expr2</mal:mapping>
-  <mal:mapping keyname="int" precedence="H">defint(func#unique1, BOUND, CONSTANTS, RATES, VARIABLES, #bvarIndex)#supplement double func#unique1(double* BOUND, double* CONSTANTS, double* RATES, double* VARIABLES) { return #expr1; }</mal:mapping>
+  <mal:mapping keyname="int" precedence="H">int: #prec[H]defint(func#unique1, BOUND, CONSTANTS, RATES, VARIABLES, #lowlimit, #uplimit, #bvarIndex, pret)#supplement double func#unique1(double* BOUND, double* CONSTANTS, double* RATES, double* VARIABLES, int* pret) { return #expr1; }
+</mal:mapping>
   <mal:mapping keyname="lcm" precedence="H">lcm_multi(#count, #exprs[, ])</mal:mapping>
   <mal:mapping keyname="leq" precedence="30">#exprs[&lt;=]</mal:mapping>
   <mal:mapping keyname="ln" precedence="H">log(#expr1)</mal:mapping>
@@ -103,7 +104,7 @@ void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)
 #define ALGEBRAIC rfi->aALGEBRAIC
 #define pret rfi->aPRET
   <VAR> = *p;
-  *hx = fixnans((<LHS>) - (<RHS>));
+  *hx = (<LHS>) - (<RHS>);
 #undef VOI
 #undef CONSTANTS
 #undef RATES
@@ -140,7 +141,7 @@ void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)
 #define pret rfi->aPRET
   <EQUATIONS><VAR> = p[<INDEX>];<JOIN>
   </EQUATIONS>
-  <EQUATIONS>hx[<INDEX>] = fixnans(<EXPR>);<JOIN>
+  <EQUATIONS>hx[<INDEX>] = <EXPR>;<JOIN>
   </EQUATIONS>
 #undef VOI
 #undef CONSTANTS

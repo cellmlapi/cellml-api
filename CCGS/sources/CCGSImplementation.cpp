@@ -193,6 +193,12 @@ CDA_CodeInformation::functionsString() throw()
   return CDA_wcsdup(mFuncsStr.c_str());
 }
 
+wchar_t*
+CDA_CodeInformation::essentialVariablesString() throw()
+{
+  return CDA_wcsdup(mEssentialVarsStr.c_str());
+}
+
 iface::cellml_services::ComputationTargetIterator*
 CDA_CodeInformation::iterateTargets() throw()
 {
@@ -239,7 +245,7 @@ CDA_CodeInformation::flaggedEquations() throw()
   return new CDA_FlaggedEquationsNodeList(this, mFlaggedEquations);
 }
 
-CDA_CodeGenerator::CDA_CodeGenerator()
+CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
  : _cda_refcount(1),
    mConstantPattern(L"CONSTANTS[%]"),
    mStateVariableNamePattern(L"STATES[%]"),
@@ -261,7 +267,7 @@ CDA_CodeGenerator::CDA_CodeGenerator()
     L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
     L"#define pret rfi->aPRET\r\n"
     L"  <VAR> = *p;\r\n"
-    L"  *hx = fixnans((<LHS>) - (<RHS>));\r\n"
+    L"  *hx = (<LHS>) - (<RHS>);\r\n"
     L"#undef VOI\r\n"
     L"#undef CONSTANTS\r\n"
     L"#undef RATES\r\n"
@@ -300,7 +306,7 @@ CDA_CodeGenerator::CDA_CodeGenerator()
     L"#define pret rfi->aPRET\r\n"
     L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
     L"  </EQUATIONS>\r\n"
-    L"  <EQUATIONS>hx[<INDEX>] = fixnans(<EXPR>);<JOIN>\r\n"
+    L"  <EQUATIONS>hx[<INDEX>] = <EXPR>;<JOIN>\r\n"
     L"  </EQUATIONS>\r\n"
     L"#undef VOI\r\n"
     L"#undef CONSTANTS\r\n"
@@ -340,7 +346,12 @@ CDA_CodeGenerator::CDA_CodeGenerator()
     L"}\r\n"
     L"</CASES>"
    ),
-   mArrayOffset(0)
+   mResidualPattern
+   (
+    L"resid[<RNO>] = <LHS> - <RHS>;\r\n"
+   ),
+   mArrayOffset(0),
+   mIDAStyle(aIDAStyle)
 {
 }
 
@@ -494,6 +505,20 @@ CDA_CodeGenerator::conditionalAssignmentPattern(const wchar_t* aPattern)
   mConditionalAssignmentPattern = aPattern;
 }
 
+wchar_t*
+CDA_CodeGenerator::residualPattern()
+  throw()
+{
+  return CDA_wcsdup(mResidualPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::residualPattern(const wchar_t* aPattern)
+  throw()
+{
+  mResidualPattern = aPattern;
+}
+
 iface::cellml_services::MaLaESTransform*
 CDA_CodeGenerator::transform() throw()
 {
@@ -555,8 +580,20 @@ CDA_CodeGenerator::useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet)
   mAnnoSet = aAnnoSet;
 }
 
-iface::cellml_services::CodeInformation*
-CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
+static iface::cellml_services::IDACodeInformation*
+CDA_ErrorCodeInformation(const wchar_t* aMessage)
+{
+  CDA_CodeInformation* ci = new CDA_CodeInformation();
+  ci->mErrorMessage = aMessage;
+  return ci;
+}
+
+/* Note: this generates both IDA and normal code - we implement it as
+ * GenerateIDACode to avoid the need to QueryInterface in the case where we
+ * are generating IDA code.
+ */
+iface::cellml_services::IDACodeInformation*
+CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
  throw()
 {
   CodeGenerationState cgs(
@@ -566,17 +603,24 @@ CDA_CodeGenerator::generateCode(iface::cellml_api::Model* aSourceModel)
                           mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
                           mSolveNLSystemPattern, mTemporaryVariablePattern,
                           mDeclareTemporaryPattern, mConditionalAssignmentPattern,
-                          mArrayOffset, mTransform,
-                          mCeVAS, mCUSES, mAnnoSet
+                          mResidualPattern, mArrayOffset, mTransform,
+                          mCeVAS, mCUSES, mAnnoSet, mIDAStyle
                          );
 
   if (cgs.mAnnoSet == NULL)
   {
-    RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
-                       CreateAnnotationToolService());
-    cgs.mAnnoSet =
-      already_AddRefd<iface::cellml_services::AnnotationSet>
-      (ats->createAnnotationSet());
+    try
+    {
+      RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
+                         CreateAnnotationToolService());
+      cgs.mAnnoSet =
+        already_AddRefd<iface::cellml_services::AnnotationSet>
+        (ats->createAnnotationSet());
+    }
+    catch (...)
+    {
+      return CDA_ErrorCodeInformation(L"Error processing CellML model.");
+    }
   }
 
   if (cgs.mTransform == NULL)
@@ -620,9 +664,9 @@ L"gcd: #prec[H]gcd_multi(#count, #exprs[, ])\r\n"
 L"geq: #prec[30]#exprs[>=]\r\n"
 L"gt: #prec[30]#exprs[>]\r\n"
 L"implies: #prec[10(950)] !#expr1 || #expr2\r\n"
-L"int: #prec[H]defint(func#unique1, BOUND, CONSTANTS, RATES, VARIABLES, "
-L"#bvarIndex, pret)#supplement double func#unique1(double* BOUND, "
-L"double* CONSTANTS, double* RATES, double* VARIABLES, int* pret) { return #expr1; }\r\n"
+L"int: #prec[H]defint(func#unique1, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &#bvarIndex, #lowlimit, #uplimit, "
+L"pret)#supplement double func#unique1(double VOI, "
+L"double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret) { return #expr1; }\r\n"
 L"lcm: #prec[H]lcm_multi(#count, #exprs[, ])\r\n"
 L"leq: #prec[30]#exprs[<=]\r\n"
 L"ln: #prec[H]log(#expr1)\r\n"

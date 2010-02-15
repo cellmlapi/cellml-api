@@ -274,8 +274,8 @@ public:
       res += path;
     else if (aRelativeTo.path != path)
     {
-      size_t s = -1, l1 = path.length(), l2 = aRelativeTo.path.length(), l = (l1 < l2) ? l1 : l2;
-      for (size_t i = 0; i < l; i++)
+      int32_t s = -1, l1 = path.length(), l2 = aRelativeTo.path.length(), l = (l1 < l2) ? l1 : l2;
+      for (int32_t i = 0; i < l; i++)
       {
         if (path[i] != aRelativeTo.path[i])
           break;
@@ -287,7 +287,7 @@ public:
       while (true)
       {
         l = aRelativeTo.path.find(L'/', l);
-        if (l == std::wstring::npos)
+        if (l == static_cast<int32_t>(std::wstring::npos))
           break;
         l++;
         res += L"../";

@@ -11,6 +11,7 @@
 void
 initConsts(double* CONSTANTS, double* RATES, double *STATES)
 {
+STATES[0] = 0;
 }
 void
 computeRates(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

@@ -153,7 +153,7 @@ C
 </dictionary>
 
 <extrafunctions>
-  <function searchname="TERNRY">REAL FUNCTION TERNRY(TEST, VALA, VALB)
+  <function searchname="TERNRY">      REAL FUNCTION TERNRY(TEST, VALA, VALB)
       LOGICAL TEST
       REAL VALA, VALB
       IF (TEST) THEN

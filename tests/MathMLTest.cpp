@@ -140,7 +140,7 @@ MathMLTest::testMathMLDocumentElementContainer()
   {
     CPPUNIT_ASSERT_EQUAL(1, (int)me->nArguments());
     
-    iface::mathml_dom::MathMLElement* me2;
+    iface::mathml_dom::MathMLElement* me2 = NULL;
     CPPUNIT_ASSERT_NO_THROW(me2 = me->getArgument(1));
     CPPUNIT_ASSERT(me2);
     

@@ -38,7 +38,7 @@ CodeGenerationState::~CodeGenerationState()
     delete *i;
 }
 
-iface::cellml_services::CodeInformation*
+iface::cellml_services::IDACodeInformation*
 CodeGenerationState::GenerateCode()
 {
   // Create a new code information object...
@@ -64,103 +64,59 @@ CodeGenerationState::GenerateCode()
     // Create all variable edges (this creates derived computation targets as a
     //   side-effect)...
     CreateMathStatements();
-    SplitPiecewiseByResetRule();
+    if (!mIDAStyle)
+      SplitPiecewiseByResetRule();
+    ProcessModellerSuppliedIVHints();
 
     // Next, set starting classification for all targets...
     FirstPassTargetClassification();
 
     mUnusedMathStatements.insert(mMathStatements.begin(), mMathStatements.end());
 
-    ProcessModellerSuppliedIVHints();
-
     // Put all targets into lists based on their classification...
     BuildFloatingAndConstantLists();
-
+  
     std::list<System*> systems;
-
+    
     // Now, determine all constants computable from the current constants...
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems, true);
-
+    
     mUnwanted.clear();
-
+    
     // Assign constant variables for set...
     AllocateVariablesInSet(systems, iface::cellml_services::CONSTANT,
                            mConstantPattern, mNextConstantIndex,
                            mCodeInfo->mConstantIndexCount);
-
+    
     // Allocate temporary names in constants for the rates...
     AllocateRateNamesAsConstants(systems);
-
+    
     std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
     // Build an index from variables required to systems...
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     CloneNamesIntoDelayedNames();
-
+  
     // Write evaluations for all constants we just worked out how to compute...
     std::wstring tmp;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mCodeInfo->mInitConstsStr += tmp;
-
+  
     // Also we need to initialise state variable IVs...
     systems.clear();
-
+    
     BuildStateAndConstantLists();
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
-
+    CheckStateVariableIVConstraints(systems);
+    
     tmp = L"";
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mCodeInfo->mInitConstsStr += tmp;
-
-    // Put all targets into lists based on their classification...
-    BuildFloatingAndKnownLists();
-
-    // Now, determine all algebraic variables / rates computable from the
-    // known variables (constants, state variables, and bound variable)...
-    systems.clear();
-
-    bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
-    MakeSystemsForResetRulesAndClearKnown(mResets, systems, mKnown, mFloating);
-    BuildSystemsByTargetsRequired(systems, sysByTargReq);
-
-    // Assign algebraic variables for set...
-    AllocateVariablesInSet(systems, iface::cellml_services::ALGEBRAIC,
-                           mAlgebraicVariableNamePattern,
-                           mNextAlgebraicVariableIndex,
-                           mCodeInfo->mAlgebraicIndexCount);
-
-    if (wasError)
-    {
-      if (mUnusedMathStatements.size() != 0)
-      {
-        if (mFloating.size() != 0)
-          throw UnsuitablyConstrainedError();
-        else
-        {
-          MathStatement * ms = *(mUnusedMathStatements.begin());
-          if (ms->mType != MathStatement::INITIAL_ASSIGNMENT)
-            throw OverconstrainedError
-              ((static_cast<MathMLMathStatement*>(ms))->mMaths);
-          // It is overconstrained because of an initial_value...
-          throw OverconstrainedError(NULL);
-        }
-      }
-      else
-        throw UnderconstrainedError();
-    }
-
-    // Restore the saved rates...
-    RestoreSavedRates(mCodeInfo->mRatesStr);
-
-    // Write evaluations for all rates & algebraic variables in reachabletargets
-    GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
-
-    // Also cascade state variables to rate variables where they are the same
-    // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
-    //  above equation, but also it is a rate for y).
-    GenerateStateToRateCascades();
-
-    GenerateInfDelayUpdates();
+    
+    if (mIDAStyle)
+      IDAStyleCodeGeneration();
+    else
+      ODESolverStyleCodeGeneration();
   }
   catch (UnderconstrainedError uce)
   {
@@ -218,6 +174,347 @@ CodeGenerationState::GenerateCode()
 }
 
 #define HINTS_NS L"http://www.cellml.org/metadata/simulation/solverhints/1.0#"
+
+void
+CodeGenerationState::IDAStyleCodeGeneration()
+{
+  // We now want to identify variables which are currently marked as floating,
+  // which can be computed from the constants, states, and VOI. However, we are
+  // not aiming to solve systems here...
+  
+  // Put all targets into lists based on their classification...
+  BuildFloatingAndKnownLists(false);
+
+  // Now, determine all algebraic variables / rates computable from the
+  // known variables (constants, state variables, and bound variable)...
+  std::list<System*> algebraicSystems;
+  
+  DecomposeIntoAssignments(mKnown, mFloating, mUnwanted, algebraicSystems);
+  // Assign algebraic variables for set...
+  AllocateVariablesInSet(algebraicSystems, iface::cellml_services::ALGEBRAIC,
+                         mAlgebraicVariableNamePattern,
+                         mNextAlgebraicVariableIndex,
+                         mCodeInfo->mAlgebraicIndexCount);
+
+  // Build an index from variables required to systems...
+  std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
+  BuildSystemsByTargetsRequired(algebraicSystems, sysByTargReq);
+  
+  // Now we need to assign everything else as a pseudo-state variable...
+  MarkRemainingVariablesAsPseudoState();
+
+  std::list<System*> essentialSystems;
+  FindSystemsForResiduals(algebraicSystems, essentialSystems);
+  GenerateCodeForSet(mCodeInfo->mEssentialVarsStr, mKnown, essentialSystems, sysByTargReq);
+  GenerateCodeForSet(mCodeInfo->mVarsStr, mKnown, algebraicSystems, sysByTargReq);
+
+  // Now, generate residuals for all state and pseudostate variables...
+  std::set<ptr_tag<CDA_ComputationTarget> > aNeeded;
+  GenerateResiduals(mCodeInfo->mRatesStr);
+}
+
+void
+CodeGenerationState::FindSystemsForResiduals
+(
+ std::list<System*>& aSystems,
+ std::list<System*>& aSysForResid
+)
+{
+  // Go through unused mathstatements looking for state or pseudostate variables, and add all
+  // co-occuring variables to the set...
+  std::set<ptr_tag<CDA_ComputationTarget> > sysvars;
+  for (std::set<ptr_tag<MathStatement> >::iterator i = mUnusedMathStatements.begin();
+       i != mUnusedMathStatements.end();
+       i++)
+  {
+    bool isState = false;
+    for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mTargets.begin();
+         j != (*i)->mTargets.end();
+         j++)
+      if ((*j)->mEvaluationType == iface::cellml_services::STATE_VARIABLE ||
+          (*j)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE ||
+          (*j)->mDegree > 0)
+      {
+        isState = true;
+        break;
+      }
+
+    if (isState)
+    {
+      for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mTargets.begin();
+           j != (*i)->mTargets.end();
+           j++)
+        sysvars.insert(*j);
+    }
+  }
+
+  for (std::list<System*>::iterator i = aSystems.begin();
+       i != aSystems.end();
+       i++)
+  {
+    bool hasTarg = false;
+    for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mUnknowns.begin();
+         j != (*i)->mUnknowns.end();
+         j++)
+      if (sysvars.count(*j))
+      {
+        hasTarg = true;
+        break;
+      }
+
+    if (hasTarg)
+      aSysForResid.push_back(*i);
+  }
+}
+
+void
+CodeGenerationState::MarkRemainingVariablesAsPseudoState()
+{
+  std::list<ptr_tag<CDA_ComputationTarget> >::iterator i;
+  uint32_t count = 0;
+  for (i = mCodeInfo->mTargets.begin(); i != mCodeInfo->mTargets.end(); i++)
+  {
+    if ((*i)->mEvaluationType == iface::cellml_services::FLOATING)
+    {
+      if ((*i)->mDegree == 0)
+      {
+        count++;
+        (*i)->mEvaluationType = iface::cellml_services::PSEUDOSTATE_VARIABLE;
+        RETURN_INTO_WSTRING(n, (*i)->name());
+        std::wstring str;
+        if (n == L"")
+          AllocateStateVariable(*i, str);
+        mKnown.insert(*i);
+      }
+      else
+        (*i)->mEvaluationType = iface::cellml_services::ALGEBRAIC;
+    }
+    else if ((*i)->mEvaluationType == iface::cellml_services::STATE_VARIABLE)
+    {
+      count++;
+    }
+  }
+
+  // XXX Do we want to exclude inequalities from the math statements count?
+  if (count > mUnusedMathStatements.size())
+    throw UnderconstrainedError();
+  else if (count < mUnusedMathStatements.size())
+    throw OverconstrainedError(NULL);
+}
+
+void
+CodeGenerationState::ODESolverStyleCodeGeneration()
+{
+  // Put all targets into lists based on their classification...
+  BuildFloatingAndKnownLists();
+  
+  // Now, determine all algebraic variables / rates computable from the
+  // known variables (constants, state variables, and bound variable)...
+  std::list<System*> systems;
+  
+  bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
+  MakeSystemsForResetRulesAndClearKnown(mResets, systems, mKnown, mFloating);
+  std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
+  BuildSystemsByTargetsRequired(systems, sysByTargReq);
+  
+  // Assign algebraic variables for set...
+  AllocateVariablesInSet(systems, iface::cellml_services::ALGEBRAIC,
+                         mAlgebraicVariableNamePattern,
+                         mNextAlgebraicVariableIndex,
+                         mCodeInfo->mAlgebraicIndexCount);
+  
+  if (wasError)
+  {
+    if (mUnusedMathStatements.size() != 0)
+    {
+      if (mFloating.size() != 0)
+        throw UnsuitablyConstrainedError();
+      else
+      {
+        MathStatement * ms = *(mUnusedMathStatements.begin());
+        if (ms->mType != MathStatement::INITIAL_ASSIGNMENT)
+          throw OverconstrainedError
+            ((static_cast<MathMLMathStatement*>(ms))->mMaths);
+        // It is overconstrained because of an initial_value...
+        throw OverconstrainedError(NULL);
+      }
+    }
+    else
+      throw UnderconstrainedError();
+  }
+  
+  // Restore the saved rates...
+  RestoreSavedRates(mCodeInfo->mRatesStr);
+  
+  // Write evaluations for all rates & algebraic variables in reachabletargets
+  GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
+  
+  // Also cascade state variables to rate variables where they are the same
+  // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
+  //  above equation, but also it is a rate for y).
+  GenerateStateToRateCascades();
+  
+  GenerateInfDelayUpdates();
+}
+
+void
+CodeGenerationState::CheckStateVariableIVConstraints(const std::list<System*>& aSystems)
+{
+  // Step one: check aSystems for overconstraints...
+  for (std::list<System*>::const_iterator i = aSystems.begin();
+       i != aSystems.end();
+       i++)
+  {
+    for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j =
+           (*i)->mUnknowns.begin();
+         j != (*i)->mUnknowns.end();
+         j++)
+      if ((*j)->type() == iface::cellml_services::STATE_VARIABLE)
+      {
+        if ((*j)->mStateHasIV)
+        {
+          MathStatement *ms =
+            *((*i)->mMathStatements.begin());
+          if (ms->mType == MathStatement::INITIAL_ASSIGNMENT)
+            throw OverconstrainedError(NULL);
+          else
+            throw OverconstrainedError((static_cast<MathMLMathStatement*>(ms))->mMaths);
+        }
+        (*j)->mStateHasIV = true;
+      }
+  }
+
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i = mBaseTargets.begin();
+       i != mBaseTargets.end(); i++)
+  {
+    for (CDA_ComputationTarget* ct = (*i); ct->mUpDegree; ct = ct->mUpDegree)
+    {
+      // If it has an updegree, it is a state variable, so it must have an IV...
+      if (!ct->mStateHasIV)
+        throw UnderconstrainedError();
+    }
+  }
+}
+
+void
+CodeGenerationState::GenerateResiduals
+(
+ std::wstring& aCode
+)
+{
+  // It has already been checked that the number of math statements matches
+  // the number of residuals (XXX this will change when we handle inequalities
+  // properly - which need to be bundled on to another residual and not counted
+  // as their own residual).
+  uint32_t residNumber = mArrayOffset;
+  for (std::set<ptr_tag<MathStatement> >::iterator i = mUnusedMathStatements.begin();
+       i != mUnusedMathStatements.end(); i++)
+  {
+    MathStatement* ms = *i;
+
+    if (ms->mType == MathStatement::PIECEWISE)
+    {
+      Piecewise* pw = static_cast<Piecewise*>(ms);
+      std::list<std::pair<std::wstring, std::wstring> > cases;
+      for (std::list<std::pair<ptr_tag<Equation>,
+                               ptr_tag<MathMLMathStatement> > >::iterator j = pw->mPieces.begin();
+           j != pw->mPieces.end(); j++)
+      {
+        std::wstring st;
+        GenerateResidualForEquation(st, residNumber, (*j).first);
+        RETURN_INTO_OBJREF(mr,
+                           iface::cellml_services::MaLaESResult,
+                           mTransform->transform
+                           (mCeVAS, mCUSES, mAnnoSet, (*j).second->mMaths, pw->mContext,
+                            NULL, NULL, 0));
+        RETURN_INTO_WSTRING(cond, mr->expression());
+        cases.push_back(std::pair<std::wstring, std::wstring>(st, cond));
+      }
+      residNumber++;
+      GenerateCasesIntoTemplate(aCode, cases);
+    }
+    else if (ms->mType == MathStatement::EQUATION)
+    {
+      GenerateResidualForEquation(aCode, residNumber, static_cast<Equation*>(ms));
+      residNumber++;
+    }
+  }
+
+  while (!mRateNameBackup.empty())
+  {
+    std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> p =
+      mRateNameBackup.front();
+    mRateNameBackup.pop_front();
+
+    RETURN_INTO_WSTRING(constName, p.first->name());
+
+    uint32_t index = p.first->assignedIndex();
+
+    GenerateResidualForString(aCode, residNumber++, p.second, constName);
+    p.first->setNameAndIndex(index, p.second.c_str());
+  }
+
+  if (residNumber > mNextStateVariableIndex)
+    throw OverconstrainedError(NULL);
+  else if (residNumber < mNextStateVariableIndex)
+    throw UnderconstrainedError();
+}
+
+void
+CodeGenerationState::GenerateResidualForEquation
+(
+ std::wstring& aCode,
+ uint32_t aResidNo,
+ Equation* aEq
+)
+{
+  RETURN_INTO_OBJREF(mr1, iface::cellml_services::MaLaESResult,
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aEq->mLHS,
+                                           aEq->mContext, NULL, NULL, 0));
+  RETURN_INTO_OBJREF(mr2, iface::cellml_services::MaLaESResult,
+                     mTransform->transform(mCeVAS, mCUSES, mAnnoSet, aEq->mRHS,
+                                           aEq->mContext, NULL, NULL, 0));
+  RETURN_INTO_WSTRING(e1, mr1->expression());
+  RETURN_INTO_WSTRING(e2, mr2->expression());
+
+  GenerateResidualForString(aCode, aResidNo, e1, e2);
+}
+
+void
+CodeGenerationState::GenerateResidualForString
+(
+ std::wstring& aCode,
+ uint32_t aResidNo,
+ const std::wstring& e1,
+ const std::wstring& e2
+)
+{
+  std::wstring r(mResidualPattern);
+  while (true)
+  {
+    size_t pos = r.find(L"<RNO>");
+
+    if (pos == std::wstring::npos)
+      break;
+
+    wchar_t buf[30];
+    swprintf(buf, 30, L"%lu", aResidNo);
+    
+    r.replace(pos, 5, buf);
+  }
+
+
+  size_t pos = r.find(L"<LHS>");
+  if (pos != std::wstring::npos)
+    r.replace(pos, 5, e1);
+
+  // XXX this is wrong if e1 can contain the string <LHS>
+  pos = r.find(L"<RHS>");
+  if (pos != std::wstring::npos)
+    r.replace(pos, 5, e2);
+
+  aCode += r;
+}
 
 void
 CodeGenerationState::MakeSystemsForResetRulesAndClearKnown
@@ -953,6 +1250,7 @@ CodeGenerationState::SetupMathMLMathStatement
 {
   assert(mn != NULL);
   assert(c != NULL);
+
   mms->mMaths = mn;
   mms->mContext = c;
   RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
@@ -962,6 +1260,43 @@ CodeGenerationState::SetupMathMLMathStatement
   RETURN_INTO_WSTRING(compErr, mr->compileErrors());
   if (compErr != L"")
     ContextError(compErr.c_str(), mn, c);
+
+  RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
+                     mr->iterateBoundVariables());  
+  while (true)
+  {
+    RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
+                       bvi->nextVariable());
+    if (bv == NULL)
+      break;
+
+    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+      ::iterator  mi = mTargetsBySource.find(bv);
+    if (mi != mTargetsBySource.end())
+    {
+      if (mBoundTargs.count((*mi).second) == 0)
+        mBoundTargs.insert((*mi).second);
+    }
+  }
+
+  bvi = already_AddRefd<iface::cellml_api::CellMLVariableIterator>
+    (mr->iterateLocallyBoundVariables());
+  
+  while (true)
+  {
+    RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
+                       bvi->nextVariable());
+    if (bv == NULL)
+      break;
+
+    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+      ::iterator  mi = mTargetsBySource.find(bv);
+    if (mi != mTargetsBySource.end())
+    {
+      if (mLocallyBoundTargs.count((*mi).second) == 0)
+        mLocallyBoundTargs.insert((*mi).second);
+    }
+  }
   
   RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
                      mr->iterateInvolvedVariablesByDegree());
@@ -980,6 +1315,9 @@ CodeGenerationState::SetupMathMLMathStatement
       ::iterator  mi = mTargetsBySource.find(cv);
     if (mi != mTargetsBySource.end())
     {
+      if (mLocallyBoundTargs.count((*mi).second))
+        continue;
+
       ptr_tag<CDA_ComputationTarget> targ(GetTargetOfDegree((*mi).second, dv->degree()));
       if (dv->appearedInfinitesimallyDelayed())
       {
@@ -994,24 +1332,6 @@ CodeGenerationState::SetupMathMLMathStatement
     }
   }
 
-  RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
-                     mr->iterateBoundVariables());
-  
-  while (true)
-  {
-    RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
-                       bvi->nextVariable());
-    if (bv == NULL)
-      break;
-
-    std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
-      ::iterator  mi = mTargetsBySource.find(bv);
-    if (mi != mTargetsBySource.end())
-    {
-      if (mBoundTargs.count((*mi).second) == 0)
-        mBoundTargs.insert((*mi).second);
-    }
-  }
 }
 
 void
@@ -1078,6 +1398,13 @@ CodeGenerationState::FirstPassTargetClassification()
       std::wstring ignore;
       AllocateVOI(ct, ignore);
     }
+    else if (mLocallyBoundTargs.count(ct))
+    {
+      ct->mEvaluationType = iface::cellml_services::LOCALLY_BOUND;
+      std::wstring name;
+      AllocateAlgebraicVariable(ct, name);
+      mAnnoSet->setStringAnnotation(ct->mVariable, L"bvarIndex", name.c_str());
+    }
     else
     {
       if (hasImmedIV && !mDelayedTargs.count(ct))
@@ -1091,13 +1418,16 @@ CodeGenerationState::FirstPassTargetClassification()
       while (tct->mUpDegree)
       {
         tct->mEvaluationType = iface::cellml_services::STATE_VARIABLE;
+        tct->mStateHasIV = false;
         AllocateStateVariable(tct, cname);
         if (tct == ct && hasImmedIV)
         {
+          tct->mStateHasIV = true;
           AppendAssign(mCodeInfo->mInitConstsStr, cname, iv);
         }
         else if (tct != ct)
         {
+          tct->mStateHasIV = true;
           AppendAssign(mCodeInfo->mInitConstsStr, cname, L"0.0");
         }
         tct = tct->mUpDegree;
@@ -1400,7 +1730,7 @@ CodeGenerationState::BuildStateAndConstantLists()
 }
 
 void
-CodeGenerationState::BuildFloatingAndKnownLists()
+CodeGenerationState::BuildFloatingAndKnownLists(bool aIncludeRates)
 {
   std::list<ptr_tag<CDA_ComputationTarget> >::iterator i = mCodeInfo->mTargets.begin();
   mFloating.clear();
@@ -1408,7 +1738,14 @@ CodeGenerationState::BuildFloatingAndKnownLists()
   for (; i != mCodeInfo->mTargets.end(); i++)
     switch ((*i)->mEvaluationType)
     {
+    case iface::cellml_services::LOCALLY_BOUND:
+      break;
     case iface::cellml_services::FLOATING:
+      if (!aIncludeRates && (*i)->mDegree > 0)
+      {
+        mUnwanted.insert(*i);
+        break;
+      }
       mFloating.insert(*i);
       break;
     default:
@@ -1463,6 +1800,113 @@ CodeGenerationState::RuleOutCandidates
         aCandidates.erase(*f);
         aUnwanted.insert(*f);
       }
+    }
+  }
+}
+
+void
+CodeGenerationState::DecomposeIntoAssignments
+(
+ std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,
+ std::list<System*>& aSystems
+)
+{
+  std::set<ptr_tag<CDA_ComputationTarget> > start(aStart);
+
+  bool progress = true;
+  while (progress)
+  {
+    progress = false;
+
+    for (std::set<ptr_tag<MathStatement> >::iterator j, i = mUnusedMathStatements.begin();
+         i != mUnusedMathStatements.end(); i=j)
+    {
+      j = i;
+      j++;
+      MathStatement* ms = *i;
+
+      // XXX Do we want to handle top-level piecewise functions that have no
+      // unknown rates in any form here too? These are not encouraged, but
+      // they are probably valid.
+      if (ms->mType != MathStatement::INITIAL_ASSIGNMENT &&
+          ms->mType != MathStatement::EQUATION)
+        continue;
+
+      bool failed = false;
+      ptr_tag<CDA_ComputationTarget> newUnknown;
+      std::set<ptr_tag<CDA_ComputationTarget> > knowns;
+      for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator k = ms->mTargets.begin();
+           k != ms->mTargets.end(); k++)
+      {
+        if (start.count(*k) != 0)
+        {
+          knowns.insert(*k);
+          continue;
+        }
+        if (aUnwanted.count(*k) != 0)
+        {
+          failed = true;
+          break;
+        }
+
+        if (aCandidates.count(*k) != 0)
+        {
+          if (newUnknown != NULL)
+          {
+            failed = true;
+            break;
+          }
+
+          newUnknown = *k;
+        }
+      }
+      if (failed)
+        continue;
+
+      if (newUnknown == NULL)
+      {
+        if (ms->mType != MathStatement::INITIAL_ASSIGNMENT)
+          throw OverconstrainedError((static_cast<MathMLMathStatement*>(ms))->mMaths);
+        else
+          throw OverconstrainedError(NULL);
+      }
+
+      std::set<ptr_tag<MathStatement> > mss;
+      mss.insert(*i);
+      std::set<ptr_tag<CDA_ComputationTarget> > unknowns;
+      unknowns.insert(newUnknown);
+
+      if (ms->mType == MathStatement::INITIAL_ASSIGNMENT)
+      {
+        if (ms->mTargets.front() != newUnknown)
+          continue;
+      }
+      else if (ms->mType == MathStatement::EQUATION)
+      {
+        // Now we see if we can do a simple assignment...
+        try
+        {
+          Equation* eq = static_cast<Equation*>(ms);
+          std::wstring throwAway;
+          GenerateCodeForEquation(throwAway, eq, newUnknown, true);
+        }
+        catch (AssignmentOnlyRequestedNeedSolve aorns)
+        {
+          // No we can't - this equation needs to be solved for by IDA instead.
+          continue;
+        }
+      }
+
+      System* sys = new System(mss, knowns, unknowns);
+      mSystems.push_back(sys);
+      aSystems.push_back(sys);
+
+      start.insert(newUnknown);
+      aCandidates.erase(newUnknown);
+      mUnusedMathStatements.erase(i);
+      progress = true;
     }
   }
 }
@@ -2251,7 +2695,8 @@ CodeGenerationState::GenerateCodeForEquation
 (
  std::wstring& aCodeTo,
  Equation* aEq,
- ptr_tag<CDA_ComputationTarget> aComputedTarget
+ ptr_tag<CDA_ComputationTarget> aComputedTarget,
+ bool aAssignmentOnly
 )
 {
   // If we get here, we do have an equation. However, we are not yet sure
@@ -2267,6 +2712,9 @@ CodeGenerationState::GenerateCodeForEquation
     DECLARE_QUERY_INTERFACE_OBJREF(lhsci, aEq->mLHS, mathml_dom::MathMLCiElement);
     if (lhsci == NULL && rhsci == NULL)
     {
+      if (aAssignmentOnly)
+        throw AssignmentOnlyRequestedNeedSolve();
+
       GenerateSolveCode(aCodeTo, aEq, aComputedTarget);
       aEq->mLHS = NULL;
       return;
@@ -2309,6 +2757,9 @@ CodeGenerationState::GenerateCodeForEquation
 
     if (lhsIsDiff == false && rhsIsDiff == false)
     {
+      if (aAssignmentOnly)
+        throw AssignmentOnlyRequestedNeedSolve();
+
       GenerateSolveCode(aCodeTo, aEq, aComputedTarget);
       aEq->mLHS = NULL;
       return;
@@ -2419,6 +2870,9 @@ CodeGenerationState::GenerateCodeForEquation
   }
   while (true);
 
+  if (aAssignmentOnly)
+    throw AssignmentOnlyRequestedNeedSolve();
+
   GenerateSolveCode(aCodeTo, aEq, aComputedTarget);
   aEq->mLHS = NULL;
 }
@@ -2511,7 +2965,7 @@ CodeGenerationState::GenerateAssignmentMaLaESResult
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_WSTRING(s, aMR->getSupplementary(i));
-    mCodeInfo->mFuncsStr += s;
+    mCodeInfo->mFuncsStr += s + L"\r\n";
   }
 
   AppendAssign(aCodeTo, lhs, rhs);

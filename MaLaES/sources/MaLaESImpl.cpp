@@ -7,6 +7,8 @@
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
 #define INFDELAY L"http://www.cellml.org/cellml/infinitesimal-delay"
 
+static const MaLaESQualifiers noQualifiers = {NULL, NULL, NULL, NULL};
+
 class MaLaESError
 {
 public:
@@ -132,7 +134,7 @@ public:
   CDAMaLaESInvolvedVariableIterator
   (
    CDAMaLaESResult* aResult,
-   std::vector<iface::cellml_api::CellMLVariable*>& aVars
+   std::set<iface::cellml_api::CellMLVariable*,XPCOMComparator>& aVars
   )
     : _cda_refcount(1), mResult(aResult), mVars(aVars)
   {
@@ -165,8 +167,8 @@ public:
 
 private:
   ObjRef<CDAMaLaESResult> mResult;
-  std::vector<iface::cellml_api::CellMLVariable*>& mVars;
-  std::vector<iface::cellml_api::CellMLVariable*>::iterator mIt;
+  std::set<iface::cellml_api::CellMLVariable*,XPCOMComparator>& mVars;
+  std::set<iface::cellml_api::CellMLVariable*,XPCOMComparator>::iterator mIt;
 };
 
 class CDAMaLaESDegreeVariable
@@ -276,6 +278,13 @@ CDAMaLaESResult::iterateBoundVariables()
   return new CDAMaLaESInvolvedVariableIterator(this, mBoundVars);
 }
 
+iface::cellml_api::CellMLVariableIterator*
+CDAMaLaESResult::iterateLocallyBoundVariables()
+  throw(std::exception&)
+{
+  return new CDAMaLaESInvolvedVariableIterator(this, mLocallyBoundVars);
+}
+
 iface::cellml_services::DegreeVariableIterator*
 CDAMaLaESResult::iterateInvolvedVariablesByDegree()
   throw(std::exception&)
@@ -361,14 +370,13 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
 
     double mup = curSrc->convertUnits(curDest, &aOffset);
 
-    if (mInvolvedSet.count(sv) == 0)
+    if (mInvolved.count(sv) == 0)
     {
       sv->add_ref();
-      mInvolved.push_back(sv);
-      mInvolvedSet.insert(sv);
+      mInvolved.insert(sv);
 
       if (aIsBound)
-        mBoundVars.push_back(sv);
+        mBoundVars.insert(sv);
     }
 
     if (mVariablesFromSource)
@@ -400,7 +408,7 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
 
     return mup;
   }
-  catch (iface::dom::DOMException& de)
+  catch (iface::dom::DOMException&)
   {
     throw MaLaESError(L"CI Element with no text inside.");
   }
@@ -460,7 +468,7 @@ CDAMaLaESResult::endConversionMode()
 bool
 CDAMaLaESResult::pushPrecedence(uint32_t outer, uint32_t inner)
 {
-  bool eqNeed = outer > mPrec.back().second;
+  bool eqNeed = (outer > static_cast<uint32_t>(mPrec.back().second));
   if (!eqNeed)
     mPrec.back().second = true;
   bool ret;
@@ -486,8 +494,7 @@ CDAMaLaESResult::appendString
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   mActive += aArg;
@@ -499,8 +506,7 @@ CDAMaLaESResult::appendCount
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   // Scoped locale change.
@@ -517,8 +523,7 @@ CDAMaLaESResult::appendExprs
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   std::vector<iface::mathml_dom::MathMLElement*>::iterator i;
@@ -539,8 +544,7 @@ CDAMaLaESResult::appendExpr
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   uint32_t idx = wcstoul(aArg.c_str(), NULL, 10);
@@ -553,14 +557,13 @@ CDAMaLaESResult::appendDegree
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
-  if (degree == NULL)
+  if (mq.degree == NULL)
     mActive += L"2";
   else
-    mTransform->RunTransformOnOperator(this, degree);
+    mTransform->RunTransformOnOperator(this, mq.degree);
 }
 
 void
@@ -569,14 +572,39 @@ CDAMaLaESResult::appendLogbase
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
-  if (logbase == NULL)
+  if (mq.logbase == NULL)
     mActive += L"10";
   else
-    mTransform->RunTransformOnOperator(this, logbase);
+    mTransform->RunTransformOnOperator(this, mq.logbase);
+}
+
+void
+CDAMaLaESResult::appendUplimit
+(
+ const std::wstring& aArg,
+ std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
+ std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
+ const MaLaESQualifiers& mq
+)
+{
+  if (mq.uplimit != NULL)
+    mTransform->RunTransformOnOperator(this, mq.uplimit);
+}
+
+void
+CDAMaLaESResult::appendLowlimit
+(
+ const std::wstring& aArg,
+ std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
+ std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
+ const MaLaESQualifiers& mq
+)
+{
+  if (mq.lowlimit != NULL)
+    mTransform->RunTransformOnOperator(this, mq.lowlimit);
 }
 
 void
@@ -585,8 +613,7 @@ CDAMaLaESResult::appendBvarIndex
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   // XXX what about multivariate bvars?
@@ -606,14 +633,14 @@ CDAMaLaESResult::appendBvarIndex
   // We don't want an actual conversion here; this is used to get the bvar
   // into processingVariable, so we just ignore the factors.
   boundVariable = true;
+
   double offset;
   startConversionMode(ci, offset);
   writeConvertedVariable();
+  mLocallyBoundVars.insert(processingVariable);
 
-  RETURN_INTO_WSTRING(expr,
-                      mAnnos->getStringAnnotation(processingVariable,
-                                                  L"bvarIndex"));
-  mActive += expr;
+  boundVariable = false;
+
   endConversionMode();
 }
 
@@ -623,8 +650,7 @@ CDAMaLaESResult::appendDiffVariable
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   if (aBvars.size() < 1)
@@ -657,9 +683,9 @@ CDAMaLaESResult::appendDiffVariable
 
   bool noOtherDeg = true;
   int deg = 0;
-  if (degree != NULL)
+  if (mq.degree != NULL)
   {
-    DECLARE_QUERY_INTERFACE_OBJREF(dcn, degree, mathml_dom::MathMLCnElement);
+    DECLARE_QUERY_INTERFACE_OBJREF(dcn, mq.degree, mathml_dom::MathMLCnElement);
     if (dcn == NULL)
       throw MaLaESError(L"Sorry, only constant diff degrees are supported.");
     deg = (uint32_t)parseConstant(dcn);
@@ -720,8 +746,7 @@ CDAMaLaESResult::pushSupplement
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   mInactive.push_back(mActive);
@@ -734,8 +759,7 @@ CDAMaLaESResult::popSupplement
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   mSupplementaries.push_back(mActive);
@@ -749,8 +773,7 @@ CDAMaLaESResult::appendUnique
  const std::wstring& aArg,
  std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   // See if the unique has been assigned already for the arg...
@@ -804,7 +827,7 @@ CDAMaLaESResult::parseConstant
     while ((c = txtn[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
       j--;
     if (j < i)
-      throw MaLaESError(L"CN element with only spaces inside.");
+      throw MaLaESError(L"CN argument with only spaces inside (exponent of e-notation)");
     txtn = txtn.substr(i, j - i + 1);
     i = 0;
     j = txtm.length() - 1;
@@ -813,7 +836,7 @@ CDAMaLaESResult::parseConstant
     while ((c = txtm[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
       j--;
     if (j < i)
-      throw MaLaESError(L"CN element with only spaces inside.");
+      throw MaLaESError(L"CN argument with only spaces inside (mantissa of e-notation)");
     txtm = txtm.substr(i, j - i + 1);
 
     // Scoped locale change.
@@ -837,7 +860,7 @@ CDAMaLaESResult::parseConstant
     while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
       j--;
     if (j < i)
-      throw MaLaESError(L"CN element with only spaces inside.");
+      throw MaLaESError(L"CN element with only spaces inside (expected decimal)");
     txt = txt.substr(i, j - i + 1);
 
     // Scoped locale change.
@@ -1053,7 +1076,7 @@ CDAMaLaESTransform::transform
       else
         pseudo = L"units_conversion";
       // Apply the pseudo-operator...
-      ExecuteTransform(r, pseudo, args, bvars, NULL, NULL);
+      ExecuteTransform(r, pseudo, args, bvars, noQualifiers);
     }
   }
   catch (MaLaESError& mError)
@@ -1251,6 +1274,11 @@ CDAMaLaESTransform::AppendCommandToProgram
       aProgram.push_back(command(&CDAMaLaESResult::appendDiffVariable, aArg));
       return;
     }
+    else if (aCmd == L"lowlimit")
+    {
+      aProgram.push_back(command(&CDAMaLaESResult::appendLowlimit, aArg));
+      return;
+    }
   }
   else if (c == L'p')
   {
@@ -1272,6 +1300,11 @@ CDAMaLaESTransform::AppendCommandToProgram
   {
     std::wstring arg = aCmd.substr(6);
     aProgram.push_back(command(&CDAMaLaESResult::appendUnique, arg));
+    return;
+  }
+  else if (aCmd == L"uplimit")
+  {
+    aProgram.push_back(command(&CDAMaLaESResult::appendUplimit, aArg));
     return;
   }
 
@@ -1514,7 +1547,7 @@ CDAMaLaESTransform::WriteConversion
     pseudo = L"units_conversion";
   
   // Apply the pseudo-operator...
-  ExecuteTransform(aResult, pseudo, args, bvars, NULL, NULL);
+  ExecuteTransform(aResult, pseudo, args, bvars, noQualifiers);
   
   aResult->endConversionMode();
 }
@@ -1560,7 +1593,7 @@ CDAMaLaESTransform::RunTransformOnOperator
       CleanupVector<iface::mathml_dom::MathMLElement*> tmpargs;
       tmpargs.push_back(pwc->caseCondition());
       tmpargs.push_back(pwc->caseValue());
-      ExecuteTransform(aResult, sn, tmpargs, bvars, NULL, NULL);
+      ExecuteTransform(aResult, sn, tmpargs, bvars, noQualifiers);
       if (i == 1)
         sn = L"piecewise_extra_case";
     }
@@ -1573,7 +1606,7 @@ CDAMaLaESTransform::RunTransformOnOperator
     catch (...)
     {
       std::wstring sn = L"piecewise_no_otherwise";
-      ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
+      ExecuteTransform(aResult, sn, args, bvars, noQualifiers);
     }
 
 
@@ -1583,7 +1616,7 @@ CDAMaLaESTransform::RunTransformOnOperator
       pwo->add_ref();
 
       std::wstring sn = L"piecewise_otherwise";
-      ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
+      ExecuteTransform(aResult, sn, args, bvars, noQualifiers);
     }
 
     return;
@@ -1597,7 +1630,7 @@ CDAMaLaESTransform::RunTransformOnOperator
     if (pds == NULL)
       throw MaLaESError(L"Only apply, cn, ci, constants, and piecewise are supported.");
     RETURN_INTO_WSTRING(sn, pds->symbolName());
-    ExecuteTransform(aResult, sn, args, bvars, NULL, NULL);
+    ExecuteTransform(aResult, sn, args, bvars, noQualifiers);
     return;
   }
 
@@ -1606,7 +1639,7 @@ CDAMaLaESTransform::RunTransformOnOperator
   DECLARE_QUERY_INTERFACE_OBJREF(csym, op, mathml_dom::MathMLCsymbolElement);
   std::wstring opName;
 
-  ObjRef<iface::mathml_dom::MathMLElement> degree, logbase;
+  MaLaESQualifiers mq = noQualifiers;
 
   RETURN_INTO_OBJREF(nl, iface::dom::NodeList, apply->childNodes());
   uint32_t l = nl->length(), i;
@@ -1632,7 +1665,7 @@ CDAMaLaESTransform::RunTransformOnOperator
       DECLARE_QUERY_INTERFACE_OBJREF(degreeC, el, mathml_dom::MathMLContainer);
       if (degreeC->nArguments() < 1)
         throw MaLaESError(L"Found a degree with no argument (invalid)");
-      degree = already_AddRefd<iface::mathml_dom::MathMLElement>
+      mq.degree = already_AddRefd<iface::mathml_dom::MathMLElement>
         (degreeC->getArgument(1));
     }
     else if (ln == L"logbase")
@@ -1641,8 +1674,26 @@ CDAMaLaESTransform::RunTransformOnOperator
                                      mathml_dom::MathMLContentContainer);
       if (logbaseC->nArguments() < 1)
         throw MaLaESError(L"Found a logbase with no argument (invalid)");
-      logbase = already_AddRefd<iface::mathml_dom::MathMLElement>
+      mq.logbase = already_AddRefd<iface::mathml_dom::MathMLElement>
         (logbaseC->getArgument(1));
+    }
+    else if (ln == L"uplimit")
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(uplimitC, el,
+                                     mathml_dom::MathMLContentContainer);
+      if (uplimitC->nArguments() < 1)
+        throw MaLaESError(L"Found an uplimit with no argument (invalid)");
+      mq.uplimit = already_AddRefd<iface::mathml_dom::MathMLElement>
+        (uplimitC->getArgument(1));
+    }
+    else if (ln == L"lowlimit")
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(lowlimitC, el,
+                                     mathml_dom::MathMLContentContainer);
+      if (lowlimitC->nArguments() < 1)
+        throw MaLaESError(L"Found a lowlimit with no argument (invalid)");
+      mq.lowlimit = already_AddRefd<iface::mathml_dom::MathMLElement>
+        (lowlimitC->getArgument(1));
     }
   }
 
@@ -1689,7 +1740,7 @@ CDAMaLaESTransform::RunTransformOnOperator
   for (i = 2; i <= l; i++)
     args.push_back(apply->getArgument(i));
 
-  ExecuteTransform(aResult, opName, args, bvars, degree, logbase);
+  ExecuteTransform(aResult, opName, args, bvars, mq);
 }
 
 void
@@ -1699,8 +1750,7 @@ CDAMaLaESTransform::ExecuteTransform
  const std::wstring& aOpName,
  std::vector<iface::mathml_dom::MathMLElement*>& args,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& bvars,
- iface::mathml_dom::MathMLElement* degree,
- iface::mathml_dom::MathMLElement* logbase
+ const MaLaESQualifiers& mq
 )
 {
   // Scoped locale change.
@@ -1749,16 +1799,16 @@ CDAMaLaESTransform::ExecuteTransform
 
   // Open group...
   if (needGroup)
-    aResult->appendString(openGroup, args, bvars, degree, logbase);
+    aResult->appendString(openGroup, args, bvars, mq);
 
   // Now run the append program we compiled earlier...
   commandlist::iterator pri;
   for (pri = o.program.begin(); pri != o.program.end(); pri++)
-    (aResult->* ((*pri).first)) ((*pri).second, args, bvars, degree, logbase);
+    (aResult->* ((*pri).first)) ((*pri).second, args, bvars, mq);
 
   // Close group...
   if (needGroup)
-    aResult->appendString(closeGroup, args, bvars, degree, logbase);
+    aResult->appendString(closeGroup, args, bvars, mq);
   aResult->popPrecedence();
 }
 

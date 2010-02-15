@@ -748,7 +748,7 @@ CDA_Node::addEventListener(const wchar_t* type,
     throw iface::dom::DOMException();
   eventid p(const_cast<wchar_t*>(type), useCapture);
   std::multimap<eventid, iface::events::EventListener*>
-    ::iterator i = mListeners.find(p);
+    ::iterator i = mListeners.lower_bound(p);
 
   // Silently ignore a request to add a duplicate, as per spec...
   for (; i != mListeners.end() && (*i).first == p; i++)
@@ -773,7 +773,7 @@ CDA_Node::removeEventListener(const wchar_t* type,
   eventid p(const_cast<wchar_t*>(type), useCapture);
   std::multimap<eventid,iface::events::EventListener*>
      ::iterator i =
-    mListeners.find(p);
+    mListeners.lower_bound(p);
   for (; i != mListeners.end() && (*i).first == p; i++)
     if (CDA_objcmp((*i).second, listener) == 0)
     {
@@ -908,7 +908,7 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
   {
     eventid p(const_cast<wchar_t*>(me->mType.c_str()), true);
     std::multimap<eventid,iface::events::EventListener*>
-       ::iterator i(mListeners.find(p)), i2;
+       ::iterator i(mListeners.lower_bound(p)), i2;
     while (i != mListeners.end() && (*i).first == p)
     {
       i2 = i;
@@ -930,7 +930,7 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
   {
     eventid p(const_cast<wchar_t*>(me->mType.c_str()), false);
     std::multimap<eventid,iface::events::EventListener*>
-       ::iterator i(mListeners.find(p)), i2;
+       ::iterator i(mListeners.lower_bound(p)), i2;
     while (i != mListeners.end() && (*i).first == p)
     {
       i2 = i;
@@ -1807,8 +1807,8 @@ CDA_Element::removeAttribute(const wchar_t* name)
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   LocalName ln((*i).first);
-  attributeMap.erase(i);
   ln.release();
+  attributeMap.erase(i);
 
   std::map<QualifiedName, CDA_Attr*>::iterator j;
   if (at->mLocalName != L"")
@@ -1866,6 +1866,9 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   RETURN_INTO_THINSTRING(name, newAttr->name());
   std::map<LocalName, CDA_Attr*>::iterator
     i = attributeMap.find(LocalName(const_cast<wchar_t*>(name.getPointer())));
+  std::map<QualifiedName, CDA_Attr*>::iterator
+    j = attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(L""),
+                                          const_cast<wchar_t*>(name.getPointer())));
 
   CDA_DOM_SomethingChanged();
 
@@ -1893,7 +1896,15 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   }
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
+  LocalName((*i).first).release();
   attributeMap.erase(i);
+
+  if (j != attributeMapNS.end())
+  {
+    QualifiedName((*j).first).release();
+    attributeMapNS.erase(j);
+  }
+
   insertBeforePrivate(newAttr, NULL)->release_ref();
   attributeMap.insert(std::pair<LocalName, CDA_Attr*>
                       (LocalName(CDA_wcsdup(name)), newAttr));
@@ -2027,6 +2038,16 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
                                          CDA_wcsdup(localName)), a
                           )
                          );
+
+
+    std::map<LocalName, CDA_Attr*>::iterator
+      j = attributeMap.find(LocalName(const_cast<wchar_t*>(qualifiedName)));
+    if (j != attributeMap.end())
+    {
+      LocalName((*j).first).release();
+      attributeMap.erase(j);
+    }
+
     attributeMap.insert(std::pair<LocalName,CDA_Attr*>
                         (LocalName(CDA_wcsdup(qualifiedName)), a));
 

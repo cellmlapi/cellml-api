@@ -90,7 +90,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #else
     "-nodefaultlibs "
 #ifdef __MACH__
-    "-L. -L./.libs -L./../Resources/lib -L./../Resources/components -Llib -lcellml.0 -lannotools.0 -lcuses.0 -lmalaes.0 -lcevas.0 -lcis -lccgs.0 "
+    "-arch i386 -L. -L./.libs -L./../Resources/lib -L./../Resources/components -Llib -lcellml.0 -lannotools.0 -lcuses.0 -lmalaes.0 -lcevas.0 -lcis -lccgs.0 "
 #else
     "-Llib -lcis "
 #endif
@@ -219,7 +219,7 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
   struct _finddata_t d;
   intptr_t hd;
   std::string pat = mDirname;
-  pat += "\*.*";
+  pat += "*.*";
   hd = _findfirst(pat.c_str(), &d);
   if (hd != -1)
   {
@@ -567,6 +567,9 @@ CDA_CellMLIntegrationService::compileModel
      << "  double aVOI, * aCONSTANTS, * aRATES, * aSTATES, * aALGEBRAIC;" << std::endl
      << "  int* aPRET;" << std::endl
      << "};" << std::endl
+     << "extern double defint(double (*f)(double VOI,double *C,double *R,double *S,"
+     << "double *A, int* pret), double VOI,double *C,double *R,double *S,double *A,double *V,"
+     << "double lowV, double highV, int* pret);" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
     "(nmeas)*(npar) + (npar)*(npar))" << std::endl
      << "extern void do_levmar(void (*)(double *, double *, int, int, void*), "

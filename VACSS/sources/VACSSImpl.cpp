@@ -2,6 +2,7 @@
 #include "VACSSImpl.hpp"
 #include "VACSSBootstrap.hpp"
 #include "CUSESBootstrap.hpp"
+#include <cstdio>
 #include <string>
 #include <set>
 #include <assert.h>
@@ -2242,8 +2243,8 @@ ModelValidation::validateMathMLConstant
 {
   // Check for any inappropriate children...
   RETURN_INTO_OBJREF(child, iface::dom::Node, aEl->firstChild());
-  std::wstring txt, type, name;
-  type = aEl->getAttributeNS(L"", L"type");
+  std::wstring txt, name;
+  RETURN_INTO_WSTRING(type, aEl->getAttributeNS(L"", L"type"));
   for (; child != NULL;
        child = already_AddRefd<iface::dom::Node>(child->nextSibling()))
   {
@@ -3174,78 +3175,100 @@ ModelValidation::validateMathMLApply
       }
       seenDegree = true;
 
-      RETURN_INTO_OBJREF(degreeUnits,
-                         iface::cellml_services::CanonicalUnitRepresentation,
-                         validateMathMLExpression(aContext, el2));
-      if (degreeUnits)
+      ObjRef<iface::cellml_services::CanonicalUnitRepresentation> degreeUnits;
+
       {
-        if (!degreeUnits->compatibleWith(mDimensionlessUnits) ||
-            (!CDA_objcmp(degreeUnits, mBooleanUnits)))
-        {
-          REPR_ERROR(L"degree qualifier should be in dimensionless units",
-                     el2);
-        }
-      }
-      
-      if (degreeUnits)
-      {
-        // To work out the units properly, we actually need a number for the
-        // degree...
         ObjRef<iface::dom::Node> n3;
         for (n3 = already_AddRefd<iface::dom::Node>(el2->firstChild());
              n3;
              n3 = already_AddRefd<iface::dom::Node>(n3->nextSibling()))
         {
-          DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, dom::Element);
+          DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, mathml_dom::MathMLElement);
           if (el3 == NULL)
             continue;
-        
-          RETURN_INTO_WSTRING(ns3, el3->namespaceURI());
-          if (ns3 != MATHML_NS)
+
+          if (degreeUnits)
+          {
+            REPR_ERROR(L"There should only be one MathML element inside degree",
+                       el3);
             continue;
-
-          RETURN_INTO_WSTRING(ln3, el3->localName());
-          if (ln3 == L"semantics")
-          {
-            el3 = already_AddRefd<iface::dom::Element>
-              (extractSemanticsValidateAnnotation(el3));
-            wchar_t* str = el3->localName();
-            ln3 = str;
-            free(str);
           }
+          degreeUnits =
+            already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
+            (validateMathMLExpression(aContext, el3));
+        }
 
-          if (ln3 != L"cn")
+        if (degreeUnits == NULL)
+        {
+          REPR_ERROR(L"Degree element does not content MathML child",
+                     el2);
+          continue;
+        }
+      }
+
+      if (!degreeUnits->compatibleWith(mDimensionlessUnits) ||
+          (!CDA_objcmp(degreeUnits, mBooleanUnits)))
+      {
+        REPR_ERROR(L"degree qualifier should be in dimensionless units",
+                   el2);
+      }
+      
+      // To work out the units properly, we actually need a number for the
+      // degree...
+      ObjRef<iface::dom::Node> n3;
+      for (n3 = already_AddRefd<iface::dom::Node>(el2->firstChild());
+           n3;
+           n3 = already_AddRefd<iface::dom::Node>(n3->nextSibling()))
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, dom::Element);
+        if (el3 == NULL)
+          continue;
+        
+        RETURN_INTO_WSTRING(ns3, el3->namespaceURI());
+        if (ns3 != MATHML_NS)
+          continue;
+        
+        RETURN_INTO_WSTRING(ln3, el3->localName());
+        if (ln3 == L"semantics")
+        {
+          el3 = already_AddRefd<iface::dom::Element>
+            (extractSemanticsValidateAnnotation(el3));
+          wchar_t* str = el3->localName();
+          ln3 = str;
+          free(str);
+        }
+
+        if (ln3 != L"cn")
+        {
+          REPR_WARNING(L"Units validation results may be incorrect because the "
+                       L"degree of differentiation is not a constant", el3);
+          break;
+        }
+
+        // This is safe because degreeUnits is non-null...
+        DECLARE_QUERY_INTERFACE_OBJREF(cn, el3, mathml_dom::MathMLCnElement);
+        RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
+        
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
+        if (tn != NULL)
+        {
+          RETURN_INTO_WSTRING(tns, tn->data());
+          int i = 0, j = tns.length() - 1;
+          wchar_t c;
+          while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+            i++;
+          while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+            j--;
+          if (j < i)
+            j = i - 1;
+          tns = tns.substr(i, j - i + 1);
+
+          wchar_t* e;
+          overallDegree = wcstoul(tns.c_str(), &e, 10);
+          if (*e != 0 || overallDegree == 0)
           {
-            REPR_WARNING(L"Units validation results may be incorrect because the "
-                         L"degree of differentiation is not a constant", el3);
-            break;
-          }
-
-          // This is safe because degreeUnits is non-null...
-          DECLARE_QUERY_INTERFACE_OBJREF(cn, el3, mathml_dom::MathMLCnElement);
-          RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
-
-          DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
-          if (tn != NULL)
-          {
-            RETURN_INTO_WSTRING(tns, tn->data());
-            int i = 0, j = tns.length() - 1;
-            wchar_t c;
-            while ((c = tns[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-              i++;
-            while ((c = tns[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
-              j--;
-            if (j < i)
-              j = i - 1;
-            tns = tns.substr(i, j - i + 1);
-
-            wchar_t* e;
-            overallDegree = wcstoul(tns.c_str(), &e, 10);
-            if (*e != 0 || overallDegree == 0)
-            {
-              REPR_WARNING(L"Degree of differentiation should be integral", el2);
-              overallDegree = 1;
-            }
+            REPR_WARNING(L"Degree of differentiation should be integral", el2);
+            overallDegree = 1;
           }
         }
       }
@@ -3418,7 +3441,7 @@ ModelValidation::validateMathMLApply
   // This simplifies the logic later...
   if (unitsList.empty())
   {
-    REPR_ERROR(L"Expected operator to have at least one argument",
+    REPR_ERROR(std::wstring(L"Expected \"") + opinfo->mName + L"\" operator to have at least one argument",
                op);
     return NULL;
   }
@@ -3442,8 +3465,8 @@ ModelValidation::validateMathMLApply
               (!CDA_objcmp(thisUnits, mBooleanUnits))))
            )
         {
-          REPR_WARNING(L"Expected all arguments to MathML apply to have the same "
-                       L"units", op);
+          REPR_WARNING(std::wstring(L"Expected all arguments to operator \"") +
+                       opinfo->mName + L"\" to have the same units", op);
         }
       }
     }
@@ -3456,8 +3479,9 @@ ModelValidation::validateMathMLApply
       if (!(*ui)->compatibleWith(mDimensionlessUnits) ||
           !CDA_objcmp(*ui, mBooleanUnits))
       {
-        REPR_WARNING(L"Expected arguments to MathML apply to have dimensionless "
-                     L"units", op);
+        REPR_WARNING(std::wstring(L"Expected arguments to operator \"") +
+                     opinfo->mName +
+                     L"\" to be dimensionless", op);
       }
   }
   else if (opinfo->mInput == AI_BOOLEAN)
@@ -3467,8 +3491,9 @@ ModelValidation::validateMathMLApply
     for (; ui != unitsList.end(); ui++)
       if (CDA_objcmp(*ui, mBooleanUnits))
       {
-        REPR_WARNING(L"Expected arguments to MathML apply to have boolean "
-                     L"units", op);
+        REPR_WARNING(std::wstring(L"Expected arguments to operator \"") +
+                     opinfo->mName +
+                     L"\" to be boolean (i.e. true or false)", op);
       }
   }
 
@@ -3476,7 +3501,10 @@ ModelValidation::validateMathMLApply
   {
     if (unitsList.size() != 1)
     {
-      REPR_ERROR(L"Expected operator to be unary (i.e. have exactly one argument)",
+      wchar_t buf[30];
+      swprintf(buf, 30, L"%d", unitsList.size());
+      REPR_ERROR(std::wstring(L"Operator \"") +
+                 opinfo->mName + L"\" is unary (i.e. takes exactly one argument), but was given " + buf + L" arguments.",
                  op);
       return NULL;
     }
@@ -3489,15 +3517,21 @@ ModelValidation::validateMathMLApply
       {
         if (unitsList.size() != 1)
         {
-          REPR_ERROR(L"Expected minus operator to be unary or binary (i.e. "
-                     L"have one or two arguments)", op);
+          wchar_t buf[30];
+          swprintf(buf, 30, L"%d", unitsList.size());
+          REPR_ERROR(std::wstring(
+                       L"Expected operator \"minus\" to be unary or binary (i.e. "
+                       L"have one or two arguments), not ") + buf, op);
           return NULL;
         }
       }
       else
       {
-        REPR_ERROR(L"Expected operator to be binary (i.e. have exactly "
-                   L"two arguments)", op);
+        wchar_t buf[30];
+        swprintf(buf, 30, L"%d", unitsList.size());
+        REPR_ERROR(std::wstring(L"Expected operator \"") + opinfo->mName +
+                   L"\" to be binary (i.e. have exactly "
+                   L"two arguments), not " + buf, op);
         return NULL;
       }
     }
@@ -3514,8 +3548,7 @@ ModelValidation::validateMathMLApply
     if (!uexp->compatibleWith(mDimensionlessUnits) ||
         !CDA_objcmp(uexp, mBooleanUnits))
     {
-      REPR_ERROR(L"Expected exponent to MathML apply pow to have dimensionless "
-                 L"units", op);
+      REPR_ERROR(L"Expected exponent to pow operator to be dimensionless", op);
     }
 
     double expVal;
@@ -3524,7 +3557,7 @@ ModelValidation::validateMathMLApply
 
     if (!CDA_objcmp(mBooleanUnits, ubase))
     {
-      REPR_WARNING(L"It is not valid to take a power of boolean units", op);
+      REPR_WARNING(L"It is not valid to take a power of a boolean value", op);
     }
 
     // Don't require exponent to be constant if the base is dimensionless.
@@ -3553,7 +3586,7 @@ ModelValidation::validateMathMLApply
 
     if (!CDA_objcmp(mBooleanUnits, ubase))
     {
-      REPR_WARNING(L"It is not valid to take a root of boolean units", op);
+      REPR_WARNING(L"It is not valid to take the root of a boolean value", op);
     }
 
     return ubase->mergeWith(1.0 / rootDegree, NULL, 0.0);
@@ -3570,7 +3603,7 @@ ModelValidation::validateMathMLApply
     {
       if (!CDA_objcmp((*i), mBooleanUnits))
       {
-        REPR_WARNING(L"It is not valid to multiply boolean units", op);
+        REPR_WARNING(L"It is not valid to multiply with a boolean value", op);
       }
 
       finalUnits = already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
@@ -3590,11 +3623,11 @@ ModelValidation::validateMathMLApply
 
     if (!CDA_objcmp(udividend, mBooleanUnits))
     {
-      REPR_WARNING(L"It is not valid to divide boolean units", op);
+      REPR_WARNING(L"It is not valid to divide a boolean value", op);
     }
     if (!CDA_objcmp(udivisor, mBooleanUnits))
     {
-      REPR_WARNING(L"It is not valid to divide boolean units", op);
+      REPR_WARNING(L"It is not valid to divide by a boolean value", op);
     }
     
     return udividend->mergeWith(1.0, udivisor, -1.0);
@@ -4507,6 +4540,9 @@ ModelValidation::validateGroupComponentRefs
         break;
 
       RETURN_INTO_OBJREF(m, iface::cellml_api::Model, imp->importedModel());
+
+      if (m == NULL)
+        break;
 
       RETURN_INTO_OBJREF(iccs,
                          iface::cellml_api::CellMLComponentSet,

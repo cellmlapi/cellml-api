@@ -3329,6 +3329,10 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
     return;
   }
 
+  // No point trying to deal with a zero-length base URI.
+  if (base.length() == 0)
+    return;
+
   // It is a completely relative URL.
   // See if base ends in a /...
   size_t pos = base.find(L"://");
@@ -6882,7 +6886,8 @@ CDA_ExtensionElementList::length()
     RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
     if (nsURI == CELLML_1_0_NS ||
         nsURI == CELLML_1_1_NS ||
-        nsURI == RDF_NS)
+        nsURI == RDF_NS ||
+        nsURI == MATHML_NS)
       continue;
 
     le++;
@@ -6926,9 +6931,9 @@ CDA_ExtensionElementList::getIndexOf(iface::dom::Element* x)
     RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
     if (nsURI == CELLML_1_0_NS ||
         nsURI == CELLML_1_1_NS ||
-        nsURI == RDF_NS)
+        nsURI == RDF_NS ||
+        nsURI == MATHML_NS)
       continue;
-
 
     if (el == x)
       return le;
@@ -6954,7 +6959,8 @@ CDA_ExtensionElementList::getAt(uint32_t index)
     RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
     if (nsURI == CELLML_1_0_NS ||
         nsURI == CELLML_1_1_NS ||
-        nsURI == RDF_NS)
+        nsURI == RDF_NS ||
+        nsURI == MATHML_NS)
       continue;
 
     if (index == 0)

@@ -107,7 +107,7 @@ CDABaseUnitInstance::exponent()
 
 CDACanonicalUnitRepresentation::CDACanonicalUnitRepresentation(bool aStrict)
   throw()
-  : _cda_refcount(1), mStrict(aStrict)
+  : _cda_refcount(1), mStrict(aStrict), mCarry(1.0)
 {
 }
 
@@ -170,16 +170,27 @@ CDACanonicalUnitRepresentation::compatibleWith
     if (mStrict && (bui1->offset() != bui2->offset()))
       return false;
 
-    mup1 *= pow(bui1->prefix(), bui1->exponent());
-    mup2 *= pow(bui2->prefix(), bui2->exponent());
+    mup1 *= bui1->prefix();
+    mup2 *= bui2->prefix();
   }
 
   if (mStrict)
   {
-    double mupRat = mup1 / mup2;
-    double normMupRat = fabs((1.0 - mupRat) / std::max(mup1, mup2));
-    if (normMupRat > 1E-20)
+    if (mup1 > mup2)
+    {
+      double tmp = mup1;
+      mup1 = mup2;
+      mup2 = tmp;
+    }
+
+    double mupErr = mup2 / mup1 - 1.0;
+    if (mupErr > 1E-15)
+    {
+#ifdef DEBUG_UNITS
+      printf("normErr too big: %g; mup1 = %g, mup2 = %g\n", mupErr, mup1, mup2);
+#endif
       return false;
+    }
   }
 
   return true;
@@ -258,7 +269,7 @@ public:
 };
 
 void
-CDACanonicalUnitRepresentation::canonicalise(bool strictKeep)
+CDACanonicalUnitRepresentation::canonicalise()
   throw(std::exception&)
 {
   CanonicalUnitComparator cuc;
@@ -270,43 +281,66 @@ CDACanonicalUnitRepresentation::canonicalise(bool strictKeep)
   uint32_t l = length();
   uint32_t i;
 
-  iface::cellml_services::BaseUnitInstance *uThis, *uLast = NULL;
+  iface::cellml_services::BaseUnitInstance *uThis;
+  ObjRef<iface::cellml_services::BaseUnitInstance> uLast;
+
+#ifdef DEBUG_UNITS
+  if (mCarry != 1.0)
+    printf("Canonicalise starting with carry: %g\n", mCarry);
+#endif
 
   for (i = 0; i < l; i++)
   {
     uThis = baseUnits[i];
+    RETURN_INTO_OBJREF(buThis, iface::cellml_services::BaseUnit,
+                       uThis->unit());
     if (uLast != NULL)
     {
-      if (!strictKeep || uLast->prefix() != uThis->prefix())
+      RETURN_INTO_OBJREF(buLast, iface::cellml_services::BaseUnit,
+                         uLast->unit());
+      if (CDA_objcmp(buLast, buThis) == 0)
       {
-        RETURN_INTO_OBJREF(buLast, iface::cellml_services::BaseUnit,
-                           uLast->unit());
-        RETURN_INTO_OBJREF(buThis, iface::cellml_services::BaseUnit,
-                           uThis->unit());
-        if (CDA_objcmp(buLast, buThis) == 0)
+        anyChanges = true;
+        double newPref = uThis->prefix() * uLast->prefix();
+        double newExp = uThis->exponent() + uLast->exponent();
+        
+        newBaseUnits.back()->release_ref();
+        newBaseUnits.pop_back();
+        
+        if (newExp != 0)
         {
-          anyChanges = true;
-          double newPref = uThis->prefix() * uLast->prefix();
-          double newExp = uThis->exponent() + uLast->exponent();
-
-          newBaseUnits.back()->release_ref();
-          newBaseUnits.pop_back();
-
-          uLast = NULL;
-
-          if (newExp != 0)
-          {
-            uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
-            newBaseUnits.push_back(uLast);
-          }
-          continue;
+          uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
+          newBaseUnits.push_back(uLast);
         }
+        else
+          mCarry *= newPref;
+
+        continue;
       }
     }
+
     uThis->add_ref();
     newBaseUnits.push_back(uThis);
     uLast = uThis;
   }
+  if (mCarry != 1.0 && !newBaseUnits.empty())
+  {
+    iface::cellml_services::BaseUnitInstance* fix = newBaseUnits[0];
+    RETURN_INTO_OBJREF(buFix, iface::cellml_services::BaseUnit,
+                       fix->unit());
+#ifdef DEBUG_UNITS
+    printf("Retrospectively applying carry %g\n", mCarry);
+#endif
+    newBaseUnits[0] = new CDABaseUnitInstance(buFix, fix->prefix() * mCarry,
+                                              fix->offset(), fix->exponent());
+    mCarry = 1.0;
+    fix->release_ref();
+  }
+
+#ifdef DEBUG_UNITS
+  if (mCarry != 1.0)
+    printf("Carry saved for next invocation.\n");
+#endif
 
   if (anyChanges)
   {
@@ -342,6 +376,10 @@ CDACanonicalUnitRepresentation::mergeWith
 )
   throw(std::exception&)
 {
+#ifdef DEBUG_UNITS
+  printf("mergeWith %g %g\n", aThisExponent, aOtherExponent);
+#endif
+
   RETURN_INTO_OBJREF(uNew, CDACanonicalUnitRepresentation,
                      new CDACanonicalUnitRepresentation(mStrict));
 
@@ -355,6 +393,15 @@ CDACanonicalUnitRepresentation::mergeWith
     {
       RETURN_INTO_OBJREF(bu, iface::cellml_services::BaseUnitInstance,
                          fetchBaseUnit(i));
+
+#ifdef DEBUG_UNITS
+      {
+        RETURN_INTO_OBJREF(u, iface::cellml_services::BaseUnit, bu->unit());
+        RETURN_INTO_WSTRING(n, u->name());
+        printf("  Current: %g %S ^ %g\n", bu->prefix(), n.c_str(), bu->exponent());
+      }
+#endif
+
       if (aThisExponent == 1)
         uNew->addBaseUnit(bu);
       else
@@ -367,6 +414,13 @@ CDACanonicalUnitRepresentation::mergeWith
         uNew->addBaseUnit(bui);
       }
     }
+
+#ifdef DEBUG_UNITS
+    if (carry() != 1.0)
+      printf("Building uNew, current carry %g\n", carry());
+#endif
+
+    uNew->carry(pow(carry(), aThisExponent));
   }
 
   if (aOtherExponent != 0)
@@ -376,6 +430,15 @@ CDACanonicalUnitRepresentation::mergeWith
     {
       RETURN_INTO_OBJREF(bu, iface::cellml_services::BaseUnitInstance,
                          aOther->fetchBaseUnit(i));
+
+#ifdef DEBUG_UNITS
+      {
+        RETURN_INTO_OBJREF(u, iface::cellml_services::BaseUnit, bu->unit());
+        RETURN_INTO_WSTRING(n, u->name());
+        printf("  Other: %g %S ^ %g\n", bu->prefix(), n.c_str(), bu->exponent());
+      }
+#endif
+
       if (aOtherExponent == 1)
         uNew->addBaseUnit(bu);
       else
@@ -388,9 +451,18 @@ CDACanonicalUnitRepresentation::mergeWith
         uNew->addBaseUnit(bui);
       }
     }
+
+#ifdef DEBUG_UNITS
+    if (unsafe_dynamic_cast<CDACanonicalUnitRepresentation*>
+        (aOther)->carry() != 1.0)
+      printf("Building uNew, current carry %g\n", carry());
+#endif
+
+    uNew->carry(uNew->carry() * pow(unsafe_dynamic_cast<CDACanonicalUnitRepresentation*>
+                                    (aOther)->carry(), aOtherExponent));
   }
 
-  uNew->canonicalise(false);
+  uNew->canonicalise();
 
   iface::cellml_services::CanonicalUnitRepresentation* cur = uNew;
   cur->add_ref();
@@ -929,7 +1001,7 @@ CDACUSES::PopulateBuiltinUnits()
     RETURN_INTO_OBJREF(cu, CDACanonicalUnitRepresentation, \
                        new CDACanonicalUnitRepresentation(mStrict)); \
     x \
-    cu->canonicalise(false);                                          \
+    cu->canonicalise();                                          \
     mUnitsMap->insert(std::pair<std::wstring, CDACanonicalUnitRepresentation*> \
                       (L###name, cu)); \
     cu->add_ref(); \
@@ -1052,7 +1124,7 @@ CDACUSES::ComputeUnits
       }
     }
 
-    newrep->canonicalise(mStrict);
+    newrep->canonicalise();
   }
 
   std::list<std::wstring>::iterator i(context->scopes.begin());

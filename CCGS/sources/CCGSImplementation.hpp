@@ -56,6 +56,7 @@ public:
   uint32_t mHighestDegree;
   // -1 if there is no index for the infinitesimally delayed version.
   int32_t mInfDelayedAssignedIndex;
+  bool mStateHasIV;
 
   // Disjoint set utilities...
   uint32_t rank;
@@ -121,12 +122,12 @@ private:
 };
 
 class CDA_CodeInformation
-  : public iface::cellml_services::CodeInformation
+  : public iface::cellml_services::IDACodeInformation
 {
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_services::CodeInformation);
+  CDA_IMPL_QI2(cellml_services::CodeInformation, cellml_services::IDACodeInformation);
 
   CDA_CodeInformation() : _cda_refcount(1) {};
   ~CDA_CodeInformation();
@@ -140,6 +141,7 @@ public:
   wchar_t* ratesString() throw();
   wchar_t* variablesString() throw();
   wchar_t* functionsString() throw();
+  wchar_t* essentialVariablesString() throw();
   iface::cellml_services::ComputationTargetIterator* iterateTargets()
     throw();
   iface::mathml_dom::MathMLNodeList* flaggedEquations()
@@ -149,20 +151,20 @@ public:
   std::wstring mErrorMessage;
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
   uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount;
-  std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr;
+  std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr;
   std::list<ptr_tag<CDA_ComputationTarget> > mTargets;
   std::vector<iface::dom::Element*> mFlaggedEquations;
 };
 
 class CDA_CodeGenerator
-  : public iface::cellml_services::CodeGenerator
+  : public iface::cellml_services::IDACodeGenerator
 {
 public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_services::CodeGenerator);
+  CDA_IMPL_QI2(cellml_services::CodeGenerator, cellml_services::IDACodeGenerator);
 
-  CDA_CodeGenerator();
+  CDA_CodeGenerator(bool aIDAStyle);
   ~CDA_CodeGenerator() {};
 
   wchar_t* constantPattern() throw();
@@ -189,6 +191,8 @@ public:
   void declareTemporaryPattern(const wchar_t* aPattern) throw();
   wchar_t* conditionalAssignmentPattern() throw();
   void conditionalAssignmentPattern(const wchar_t* aPattern) throw();
+  wchar_t* residualPattern() throw();
+  void residualPattern(const wchar_t* aPattern) throw();
 
   iface::cellml_services::MaLaESTransform* transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
@@ -201,15 +205,24 @@ public:
   void useCUSES(iface::cellml_services::CUSES* aCUSES) throw();
   iface::cellml_services::AnnotationSet* useAnnoSet() throw();
   void useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet) throw();
+
   iface::cellml_services::CodeInformation* generateCode
+    (iface::cellml_api::Model* aSourceModel) throw()
+  {
+    return generateIDACode(aSourceModel);
+  }
+
+  iface::cellml_services::IDACodeInformation* generateIDACode
     (iface::cellml_api::Model* aSourceModel) throw();
+
 private:
   std::wstring mConstantPattern, mStateVariableNamePattern,
     mAlgebraicVariableNamePattern,
     mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
     mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
-    mConditionalAssignmentPattern;
+    mConditionalAssignmentPattern, mResidualPattern;
   uint32_t mArrayOffset;
+  bool mIDAStyle;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;
   ObjRef<iface::cellml_services::CUSES> mCUSES;
@@ -241,7 +254,13 @@ public:
   iface::cellml_services::CodeGenerator*
   createCodeGenerator() throw(std::exception&)
   {
-    return new CDA_CodeGenerator();
+    return new CDA_CodeGenerator(false);
+  }
+
+  iface::cellml_services::IDACodeGenerator*
+  createIDACodeGenerator() throw(std::exception&)
+  {
+    return new CDA_CodeGenerator(true);
   }
 
 #ifdef ENABLE_CONTEXT

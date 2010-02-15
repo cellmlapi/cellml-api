@@ -47,7 +47,7 @@ void
 DOMTest::testCreateDocumentType()
 {
   CPPUNIT_ASSERT(dt);
-  wchar_t* n;
+  wchar_t* n = NULL;
 
   // Check the name...
   CPPUNIT_ASSERT_NO_THROW(n = dt->name());
@@ -64,7 +64,7 @@ DOMTest::testCreateDocumentType()
   CPPUNIT_ASSERT_EQUAL(0, wcscmp(n, L"baz"));
   free(n);
 
-  iface::dom::NamedNodeMap* nnm;
+  iface::dom::NamedNodeMap* nnm = NULL;
   CPPUNIT_ASSERT_NO_THROW(nnm = dt->entities());
   CPPUNIT_ASSERT(nnm);
   int32_t l;
@@ -95,7 +95,7 @@ DOMTest::testCreateDocument()
   CPPUNIT_ASSERT_EQUAL((int32_t)iface::dom::Node::DOCUMENT_NODE, nt);
 
   // Check there is a document element...
-  iface::dom::Element* de;
+  iface::dom::Element* de = NULL;
   CPPUNIT_ASSERT_NO_THROW(de = doc->documentElement());
   CPPUNIT_ASSERT(de);
 
@@ -103,7 +103,7 @@ DOMTest::testCreateDocument()
   CPPUNIT_ASSERT_EQUAL((int32_t)iface::dom::Node::ELEMENT_NODE, nt);
 
   // Check the document element is in the right namespace...
-  wchar_t* nsURI;
+  wchar_t* nsURI = NULL;
   CPPUNIT_ASSERT_NO_THROW(nsURI = de->namespaceURI());
   CPPUNIT_ASSERT(nsURI);
   CPPUNIT_ASSERT_EQUAL(0, wcscmp(nsURI, L"http://www.physiome.org/testsuite/1"));
@@ -128,7 +128,7 @@ DOMTest::testCreateDocument()
 void
 DOMTest::testCloneNode()
 {
-  iface::dom::Element* de;
+  iface::dom::Element* de = NULL;
   CPPUNIT_ASSERT_NO_THROW(de = doc->documentElement());
   CPPUNIT_ASSERT(de);
 
@@ -137,7 +137,7 @@ DOMTest::testCloneNode()
   CPPUNIT_ASSERT_EQUAL(0, wcscmp(ln, L"tests"));
   free(ln);
 
-  iface::dom::Node* cn;
+  iface::dom::Node* cn = NULL;
   CPPUNIT_ASSERT_NO_THROW(cn = doc->cloneNode(true));
   CPPUNIT_ASSERT(cn);
 
@@ -157,15 +157,14 @@ DOMTest::testCloneNode()
 void
 DOMTest::testImportNode()
 {
-  iface::dom::Document* doc2;
-  iface::dom::DocumentType* dtype;
+  iface::dom::Document* doc2 = NULL;
   CPPUNIT_ASSERT_NO_THROW(doc2 = di->createDocument(L"http://www.physiome.org/testsuite/1",
                                                     L"tests", NULL));
 
   iface::dom::Element* de = doc->documentElement();
   CPPUNIT_ASSERT(de);
 
-  iface::dom::Node* in;
+  iface::dom::Node* in = NULL;
   CPPUNIT_ASSERT_NO_THROW(in = doc2->importNode(de, true));
   iface::dom::Element* de2 = doc2->documentElement();
   de2->appendChild(in)->release_ref();
@@ -194,7 +193,7 @@ DOMTest::testSerialiseAttributes()
   DOMWriter dw;
   std::wstring str;
 
-  iface::dom::Node* dn;
+  iface::dom::Node* dn = NULL;
   iface::dom::Element* de = doc->documentElement();
   CPPUNIT_ASSERT_NO_THROW(dn = de->cloneNode(true));
   de->release_ref();
@@ -239,18 +238,18 @@ DOMTest::testSerialiseChildElements()
   DOMWriter dw;
   std::wstring str;
 
-  iface::dom::Node* dn;
+  iface::dom::Node* dn = NULL;
   iface::dom::Element* de = doc->documentElement();
   CPPUNIT_ASSERT_NO_THROW(dn = de->cloneNode(true));
   de->release_ref();
   QUERY_INTERFACE_REPLACE(de, dn, dom::Element);
 
-  iface::dom::Element* el;
+  iface::dom::Element* el = NULL;
   CPPUNIT_ASSERT_NO_THROW(el = doc->createElementNS
                           (L"http://www.example.org/testsuite/subelns",
                            L"foo:test"));
 
-  iface::dom::Element* el2;
+  iface::dom::Element* el2 = NULL;
   CPPUNIT_ASSERT_NO_THROW(el2 = doc->createElementNS
                           (L"http://www.example.org/testsuite/subelns",
                            L"bar"));
