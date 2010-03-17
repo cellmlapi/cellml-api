@@ -543,7 +543,7 @@ case "$host-$CXX" in
 *msvc*|*wince*)
 	STLLINK=-no-undefined
 	OMNILINK="-lomniORB410_rt -lomnithread32_rt -lws2_32"
-        CYGWIN_WRAPPER="${abssrcdir}/build/cygwin-wrapper"
+        CYGWIN_WRAPPER="\"${abssrcdir}/build/cygwin-wrapper\""
 	;;
 *cygwin*|*mks*|*mingw*)
         case "$build" in
