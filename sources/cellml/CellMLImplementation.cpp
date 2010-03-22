@@ -337,28 +337,37 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 #endif
 
 CDA_URI::CDA_URI(iface::dom::Attr* idata)
-  : _cda_refcount(1), datastore(idata)
+  : _cda_refcount(1), datastore(idata), fake(false)
 {
   datastore->add_ref();
 }
 
+CDA_URI::CDA_URI(wchar_t* ifaketext)
+  : _cda_refcount(1), faketext(ifaketext), fake(true)
+{
+}
+
 CDA_URI::~CDA_URI()
 {
-  datastore->release_ref();
+  if (!fake)
+    datastore->release_ref();
 }
 
 wchar_t*
 CDA_URI::asText()
   throw(std::exception&)
 {
-  return datastore->value();
+  if (!fake)
+    return datastore->value();
+  return faketext;
 }
 
 void
 CDA_URI::asText(const wchar_t* attr)
   throw(std::exception&)
 {
-  datastore->value(attr);
+  if (!fake)
+    datastore->value(attr);
 }
 
 CDA_CellMLElement::CDA_CellMLElement
@@ -1163,6 +1172,33 @@ CDA_Model::imports()
 
 iface::cellml_api::URI*
 CDA_Model::base_uri()
+  throw(std::exception&)
+{
+  // Find the xml:base attribute...
+  try
+  {
+    ObjRef<iface::dom::Attr> attr
+      (already_AddRefd<iface::dom::Attr>
+       (
+        datastore->getAttributeNodeNS(L"http://www.w3.org/XML/1998/namespace",
+                                      L"base")
+       ));
+    if (attr == NULL)
+    {
+      wchar_t* temp = (wchar_t*)malloc(sizeof(wchar_t));
+      wcscpy(temp, L"");
+      return new CDA_URI(temp);
+    }
+    return new CDA_URI(attr);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
+iface::cellml_api::URI*
+CDA_Model::unsafe_base_uri()
   throw(std::exception&)
 {
   // Find the xml:base attribute...
@@ -3459,7 +3495,7 @@ CDA_CellMLImport::instantiate()
       throw iface::cellml_api::CellMLException();
 
     CDA_Model* cm = new CDA_Model(rootModel->mLoader, dd, modelEl);
-    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->base_uri());
+    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->unsafe_base_uri());
     RETURN_INTO_WSTRING(base, bu->asText());
     if (base == L"")
       bu->asText(urlStr.c_str());
