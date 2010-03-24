@@ -10,7 +10,7 @@ module cellml_services
 {
   typedef sequence<double> DoubleSeq;
 
-  enum IntegrationStepType
+  enum ODEIntegrationStepType
   {
     RUNGE_KUTTA_2_3,
     RUNGE_KUTTA_4,
@@ -82,11 +82,6 @@ module cellml_services
   interface CellMLIntegrationRun
     : XPCOM::IObject
   {
-    /**
-     * The algorithm used to advance steps. This may only be set once.
-     */
-    attribute IntegrationStepType stepType;
-
     /**
      * Sets a standard step size control function.
      * @param epsAbs The absolute error control.
@@ -165,6 +160,21 @@ module cellml_services
      */
     void stop();
   };
+
+  interface ODESolverRun
+    : CellMLIntegrationRun
+  {
+    /**
+     * The algorithm used to advance steps. This may only be set once.
+     */
+    attribute ODEIntegrationStepType stepType;
+  };
+#pragma terminal-interface
+
+  interface DAESolverRun
+    : CellMLIntegrationRun
+  {
+  };
 #pragma terminal-interface
 
   interface CellMLCompiledModel
@@ -180,24 +190,49 @@ module cellml_services
      */
     readonly attribute cellml_services::CodeInformation codeInformation;
   };
+
+  interface ODESolverCompiledModel
+    : CellMLCompiledModel
+  {
+  };
+#pragma terminal-interface
+
+  interface DAESolverCompiledModel
+    : CellMLCompiledModel
+  {
+  };
 #pragma terminal-interface
 
   interface CellMLIntegrationService
     : XPCOM::IObject
   {
     /**
-     * Called to compile the model.
+     * Called to compile the model for use with an ODE-style solver.
      * @param aModel The model to compile.
      */
-    CellMLCompiledModel compileModel(in cellml_api::Model aModel)
+    ODESolverCompiledModel compileModelODE(in cellml_api::Model aModel)
       raises(cellml_api::CellMLException);
 
     /**
-     * Creates an integration run object used to run integration.
+     * Called to compile the model for use with a DAE-style solver like IDA.
+     * @param aModel The model to compile.
+     */
+    DAESolverCompiledModel compileModelDAE(in cellml_api::Model aModel)
+      raises(cellml_api::CellMLException);
+
+    /**
+     * Creates an integration run object used to run integration with an ODE solver.
      * @param aModel A compiled model (which must have been created from the same
      *               CellMLIntegrationService object.
      */
-    CellMLIntegrationRun createIntegrationRun(in CellMLCompiledModel aModel);
+    ODESolverRun createODEIntegrationRun(in ODESolverCompiledModel aModel);
+
+    /**
+     * Creates an integration run object used to run integration with a DAE solver.
+     * @param aModel A compiled model (which must have been created from the same
+     *               CellMLIntegrationService object.
+     */
+    DAESolverRun createDAEIntegrationRun(in DAESolverCompiledModel aModel);
 
     /**
      * Returns a description of the last error.

@@ -20,7 +20,8 @@ struct CompiledModelFunctions
 };
 
 class CDA_CellMLCompiledModel
-  : public iface::cellml_services::CellMLCompiledModel
+  : public iface::cellml_services::ODESolverCompiledModel,
+    public iface::cellml_services::DAESolverCompiledModel
 {
 public:
   CDA_CellMLCompiledModel(
@@ -33,7 +34,6 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
-  CDA_IMPL_QI1(cellml_services::CellMLCompiledModel);
 
   iface::cellml_api::Model* model()
     throw(std::exception&)
@@ -58,8 +58,43 @@ public:
   std::string mDirname;
 };
 
+class CDA_ODESolverModel
+  : public CDA_CellMLCompiledModel
+{
+public:
+  CDA_ODESolverModel
+  (
+   void* aModule, CompiledModelFunctions* aCMF,
+   iface::cellml_api::Model* aModel,
+   iface::cellml_services::CodeInformation* aCCI,
+   std::string& aDirname
+  )
+    : CDA_CellMLCompiledModel(aModule, aCMF, aModel, aCCI, aDirname)
+  {}
+
+  CDA_IMPL_QI2(cellml_services::CellMLCompiledModel, cellml_services::ODESolverCompiledModel);
+};
+
+class CDA_DAESolverModel
+  : public CDA_CellMLCompiledModel
+{
+public:
+  CDA_DAESolverModel
+  (
+   void* aModule, CompiledModelFunctions* aCMF,
+   iface::cellml_api::Model* aModel,
+   iface::cellml_services::CodeInformation* aCCI,
+   std::string& aDirname
+  )
+    : CDA_CellMLCompiledModel(aModule, aCMF, aModel, aCCI, aDirname)
+  {}
+
+  CDA_IMPL_QI2(cellml_services::CellMLCompiledModel, cellml_services::DAESolverCompiledModel);
+};
+
 class CDA_CellMLIntegrationRun
-  : public iface::cellml_services::CellMLIntegrationRun,
+  : public iface::cellml_services::ODESolverRun,
+    public iface::cellml_services::DAESolverRun,
     public CDAThread
 {
 public:
@@ -70,12 +105,11 @@ public:
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
-  CDA_IMPL_QI1(cellml_services::CellMLIntegrationRun);
 
-  iface::cellml_services::IntegrationStepType stepType()
+  iface::cellml_services::ODEIntegrationStepType stepType()
     throw (std::exception&);
 
-  void stepType(iface::cellml_services::IntegrationStepType ist)
+  void stepType(iface::cellml_services::ODEIntegrationStepType ist)
     throw (std::exception&);
 
   void setStepSizeControl(double epsAbs, double epsRel, double scalVar,
@@ -111,7 +145,7 @@ private:
                        double* states, uint32_t algSize, double* algebraic);
 
   CDA_CellMLCompiledModel* mModel;
-  iface::cellml_services::IntegrationStepType mStepType;
+  iface::cellml_services::ODEIntegrationStepType mStepType;
   double mEpsAbs, mEpsRel, mScalVar, mScalRate, mStepSizeMax;
   double mStartBvar, mStopBvar, mMaxPointDensity, mTabulationStepSize;
   iface::cellml_services::IntegrationProgressObserver* mObserver;
@@ -120,6 +154,22 @@ private:
   volatile bool mCancelIntegration;
   bool mStrictTabulation;
   std::string mWhyFailure;
+};
+
+class CDA_ODESolverRun
+  : public CDA_CellMLIntegrationRun
+{
+public:
+  CDA_ODESolverRun(iface::cellml_services::ODESolverCompiledModel* m) : CDA_CellMLIntegrationRun(m) {}
+  CDA_IMPL_QI2(cellml_services::CellMLIntegrationRun, cellml_services::ODESolverRun);
+};
+
+class CDA_DAESolverRun
+  : public CDA_CellMLIntegrationRun
+{
+public:
+  CDA_DAESolverRun(iface::cellml_services::DAESolverCompiledModel* m) : CDA_CellMLIntegrationRun(m) {}
+  CDA_IMPL_QI2(cellml_services::CellMLIntegrationRun, cellml_services::DAESolverRun);
 };
 
 class CDA_CellMLIntegrationService
@@ -151,12 +201,18 @@ public:
   CDA_IMPL_QI1(cellml_services::CellMLIntegrationService);
 #endif
 
-  iface::cellml_services::CellMLCompiledModel*
-  compileModel(iface::cellml_api::Model* aModel)
+  iface::cellml_services::ODESolverCompiledModel*
+  compileModelODE(iface::cellml_api::Model* aModel)
+    throw(std::exception&);
+  iface::cellml_services::DAESolverCompiledModel*
+  compileModelDAE(iface::cellml_api::Model* aModel)
     throw(std::exception&);
 
-  iface::cellml_services::CellMLIntegrationRun*
-  createIntegrationRun(iface::cellml_services::CellMLCompiledModel* aModel)
+  iface::cellml_services::ODESolverRun*
+  createODEIntegrationRun(iface::cellml_services::ODESolverCompiledModel* aModel)
+    throw(std::exception&);
+  iface::cellml_services::DAESolverRun*
+  createDAEIntegrationRun(iface::cellml_services::DAESolverCompiledModel* aModel)
     throw(std::exception&);
   
   wchar_t* lastError() throw(std::exception&)

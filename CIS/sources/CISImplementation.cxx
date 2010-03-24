@@ -268,7 +268,7 @@ CDA_CellMLIntegrationRun::~CDA_CellMLIntegrationRun()
     mObserver->release_ref();
 }
 
-iface::cellml_services::IntegrationStepType
+iface::cellml_services::ODEIntegrationStepType
 CDA_CellMLIntegrationRun::stepType
 (
 )
@@ -280,7 +280,7 @@ CDA_CellMLIntegrationRun::stepType
 void
 CDA_CellMLIntegrationRun::stepType
 (
- iface::cellml_services::IntegrationStepType aStepType
+ iface::cellml_services::ODEIntegrationStepType aStepType
 )
   throw(std::exception&)
 {
@@ -446,8 +446,8 @@ CDA_CellMLIntegrationRun::runthread()
   release_ref();
 }
 
-iface::cellml_services::CellMLCompiledModel*
-CDA_CellMLIntegrationService::compileModel
+iface::cellml_services::ODESolverCompiledModel*
+CDA_CellMLIntegrationService::compileModelODE
 (
  iface::cellml_api::Model* aModel
 )
@@ -633,17 +633,38 @@ CDA_CellMLIntegrationService::compileModel
   void* mod = CompileSource(dirname, sourcename, mLastError);
   CompiledModelFunctions* cmf = SetupCompiledModelFunctions(mod);
   
-  return new CDA_CellMLCompiledModel(mod, cmf, aModel, cci, dirname);
+  return new CDA_ODESolverModel(mod, cmf, aModel, cci, dirname);
 }
 
-iface::cellml_services::CellMLIntegrationRun*
-CDA_CellMLIntegrationService::createIntegrationRun
+iface::cellml_services::DAESolverCompiledModel*
+CDA_CellMLIntegrationService::compileModelDAE
 (
- iface::cellml_services::CellMLCompiledModel* aModel
+ iface::cellml_api::Model* aModel
+)
+  throw(std::exception&)
+{
+  // Not yet implemented. XXX TODO
+  return NULL;
+}
+
+iface::cellml_services::ODESolverRun*
+CDA_CellMLIntegrationService::createODEIntegrationRun
+(
+ iface::cellml_services::ODESolverCompiledModel* aModel
 )
   throw (std::exception&)
 {
-  return new CDA_CellMLIntegrationRun(aModel);
+  return new CDA_ODESolverRun(aModel);
+}
+
+iface::cellml_services::DAESolverRun*
+CDA_CellMLIntegrationService::createDAEIntegrationRun
+(
+ iface::cellml_services::DAESolverCompiledModel* aModel
+)
+  throw (std::exception&)
+{
+  return new CDA_DAESolverRun(aModel);
 }
 
 iface::cellml_services::CellMLIntegrationService*

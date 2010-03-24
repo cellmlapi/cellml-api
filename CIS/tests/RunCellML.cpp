@@ -214,7 +214,7 @@ private:
 
 void
 ProcessKeywords(int argc, char** argv,
-                iface::cellml_services::CellMLIntegrationRun* run)
+                iface::cellml_services::ODESolverRun* run)
 {
   // Scoped locale change.
   CNumericLocale locobj;
@@ -230,7 +230,7 @@ ProcessKeywords(int argc, char** argv,
     
     if (!strcasecmp(command, "step_type"))
     {
-      iface::cellml_services::IntegrationStepType ist;
+      iface::cellml_services::ODEIntegrationStepType ist;
       if (!strcasecmp(value, "RK2"))
         ist = iface::cellml_services::RUNGE_KUTTA_2_3;
       else if (!strcasecmp(value, "RK4"))
@@ -453,11 +453,11 @@ main(int argc, char** argv)
   iface::cellml_services::CellMLIntegrationService* cis =
     CreateIntegrationService();
 
-  iface::cellml_services::CellMLCompiledModel* ccm = NULL;
+  iface::cellml_services::ODESolverCompiledModel* ccm = NULL;
   try
   {
     printf("# Compiling model...\n");
-    ccm = cis->compileModel(mod);
+    ccm = cis->compileModelODE(mod);
   }
   catch (iface::cellml_api::CellMLException& ce)
   {
@@ -477,8 +477,8 @@ main(int argc, char** argv)
   mod->release_ref();
 
   printf("# Creating run...\n");
-  iface::cellml_services::CellMLIntegrationRun* cir =
-    cis->createIntegrationRun(ccm);
+  iface::cellml_services::ODESolverRun* cir =
+    cis->createODEIntegrationRun(ccm);
   cis->release_ref();
 
   TestProgressObserver* tpo = new TestProgressObserver(ccm);
