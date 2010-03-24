@@ -211,6 +211,32 @@ CodeGenerationState::IDAStyleCodeGeneration()
   // Now, generate residuals for all state and pseudostate variables...
   std::set<ptr_tag<CDA_ComputationTarget> > aNeeded;
   GenerateResiduals(mCodeInfo->mRatesStr);
+
+  // Generate the code to set-up an array distinguishing state from pseudostate...
+  GenerateStateInformation(mCodeInfo->mStateInformationStr);
+}
+
+void
+CodeGenerationState::GenerateStateInformation(std::wstring& aStr)
+{
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i = mBaseTargets.begin();
+       i != mBaseTargets.end();
+       i++)
+  {
+    for (ptr_tag<CDA_ComputationTarget> ct = *i; ct != NULL; ct = ct->mUpDegree)
+    {
+      wchar_t id[32];
+      swprintf(id, 32, L"%u", ct->mAssignedIndex);
+      if (ct->mEvaluationType == iface::cellml_services::STATE_VARIABLE)
+      {
+        aStr += ReplaceIDs(mConstrainedRateStateInfoPattern, id, L"", L"");
+      }
+      else if (ct->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE)
+      {
+        aStr += ReplaceIDs(mUnconstrainedRateStateInfoPattern, id, L"", L"");
+      }
+    }
+  }
 }
 
 void

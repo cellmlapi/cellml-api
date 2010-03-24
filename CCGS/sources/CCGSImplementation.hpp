@@ -142,6 +142,7 @@ public:
   wchar_t* variablesString() throw();
   wchar_t* functionsString() throw();
   wchar_t* essentialVariablesString() throw();
+  wchar_t* stateInformationString() throw();
   iface::cellml_services::ComputationTargetIterator* iterateTargets()
     throw();
   iface::mathml_dom::MathMLNodeList* flaggedEquations()
@@ -151,7 +152,7 @@ public:
   std::wstring mErrorMessage;
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
   uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount;
-  std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr;
+  std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr, mStateInformationStr;
   std::list<ptr_tag<CDA_ComputationTarget> > mTargets;
   std::vector<iface::dom::Element*> mFlaggedEquations;
 };
@@ -193,6 +194,10 @@ public:
   void conditionalAssignmentPattern(const wchar_t* aPattern) throw();
   wchar_t* residualPattern() throw();
   void residualPattern(const wchar_t* aPattern) throw();
+  wchar_t* constrainedRateStateInfoPattern() throw();
+  void constrainedRateStateInfoPattern(const wchar_t* aPattern) throw();
+  wchar_t* unconstrainedRateStateInfoPattern() throw();
+  void unconstrainedRateStateInfoPattern(const wchar_t* aPattern) throw();
 
   iface::cellml_services::MaLaESTransform* transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
@@ -220,7 +225,8 @@ private:
     mAlgebraicVariableNamePattern,
     mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
     mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
-    mConditionalAssignmentPattern, mResidualPattern;
+    mConditionalAssignmentPattern, mResidualPattern, mConstrainedRateStateInfoPattern,
+    mUnconstrainedRateStateInfoPattern;
   uint32_t mArrayOffset;
   bool mIDAStyle;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;

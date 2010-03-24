@@ -129,6 +129,8 @@ public:
                       std::wstring& aDeclareTemporaryPattern,
                       std::wstring& aConditionalAssignmentPattern,
                       std::wstring& aResidualPattern,
+                      std::wstring& aConstrainedRateStateInfoPattern,
+                      std::wstring& aUnconstrainedRateStateInfoPattern,
                       uint32_t aArrayOffset,
                       iface::cellml_services::MaLaESTransform* aTransform,
                       iface::cellml_services::CeVAS* aCeVAS,
@@ -147,6 +149,8 @@ public:
       mDeclareTemporaryPattern(aDeclareTemporaryPattern),
       mConditionalAssignmentPattern(aConditionalAssignmentPattern),
       mResidualPattern(aResidualPattern),
+      mConstrainedRateStateInfoPattern(aConstrainedRateStateInfoPattern),
+      mUnconstrainedRateStateInfoPattern(aUnconstrainedRateStateInfoPattern),
       mArrayOffset(aArrayOffset),
       mTransform(aTransform),
       mCeVAS(aCeVAS),
@@ -328,7 +332,8 @@ public:
    const wchar_t* aIndex,
    const wchar_t* aCount
   );
-
+  
+  void GenerateStateInformation(std::wstring& aStr);
   void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
   void RestoreSavedRates(std::wstring& aCode);
   void ProcessModellerSuppliedIVHints();
@@ -348,7 +353,8 @@ public:
     & mAlgebraicVariableNamePattern, & mRateNamePattern,
     & mVOIPattern, & mAssignPattern, & mSolvePattern,
     & mSolveNLSystemPattern, & mTemporaryVariablePattern,
-    & mDeclareTemporaryPattern, & mConditionalAssignmentPattern, & mResidualPattern;
+    & mDeclareTemporaryPattern, & mConditionalAssignmentPattern, & mResidualPattern,
+    & mConstrainedRateStateInfoPattern, & mUnconstrainedRateStateInfoPattern;
   uint32_t mArrayOffset;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;

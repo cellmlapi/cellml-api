@@ -408,6 +408,10 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
            "{\n%S}\n", frag);
     free(frag);
 
+    frag = icci->stateInformationString();
+    printf("void SetupStateInfo(double * SI)\n{\n%S}\n", frag);
+    free(frag);
+
     icci->release_ref();
   }
   else

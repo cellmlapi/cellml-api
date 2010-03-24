@@ -199,6 +199,12 @@ CDA_CodeInformation::essentialVariablesString() throw()
   return CDA_wcsdup(mEssentialVarsStr.c_str());
 }
 
+wchar_t*
+CDA_CodeInformation::stateInformationString() throw()
+{
+  return CDA_wcsdup(mStateInformationStr.c_str());
+}
+
 iface::cellml_services::ComputationTargetIterator*
 CDA_CodeInformation::iterateTargets() throw()
 {
@@ -349,6 +355,14 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    mResidualPattern
    (
     L"resid[<RNO>] = <LHS> - <RHS>;\r\n"
+   ),
+   mConstrainedRateStateInfoPattern
+   (
+    L"SI[<ID>] = 1.0;\r\n"
+   ),
+   mUnconstrainedRateStateInfoPattern
+   (
+    L"SI[<ID>] = 0.0;\r\n"
    ),
    mArrayOffset(0),
    mIDAStyle(aIDAStyle)
@@ -519,6 +533,34 @@ CDA_CodeGenerator::residualPattern(const wchar_t* aPattern)
   mResidualPattern = aPattern;
 }
 
+wchar_t*
+CDA_CodeGenerator::constrainedRateStateInfoPattern()
+  throw()
+{
+  return CDA_wcsdup(mConstrainedRateStateInfoPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::constrainedRateStateInfoPattern(const wchar_t* aPattern)
+  throw()
+{
+  mConstrainedRateStateInfoPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::unconstrainedRateStateInfoPattern()
+  throw()
+{
+  return CDA_wcsdup(mUnconstrainedRateStateInfoPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::unconstrainedRateStateInfoPattern(const wchar_t* aPattern)
+  throw()
+{
+  mUnconstrainedRateStateInfoPattern = aPattern;
+}
+
 iface::cellml_services::MaLaESTransform*
 CDA_CodeGenerator::transform() throw()
 {
@@ -603,7 +645,8 @@ CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
                           mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
                           mSolveNLSystemPattern, mTemporaryVariablePattern,
                           mDeclareTemporaryPattern, mConditionalAssignmentPattern,
-                          mResidualPattern, mArrayOffset, mTransform,
+                          mResidualPattern, mConstrainedRateStateInfoPattern,
+                          mUnconstrainedRateStateInfoPattern, mArrayOffset, mTransform,
                           mCeVAS, mCUSES, mAnnoSet, mIDAStyle
                          );
 

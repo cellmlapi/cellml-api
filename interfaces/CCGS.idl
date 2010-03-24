@@ -461,6 +461,11 @@ module cellml_services
     * The essential variables string, as described in the table above.
     */
    readonly attribute wstring essentialVariablesString;
+
+   /**
+    * The string for setting up the state information descriptor.
+    */
+   readonly attribute wstring stateInformationString;
  };
 #pragma terminal-interface
 #pragma cross-module-argument
@@ -482,6 +487,22 @@ module cellml_services
     * Default: resid[<RNO>] = <LHS> - <RHS>;\r\n
     */
    attribute wstring residualPattern;
+
+   /**
+    * The pattern used when generating the 'state' information descriptor, for
+    * state variables where there is a constraint on the rate.
+    * <ID> is replaced by the identifier of the variable.
+    * Default: SI[<ID>] = 1.0;\r\n
+    */
+   attribute wstring constrainedRateStateInfoPattern;
+
+   /**
+    * The pattern used when generating the 'state' information descriptor, for
+    * state variables where there is no constraint on the rate.
+    * <ID> is replaced by the identifier of the variable.
+    * Default: SI[<ID>] = 0.0;\r\n
+    */
+   attribute wstring unconstrainedRateStateInfoPattern;
  };
 #pragma terminal-interface
 #pragma cross-module-argument
