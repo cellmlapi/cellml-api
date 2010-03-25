@@ -297,7 +297,7 @@ CDA_RDFAPIRepresentation::source()
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
   RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, bs->createDataSource());
 
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->safe_base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
   bs->parseIntoDataSource(ds, rdocel, base.c_str());
 
@@ -323,7 +323,7 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 
   // Step two: Convert the data-source into an RDF document...
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->safe_base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
   RETURN_INTO_OBJREF(doc, iface::dom::Document,
                      bs->getDOMForDataSource(aSource, base.c_str()));
@@ -1171,7 +1171,7 @@ CDA_Model::imports()
 }
 
 iface::cellml_api::URI*
-CDA_Model::base_uri()
+CDA_Model::safe_base_uri()
   throw(std::exception&)
 {
   // Find the xml:base attribute...
@@ -1198,7 +1198,7 @@ CDA_Model::base_uri()
 }
 
 iface::cellml_api::URI*
-CDA_Model::unsafe_base_uri()
+CDA_Model::base_uri()
   throw(std::exception&)
 {
   // Find the xml:base attribute...
@@ -3338,7 +3338,7 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
     return;
 
   // See if we can get an xml:base...
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->safe_base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
 
   if (aURL.find(L"://") != std::wstring::npos)
@@ -3495,7 +3495,7 @@ CDA_CellMLImport::instantiate()
       throw iface::cellml_api::CellMLException();
 
     CDA_Model* cm = new CDA_Model(rootModel->mLoader, dd, modelEl);
-    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->unsafe_base_uri());
+    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->base_uri());
     RETURN_INTO_WSTRING(base, bu->asText());
     if (base == L"")
       bu->asText(urlStr.c_str());

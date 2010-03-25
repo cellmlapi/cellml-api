@@ -367,12 +367,18 @@ module cellml_api
     readonly attribute CellMLImportSet imports;
 
     /**
-     * Models should really set an 'xml:base' attribute in the model element as
-     * we need to be able to unambiguously and uniquely reference a model
-     * independent of its location. If this is not set, the base_uri could be
-     * set to the URI used to obtain it.
+     * If this is not set in the model, accessing it will create an empty
+     * xml:base attribute in the model.
      */
     readonly attribute URI base_uri;
+
+    /**
+     * If this is not set in the Model, accessing it will not create an empty
+     * xml:base attribute in the model; furthermore, in that case the URI
+     * returned cannot be set to another value, and the asText method will
+     * always return an empty string.
+     */
+    readonly attribute URI safe_base_uri;
 
     /**
      * The collection of units defined within this model.

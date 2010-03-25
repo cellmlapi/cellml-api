@@ -261,7 +261,7 @@ public:
     throw(std::exception&);
   iface::cellml_api::GroupSet* groups() throw(std::exception&);
   iface::cellml_api::CellMLImportSet* imports() throw(std::exception&);
-  iface::cellml_api::URI* unsafe_base_uri() throw(std::exception&);
+  iface::cellml_api::URI* safe_base_uri() throw(std::exception&);
   iface::cellml_api::URI* base_uri() throw(std::exception&);
   iface::cellml_api::UnitsSet* localUnits() throw(std::exception&);
   iface::cellml_api::UnitsSet* modelUnits() throw(std::exception&);
