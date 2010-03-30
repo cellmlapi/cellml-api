@@ -297,7 +297,7 @@ CDA_RDFAPIRepresentation::source()
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
   RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, bs->createDataSource());
 
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->safe_base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
   bs->parseIntoDataSource(ds, rdocel, base.c_str());
 
@@ -323,7 +323,7 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 
   // Step two: Convert the data-source into an RDF document...
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->safe_base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
   RETURN_INTO_OBJREF(doc, iface::dom::Document,
                      bs->getDOMForDataSource(aSource, base.c_str()));
@@ -337,28 +337,37 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 #endif
 
 CDA_URI::CDA_URI(iface::dom::Attr* idata)
-  : _cda_refcount(1), datastore(idata)
+  : _cda_refcount(1), datastore(idata), fake(false)
 {
   datastore->add_ref();
 }
 
+CDA_URI::CDA_URI(wchar_t* ifaketext)
+  : _cda_refcount(1), faketext(ifaketext), fake(true)
+{
+}
+
 CDA_URI::~CDA_URI()
 {
-  datastore->release_ref();
+  if (!fake)
+    datastore->release_ref();
 }
 
 wchar_t*
 CDA_URI::asText()
   throw(std::exception&)
 {
-  return datastore->value();
+  if (!fake)
+    return datastore->value();
+  return faketext;
 }
 
 void
 CDA_URI::asText(const wchar_t* attr)
   throw(std::exception&)
 {
-  datastore->value(attr);
+  if (!fake)
+    datastore->value(attr);
 }
 
 CDA_CellMLElement::CDA_CellMLElement
@@ -1159,6 +1168,33 @@ CDA_Model::imports()
 
   mImportSet = new CDA_CellMLImportSet(this, allChildren);
   return mImportSet;
+}
+
+iface::cellml_api::URI*
+CDA_Model::safe_base_uri()
+  throw(std::exception&)
+{
+  // Find the xml:base attribute...
+  try
+  {
+    ObjRef<iface::dom::Attr> attr
+      (already_AddRefd<iface::dom::Attr>
+       (
+        datastore->getAttributeNodeNS(L"http://www.w3.org/XML/1998/namespace",
+                                      L"base")
+       ));
+    if (attr == NULL)
+    {
+      wchar_t* temp = (wchar_t*)malloc(sizeof(wchar_t));
+      wcscpy(temp, L"");
+      return new CDA_URI(temp);
+    }
+    return new CDA_URI(attr);
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
 }
 
 iface::cellml_api::URI*
@@ -3302,7 +3338,7 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
     return;
 
   // See if we can get an xml:base...
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->safe_base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
 
   if (aURL.find(L"://") != std::wstring::npos)

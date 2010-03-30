@@ -104,6 +104,7 @@ class CDA_URI
 {
 public:
   CDA_URI(iface::dom::Attr* idata);
+  CDA_URI(wchar_t* ifaketext);
   virtual ~CDA_URI();
 
   CDA_IMPL_REFCOUNT
@@ -114,6 +115,8 @@ public:
   void asText(const wchar_t* attr) throw(std::exception&);
 private:
   iface::dom::Attr* datastore;
+  wchar_t* faketext;
+  bool fake;
 };
 
 class CDA_CellMLElementSet;
@@ -258,6 +261,7 @@ public:
     throw(std::exception&);
   iface::cellml_api::GroupSet* groups() throw(std::exception&);
   iface::cellml_api::CellMLImportSet* imports() throw(std::exception&);
+  iface::cellml_api::URI* safe_base_uri() throw(std::exception&);
   iface::cellml_api::URI* base_uri() throw(std::exception&);
   iface::cellml_api::UnitsSet* localUnits() throw(std::exception&);
   iface::cellml_api::UnitsSet* modelUnits() throw(std::exception&);
