@@ -12,6 +12,8 @@
 #define swprintf _snwprintf
 #endif
 
+#define RDF_NS L"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+
 CDA_DataSource::CDA_DataSource()
   : _cda_refcount(1), mTripleSet(new CDA_AllTriplesSet(this))
 {
@@ -372,6 +374,440 @@ CDA_Resource::getTriplesWhereSubject()
   return new CDA_FilteringTripleSet(mDataSource->mTripleSet, this, NULL, NULL);
 }
 
+iface::rdf_api::Container*
+CDA_Resource::correspondingContainer()
+  throw(std::exception&)
+{
+  return new CDA_Container(mDataSource, this);
+}
+
+iface::rdf_api::Container*
+CDA_Resource::findOrMakeContainer
+(
+ iface::rdf_api::Resource* aPredicate,
+ iface::rdf_api::Resource* aContainerType
+)
+  throw(std::exception&)
+{
+  ObjRef<iface::rdf_api::Container> result;
+
+  RETURN_INTO_OBJREF(type, iface::rdf_api::URIReference,
+                     mDataSource->getURIReference(RDF_NS L"type"));
+
+  // Find all triples with predicate...
+  RETURN_INTO_OBJREF(ts, iface::rdf_api::TripleSet,
+                     getTriplesOutOfByPredicate(aPredicate));
+  RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator,
+                     ts->enumerateTriples());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+    if (t == NULL)
+      break;
+
+    RETURN_INTO_OBJREF(n, iface::rdf_api::Node, t->object());
+    DECLARE_QUERY_INTERFACE_OBJREF(r, n, rdf_api::Resource);
+    if (r == NULL)
+      continue;
+
+    if (!r->hasTripleOutOf(type, aContainerType))
+      continue;
+
+    if (result == NULL)
+      result = already_AddRefd<iface::rdf_api::Container>
+        (r->correspondingContainer());
+    else
+    {
+      RETURN_INTO_OBJREF(c, iface::rdf_api::Container, r->correspondingContainer());
+      result = already_AddRefd<iface::rdf_api::Container>(result->mergeWith(c));
+    }
+  }
+
+  if (result != NULL)
+  {
+    result->add_ref();
+    return result;
+  }
+  
+  // So no matching containter exists. Make one...
+  RETURN_INTO_OBJREF(r, iface::rdf_api::BlankNode, mDataSource->createBlankNode());
+  createTripleOutOf(aPredicate, r);
+  r->createTripleOutOf(type, aContainerType);
+  return r->correspondingContainer();
+}
+
+#define MAX_SEQUENTIAL_SEARCH 5
+
+iface::rdf_api::Node*
+CDA_NodeIteratorContainer::getNextNode()
+  throw(std::exception&)
+{
+  uint32_t i;
+  for (i = 0; i < MAX_SEQUENTIAL_SEARCH; i++)
+  {
+    const int sz = sizeof(RDF_NS) + 20;
+    wchar_t buf[sz];
+    swprintf(buf, sz, L"%S_%u", RDF_NS, mNextIndex + i);
+    RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
+                       mDataSource->getURIReference(buf));
+    try
+    {
+      RETURN_INTO_OBJREF(t, iface::rdf_api::Triple,
+                         mResource->getTripleOutOfByPredicate(indexp));
+      mNextIndex += i + 1;
+      return t->object();
+    }
+    catch (iface::rdf_api::RDFProcessingError)
+    {
+    }
+  }
+
+  mNextIndex += MAX_SEQUENTIAL_SEARCH;
+  // We failed to find anything close enough; this could be the end, or maybe
+  // there is just a big gap. Check all triples and find the next if any...
+  RETURN_INTO_OBJREF(ts, iface::rdf_api::TripleSet,
+                     mResource->getTriplesWhereSubject());
+  RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator,
+                     ts->enumerateTriples());
+  ObjRef<iface::rdf_api::Node> closestNode;
+  uint32_t smallestIndex = 0 /* Avoid spurious compiler warning. */;
+  while (true)
+  {
+    RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+    if (t == NULL)
+      break;
+
+    RETURN_INTO_OBJREF(p, iface::rdf_api::Resource, t->predicate());
+    DECLARE_QUERY_INTERFACE_OBJREF(u, p, rdf_api::URIReference);
+    if (u == NULL)
+      continue;
+
+    RETURN_INTO_WSTRING(uri, u->URI());
+    uint32_t n;
+    if (swscanf(uri.c_str(), RDF_NS L"_%u", &n) != 1)
+      continue;
+
+    if (n < mNextIndex)
+      continue;
+    if (closestNode == NULL || smallestIndex > n)
+    {
+      smallestIndex = n;
+      closestNode = already_AddRefd<iface::rdf_api::Node>(t->object());
+    }
+  }
+
+  if (closestNode != NULL)
+  {
+    closestNode->add_ref();
+    mNextIndex = smallestIndex + 1;
+  }
+  return closestNode;
+}
+
+iface::rdf_api::Resource*
+CDA_Container::correspondingResource()
+  throw(std::exception&)
+{
+  mCorrespondingResource->add_ref();
+  return mCorrespondingResource;
+}
+
+iface::rdf_api::Resource*
+CDA_Container::containerType()
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(type, iface::rdf_api::URIReference,
+                     mDataSource->getURIReference(RDF_NS L"type"));
+  try
+  {
+    RETURN_INTO_OBJREF(t, iface::rdf_api::Triple,
+                       mCorrespondingResource->getTripleOutOfByPredicate(type));
+    RETURN_INTO_OBJREF(n, iface::rdf_api::Node, t->object());
+    DECLARE_QUERY_INTERFACE_OBJREF(r, n, rdf_api::Resource);
+    r->add_ref();
+    return r;
+  }
+  catch (iface::rdf_api::RDFProcessingError)
+  {
+    return NULL;
+  }
+}
+
+void
+CDA_Container::containerType(iface::rdf_api::Resource* aType)
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(type, iface::rdf_api::URIReference,
+                     mDataSource->getURIReference(RDF_NS L"type"));
+  RETURN_INTO_OBJREF(ts, iface::rdf_api::TripleSet,
+                     mCorrespondingResource->getTriplesOutOfByPredicate(type));
+  RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator,
+                     ts->enumerateTriples());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+    if (t == NULL)
+      break;
+
+    t->unassert();
+  }
+
+  mCorrespondingResource->createTripleOutOf(type, aType);
+}
+
+iface::rdf_api::NodeIterator*
+CDA_Container::iterateChildren()
+  throw(std::exception&)
+{
+  return new CDA_NodeIteratorContainer(mDataSource, mCorrespondingResource);
+}
+
+void
+CDA_Container::appendChild(iface::rdf_api::Node* aChild)
+  throw(std::exception&)
+{
+  for (uint32_t i = 1;; i++)
+  {
+    const int sz = sizeof(RDF_NS) + 20;
+    wchar_t buf[sz];
+    swprintf(buf, sz, L"%S_%u", RDF_NS, i);
+    RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
+                       mDataSource->getURIReference(buf));
+    try
+    {
+      RETURN_INTO_OBJREF(t, iface::rdf_api::Triple,
+                         mCorrespondingResource->getTripleOutOfByPredicate(indexp));
+      continue;
+    }
+    catch (iface::rdf_api::RDFProcessingError)
+    {
+    }
+
+    mCorrespondingResource->createTripleOutOf(indexp, aChild);
+    return;
+  }
+}
+
+void
+CDA_Container::removeChild(iface::rdf_api::Node* aChild, bool aDoRenumbering)
+  throw(std::exception&)
+{
+  bool anotherRunNeeded;
+
+  RETURN_INTO_OBJREF(ts, iface::rdf_api::TripleSet,
+                     mCorrespondingResource->getTriplesWhereSubject());
+
+  do
+  {
+    RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator,
+                       ts->enumerateTriples());
+
+    anotherRunNeeded = false;
+
+    while (true)
+    {
+      RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+      if (t == NULL)
+        break;
+
+      RETURN_INTO_OBJREF(o, iface::rdf_api::Node, t->object());
+      if (CDA_objcmp(o, aChild))
+        continue;
+
+      RETURN_INTO_OBJREF(p, iface::rdf_api::Resource, t->predicate());
+      DECLARE_QUERY_INTERFACE_OBJREF(u, p, rdf_api::URIReference);
+      if (u == NULL)
+        continue;
+
+      RETURN_INTO_WSTRING(uri, u->URI());
+      uint32_t n;
+      if (swscanf(uri.c_str(), RDF_NS L"_%u", &n) != 1)
+        continue;
+
+      t->unassert();
+
+      // If we get here, we have removed an entry at n.
+      anotherRunNeeded = true;
+      if (!aDoRenumbering)
+        break;
+
+      te = already_AddRefd<iface::rdf_api::TripleEnumerator>
+        (ts->enumerateTriples());
+      std::list<ObjRef<iface::rdf_api::Triple> > toremove;
+      std::list<std::pair<ObjRef<iface::rdf_api::URIReference>, ObjRef<iface::rdf_api::Node> > > toadd;
+      while (true)
+      {
+        RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+        if (t == NULL)
+          break;
+        RETURN_INTO_OBJREF(p, iface::rdf_api::Resource, t->predicate());
+        DECLARE_QUERY_INTERFACE_OBJREF(u, p, rdf_api::URIReference);
+        if (u == NULL)
+          continue;
+
+        RETURN_INTO_WSTRING(uri, u->URI());
+        uint32_t n2;
+        if (swscanf(uri.c_str(), RDF_NS L"_%u", &n2) != 1)
+          continue;
+        if (n2 <= n)
+          continue;
+        const int sz = sizeof(RDF_NS) + 20;
+        wchar_t buf[sz];
+        swprintf(buf, sz, L"%S_%u", RDF_NS, n2 - 1);
+        RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
+                           mDataSource->getURIReference(buf));
+
+        RETURN_INTO_OBJREF(o, iface::rdf_api::Node, t->object());
+        toremove.push_back(t);
+        toadd.push_back(std::pair<ObjRef<iface::rdf_api::URIReference>, ObjRef<iface::rdf_api::Node> >
+                        (indexp, o));
+      }
+      for (std::list<ObjRef<iface::rdf_api::Triple> >::iterator i =
+             toremove.begin();
+           i != toremove.end();
+           i++)
+        (*i)->unassert();
+      for (std::list<std::pair<ObjRef<iface::rdf_api::URIReference>, ObjRef<iface::rdf_api::Node> > >::iterator i =
+             toadd.begin();
+           i != toadd.end();
+           i++)
+        mCorrespondingResource->createTripleOutOf((*i).first, (*i).second);
+
+      break;
+    }
+  }
+  while (anotherRunNeeded);
+}
+
+void
+CDA_Container::renumberContainer()
+  throw(std::exception&)
+{
+  std::map<uint32_t, ObjRef<iface::rdf_api::Node> > contents;
+  RETURN_INTO_OBJREF(ts, iface::rdf_api::TripleSet,
+                     mCorrespondingResource->getTriplesWhereSubject());
+  RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator,
+                     ts->enumerateTriples());
+
+  while (true)
+  {
+    RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+    if (t == NULL)
+      break;
+
+    RETURN_INTO_OBJREF(p, iface::rdf_api::Resource, t->predicate());
+    DECLARE_QUERY_INTERFACE_OBJREF(u, p, rdf_api::URIReference);
+    if (u == NULL)
+      continue;
+    
+    RETURN_INTO_WSTRING(uri, u->URI());
+    uint32_t n;
+    if (swscanf(uri.c_str(), RDF_NS L"_%u", &n) != 1)
+      continue;
+
+    RETURN_INTO_OBJREF(o, iface::rdf_api::Node, t->object());
+    t->unassert();
+    contents.insert(std::pair<uint32_t, ObjRef<iface::rdf_api::Node> >(n, o));
+  }
+  
+  uint32_t n = 1;
+  for (std::map<uint32_t, ObjRef<iface::rdf_api::Node> >::iterator i = contents.begin();
+       i != contents.end(); i++, n++)
+  {
+    const int sz = sizeof(RDF_NS) + 20;
+    wchar_t buf[sz];
+    swprintf(buf, sz, L"%S_%u", RDF_NS, n);
+    RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
+                       mDataSource->getURIReference(buf));
+    mCorrespondingResource->createTripleOutOf(indexp, (*i).second);
+  }
+}
+
+iface::rdf_api::Container*
+CDA_Container::mergeWith(iface::rdf_api::Container* aContainer)
+  throw(std::exception&)
+{
+  return new CDA_MergedContainer(this, aContainer);
+}
+
+
+iface::rdf_api::Node*
+CDA_NodeIteratorMergedContainer::getNextNode()
+  throw(std::exception&)
+{
+  if (mIterator1Done)
+    return mIterator2->getNextNode();
+  iface::rdf_api::Node* n = mIterator1->getNextNode();
+  if (n == NULL)
+  {
+    mIterator1Done = true;
+    n = mIterator2->getNextNode();
+  }
+
+  return n;
+}
+
+iface::rdf_api::Resource*
+CDA_MergedContainer::correspondingResource()
+  throw(std::exception&)
+{
+  return mContainer1->correspondingResource();
+}
+
+iface::rdf_api::Resource*
+CDA_MergedContainer::containerType()
+  throw(std::exception&)
+{
+  return mContainer1->containerType();
+}
+
+void
+CDA_MergedContainer::containerType(iface::rdf_api::Resource* aType)
+  throw(std::exception&)
+{
+  mContainer1->containerType(aType);
+}
+
+iface::rdf_api::NodeIterator*
+CDA_MergedContainer::iterateChildren()
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(it1, iface::rdf_api::NodeIterator, mContainer1->iterateChildren());
+  RETURN_INTO_OBJREF(it2, iface::rdf_api::NodeIterator,
+                     mContainer2->iterateChildren());
+  return new CDA_NodeIteratorMergedContainer(it1, it2);
+}
+
+void
+CDA_MergedContainer::appendChild(iface::rdf_api::Node* aChild)
+  throw(std::exception&)
+{
+  mContainer1->appendChild(aChild);
+}
+
+void
+CDA_MergedContainer::removeChild(iface::rdf_api::Node* aChild, bool aDoRenumbering)
+  throw(std::exception&)
+{
+  mContainer1->removeChild(aChild, aDoRenumbering);
+  mContainer2->removeChild(aChild, aDoRenumbering);
+}
+
+void
+CDA_MergedContainer::renumberContainer()
+  throw(std::exception&)
+{
+  mContainer1->renumberContainer();
+  mContainer2->renumberContainer();
+}
+
+iface::rdf_api::Container*
+CDA_MergedContainer::mergeWith(iface::rdf_api::Container* aContainer)
+  throw(std::exception&)
+{
+  return new CDA_MergedContainer(this, aContainer);
+}
+
 CDA_BlankNode::CDA_BlankNode(CDA_DataSource* aDataSource)
   : CDA_Resource(aDataSource)
 {
@@ -700,7 +1136,6 @@ CDA_RDFBootstrap::createDataSource()
   return new CDA_DataSource();
 }
 
-#define RDF_NS L"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 /* We should really support xml:lang properly. But for now it is hardcoded. */
 #define LANGUAGE L"en"
 

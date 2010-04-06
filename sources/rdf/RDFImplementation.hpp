@@ -108,6 +108,129 @@ public:
     throw(std::exception&);
   iface::rdf_api::TripleSet* getTriplesWhereSubject()
     throw(std::exception&);
+  iface::rdf_api::Container* correspondingContainer()
+    throw(std::exception&);
+  iface::rdf_api::Container* findOrMakeContainer(iface::rdf_api::Resource* aPredicate,
+                                                 iface::rdf_api::Resource* aContainerType)
+    throw(std::exception&);
+};
+
+class CDA_NodeIteratorContainer
+  : public iface::rdf_api::NodeIterator
+{
+public:
+  CDA_NodeIteratorContainer(CDA_DataSource* aDataSource,
+                            CDA_Resource* aResource)
+    : _cda_refcount(1), mNextIndex(1), mDataSource(aDataSource), mResource(aResource)
+  {
+  }
+
+  ~CDA_NodeIteratorContainer() {}
+
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+  CDA_IMPL_QI1(rdf_api::NodeIterator);
+
+  iface::rdf_api::Node* getNextNode()
+    throw(std::exception&);
+
+private:
+  uint32_t mNextIndex;
+  ObjRef<CDA_DataSource> mDataSource;
+  ObjRef<CDA_Resource> mResource;
+};
+
+class CDA_Container
+  : public iface::rdf_api::Container
+{
+public:
+  CDA_Container(CDA_DataSource* aDataSource,
+                CDA_Resource* aCorrespondingResource)
+    : _cda_refcount(1),
+      mDataSource(aDataSource), mCorrespondingResource(aCorrespondingResource)
+  {}
+  ~CDA_Container() {};
+
+  CDA_IMPL_QI1(rdf_api::Container);
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+
+  iface::rdf_api::Resource* correspondingResource()
+    throw(std::exception&);
+  iface::rdf_api::Resource* containerType()
+    throw(std::exception&);
+  void containerType(iface::rdf_api::Resource* aType)
+    throw(std::exception&);
+  iface::rdf_api::NodeIterator* iterateChildren()
+    throw(std::exception&);
+  void appendChild(iface::rdf_api::Node* aChild)
+    throw(std::exception&);
+  void removeChild(iface::rdf_api::Node*, bool aDoRenumbering)
+    throw(std::exception&);
+  void renumberContainer()
+    throw(std::exception&);
+  iface::rdf_api::Container* mergeWith(iface::rdf_api::Container* aContainer)
+    throw(std::exception&);
+
+private:
+  ObjRef<CDA_DataSource> mDataSource;
+  ObjRef<CDA_Resource> mCorrespondingResource;
+};
+
+class CDA_NodeIteratorMergedContainer
+  : public iface::rdf_api::NodeIterator
+{
+public:
+  CDA_NodeIteratorMergedContainer(iface::rdf_api::NodeIterator * it1,
+                                  iface::rdf_api::NodeIterator * it2)
+    : _cda_refcount(1), mIterator1(it1), mIterator2(it2), mIterator1Done(false)
+  {
+  }
+
+  ~CDA_NodeIteratorMergedContainer() {}
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+  CDA_IMPL_QI1(rdf_api::NodeIterator);
+
+  iface::rdf_api::Node* getNextNode() throw(std::exception&);
+
+private:
+  ObjRef<iface::rdf_api::NodeIterator> mIterator1, mIterator2;
+  bool mIterator1Done;
+};
+
+class CDA_MergedContainer
+  : public iface::rdf_api::Container
+{
+public:
+  CDA_MergedContainer(iface::rdf_api::Container* aC1,
+                      iface::rdf_api::Container* aC2)
+    : _cda_refcount(1), mContainer1(aC1), mContainer2(aC2) {}
+  ~CDA_MergedContainer() {};
+
+  CDA_IMPL_QI1(rdf_api::Container);
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+
+  iface::rdf_api::Resource* correspondingResource()
+    throw(std::exception&);
+  iface::rdf_api::Resource* containerType()
+    throw(std::exception&);
+  void containerType(iface::rdf_api::Resource* aType)
+    throw(std::exception&);
+  iface::rdf_api::NodeIterator* iterateChildren()
+    throw(std::exception&);
+  void appendChild(iface::rdf_api::Node* aChild)
+    throw(std::exception&);
+  void removeChild(iface::rdf_api::Node*, bool aDoRenumbering)
+    throw(std::exception&);
+  void renumberContainer()
+    throw(std::exception&);
+  iface::rdf_api::Container* mergeWith(iface::rdf_api::Container* aContainer)
+    throw(std::exception&);
+
+private:
+  ObjRef<iface::rdf_api::Container> mContainer1, mContainer2;
 };
 
 class CDA_BlankNode

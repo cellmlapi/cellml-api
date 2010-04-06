@@ -18,6 +18,7 @@ module rdf_api
   interface BlankNode;
   interface PlainLiteral;
   interface TypedLiteral;
+  interface Container;
 
   exception RDFProcessingError
   {
@@ -157,6 +158,93 @@ module rdf_api
      * @return The set of all triples meeting the constraints.
      */
     TripleSet getTriplesWhereSubject();
+
+    /**
+     * Retrieves a 'Container' interface around this Resource.
+     */
+    readonly attribute Container correspondingContainer;
+
+    /**
+     * Finds or makes a particular container out of 'this', with the
+     * specified predicate, and the specified type. If there are multiple
+     * existing containers, the returned container is a merged view of all
+     * containers. The underlying RDF is only changed if the container doesn't
+     * already exist, in which case:
+     *  A new triple (subject=this) (predicate=aPredicate) (object=new blank node 'A')
+     *   is made.
+     *  A new triple (subject=the new blank node 'A') (predicate=RDF type) (object=aContainerType)
+     *   is made.
+     *  The returned Container is the correspondingContainer around the new blank node 'A'.
+     */
+    Container findOrMakeContainer(in Resource aPredicate,
+                                  in Resource aContainerType);
+  };
+
+  /**
+   * An interface for iterating nodes.
+   */
+  interface NodeIterator
+    : XPCOM::IObject
+  {
+    /**
+     * Retrieves the next RDF Node.
+     */
+    Node getNextNode();
+  };
+
+  /**
+   * An RDF container.
+   */
+  interface Container
+    : XPCOM::IObject
+  {
+    /**
+     * Retrieves the resource this container is built on.
+     */
+    readonly attribute Resource correspondingResource;
+
+    /**
+     * Finds the type of container (or one of the types, if there are multiple
+     * types).
+     */
+    attribute Resource containerType;
+
+    /**
+     * Iterates through all children in this container.
+     */
+    NodeIterator iterateChildren();
+
+    /**
+     * Appends a child to this container. The child will have the first free
+     * index, even if there is a higher index already in use.
+     */
+    void appendChild(in Node aChild);
+
+    /**
+     * Removes a child. If aDoRenumbering is true, will also reduce the value of
+     * any existing indices above the one of the child being removed by one.
+     * Otherwise, leaves a gap in the numbering.
+     */
+    void removeChild(in Node aChild, in boolean aDoRenumbering);
+
+    /**
+     * Renumbers all indices in the container to be consecutive starting from 1.
+     */
+    void renumberContainer();
+
+    /**
+     * Creates a merged container. This does not change the RDF, but merely
+     * creates a merged view.
+     * Merged containers return the same correspondingResource and type as
+     * this (not aContainer). Iterating children will iterate
+     * the children of this, and then the children of aContainer (with
+     * repetition possible). appendChild will have the same effect as performing
+     * appendChild on this. removeChild will have the same effect as performing
+     * removeChild on this and aContainer. renumberContainer will have the same
+     * effect as performing the renumber on each container separately. Merged
+     * containers can in turn be further merged.
+     */
+    Container mergeWith(in Container aContainer);
   };
 
   /**

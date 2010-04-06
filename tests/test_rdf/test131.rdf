@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <Bag rdf:about="http://example.org/thing">
+      <li>Hello</li>
+      <li>World</li>
+      <li>I</li>
+      <li>Hope</li>
+      <li>This</li>
+      <li>Works!</li>
+  </Bag>
+  <Alt rdf:about="http://example.org/thing2">
+      <li>Testing</li>
+      <li>Things:</li>
+      <li>It's</li>
+      <li>Good</li>
+      <li>When It</li>
+      <li>Succeeds!</li>
+  </Alt>
+  <rdf:Description rdf:about="http://example.org/myitem">
+    <thing xmlns="http://example.org/">
+      <rdf:Description rdf:about="http://example.org/thing" />
+    </thing>
+  </rdf:Description>
+</RDF>

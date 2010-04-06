@@ -1,5 +1,4 @@
 #include "RDFTest.hpp"
-#include "IfaceRDF_APISPEC.hxx"
 #include "DOMBootstrap.hxx"
 #include "RDFBootstrap.hpp"
 #include "Utilities.hxx"
@@ -921,4 +920,341 @@ RDFTest::testW3CSuite()
 
     ntf.compareTriples(ds2);
   }
+}
+
+void
+RDFTest::assertContainerContents
+(
+ iface::rdf_api::Container* aCT,
+ const wchar_t** aExpect
+)
+{
+
+  RETURN_INTO_OBJREF(ni, iface::rdf_api::NodeIterator, aCT->iterateChildren());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(n, iface::rdf_api::Node, ni->getNextNode());
+    if (*aExpect == NULL)
+    {
+      CPPUNIT_ASSERT(n == NULL);
+      return;
+    }
+    else
+    {
+      CPPUNIT_ASSERT(n);
+    }
+
+    DECLARE_QUERY_INTERFACE_OBJREF(pl, n, rdf_api::PlainLiteral);
+    CPPUNIT_ASSERT(pl);
+    RETURN_INTO_WSTRING(lf, pl->lexicalForm());
+    // printf("lf: %S, expect: %S\n", lf.c_str(), *aExpect);
+    CPPUNIT_ASSERT(lf == *aExpect);
+    aExpect++;
+  }
+}
+
+void
+RDFTest::testContainerLibrary()
+{
+  RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
+  RETURN_INTO_OBJREF(cdibs, CellML_DOMImplementationBase, CreateDOMImplementation());
+
+  std::wstring url(BASE_URI);
+  url += L"test131.rdf";
+
+  std::wstring msg;
+  
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, cdibs->loadDocument
+                     (url.c_str(), msg));
+  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
+  RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, bs->createDataSource());
+  
+  const wchar_t* uriStr = url.c_str();
+  bs->parseIntoDataSource(ds, de, uriStr);
+  
+//    /**
+//     * Retrieves a 'Container' interface around this Resource.
+//     */
+//    readonly attribute Container correspondingContainer;
+  RETURN_INTO_OBJREF(ur, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://example.org/thing"));
+  RETURN_INTO_OBJREF(cc, iface::rdf_api::Container, ur->correspondingContainer());
+  CPPUNIT_ASSERT(cc);
+
+//    /**
+//     * Retrieves the resource this container is built on.
+//     */
+//    readonly attribute Resource correspondingResource;
+  RETURN_INTO_OBJREF(cr, iface::rdf_api::Resource, cc->correspondingResource());
+  CPPUNIT_ASSERT(!CDA_objcmp(cr, ur));
+
+//    /**
+//     * Finds the type of container (or one of the types, if there are multiple
+//     * types).
+//     */
+//    attribute Resource containerType;
+  RETURN_INTO_OBJREF(ct, iface::rdf_api::Resource, cc->containerType());
+  CPPUNIT_ASSERT(ct);
+  RETURN_INTO_OBJREF(bag, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag"));
+  RETURN_INTO_OBJREF(seq, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"));  
+  CPPUNIT_ASSERT(!CDA_objcmp(ct, bag));
+  cc->containerType(seq);
+  ct = already_AddRefd<iface::rdf_api::Resource>(cc->containerType());
+  CPPUNIT_ASSERT(ct);
+  CPPUNIT_ASSERT(!CDA_objcmp(ct, seq));
+
+//
+//    /**
+//     * Iterates through all children in this container.
+//     */
+//    NodeIterator iterateChildren();
+  // printf("Initial container iteration.\n");
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!", NULL
+      };
+    assertContainerContents(cc, expect);
+  }
+
+//
+//    /**
+//     * Appends a child to this container. The child will have the first free
+//     * index, even if there is a higher index already in use.
+//     */
+//    void appendChild(in Node aChild);
+
+  RETURN_INTO_OBJREF(word1, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"We", L"en"));
+  cc->appendChild(word1);
+  RETURN_INTO_OBJREF(word2, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"think", L"en"));
+  cc->appendChild(word2);
+  RETURN_INTO_OBJREF(word3, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"it", L"en"));
+  cc->appendChild(word3);
+  RETURN_INTO_OBJREF(word4, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"most", L"en"));
+  cc->appendChild(word4);
+  RETURN_INTO_OBJREF(word5, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"certainly", L"en"));
+  cc->appendChild(word5);
+  RETURN_INTO_OBJREF(word6, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"seems", L"en"));
+  cc->appendChild(word6);
+  RETURN_INTO_OBJREF(word7, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"to", L"en"));
+  cc->appendChild(word7);
+  RETURN_INTO_OBJREF(word8, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"work", L"en"));
+  cc->appendChild(word8);
+  RETURN_INTO_OBJREF(word9, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"!", L"en"));
+  cc->appendChild(word9);
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!", L"We", L"think", L"it", L"most", L"certainly",
+        L"seems", L"to", L"work", L"!", NULL
+      };
+    assertContainerContents(cc, expect);
+  }
+
+//
+//    /**
+//     * Removes a child. If aDoRenumbering is true, will also reduce the value of
+//     * any existing indices above the one of the child being removed by one.
+//     * Otherwise, leaves a gap in the numbering.
+//     */
+//    void removeChild(in Node aChild, in boolean aDoRenumbering);
+  cc->removeChild(word1, false);
+  cc->removeChild(word2, false);
+  cc->removeChild(word3, false);
+  cc->removeChild(word4, false);
+  cc->removeChild(word5, false);
+  // printf("Did removeChild(,false) calls\n");
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"seems", L"to", L"work", L"!", NULL
+      };
+    assertContainerContents(cc, expect);
+  }
+  // Also check it wasn't renumbered.
+  RETURN_INTO_OBJREF(twelth, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#_12"));  
+  RETURN_INTO_OBJREF(t12, iface::rdf_api::Triple, cr->getTripleOutOfByPredicate(twelth));
+  CPPUNIT_ASSERT(t12);
+  RETURN_INTO_OBJREF(t12o, iface::rdf_api::Node, t12->object());
+  CPPUNIT_ASSERT(!CDA_objcmp(t12o, word6));
+
+  cc->removeChild(word6, true);
+  // printf("Did removeChild(,true) call\n");
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"to", L"work", L"!", NULL
+      };
+    assertContainerContents(cc, expect);
+  }
+  t12 = already_AddRefd<iface::rdf_api::Triple>(cr->getTripleOutOfByPredicate(twelth));
+  CPPUNIT_ASSERT(t12);
+  t12o = already_AddRefd<iface::rdf_api::Node>(t12->object());
+  CPPUNIT_ASSERT(!CDA_objcmp(t12o, word7));
+
+//
+//    /**
+//     * Renumbers all indices in the container to be consecutive starting from 1.
+//     */
+//    void renumberContainer();
+  cc->renumberContainer();
+  // printf("Did renumberContainer() call\n");
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"to", L"work", L"!", NULL
+      };
+    assertContainerContents(cc, expect);
+  }
+  RETURN_INTO_OBJREF(ninth, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#_9"));
+  RETURN_INTO_OBJREF(t9, iface::rdf_api::Triple, cr->getTripleOutOfByPredicate(ninth));
+  CPPUNIT_ASSERT(t9);
+  RETURN_INTO_OBJREF(t9o, iface::rdf_api::Node, t9->object());
+  CPPUNIT_ASSERT(!CDA_objcmp(t9o, word9));
+ 
+//
+//    /**
+//     * Creates a merged container. This does not change the RDF, but merely
+//     * creates a merged view.
+//     * Merged containers return the same correspondingResource and type as
+//     * this (not aContainer). Iterating children will iterate
+//     * the children of this, and then the children of aContainer (with
+//     * repetition possible). appendChild will have the same effect as performing
+//     * appendChild on this. removeChild will have the same effect as performing
+//     * removeChild on this and aContainer. renumberContainer will have the same
+//     * effect as performing the renumber on each container separately. Merged
+//     * containers can in turn be further merged.
+//     */
+//    Container mergeWith(in Container aContainer);
+  RETURN_INTO_OBJREF(ur2, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://example.org/thing2"));
+  RETURN_INTO_OBJREF(cc2, iface::rdf_api::Container, ur2->correspondingContainer());
+  CPPUNIT_ASSERT(cc2);
+  RETURN_INTO_OBJREF(ccm, iface::rdf_api::Container, cc->mergeWith(cc2));
+
+  RETURN_INTO_OBJREF(crm, iface::rdf_api::Resource, ccm->correspondingResource());
+  CPPUNIT_ASSERT(!CDA_objcmp(crm, ur));
+
+  
+  RETURN_INTO_OBJREF(ctm, iface::rdf_api::Resource, ccm->containerType());
+  CPPUNIT_ASSERT(ctm);
+  CPPUNIT_ASSERT(!CDA_objcmp(ctm, seq));
+  ccm->containerType(bag);
+  ctm = already_AddRefd<iface::rdf_api::Resource>(ccm->containerType());
+  CPPUNIT_ASSERT(ctm);
+  CPPUNIT_ASSERT(!CDA_objcmp(ctm, bag));
+
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"to", L"work", L"!",
+        L"Testing", L"Things:", L"It's", L"Good", L"When It", L"Succeeds!",
+        NULL
+      };
+    // printf("Merge container test 1\n");
+    assertContainerContents(ccm, expect);
+  }
+
+  ccm->appendChild(word1);
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"to", L"work", L"!", L"We",
+        L"Testing", L"Things:", L"It's", L"Good", L"When It", L"Succeeds!",
+        NULL
+      };
+    // printf("Merge container test 2\n");
+    assertContainerContents(ccm, expect);
+  }
+  
+  ccm->removeChild(word1, false);
+  RETURN_INTO_OBJREF(succeeds, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"Succeeds!", L"en"));
+  ccm->removeChild(succeeds, true);
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"to", L"work", L"!",
+        L"Testing", L"Things:", L"It's", L"Good", L"When It",
+        NULL
+      };
+    // printf("Merge container test 3\n");
+    assertContainerContents(ccm, expect);
+  }
+
+  ccm->renumberContainer();
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"to", L"work", L"!",
+        L"Testing", L"Things:", L"It's", L"Good", L"When It",
+        NULL
+      };
+    // printf("Merge container test 4\n");
+    assertContainerContents(ccm, expect);
+  }
+
+//    /**
+//     * Finds or makes a particular container out of 'this', with the
+//     * specified predicate, and the specified type. If there are multiple
+//     * existing containers, the returned container is a merged view of all
+//     * containers. The underlying RDF is only changed if the container doesn't
+//     * already exist, in which case:
+//     *  A new triple (subject=this) (predicate=aPredicate) (object=new blank node 'A')
+//     *   is made.
+//     *  A new triple (subject=the new blank node 'A') (predicate=RDF type) (object=aContainerType)
+//     *   is made.
+//     *  The returned Container is the correspondingContainer around the new blank node 'A'.
+//     */
+//    Container findOrMakeContainer(in Resource aPredicate,
+//                                  in Resource aContainerType);
+  
+  RETURN_INTO_OBJREF(ur3, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://example.org/myitem"));
+  RETURN_INTO_OBJREF(cont, iface::rdf_api::Container, ur3->findOrMakeContainer(ur, bag));
+  {
+    const wchar_t* expect[] =
+      {
+        L"Hello", L"World", L"I", L"Hope", L"This",
+        L"Works!",
+        L"to", L"work", L"!", NULL
+      };
+    // printf("findOrMakeContainer test 1\n");
+    assertContainerContents(cont, expect);
+  }
+
+  RETURN_INTO_OBJREF(ur4, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://example.org/myitem2"));
+  RETURN_INTO_OBJREF(cont2, iface::rdf_api::Container, ur4->findOrMakeContainer(ur, bag));
+  cont2->appendChild(word1);
+  {
+    // printf("findOrMakeContainer test 2\n");
+    const wchar_t* expect[] =
+      {
+        L"We",
+        NULL
+      };
+    assertContainerContents(cont2, expect);
+  }
+  RETURN_INTO_OBJREF(ct3, iface::rdf_api::Resource, cc->containerType());
+  CPPUNIT_ASSERT(!CDA_objcmp(ct3, bag));
 }
