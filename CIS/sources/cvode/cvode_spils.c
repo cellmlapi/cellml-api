@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2006/07/05 15:32:33 $
+ * $Revision: 1.5 $
+ * $Date: 2008/09/10 22:39:03 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -32,31 +32,35 @@
 
 /* Readability Replacements */
 
-#define lrw1    (cv_mem->cv_lrw1)
-#define liw1    (cv_mem->cv_liw1)
-#define tq      (cv_mem->cv_tq)
-#define tn      (cv_mem->cv_tn)
-#define h       (cv_mem->cv_h)
-#define gamma   (cv_mem->cv_gamma)
-#define nfe     (cv_mem->cv_nfe)
-#define f       (cv_mem->cv_f)
-#define f_data  (cv_mem->cv_f_data)
-#define ewt     (cv_mem->cv_ewt)
-#define lmem    (cv_mem->cv_lmem)
+#define lrw1      (cv_mem->cv_lrw1)
+#define liw1      (cv_mem->cv_liw1)
+#define tq        (cv_mem->cv_tq)
+#define tn        (cv_mem->cv_tn)
+#define h         (cv_mem->cv_h)
+#define gamma     (cv_mem->cv_gamma)
+#define nfe       (cv_mem->cv_nfe)
+#define f         (cv_mem->cv_f)
+#define user_data (cv_mem->cv_user_data)
+#define ewt       (cv_mem->cv_ewt)
+#define lmem      (cv_mem->cv_lmem)
 
-#define ils_type (cvspils_mem->s_type)
-#define sqrtN   (cvspils_mem->s_sqrtN)   
-#define ytemp   (cvspils_mem->s_ytemp)
-#define x       (cvspils_mem->s_x)
-#define ycur    (cvspils_mem->s_ycur)
-#define fcur    (cvspils_mem->s_fcur)
-#define delta   (cvspils_mem->s_delta)
-#define npe     (cvspils_mem->s_npe)
-#define nli     (cvspils_mem->s_nli)
-#define nps     (cvspils_mem->s_nps)
-#define ncfl    (cvspils_mem->s_ncfl)
-#define njtimes (cvspils_mem->s_njtimes)
-#define nfes    (cvspils_mem->s_nfes)
+#define ils_type  (cvspils_mem->s_type)
+#define sqrtN     (cvspils_mem->s_sqrtN)   
+#define ytemp     (cvspils_mem->s_ytemp)
+#define x         (cvspils_mem->s_x)
+#define ycur      (cvspils_mem->s_ycur)
+#define fcur      (cvspils_mem->s_fcur)
+#define delta     (cvspils_mem->s_delta)
+#define npe       (cvspils_mem->s_npe)
+#define nli       (cvspils_mem->s_nli)
+#define nps       (cvspils_mem->s_nps)
+#define ncfl      (cvspils_mem->s_ncfl)
+#define njtimes   (cvspils_mem->s_njtimes)
+#define nfes      (cvspils_mem->s_nfes)
+
+#define jtimesDQ  (cvspils_mem->s_jtimesDQ)
+#define jtimes    (cvspils_mem->s_jtimes)
+#define j_data    (cvspils_mem->s_j_data)
 
 #define last_flag (cvspils_mem->s_last_flag)
 
@@ -182,35 +186,35 @@ int CVSpilsSetMaxl(void *cvode_mem, int maxl)
 
 /*
  * -----------------------------------------------------------------
- * CVSpilsSetDelt
+ * CVSpilsSetEpsLin
  * -----------------------------------------------------------------
  */
 
-int CVSpilsSetDelt(void *cvode_mem, realtype delt)
+int CVSpilsSetEpsLin(void *cvode_mem, realtype eplifac)
 {
   CVodeMem cv_mem;
   CVSpilsMem cvspils_mem;
 
   /* Return immediately if cvode_mem is NULL */
   if (cvode_mem == NULL) {
-    CVProcessError(NULL, CVSPILS_MEM_NULL, "CVSPILS", "CVSpilsSetDelt", MSGS_CVMEM_NULL);
+    CVProcessError(NULL, CVSPILS_MEM_NULL, "CVSPILS", "CVSpilsSetEpsLin", MSGS_CVMEM_NULL);
     return(CVSPILS_MEM_NULL);
   }
   cv_mem = (CVodeMem) cvode_mem;
 
   if (lmem == NULL) {
-    CVProcessError(cv_mem, CVSPILS_LMEM_NULL, "CVSPILS", "CVSpilsSetDelt", MSGS_LMEM_NULL);
+    CVProcessError(cv_mem, CVSPILS_LMEM_NULL, "CVSPILS", "CVSpilsSetEpsLin", MSGS_LMEM_NULL);
     return(CVSPILS_LMEM_NULL);
   }
   cvspils_mem = (CVSpilsMem) lmem;
 
-  /* Check for legal delt */
-  if(delt < ZERO) {
-    CVProcessError(cv_mem, CVSPILS_ILL_INPUT, "CVSPILS", "CVSpilsSetDelt", MSGS_BAD_DELT);
+  /* Check for legal eplifac */
+  if(eplifac < ZERO) {
+    CVProcessError(cv_mem, CVSPILS_ILL_INPUT, "CVSPILS", "CVSpilsSetEpsLin", MSGS_BAD_EPLIN);
     return(CVSPILS_ILL_INPUT);
   }
 
-  cvspils_mem->s_delt = (delt == ZERO) ? CVSPILS_DELT : delt;
+  cvspils_mem->s_eplifac = (eplifac == ZERO) ? CVSPILS_EPLIN : eplifac;
 
   return(CVSPILS_SUCCESS);
 }
@@ -221,8 +225,8 @@ int CVSpilsSetDelt(void *cvode_mem, realtype delt)
  * -----------------------------------------------------------------
  */
 
-int CVSpilsSetPreconditioner(void *cvode_mem, CVSpilsPrecSetupFn pset, 
-                             CVSpilsPrecSolveFn psolve, void *P_data)
+int CVSpilsSetPreconditioner(void *cvode_mem, 
+                             CVSpilsPrecSetupFn pset, CVSpilsPrecSolveFn psolve)
 {
   CVodeMem cv_mem;
   CVSpilsMem cvspils_mem;
@@ -242,7 +246,6 @@ int CVSpilsSetPreconditioner(void *cvode_mem, CVSpilsPrecSetupFn pset,
 
   cvspils_mem->s_pset = pset;
   cvspils_mem->s_psolve = psolve;
-  if (psolve != NULL) cvspils_mem->s_P_data = P_data;
 
   return(CVSPILS_SUCCESS);
 }
@@ -253,7 +256,7 @@ int CVSpilsSetPreconditioner(void *cvode_mem, CVSpilsPrecSetupFn pset,
  * -----------------------------------------------------------------
  */
 
-int CVSpilsSetJacTimesVecFn(void *cvode_mem, CVSpilsJacTimesVecFn jtimes, void *jac_data)
+int CVSpilsSetJacTimesVecFn(void *cvode_mem, CVSpilsJacTimesVecFn jtv)
 {
   CVodeMem cv_mem;
   CVSpilsMem cvspils_mem;
@@ -271,8 +274,12 @@ int CVSpilsSetJacTimesVecFn(void *cvode_mem, CVSpilsJacTimesVecFn jtimes, void *
   }
   cvspils_mem = (CVSpilsMem) lmem;
 
-  cvspils_mem->s_jtimes = jtimes;
-  if (jtimes != NULL) cvspils_mem->s_j_data = jac_data;
+  if (jtv != NULL) {
+    jtimesDQ = FALSE;
+    jtimes = jtv;
+  } else {
+    jtimesDQ = TRUE;
+  }
 
   return(CVSPILS_SUCCESS);
 }
@@ -554,6 +561,9 @@ char *CVSpilsGetReturnFlagName(int flag)
   case CVSPILS_MEM_FAIL:
     sprintf(name,"CVSPILS_MEM_FAIL");
     break;
+  case CVSPILS_PMEM_NULL:
+    sprintf(name,"CVSPILS_PMEM_NULL");
+    break;
   default:
     sprintf(name,"NONE");
   }
@@ -571,12 +581,10 @@ char *CVSpilsGetReturnFlagName(int flag)
 /* Additional readability Replacements */
 
 #define pretype (cvspils_mem->s_pretype)
-#define delt    (cvspils_mem->s_delt)
+#define eplifac (cvspils_mem->s_eplifac)
 #define maxl    (cvspils_mem->s_maxl)
 #define psolve  (cvspils_mem->s_psolve)
 #define P_data  (cvspils_mem->s_P_data)
-#define jtimes  (cvspils_mem->s_jtimes)
-#define j_data  (cvspils_mem->s_j_data)
 
 /*
  * -----------------------------------------------------------------
@@ -650,15 +658,15 @@ int CVSpilsPSolve(void *cvode_mem, N_Vector r, N_Vector z, int lr)
 
 int CVSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t, 
                     N_Vector y, N_Vector fy,
-                    void *jac_data, N_Vector work)
+                    void *data, N_Vector work)
 {
   CVodeMem cv_mem;
   CVSpilsMem cvspils_mem;
   realtype sig, siginv;
   int iter, retval;
 
-  /* jac_data is cvode_mem */
-  cv_mem = (CVodeMem) jac_data;
+  /* data is cvode_mem */
+  cv_mem = (CVodeMem) data;
   cvspils_mem = (CVSpilsMem) lmem;
 
   /* Initialize perturbation to 1/||v|| */
@@ -670,7 +678,7 @@ int CVSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
     N_VLinearSum(sig, v, ONE, y, work);
 
     /* Set Jv = f(tn, y+sig*v) */
-    retval = f(t, work, Jv, f_data); 
+    retval = f(t, work, Jv, user_data); 
     nfes++;
     if (retval == 0) break;
     if (retval < 0)  return(-1);

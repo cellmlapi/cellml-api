@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2006/07/05 15:32:33 $
+ * $Revision: 1.6 $
+ * $Date: 2008/09/10 22:39:03 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 #include <cvode/cvode_spils.h>
+#include "cvode_impl.h"
 
 /* Types of iterative linear solvers */
 
@@ -38,14 +39,14 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-typedef struct {
+typedef struct CVSpilsMemRec {
 
   int s_type;           /* type of scaled preconditioned iterative LS   */
 
   int  s_pretype;       /* type of preconditioning                      */
   int  s_gstype;        /* type of Gram-Schmidt orthogonalization       */
   realtype s_sqrtN;     /* sqrt(N)                                      */
-  realtype s_delt;      /* delt = user specified or DELT_DEFAULT        */
+  realtype s_eplifac;   /* eplifac = user specified or EPLIN_DEFAULT    */
   realtype s_deltar;    /* deltar = delt * tq4                          */
   realtype s_delta;     /* delta = deltar * sqrtN                       */
   int  s_maxl;          /* maxl = maximum dimension of the Krylov space */
@@ -64,25 +65,36 @@ typedef struct {
   N_Vector s_ycur;      /* CVODE current y vector in Newton Iteration   */
   N_Vector s_fcur;      /* fcur = f(tn, ycur)                           */
 
-  CVSpilsPrecSetupFn s_pset; 
-                        /* pset = user-supplied routine to compute      */
-                        /* a preconditioner                             */
-
-  CVSpilsPrecSolveFn s_psolve;   
-                        /* psolve = user-supplied routine to solve      */
-                        /* preconditioner linear system                 */
-
-  void *s_P_data;       /* P_data passed to psolve and pset             */
-
   void* s_spils_mem;    /* memory used by the generic solver            */
 
-  CVSpilsJacTimesVecFn s_jtimes;  
-                        /* jtimes = Jacobian * vector routine           */
-  void *s_j_data;       /* j_data is passed to jtimes                   */
+  /* Preconditioner computation
+   * (a) user-provided:
+   *     - P_data == user_data
+   *     - pfree == NULL (the user dealocates memory for user_data)
+   * (b) internal preconditioner module
+   *     - P_data == cvode_mem
+   *     - pfree == set by the prec. module and called in CVodeFree
+   */
+  CVSpilsPrecSetupFn s_pset;
+  CVSpilsPrecSolveFn s_psolve;
+  void (*s_pfree)(CVodeMem cv_mem);
+  void *s_P_data;
+
+  /* Jacobian times vector compuation
+   * (a) jtimes function provided by the user:
+   *     - j_data == user_data
+   *     - jtimesDQ == FALSE
+   * (b) internal jtimes
+   *     - j_data == cvode_mem
+   *     - jtimesDQ == TRUE
+   */
+  booleantype s_jtimesDQ;
+  CVSpilsJacTimesVecFn s_jtimes;
+  void *s_j_data;
 
   int s_last_flag;      /* last error flag returned by any function     */
 
-} CVSpilsMemRec, *CVSpilsMem;
+} *CVSpilsMem;
 
 /*
  * -----------------------------------------------------------------
@@ -99,7 +111,7 @@ int CVSpilsPSolve(void *cv_mem, N_Vector r, N_Vector z, int lr);
 /* Difference quotient approximation for Jac times vector */
 
 int CVSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
-                    N_Vector y, N_Vector fy, void *jac_data,
+                    N_Vector y, N_Vector fy, void *data,
                     N_Vector work);
 
 /*
@@ -116,7 +128,7 @@ int CVSpilsDQJtimes(N_Vector v, N_Vector Jv, realtype t,
 #define MSGS_PSOLVE_REQ  "pretype != PREC_NONE, but PSOLVE = NULL is illegal."
 #define MSGS_LMEM_NULL   "Linear solver memory is NULL."
 #define MSGS_BAD_GSTYPE  "Illegal value for gstype. Legal values are MODIFIED_GS and CLASSICAL_GS."
-#define MSGS_BAD_DELT    "delt < 0 illegal."
+#define MSGS_BAD_EPLIN   "eplifac < 0 illegal."
 
 #define MSGS_PSET_FAILED "The preconditioner setup routine failed in an unrecoverable manner."
 #define MSGS_PSOLVE_FAILED "The preconditioner solve routine failed in an unrecoverable manner."

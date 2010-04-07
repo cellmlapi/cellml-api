@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006/10/20 16:50:29 $
+ * $Revision: 1.9 $
+ * $Date: 2008/09/10 22:36:38 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -12,7 +12,7 @@
  * For details, see the LICENSE file.
  * -----------------------------------------------------------------
  * This is the common header file for the Scaled, Preconditioned
- * Iterative Linear Solvers in CVODE/CVODES.
+ * Iterative Linear Solvers in CVODE.
  * -----------------------------------------------------------------
  */
 
@@ -25,6 +25,20 @@ extern "C" {
 
 #include <sundials/sundials_iterative.h>
 #include <sundials/sundials_nvector.h>
+
+
+/*
+ * -----------------------------------------------------------------
+ * CVSPILS return values 
+ * -----------------------------------------------------------------
+ */
+
+#define CVSPILS_SUCCESS          0
+#define CVSPILS_MEM_NULL        -1
+#define CVSPILS_LMEM_NULL       -2
+#define CVSPILS_ILL_INPUT       -3
+#define CVSPILS_MEM_FAIL        -4
+#define CVSPILS_PMEM_NULL       -5
 
 /*
  * -----------------------------------------------------------------
@@ -39,7 +53,7 @@ extern "C" {
  * CVSPILS_DGMAX  : maximum change in gamma between
  *                  preconditioner evaluations
  *
- * CVSPILS_DELT   : default value for factor by which the
+ * CVSPILS_EPLIN  : default value for factor by which the
  *                  tolerance on the nonlinear iteration is
  *                  multiplied to get a tolerance on the linear
  *                  iteration
@@ -49,7 +63,7 @@ extern "C" {
 #define CVSPILS_MAXL   5
 #define CVSPILS_MSBPRE 50
 #define CVSPILS_DGMAX  RCONST(0.2)
-#define CVSPILS_DELT   RCONST(0.05)
+#define CVSPILS_EPLIN  RCONST(0.05)
 
 /*
  * -----------------------------------------------------------------
@@ -116,8 +130,8 @@ extern "C" {
  *
  * gamma   is the scalar appearing in the Newton matrix.
  *
- * P_data  is a pointer to user data - the same as the P_data
- *         parameter passed to the CV*SetPreconditioner function.
+ * user_data  is a pointer to user data - the same as the user_data
+ *         parameter passed to the CVodeSetUserData function.
  *
  * tmp1, tmp2, and tmp3 are pointers to memory allocated
  *                      for N_Vectors which can be used by
@@ -142,7 +156,7 @@ extern "C" {
 
 typedef int (*CVSpilsPrecSetupFn)(realtype t, N_Vector y, N_Vector fy,
                                   booleantype jok, booleantype *jcurPtr,
-                                  realtype gamma, void *P_data,
+                                  realtype gamma, void *user_data,
                                   N_Vector tmp1, N_Vector tmp2,
                                   N_Vector tmp3);
 
@@ -182,8 +196,8 @@ typedef int (*CVSpilsPrecSetupFn)(realtype t, N_Vector y, N_Vector fy,
  *        the left preconditioner P1 or right preconditioner
  *        P2: lr = 1 means use P1, and lr = 2 means use P2.
  *
- * P_data is a pointer to user data - the same as the P_data
- *        parameter passed to the CV*SetPreconditioner function.
+ * user_data  is a pointer to user data - the same as the user_data
+ *         parameter passed to the CVodeSetUserData function.
  *
  * tmp    is a pointer to memory allocated for an N_Vector
  *        which can be used by PSolve for work space.
@@ -200,7 +214,7 @@ typedef int (*CVSpilsPrecSetupFn)(realtype t, N_Vector y, N_Vector fy,
 typedef int (*CVSpilsPrecSolveFn)(realtype t, N_Vector y, N_Vector fy,
                                   N_Vector r, N_Vector z,
                                   realtype gamma, realtype delta,
-                                  int lr, void *P_data, N_Vector tmp);
+                                  int lr, void *user_data, N_Vector tmp);
 
 /*
  * -----------------------------------------------------------------
@@ -226,9 +240,8 @@ typedef int (*CVSpilsPrecSolveFn)(realtype t, N_Vector y, N_Vector fy,
  *
  *   fy       is the vector f(t,y).
  *
- *   jac_data is a pointer to user Jacobian data, the same as the
- *            jac_data parameter passed to the CV*SetJacTimesVecFn 
- *            function.
+ *   user_data   is a pointer to user data, the same as the user_data
+ *            parameter passed to the CVodeSetUserData function.
  *
  *   tmp      is a pointer to memory allocated for an N_Vector
  *            which can be used by Jtimes for work space.
@@ -237,7 +250,7 @@ typedef int (*CVSpilsPrecSolveFn)(realtype t, N_Vector y, N_Vector fy,
 
 typedef int (*CVSpilsJacTimesVecFn)(N_Vector v, N_Vector Jv, realtype t,
                                     N_Vector y, N_Vector fy,
-                                    void *jac_data, N_Vector tmp);
+                                    void *user_data, N_Vector tmp);
 
 
 
@@ -263,39 +276,34 @@ typedef int (*CVSpilsJacTimesVecFn)(N_Vector v, N_Vector Jv, realtype t,
  *                from the value previously set.
  *                An input value <= 0, gives the default value.
  *
- * CVSpilsSetDelt specifies the factor by which the tolerance on
+ * CVSpilsSetEpsLin specifies the factor by which the tolerance on
  *                the nonlinear iteration is multiplied to get a
  *                tolerance on the linear iteration.
  *                Default value is 0.05.
  *
  * CVSpilsSetPreconditioner specifies the PrecSetup and PrecSolve functions.
- *                as well as a pointer to user preconditioner data.
- *                This pointer is passed to PrecSetup and PrecSolve
- *                every time these routines are called.
- *                Default is NULL for al three arguments.
+ *                Default is NULL for both arguments (no preconditioning)
  *
- * CVSpilsSetJacTimesVecFn specifies the jtimes function and a pointer to
- *                user Jacobian data. This pointer is passed to jtimes every 
- *                time the jtimes routine is called.
- *                Default is to use an internal finite difference
- *                approximation routine.
+ * CVSpilsSetJacTimesVecFn specifies the jtimes function. Default is to 
+ *                use an internal finite difference approximation routine.
  *
  * The return value of CVSpilsSet* is one of:
  *    CVSPILS_SUCCESS   if successful
  *    CVSPILS_MEM_NULL  if the cvode memory was NULL
- *    CVSPILS_LMEM_NULL if the cvspgmr memory was NULL
+ *    CVSPILS_LMEM_NULL if the linear solver memory was NULL
  *    CVSPILS_ILL_INPUT if an input has an illegal value
  * -----------------------------------------------------------------
  */
 
-int CVSpilsSetPrecType(void *cvode_mem, int pretype);
-int CVSpilsSetGSType(void *cvode_mem, int gstype);
-int CVSpilsSetMaxl(void *cvode_mem, int maxl);
-int CVSpilsSetDelt(void *cvode_mem, realtype delt);
-int CVSpilsSetPreconditioner(void *cvode_mem, CVSpilsPrecSetupFn pset, 
-			     CVSpilsPrecSolveFn psolve, void *P_data);
-int CVSpilsSetJacTimesVecFn(void *cvode_mem, 
-                            CVSpilsJacTimesVecFn jtimes, void *jac_data);
+SUNDIALS_EXPORT int CVSpilsSetPrecType(void *cvode_mem, int pretype);
+SUNDIALS_EXPORT int CVSpilsSetGSType(void *cvode_mem, int gstype);
+SUNDIALS_EXPORT int CVSpilsSetMaxl(void *cvode_mem, int maxl);
+SUNDIALS_EXPORT int CVSpilsSetEpsLin(void *cvode_mem, realtype eplifac);
+SUNDIALS_EXPORT int CVSpilsSetPreconditioner(void *cvode_mem, 
+                                             CVSpilsPrecSetupFn pset,
+                                             CVSpilsPrecSolveFn psolve);
+SUNDIALS_EXPORT int CVSpilsSetJacTimesVecFn(void *cvode_mem, 
+                                            CVSpilsJacTimesVecFn jtv);
 
 /*
  * -----------------------------------------------------------------
@@ -328,18 +336,18 @@ int CVSpilsSetJacTimesVecFn(void *cvode_mem,
  * The return value of CVSpilsGet* is one of:
  *    CVSPILS_SUCCESS   if successful
  *    CVSPILS_MEM_NULL  if the cvode memory was NULL
- *    CVSPILS_LMEM_NULL if the cvspgmr memory was NULL
+ *    CVSPILS_LMEM_NULL if the linear solver memory was NULL
  * -----------------------------------------------------------------
  */
 
-int CVSpilsGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS);
-int CVSpilsGetNumPrecEvals(void *cvode_mem, long int *npevals);
-int CVSpilsGetNumPrecSolves(void *cvode_mem, long int *npsolves);
-int CVSpilsGetNumLinIters(void *cvode_mem, long int *nliters);
-int CVSpilsGetNumConvFails(void *cvode_mem, long int *nlcfails);
-int CVSpilsGetNumJtimesEvals(void *cvode_mem, long int *njvevals);
-int CVSpilsGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS); 
-int CVSpilsGetLastFlag(void *cvode_mem, int *flag);
+SUNDIALS_EXPORT int CVSpilsGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS);
+SUNDIALS_EXPORT int CVSpilsGetNumPrecEvals(void *cvode_mem, long int *npevals);
+SUNDIALS_EXPORT int CVSpilsGetNumPrecSolves(void *cvode_mem, long int *npsolves);
+SUNDIALS_EXPORT int CVSpilsGetNumLinIters(void *cvode_mem, long int *nliters);
+SUNDIALS_EXPORT int CVSpilsGetNumConvFails(void *cvode_mem, long int *nlcfails);
+SUNDIALS_EXPORT int CVSpilsGetNumJtimesEvals(void *cvode_mem, long int *njvevals);
+SUNDIALS_EXPORT int CVSpilsGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS); 
+SUNDIALS_EXPORT int CVSpilsGetLastFlag(void *cvode_mem, int *flag);
 
 /*
  * -----------------------------------------------------------------
@@ -348,15 +356,7 @@ int CVSpilsGetLastFlag(void *cvode_mem, int *flag);
  * -----------------------------------------------------------------
  */
 
-char *CVSpilsGetReturnFlagName(int flag);
-
-/* CVSPILS return values */
-
-#define CVSPILS_SUCCESS          0
-#define CVSPILS_MEM_NULL        -1
-#define CVSPILS_LMEM_NULL       -2
-#define CVSPILS_ILL_INPUT       -3
-#define CVSPILS_MEM_FAIL        -4
+SUNDIALS_EXPORT char *CVSpilsGetReturnFlagName(int flag);
 
 #ifdef __cplusplus
 }

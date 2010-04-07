@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2006/07/05 15:32:32 $
+ * $Revision: 1.6 $
+ * $Date: 2007/11/26 16:19:59 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -24,6 +24,7 @@ extern "C" {
 
 #include <cvode/cvode_bandpre.h>
 #include <sundials/sundials_band.h>
+#include <sundials/sundials_direct.h>
 
 /*
  * -----------------------------------------------------------------
@@ -31,18 +32,18 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-typedef struct {
+typedef struct CVBandPrecDataRec {
 
-  /* Data set by user in CVBandPrecAlloc */
+  /* Data set by user in CVBandPrecInit */
 
-  long int N;
-  long int ml, mu;
+  int N;
+  int ml, mu;
 
   /* Data set by CVBandPrecSetup */
 
-  BandMat savedJ;
-  BandMat savedP;
-  long int *pivots;
+  DlsMat savedJ;
+  DlsMat savedP;
+  int *pivots;
 
   /* Rhs calls */
 
@@ -60,10 +61,11 @@ typedef struct {
  * -----------------------------------------------------------------
  */
 
-#define MSGBP_CVMEM_NULL "Integrator memory is NULL."
-#define MSGBP_MEM_FAIL "A memory request failed."
-#define MSGBP_BAD_NVECTOR "A required vector operation is not implemented."
-#define MSGBP_PDATA_NULL "BandPrecData is NULL."
+#define MSGBP_MEM_NULL       "Integrator memory is NULL."
+#define MSGBP_LMEM_NULL      "Linear solver memory is NULL. One of the SPILS linear solvers must be attached."
+#define MSGBP_MEM_FAIL       "A memory request failed."
+#define MSGBP_BAD_NVECTOR    "A required vector operation is not implemented."
+#define MSGBP_PMEM_NULL      "Band preconditioner memory is NULL. CVBandPrecInit must be called."
 #define MSGBP_RHSFUNC_FAILED "The right-hand side routine failed in an unrecoverable manner."
 
 

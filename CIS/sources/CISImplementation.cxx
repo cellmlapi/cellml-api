@@ -73,6 +73,23 @@ SetupCompiledModelFunctions(void* module)
   return cmf;
 }
 
+IDACompiledModelFunctions*
+SetupIDACompiledModelFunctions(void* module)
+{
+  IDACompiledModelFunctions* cmf = new IDACompiledModelFunctions;
+  cmf->SetupFixedConstants = (void (*)(double*, double*, double*))
+    getsym(module, "SetupFixedConstants");
+  cmf->EvaluateVariables = (void (*)(double, double*, double*, double*, double*))
+    getsym(module, "EvaluateVariables");
+  cmf->EvaluateEssentialVariables = (void (*)(double, double*, double*, double*, double*))
+    getsym(module, "EvaluateEssentialVariables");
+  cmf->ComputeResiduals = (void (*)(double, double*, double*, double*, double*, double*))
+    getsym(module, "ComputeResiduals");
+  cmf->SetupStateInfo = (void (*)(double*))
+    getsym(module, "SetupStateInfo");
+  return cmf;
+}
+
 void*
 CompileSource(std::string& destDir, std::string& sourceFile,
               std::wstring& lastError)
@@ -193,12 +210,12 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 
 CDA_CellMLCompiledModel::CDA_CellMLCompiledModel
 (
- void* aModule, CompiledModelFunctions* aCMF,
+ void* aModule,
  iface::cellml_api::Model* aModel,
  iface::cellml_services::CodeInformation* aCCI,
  std::string& aDirname
 )
-  : _cda_refcount(1), mModule(aModule), mCMF(aCMF), mModel(aModel), mCCI(aCCI),
+  : _cda_refcount(1), mModule(aModule), mModel(aModel), mCCI(aCCI),
     mDirname(aDirname)
 {
   mModel->add_ref();
@@ -212,7 +229,6 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
 #else
   dlclose(mModule);
 #endif
-  delete mCMF;
   mModel->release_ref();
   mCCI->release_ref();
 #ifdef WIN32
@@ -247,7 +263,6 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
 
 CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
 (
- iface::cellml_services::CellMLCompiledModel* aModel
 )
   : _cda_refcount(1),
     mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
@@ -255,15 +270,10 @@ CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
     mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mMaxPointDensity(10000.0),
     mTabulationStepSize(0.0), mObserver(NULL), mCancelIntegration(false), mStrictTabulation(false)
 {
-  mModel = dynamic_cast<CDA_CellMLCompiledModel*>(aModel);
-  if (mModel == NULL)
-    throw iface::cellml_api::CellMLException();
-  mModel->add_ref();
 }
 
 CDA_CellMLIntegrationRun::~CDA_CellMLIntegrationRun()
 {
-  mModel->release_ref();
   if (mObserver != NULL)
     mObserver->release_ref();
 }
@@ -379,7 +389,7 @@ CDA_CellMLIntegrationRun::stop()
 }
 
 void
-CDA_CellMLIntegrationRun::runthread()
+CDA_ODESolverRun::runthread()
 {
   std::string emsg = "Unknown error";
   double* constants = NULL, * buffer = NULL, * algebraic, * rates, * states;
@@ -446,40 +456,77 @@ CDA_CellMLIntegrationRun::runthread()
   release_ref();
 }
 
-iface::cellml_services::ODESolverCompiledModel*
-CDA_CellMLIntegrationService::compileModelODE
-(
- iface::cellml_api::Model* aModel
-)
-  throw(std::exception&)
+void
+CDA_DAESolverRun::runthread()
 {
-  RETURN_INTO_OBJREF(cgb, iface::cellml_services::CodeGeneratorBootstrap,
-                     CreateCodeGeneratorBootstrap());
-  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator,
-                     cgb->createCodeGenerator());
+  std::string emsg = "Unknown error";
+  double* constants = NULL, * buffer = NULL, * algebraic, * rates, * states;
 
-  // Generate code information...
-  ObjRef<iface::cellml_services::CodeInformation> cci;
   try
   {
-    cci = already_AddRefd<iface::cellml_services::CodeInformation>
-      (cg->generateCode(aModel));
-    wchar_t* msg = cci->errorMessage();
-    if (!wcscmp(msg, L""))
-      free(msg);
-    else
-    {
-      mLastError = msg;
-      free(msg);
-      throw iface::cellml_api::CellMLException();
-    }
+    IDACompiledModelFunctions* f = mModel->mCMF;
+    uint32_t algSize = mModel->mCCI->algebraicIndexCount();
+    uint32_t constSize = mModel->mCCI->constantIndexCount();
+    uint32_t rateSize = mModel->mCCI->rateIndexCount();
+
+    constants = new double[constSize];
+    buffer = new double[2 * rateSize + algSize + 1];
+    
+    buffer[0] = mStartBvar;
+    states = buffer + 1;
+    rates = states + rateSize;
+    algebraic = rates + rateSize;
+
+    memset(rates, 0, rateSize * sizeof(double));
+
+    f->SetupFixedConstants(constants, rates, states);
+
+    // Now apply overrides...
+    OverrideList::iterator oli;
+    for (oli = mConstantOverrides.begin(); oli != mConstantOverrides.end();
+         oli++)
+      if ((*oli).first < constSize)
+        constants[(*oli).first] = (*oli).second;
+    for (oli = mIVOverrides.begin(); oli != mIVOverrides.end();
+         oli++)
+      if ((*oli).first < rateSize)
+        states[(*oli).first] = (*oli).second;
+
+    if (mObserver != NULL)
+      mObserver->computedConstants(constSize, constants);
+
+    SolveDAEProblem(f, constSize, constants, rateSize, rates, rateSize, states,
+                    algSize, algebraic);
   }
   catch (...)
   {
-    mLastError = L"Unexpected exception generating code";
-    throw iface::cellml_api::CellMLException();
+    try
+    {
+      if (mObserver != NULL)
+        mObserver->failed(emsg.c_str());
+    }
+    catch (...)
+    {
+    }
   }
 
+  if (constants != NULL)
+    delete [] constants;
+  if (buffer != NULL)
+    delete [] buffer;
+
+  release_ref();
+}
+
+void
+CDA_CellMLIntegrationService::setupCodeEnvironment
+(
+ iface::cellml_services::CodeInformation* cci,
+ std::string& dirname,
+ std::string& sourcename,
+ std::ofstream& ss
+)
+{
   iface::cellml_services::ModelConstraintLevel mcl = cci->constraintLevel();
   if (mcl != iface::cellml_services::CORRECTLY_CONSTRAINED)
   {
@@ -519,12 +566,13 @@ CDA_CellMLIntegrationService::compileModelODE
   }
   if (fn == NULL)
     throw iface::cellml_api::CellMLException();
-  std::string dirname = fn;
+  dirname = fn;
   free(fn);
 
   // We now have a temporary directory. Make the source file...
-  std::string sourcename = dirname + "/generated.c";
-  std::ofstream ss(sourcename.c_str());
+  sourcename = dirname + "/generated.c";
+  ss.open(sourcename.c_str());
+
   ss << "/* This file is automatically generated and will be automatically"
      << std::endl
      << " * deleted. Don't edit it or changes will be lost. */" << std::endl
@@ -551,7 +599,7 @@ CDA_CellMLIntegrationService::compileModelODE
      << "extern double sinh(double x);" << std::endl
      << "extern double exp(double x);" << std::endl
      << "extern double floor(double x);" << std::endl
-     << "extern double pow(double x, double y);" << std::endl    
+     << "extern double pow(double x, double y);" << std::endl
      << "extern double factorial(double x);" << std::endl
      << "extern double log(double x);" << std::endl
      << "extern double arbitrary_log(double x, double base);" << std::endl
@@ -582,12 +630,51 @@ CDA_CellMLIntegrationService::compileModelODE
   ss << frag8 << std::endl;
   free(frag);
   delete [] frag8;
+}
+
+iface::cellml_services::ODESolverCompiledModel*
+CDA_CellMLIntegrationService::compileModelODE
+(
+ iface::cellml_api::Model* aModel
+)
+  throw(std::exception&)
+{
+  RETURN_INTO_OBJREF(cgb, iface::cellml_services::CodeGeneratorBootstrap,
+                     CreateCodeGeneratorBootstrap());
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator,
+                     cgb->createCodeGenerator());
+
+  // Generate code information...
+  ObjRef<iface::cellml_services::CodeInformation> cci;
+  try
+  {
+    cci = already_AddRefd<iface::cellml_services::CodeInformation>
+      (cg->generateCode(aModel));
+    wchar_t* msg = cci->errorMessage();
+    if (!wcscmp(msg, L""))
+      free(msg);
+    else
+    {
+      mLastError = msg;
+      free(msg);
+      throw iface::cellml_api::CellMLException();
+    }
+  }
+  catch (...)
+  {
+    mLastError = L"Unexpected exception generating code";
+    throw iface::cellml_api::CellMLException();
+  }
+
+  std::ofstream ss;
+  std::string dirname, sourcename;
+  setupCodeEnvironment(cci, dirname, sourcename, ss);
 
   ss << "int SetupConstants(double* CONSTANTS, double* RATES, "
     "double *STATES)" << std::endl;
-  frag = cci->initConstsString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
-  frag8 = new char[fragLen];
+  wchar_t* frag = cci->initConstsString();
+  size_t fragLen = wcstombs(NULL, frag, 0) + 1;
+  char* frag8 = new char[fragLen];
   wcstombs(frag8, frag, fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
@@ -643,8 +730,113 @@ CDA_CellMLIntegrationService::compileModelDAE
 )
   throw(std::exception&)
 {
-  // Not yet implemented. XXX TODO
-  return NULL;
+  RETURN_INTO_OBJREF(cgb, iface::cellml_services::CodeGeneratorBootstrap,
+                     CreateCodeGeneratorBootstrap());
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::IDACodeGenerator,
+                     cgb->createIDACodeGenerator());
+
+  // Generate code information...
+  ObjRef<iface::cellml_services::IDACodeInformation> cci;
+  try
+  {
+    cci = already_AddRefd<iface::cellml_services::IDACodeInformation>
+      (cg->generateIDACode(aModel));
+    wchar_t* msg = cci->errorMessage();
+    if (!wcscmp(msg, L""))
+      free(msg);
+    else
+    {
+      mLastError = msg;
+      free(msg);
+      throw iface::cellml_api::CellMLException();
+    }
+  }
+  catch (...)
+  {
+    mLastError = L"Unexpected exception generating code";
+    throw iface::cellml_api::CellMLException();
+  }
+
+  std::ofstream ss;
+  std::string dirname, sourcename;
+  setupCodeEnvironment(cci, dirname, sourcename, ss);
+
+  ss << "void SetupFixedConstants(double* CONSTANTS, double* RATES, "
+    "double *STATES)" << std::endl;
+  wchar_t* frag = cci->initConstsString();
+  size_t fragLen = wcstombs(NULL, frag, 0) + 1;
+  char* frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
+     << "#define VOI 0.0" << std::endl
+     << "#define ALGEBRAIC NULL" << std::endl
+     << frag8 << std::endl
+     << "#undef VOI" << std::endl
+     << "#undef ALGEBRAIC" << std::endl
+     << "  return ret;" << std::endl
+     << "}" << std::endl;
+  free(frag);
+  delete [] frag8;
+
+  ss << "void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, "
+     << "double* STATES, double* ALGEBRAIC)" << std::endl;
+  frag = cci->variablesString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
+     << frag8 << std::endl
+     << "  return ret;" << std::endl
+     << "}" << std::endl;
+  free(frag);
+  delete [] frag8;
+
+  ss << "void EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, "
+     << "double* STATES, double* ALGEBRAIC)" << std::endl;
+  frag = cci->essentialVariablesString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
+     << frag8 << std::endl
+     << "  return ret;" << std::endl
+     << "}" << std::endl;
+  free(frag);
+  delete [] frag8;
+
+  ss << "void ComputeResiduals(double VOI, double* CONSTANTS, double* RATES, "
+    "double* STATES, double* ALGEBRAIC)" << std::endl;
+  frag = cci->ratesString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
+     << frag8 << std::endl
+     << "  return ret;" << std::endl
+     << "}" << std::endl;
+  free(frag);
+  delete [] frag8;
+
+  ss << "void SetupStateInfo(double * SI)" << std::endl;
+  frag = cci->stateInformationString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl
+     << frag8 << std::endl
+     << "}" << std::endl;
+  free(frag);
+  delete [] frag8;
+  ss.close();
+
+  void* mod = CompileSource(dirname, sourcename, mLastError);
+  IDACompiledModelFunctions* cmf = SetupIDACompiledModelFunctions(mod);
+  
+  return new CDA_DAESolverModel(mod, cmf, aModel, cci, dirname);
 }
 
 iface::cellml_services::ODESolverRun*
@@ -654,7 +846,7 @@ CDA_CellMLIntegrationService::createODEIntegrationRun
 )
   throw (std::exception&)
 {
-  return new CDA_ODESolverRun(aModel);
+  return new CDA_ODESolverRun(unsafe_dynamic_cast<CDA_ODESolverModel*>(aModel));
 }
 
 iface::cellml_services::DAESolverRun*
@@ -664,7 +856,7 @@ CDA_CellMLIntegrationService::createDAEIntegrationRun
 )
   throw (std::exception&)
 {
-  return new CDA_DAESolverRun(aModel);
+  return new CDA_DAESolverRun(unsafe_dynamic_cast<CDA_DAESolverModel*>(aModel));
 }
 
 iface::cellml_services::CellMLIntegrationService*

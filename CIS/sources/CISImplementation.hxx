@@ -17,6 +17,21 @@ struct CompiledModelFunctions
                        double* STATES, double* ALGEBRAIC);
   int (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
                            double* STATES, double* ALGEBRAIC);
+
+};
+
+struct IDACompiledModelFunctions
+{
+  void (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES);
+  void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
+                            double *STATES, double* ALGEBRAIC);
+  void (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
+                                     double* STATES, double* ALGEBRAIC);
+
+  void (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
+                           double* STATES, double* ALGEBRAIC,
+                           double* resids);
+  void (*SetupStateInfo)(double * SI);
 };
 
 class CDA_CellMLCompiledModel
@@ -25,11 +40,11 @@ class CDA_CellMLCompiledModel
 {
 public:
   CDA_CellMLCompiledModel(
-                           void* aModule, CompiledModelFunctions* aCMF,
+                           void* aModule,
                            iface::cellml_api::Model* aModel,
                            iface::cellml_services::CodeInformation* aCCI,
                            std::string& aDirname
-                          );
+                         );
   ~CDA_CellMLCompiledModel();
 
   CDA_IMPL_REFCOUNT;
@@ -52,7 +67,6 @@ public:
   // These are not available directly across CORBA, but read-only access is
   // allowed within the same module...
   void* mModule;
-  CompiledModelFunctions* mCMF;
   iface::cellml_api::Model* mModel;
   iface::cellml_services::CodeInformation* mCCI;
   std::string mDirname;
@@ -69,10 +83,13 @@ public:
    iface::cellml_services::CodeInformation* aCCI,
    std::string& aDirname
   )
-    : CDA_CellMLCompiledModel(aModule, aCMF, aModel, aCCI, aDirname)
+    : CDA_CellMLCompiledModel(aModule, aModel, aCCI, aDirname), mCMF(aCMF)
   {}
 
+  ~CDA_ODESolverModel() { delete mCMF; }
+
   CDA_IMPL_QI2(cellml_services::CellMLCompiledModel, cellml_services::ODESolverCompiledModel);
+  CompiledModelFunctions* mCMF;
 };
 
 class CDA_DAESolverModel
@@ -81,15 +98,19 @@ class CDA_DAESolverModel
 public:
   CDA_DAESolverModel
   (
-   void* aModule, CompiledModelFunctions* aCMF,
+   void* aModule, IDACompiledModelFunctions* aCMF,
    iface::cellml_api::Model* aModel,
    iface::cellml_services::CodeInformation* aCCI,
    std::string& aDirname
   )
-    : CDA_CellMLCompiledModel(aModule, aCMF, aModel, aCCI, aDirname)
+    : CDA_CellMLCompiledModel(aModule, aModel, aCCI, aDirname),
+      mCMF(aCMF)
   {}
 
+  ~CDA_DAESolverModel() { delete mCMF; }
+
   CDA_IMPL_QI2(cellml_services::CellMLCompiledModel, cellml_services::DAESolverCompiledModel);
+  IDACompiledModelFunctions* mCMF;
 };
 
 class CDA_CellMLIntegrationRun
@@ -98,9 +119,7 @@ class CDA_CellMLIntegrationRun
     public CDAThread
 {
 public:
-  CDA_CellMLIntegrationRun(
-                           iface::cellml_services::CellMLCompiledModel* aModel
-                          );
+  CDA_CellMLIntegrationRun();
   ~CDA_CellMLIntegrationRun();
 
   CDA_IMPL_REFCOUNT;
@@ -131,20 +150,9 @@ public:
                   const char* msg);
 
 protected:
-  void runthread();
+  virtual void runthread() = 0;
 
-private:
-  void SolveODEProblem(CompiledModelFunctions* f, uint32_t constSize,
-                       double* constants, uint32_t rateSize, double* rates,
-                       double* states, uint32_t algSize, double* algebraic);
-  void SolveODEProblemGSL(CompiledModelFunctions* f, uint32_t constSize,
-                       double* constants, uint32_t rateSize, double* rates,
-                       double* states, uint32_t algSize, double* algebraic);
-  void SolveODEProblemCVODE(CompiledModelFunctions* f, uint32_t constSize,
-                       double* constants, uint32_t rateSize, double* rates,
-                       double* states, uint32_t algSize, double* algebraic);
-
-  CDA_CellMLCompiledModel* mModel;
+protected:
   iface::cellml_services::ODEIntegrationStepType mStepType;
   double mEpsAbs, mEpsRel, mScalVar, mScalRate, mStepSizeMax;
   double mStartBvar, mStopBvar, mMaxPointDensity, mTabulationStepSize;
@@ -160,16 +168,37 @@ class CDA_ODESolverRun
   : public CDA_CellMLIntegrationRun
 {
 public:
-  CDA_ODESolverRun(iface::cellml_services::ODESolverCompiledModel* m) : CDA_CellMLIntegrationRun(m) {}
+  CDA_ODESolverRun(CDA_ODESolverModel* m) :
+    CDA_CellMLIntegrationRun(), mModel(m) {}
   CDA_IMPL_QI2(cellml_services::CellMLIntegrationRun, cellml_services::ODESolverRun);
+protected:
+  ObjRef<CDA_ODESolverModel> mModel;
+  void SolveODEProblem(CompiledModelFunctions* f, uint32_t constSize,
+                       double* constants, uint32_t rateSize, double* rates,
+                       double* states, uint32_t algSize, double* algebraic);
+  void SolveODEProblemGSL(CompiledModelFunctions* f, uint32_t constSize,
+                       double* constants, uint32_t rateSize, double* rates,
+                       double* states, uint32_t algSize, double* algebraic);
+  void SolveODEProblemCVODE(CompiledModelFunctions* f, uint32_t constSize,
+                       double* constants, uint32_t rateSize, double* rates,
+                       double* states, uint32_t algSize, double* algebraic);
+  void runthread();
 };
 
 class CDA_DAESolverRun
   : public CDA_CellMLIntegrationRun
 {
 public:
-  CDA_DAESolverRun(iface::cellml_services::DAESolverCompiledModel* m) : CDA_CellMLIntegrationRun(m) {}
+  CDA_DAESolverRun(CDA_DAESolverModel* m) : CDA_CellMLIntegrationRun(),
+                                            mModel(m) {}
   CDA_IMPL_QI2(cellml_services::CellMLIntegrationRun, cellml_services::DAESolverRun);
+protected:
+  ObjRef<CDA_DAESolverModel> mModel;
+  void runthread();
+
+  void SolveDAEProblem(IDACompiledModelFunctions* f, uint32_t constSize,
+                       double* constants, uint32_t rateSize, double* rates,
+                       uint32_t stateSize, double* states, uint32_t algSize, double* algebraic);
 };
 
 class CDA_CellMLIntegrationService
@@ -200,6 +229,11 @@ public:
 #else
   CDA_IMPL_QI1(cellml_services::CellMLIntegrationService);
 #endif
+
+  void setupCodeEnvironment(iface::cellml_services::CodeInformation* cci,
+                            std::string& dirname,
+                            std::string& sourcename,
+                            std::ofstream& ss);
 
   iface::cellml_services::ODESolverCompiledModel*
   compileModelODE(iface::cellml_api::Model* aModel)

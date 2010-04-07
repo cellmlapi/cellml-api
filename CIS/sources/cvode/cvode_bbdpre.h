@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2006/07/05 15:27:50 $
+ * $Revision: 1.7 $
+ * $Date: 2007/11/26 16:19:58 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -36,26 +36,24 @@
  *   #include <cvode/cvode_bbdpre.h>
  *   ...
  *   void *cvode_mem;
- *   void *bbd_data;
  *   ...
  *   Set y0
  *   ...
  *   cvode_mem = CVodeCreate(...);
  *   ier = CVodeMalloc(...);
  *   ...
- *   bbd_data = CVBBDPrecAlloc(cvode_mem, Nlocal, mudq ,mldq,
- *                             mukeep, mlkeep, dqrely, gloc, cfn);
- *   flag = CVBBDSpgmr(cvode_mem, pretype, maxl, bbd_data);
+ *   flag = CVSpgmr(cvode_mem, pretype, maxl);
  *      -or-
- *   flag = CVBBDSpbcg(cvode_mem, pretype, maxl, bbd_data);
+ *   flag = CVSpbcg(cvode_mem, pretype, maxl);
  *      -or-
- *   flag = CVBBDSptfqmr(cvode_mem, pretype, maxl, bbd_data);
+ *   flag = CVSptfqmr(cvode_mem, pretype, maxl);
+ *   ...
+ *   flag = CVBBDPrecInit(cvode_mem, Nlocal, mudq ,mldq,
+ *                        mukeep, mlkeep, dqrely, gloc, cfn);
  *   ...
  *   ier = CVode(...);
  *   ...
- *   CVBBDPrecFree(&bbd_data);
- *   ...                                                           
- *   CVodeFree(...);
+ *   CVodeFree(&cvode_mem);
  * 
  *   Free y0
  *
@@ -72,7 +70,7 @@
  * 1) This header file is included by the user for the definition
  *    of the CVBBDData type and for needed function prototypes.
  *
- * 2) The CVBBDPrecAlloc call includes half-bandwiths mudq and mldq
+ * 2) The CVBBDPrecInit call includes half-bandwiths mudq and mldq
  *    to be used in the difference quotient calculation of the
  *    approximate Jacobian. They need not be the true
  *    half-bandwidths of the Jacobian of the local block of g,
@@ -84,17 +82,14 @@
  *    same on every processor.
  *
  * 3) The actual name of the user's f function is passed to
- *    CVodeMalloc, and the names of the user's gloc and cfn
- *    functions are passed to CVBBDPrecAlloc.
+ *    CVodeInit, and the names of the user's gloc and cfn
+ *    functions are passed to CVBBDPrecInit.
  *
- * 4) The pointer to the user-defined data block f_data, which is
- *    set through CVodeSetFdata is also available to the user in
+ * 4) The pointer to the user-defined data block user_data, which is
+ *    set through CVodeSetUserData is also available to the user in
  *    gloc and cfn.
  *
- * 5) For the CVSpgmr solver, the Gram-Schmidt type gstype,
- *    is left to the user to specify through CVSpgmrSetGStype.
- *
- * 6) Optional outputs specific to this module are available by
+ * 5) Optional outputs specific to this module are available by
  *    way of routines listed below. These include work space sizes
  *    and the cumulative number of gloc calls. The costs
  *    associated with this module also include nsetups banded LU
@@ -113,12 +108,6 @@ extern "C" {
 
 #include <sundials/sundials_nvector.h>
 
-/* CVBBDPRE return values */
-
-#define CVBBDPRE_SUCCESS            0
-#define CVBBDPRE_PDATA_NULL       -11
-#define CVBBDPRE_FUNC_UNRECVR     -12
-
 /*
  * -----------------------------------------------------------------
  * Type : CVLocalFn
@@ -132,11 +121,11 @@ extern "C" {
  * This function takes as input the local vector size Nlocal, the
  * independent variable value t, the local real dependent
  * variable vector y, and a pointer to the user-defined data
- * block f_data. It is to compute the local part of g(t,y) and
+ * block user_data. It is to compute the local part of g(t,y) and
  * store this in the vector g.
  * (Allocation of memory for y and g is handled within the
  * preconditioner module.)
- * The f_data parameter is the same as that specified by the user
+ * The user_data parameter is the same as that specified by the user
  * through the CVodeSetFdata routine.
  *
  * A CVLocalFn should return 0 if successful, a positive value if 
@@ -145,8 +134,8 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-typedef int (*CVLocalFn)(long int Nlocal, realtype t, N_Vector y,
-                         N_Vector g, void *f_data);
+typedef int (*CVLocalFn)(int Nlocal, realtype t, N_Vector y,
+                         N_Vector g, void *user_data);
 
 /*
  * -----------------------------------------------------------------
@@ -158,17 +147,17 @@ typedef int (*CVLocalFn)(long int Nlocal, realtype t, N_Vector y,
  *
  * This function takes as input the local vector size Nlocal,
  * the independent variable value t, the dependent variable
- * vector y, and a pointer to the user-defined data block f_data.
- * The f_data parameter is the same as that specified by the user
- * through the CVodeSetFdata routine. The CVCommFn cfn is
+ * vector y, and a pointer to the user-defined data block user_data.
+ * The user_data parameter is the same as that specified by the user
+ * through the CVodeSetUserData routine. The CVCommFn cfn is
  * expected to save communicated data in space defined within the
- * structure f_data. Note: A CVCommFn cfn does not have a return value.
+ * structure user_data. Note: A CVCommFn cfn does not have a return value.
  *
  * Each call to the CVCommFn cfn is preceded by a call to the
  * CVRhsFn f with the same (t,y) arguments. Thus cfn can omit any
  * communications done by f if relevant to the evaluation of g.
  * If all necessary communication was done by f, the user can
- * pass NULL for cfn in CVBBDPrecAlloc (see below).
+ * pass NULL for cfn in CVBBDPrecInit (see below).
  *
  * A CVCommFn should return 0 if successful, a positive value if 
  * a recoverable error occurred, and a negative value if an 
@@ -176,18 +165,16 @@ typedef int (*CVLocalFn)(long int Nlocal, realtype t, N_Vector y,
  * -----------------------------------------------------------------
  */
 
-typedef int (*CVCommFn)(long int Nlocal, realtype t, N_Vector y,
-                        void *f_data);
+typedef int (*CVCommFn)(int Nlocal, realtype t, N_Vector y,
+                        void *user_data);
 
 /*
  * -----------------------------------------------------------------
- * Function : CVBBDPrecAlloc
+ * Function : CVBBDPrecInit
  * -----------------------------------------------------------------
- * CVBBDPrecAlloc allocates and initializes a CVBBDData structure
- * to be passed to CVSp* (and used by CVBBDPrecSetup and
- * CVBBDPrecSolve).
+ * CVBBDPrecInit allocates and initializes the BBD preconditioner.
  *
- * The parameters of CVBBDPrecAlloc are as follows:
+ * The parameters of CVBBDPrecInit are as follows:
  *
  * cvode_mem is the pointer to the integrator memory.
  *
@@ -215,103 +202,20 @@ typedef int (*CVCommFn)(long int Nlocal, realtype t, N_Vector y,
  *     necessary interprocess communication for the
  *     execution of gloc.
  *
- * CVBBDPrecAlloc returns the storage allocated (type *void),
- * or NULL if the request for storage cannot be satisfied.
+ * The return value of CVBBDPrecInit is one of:
+ *   CVSPILS_SUCCESS if no errors occurred
+ *   CVSPILS_MEM_NULL if the integrator memory is NULL
+ *   CVSPILS_LMEM_NULL if the linear solver memory is NULL
+ *   CVSPILS_ILL_INPUT if an input has an illegal value
+ *   CVSPILS_MEM_FAIL if a memory allocation request failed
  * -----------------------------------------------------------------
  */
 
-void *CVBBDPrecAlloc(void *cvode_mem, long int Nlocal, 
-                     long int mudq, long int mldq, 
-                     long int mukeep, long int mlkeep, 
-                     realtype dqrely,
-                     CVLocalFn gloc, CVCommFn cfn);
-
-/*
- * -----------------------------------------------------------------
- * Function : CVBBDSptfqmr
- * -----------------------------------------------------------------
- * CVBBDSptfqmr links the CVBBDPRE preconditioner to the CVSPTFQMR
- * linear solver. It performs the following actions:
- *  1) Calls the CVSPTFQMR specification routine and attaches the
- *     CVSPTFQMR linear solver to the integrator memory;
- *  2) Sets the preconditioner data structure for CVSPTFQMR
- *  3) Sets the preconditioner setup routine for CVSPTFQMR
- *  4) Sets the preconditioner solve routine for CVSPTFQMR
- *
- * Its first 3 arguments are the same as for CVSptfqmr (see
- * cvsptfqmr.h). The last argument is the pointer to the CVBBDPRE
- * memory block returned by CVBBDPrecAlloc. Note that the user need
- * not call CVSptfqmr.
- *
- * Possible return values are:
- *    CVSPILS_SUCCESS      if successful
- *    CVSPILS_MEM_NULL     if the cvode memory was NULL
- *    CVSPILS_LMEM_NULL    if the cvsptfqmr memory was NULL
- *    CVSPILS_MEM_FAIL     if there was a memory allocation failure
- *    CVSPILS_ILL_INPUT    if a required vector operation is missing
- *    CVBBDPRE_PDATA_NULL  if the bbd_data was NULL
- * -----------------------------------------------------------------
- */
-
-int CVBBDSptfqmr(void *cvode_mem, int pretype, int maxl, void *bbd_data);
-
-/*
- * -----------------------------------------------------------------
- * Function : CVBBDSpbcg
- * -----------------------------------------------------------------
- * CVBBDSpbcg links the CVBBDPRE preconditioner to the CVSPBCG
- * linear solver. It performs the following actions:
- *  1) Calls the CVSPBCG specification routine and attaches the
- *     CVSPBCG linear solver to the integrator memory;
- *  2) Sets the preconditioner data structure for CVSPBCG
- *  3) Sets the preconditioner setup routine for CVSPBCG
- *  4) Sets the preconditioner solve routine for CVSPBCG
- *
- * Its first 3 arguments are the same as for CVSpbcg (see
- * cvspbcg.h). The last argument is the pointer to the CVBBDPRE
- * memory block returned by CVBBDPrecAlloc. Note that the user need
- * not call CVSpbcg.
- *
- * Possible return values are:
- *    CVSPILS_SUCCESS      if successful
- *    CVSPILS_MEM_NULL     if the cvode memory was NULL
- *    CVSPILS_LMEM_NULL    if the cvspbcg memory was NULL
- *    CVSPILS_MEM_FAIL     if there was a memory allocation failure
- *    CVSPILS_ILL_INPUT    if a required vector operation is missing
- *    CVBBDPRE_PDATA_NULL  if the bbd_data was NULL
- * -----------------------------------------------------------------
- */
-
-int CVBBDSpbcg(void *cvode_mem, int pretype, int maxl, void *bbd_data);
-
-/*
- * -----------------------------------------------------------------
- * Function : CVBBDSpgmr
- * -----------------------------------------------------------------
- * CVBBDSpgmr links the CVBBDPRE preconditioner to the CVSPGMR
- * linear solver. It performs the following actions:
- *  1) Calls the CVSPGMR specification routine and attaches the
- *     CVSPGMR linear solver to the integrator memory;
- *  2) Sets the preconditioner data structure for CVSPGMR
- *  3) Sets the preconditioner setup routine for CVSPGMR
- *  4) Sets the preconditioner solve routine for CVSPGMR
- *
- * Its first 3 arguments are the same as for CVSpgmr (see
- * cvspgmr.h). The last argument is the pointer to the CVBBDPRE
- * memory block returned by CVBBDPrecAlloc. Note that the user need
- * not call CVSpgmr.
- *
- * Possible return values are:
- *    CVSPILS_SUCCESS      if successful
- *    CVSPILS_MEM_NULL     if the cvode memory was NULL
- *    CVSPILS_LMEM_NULL    if the cvspgmr memory was NULL
- *    CVSPILS_MEM_FAIL     if there was a memory allocation failure
- *    CVSPILS_ILL_INPUT    if a required vector operation is missing
- *    CVBBDPRE_PDATA_NULL  if the bbd_data was NULL
- * -----------------------------------------------------------------
- */
-
-int CVBBDSpgmr(void *cvode_mem, int pretype, int maxl, void *bbd_data);
+SUNDIALS_EXPORT int CVBBDPrecInit(void *cvode_mem, int Nlocal, 
+                                  int mudq, int mldq, 
+                                  int mukeep, int mlkeep, 
+                                  realtype dqrely,
+                                  CVLocalFn gloc, CVCommFn cfn);
 
 /*
  * -----------------------------------------------------------------
@@ -322,32 +226,21 @@ int CVBBDSpgmr(void *cvode_mem, int pretype, int maxl, void *bbd_data);
  * CVSPBCG/CVBBDPRE or CVSPTFQMR/CVBBDPRE provided there is no change 
  * in Nlocal, mukeep, or mlkeep. After solving one problem, and after 
  * calling CVodeReInit to re-initialize the integrator for a subsequent 
- * problem, call CVBBDPrecReInit. Then call CVSpgmrSet* or CVSpbcgSet* 
- * or CVSptfqmrSet* functions if necessary for any changes to CVSPGMR, 
- * CVSPBCG, or CVSPTFQMR parameters, before calling CVode.
+ * problem, call CVBBDPrecReInit.
  *
- * The first argument to CVBBDPrecReInit must be the pointer pdata
- * that was returned by CVBBDPrecAlloc. All other arguments have
- * the same names and meanings as those of CVBBDPrecAlloc.
+ * All arguments have the same names and meanings as those
+ * of CVBBDPrecInit.
  *
- * The return value of CVBBDPrecReInit is CVBBDPRE_SUCCESS, indicating
- * success, or CVBBDPRE_PDATA_NULL if bbd_data was NULL.
+ * The return value of CVBBDPrecReInit is one of:
+ *   CVSPILS_SUCCESS if no errors occurred
+ *   CVSPILS_MEM_NULL if the integrator memory is NULL
+ *   CVSPILS_LMEM_NULL if the linear solver memory is NULL
+ *   CVSPILS_PMEM_NULL if the preconditioner memory is NULL
  * -----------------------------------------------------------------
  */
 
-int CVBBDPrecReInit(void *bbd_data, long int mudq, long int mldq,
-                    realtype dqrely, CVLocalFn gloc, CVCommFn cfn);
-
-/*
- * -----------------------------------------------------------------
- * Function : CVBBDPrecFree
- * -----------------------------------------------------------------
- * CVBBDPrecFree frees the memory block bbd_data allocated by the
- * call to CVBBDAlloc.
- * -----------------------------------------------------------------
- */
-
-void CVBBDPrecFree(void **bbd_data);
+SUNDIALS_EXPORT int CVBBDPrecReInit(void *cvode_mem, int mudq, int mldq,
+				    realtype dqrely);
 
 /*
  * -----------------------------------------------------------------
@@ -358,22 +251,15 @@ void CVBBDPrecFree(void **bbd_data);
  * CVBBDPrecGetNumGfnEvals returns the number of calls to gfn.
  *
  * The return value of CVBBDPrecGet* is one of:
- *    CVBBDPRE_SUCCESS    if successful
- *    CVBBDPRE_PDATA_NULL if the bbd_data memory was NULL
+ *   CVSPILS_SUCCESS if no errors occurred
+ *   CVSPILS_MEM_NULL if the integrator memory is NULL
+ *   CVSPILS_LMEM_NULL if the linear solver memory is NULL
+ *   CVSPILS_PMEM_NULL if the preconditioner memory is NULL
  * -----------------------------------------------------------------
  */
 
-int CVBBDPrecGetWorkSpace(void *bbd_data, long int *lenrwLS, long int *leniwLS);
-int CVBBDPrecGetNumGfnEvals(void *bbd_data, long int *ngevalsBBDP);
-
-/*
- * -----------------------------------------------------------------
- * The following function returns the name of the constant 
- * associated with a CVBBDPRE return flag
- * -----------------------------------------------------------------
- */
-  
-char *CVBBDPrecGetReturnFlagName(int flag);
+SUNDIALS_EXPORT int CVBBDPrecGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS);
+SUNDIALS_EXPORT int CVBBDPrecGetNumGfnEvals(void *cvode_mem, long int *ngevalsBBDP);
 
 #ifdef __cplusplus
 }

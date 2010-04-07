@@ -25,7 +25,10 @@
 #undef N
 #undef M
 #include <cvode/cvode.h>
+#include <ida/ida.h>
+#include <ida/ida_spgmr.h>
 #include <nvector/nvector_serial.h>
+#include <sundials/sundials_nvector.h>
 #include <sundials/sundials_types.h>
 #include <cvode/cvode_dense.h>
 
@@ -167,7 +170,7 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 
 #ifdef ENABLE_GSL_INTEGRATORS
 void
-CDA_CellMLIntegrationRun::SolveODEProblemGSL
+CDA_ODESolverRun::SolveODEProblemGSL
 (
  CompiledModelFunctions* f, uint32_t constSize,
  double* constants, uint32_t rateSize, double* rates,
@@ -344,7 +347,7 @@ CDA_CellMLIntegrationRun::CVODEError
 }
 
 void
-CDA_CellMLIntegrationRun::SolveODEProblemCVODE
+CDA_ODESolverRun::SolveODEProblemCVODE
 (
  CompiledModelFunctions* f, uint32_t constSize,
  double* constants, uint32_t rateSize, double* rates,
@@ -369,11 +372,11 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 
   EvaluationInformation ei;
 
-  CVodeMalloc(solver, EvaluateRatesCVODE, mStartBvar, y, CV_SS, mEpsRel,
-              &mEpsAbs);
+  CVodeInit(solver, EvaluateRatesCVODE, mStartBvar, y);
+  CVodeSStolerances(solver, mEpsRel, mEpsAbs);
   if (mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
     CVDense(solver, rateSize);
-  CVodeSetFdata(solver, &ei);
+  CVodeSetUserData(solver, &ei);
 
   ei.constants = constants;
   ei.states = states;
@@ -411,7 +414,7 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
       bhl = nextStopPoint;
 
     CVodeSetStopTime(solver, bhl);
-    if (CVode(solver, bhl, y, &voi, CV_ONE_STEP_TSTOP) < 0)
+    if (CVode(solver, bhl, y, &voi, CV_ONE_STEP) < 0)
     {
       sendFailure = true;
       break;
@@ -479,7 +482,7 @@ CDA_CellMLIntegrationRun::SolveODEProblemCVODE
 #endif
 
 void
-CDA_CellMLIntegrationRun::SolveODEProblem
+CDA_ODESolverRun::SolveODEProblem
 (
  CompiledModelFunctions* f, uint32_t constSize,
  double* constants, uint32_t rateSize, double* rates,
@@ -535,6 +538,155 @@ struct DefintInformation
   double (*f)(double VOI,double *C,double *R,double *S,double *A, int*);
 };
 
+struct DAEEvaluationInformation
+{
+  double* constants, * rates, * algebraic, * states;
+  void (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
+                           double* STATES, double* ALGEBRAIC, double* resids);
+  void (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
+                                    double* STATES, double* ALGEBRAIC);
+  void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
+                           double* STATES, double* ALGEBRAIC);
+};
+
+int
+ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
+{
+  DAEEvaluationInformation * d = reinterpret_cast<DAEEvaluationInformation*>(userdata);
+  double *states = N_VGetArrayPointer(yy);
+  double * rates = N_VGetArrayPointer(yp);
+  double * resids = N_VGetArrayPointer(resval);
+  d->EvaluateEssentialVariables(t, d->constants, rates, states, d->algebraic);
+  d->ComputeResiduals(t, states, rates, d->constants, d->algebraic, resids);
+  return 0;
+}
+
+void
+CDA_DAESolverRun::SolveDAEProblem
+(
+ IDACompiledModelFunctions* f, uint32_t constSize,
+ double* constants, uint32_t rateSize, double* rates,
+ uint32_t stateSize, double* states, uint32_t algSize,
+ double* algebraic
+)
+{
+  N_Vector y0, dy0;
+  y0 = N_VMake_Serial(stateSize, states);
+  dy0 = N_VMake_Serial(rateSize, rates);
+
+  DAEEvaluationInformation ei;
+  ei.constants = constants;
+  ei.states = states;
+  ei.rates = rates;
+  ei.algebraic = algebraic;
+  ei.ComputeResiduals = f->ComputeResiduals;
+  ei.EvaluateEssentialVariables = f->EvaluateEssentialVariables;
+  ei.EvaluateVariables = f->EvaluateVariables;
+  void* idamem = IDACreate();
+  IDAInit(idamem, ida_resfn, /* t0 = */mStartBvar, y0, dy0);
+  IDASetUserData(idamem, &ei);
+  IDASStolerances(idamem, mEpsRel, mEpsAbs);
+  IDASpgmr(idamem, 0);
+  IDASetUserData(idamem, &ei);
+
+  {
+    N_Vector icinfo = N_VNew_Serial(stateSize);
+    f->SetupStateInfo(N_VGetArrayPointer(icinfo));
+    IDASetId(idamem, icinfo);
+    N_VDestroy(icinfo);
+  }
+  IDACalcIC(idamem, IDA_YA_YDP_INIT, mStopBvar);
+
+  uint32_t recsize = rateSize * 2 + algSize + 1;
+  uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / recsize) * recsize;
+  double* storage = new double[storageCapacity];
+  uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
+  uint32_t storageSize = 0;
+
+  double voi = mStartBvar;
+  double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
+  bool isFirst = true;
+
+  double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
+  uint32_t tabStepNumber = 1;
+  double nextStopPoint = mTabulationStepSize + voi;
+  bool sendFailure = false;
+
+  if (mTabulationStepSize == 0.0)
+    nextStopPoint = mStopBvar;
+
+  while (voi < mStopBvar)
+  {
+    double bhl = mStopBvar;
+    if (bhl - voi > mStepSizeMax)
+      bhl = voi + mStepSizeMax;
+    if(bhl > nextStopPoint)
+      bhl = nextStopPoint;
+
+    IDASetStopTime(idamem, bhl);
+    if (IDASolve(idamem, bhl, &voi, y0, dy0, IDA_NORMAL) < 0)
+    {
+      sendFailure = true;
+      break;
+    }
+
+    if (mCancelIntegration)
+      break;
+
+    if (isFirst)
+      isFirst = false;
+    else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
+      continue;
+
+    if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
+      continue;
+
+    if (voi==nextStopPoint)
+      nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
+
+    lastVOI = voi;
+
+    f->EvaluateVariables(voi, constants, rates, states, algebraic);
+
+    // Add to storage...
+    storage[storageSize] = voi;
+    memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+    memcpy(storage + storageSize + 1 + rateSize, rates,
+           rateSize * sizeof(double));
+    memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+           algSize * sizeof(double));
+
+    storageSize += recsize;
+
+    // Are we ready to send?
+    uint32_t timeNow = time(0);
+    if (timeNow >= storageExpiry || storageSize == storageCapacity)
+    {
+      if (mObserver != NULL)
+        mObserver->results(storageSize, storage);
+      storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
+      storageSize = 0;
+    }
+  }
+  if (storageSize != 0 && mObserver != NULL)
+  {
+    mObserver->results(storageSize, storage);
+  }
+  if (mObserver != NULL)
+  {
+    if (sendFailure)
+      mObserver->failed(mWhyFailure.c_str());
+    else
+      mObserver->done();
+  }
+  delete [] storage;
+
+  IDAFree(&idamem);
+  N_VDestroy(y0);
+  N_VDestroy(dy0);
+  
+}
+
 int
 EvaluateDefintCVODE(double x, N_Vector varsV, N_Vector ratesV, void* params)
 {
@@ -561,8 +713,8 @@ defint(
   N_Vector y = N_VMake_Serial(1, &zero);
   void* subsolver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
   double epsAbs = SUBSOL_TOLERANCE;
-  CVodeMalloc(subsolver, EvaluateDefintCVODE, lowV, y, CV_SS, SUBSOL_TOLERANCE,
-            &epsAbs);
+  CVodeInit(subsolver, EvaluateDefintCVODE, lowV, y);
+  CVodeSStolerances(subsolver, SUBSOL_TOLERANCE, epsAbs);
   CVDense(subsolver, 1);
 
   DefintInformation ei;
@@ -573,7 +725,7 @@ defint(
   ei.algebraic = A;
   ei.f = f;
   ei.var = V;
-  CVodeSetFdata(subsolver, &ei);
+  CVodeSetUserData(subsolver, &ei);
 
   *V = lowV;
   double ret, tret;

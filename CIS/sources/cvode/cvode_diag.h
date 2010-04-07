@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.1 $
- * $Date: 2006/07/05 15:27:50 $
+ * $Revision: 1.3 $
+ * $Date: 2006/11/29 00:05:06 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -11,8 +11,7 @@
  * All rights reserved.
  * For details, see the LICENSE file.
  * -----------------------------------------------------------------
- * This is the header file for the CVODE/CVODES diagonal linear
- * solver, CVDIAG.
+ * This is the header file for the CVODE diagonal linear solver, CVDIAG.
  * -----------------------------------------------------------------
  */
 
@@ -43,7 +42,7 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-int CVDiag(void *cvode_mem);
+SUNDIALS_EXPORT int CVDiag(void *cvode_mem);
 
 /*
  * -----------------------------------------------------------------
@@ -69,9 +68,9 @@ int CVDiag(void *cvode_mem);
  * -----------------------------------------------------------------
  */
 
-int CVDiagGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS);
-int CVDiagGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS);
-int CVDiagGetLastFlag(void *cvode_mem, int *flag);
+SUNDIALS_EXPORT int CVDiagGetWorkSpace(void *cvode_mem, long int *lenrwLS, long int *leniwLS);
+SUNDIALS_EXPORT int CVDiagGetNumRhsEvals(void *cvode_mem, long int *nfevalsLS);
+SUNDIALS_EXPORT int CVDiagGetLastFlag(void *cvode_mem, int *flag);
 
 /*
  * -----------------------------------------------------------------
@@ -80,7 +79,7 @@ int CVDiagGetLastFlag(void *cvode_mem, int *flag);
  * -----------------------------------------------------------------
  */
   
-char *CVDiagGetReturnFlagName(int flag);
+SUNDIALS_EXPORT char *CVDiagGetReturnFlagName(int flag);
 
 /*
  * -----------------------------------------------------------------

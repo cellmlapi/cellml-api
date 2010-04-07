@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 1.2 $
- * $Date: 2006/10/11 16:34:13 $
+ * $Revision: 1.5 $
+ * $Date: 2007/04/30 17:41:05 $
  * ----------------------------------------------------------------- 
  * Programmer(s): Michael Wittman, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
@@ -31,24 +31,24 @@ extern "C" {
  * -----------------------------------------------------------------
  */
 
-typedef struct {
+typedef struct CVBBDPrecDataRec {
 
   /* passed by user to CVBBDPrecAlloc and used by PrecSetup/PrecSolve */
 
-  long int mudq, mldq, mukeep, mlkeep;
+  int mudq, mldq, mukeep, mlkeep;
   realtype dqrely;
   CVLocalFn gloc;
   CVCommFn cfn;
 
   /* set by CVBBDPrecSetup and used by CVBBDPrecSolve */
 
-  BandMat savedJ;
-  BandMat savedP;
-  long int *pivots;
+  DlsMat savedJ;
+  DlsMat savedP;
+  int *pivots;
 
   /* set by CVBBDPrecAlloc and used by CVBBDPrecSetup */
 
-  long int n_local;
+  int n_local;
 
   /* available for optional output */
 
@@ -68,11 +68,12 @@ typedef struct {
  * -----------------------------------------------------------------
  */
 
-#define MSGBBDP_CVMEM_NULL "Integrator memory is NULL."
-#define MSGBBDP_MEM_FAIL "A memory request failed."
-#define MSGBBDP_BAD_NVECTOR "A required vector operation is not implemented."
-#define MSGBBDP_PDATA_NULL "BBDPrecData is NULL."
-#define MSGBBDP_FUNC_FAILED "The gloc or cfn routine failed in an unrecoverable manner."
+#define MSGBBD_MEM_NULL    "Integrator memory is NULL."
+#define MSGBBD_LMEM_NULL   "Linear solver memory is NULL. One of the SPILS linear solvers must be attached."
+#define MSGBBD_MEM_FAIL    "A memory request failed."
+#define MSGBBD_BAD_NVECTOR "A required vector operation is not implemented."
+#define MSGBBD_PMEM_NULL   "BBD peconditioner memory is NULL. CVBBDPrecInit must be called."
+#define MSGBBD_FUNC_FAILED "The gloc or cfn routine failed in an unrecoverable manner."
 
 #ifdef __cplusplus
 }
