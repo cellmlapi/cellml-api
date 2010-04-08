@@ -297,7 +297,7 @@ CDA_RDFAPIRepresentation::source()
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
   RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, bs->createDataSource());
 
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->safe_base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
   bs->parseIntoDataSource(ds, rdocel, base.c_str());
 
@@ -323,7 +323,7 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 
   // Step two: Convert the data-source into an RDF document...
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->safe_base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
   RETURN_INTO_OBJREF(doc, iface::dom::Document,
                      bs->getDOMForDataSource(aSource, base.c_str()));
@@ -336,38 +336,29 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 }
 #endif
 
-CDA_URI::CDA_URI(iface::dom::Attr* idata)
-  : _cda_refcount(1), datastore(idata), fake(false)
-{
-  datastore->add_ref();
-}
-
-CDA_URI::CDA_URI(wchar_t* ifaketext)
-  : _cda_refcount(1), faketext(ifaketext), fake(true)
+CDA_URI::CDA_URI(iface::dom::Element* aDatastore, const wchar_t* aNamespace, const wchar_t* aLocalname,
+                 const wchar_t* aQualifiedName)
+  : _cda_refcount(1), mDatastore(aDatastore), mNamespace(aNamespace), mLocalname(aLocalname),
+    mQualifiedName(aQualifiedName)
 {
 }
 
 CDA_URI::~CDA_URI()
 {
-  if (!fake)
-    datastore->release_ref();
 }
 
 wchar_t*
 CDA_URI::asText()
   throw(std::exception&)
 {
-  if (!fake)
-    return datastore->value();
-  return faketext;
+  return mDatastore->getAttributeNS(mNamespace, mLocalname);
 }
 
 void
 CDA_URI::asText(const wchar_t* attr)
   throw(std::exception&)
 {
-  if (!fake)
-    datastore->value(attr);
+  mDatastore->setAttributeNS(mNamespace, mQualifiedName, attr);
 }
 
 CDA_CellMLElement::CDA_CellMLElement
@@ -1171,63 +1162,10 @@ CDA_Model::imports()
 }
 
 iface::cellml_api::URI*
-CDA_Model::safe_base_uri()
-  throw(std::exception&)
-{
-  // Find the xml:base attribute...
-  try
-  {
-    ObjRef<iface::dom::Attr> attr
-      (already_AddRefd<iface::dom::Attr>
-       (
-        datastore->getAttributeNodeNS(L"http://www.w3.org/XML/1998/namespace",
-                                      L"base")
-       ));
-    if (attr == NULL)
-    {
-      wchar_t* temp = (wchar_t*)malloc(sizeof(wchar_t));
-      wcscpy(temp, L"");
-      return new CDA_URI(temp);
-    }
-    return new CDA_URI(attr);
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::cellml_api::CellMLException();
-  }
-}
-
-iface::cellml_api::URI*
 CDA_Model::base_uri()
   throw(std::exception&)
 {
-  // Find the xml:base attribute...
-  try
-  {
-    ObjRef<iface::dom::Attr> attr
-      (already_AddRefd<iface::dom::Attr>
-       (
-        datastore->getAttributeNodeNS(L"http://www.w3.org/XML/1998/namespace",
-                                      L"base")
-       ));
-    if (attr == NULL)
-    {
-      attr =
-        already_AddRefd<iface::dom::Attr>
-        (
-         mDoc->createAttributeNS(L"http://www.w3.org/XML/1998/namespace",
-                                 L"xml:base")
-        );
-      iface::dom::Attr* at = datastore->setAttributeNodeNS(attr);
-      if (at != NULL)
-        at->release_ref();
-    }
-    return new CDA_URI(attr);
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::cellml_api::CellMLException();
-  }
+  return new CDA_URI(datastore, L"http://www.w3.org/XML/1998/namespace", L"base", L"xml:base");
 }
 
 iface::cellml_api::UnitsSet*
@@ -3263,25 +3201,7 @@ iface::cellml_api::URI*
 CDA_CellMLImport::xlinkHref()
   throw(std::exception&)
 {
-  try
-  {
-    ObjRef<iface::dom::Attr> attrNode =
-      already_AddRefd<iface::dom::Attr>
-      (datastore->getAttributeNodeNS(XLINK_NS, L"href"));
-    if (attrNode == NULL)
-    {
-      RETURN_INTO_OBJREF(doc, iface::dom::Document, datastore->ownerDocument());
-      attrNode = already_AddRefd<iface::dom::Attr>
-        (doc->createAttributeNS(XLINK_NS, L"href"));
-      RETURN_INTO_OBJREF(n, iface::dom::Attr,
-                         datastore->setAttributeNodeNS(attrNode));
-    }
-    return new CDA_URI(attrNode);
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::cellml_api::CellMLException();
-  }
+  return new CDA_URI(datastore, XLINK_NS, L"href", L"xlink:href");
 }
 
 iface::cellml_api::ImportComponentSet*
@@ -3338,7 +3258,7 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
     return;
 
   // See if we can get an xml:base...
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->safe_base_uri());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->base_uri());
   RETURN_INTO_WSTRING(base, bu->asText());
 
   if (aURL.find(L"://") != std::wstring::npos)

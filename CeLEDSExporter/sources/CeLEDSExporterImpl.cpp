@@ -335,7 +335,7 @@ CDA_CodeExporter::listVariablesByState(iface::cellml_services::CodeInformation *
     
     DECLARE_QUERY_INTERFACE_OBJREF(vElement, v, cellml_api::CellMLElement);
     RETURN_INTO_OBJREF(model, iface::cellml_api::Model, vElement->modelElement());
-    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, model->safe_base_uri());
+    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, model->base_uri());
     RETURN_INTO_WSTRING(tbu, bu->asText());
     if (!tbu.empty()) {
       str += L" in model ";

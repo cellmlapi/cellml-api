@@ -786,7 +786,7 @@ CodeGenerationState::ProcessModellerSuppliedIVHints()
   DECLARE_QUERY_INTERFACE_OBJREF(rar, rr, rdf_api::RDFAPIRepresentation);
   RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, rar->source());
 
-  RETURN_INTO_OBJREF(buo, iface::cellml_api::URI, mModel->safe_base_uri());
+  RETURN_INTO_OBJREF(buo, iface::cellml_api::URI, mModel->base_uri());
   RETURN_INTO_WSTRING(bu, buo->asText());
   std::wstring modelURL = bu + L"#";
   RETURN_INTO_WSTRING(cmId, mModel->cmetaId());
@@ -807,7 +807,7 @@ CodeGenerationState::ProcessModellerSuppliedIVHints()
       if (vcmId != L"")
       {
         RETURN_INTO_OBJREF(vm, iface::cellml_api::Model, cv->modelElement());
-        RETURN_INTO_OBJREF(vbuo, iface::cellml_api::URI, vm->safe_base_uri());
+        RETURN_INTO_OBJREF(vbuo, iface::cellml_api::URI, vm->base_uri());
         RETURN_INTO_WSTRING(vbu, vbuo->asText());
         std::wstring url(vbu + L"#" + vcmId);
         cmetaCTMap.insert(std::pair<std::wstring, ptr_tag<CDA_ComputationTarget> >(url, *i));
