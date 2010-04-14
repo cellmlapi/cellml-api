@@ -140,6 +140,8 @@ interface_list =\
   rdf_api/BlankNode \
   rdf_api/DataSource \
   rdf_api/Node \
+  rdf_api/NodeIterator \
+  rdf_api/Container \
   rdf_api/Resource \
   rdf_api/RDFAPIRepresentation \
   rdf_api/Bootstrap \
