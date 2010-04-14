@@ -214,7 +214,7 @@ private:
 
 void
 ProcessKeywords(int argc, char** argv,
-                iface::cellml_services::ODESolverRun* run)
+                iface::cellml_services::CellMLIntegrationRun* run)
 {
   // Scoped locale change.
   CNumericLocale locobj;
@@ -257,13 +257,20 @@ ProcessKeywords(int argc, char** argv,
         ist = iface::cellml_services::ADAMS_MOULTON_1_12;
       else if (!strcasecmp(value, "BDF15SIMP"))
         ist = iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE;
+      else if (!strcasecmp(value, "IDA"))
+        continue;
       else
       {
         printf("# Warning: Unsupported step_type value %s (ignored)\n",
                value);
         continue;
       }
-      run->stepType(ist);
+
+      DECLARE_QUERY_INTERFACE_OBJREF(osr, run, cellml_services::ODESolverRun);
+      if (osr == NULL)
+        printf("Warning: step_type not IDA on IDA SolverRun. Probably multiple step_types set.\n");
+      else
+        osr->stepType(ist);
     }
     else if (!strcasecmp(command, "step_size_control"))
     {
@@ -372,6 +379,120 @@ ProcessKeywords(int argc, char** argv,
   }
 }
 
+bool
+PeekForIDA(int argc, char** argv)
+{
+  for (int i = 0; i < argc; i++)
+  {
+    if (!strcasecmp(argv[i], "step_type") && i + 1 < argc &&
+        !strcasecmp(argv[i + 1], "IDA"))
+      return true;
+  }
+  return false;
+}
+
+int
+IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
+        iface::cellml_api::Model* mod, int argc, char** argv)
+{
+  iface::cellml_services::DAESolverCompiledModel* ccm = NULL;
+  try
+  {
+    printf("# Compiling model...\n");
+    ccm = cis->compileModelDAE(mod);
+  }
+  catch (iface::cellml_api::CellMLException& ce)
+  {
+    wchar_t* err = cis->lastError();
+    printf("Caught a CellMLException while compiling model: %S\n", err);
+    free(err);
+    return -1;
+  }
+  catch (...)
+  {
+    printf("Unexpected exception calling compileModel!\n");
+    // this is a leak, but it should also never happen :)
+    return -1;
+  }
+
+  printf("# Creating run...\n");
+  iface::cellml_services::DAESolverRun* cir =
+    cis->createDAEIntegrationRun(ccm);
+
+  TestProgressObserver* tpo = new TestProgressObserver(ccm);
+  cir->setProgressObserver(tpo);
+  tpo->release_ref();
+
+  ProcessKeywords(argc, argv, cir);
+
+#ifdef ENABLE_FIND_NUMERIC_ERRORS
+  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
+#endif
+
+  cir->start();
+  cir->release_ref();
+  ccm->release_ref();
+
+  while (!gFinished)
+    sleep(1);
+
+  if (gSleepTime)
+    sleep(gSleepTime);
+
+  return 0;
+}
+
+int
+ODEMain(iface::cellml_services::CellMLIntegrationService* cis,
+        iface::cellml_api::Model* mod, int argc, char** argv)
+{
+  iface::cellml_services::ODESolverCompiledModel* ccm = NULL;
+  try
+  {
+    printf("# Compiling model...\n");
+    ccm = cis->compileModelODE(mod);
+  }
+  catch (iface::cellml_api::CellMLException& ce)
+  {
+    wchar_t* err = cis->lastError();
+    printf("Caught a CellMLException while compiling model: %S\n", err);
+    free(err);
+    return -1;
+  }
+  catch (...)
+  {
+    printf("Unexpected exception calling compileModel!\n");
+    // this is a leak, but it should also never happen :)
+    return -1;
+  }
+
+  printf("# Creating run...\n");
+  iface::cellml_services::ODESolverRun* cir =
+    cis->createODEIntegrationRun(ccm);
+
+  TestProgressObserver* tpo = new TestProgressObserver(ccm);
+  cir->setProgressObserver(tpo);
+  tpo->release_ref();
+
+  ProcessKeywords(argc, argv, cir);
+
+#ifdef ENABLE_FIND_NUMERIC_ERRORS
+  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
+#endif
+
+  cir->start();
+  cir->release_ref();
+  ccm->release_ref();
+
+  while (!gFinished)
+    sleep(1);
+
+  if (gSleepTime)
+    sleep(gSleepTime);
+
+  return 0;
+}
+
 int
 main(int argc, char** argv)
 {
@@ -381,7 +502,7 @@ main(int argc, char** argv)
     printf("Usage: RunCellML modelURL (options)*\n"
            "Available options:\n"
            "  step_type RK2|RK4|RKF45|RKCK|RKPD|"
-           "RK2IMP|RK2SIMP|RK4IMP|BSIMP|GEAR1|GEAR2|AM_1_12|BDF15SIMP\n"
+           "RK2IMP|RK2SIMP|RK4IMP|BSIMP|GEAR1|GEAR2|AM_1_12|BDF15SIMP|IDA\n"
            "    => Sets the stepping algorithm to use:\n"
            "      RK2     = 2nd order Runge-Kutta.\n"
            "      RK4     = 4th order Runge-Kutta.\n"
@@ -453,53 +574,15 @@ main(int argc, char** argv)
   iface::cellml_services::CellMLIntegrationService* cis =
     CreateIntegrationService();
 
-  iface::cellml_services::ODESolverCompiledModel* ccm = NULL;
-  try
-  {
-    printf("# Compiling model...\n");
-    ccm = cis->compileModelODE(mod);
-  }
-  catch (iface::cellml_api::CellMLException& ce)
-  {
-    wchar_t* err = cis->lastError();
-    printf("Caught a CellMLException while compiling model: %S\n", err);
-    free(err);
-    mod->release_ref();
-    cis->release_ref();
-    return -1;
-  }
-  catch (...)
-  {
-    printf("Unexpected exception calling compileModel!\n");
-    // this is a leak, but it should also never happen :)
-    return -1;
-  }
+  int ret;
+
+  if (PeekForIDA(argc, argv))
+    ret = IDAMain(cis, mod, argc, argv);
+  else
+    ret = ODEMain(cis, mod, argc, argv);
+
+  cis->release_ref();
   mod->release_ref();
 
-  printf("# Creating run...\n");
-  iface::cellml_services::ODESolverRun* cir =
-    cis->createODEIntegrationRun(ccm);
-  cis->release_ref();
-
-  TestProgressObserver* tpo = new TestProgressObserver(ccm);
-  cir->setProgressObserver(tpo);
-  tpo->release_ref();
-
-  ProcessKeywords(argc, argv, cir);
-
-#ifdef ENABLE_FIND_NUMERIC_ERRORS
-  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW);
-#endif
-
-  cir->start();
-  cir->release_ref();
-  ccm->release_ref();
-
-  while (!gFinished)
-    sleep(1);
-
-  if (gSleepTime)
-    sleep(gSleepTime);
-
-  return 0;
+  return ret;
 }

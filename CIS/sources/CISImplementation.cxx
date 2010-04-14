@@ -77,13 +77,13 @@ IDACompiledModelFunctions*
 SetupIDACompiledModelFunctions(void* module)
 {
   IDACompiledModelFunctions* cmf = new IDACompiledModelFunctions;
-  cmf->SetupFixedConstants = (void (*)(double*, double*, double*))
+  cmf->SetupFixedConstants = (int (*)(double*, double*, double*))
     getsym(module, "SetupFixedConstants");
-  cmf->EvaluateVariables = (void (*)(double, double*, double*, double*, double*))
+  cmf->EvaluateVariables = (int (*)(double, double*, double*, double*, double*))
     getsym(module, "EvaluateVariables");
-  cmf->EvaluateEssentialVariables = (void (*)(double, double*, double*, double*, double*))
+  cmf->EvaluateEssentialVariables = (int (*)(double, double*, double*, double*, double*))
     getsym(module, "EvaluateEssentialVariables");
-  cmf->ComputeResiduals = (void (*)(double, double*, double*, double*, double*, double*))
+  cmf->ComputeResiduals = (int (*)(double, double*, double*, double*, double*, double*))
     getsym(module, "ComputeResiduals");
   cmf->SetupStateInfo = (void (*)(double*))
     getsym(module, "SetupStateInfo");
@@ -761,7 +761,7 @@ CDA_CellMLIntegrationService::compileModelDAE
   std::string dirname, sourcename;
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
-  ss << "void SetupFixedConstants(double* CONSTANTS, double* RATES, "
+  ss << "int SetupFixedConstants(double* CONSTANTS, double* RATES, "
     "double *STATES)" << std::endl;
   wchar_t* frag = cci->initConstsString();
   size_t fragLen = wcstombs(NULL, frag, 0) + 1;
@@ -779,7 +779,7 @@ CDA_CellMLIntegrationService::compileModelDAE
   free(frag);
   delete [] frag8;
 
-  ss << "void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, "
+  ss << "int EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, "
      << "double* STATES, double* ALGEBRAIC)" << std::endl;
   frag = cci->variablesString();
   fragLen = wcstombs(NULL, frag, 0) + 1;
@@ -793,7 +793,7 @@ CDA_CellMLIntegrationService::compileModelDAE
   free(frag);
   delete [] frag8;
 
-  ss << "void EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, "
+  ss << "int EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, "
      << "double* STATES, double* ALGEBRAIC)" << std::endl;
   frag = cci->essentialVariablesString();
   fragLen = wcstombs(NULL, frag, 0) + 1;
@@ -807,8 +807,8 @@ CDA_CellMLIntegrationService::compileModelDAE
   free(frag);
   delete [] frag8;
 
-  ss << "void ComputeResiduals(double VOI, double* CONSTANTS, double* RATES, "
-    "double* STATES, double* ALGEBRAIC)" << std::endl;
+  ss << "int ComputeResiduals(double VOI, double* CONSTANTS, double* RATES, "
+    "double* STATES, double* ALGEBRAIC, double* resid)" << std::endl;
   frag = cci->ratesString();
   fragLen = wcstombs(NULL, frag, 0) + 1;
   frag8 = new char[fragLen];

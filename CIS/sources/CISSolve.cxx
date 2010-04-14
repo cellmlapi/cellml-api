@@ -541,11 +541,11 @@ struct DefintInformation
 struct DAEEvaluationInformation
 {
   double* constants, * rates, * algebraic, * states;
-  void (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
+  int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
                            double* STATES, double* ALGEBRAIC, double* resids);
-  void (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
+  int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
                                     double* STATES, double* ALGEBRAIC);
-  void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
+  int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
                            double* STATES, double* ALGEBRAIC);
 };
 
@@ -556,9 +556,11 @@ ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
   double *states = N_VGetArrayPointer(yy);
   double * rates = N_VGetArrayPointer(yp);
   double * resids = N_VGetArrayPointer(resval);
-  d->EvaluateEssentialVariables(t, d->constants, rates, states, d->algebraic);
-  d->ComputeResiduals(t, states, rates, d->constants, d->algebraic, resids);
-  return 0;
+  int ret = d->EvaluateEssentialVariables(t, d->constants, rates, states, d->algebraic);
+  if (ret != 0)
+    return ret;
+
+  return d->ComputeResiduals(t, d->constants, rates, states, d->algebraic, resids);
 }
 
 void

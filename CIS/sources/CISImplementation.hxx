@@ -22,13 +22,13 @@ struct CompiledModelFunctions
 
 struct IDACompiledModelFunctions
 {
-  void (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES);
-  void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
+  int (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES);
+  int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
                             double *STATES, double* ALGEBRAIC);
-  void (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
+  int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
                                      double* STATES, double* ALGEBRAIC);
 
-  void (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
+  int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
                            double* STATES, double* ALGEBRAIC,
                            double* resids);
   void (*SetupStateInfo)(double * SI);
