@@ -447,7 +447,7 @@ CDA_NodeIteratorContainer::getNextNode()
   {
     const int sz = sizeof(RDF_NS) + 20;
     wchar_t buf[sz];
-    swprintf(buf, sz, L"%S_%u", RDF_NS, mNextIndex + i);
+    swprintf(buf, sz, RDF_NS L"_%u", mNextIndex + i);
     RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
                        mDataSource->getURIReference(buf));
     try
@@ -570,7 +570,7 @@ CDA_Container::appendChild(iface::rdf_api::Node* aChild)
   {
     const int sz = sizeof(RDF_NS) + 20;
     wchar_t buf[sz];
-    swprintf(buf, sz, L"%S_%u", RDF_NS, i);
+    swprintf(buf, sz, RDF_NS L"_%u", i);
     RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
                        mDataSource->getURIReference(buf));
     try
@@ -653,7 +653,7 @@ CDA_Container::removeChild(iface::rdf_api::Node* aChild, bool aDoRenumbering)
           continue;
         const int sz = sizeof(RDF_NS) + 20;
         wchar_t buf[sz];
-        swprintf(buf, sz, L"%S_%u", RDF_NS, n2 - 1);
+        swprintf(buf, sz, RDF_NS L"_%u", n2 - 1);
         RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
                            mDataSource->getURIReference(buf));
 
@@ -716,7 +716,7 @@ CDA_Container::renumberContainer()
   {
     const int sz = sizeof(RDF_NS) + 20;
     wchar_t buf[sz];
-    swprintf(buf, sz, L"%S_%u", RDF_NS, n);
+    swprintf(buf, sz, RDF_NS L"_%u", n);
     RETURN_INTO_OBJREF(indexp, iface::rdf_api::URIReference,
                        mDataSource->getURIReference(buf));
     mCorrespondingResource->createTripleOutOf(indexp, (*i).second);
