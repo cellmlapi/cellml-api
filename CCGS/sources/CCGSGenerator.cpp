@@ -202,6 +202,7 @@ CodeGenerationState::IDAStyleCodeGeneration()
   
   // Now we need to assign everything else as a pseudo-state variable...
   MarkRemainingVariablesAsPseudoState();
+  InitialisePseudoStates(mCodeInfo->mInitConstsStr);
 
   std::list<System*> essentialSystems;
   FindSystemsForResiduals(algebraicSystems, essentialSystems);
@@ -237,6 +238,34 @@ CodeGenerationState::GenerateStateInformation(std::wstring& aStr)
       }
     }
   }
+}
+
+double
+CodeGenerationState::GetPseudoStateIV(ptr_tag<CDA_ComputationTarget> aCT)
+{
+  std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator i =
+    mInitialOverrides.find(aCT);
+
+  if (i == mInitialOverrides.end())
+    // Default to this (non-zero and positive is often best for many real-world models).
+    return 0.1;
+
+  return (*i).second;
+}
+
+void
+CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
+{
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
+         mCodeInfo->mTargets.begin();
+       i != mCodeInfo->mTargets.end(); i++)
+    if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE)
+    {
+      double iv = GetPseudoStateIV(*i);
+      wchar_t ivv[30];
+      swprintf(ivv, 30, L"%g", iv);
+      AppendAssign(aCode, (*i)->name(), ivv);
+    }
 }
 
 void
@@ -1288,7 +1317,7 @@ CodeGenerationState::SetupMathMLMathStatement
     ContextError(compErr.c_str(), mn, c);
 
   RETURN_INTO_OBJREF(bvi, iface::cellml_api::CellMLVariableIterator,
-                     mr->iterateBoundVariables());  
+                     mr->iterateBoundVariables());
   while (true)
   {
     RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
