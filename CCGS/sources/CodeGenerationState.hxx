@@ -337,6 +337,8 @@ public:
   void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
   void RestoreSavedRates(std::wstring& aCode);
   void ProcessModellerSuppliedIVHints();
+  double GetPseudoStateIV(ptr_tag<CDA_ComputationTarget>);
+  void InitialisePseudoStates(std::wstring& aCode);
   void FindSystemsForResiduals(std::list<System*>& aSystems,
                                std::list<System*>& aSysForResid);
   void ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT, std::wstring& aStr);
