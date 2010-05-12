@@ -354,7 +354,7 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    ),
    mResidualPattern
    (
-    L"resid[<RNO>] = <LHS> - <RHS>;\r\n"
+    L"resid[<RNO>] = (<LHS>) - (<RHS>);\r\n"
    ),
    mConstrainedRateStateInfoPattern
    (

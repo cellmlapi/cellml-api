@@ -26,7 +26,10 @@
 #undef M
 #include <cvode/cvode.h>
 #include <ida/ida.h>
-#include <ida/ida_spgmr.h>
+// #include <ida/ida_spgmr.h>
+#include <ida/ida_dense.h>
+// #include <ida/ida_sptfqmr.h>
+
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_nvector.h>
 #include <sundials/sundials_types.h>
@@ -563,6 +566,51 @@ ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
   return d->ComputeResiduals(t, d->constants, rates, states, d->algebraic, resids);
 }
 
+static void
+RatesStatesICInfoToParameters
+(
+ size_t sz, double * rates, double * states, double * icinfo, double * params
+)
+{
+  for (size_t i = 0; i < sz; i++)
+    params[i] = (icinfo[i] == 0.0) ? states[i] : rates[i];
+}
+
+static void
+MergeParametersICInfoIntoRatesStates
+(
+ size_t sz, double * rates, double * states, double * icinfo, double * params
+)
+{
+  for (size_t i = 0; i < sz; i++)
+    if (icinfo[i] == 0.0)
+      states[i] = params[i];
+    else
+      rates[i] = params[i];
+}
+
+struct DAEIVFindingInformation
+{
+  size_t n;
+  double voi0;
+  double* constants, * rates, * algebraic, * states, * icinfo;
+  int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
+                           double* STATES, double* ALGEBRAIC, double* resids);
+  int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
+                                    double* STATES, double* ALGEBRAIC);
+};
+
+static void levmar_dae_iv_paramfinder(double * p, double * hx, int m, int n, void *adata)
+{
+  DAEIVFindingInformation * info = reinterpret_cast<DAEIVFindingInformation*>(adata);
+  MergeParametersICInfoIntoRatesStates(info->n, info->rates, info->states,
+                                       info->icinfo, p);
+  info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
+                                   info->algebraic);
+  info->ComputeResiduals(info->voi0, info->constants, info->rates, info->states,
+                         info->algebraic, hx);
+}
+
 void
 CDA_DAESolverRun::SolveDAEProblem
 (
@@ -572,6 +620,43 @@ CDA_DAESolverRun::SolveDAEProblem
  double* algebraic
 )
 {
+#ifndef USE_IDA_CALC_IC
+  double* icinfo = new double[stateSize];
+  double* params = new double[stateSize];
+  f->SetupStateInfo(icinfo);
+  RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
+
+  DAEIVFindingInformation ivf;
+  ivf.n = stateSize;
+  ivf.voi0 = mStartBvar;
+  ivf.constants = constants;
+  ivf.rates = rates;
+  ivf.algebraic = algebraic;
+  ivf.states = states;
+  ivf.icinfo = icinfo;
+  ivf.ComputeResiduals = f->ComputeResiduals;
+  ivf.EvaluateEssentialVariables = f->EvaluateEssentialVariables;
+
+  double info[LM_INFO_SZ];
+  dlevmar_dif(levmar_dae_iv_paramfinder,
+              params,
+              NULL, /* Target: Make all residuals 0. */
+              stateSize, /* There are stateSize unknowns. */
+              stateSize, /* There are stateSize residuals. */
+              1000, /* Max 1000 iterations (TODO - make configurable?). */
+              NULL, /* Default options (TODO - make configurable?). */
+              info, /* Information returned. */
+              NULL, /* Allocate work memory as required. */
+              NULL, /* Don't return covariance matrix. */
+              reinterpret_cast<void*>(&ivf)
+             );
+  MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
+                                       icinfo, params);
+
+  delete [] icinfo;
+  delete [] params;
+#endif
+
   N_Vector y0, dy0;
   y0 = N_VMake_Serial(stateSize, states);
   dy0 = N_VMake_Serial(rateSize, rates);
@@ -584,13 +669,18 @@ CDA_DAESolverRun::SolveDAEProblem
   ei.ComputeResiduals = f->ComputeResiduals;
   ei.EvaluateEssentialVariables = f->EvaluateEssentialVariables;
   ei.EvaluateVariables = f->EvaluateVariables;
+
   void* idamem = IDACreate();
   IDAInit(idamem, ida_resfn, /* t0 = */mStartBvar, y0, dy0);
   IDASetUserData(idamem, &ei);
   IDASStolerances(idamem, mEpsRel, mEpsAbs);
-  IDASpgmr(idamem, 0);
+  // IDASpgmr(idamem, 0);
+  IDADense(idamem, stateSize);
+  // IDASptfqmr(idamem, 0);
+
   IDASetUserData(idamem, &ei);
 
+#if USE_IDA_CALC_IC
   {
     N_Vector icinfo = N_VNew_Serial(stateSize);
     f->SetupStateInfo(N_VGetArrayPointer(icinfo));
@@ -598,6 +688,7 @@ CDA_DAESolverRun::SolveDAEProblem
     N_VDestroy(icinfo);
   }
   IDACalcIC(idamem, IDA_YA_YDP_INIT, mStopBvar);
+#endif
 
   uint32_t recsize = rateSize * 2 + algSize + 1;
   uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / recsize) * recsize;
