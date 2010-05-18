@@ -39,3 +39,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/CanonicalUnitRepresentation.class \
   $(top_builddir)/javacp/cellml_services/CUSES.class \
   $(top_builddir)/javacp/cellml_services/CUSESBootstrap.class
+
+pure_java += cellml_bootstrap/CUSESBootstrap

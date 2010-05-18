@@ -35,3 +35,4 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/CellMLSemanticValidityError.class \
   $(top_builddir)/javacp/cellml_services/CellMLValidityErrorSet.class \
   $(top_builddir)/javacp/cellml_services/VACSService.class
+pure_java += cellml_bootstrap/VACSSBootstrap

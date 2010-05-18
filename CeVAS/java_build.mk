@@ -27,3 +27,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/ConnectedVariableSet.class \
   $(top_builddir)/javacp/cellml_services/CeVAS.class \
   $(top_builddir)/javacp/cellml_services/CeVASBootstrap.class
+
+pure_java += cellml_bootstrap/CeVASBootstrap

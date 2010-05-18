@@ -23,3 +23,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeExporter.class \
   $(top_builddir)/javacp/cellml_services/CeLEDSExporterBootstrap.class \
   $(top_builddir)/javacp/cellml_services/CodeExporter.class
+
+pure_java += cellml_bootstrap/CeLEDSExporterBootstrap

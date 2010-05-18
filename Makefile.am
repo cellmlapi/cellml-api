@@ -26,6 +26,7 @@ libcellml_java_bridge_la_SOURCES =
 libcellml_java_bridge_la_LIBADD =
 cellml_jar_java =
 cellml_jar_classes =
+pure_java =
 
 # This saves repeating this everywhere...
 XPCOM_LDFLAGS =  -no-undefined -module -L$(MOZILLA_DIR)/lib -L$(MOZILLA_DIR)/bin -lxpcomglue_s -lxpcom -lnspr4
