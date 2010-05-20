@@ -187,8 +187,11 @@ interface_list =\
 enum_list = \
   cellml_api/VariableInterface
 
+pure_java += \
+  cellml_bootstrap/CellMLBootstrap
 
 cellml_jar_java += \
+  $(addprefix $(top_srcdir)/java/, $(addsuffix .java, $(pure_java))) \
   $(top_srcdir)/simple_interface_generators/glue/java/pjm/Reference.java \
   $(top_srcdir)/simple_interface_generators/glue/java/pjm/XPCOMDerived.java \
   $(addprefix $(top_builddir)/interfaces/, $(addsuffix .java, $(interface_list))) \
@@ -196,6 +199,7 @@ cellml_jar_java += \
   $(addprefix $(top_builddir)/interfaces/pjm2pcm/, $(addsuffix .java, $(interface_list)))
 
 cellml_jar_classes += \
+  $(addprefix $(top_builddir)/javacp/, $(addsuffix .class, $(pure_java))) \
   $(top_builddir)/javacp/pjm/Reference.class \
   $(top_builddir)/javacp/pjm/XPCOMDerived.class \
   $(addprefix $(top_builddir)/javacp/, $(addsuffix .class, $(interface_list))) \

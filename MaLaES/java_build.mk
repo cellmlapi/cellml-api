@@ -35,3 +35,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/MaLaESResult.class \
   $(top_builddir)/javacp/cellml_services/MaLaESTransform.class \
   $(top_builddir)/javacp/cellml_services/MaLaESBootstrap.class
+
+pure_java += cellml_bootstrap/MaLaESBootstrap

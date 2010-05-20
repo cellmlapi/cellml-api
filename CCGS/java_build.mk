@@ -39,3 +39,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/CodeInformation.class \
   $(top_builddir)/javacp/cellml_services/CodeGenerator.class \
   $(top_builddir)/javacp/cellml_services/CodeGeneratorBootstrap.class
+
+pure_java += cellml_bootstrap/CCGSBootstrap

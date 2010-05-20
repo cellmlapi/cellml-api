@@ -31,3 +31,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/ObjectAnnotation.class \
   $(top_builddir)/javacp/cellml_services/AnnotationSet.class \
   $(top_builddir)/javacp/cellml_services/AnnotationToolService.class
+
+pure_java += cellml_bootstrap/AnnoToolsBootstrap

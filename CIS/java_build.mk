@@ -49,3 +49,5 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/ODESolverCompiledModel.class \
   $(top_builddir)/javacp/cellml_services/DAESolverCompiledModel.class \
   $(top_builddir)/javacp/cellml_services/CellMLIntegrationService.class
+
+pure_java += cellml_bootstrap/CISBootstrap
