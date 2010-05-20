@@ -462,6 +462,8 @@ CodeGenerationState::GenerateResiduals
   // properly - which need to be bundled on to another residual and not counted
   // as their own residual).
   uint32_t residNumber = mArrayOffset;
+  MathStatement* lastResid = NULL;
+
   for (std::set<ptr_tag<MathStatement> >::iterator i = mUnusedMathStatements.begin();
        i != mUnusedMathStatements.end(); i++)
   {
@@ -486,6 +488,7 @@ CodeGenerationState::GenerateResiduals
         cases.push_back(std::pair<std::wstring, std::wstring>(st, cond));
       }
       residNumber++;
+      lastResid = ms;
       GenerateCasesIntoTemplate(aCode, cases);
     }
     else if (ms->mType == MathStatement::EQUATION)
@@ -509,9 +512,25 @@ CodeGenerationState::GenerateResiduals
     p.first->setNameAndIndex(index, p.second.c_str());
   }
 
-  if (residNumber > mNextStateVariableIndex)
-    throw OverconstrainedError(NULL);
-  else if (residNumber < mNextStateVariableIndex)
+  // Count up the total number of state / pseudostates...
+  uint32_t totalState = 0;
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
+         mCodeInfo->mTargets.begin();
+       i != mCodeInfo->mTargets.end(); i++)
+    if ((*i)->mEvaluationType == iface::cellml_services::STATE_VARIABLE ||
+        (*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE)
+      totalState++;
+
+  if (residNumber > totalState)
+  {
+    if (lastResid == NULL ||
+        lastResid->mType == MathStatement::INITIAL_ASSIGNMENT)
+      throw OverconstrainedError(NULL);
+    else
+      throw OverconstrainedError((static_cast<MathMLMathStatement*>(lastResid))
+                                   ->mMaths);
+  }
+  else if (residNumber < totalState)
     throw UnderconstrainedError();
 }
 
