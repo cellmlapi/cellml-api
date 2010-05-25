@@ -66,7 +66,6 @@ CodeGenerationState::GenerateCode()
     CreateMathStatements();
     if (!mIDAStyle)
       SplitPiecewiseByResetRule();
-    ProcessModellerSuppliedIVHints();
 
     // Next, set starting classification for all targets...
     FirstPassTargetClassification();
@@ -96,6 +95,8 @@ CodeGenerationState::GenerateCode()
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     CloneNamesIntoDelayedNames();
   
+    ProcessModellerSuppliedIVHints();
+    
     // Write evaluations for all constants we just worked out how to compute...
     std::wstring tmp;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
@@ -112,7 +113,7 @@ CodeGenerationState::GenerateCode()
     tmp = L"";
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mCodeInfo->mInitConstsStr += tmp;
-    
+
     if (mIDAStyle)
       IDAStyleCodeGeneration();
     else
@@ -259,7 +260,8 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
          mCodeInfo->mTargets.begin();
        i != mCodeInfo->mTargets.end(); i++)
-    if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE)
+    if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE ||
+        (*i)->mDegree > 0)
     {
       double iv = GetPseudoStateIV(*i);
       wchar_t ivv[30];
@@ -931,10 +933,9 @@ CodeGenerationState::ProcessModellerSuppliedIVHints()
       ptr_tag<CDA_ComputationTarget> ct = (*it).second;
 
       for (; degree && ct; degree--)
-      {
         ct = ct->mUpDegree;
-      }
-      if (degree)
+
+      if (degree || ct == NULL)
         continue;
 
       mInitialOverrides.insert(std::pair<ptr_tag<CDA_ComputationTarget>,

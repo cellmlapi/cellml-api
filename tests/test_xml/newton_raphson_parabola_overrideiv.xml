@@ -20,7 +20,7 @@
     <variable name="time" units="dimensionless"/>
     <variable name="offset" units="dimensionless" initial_value="3"/>
     <variable name="x" units="dimensionless" cmeta:id="x" />
-    <variable name="y" units="dimensionless" initial_value="offset"/>
+    <variable name="y" units="dimensionless" cmeta:id="y" initial_value="offset"/>
     <variable name="z" units="dimensionless"/>
     <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq1">
       <apply><eq/>
