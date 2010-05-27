@@ -68,6 +68,9 @@ public:
 private:
   ObjRef<iface::cellml_services::DictionaryGenerator> mLangDictGen;
   double mRangeStart, mRangeEnd, mAbsTol, mRelTol, mMaxStep;
+  wchar_t*
+  getTextContents(iface::dom::Node* inNode)
+    throw(std::exception&);
 };
 
 class CDA_CeLEDSExporterBootstrap
@@ -98,10 +101,6 @@ public:
 private:
   std::wstring mLoadError;
 };
-
-wchar_t*
-getTextContents(iface::dom::Node* inNode)
-  throw(std::exception&);
 
 #endif // _CeLEDSExporterImpl_hpp
 

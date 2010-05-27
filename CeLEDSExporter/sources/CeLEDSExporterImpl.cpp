@@ -540,7 +540,7 @@ CreateCeLEDSExporterBootstrap()
 }
 
 wchar_t*
-getTextContents(iface::dom::Node* inNode)
+CDA_CodeExporter::getTextContents(iface::dom::Node* inNode)
   throw(std::exception&)
 {
   uint32_t i;
