@@ -21,12 +21,21 @@ public:
   CDA_CodeExporter(iface::cellml_services::DictionaryGenerator *langDictGen) throw();
   ~CDA_CodeExporter() {};
 
-  // get CCGS code generator, setting patterns using the XML language definition file
-  iface::cellml_services::CodeGenerator* getCodeGenerator() 
-    throw(std::exception&);
-
   wchar_t* generateCode(iface::cellml_api::Model* model)
     throw(std::exception&);
+
+private:
+  // get CCGS code generator, setting patterns using the XML language definition file
+  iface::cellml_services::CodeGenerator* getExplicitCodeGenerator() 
+    throw(std::exception&);
+  iface::cellml_services::IDACodeGenerator* getImplicitCodeGenerator() 
+    throw(std::exception&);
+  void transferCommonCodeAttributes(iface::cellml_services::CodeGenerator* aCG);
+  int generateCodeCommonHeader(std::wstring&,
+                               iface::cellml_services::CodeGenerator*,
+                               iface::cellml_services::CodeInformation*);
+  int generateCodeCommonFooter(std::wstring&,
+                               iface::cellml_services::CodeInformation*);
 
   // get a section of code from dictionary, replacing 
   // occurances of solver parameters where required
@@ -65,12 +74,18 @@ public:
   double maxStep() throw();
   void maxStep(double aValue) throw();
 
-private:
   ObjRef<iface::cellml_services::DictionaryGenerator> mLangDictGen;
+  ObjRef<iface::cellml_services::LanguageDictionary> mLangDict, mCCGSLangDict;
   double mRangeStart, mRangeEnd, mAbsTol, mRelTol, mMaxStep;
   wchar_t*
   getTextContents(iface::dom::Node* inNode)
     throw(std::exception&);
+
+  wchar_t* generateCodeExplicit(iface::cellml_api::Model* aModel);
+  wchar_t* generateCodeImplicit(iface::cellml_api::Model* aModel);
+
+  typedef enum { CODESTYLE_EXPLICIT, CODESTYLE_IMPLICIT } codestyle_t;
+  codestyle_t mCodeStyle;
 };
 
 class CDA_CeLEDSExporterBootstrap

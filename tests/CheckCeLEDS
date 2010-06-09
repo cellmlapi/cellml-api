@@ -7,7 +7,6 @@ cd $BASEDIR
 DIFF=diff
 TESTCELEDS=./testCeLEDS
 TEMPFILE=test_celeds_output
-LANGUAGE=C
 
 if [[ ! -f "$TESTCELEDS" ]]; then
         echo testCeLEDS not found. Not testing it.
@@ -22,19 +21,21 @@ TESTCELEDS="$TESTS_ENVIRONMENT $TESTCELEDS"
 function runtest()
 {
   name=$1;
+  LANGUAGE=$2
+  EXTN=$3
   rm -f $TEMPFILE;
   $TESTCELEDS ./tests/test_xml/$name.xml ./CeLEDS/languages/$LANGUAGE.xml | tr -d "\r" | sed -e "s/0.000000/0.00000/" > $TEMPFILE
   FAIL=0
-  $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name.c
+  $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name.$EXTN
   if [[ $? -ne 0 ]]; then
-    if [[ -f tests/test_celeds_expected/$name-alt1.c ]]; then
-        $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt1.c
+    if [[ -f tests/test_celeds_expected/$name-alt1.$EXTN ]]; then
+        $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt1.$EXTN
         if [[ $? -ne 0 ]]; then
-            if [[ -f tests/test_celeds_expected/$name-alt2.c ]]; then
-                $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt2.c
+            if [[ -f tests/test_celeds_expected/$name-alt2.$EXTN ]]; then
+                $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt2.$EXTN
                 if [[ $? -ne 0 ]]; then
-                    if [[ -f tests/test_celeds_expected/$name-alt3.c ]]; then
-                        $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt3.c
+                    if [[ -f tests/test_celeds_expected/$name-alt3.$EXTN ]]; then
+                        $DIFF -bu $TEMPFILE tests/test_celeds_expected/$name-alt3.$EXTN
                         FAIL=$?
                     else
                         FAIL=1
@@ -57,19 +58,20 @@ function runtest()
   rm -f $TEMPFILE
 }
 
-runtest cellml_simple_test
-runtest modified_parabola
-runtest underconstrained_1
-runtest overconstrained_1
-runtest newton_raphson_parabola
-runtest import_eqn
-runtest number-minus
-runtest units
-runtest units-import
-runtest units-import-import
-runtest units-in-imported-component
-runtest SimpleDAE_NonLinear
-runtest StateModel
-runtest reset_rule
+runtest cellml_simple_test C c
+runtest modified_parabola C c
+runtest underconstrained_1 C c
+runtest overconstrained_1 C c
+runtest newton_raphson_parabola C c
+runtest import_eqn C c
+runtest number-minus C c
+runtest units C c
+runtest units-import C c
+runtest units-import-import C c
+runtest units-in-imported-component C c
+runtest SimpleDAE_NonLinear C c
+runtest StateModel C c
+runtest reset_rule C c
+runtest SimpleDAE_NonLinear C_IDA ida.c
 
 exit 0

@@ -21,6 +21,15 @@ CDA_CodeExporter::CDA_CodeExporter(iface::cellml_services::DictionaryGenerator* 
   : _cda_refcount(1), mLangDictGen(langDictGen), mRangeStart(0.0), mRangeEnd(10.0),
     mAbsTol(1E-6), mRelTol(1E-6), mMaxStep(1.0)
 {
+  mLangDict = already_AddRefd<iface::cellml_services::LanguageDictionary>
+    (mLangDictGen->getDictionary(L"http://www.cellml.org/CeLEDS/1.0#"));
+  mCCGSLangDict = already_AddRefd<iface::cellml_services::LanguageDictionary>
+    (mLangDictGen->getDictionary(L"http://www.cellml.org/CeLEDS/CCGS/1.0#"));
+  RETURN_INTO_WSTRING(codeStyle, mCCGSLangDict->getValue(L"codeStyle"));
+  if (codeStyle == L"implicit")
+    mCodeStyle = CODESTYLE_IMPLICIT;
+  else // default...
+    mCodeStyle = CODESTYLE_EXPLICIT;
 }
 
 wchar_t* 
@@ -28,25 +37,37 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
   throw(std::exception&)
 {
   std::wstring output(L"");
-  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator,
-                     getCodeGenerator());
 
-  if (cg == NULL)
-    return CDA_wcsdup(L"Could not access CCGS information.\n");
+  switch (mCodeStyle)
+  {
+  case CODESTYLE_IMPLICIT:
+    return generateCodeImplicit(model);
+  case CODESTYLE_EXPLICIT:
+    return generateCodeExplicit(model);
+  }
 
-  RETURN_INTO_OBJREF(codeinfo, iface::cellml_services::CodeInformation,
-      cg->generateCode(model));
+  return CDA_wcsdup(L"CDA_CodeExporter::generateCode encountered an unknown code style - "
+                    L"this shouldn't happen, so please file a bug report.");
+}
 
+int
+CDA_CodeExporter::generateCodeCommonHeader(std::wstring& output,
+                                           iface::cellml_services::CodeGenerator* cg,
+                                           iface::cellml_services::CodeInformation* codeinfo)
+{
   // Check for errors and list problem variables or equations
   if (codeinfo == NULL)
-    return CDA_wcsdup(L"Unexpected error generating code");
+  {
+    output = L"Unexpected error generating code";
+    return 1;
+  }
 
   RETURN_INTO_WSTRING(em, codeinfo->errorMessage());
   if (em != L"")
   {
     output = L"Couldn't generate code for the following reason:\n";
     output += em;
-    return CDA_wcsdup(output.c_str());
+    return 1;
   }
 
   if (codeinfo->constraintLevel() == 0/* UNDERCONSTRAINED */)
@@ -54,7 +75,7 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
     output = L"Model is underconstrained.\n"
              L"The following variables couldn't be defined:\n";
     output += listVariablesByState(codeinfo, -1);
-    return CDA_wcsdup(output.c_str());
+    return 1;
   }
   else if (codeinfo->constraintLevel() == 2/* OVERCONSTRAINED*/)
   {
@@ -64,7 +85,7 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
     output += listVariablesByState(codeinfo, 1);
     output += L"The following equation was unneeded:\n";
     output += listFlaggedEquations(codeinfo);
-    return CDA_wcsdup(output.c_str());
+    return 1;
   }
   else if (codeinfo->constraintLevel() == 1 /* UNSUITABLY_CONSTRAINED*/)
   {
@@ -76,7 +97,7 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
     output += listVariablesByState(codeinfo, 0);
     output += L"The following equations couldn't be used:\n";
     output += listFlaggedEquations(codeinfo);
-    return CDA_wcsdup(output.c_str());
+    return 1;
   }
 
   // insert bracketing strings, replacing with solver params if necessary,
@@ -141,6 +162,17 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
   RETURN_INTO_WSTRING(vs, codeinfo->variablesString());
   output += vs;
   output += getCodeSection(L"postVariables");
+
+  return 0;
+}
+
+int
+CDA_CodeExporter::generateCodeCommonFooter
+(
+ std::wstring& output,
+ iface::cellml_services::CodeInformation* codeinfo
+)
+{
   RETURN_INTO_WSTRING(fs, codeinfo->functionsString());
   output += fs;
 
@@ -148,6 +180,58 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
   output += defineExtraFunctions(output);
 
   output += getCodeSection(L"endSection");
+
+  return 0;
+}
+
+wchar_t*
+CDA_CodeExporter::generateCodeExplicit(iface::cellml_api::Model* model)
+{
+  std::wstring output;
+
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator,
+                     getExplicitCodeGenerator());
+
+  if (cg == NULL)
+    return CDA_wcsdup(L"Could not access CCGS information.\n");
+
+  RETURN_INTO_OBJREF(codeinfo, iface::cellml_services::CodeInformation,
+      cg->generateCode(model));
+
+  if (generateCodeCommonHeader(output, cg, codeinfo))
+    return CDA_wcsdup(output.c_str());
+
+  generateCodeCommonFooter(output, codeinfo);
+  
+  return CDA_wcsdup(output.c_str());
+}
+
+wchar_t*
+CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
+{
+  std::wstring output;
+
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::IDACodeGenerator,
+                     getImplicitCodeGenerator());
+
+  if (cg == NULL)
+    return CDA_wcsdup(L"Could not access CCGS information.\n");
+
+  RETURN_INTO_OBJREF(codeinfo, iface::cellml_services::IDACodeInformation,
+                     cg->generateIDACode(model));
+
+  if (generateCodeCommonHeader(output, cg, codeinfo))
+    return CDA_wcsdup(output.c_str());
+
+  output += getCodeSection(L"preEssentialVariables");
+  RETURN_INTO_WSTRING(evs, codeinfo->essentialVariablesString());
+  output += evs;
+  output += getCodeSection(L"postEssentialVariables") + getCodeSection(L"preStateInformation");
+  RETURN_INTO_WSTRING(sis, codeinfo->stateInformationString());
+  output += sis;
+  output += getCodeSection(L"postStateInformation");
+
+  generateCodeCommonFooter(output, codeinfo);
   
   return CDA_wcsdup(output.c_str());
 }
@@ -157,13 +241,11 @@ CDA_CodeExporter::getCodeSection(const wchar_t* name)
   throw(std::exception&)
 {
   uint32_t i;
-  RETURN_INTO_OBJREF(langDict, iface::cellml_services::LanguageDictionary,
-      mLangDictGen->getDictionary(L"http://www.cellml.org/CeLEDS/1.0#"));
-  if (langDict == NULL)
+  if (mLangDict == NULL)
     return std::wstring(L"");
 
   RETURN_INTO_OBJREF(entries, iface::dom::NodeList,
-                     langDict->getMappings());
+                     mLangDict->getMappings());
   if (entries == NULL)
     return std::wstring(L"");
 
@@ -424,22 +506,17 @@ void CDA_CodeExporter::maxStep(double aValue) throw()
   mMaxStep = aValue;
 }
 
-iface::cellml_services::CodeGenerator*
-CDA_CodeExporter::getCodeGenerator() 
-  throw(std::exception&)
-{
-  RETURN_INTO_OBJREF(ccgsDict, iface::cellml_services::LanguageDictionary, 
-                     mLangDictGen->getDictionary(L"http://www.cellml.org/CeLEDS/CCGS/1.0#"));
-  if (ccgsDict == NULL)
-    return NULL;
-  RETURN_INTO_OBJREF(cgbs, iface::cellml_services::CodeGeneratorBootstrap, 
-                     CreateCodeGeneratorBootstrap());
-  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator, 
-                     cgbs->createCodeGenerator());
+#include <assert.h>
 
+void
+CDA_CodeExporter::transferCommonCodeAttributes
+(
+ iface::cellml_services::CodeGenerator* cg
+)
+{
 #define TRANSFER_ATTRIBUTE(n, x)                 \
   { \
-    RETURN_INTO_WSTRING(pattern, ccgsDict->getValue(n)); \
+    RETURN_INTO_WSTRING(pattern, mCCGSLangDict->getValue(n)); \
     if (!pattern.empty()) \
       cg->x(pattern.c_str()); \
   }
@@ -456,7 +533,7 @@ CDA_CodeExporter::getCodeGenerator()
   TRANSFER_ATTRIBUTE(L"conditionalAssignmentPattern", conditionalAssignmentPattern);
 
   {
-    RETURN_INTO_WSTRING(pattern, ccgsDict->getValue(L"arrayOffset"));
+    RETURN_INTO_WSTRING(pattern, mLangDict->getValue(L"arrayOffset"));
     // convert string to integer
     uint32_t offset = 0;
     std::wistringstream strm(pattern);
@@ -468,6 +545,40 @@ CDA_CodeExporter::getCodeGenerator()
   // Set MaLaES transform
   RETURN_INTO_OBJREF(mt, iface::cellml_services::MaLaESTransform, mLangDictGen->getMalTransform());
   cg->transform(mt);
+}
+
+iface::cellml_services::CodeGenerator*
+CDA_CodeExporter::getExplicitCodeGenerator()
+  throw(std::exception&)
+{
+  if (mLangDict == NULL)
+    return NULL;
+  RETURN_INTO_OBJREF(cgbs, iface::cellml_services::CodeGeneratorBootstrap, 
+                     CreateCodeGeneratorBootstrap());
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator, 
+                     cgbs->createCodeGenerator());
+  transferCommonCodeAttributes(cg);
+
+  cg->add_ref();
+  return cg;
+}
+
+iface::cellml_services::IDACodeGenerator*
+CDA_CodeExporter::getImplicitCodeGenerator()
+  throw(std::exception&)
+{
+  if (mLangDict == NULL)
+    return NULL;
+  RETURN_INTO_OBJREF(cgbs, iface::cellml_services::CodeGeneratorBootstrap, 
+                     CreateCodeGeneratorBootstrap());
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::IDACodeGenerator, 
+                     cgbs->createIDACodeGenerator());
+
+  transferCommonCodeAttributes(cg);
+
+  TRANSFER_ATTRIBUTE(L"residualPattern", residualPattern);
+  TRANSFER_ATTRIBUTE(L"constrainedRateStateInfoPattern", constrainedRateStateInfoPattern);
+  TRANSFER_ATTRIBUTE(L"unconstrainedRateStateInfoPattern", unconstrainedRateStateInfoPattern);
 
   cg->add_ref();
   return cg;
