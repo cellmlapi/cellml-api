@@ -266,7 +266,8 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
       double iv = GetPseudoStateIV(*i);
       wchar_t ivv[30];
       swprintf(ivv, 30, L"%g", iv);
-      AppendAssign(aCode, (*i)->name(), ivv);
+      RETURN_INTO_WSTRING(n, (*i)->name());
+      AppendAssign(aCode, n, ivv);
     }
 }
 
