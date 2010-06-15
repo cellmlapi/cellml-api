@@ -378,3 +378,7 @@ CreateCellMLBootstrap()
 {
   return new CDA_CellMLBootstrap();
 } 
+
+#ifdef DEBUG_PTR_TAG
+CDA_EXPORT_PRE CDA_EXPORT_POST std::map<void*,uint32_t> currentlyActivePtrTags;
+#endif

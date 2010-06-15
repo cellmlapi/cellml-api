@@ -1082,6 +1082,16 @@ private:
 // A non-threadsafe, compilation-unit local number for serial allocation...
 static uint32_t cuNextSerial = 0;
 
+#undef DEBUG_PTR_TAG
+#ifdef DEBUG_PTR_TAG
+#endif
+
+#ifdef DEBUG_PTR_TAG
+#include <map>
+#include <assert.h>
+extern std::map<void*,uint32_t> currentlyActivePtrTags;
+#endif
+
 // Like a pointer, but with deterministic sort...
 template<class C>
 class ptr_tag
@@ -1098,6 +1108,11 @@ public:
   {
     D* ptr = aOther;
     mPtr = ptr;
+
+#ifdef DEBUG_PTR_TAG
+    if (mPtr != NULL)
+      (*(currentlyActivePtrTags.find(reinterpret_cast<void*>(mPtr)))).second++;
+#endif
   }
 
   template<class D>
@@ -1105,13 +1120,47 @@ public:
   {
     D* ptr = aOther;
     setup(ptr);
+
+#ifdef DEBUG_PTR_TAG
+    if (mPtr != NULL)
+    {
+      std::map<void*,uint32_t>::iterator i = currentlyActivePtrTags.find(reinterpret_cast<void*>(mPtr));
+      if (i == currentlyActivePtrTags.end())
+        currentlyActivePtrTags.insert(std::pair<void*,uint32_t>(reinterpret_cast<void*>(mPtr), 1));
+      else
+      {
+        assert((*i).second == 0);
+        (*i).second++;
+      }
+    }
+#endif
   }
 
   template<class D>
   ptr_tag<C>&
   operator=(D* aPtr)
   {
+#ifdef DEBUG_PTR_TAG
+    if (mPtr != NULL)
+      (*(currentlyActivePtrTags.find(reinterpret_cast<void*>(mPtr)))).second--;
+#endif
+
     setup(aPtr);
+
+#ifdef DEBUG_PTR_TAG
+    if (mPtr != NULL)
+    {
+      std::map<void*,uint32_t>::iterator i = currentlyActivePtrTags.find(reinterpret_cast<void*>(mPtr));
+      if (i == currentlyActivePtrTags.end())
+        currentlyActivePtrTags.insert(std::pair<void*,uint32_t>(reinterpret_cast<void*>(mPtr), 1));
+      else
+      {
+        assert((*i).second == 0);
+        (*i).second++;
+      }
+    }
+#endif
+
     return *this;
   }
 
@@ -1119,9 +1168,21 @@ public:
   ptr_tag<C>&
   operator=(const ptr_tag<D>& aOther)
   {
+#ifdef DEBUG_PTR_TAG
+    if (mPtr != NULL)
+      (*(currentlyActivePtrTags.find(reinterpret_cast<void*>(mPtr)))).second--;
+#endif
+
     D* ptr = aOther;
     mPtr = ptr;
     mSerial = aOther.serial();
+
+#ifdef DEBUG_PTR_TAG
+    if (mPtr != NULL)
+      (*(currentlyActivePtrTags.find(reinterpret_cast<void*>(mPtr)))).second++;
+#endif
+
+    return *this;
   }
 
   uint32_t serial() const
