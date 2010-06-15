@@ -101,5 +101,6 @@ runtest StateModel
 runtest reset_rule
 runtest definite_integral
 runtest TestParameterIVAmbiguity
+runtest IVComputation
 
 exit 0

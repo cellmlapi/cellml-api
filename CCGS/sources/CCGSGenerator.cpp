@@ -221,6 +221,7 @@ CodeGenerationState::IDAStyleCodeGeneration()
 void
 CodeGenerationState::GenerateStateInformation(std::wstring& aStr)
 {
+  CNumericLocale localeObj; // Scoped locale change...
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i = mBaseTargets.begin();
        i != mBaseTargets.end();
        i++)
@@ -228,7 +229,7 @@ CodeGenerationState::GenerateStateInformation(std::wstring& aStr)
     for (ptr_tag<CDA_ComputationTarget> ct = *i; ct != NULL; ct = ct->mUpDegree)
     {
       wchar_t id[32];
-      swprintf(id, 32, L"%u", ct->mAssignedIndex);
+      swprintf(id, 32, L"%lu", ct->mAssignedIndex);
       if (ct->mEvaluationType == iface::cellml_services::STATE_VARIABLE)
       {
         aStr += ReplaceIDs(mConstrainedRateStateInfoPattern, id, L"", L"");
@@ -1179,7 +1180,7 @@ CodeGenerationState::CreateMathStatements()
         if (mn == NULL)
           continue;
         
-        MathMLMathStatement* mms;
+        ptr_tag<MathMLMathStatement> mms;
 
         // See if it is a piecewise...
         DECLARE_QUERY_INTERFACE_OBJREF(mpw, n, mathml_dom::MathMLPiecewiseElement);
@@ -1845,6 +1846,10 @@ CodeGenerationState::RuleOutCandidates
     for (std::set<ptr_tag<MathStatement> >::iterator i = mUnusedMathStatements.begin();
          i != mUnusedMathStatements.end(); i++)
     {
+      // Don't use initial assignments to rule out computing IVs...
+      if ((*i)->mType == MathStatement::INITIAL_ASSIGNMENT)
+        continue;
+
       uint32_t count = 0, ucount = 0;
       std::list<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mTargets.begin(), f;
       for (; j != (*i)->mTargets.end(); j++)
@@ -2115,6 +2120,7 @@ CodeGenerationState::DecomposeIntoSystems
       {
         if (start.count(*j) > 0)
           continue;
+
         if (aCandidates.count(*j) == 0)
         {
           ignoreMathStatement = true;
