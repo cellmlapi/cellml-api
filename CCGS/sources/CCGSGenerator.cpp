@@ -346,11 +346,10 @@ CodeGenerationState::MarkRemainingVariablesAsPseudoState()
         mKnown.insert(*i);
       }
       else
+      {
+        count++;
         (*i)->mEvaluationType = iface::cellml_services::ALGEBRAIC;
-    }
-    else if ((*i)->mEvaluationType == iface::cellml_services::STATE_VARIABLE)
-    {
-      count++;
+      }
     }
   }
 
