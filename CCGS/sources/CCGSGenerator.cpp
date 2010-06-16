@@ -226,7 +226,7 @@ CodeGenerationState::GenerateStateInformation(std::wstring& aStr)
        i != mBaseTargets.end();
        i++)
   {
-    for (ptr_tag<CDA_ComputationTarget> ct = *i; ct != NULL; ct = ct->mUpDegree)
+    for (CDA_ComputationTarget ct = *i; ct != NULL; ct = ct->mUpDegree)
     {
       wchar_t id[32];
       swprintf(id, 32, L"%lu", ct->mAssignedIndex);
