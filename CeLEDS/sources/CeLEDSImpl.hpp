@@ -84,9 +84,5 @@ private:
   std::wstring mLoadError;
 };
 
-wchar_t*
-getTextContents(iface::dom::Node* inNode)
-  throw(std::exception&);
-
 #endif // _CeLEDSImpl_hpp
 

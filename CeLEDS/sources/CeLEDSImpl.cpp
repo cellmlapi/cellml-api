@@ -7,6 +7,10 @@
 #include <sstream>
 #include <iostream>
 
+static wchar_t*
+getTextContents(iface::dom::Node* inNode)
+  throw(std::exception&);
+
 CDA_LanguageDictionary::CDA_LanguageDictionary(const wchar_t* nameSpace, iface::dom::Element *DictionaryXML)
   throw ()
   : _cda_refcount(1), mNameSpace(nameSpace), mDictionaryXML(DictionaryXML)
@@ -48,7 +52,7 @@ CDA_LanguageDictionary::getValue(const wchar_t* keyName)
   return CDA_wcsdup(L"");
 }
 
-wchar_t*
+static wchar_t*
 getTextContents(iface::dom::Node* inNode)
   throw(std::exception&)
 {
