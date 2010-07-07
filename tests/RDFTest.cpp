@@ -1,5 +1,6 @@
 #include "RDFTest.hpp"
 #include "DOMBootstrap.hxx"
+#include "CellMLBootstrap.hpp"
 #include "RDFBootstrap.hpp"
 #include "Utilities.hxx"
 #include <fstream>
@@ -17,6 +18,14 @@
 #define BASE_URI L"file://" TESTDIR L"/test_rdf/"
 #endif
 #endif
+#ifndef BASE_DIRECTORY_CELLML
+#ifdef WIN32
+#define BASE_DIRECTORY_CELLML L"file:///" TESTDIR L"/test_xml/"
+#else
+#define BASE_DIRECTORY_CELLML L"file://" TESTDIR L"/test_xml/"
+#endif
+#endif
+
 
 #ifdef _WIN32
 #ifndef swprintf
@@ -920,6 +929,94 @@ RDFTest::testW3CSuite()
 
     ntf.compareTriples(ds2);
   }
+}
+
+void
+debug_PrintNode(iface::rdf_api::Node* aNode)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(ur, aNode, rdf_api::URIReference);
+  if (ur != NULL)
+  {
+    RETURN_INTO_WSTRING(s, ur->URI());
+    printf("<URI: %S> ", s.c_str());
+    return;
+  }
+
+  DECLARE_QUERY_INTERFACE_OBJREF(bn, aNode, rdf_api::BlankNode);
+  if (bn != NULL)
+  {
+    printf("<BlankNode %08X>", reinterpret_cast<uint32_t>(static_cast<iface::rdf_api::BlankNode*>(bn)));
+    return;
+  }
+
+  DECLARE_QUERY_INTERFACE_OBJREF(pl, aNode, rdf_api::PlainLiteral);
+  if (pl != NULL)
+  {
+    RETURN_INTO_WSTRING(lf, pl->lexicalForm());
+    RETURN_INTO_WSTRING(l, pl->language());
+    printf("<PlainLiteral: %S language %S> ", lf.c_str(), l.c_str());
+    return;
+  }
+
+  DECLARE_QUERY_INTERFACE_OBJREF(tl, aNode, rdf_api::TypedLiteral);
+  if (tl != NULL)
+  {
+    RETURN_INTO_WSTRING(lf, tl->lexicalForm());
+    RETURN_INTO_WSTRING(l, tl->datatypeURI());
+    printf("<TypedLiteral: %S type %S> ", lf.c_str(), l.c_str());
+    return;
+  }
+}
+
+void
+RDFTest::testRDFAPIImplementation()
+{
+  RETURN_INTO_OBJREF(cb, iface::cellml_api::CellMLBootstrap,
+                     CreateCellMLBootstrap());
+  RETURN_INTO_OBJREF(ml, iface::cellml_api::ModelLoader,
+                     cb->modelLoader());
+  RETURN_INTO_OBJREF(m, iface::cellml_api::Model,
+                     ml->loadFromURL
+                     (BASE_DIRECTORY_CELLML L"Ach_cascade_1995.xml"));
+  CPPUNIT_ASSERT(m != NULL);
+  RETURN_INTO_OBJREF(rr, iface::cellml_api::RDFRepresentation, m->getRDFRepresentation(L"http://www.cellml.org/RDF/API"));
+  CPPUNIT_ASSERT(rr != NULL);
+  DECLARE_QUERY_INTERFACE_OBJREF(rar, rr, rdf_api::RDFAPIRepresentation);
+  CPPUNIT_ASSERT(rar != NULL);
+  RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, rar->source());
+  CPPUNIT_ASSERT(ds != NULL);
+
+#if 0
+  {
+    RETURN_INTO_OBJREF(ts, iface::rdf_api::TripleSet, ds->getAllTriples());
+    RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator, ts->enumerateTriples());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
+      if (t == NULL) break;
+      RETURN_INTO_OBJREF(s, iface::rdf_api::Resource, t->subject());
+      debug_PrintNode(s);
+      RETURN_INTO_OBJREF(p, iface::rdf_api::Resource, t->predicate());
+      debug_PrintNode(p);
+      RETURN_INTO_OBJREF(o, iface::rdf_api::Node, t->object());
+      debug_PrintNode(o);
+      printf("\n");
+    }
+  }
+#endif
+
+  RETURN_INTO_OBJREF(modur, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://www.example.org/repository/Ach_cascade_1995.xml"));
+  CPPUNIT_ASSERT(modur != NULL);
+  RETURN_INTO_OBJREF(dcpublisher, iface::rdf_api::URIReference,
+                     ds->getURIReference(L"http://purl.org/dc/elements/1.1/publisher"));
+  RETURN_INTO_OBJREF(dcp, iface::rdf_api::Triple, modur->getTripleOutOfByPredicate(dcpublisher));
+  CPPUNIT_ASSERT(dcp != NULL);
+  RETURN_INTO_OBJREF(dcpo, iface::rdf_api::Node, dcp->object());
+  CPPUNIT_ASSERT(dcpo != NULL);
+  DECLARE_QUERY_INTERFACE_OBJREF(pl, dcpo, rdf_api::PlainLiteral);
+  RETURN_INTO_WSTRING(lf, pl->lexicalForm());
+  CPPUNIT_ASSERT(lf == L"\n        The University of Auckland, Bioengineering Institute\n      ");
 }
 
 void

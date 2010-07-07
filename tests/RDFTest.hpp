@@ -14,6 +14,7 @@ class RDFTest : public CppUnit::TestFixture
   CPPUNIT_TEST_SUITE(RDFTest);
   CPPUNIT_TEST(testW3CSuite);
   CPPUNIT_TEST(testContainerLibrary);
+  CPPUNIT_TEST(testRDFAPIImplementation);
   CPPUNIT_TEST_SUITE_END();
 
   void assertContainerContents(iface::rdf_api::Container*, const wchar_t** aExpect);
@@ -21,6 +22,7 @@ class RDFTest : public CppUnit::TestFixture
 public:
   void setUp();
   void tearDown();
+  void testRDFAPIImplementation();
   void testW3CSuite();
   void testContainerLibrary();
 };
