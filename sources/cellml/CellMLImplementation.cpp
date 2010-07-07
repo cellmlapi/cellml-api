@@ -7424,7 +7424,16 @@ SIMPLE_ITERATOR_NEXT(CDA_RelationshipRefIterator, RelationshipRef,
 SIMPLE_ITERATOR_NEXT(CDA_ComponentRefIterator, ComponentRef,
                      nextComponentRef, (L"component_ref"));
 SIMPLE_ITERATOR_NEXT(CDA_MapVariablesIterator, MapVariables,
-                     nextMapVariable, (L"map_variables"));
+                     nextMapVariables, (L"map_variables"));
+
+// Deprecated method name...
+iface::cellml_api::MapVariables*
+CDA_MapVariablesIterator::nextMapVariable()
+  throw (std::exception&)
+{
+  return nextMapVariables();
+}
+
 SIMPLE_ITERATOR_NEXT(CDA_VariableRefIterator, VariableRef,
                      nextVariableRef, (L"variable_ref"));
 SIMPLE_ITERATOR_NEXT(CDA_RoleIterator, Role,

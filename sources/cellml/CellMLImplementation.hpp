@@ -1855,6 +1855,7 @@ public:
 
   iface::cellml_api::CellMLElement* next() throw(std::exception&);
   iface::cellml_api::MapVariables* nextMapVariable() throw(std::exception&);
+  iface::cellml_api::MapVariables* nextMapVariables() throw(std::exception&);
 };
 
 class CDA_MapVariablesSet

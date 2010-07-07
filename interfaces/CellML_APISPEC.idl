@@ -1761,8 +1761,17 @@ module cellml_api
      * Fetches the next MapVariables element, and advances the iterator.
      * @return The next MapVariables element, or nil if there are no more
      *         MapVariables elements.
+     * @deprecated Use nextMapVariables(). This method may be removed from a
+     *             future release of the CellML API.
      */
     MapVariables nextMapVariable();
+
+    /**
+     * Fetches the next MapVariables element, and advances the iterator.
+     * @return The next MapVariables element, or nil if there are no more
+     *         MapVariables elements.
+     */
+    MapVariables nextMapVariables();
   };
 #pragma terminal-interface
 
