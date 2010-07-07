@@ -47,6 +47,8 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
     return L"constant";
   case iface::cellml_services::STATE_VARIABLE:
     return L"state variable";
+  case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+    return L"pseudo-state variable";
   case iface::cellml_services::ALGEBRAIC:
     return L"algebraic variable";
   case iface::cellml_services::FLOATING:
