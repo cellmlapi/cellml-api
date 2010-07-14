@@ -10,6 +10,8 @@
  */
 module cellml_services
 {
+ interface CustomGenerator;
+
  enum VariableEvaluationType
  {
    /**
@@ -411,8 +413,108 @@ module cellml_services
     * @param sourceModel The model for which to generate the CodeInformation.
     */
    CodeInformation generateCode(in cellml_api::Model sourceModel);
+
+   /**
+    * Creates a CustomGenerator object for a model. Note that this picks
+    * up on the transform, CeVAS, CUSES, AnnoSet, stateVariableNamePattern,
+    * assignPattern, solvePattern, solveNLSystemPattern,
+    * and arrayOffset - everything else is specific to generateCode.
+    */
+   CustomGenerator createCustomGenerator(in cellml_api::Model sourceModel);
  };
 #pragma cross-module-argument
+
+interface CustomCodeInformation
+  : XPCOM::IObject
+{
+  /**
+   * The constraint level, describing whether or not the model is correctly
+   * constrained. Note that improperly constrained models result in
+   * constraintLevel being set, rather than setting an errorMessage.
+   * Note: Depending on how you are using the custom code generator, an
+   *       underconstrained result might be normal (especially if you are
+   *       generating code in phases, and don't expect to solve for everything
+   *       in one round).
+   */
+  readonly attribute ModelConstraintLevel constraintLevel;
+  
+  /**
+   * The number of variables which were assigned indices in the variables
+   * array. There can be multiple entries for the same CellML variable - at
+   * most one for each degree of integration.
+   */
+  readonly attribute unsigned long indexCount;
+  
+  /**
+   * Iterates through all computation targets. Several things to note:
+   *  * The objects retrieved are copied and changed from those fetched from
+   *    CustomGenerator - so they have different object IDs.
+   *  * The ComputationTarget type is overloaded for a different purpose to
+   *    those used in non-custom CodeGeneration. The type should be interpreted
+   *    as follows:
+   *      VARIABLE_OF_INTEGRATION => Target is independent (markAsKnown called).
+   *      STATE_VARIABLE => Target was requested, and is available.
+   *      PSEUDOSTATE_VARIABLE => Target was requested, but could not be
+   *                              computed from the independent variables + model.
+   *      LOCALLY_BOUND => Target is locally bound in expressions only.
+   *      ALGEBRAIC => Target is used as an intermediate.
+   *      FLOATING => Every other target (i.e. unused, not requested).
+   */
+  ComputationTargetIterator iterateTargets();
+
+  /**
+   * The actual generated code. It won't have any kind of wrapping around it
+   * such as function boilerplate - that is up to the user of the API.
+   */
+  readonly attribute wstring generatedCode;
+
+   /**
+    * A string containing any supplementary code which is needed to be used
+    * out-of-line by the above string. Whether or not supplementary code
+    * is used, and exactly what it means depends on the MAL file used with
+    * MaLaES, and the options set on the CodeGenerator. Typically, for C, it
+    * is used to define extra functions that are passed as arguments to
+    * functions being called from expressions.
+    */
+   readonly attribute wstring functionsString;
+};
+
+interface CustomGenerator
+  : XPCOM::IObject
+{
+  /**
+   * Iterates through all computation targets.
+   */
+  ComputationTargetIterator iterateTargets();
+  
+  /**
+   * Requests computation of a particular computation target, if computation
+   * is possible.
+   * @raises CellMLException if ComputationTarget not in target set.
+   */
+  void requestComputation(in ComputationTarget wanted) raises(cellml_api::CellMLException);
+
+  /**
+   * Sets a particular computation target as being 'known' (for example, this
+   * can be used to set independent variables, or variables which are computed
+   * elsewhere in the code).
+   * @raises CellMLException if ComputationTarget not in target set.
+   */
+  void markAsKnown(in ComputationTarget known);
+
+  /**
+   * Sets a particular computation target as being 'unwanted', meaning that it
+   * will not be considered as a potential intermediate to compute the requested
+   * variables.
+   * @raises CellMLException if ComputationTarget not in target set.
+   */
+  void markAsUnwanted(in ComputationTarget unwanted);
+
+  /**
+   * Generate the custom code for computing the requested variables.
+   */
+  CustomCodeInformation generateCode();
+};
 
  interface IDACodeInformation
    : CodeInformation

@@ -38,6 +38,254 @@ CodeGenerationState::~CodeGenerationState()
     delete *i;
 }
 
+iface::cellml_services::CustomGenerator*
+CodeGenerationState::CreateCustomGenerator()
+{
+  // Create a new code information object...
+  mCodeInfo = already_AddRefd<CDA_CodeInformation>
+    (new CDA_CodeInformation());
+  RETURN_INTO_WSTRING(cevError, mCeVAS->modelError());
+  if (cevError != L"")
+    throw CodeGenerationError(cevError);
+  RETURN_INTO_WSTRING(cusesError, mCUSES->modelError());
+  if (cusesError != L"")
+    throw CodeGenerationError(cusesError);
+  
+  // Create all computation targets...
+  CreateBaseComputationTargets();
+  
+  // Create all variable edges (this creates derived computation targets as a
+  //   side-effect)...
+  CreateMathStatements();
+
+  RETURN_INTO_OBJREF(cg, CDA_CustomGenerator,
+                     new CDA_CustomGenerator
+                     (mModel, mTransform, mCeVAS, mCUSES, mAnnoSet,
+                      mStateVariableNamePattern, mAssignPattern,
+                      mSolvePattern, mSolveNLSystemPattern, mArrayOffset));
+
+  // Now copy mCodeInfo->mTargets
+  cg->mTargets.insert(cg->mTargets.end(), mCodeInfo->mTargets.begin(),
+                      mCodeInfo->mTargets.end());
+  cg->indexTargets();
+  // Wipe them from mCodeInfo or they will be destroyed.
+  mCodeInfo->mTargets.clear();
+
+  cg->add_ref();
+  return cg;
+}
+
+iface::cellml_services::CustomCodeInformation*
+CodeGenerationState::GenerateCustomCode
+(
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aTargetSet,
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserWanted,
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserKnown,
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserUnwanted
+)
+{
+  RETURN_INTO_OBJREF(cci, CDA_CustomCodeInformation, new CDA_CustomCodeInformation());
+
+  try
+  {
+    // Create a new code information object...
+    mCodeInfo = already_AddRefd<CDA_CodeInformation>
+      (new CDA_CodeInformation());
+    RETURN_INTO_WSTRING(cevError, mCeVAS->modelError());
+    if (cevError != L"")
+      throw CodeGenerationError(cevError);
+    RETURN_INTO_WSTRING(cusesError, mCUSES->modelError());
+    if (cusesError != L"")
+      throw CodeGenerationError(cusesError);
+    
+    // Create all computation targets...
+    CreateBaseComputationTargets();
+    
+    // Create all variable edges (this creates derived computation targets as a
+    //   side-effect)...
+    CreateMathStatements();
+    SplitPiecewiseByResetRule();
+
+    for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator i =
+           mLocallyBoundTargs.begin(); i != mLocallyBoundTargs.end();
+         i++)
+      (*i)->mEvaluationType = iface::cellml_services::LOCALLY_BOUND;
+
+    mUnusedMathStatements.insert(mMathStatements.begin(), mMathStatements.end());
+
+    // Translate from external computation targets to internal ones...
+    std::set<ptr_tag<CDA_ComputationTarget> > wanted, known, unwanted;
+    MapExternalTargetsToInternal(aTargetSet,
+                                 aUserWanted, aUserKnown, aUserUnwanted,
+                                 wanted, known, unwanted);
+
+    ClassifyAndBuildFloatingForCustom(wanted, known, unwanted);
+    
+    std::list<System*> systems;
+    // Now, find everything computable from the information the user provided.
+    DecomposeIntoSystems(known, mFloating, unwanted, systems, true);
+    
+    std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
+    // Build an index from variables required to systems...
+    BuildSystemsByTargetsRequired(systems, sysByTargReq);
+
+    // Work out what systems we need to solve...
+    std::list<System*> neededSys;
+    FindSystemsNeededForTargets(sysByTargReq, wanted, true, known, neededSys);
+
+    // Generate code for wanted and the prerequisites...
+    GenerateCodeForSet(cci->mGeneratedCode, known, neededSys, sysByTargReq);
+    cci->mFunctionsString = mCodeInfo->mFuncsStr;
+
+    if (mUnusedMathStatements.empty())
+      cci->mConstraintLevel = iface::cellml_services::CORRECTLY_CONSTRAINED;
+    else
+      cci->mConstraintLevel = iface::cellml_services::OVERCONSTRAINED;
+
+    cci->mIndexCount = mCodeInfo->mRateIndexCount;
+
+    for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
+           mCodeInfo->mTargets.begin();
+         i != mCodeInfo->mTargets.end();
+         i++)
+      if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE)
+      {
+        if (cci->mConstraintLevel == iface::cellml_services::CORRECTLY_CONSTRAINED)
+          cci->mConstraintLevel = iface::cellml_services::UNDERCONSTRAINED;
+        else if (cci->mConstraintLevel == iface::cellml_services::OVERCONSTRAINED)
+          cci->mConstraintLevel = iface::cellml_services::UNSUITABLY_CONSTRAINED;
+      }
+  }
+  catch (...)
+  {
+    cci->mConstraintLevel = iface::cellml_services::UNSUITABLY_CONSTRAINED;
+  }
+
+  cci->mTargets.insert(cci->mTargets.end(),
+                       mCodeInfo->mTargets.begin(), mCodeInfo->mTargets.end());
+  mCodeInfo->mTargets.clear();
+
+  cci->add_ref();
+  return cci;
+}
+
+void
+CodeGenerationState::ClassifyAndBuildFloatingForCustom
+(
+ std::set<ptr_tag<CDA_ComputationTarget> >& wanted,
+ std::set<ptr_tag<CDA_ComputationTarget> >& known,
+ std::set<ptr_tag<CDA_ComputationTarget> >& unwanted
+)
+{
+  mFloating.clear();
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i = mCodeInfo->mTargets.begin();
+       i != mCodeInfo->mTargets.end();
+       i++)
+  {
+    if (unwanted.count(*i))
+    {
+      (*i)->mEvaluationType = iface::cellml_services::FLOATING;
+      continue;
+    }
+
+    std::wstring name;
+    AllocateStateVariable(*i, name);
+
+    if (known.count(*i))
+    {
+      (*i)->mEvaluationType = iface::cellml_services::VARIABLE_OF_INTEGRATION;
+      continue;
+    }
+
+    if (wanted.count(*i))
+      (*i)->mEvaluationType = iface::cellml_services::STATE_VARIABLE;
+
+    if (!known.count(*i) && !unwanted.count(*i))
+      mFloating.insert(*i);
+  }
+}
+
+void
+CodeGenerationState::MapExternalTargetsToInternal
+(
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExTargetSet,
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExWanted,
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExKnown,
+ std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExUnwanted,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aInWanted,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aInKnown,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aInUnwanted
+)
+{
+  // Build a map from (Variable, DegreeInt) -> ptr_tag<newly created CDA_ComputationTarget>
+  std::map<std::pair<iface::cellml_api::CellMLVariable*, uint32_t>, ptr_tag<CDA_ComputationTarget> >
+    toNewCTMap;
+  for (
+       std::list<ptr_tag<CDA_ComputationTarget> >::iterator i(mCodeInfo->mTargets.begin());
+       i != mCodeInfo->mTargets.end();
+       i++
+      )
+    toNewCTMap.insert(
+                      std::pair<std::pair<iface::cellml_api::CellMLVariable*, uint32_t>,
+                                ptr_tag<CDA_ComputationTarget> >
+                      (
+                       std::pair<iface::cellml_api::CellMLVariable*, uint32_t>
+                       ((*i)->mVariable, (*i)->mDegree),
+                       *i
+                      )
+                     );
+
+  // Now map from the old ComputationTarget* to ptr_tag<newly created CDA_ComputationTarget>
+  std::map<iface::cellml_services::ComputationTarget*,
+           ptr_tag<CDA_ComputationTarget> > oldTargetToNewTarget;
+  for (
+       std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::iterator i =
+         aExTargetSet.begin();
+       i != aExTargetSet.end();
+       i++
+      )
+  {
+    std::map<std::pair<iface::cellml_api::CellMLVariable*, uint32_t>,
+             ptr_tag<CDA_ComputationTarget> >::iterator j =
+      toNewCTMap.find(std::pair<iface::cellml_api::CellMLVariable*, uint32_t>
+                      (static_cast<CDA_ComputationTarget*>(*i)->mVariable,
+                       static_cast<CDA_ComputationTarget*>(*i)->mDegree));
+    if (j == toNewCTMap.end())
+      continue; // XXX model must have changed. Consider throwing an exception?
+    oldTargetToNewTarget.insert(
+                                std::pair<iface::cellml_services::ComputationTarget*,
+                                          ptr_tag<CDA_ComputationTarget> >
+                                (*i, (*j).second)
+                               );
+  }
+
+  // Now build known, wanted, unwanted...
+  for (std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::iterator i = aExWanted.begin();
+       i != aExWanted.end(); i++)
+  {
+    std::map<iface::cellml_services::ComputationTarget*, ptr_tag<CDA_ComputationTarget> >::iterator j =
+      oldTargetToNewTarget.find(unsafe_dynamic_cast<CDA_ComputationTarget*>(*i));
+    aInWanted.insert((*j).second);
+  }
+
+  for (std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::iterator i = aExKnown.begin();
+       i != aExKnown.end(); i++)
+  {
+    std::map<iface::cellml_services::ComputationTarget*, ptr_tag<CDA_ComputationTarget> >::iterator j =
+      oldTargetToNewTarget.find(unsafe_dynamic_cast<CDA_ComputationTarget*>(*i));
+    aInKnown.insert((*j).second);
+  }
+
+  for (std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::iterator i = aExUnwanted.begin();
+       i != aExUnwanted.end(); i++)
+  {
+    std::map<iface::cellml_services::ComputationTarget*, ptr_tag<CDA_ComputationTarget> >::iterator j =
+      oldTargetToNewTarget.find(unsafe_dynamic_cast<CDA_ComputationTarget*>(*i));
+    aInUnwanted.insert((*j).second);
+  }  
+}
+
+
 iface::cellml_services::IDACodeInformation*
 CodeGenerationState::GenerateCode()
 {
@@ -413,6 +661,61 @@ CodeGenerationState::ODESolverStyleCodeGeneration()
   GenerateStateToRateCascades();
   
   GenerateInfDelayUpdates();
+}
+
+bool
+CodeGenerationState::FindSystemsNeededForTargets
+(
+ const std::map<ptr_tag<CDA_ComputationTarget>, System*>&
+   aSysByTargReq,
+ const std::set<ptr_tag<CDA_ComputationTarget> >& aWantedTargets,
+ bool aMarkOnly,
+ std::set<ptr_tag<CDA_ComputationTarget> >& aKnownTargets,
+ std::list<System*>& aNeededSystems
+)
+{
+  for (std::set<ptr_tag<CDA_ComputationTarget> >::const_iterator i = aWantedTargets.begin();
+       i != aWantedTargets.end(); i++)
+  {
+    if (aKnownTargets.count(*i))
+      continue;
+    aKnownTargets.insert(*i);
+
+    std::map<ptr_tag<CDA_ComputationTarget>, System*>::const_iterator j =
+      aSysByTargReq.find(*i);
+    if (j == aSysByTargReq.end())
+    {
+      if (aMarkOnly)
+      {
+        (*i)->mEvaluationType = iface::cellml_services::PSEUDOSTATE_VARIABLE;
+        continue;
+      }
+      else
+        return false;
+    }
+
+    System* s = (*j).second;
+
+    // Recursively check the dependencies...
+    if (!FindSystemsNeededForTargets(aSysByTargReq, (*j).second->mUnknowns, false,
+                                     aKnownTargets, aNeededSystems))
+    {
+      if (aMarkOnly)
+      {
+        (*i)->mEvaluationType = iface::cellml_services::PSEUDOSTATE_VARIABLE;
+        continue;
+      }
+      else
+        return false;
+    }
+
+    if ((*i)->mEvaluationType == iface::cellml_services::FLOATING)
+      (*i)->mEvaluationType = iface::cellml_services::ALGEBRAIC;
+
+    aNeededSystems.push_back(s);
+  }
+
+  return true;
 }
 
 void

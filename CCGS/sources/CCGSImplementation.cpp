@@ -128,12 +128,15 @@ CDA_ComputationTargetIterator::nextComputationTarget() throw()
   return t;
 }
 
-CDA_CodeInformation::~CDA_CodeInformation()
+CDA_TargetSet::~CDA_TargetSet()
 {
   std::list<ptr_tag<CDA_ComputationTarget> >::iterator ti;
   for (ti = mTargets.begin(); ti != mTargets.end(); ti++)
     (*ti)->release_ref();
+}
 
+CDA_CodeInformation::~CDA_CodeInformation()
+{
   std::vector<iface::dom::Element*>::iterator fei;
   for (fei = mFlaggedEquations.begin(); fei != mFlaggedEquations.end(); fei++)
     (*fei)->release_ref();
@@ -208,7 +211,44 @@ CDA_CodeInformation::stateInformationString() throw()
 iface::cellml_services::ComputationTargetIterator*
 CDA_CodeInformation::iterateTargets() throw()
 {
-  return new CDA_ComputationTargetIterator(mTargets, this);
+  return new CDA_ComputationTargetIterator(this);
+}
+
+CDA_CustomCodeInformation::CDA_CustomCodeInformation()
+  : _cda_refcount(1)
+{
+}
+
+iface::cellml_services::ModelConstraintLevel
+CDA_CustomCodeInformation::constraintLevel()
+  throw()
+{
+  return mConstraintLevel;
+}
+
+uint32_t
+CDA_CustomCodeInformation::indexCount()
+  throw()
+{
+  return mIndexCount;
+}
+
+iface::cellml_services::ComputationTargetIterator*
+CDA_CustomCodeInformation::iterateTargets() throw()
+{
+  return new CDA_ComputationTargetIterator(this);
+}
+
+wchar_t*
+CDA_CustomCodeInformation::generatedCode() throw()
+{
+  return CDA_wcsdup(mGeneratedCode.c_str());
+}
+
+wchar_t*
+CDA_CustomCodeInformation::functionsString() throw()
+{
+  return CDA_wcsdup(mFunctionsString.c_str());
 }
 
 class CDA_FlaggedEquationsNodeList
@@ -630,6 +670,13 @@ CDA_ErrorCodeInformation(const wchar_t* aMessage)
   return ci;
 }
 
+iface::cellml_services::CustomGenerator*
+CDA_CodeGenerator::createCustomGenerator(iface::cellml_api::Model* aSourceModel)
+  throw(std::exception&)
+{
+  return makeCodeGenerationState(aSourceModel)->CreateCustomGenerator();
+}
+
 /* Note: this generates both IDA and normal code - we implement it as
  * GenerateIDACode to avoid the need to QueryInterface in the case where we
  * are generating IDA code.
@@ -638,39 +685,49 @@ iface::cellml_services::IDACodeInformation*
 CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
  throw()
 {
-  CodeGenerationState cgs(
-                          aSourceModel,
-                          mConstantPattern, mStateVariableNamePattern,
-                          mAlgebraicVariableNamePattern,
-                          mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
-                          mSolveNLSystemPattern, mTemporaryVariablePattern,
-                          mDeclareTemporaryPattern, mConditionalAssignmentPattern,
-                          mResidualPattern, mConstrainedRateStateInfoPattern,
-                          mUnconstrainedRateStateInfoPattern, mArrayOffset, mTransform,
-                          mCeVAS, mCUSES, mAnnoSet, mIDAStyle
-                         );
-
-  if (cgs.mAnnoSet == NULL)
+  try
   {
-    try
-    {
-      RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
-                         CreateAnnotationToolService());
-      cgs.mAnnoSet =
-        already_AddRefd<iface::cellml_services::AnnotationSet>
-        (ats->createAnnotationSet());
-    }
-    catch (...)
-    {
-      return CDA_ErrorCodeInformation(L"Error processing CellML model.");
-    }
+    return makeCodeGenerationState(aSourceModel)->GenerateCode();
+  }
+  catch (...)
+  {
+    return CDA_ErrorCodeInformation(L"Error processing CellML model.");
+  }
+}
+
+std::auto_ptr<CodeGenerationState>
+CDA_CodeGenerator::makeCodeGenerationState(iface::cellml_api::Model* aSourceModel)
+{
+  std::auto_ptr<CodeGenerationState> cgs
+    (
+     new CodeGenerationState
+     (
+      aSourceModel,
+      mConstantPattern, mStateVariableNamePattern,
+      mAlgebraicVariableNamePattern,
+      mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
+      mSolveNLSystemPattern, mTemporaryVariablePattern,
+      mDeclareTemporaryPattern, mConditionalAssignmentPattern,
+      mResidualPattern, mConstrainedRateStateInfoPattern,
+      mUnconstrainedRateStateInfoPattern, mArrayOffset, mTransform,
+      mCeVAS, mCUSES, mAnnoSet, mIDAStyle
+      )
+    );
+
+  if (cgs->mAnnoSet == NULL)
+  {
+    RETURN_INTO_OBJREF(ats, iface::cellml_services::AnnotationToolService,
+                       CreateAnnotationToolService());
+    cgs->mAnnoSet =
+      already_AddRefd<iface::cellml_services::AnnotationSet>
+      (ats->createAnnotationSet());
   }
 
-  if (cgs.mTransform == NULL)
+  if (cgs->mTransform == NULL)
   {
     RETURN_INTO_OBJREF(mb, iface::cellml_services::MaLaESBootstrap,
                        CreateMaLaESBootstrap());
-    cgs.mTransform =
+    cgs->mTransform =
       already_AddRefd<iface::cellml_services::MaLaESTransform>
       (mb->compileTransformer(
 L"opengroup: (\r\n"
@@ -752,23 +809,109 @@ L"true: #prec[999]1.0\r\n"
                              ));
   }
 
-  if (cgs.mCeVAS == NULL)
+  if (cgs->mCeVAS == NULL)
   {
     RETURN_INTO_OBJREF(cb, iface::cellml_services::CeVASBootstrap,
                        CreateCeVASBootstrap());
-    cgs.mCeVAS = already_AddRefd<iface::cellml_services::CeVAS>
+    cgs->mCeVAS = already_AddRefd<iface::cellml_services::CeVAS>
       (cb->createCeVASForModel(aSourceModel));
   }
 
-  if (cgs.mCUSES == NULL)
+  if (cgs->mCUSES == NULL)
   {
     RETURN_INTO_OBJREF(cb, iface::cellml_services::CUSESBootstrap,
                        CreateCUSESBootstrap());
-    cgs.mCUSES = already_AddRefd<iface::cellml_services::CUSES>
+    cgs->mCUSES = already_AddRefd<iface::cellml_services::CUSES>
       (cb->createCUSESForModel(aSourceModel, false));
   }
 
-  return cgs.GenerateCode();
+  return cgs;
+}
+
+CDA_CustomGenerator::CDA_CustomGenerator
+(
+ iface::cellml_api::Model* aModel,
+ iface::cellml_services::MaLaESTransform* aTransform,
+ iface::cellml_services::CeVAS* aCeVAS,
+ iface::cellml_services::CUSES* aCUSES,
+ iface::cellml_services::AnnotationSet* aAnnoSet,
+ std::wstring& aStateVariableNamePattern,
+ std::wstring& aAssignPattern,
+ std::wstring& aSolvePattern,
+ std::wstring& aSolveNLSystemPattern,
+ uint32_t aArrayOffset
+)
+  : _cda_refcount(1), mModel(aModel),
+    mTransform(aTransform), mCeVAS(aCeVAS), mCUSES(aCUSES), mAnnoSet(aAnnoSet),
+    mStateVariableNamePattern(aStateVariableNamePattern), mAssignPattern(aAssignPattern),
+    mSolvePattern(aSolvePattern), mSolveNLSystemPattern(aSolveNLSystemPattern),
+    mArrayOffset(aArrayOffset)
+{
+}
+
+void
+CDA_CustomGenerator::indexTargets()
+{
+  mTargetSet.insert(mTargets.begin(), mTargets.end());
+}
+
+iface::cellml_services::ComputationTargetIterator*
+CDA_CustomGenerator::iterateTargets()
+  throw()
+{
+  return new CDA_ComputationTargetIterator(this);
+}
+
+void
+CDA_CustomGenerator::requestComputation(iface::cellml_services::ComputationTarget* aTarget)
+  throw(std::exception&)
+{
+  std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::
+    iterator i = mTargetSet.find(aTarget);
+
+  if (i == mTargetSet.end())
+    throw iface::cellml_api::CellMLException();
+
+  mRequestComputation.insert(*i);
+}
+
+void
+CDA_CustomGenerator::markAsKnown(iface::cellml_services::ComputationTarget* aTarget)
+  throw(std::exception&)
+{
+  std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::
+    iterator i = mTargetSet.find(aTarget);
+
+  if (i == mTargetSet.end())
+    throw iface::cellml_api::CellMLException();
+
+  mKnown.insert(*i);
+}
+
+void
+CDA_CustomGenerator::markAsUnwanted(iface::cellml_services::ComputationTarget* aTarget)
+  throw(std::exception&)
+{
+  std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::
+    iterator i = mTargetSet.find(aTarget);
+
+  if (i == mTargetSet.end())
+    throw iface::cellml_api::CellMLException();
+
+  mUnwanted.insert(*i);
+}
+
+iface::cellml_services::CustomCodeInformation*
+CDA_CustomGenerator::generateCode()
+  throw(std::exception&)
+{
+  std::wstring emp;
+  CodeGenerationState cgs(mModel, emp, mStateVariableNamePattern, emp, emp, emp,
+                          mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
+                          emp, emp, emp, emp, emp, emp, mArrayOffset,
+                          mTransform, mCeVAS, mCUSES, mAnnoSet, false);
+  return cgs.GenerateCustomCode(mTargetSet, mRequestComputation, mKnown,
+                                mUnwanted);
 }
 
 iface::cellml_services::CodeGeneratorBootstrap*

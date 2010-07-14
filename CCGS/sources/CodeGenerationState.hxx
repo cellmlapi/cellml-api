@@ -171,6 +171,13 @@ public:
   void IDAStyleCodeGeneration();
   void ODESolverStyleCodeGeneration();
 
+  iface::cellml_services::CustomGenerator* CreateCustomGenerator();
+  iface::cellml_services::CustomCodeInformation* GenerateCustomCode
+  (std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aTargetSet,
+   std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserWanted,
+   std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserKnown,
+   std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserUnwanted);
+
   void CreateBaseComputationTargets();
   ptr_tag<CDA_ComputationTarget>  GetTargetOfDegree(ptr_tag<CDA_ComputationTarget>  aBase,
                                            uint32_t aDegree);
@@ -184,11 +191,35 @@ public:
      std::set<ptr_tag<CDA_ComputationTarget> >& aKnown,
      std::set<ptr_tag<CDA_ComputationTarget> >& aFloating
     );
+  void MapExternalTargetsToInternal
+  (
+   std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExTargetSet,
+   std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExUserWanted,
+   std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExUserKnown,
+   std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aExUserUnwanted,
+   std::set<ptr_tag<CDA_ComputationTarget> >& aInWanted,
+   std::set<ptr_tag<CDA_ComputationTarget> >& aInKnown,
+   std::set<ptr_tag<CDA_ComputationTarget> >& aInUnwanted
+  );
   void SplitPiecewiseByResetRule();
   void ContextError(const std::wstring& details,
                     iface::mathml_dom::MathMLElement* context1,
                     iface::cellml_api::CellMLElement* context2);
   void FirstPassTargetClassification();
+  void ClassifyAndBuildFloatingForCustom(
+         std::set<ptr_tag<CDA_ComputationTarget> >& wanted,
+         std::set<ptr_tag<CDA_ComputationTarget> >& known,
+         std::set<ptr_tag<CDA_ComputationTarget> >& unwanted
+                                        );
+  bool FindSystemsNeededForTargets(
+         const std::map<ptr_tag<CDA_ComputationTarget>, System*>&
+           aSysByTargReq,
+         const std::set<ptr_tag<CDA_ComputationTarget> >& aWantedTargets,
+         bool aMarkOnly,
+         std::set<ptr_tag<CDA_ComputationTarget> >& aKnownTargets,
+         std::list<System*>& aNeededSystems
+                                  );
+
   void AllocateVariable(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr,
                         std::wstring& aPattern, uint32_t& aNextIndex,
                         uint32_t& aCount);
