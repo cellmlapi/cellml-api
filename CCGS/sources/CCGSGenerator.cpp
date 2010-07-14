@@ -91,6 +91,7 @@ CodeGenerationState::GenerateCustomCode
     // Create a new code information object...
     mCodeInfo = already_AddRefd<CDA_CodeInformation>
       (new CDA_CodeInformation());
+    mCodeInfo->mRateIndexCount = 0;
     RETURN_INTO_WSTRING(cevError, mCeVAS->modelError());
     if (cevError != L"")
       throw CodeGenerationError(cevError);
@@ -131,7 +132,21 @@ CodeGenerationState::GenerateCustomCode
 
     // Work out what systems we need to solve...
     std::list<System*> neededSys;
-    FindSystemsNeededForTargets(sysByTargReq, wanted, true, known, neededSys);
+    std::set<ptr_tag<CDA_ComputationTarget> > known2(known);
+    FindSystemsNeededForTargets(sysByTargReq, wanted, true, known2, neededSys);
+
+    for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
+           mCodeInfo->mTargets.begin();
+         i != mCodeInfo->mTargets.end();
+         i++)
+    {
+      if ((*i)->mEvaluationType != iface::cellml_services::FLOATING &&
+          (*i)->mEvaluationType != iface::cellml_services::PSEUDOSTATE_VARIABLE)
+      {
+        std::wstring name;
+        AllocateStateVariable(*i, name);
+      }
+    }
 
     // Generate code for wanted and the prerequisites...
     GenerateCodeForSet(cci->mGeneratedCode, known, neededSys, sysByTargReq);
@@ -187,9 +202,6 @@ CodeGenerationState::ClassifyAndBuildFloatingForCustom
       (*i)->mEvaluationType = iface::cellml_services::FLOATING;
       continue;
     }
-
-    std::wstring name;
-    AllocateStateVariable(*i, name);
 
     if (known.count(*i))
     {

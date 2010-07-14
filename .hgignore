@@ -8,6 +8,7 @@ testCeLEDS
 CellML2C
 CellML2Matlab
 CellML2Python
+CustomGen
 Makefile
 Makefile.in
 RunCellML

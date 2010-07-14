@@ -5,6 +5,7 @@ TESTS=tests/RunTestBin
 
 if ENABLE_CCGS
 TESTS+=tests/CheckCodeGenerator
+TESTS+=tests/CheckCustomGen
 endif
 if ENABLE_CELEDS
 TESTS+=tests/CheckCeLEDS

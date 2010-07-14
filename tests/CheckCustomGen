@@ -1,0 +1,62 @@
+#!/bin/bash
+
+BINDIR=`pwd`
+BASEDIR=`dirname $0`
+DIFF=diff
+CUSTOMGEN=$BINDIR/CustomGen
+TEMPFILE=test_output
+
+if [[ ! -f "$CUSTOMGEN" ]]; then
+        echo CUSTOMGEN not found. Not testing it.
+        exit 77
+fi
+
+if [[ -n $RUNNER ]]; then
+    CUSTOMGEN="$RUNNER $BINDIR/.libs/CustomGen.exe"
+fi
+
+CUSTOMGEN="$TESTS_ENVIRONMENT $CUSTOMGEN"
+
+function runtest()
+{
+  name=$1;
+  wanted=$2;
+  known=$3;
+  unwanted=$4;
+  rm -f $TEMPFILE;
+  $CUSTOMGEN $BASEDIR/test_xml/$name.xml $wanted $known $unwanted | tr -d "\r" | sed -e "s/0.000000/0.00000/" >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/test_expected_customgen/$name.c
+  if [[ $? -ne 0 ]]; then
+    if [[ -f $BASEDIR/test_expected/$name-alt1.c ]]; then
+        $DIFF -bu $TEMPFILE $BASEDIR/test_expected_customgen/$name-alt1.c
+        if [[ $? -ne 0 ]]; then
+            if [[ -f $BASEDIR/test_expected/$name-alt2.c ]]; then
+                $DIFF -bu $TEMPFILE $BASEDIR/test_expected_customgen/$name-alt2.c
+                if [[ $? -ne 0 ]]; then
+                    if [[ -f $BASEDIR/test_expected/$name-alt3.c ]]; then
+                        $DIFF -bu $TEMPFILE $BASEDIR/test_expected_customgen/$name-alt3.c
+                        FAIL=$?
+                    else
+                        FAIL=1
+                    fi
+                fi
+            else
+                FAIL=1
+            fi
+        fi
+    else
+        FAIL=1
+    fi
+  fi
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name generated correct output.
+  rm -f $TEMPFILE
+}
+
+runtest modified_parabola main/x:0,main/y:1,main/z:0 main/time:0,main/offset:0 main/y:0
+exit 0
