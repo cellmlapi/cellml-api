@@ -528,6 +528,8 @@ main(int argc, char** argv)
   ml->release_ref();
   delete [] URL;
 
+  mod->fullyInstantiateImports();
+
   iface::cellml_services::CodeGeneratorBootstrap* cgb =
     CreateCodeGeneratorBootstrap();
   iface::cellml_services::CodeGenerator* cg;
