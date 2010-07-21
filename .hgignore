@@ -33,3 +33,4 @@ examples/.metadata
 examples/javaexample.*\.(class|classpath|project|cellml)
 cellml.jar
 .*\.(iml|ipr|iws)
+interfaces/docs
