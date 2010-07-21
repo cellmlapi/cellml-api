@@ -517,7 +517,7 @@ private:
                          const std::wstring& aType);
   bool checkComponentRelevant(iface::cellml_api::CellMLComponent* aComp);
 
-  ObjRef<iface::cellml_services::CUSES> mStrictCUSES, mWeakCUSES;
+  ObjRef<iface::cellml_services::CUSES> mStrictCUSES;
   ObjRef<iface::cellml_services::CanonicalUnitRepresentation> mBooleanUnits,
     mDimensionlessUnits;
 };

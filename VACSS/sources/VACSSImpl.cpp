@@ -312,8 +312,6 @@ ModelValidation::validate()
                      CreateCUSESBootstrap());
   mStrictCUSES = already_AddRefd<iface::cellml_services::CUSES>
     (cb->createCUSESForModel(mModel, true));
-  mWeakCUSES = already_AddRefd<iface::cellml_services::CUSES>
-    (cb->createCUSESForModel(mModel, false));
 
   mBooleanUnits =
     already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
@@ -329,7 +327,6 @@ ModelValidation::validate()
     SEMANTIC_WARNING(L"Cannot perform any further checking of unit names due "
                      L"to problems processing the model units", mModel);
     mStrictCUSES = NULL;
-    mWeakCUSES = NULL;
   }
 
   try
@@ -344,7 +341,6 @@ ModelValidation::validate()
   mConnectedComps.clear();
 
   mStrictCUSES = NULL;
-  mWeakCUSES = NULL;
 
   if (mErrors != NULL)
     mErrors->add_ref();
@@ -2489,12 +2485,12 @@ ModelValidation::validateMathMLConstant
     return NULL;
   }
 
-  if (mWeakCUSES == NULL)
+  if (mStrictCUSES == NULL)
     return NULL;
 
   // Next, we go hunting for the units...
   RETURN_INTO_OBJREF(u, iface::cellml_services::CanonicalUnitRepresentation,
-                     mWeakCUSES->getUnitsByName(aContext, units.c_str()));
+                     mStrictCUSES->getUnitsByName(aContext, units.c_str()));
   if (u == NULL)
   {
     REPR_ERROR(L"MathML cn element has invalid units",
@@ -2614,10 +2610,10 @@ ModelValidation::validateMathMLCI
   }
   RETURN_INTO_WSTRING(vunits, v->unitsName());
   
-  if (mWeakCUSES == NULL)
+  if (mStrictCUSES == NULL)
     return NULL;
 
-  return mWeakCUSES->getUnitsByName(comp, vunits.c_str());
+  return mStrictCUSES->getUnitsByName(comp, vunits.c_str());
 }
 
 iface::cellml_services::CanonicalUnitRepresentation*
@@ -4342,15 +4338,15 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
     if (v1 == NULL || v2 == NULL)
       return;
 
-    if (mWeakCUSES != NULL)
+    if (mStrictCUSES != NULL)
     {
       // Connected variables must be dimensionally compatible...
       RETURN_INTO_WSTRING(u1, v1->unitsName());
       RETURN_INTO_OBJREF(cur1, iface::cellml_services::CanonicalUnitRepresentation,
-                         mWeakCUSES->getUnitsByName(v1, u1.c_str()));
+                         mStrictCUSES->getUnitsByName(v1, u1.c_str()));
       RETURN_INTO_WSTRING(u2, v2->unitsName());
       RETURN_INTO_OBJREF(cur2, iface::cellml_services::CanonicalUnitRepresentation,
-                         mWeakCUSES->getUnitsByName(v2, u2.c_str()));
+                         mStrictCUSES->getUnitsByName(v2, u2.c_str()));
       if (cur1 != NULL && cur2 != NULL && !cur1->compatibleWith(cur2))
       {
         SEMANTIC_ERROR(L"Connection of two variables which have dimensionally "
