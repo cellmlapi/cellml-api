@@ -40,6 +40,7 @@ class CellMLTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testCellMLElementSet);
   CPPUNIT_TEST(testIteratorLiveness);
   CPPUNIT_TEST(testRelativeImports);
+  CPPUNIT_TEST(testImportClone);
   CPPUNIT_TEST_SUITE_END();
 public:
   void setUp();
@@ -79,6 +80,7 @@ public:
   void testCellMLElementSet();
   void testIteratorLiveness();
   void testRelativeImports();
+  void testImportClone();
 private:
   iface::cellml_api::CellMLBootstrap* mBootstrap;
   iface::cellml_api::DOMModelLoader* mModelLoader;

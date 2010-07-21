@@ -887,6 +887,45 @@ CDA_CellMLElement::clone(bool aDeep)
   return WrapCellMLElement(NULL, cel);
 }
 
+static void
+recursivelyCloneFromTo(iface::cellml_api::Model* aFrom,
+                       iface::cellml_api::Model* aTo)
+{
+  RETURN_INTO_OBJREF(cisFrom, iface::cellml_api::CellMLImportSet, aFrom->imports());
+  RETURN_INTO_OBJREF(ciiFrom, iface::cellml_api::CellMLImportIterator, cisFrom->iterateImports());
+  RETURN_INTO_OBJREF(cisTo, iface::cellml_api::CellMLImportSet, aTo->imports());
+  RETURN_INTO_OBJREF(ciiTo, iface::cellml_api::CellMLImportIterator, cisTo->iterateImports());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(ciFrom, iface::cellml_api::CellMLImport, ciiFrom->nextImport());
+    if (ciFrom == NULL)
+      break;
+    RETURN_INTO_OBJREF(ciTo, iface::cellml_api::CellMLImport, ciiTo->nextImport());
+
+    RETURN_INTO_OBJREF(mFrom, iface::cellml_api::Model, ciFrom->importedModel());
+    {
+      RETURN_INTO_WSTRING(st, mFrom->serialisedText());
+      ciTo->instantiateFromText(st.c_str());
+    }
+    RETURN_INTO_OBJREF(mTo, iface::cellml_api::Model, ciTo->importedModel());
+    recursivelyCloneFromTo(mFrom, mTo);
+  }
+}
+
+iface::cellml_api::Model*
+CDA_Model::cloneAcrossImports()
+  throw(std::exception&)
+{
+  fullyInstantiateImports();
+
+  RETURN_INTO_OBJREF(cloneModelE, iface::cellml_api::CellMLElement, clone(true));
+  DECLARE_QUERY_INTERFACE_OBJREF(cloneModel, cloneModelE, cellml_api::Model);
+  recursivelyCloneFromTo(this, cloneModel);
+
+  cloneModel->add_ref();
+  return cloneModel;
+}
+
 iface::dom::Element*
 CDA_CellMLElement::domElement()
   throw(std::exception&)

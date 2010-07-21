@@ -3343,3 +3343,32 @@ CellMLTest::testRelativeImports()
   free(ret);
   c->release_ref();
 }
+
+void
+CellMLTest::testImportClone()
+{
+  loadRelativeURIModel();
+
+  //    /**
+  //     * Clones a Model, including all of its imports.
+  //     * Will cause the model to be fully instantiated.
+  //     * @raises CellMLException if problems occur instantiating imports.
+  //     */
+  //    CellMLElement cloneAcrossImports() raises(CellMLException);
+
+  iface::cellml_api::Model* m = mRelativeURI->cloneAcrossImports();
+  iface::cellml_api::CellMLImportSet* is = m->imports();
+  m->release_ref();
+  iface::cellml_api::CellMLImportIterator* ii = is->iterateImports();
+  is->release_ref();
+  iface::cellml_api::CellMLImport* imp = ii->nextImport();
+  ii->release_ref();
+  iface::cellml_api::Model* mod = imp->importedModel();
+  imp->release_ref();
+  wchar_t* name = mod->name();
+  mod->release_ref();
+
+  CPPUNIT_ASSERT(!wcscmp(name, L"level1"));
+
+  free(name);
+}

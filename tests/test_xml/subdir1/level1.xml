@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <model xmlns="http://www.cellml.org/cellml/1.1#"
-       xmlns:xlink="http://www.w3.org/1999/xlink">
+       xmlns:xlink="http://www.w3.org/1999/xlink" name="level1">
   <import xlink:href="../level2.xml">
     <component name="level1_component" component_ref="level2_component"/>
   </import>

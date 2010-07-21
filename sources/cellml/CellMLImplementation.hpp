@@ -320,6 +320,9 @@ public:
                                     iface::dom::Node* aOriginal,
                                     iface::dom::Document* aNewDoc)
     throw(std::exception&);
+
+  iface::cellml_api::Model* cloneAcrossImports()
+    throw(std::exception&);
 private:
   CDA_ConnectionSet* mConnectionSet;
   CDA_GroupSet* mGroupSet;

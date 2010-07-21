@@ -572,6 +572,14 @@ module cellml_api
      *             http://www.cellml.org/RDFXML/DOM
      */
     RDFRepresentation getRDFRepresentation(in wstring type) raises(CellMLException);
+
+
+    /**
+     * Clones a Model, including all of its imports.
+     * Will cause the model to be fully instantiated.
+     * @raises CellMLException if problems occur instantiating imports.
+     */
+    Model cloneAcrossImports() raises(CellMLException);
   };
 #pragma terminal-interface
 #pragma cross-module-argument
