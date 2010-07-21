@@ -156,6 +156,13 @@ module cellml_services
     /**
      * Converts a MathML expression into the programming language, using the
      * MAL file specification used to compile this transform.
+     * The AnnoSet can be set up as follows:
+     *   bvarIndex annotation on a bound variable: what to call the bound variable in the output.
+     *   expression on a variable: How to represent the variable (when not a derivative) in the output.
+     *   delayed_expression: How to represent an infinitesimally delayed version of the variable in the output.
+     *   expression_d<index> on a variable: How to represent the <index>th derivative in the output.
+     *   delayed_expression_d<index> on a variable: How to represent an infinitesimally delayed version of the
+     *     <index>th derivative in the output.
      * @param aCeVAS The CeVAS object to use to find variable sources.
      * @param aCUSES The CUSES object to use for unit conversions.
      * @param aAnnos The annotation set on which to look up variable names.
