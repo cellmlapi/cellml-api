@@ -918,7 +918,7 @@ CDA_CellMLElement::extensionAttributes()
 }
 
 CDA_ExtensionAttributeSet::CDA_ExtensionAttributeSet(iface::dom::Element* aDataStore)
-  : mDataStore(aDataStore)
+  : _cda_refcount(1), mDataStore(aDataStore)
 {
 }
 

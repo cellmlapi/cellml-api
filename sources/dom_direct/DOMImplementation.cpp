@@ -2124,10 +2124,13 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
   removeChildPrivate(at)->release_ref();
   QualifiedName qn((*i).first);
   qn.release();
-  
+
   std::map<LocalName, CDA_Attr*>::iterator  
     j = attributeMap.find(LocalName(const_cast<wchar_t*>
                                     ((*i).second->mNodeName.c_str())));
+
+  ObjRef<iface::dom::Node> n = (*i).second;
+
   attributeMapNS.erase(i);
   LocalName ln((*j).first);
   ln.release();
@@ -2137,7 +2140,7 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMAttrModified", true, false,
-                          (*i).second, at->mNodeValue.c_str(), L"", localName,
+                          n, at->mNodeValue.c_str(), L"", localName,
                           iface::events::MutationEvent::REMOVAL);
     dispatchEvent(me);
     me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
