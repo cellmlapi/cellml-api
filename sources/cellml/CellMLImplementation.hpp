@@ -206,6 +206,15 @@ public:
   iface::dom::Element* domElement()
     throw(std::exception&);
 
+  wchar_t* getExtensionAttributeNS(const wchar_t* aNS, const wchar_t* aLocalName)
+    throw(std::exception&);
+  void setExtensionAttributeNS(const wchar_t* aNS, const wchar_t* aLocalName, const wchar_t* aValue)
+    throw(std::exception&);
+  void removeExtensionAttributeNS(const wchar_t* aNS, const wchar_t* aLocalName)
+    throw(std::exception&);
+  iface::cellml_api::ExtensionAttributeSet* extensionAttributes()
+    throw(std::exception&);
+
   iface::XPCOM::IObject* mParent;
   iface::dom::Element* datastore;
 protected:
@@ -227,6 +236,65 @@ protected:
   ListenerToAdaptor_t mListenerToAdaptor;
 private:
   void cleanupEvents();
+};
+
+class CDA_ExtensionAttributeSet
+  : public iface::cellml_api::ExtensionAttributeSet
+{
+public:
+  CDA_ExtensionAttributeSet(iface::dom::Element* aDataStore);
+  virtual ~CDA_ExtensionAttributeSet() {}
+
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(cellml_api::ExtensionAttributeSet);
+  CDA_IMPL_ID;
+
+  iface::cellml_api::ExtensionAttributeIterator* iterate()
+    throw(std::exception&);
+
+private:
+  ObjRef<iface::dom::Element> mDataStore;
+};
+
+class CDA_ExtensionAttributeIterator
+  : public iface::cellml_api::ExtensionAttributeIterator
+{
+public:
+  CDA_ExtensionAttributeIterator(iface::dom::Element* aDataStore);
+  virtual ~CDA_ExtensionAttributeIterator();
+  CDA_IMPL_ID;
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI1(cellml_api::ExtensionAttributeIterator);
+
+  iface::dom::Attr* nextAttribute() throw(std::exception&);
+private:
+  iface::dom::Attr* nextAttributeInternal() throw(std::exception&);
+
+  ObjRef<iface::dom::NamedNodeMap> mNodeMap;
+  ObjRef<iface::dom::Node> mPrev;
+  int mPrevIndex;
+  bool mDone;
+
+  class ExtensionAttributeEventListener
+    : public iface::events::EventListener
+  {
+  public:
+    ExtensionAttributeEventListener(CDA_ExtensionAttributeIterator* aParent)
+      : mParent(aParent) {}
+    
+    CDA_IMPL_ID;
+    void add_ref() throw(std::exception&) {}
+    void release_ref() throw(std::exception&) {}
+    CDA_IMPL_QI1(events::EventListener);
+
+    void handleEvent(iface::events::Event* evt)
+      throw(std::exception&);
+
+  private:
+    CDA_ExtensionAttributeIterator* mParent;
+  };
+  friend class ExtensionAttributeEventListener;
+  ExtensionAttributeEventListener eventListener;
 };
 
 class CDA_NamedCellMLElement

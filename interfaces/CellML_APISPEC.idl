@@ -30,6 +30,7 @@ module cellml_api
   interface VariableRef;
   interface Role;
   interface ExtensionElementList;
+  interface ExtensionAttributeSet;
   interface MathList;
   interface ModelSet;
   interface CellMLElementSet;
@@ -306,6 +307,36 @@ module cellml_api
      *               into the new element.
      */
     CellMLElement clone(in boolean deep);
+
+    /**
+     * Fetches an extension attribute.
+     * @param ns The namespace of the extension attribute to fetch.
+     * @param localName The local name of the attribute to fetch.
+     */
+    wstring getExtensionAttributeNS(in wstring ns, in wstring localName);
+
+    /**
+     * Sets an extension attribute (adding it if it doesn't already exist,
+     * otherwise replacing it).
+     * @param ns The namespace of the extension attribute to set.
+     * @param qualifiedName The qualified name of the attribute to set.
+     * @param value The value to set the attribute to.
+     */
+    void setExtensionAttributeNS(in wstring ns, in wstring qualifiedName, in wstring value);
+
+    /**
+     * Removes an extension attribute. No action is taken if the attribute is
+     * not already present.
+     * @param ns The namespace of the extension attribute to remove.
+     * @param localName The local name of the attribute to remove.
+     */
+    void removeExtensionAttributeNS(in wstring ns, in wstring localName);
+
+    /**
+     * Fetches the set of all extension attributes, which can be used to iterate
+     * through the extension attributes.
+     */
+    readonly attribute ExtensionAttributeSet extensionAttributes;
   };
 
   /**
@@ -1326,6 +1357,32 @@ module cellml_api
     MathMLElementIterator iterate();
   };
 #pragma terminal-interface
+
+  /**
+   * An interface for iterating through all extension attributes.
+   */
+  interface ExtensionAttributeIterator : XPCOM::IObject
+  {
+    /**
+     * Fetches the next extension attribute node.
+     */
+    dom::Attr nextAttribute();
+  };
+#pragma terminal-interface
+
+  /**
+   * A set of extension attributes
+   */
+  interface ExtensionAttributeSet : XPCOM::IObject
+  {
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * attributes. The iteration order is undefined.
+     */
+    ExtensionAttributeIterator iterate();
+  };
+#pragma terminal-interface
+
 
   /**
    * An immutable collection of CellML elements.

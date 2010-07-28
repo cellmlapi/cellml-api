@@ -3184,6 +3184,151 @@ CellMLTest::testExtensionElementList()
 //   };
 
 void
+CellMLTest::testExtensionAttributeSet()
+{
+  loadAchCascade();
+
+//    /**
+//     * Fetches an extension attribute.
+//     * @param ns The namespace of the extension attribute to fetch.
+//     * @param localName The local name of the attribute to fetch.
+//     */
+//    wstring getExtensionAttributeNS(in wstring ns, in wstring localName);
+  wchar_t* str =
+    mAchCascade->getExtensionAttributeNS(L"http://example.org/mytest", L"hello");
+  CPPUNIT_ASSERT(!wcscmp(str, L"world"));
+  free(str);
+
+  str =
+    mAchCascade->getExtensionAttributeNS(L"http://example.org/yourtest", L"hello");
+  CPPUNIT_ASSERT(!wcscmp(str, L""));
+  free(str);
+
+//    /**
+//     * Sets an extension attribute (adding it if it doesn't already exist,
+//     * otherwise replacing it).
+//     * @param ns The namespace of the extension attribute to set.
+//     * @param qualifiedName The qualified name of the attribute to set.
+//     * @param value The value to set the attribute to.
+//     */
+//    void setExtensionAttributeNS(in wstring ns, in wstring qualifiedName, in wstring value);
+  mAchCascade->setExtensionAttributeNS(L"http://example.org/newtest", L"something:thistest", L"123");
+  mAchCascade->setExtensionAttributeNS(L"http://example.org/thetest", L"nsblah:atest", L"456");
+  str =
+    mAchCascade->getExtensionAttributeNS(L"http://example.org/newtest", L"thistest");
+  CPPUNIT_ASSERT(!wcscmp(str, L"123"));
+  free(str);
+
+//    /**
+//     * Removes an extension attribute. No action is taken if the attribute is
+//     * not already present.
+//     * @param ns The namespace of the extension attribute to remove.
+//     * @param localName The local name of the attribute to remove.
+//     */
+//    void removeExtensionAttributeNS(in wstring ns, in wstring localName);
+  mAchCascade->removeExtensionAttributeNS(L"http://example.org/newtest", L"thistest");
+  str =
+    mAchCascade->getExtensionAttributeNS(L"http://example.org/newtest", L"thistest");
+  CPPUNIT_ASSERT(!wcscmp(str, L""));
+  free(str);
+
+//
+//    /**
+//     * Fetches the set of all extension attributes, which can be used to iterate
+//     * through the extension attributes.
+//     */
+//    readonly attribute ExtensionAttributeSet extensionAttributes;
+  iface::cellml_api::ExtensionAttributeSet* eas = mAchCascade->extensionAttributes();
+  CPPUNIT_ASSERT(eas != NULL);
+
+//  /**
+//   * A set of extension attributes
+//   */
+//  interface ExtensionAttributeSet : XPCOM::IObject
+//  {
+//    /**
+//     * Returns a CellMLElementIterator that can be used to iterate through the
+//     * attributes. The iteration order is undefined.
+//     */
+//    ExtensionAttributeIterator iterate();
+  iface::cellml_api::ExtensionAttributeIterator* eai = eas->iterate();
+  eas->release_ref();
+
+//  };
+//  /**
+//   * An interface for iterating through all extension attributes.
+//   */
+//  interface ExtensionAttributeIterator : XPCOM::IObject
+//  {
+//    /**
+//     * Fetches the next extension attribute node.
+//     */
+//    dom::Attr nextAttribute();
+//  };
+  // Test that the iterator is live...
+  mAchCascade->setExtensionAttributeNS(L"http://example.org/livetest", L"shouldbe", L"live");
+
+  iface::dom::Attr* attr1 = eai->nextAttribute();
+  CPPUNIT_ASSERT(attr1 != NULL);
+  iface::dom::Attr* attr2 = eai->nextAttribute();
+  CPPUNIT_ASSERT(attr2 != NULL);
+  iface::dom::Attr* attr3 = eai->nextAttribute();
+  CPPUNIT_ASSERT(attr3 != NULL);
+  CPPUNIT_ASSERT(eai->nextAttribute() == NULL);
+
+  wchar_t * attr1ns = attr1->namespaceURI(), * attr2ns = attr2->namespaceURI(), * attr3ns = attr3->namespaceURI();
+  wchar_t * attr1ln = attr1->localName(), * attr2ln = attr2->localName(), * attr3ln = attr3->localName();
+
+  attr1->release_ref();
+  attr2->release_ref();
+  attr3->release_ref();
+
+  if (!wcscmp(attr2ns, L"http://example.org/thetest"))
+  {
+    wchar_t* tmp = attr2ns;
+    attr2ns = attr1ns;
+    attr1ns = tmp;
+    tmp = attr2ln;
+    attr2ln = attr1ln;
+    attr1ln = tmp;
+  }
+  else if (!wcscmp(attr3ns, L"http://example.org/thetest"))
+  {
+    wchar_t* tmp = attr3ns;
+    attr3ns = attr1ns;
+    attr1ns = tmp;
+    tmp = attr3ln;
+    attr3ln = attr1ln;
+    attr1ln = tmp;
+  }
+  if (!wcscmp(attr3ns, L"http://example.org/hello"))
+  {
+    wchar_t* tmp = attr3ns;
+    attr3ns = attr2ns;
+    attr2ns = tmp;
+    tmp = attr3ln;
+    attr3ln = attr2ln;
+    attr2ln = tmp;
+  }
+
+  CPPUNIT_ASSERT(!wcscmp(attr1ns, L"http://example.org/thetest"));
+  CPPUNIT_ASSERT(!wcscmp(attr1ln, L"atest"));
+  CPPUNIT_ASSERT(!wcscmp(attr2ns, L"http://example.org/mytest"));
+  CPPUNIT_ASSERT(!wcscmp(attr2ln, L"hello"));
+  CPPUNIT_ASSERT(!wcscmp(attr3ns, L"http://example.org/livetest"));
+  CPPUNIT_ASSERT(!wcscmp(attr3ln, L"shouldbe"));
+
+  free(attr1ns);
+  free(attr2ns);
+  free(attr3ns);
+  free(attr1ln);
+  free(attr2ln);
+  free(attr3ln);
+
+  eai->release_ref();
+}
+
+void
 CellMLTest::testCellMLElementSet()
 {
   loadBeelerReuter();

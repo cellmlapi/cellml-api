@@ -18,7 +18,7 @@ CHANGES:
   05/04/2003 - AAC - Changed the model name so the model loads in the database 
                      easier.
 -->
-<model name="Ach_cascade_1995" cmeta:id="Ach_cascade" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" xml:base="http://www.example.org/repository/Ach_cascade_1995.xml">
+<model name="Ach_cascade_1995" cmeta:id="Ach_cascade" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" xml:base="http://www.example.org/repository/Ach_cascade_1995.xml" xmlns:mytest="http://example.org/mytest" mytest:hello="world">
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqs="http://www.cellml.org/bqs/1.0#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#">
     <!--
       The following RDF block contains metadata that applies to this document

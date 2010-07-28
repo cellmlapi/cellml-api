@@ -887,6 +887,217 @@ CDA_CellMLElement::clone(bool aDeep)
   return WrapCellMLElement(NULL, cel);
 }
 
+wchar_t*
+CDA_CellMLElement::getExtensionAttributeNS(const wchar_t* aNS, const wchar_t* aLocalName)
+  throw(std::exception&)
+{
+  // XXX should we check aNS is an extension namespace?
+  return datastore->getAttributeNS(aNS, aLocalName);
+}
+
+void
+CDA_CellMLElement::setExtensionAttributeNS(const wchar_t* aNS, const wchar_t* aQualifiedName,
+                                           const wchar_t* aValue)
+  throw(std::exception&)
+{
+  datastore->setAttributeNS(aNS, aQualifiedName, aValue);
+}
+
+void
+CDA_CellMLElement::removeExtensionAttributeNS(const wchar_t* aNS, const wchar_t* aLocalName)
+  throw(std::exception&)
+{
+  datastore->removeAttributeNS(aNS, aLocalName);
+}
+
+iface::cellml_api::ExtensionAttributeSet*
+CDA_CellMLElement::extensionAttributes()
+  throw(std::exception&)
+{
+  return new CDA_ExtensionAttributeSet(datastore);
+}
+
+CDA_ExtensionAttributeSet::CDA_ExtensionAttributeSet(iface::dom::Element* aDataStore)
+  : mDataStore(aDataStore)
+{
+}
+
+iface::cellml_api::ExtensionAttributeIterator*
+CDA_ExtensionAttributeSet::iterate()
+  throw(std::exception&)
+{
+  return new CDA_ExtensionAttributeIterator(mDataStore);
+}
+
+CDA_ExtensionAttributeIterator::CDA_ExtensionAttributeIterator(iface::dom::Element* aDataStore)
+  : _cda_refcount(1),
+    mNodeMap(already_AddRefd<iface::dom::NamedNodeMap>(aDataStore->attributes())),
+    mPrevIndex(-1), mDone(false), eventListener(this)
+{
+}
+
+CDA_ExtensionAttributeIterator::~CDA_ExtensionAttributeIterator()
+{
+  if (mPrev != NULL)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrev, events::EventTarget);
+    targ->removeEventListener(L"DOMNodeRemoved", &eventListener, false);
+  }
+}
+
+iface::dom::Attr*
+CDA_ExtensionAttributeIterator::nextAttribute()
+  throw(std::exception&)
+{
+  while (true)
+  {
+    RETURN_INTO_OBJREF(attr, iface::dom::Attr,
+                       nextAttributeInternal());
+    if (attr == NULL)
+      return NULL;
+
+    RETURN_INTO_WSTRING(nsURI, attr->namespaceURI());
+    if (nsURI == L"" || nsURI == CELLML_1_0_NS || nsURI == CELLML_1_1_NS ||
+        nsURI == CMETA_NS || nsURI == MATHML_NS || nsURI == RDF_NS ||
+        nsURI == L"http://www.w3.org/XML/1998/namespace")
+      continue;
+    attr->add_ref();
+    return attr;
+  }
+}
+
+iface::dom::Attr*
+CDA_ExtensionAttributeIterator::nextAttributeInternal()
+  throw(std::exception&)
+{
+  if (mDone)
+    return NULL;
+
+  if (mPrev == NULL)
+  {
+    mPrev = already_AddRefd<iface::dom::Node>(mNodeMap->item(0));
+    if (mPrev == NULL)
+      return NULL;
+    mPrevIndex = 0;
+
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrev, events::EventTarget);
+      targ->addEventListener(L"DOMNodeRemoved", &eventListener, false);
+    }
+
+    DECLARE_QUERY_INTERFACE(ret, mPrev, dom::Attr);
+    return ret;
+  }
+
+  {
+    ObjRef<iface::dom::Node> curPrev;
+    if (mPrevIndex != -1)
+    {
+      curPrev = already_AddRefd<iface::dom::Node>(mNodeMap->item(mPrevIndex));
+      if (CDA_objcmp(curPrev, mPrev))
+        mPrevIndex = -1;
+    }
+
+    if (mPrevIndex == -1)
+    {
+      for (mPrevIndex = 0;; mPrevIndex++)
+      {
+        curPrev = already_AddRefd<iface::dom::Node>(mNodeMap->item(mPrevIndex));
+        assert(curPrev != NULL); // Node should be guaranteed to be there.
+
+        if (!CDA_objcmp(curPrev, mPrev))
+          break;
+      }
+    }
+  }
+
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrev, events::EventTarget);
+    targ->removeEventListener(L"DOMNodeRemoved", &eventListener, false);
+  }
+
+  // We now have a guaranteed up to date mPrevIndex.
+  mPrevIndex++;
+  mPrev = already_AddRefd<iface::dom::Node>(mNodeMap->item(mPrevIndex));
+
+  if (mPrev == NULL)
+  {
+    mDone = true;
+    return NULL;
+  }
+
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrev, events::EventTarget);
+    targ->addEventListener(L"DOMNodeRemoved", &eventListener, false);
+  }
+
+  DECLARE_QUERY_INTERFACE(ret, mPrev, dom::Attr);
+  return ret;
+}
+
+void
+CDA_ExtensionAttributeIterator::ExtensionAttributeEventListener::handleEvent
+(
+ iface::events::Event* evt
+)
+  throw(std::exception&)
+{
+
+  try
+  {
+    if (evt->eventPhase() != iface::events::Event::AT_TARGET)
+      return;
+    RETURN_INTO_OBJREF(t, iface::events::EventTarget, evt->target());
+
+    if (mParent->mPrev == NULL || CDA_objcmp(t, mParent->mPrev))
+      return;
+
+    {
+      ObjRef<iface::dom::Node> curPrev;
+      if (mParent->mPrevIndex != -1)
+      {
+        curPrev = already_AddRefd<iface::dom::Node>(mParent->mNodeMap->item(mParent->mPrevIndex));
+        if (CDA_objcmp(curPrev, mParent->mPrev))
+          mParent->mPrevIndex = -1;
+      }
+      
+      if (mParent->mPrevIndex == -1)
+      {
+        for (mParent->mPrevIndex = 0;; mParent->mPrevIndex++)
+        {
+          curPrev = already_AddRefd<iface::dom::Node>(mParent->mNodeMap->item(mParent->mPrevIndex));
+          assert(curPrev != NULL); // Node should be guaranteed to be there.
+          
+          if (!CDA_objcmp(curPrev, mParent->mPrev))
+            break;
+        }
+      }
+    }
+
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(targ, mParent->mPrev, events::EventTarget);
+      targ->removeEventListener(L"DOMNodeRemoved", this, false);
+    }
+
+    // We now have a guaranteed up to date mPrevIndex.
+    mParent->mPrevIndex--;
+    if (mParent->mPrevIndex == -1)
+      mParent->mPrev = NULL;
+    else
+      mParent->mPrev = already_AddRefd<iface::dom::Node>(mParent->mNodeMap->item(mParent->mPrevIndex));
+
+    if (mParent->mPrev != NULL)
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(targ, mParent->mPrev, events::EventTarget);
+      targ->addEventListener(L"DOMNodeRemoved", this, false);
+    }
+  }
+  catch (iface::dom::DOMException& de)
+  {
+    throw iface::cellml_api::CellMLException();
+  }
+}
+
 static void
 recursivelyCloneFromTo(iface::cellml_api::Model* aFrom,
                        iface::cellml_api::Model* aTo)

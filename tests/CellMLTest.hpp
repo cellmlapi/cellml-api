@@ -37,6 +37,7 @@ class CellMLTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testConnection);
   CPPUNIT_TEST(testReaction);
   CPPUNIT_TEST(testExtensionElementList);
+  CPPUNIT_TEST(testExtensionAttributeSet);
   CPPUNIT_TEST(testCellMLElementSet);
   CPPUNIT_TEST(testIteratorLiveness);
   CPPUNIT_TEST(testRelativeImports);
@@ -77,6 +78,7 @@ public:
   void testModelLoader();
   void testDOMURLLoader();
   void testExtensionElementList();
+  void testExtensionAttributeSet();
   void testCellMLElementSet();
   void testIteratorLiveness();
   void testRelativeImports();
