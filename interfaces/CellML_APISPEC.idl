@@ -620,6 +620,11 @@ module cellml_api
      * while setting asText creates the attribute.
      */
     readonly attribute URI baseURI;
+
+    /**
+     * Removes the xml:base from the model entirely.
+     */
+    void clearBaseURI();
   };
 #pragma terminal-interface
 #pragma cross-module-argument

@@ -572,6 +572,12 @@ CellMLTest::testURI()
     (!wcscmp(str, L"http://www.example.org/repository/some_other_example.xml"));
   free(str);
 
+  mAchCascade->clearBaseURI();
+  str = uri->asText();
+  CPPUNIT_ASSERT
+    (!wcscmp(str, L""));
+  free(str);
+  
   uri->release_ref();
 }
 //   };

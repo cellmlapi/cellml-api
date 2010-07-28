@@ -1426,6 +1426,13 @@ CDA_Model::base_uri()
   return baseURI();
 }
 
+void
+CDA_Model::clearBaseURI()
+  throw(std::exception&)
+{
+  datastore->removeAttributeNS(L"http://www.w3.org/XML/1998/namespace", L"base");
+}
+
 iface::cellml_api::UnitsSet*
 CDA_Model::localUnits()
   throw(std::exception&)
