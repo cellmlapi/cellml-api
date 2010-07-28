@@ -21,6 +21,7 @@ typedef uint32_t cda_serial_t;
 
 class CDA_Element;
 class CDA_Document;
+class CDA_Attr;
 
 // Our hooks into the MathML code...
 extern CDA_Element* WrapMathMLElement(CDA_Document* doc, const wchar_t* elname);
@@ -400,35 +401,6 @@ public:
   }
 };
 
-class CDA_NamedNodeMap
-  : public iface::dom::NamedNodeMap
-{
-public:
-  CDA_NamedNodeMap(CDA_Element* aElement);
-  ~CDA_NamedNodeMap();
-
-  CDA_IMPL_QI1(dom::NamedNodeMap);
-  CDA_IMPL_ID;
-  CDA_IMPL_REFCOUNT
-
-  iface::dom::Node* getNamedItem(const wchar_t* name) throw(std::exception&);
-  iface::dom::Node* setNamedItem(iface::dom::Node* arg) throw(std::exception&);
-  iface::dom::Node* removeNamedItem(const wchar_t* name)
-    throw(std::exception&);
-  iface::dom::Node* item(uint32_t index) throw(std::exception&);
-  uint32_t length() throw(std::exception&);
-  iface::dom::Node* getNamedItemNS(const wchar_t* namespaceURI,
-                                   const wchar_t* localName)
-    throw(std::exception&);
-  iface::dom::Node* setNamedItemNS(iface::dom::Node* arg)
-    throw(std::exception&);
-  iface::dom::Node* removeNamedItemNS(const wchar_t* namespaceURI,
-                                      const wchar_t* localName)
-    throw(std::exception&);
-
-  CDA_Element* mElement;
-};
-
 class CDA_DocumentType;
 
 class CDA_NamedNodeMapDT
@@ -630,6 +602,40 @@ public:
 
   std::map<QualifiedName, CDA_Attr*> attributeMapNS;
   std::map<LocalName, CDA_Attr*> attributeMap;
+};
+
+class CDA_NamedNodeMap
+  : public iface::dom::NamedNodeMap
+{
+public:
+  CDA_NamedNodeMap(CDA_Element* aElement);
+  ~CDA_NamedNodeMap();
+
+  CDA_IMPL_QI1(dom::NamedNodeMap);
+  CDA_IMPL_ID;
+  CDA_IMPL_REFCOUNT
+
+  iface::dom::Node* getNamedItem(const wchar_t* name) throw(std::exception&);
+  iface::dom::Node* setNamedItem(iface::dom::Node* arg) throw(std::exception&);
+  iface::dom::Node* removeNamedItem(const wchar_t* name)
+    throw(std::exception&);
+  iface::dom::Node* item(uint32_t index) throw(std::exception&);
+  uint32_t length() throw(std::exception&);
+  iface::dom::Node* getNamedItemNS(const wchar_t* namespaceURI,
+                                   const wchar_t* localName)
+    throw(std::exception&);
+  iface::dom::Node* setNamedItemNS(iface::dom::Node* arg)
+    throw(std::exception&);
+  iface::dom::Node* removeNamedItemNS(const wchar_t* namespaceURI,
+                                      const wchar_t* localName)
+    throw(std::exception&);
+
+  CDA_Element* mElement;
+
+private:
+  cda_serial_t hintSerial;
+  std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator hintIterator;
+  uint32_t hintIndex;
 };
 
 class CDA_TextBase

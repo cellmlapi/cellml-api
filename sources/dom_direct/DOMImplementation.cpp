@@ -245,7 +245,9 @@ CDA_Node::previousSibling()
   if (mParent == NULL)
     return NULL;
 
-  bool iAmAnAttr = (nodeType() == iface::dom::Node::ATTRIBUTE_NODE);
+  if (nodeType() == iface::dom::Node::ATTRIBUTE_NODE)
+    return NULL;
+
   std::list<CDA_Node*>::iterator i = mPositionInParent;
   while (true)
   {
@@ -253,8 +255,8 @@ CDA_Node::previousSibling()
       return NULL;
     i--;
     uint16_t type = (*i)->nodeType();
-    if ((iAmAnAttr ||
-         ((*i)->nodeType() != iface::dom::Node::ATTRIBUTE_NODE)) &&
+
+    if (type != iface::dom::Node::ATTRIBUTE_NODE &&
         type != iface::dom::Node::ENTITY_NODE &&
         type != iface::dom::Node::NOTATION_NODE)
     {
@@ -271,7 +273,9 @@ CDA_Node::nextSibling()
   if (mParent == NULL)
     return NULL;
 
-  bool iAmAnAttr = (nodeType() == iface::dom::Node::ATTRIBUTE_NODE);
+  if (nodeType() == iface::dom::Node::ATTRIBUTE_NODE)
+    return NULL;
+
   std::list<CDA_Node*>::iterator i = mPositionInParent;
 
   while (true)
@@ -280,10 +284,12 @@ CDA_Node::nextSibling()
     if (i == mParent->mNodeList.end())
       return NULL;
     uint16_t type = (*i)->nodeType();
-    if ((iAmAnAttr ||
-         (type != iface::dom::Node::ATTRIBUTE_NODE)) &&
+
+    if (
+        type != iface::dom::Node::ATTRIBUTE_NODE &&
         type != iface::dom::Node::ENTITY_NODE &&
-        type != iface::dom::Node::NOTATION_NODE)
+        type != iface::dom::Node::NOTATION_NODE
+       )
     {
       (*i)->add_ref();
       return (*i);
@@ -544,8 +550,6 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
 {
   bool oldTreeHadEffects = false;
 
-  CDA_DOM_SomethingChanged();
-
   if (oldChild->eventsHaveEffects() &&
       oldChild->nodeType() != iface::dom::Node::ATTRIBUTE_NODE)
   {
@@ -558,6 +562,8 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
     if (mDocumentIsAncestor)
       oldChild->dispatchRemovedFromDocument(me);
   }
+
+  CDA_DOM_SomethingChanged();
 
   std::list<CDA_Node*>::iterator posit =
     std::find(mNodeList.begin(), mNodeList.end(), oldChild);
@@ -1180,7 +1186,7 @@ CDA_NodeListDFSSearch::length()
 }
 
 CDA_NamedNodeMap::CDA_NamedNodeMap(CDA_Element* aElement)
-  : _cda_refcount(1), mElement(aElement)
+  : _cda_refcount(1), mElement(aElement), hintSerial(0)
 {
   mElement->add_ref();
 }
@@ -1260,15 +1266,29 @@ iface::dom::Node*
 CDA_NamedNodeMap::item(uint32_t index)
   throw(std::exception&)
 {
+  uint32_t saveIndex =  index;
+
   std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator i =
     mElement->attributeMapNS.begin();
+
+  // Can we use a hint saved from last time?
+  if (CDA_DOMCompareSerial(hintSerial) && hintIndex <= index)
+  {
+    i = hintIterator;
+    index -= hintIndex;
+  }
+
   for (; i != mElement->attributeMapNS.end(); i++)
   {
     if (index == 0)
     {
+      hintSerial = gCDADOMChangeSerial;
+      hintIterator = i;
+      hintIndex = saveIndex;
+
       (*i).second->add_ref();
       return (*i).second;
-    } 
+    }
     index--;
   }
   return NULL;
