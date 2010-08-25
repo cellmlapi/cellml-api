@@ -253,7 +253,7 @@ CDA_ModelLoader::createFromDOM(const wchar_t* URL,
 
     CDA_Model* model = new CDA_Model(loader, modelDoc, modelEl);
 
-    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, model->baseURI());
+    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, model->xmlBase());
     RETURN_INTO_WSTRING(base, bu->asText());
     if (base == L"")
       bu->asText(URL);
