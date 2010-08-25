@@ -1120,7 +1120,7 @@ ModelValidation::sUnitsAttr =
     /* namespace */NULL,
     /* name */L"units",
     /* missingMessage */L"Each <variable> / <unit> element MUST define a "
-                        L"a units attribute (section 3.4.3.1 / 5.4.3.1)",
+                        L"units attribute (section 3.4.3.1 / 5.4.3.1)",
     /* contentValidator */&ModelValidation::validateCellMLIdentifier
   };
 

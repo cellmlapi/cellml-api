@@ -13,6 +13,9 @@ endif
 if ENABLE_VACSS
 TESTS += tests/CheckVACSS
 endif
+if ENABLE_CIS
+TESTS += tests/CheckCIS
+endif
 
 tests_RunTestBin_SOURCES=\
 	tests/TestOutput.cpp \
