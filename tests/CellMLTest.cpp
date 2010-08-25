@@ -558,7 +558,7 @@ CellMLTest::testURI()
 //      * A representation of this string as text.
 //      */
 //     attribute wstring asText;
-  iface::cellml_api::URI* uri = mAchCascade->baseURI();
+  iface::cellml_api::URI* uri = mAchCascade->xmlBase();
   CPPUNIT_ASSERT(uri);
 
   wchar_t* str = uri->asText();
@@ -572,7 +572,7 @@ CellMLTest::testURI()
     (!wcscmp(str, L"http://www.example.org/repository/some_other_example.xml"));
   free(str);
 
-  mAchCascade->clearBaseURI();
+  mAchCascade->clearXMLBase();
   str = uri->asText();
   CPPUNIT_ASSERT
     (!wcscmp(str, L""));
@@ -1259,11 +1259,11 @@ CellMLTest::testModel()
 //     /**
 //      * Models should really set an 'xml:base' attribute in the model element as
 //      * we need to be able to unambiguously and uniquely reference a model
-//      * independent of its location. If this is not set, the baseURI could be
+//      * independent of its location. If this is not set, the xmlBase could be
 //      * set to the URI used to obtain it.
 //      */
-//     readonly attribute URI baseURI;
-  CPPUNIT_ASSERT_NO_THROW(xh = mBeelerReuter->baseURI());
+//     readonly attribute URI xmlBase;
+  CPPUNIT_ASSERT_NO_THROW(xh = mBeelerReuter->xmlBase());
   CPPUNIT_ASSERT_NO_THROW(str = xh->asText());
   CPPUNIT_ASSERT(!wcscmp(str, L"http://www.example.com/base/beelerreuter.xml"));
   free(str);
