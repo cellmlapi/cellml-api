@@ -80,10 +80,9 @@ my $default_TOL = 0.0; #Means that it will be behave almost the same as diff
 # Default diff program if not specified on the command line
 my $default_diff = "diff";
 
-# Regexp to match a real number ( qr is not available in version 5.004_04 )
-# Integers are not compared with tolerances.
+# Regexp to match a number ( qr is not available in version 5.004_04 )
 # Perhaps we should also allow variations in spaces between integers.
-my $real_regexp = q/[+-]?(?:\d+\.|\.\d)\d*(?:[EeDd][+-]?\d+)?/;
+my $num_regexp = q/[+-]?(?:\d+\.|\.\d|\d)\d*(?:[EeDd][+-]?\d+)?/;
 
 # value for absolute/percentage tolerance
 my $TOL;
@@ -402,7 +401,7 @@ sub ncompare {
 		# units may follow the number before any separator
 		# Allow a full stop after the number provided there is some
 		# other separator to confirm that it is not a decimal point.
-		m"(^|[][)(}{,;:'\"\$\t ]) *($real_regexp) *((?:[a-z][-a-z/^0-9]*|%)?\.?[][)(}{,;:*'\"\t \n])" ) {
+		m"(^|[][)(}{,;:'\"\$\t ]) *($num_regexp) *((?:[a-z][-a-z/^0-9]*|%)?\.?[][)(}{,;:*'\"\t \n])" ) {
 		$starts[$i] = "$`$1";
 		$reals[$i] = $2;
 		$strings[$i] = "$3$'";
@@ -449,18 +448,18 @@ sub real_string_close {
 
     my $permissible_difference = $TOL;
     if( $tol_is_relative ) {
-	my $abs_ref = abs $real_strings[0];
+	my $abs_ref = abs $num_strings[0];
 	$abs_ref > 1 and $permissible_difference *= $abs_ref;
     }
 
     if( $TOL > 0 ) {
 	# determine resolution in answer
-	$real_strings[0] =~ m/\.(\d*)(?:[EeDd]([+-]?\d+))?/
+	$num_strings[0] =~ m/\.?(\d*)(?:[EeDd]([+-]?\d+))?/
 	    or die "$0: confusion over regexp for real\n";
 	# If the answer is in exponential format and is zero then it
 	# has infinitesimal resolution; otherwise work out the resolution
 	# from the number of decimal places and the exponent.
-	unless( defined $2 and $real_strings[0] == 0 ) {
+	unless( defined $2 and $num_strings[0] == 0 ) {
 	    my $resolution_exponent = - length $1;
 	    defined $2 and $resolution_exponent += $2;
 	    #include a safety factor (1.1) for numerical rounding errors
@@ -471,7 +470,7 @@ sub real_string_close {
     }
 
     return
-	abs( $real_strings[1] - $real_strings[0] ) <=  $permissible_difference;
+	abs( $num_strings[1] - $num_strings[0] ) <=  $permissible_difference;
 }
 
 sub print_hunk {
