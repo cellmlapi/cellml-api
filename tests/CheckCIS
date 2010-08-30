@@ -2,7 +2,7 @@
 
 BINDIR=`pwd`
 BASEDIR=`dirname $0`
-DIFF=diff
+DIFF="$BINDIR/tests/ndiff -t 0.0000001"
 RUNCELLML=$BINDIR/RunCellML
 TEMPFILE=test_output
 
