@@ -297,7 +297,7 @@ CDA_RDFAPIRepresentation::source()
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
   RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, bs->createDataSource());
 
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->baseURI());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->xmlBase());
   RETURN_INTO_WSTRING(base, bu->asText());
   bs->parseIntoDataSource(ds, rdocel, base.c_str());
 
@@ -323,7 +323,7 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 
   // Step two: Convert the data-source into an RDF document...
   RETURN_INTO_OBJREF(bs, iface::rdf_api::Bootstrap, CreateRDFBootstrap());
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->baseURI());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, mModel->xmlBase());
   RETURN_INTO_WSTRING(base, bu->asText());
   RETURN_INTO_OBJREF(doc, iface::dom::Document,
                      bs->getDOMForDataSource(aSource, base.c_str()));
@@ -1412,7 +1412,7 @@ CDA_Model::imports()
 }
 
 iface::cellml_api::URI*
-CDA_Model::baseURI()
+CDA_Model::xmlBase()
   throw(std::exception&)
 {
   return new CDA_URI(datastore, L"http://www.w3.org/XML/1998/namespace", L"base", L"xml:base");
@@ -1423,11 +1423,11 @@ iface::cellml_api::URI*
 CDA_Model::base_uri()
   throw(std::exception&)
 {
-  return baseURI();
+  return xmlBase();
 }
 
 void
-CDA_Model::clearBaseURI()
+CDA_Model::clearXMLBase()
   throw(std::exception&)
 {
   datastore->removeAttributeNS(L"http://www.w3.org/XML/1998/namespace", L"base");
@@ -3523,7 +3523,7 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
     return;
 
   // See if we can get an xml:base...
-  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->baseURI());
+  RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->xmlBase());
   RETURN_INTO_WSTRING(base, bu->asText());
 
   if (aURL.find(L"://") != std::wstring::npos)
@@ -3680,7 +3680,7 @@ CDA_CellMLImport::instantiate()
       throw iface::cellml_api::CellMLException();
 
     CDA_Model* cm = new CDA_Model(rootModel->mLoader, dd, modelEl);
-    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->baseURI());
+    RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->xmlBase());
     RETURN_INTO_WSTRING(base, bu->asText());
     if (base == L"")
       bu->asText(urlStr.c_str());

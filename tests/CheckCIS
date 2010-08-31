@@ -1,0 +1,80 @@
+#!/bin/bash
+
+BINDIR=`pwd`
+BASEDIR=`dirname $0`
+DIFF="$BINDIR/tests/ndiff -t 0.0000001"
+RUNCELLML=$BINDIR/RunCellML
+TEMPFILE=test_output
+
+if [[ ! -f "$RUNCELLML" ]]; then
+        echo RunCellML not found. Not testing it.
+        exit 77
+fi
+
+if [[ -n $RUNNER ]]; then
+    RUNCELLML="$RUNNER $BINDIR/.libs/RunCellML.exe"
+fi
+RUNCELLML="$TESTS_ENVIRONMENT $RUNCELLML"
+
+grep -q "s,@ENABLE_RDF_TRUE@,|#_!!_#|#,g" $BINDIR/config.status
+RDF_ENABLED=$?
+
+function runtest()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $RUNCELLML $BASEDIR/test_xml/$name.xml step_type AM_1_12 | tr -d "\r" >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name.csv
+  if [[ $? -ne 0 ]]; then
+    if [[ -f $BASEDIR/test_expected/$name-alt1.csv ]]; then
+        $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt1.csv
+        if [[ $? -ne 0 ]]; then
+            if [[ -f $BASEDIR/test_expected/$name-alt2.csv ]]; then
+                $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt2.csv
+                if [[ $? -ne 0 ]]; then
+                    if [[ -f $BASEDIR/test_expected/$name-alt3.csv ]]; then
+                        $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt3.csv
+                        FAIL=$?
+                    else
+                        FAIL=1
+                    fi
+                fi
+            else
+                FAIL=1
+            fi
+        fi
+    else
+        FAIL=1
+    fi
+  fi
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name generated correct output.
+  rm -f $TEMPFILE
+}
+
+runtest cellml_simple_test
+runtest modified_parabola
+runtest underconstrained_1
+runtest overconstrained_1
+runtest newton_raphson_parabola
+runtest import_eqn
+runtest number-minus
+runtest units
+runtest units-import
+runtest units-import-import
+runtest units-in-imported-component
+runtest SimpleDAE_NonLinear
+#runtest_rdf newton_raphson_parabola_overrideiv
+#runtest_usenames modified_parabola
+runtest StateModel
+runtest reset_rule
+runtest definite_integral
+runtest TestParameterIVAmbiguity
+runtest IVComputation
+
+exit 0
