@@ -433,7 +433,7 @@ sub ncompare {
 }
 
 sub real_string_close {
-    my @real_strings = @_;
+    my @num_strings = @_;
 
     # Returns true if two strings representing real numbers are close
     # enough to be considered equal within tolerances; false
@@ -444,7 +444,7 @@ sub real_string_close {
     # tolerance it may represent a difference that is smaller.
 
     # remove fortranism
-    map { s/d/e/i } @real_strings;
+    map { s/d/e/i } @num_strings;
 
     my $permissible_difference = $TOL;
     if( $tol_is_relative ) {
