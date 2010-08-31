@@ -16,6 +16,8 @@ STLLINK ?= @STLLINK@
 LT_DLPREOPEN ?= @LT_DLPREOPEN@
 THREADFLAGS ?= @THREADFLAGS@
 LIBXML_CFLAGS ?= @LIBXML_CFLAGS@
+PYTHON_CFLAGS ?= @PYTHON_CFLAGS@
+PYTHON_LDFLAGS ?= @PYTHON_LDFLAGS@
 MOZILLA_DIR ?= @XPCOM@
 PRE_NON_AS_NEEDED := @PRE_NON_AS_NEEDED@
 POST_NON_AS_NEEDED := @POST_NON_AS_NEEDED@
@@ -58,6 +60,10 @@ endif
 
 if ENABLE_JAVA
 include $(top_srcdir)/interfaces/java_build.mk
+endif
+
+if ENABLE_PYTHON
+include $(top_srcdir)/interfaces/python_build.mk
 endif
 
 # These parts relate to the CellML Context...

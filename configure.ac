@@ -57,10 +57,27 @@ AC_ARG_ENABLE(java,
   java=$enableval
   # CHECK_SHORT_WCHAR_OPTION
   # AM_CXXFLAGS="$AM_CXXFLAGS $short_wchar_option"
-  AC_DEFINE(ENABLE_XPCOM, 1, [Is Java enabled?])
+  AC_DEFINE(ENABLE_JAVA, 1, [Is Java enabled?])
   ;;
 esac], [java=false])
 AM_CONDITIONAL(ENABLE_JAVA, test x$java != xfalse)
+
+PYTHON_CFLAGS=
+PYTHON_LDFLAGS=
+AC_ARG_ENABLE(python,
+[  --enable-python     Build Python bindings],
+[case "${enableval}" in
+  no) python=false ;;
+  *) python=$enableval
+  AC_DEFINE(ENABLE_PYTHON, 1, [Is Python enabled?])
+  ;;
+esac], [python=false])
+AM_CONDITIONAL(ENABLE_PYTHON, test x$python != xfalse)
+
+if test x$python != xfalse; then
+  PYTHON_CFLAGS=$(python-config --cflags)
+  PYTHON_LDFLAGS=$(python-config --ldflags)
+fi
 
 AC_ARG_ENABLE(context,
 [  --enable-context    Build the CellML Context],
@@ -416,6 +433,61 @@ AM_CONDITIONAL(ENABLE_CELEDSEXPORT_AND_JAVA, test x$celedsexportandjava = xtrue)
 AM_CONDITIONAL(ENABLE_CIS_AND_JAVA, test x$cisandjava = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_JAVA, test x$vacssandjava = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_JAVA, test x$rdfandjava = xtrue)
+
+if test x$python != xfalse; then
+   if test x$annotools = xtrue; then
+      annotoolsandpython=true
+   fi
+
+   if test x$cevas = xtrue; then
+      cevasandpython=true
+   fi
+
+   if test x$cuses = xtrue; then
+      cusesandpython=true
+   fi
+
+   if test x$malaes = xtrue; then
+      malaesandpython=true
+   fi
+
+   if test x$ccgs = xtrue; then
+      ccgsandpython=true
+   fi
+
+   if test x$celeds = xtrue; then
+      celedsandpython=true
+   fi
+
+   if test x$celedsexport = xtrue; then
+      celedsexportandpython=true
+   fi
+
+   if test x$cis = xtrue; then
+      cisandpython=true
+   fi
+
+   if test x$vacss = xtrue; then
+      vacssandpython=true
+   fi
+
+   if test x$rdf = xtrue; then
+      rdfandpython=true
+   fi
+fi
+
+AM_CONDITIONAL(ENABLE_CONTEXT_AND_PYTHON, test x$contextandpython = xtrue)
+AM_CONDITIONAL(ENABLE_ANNOTOOLS_AND_PYTHON, test x$annotoolsandpython = xtrue)
+AM_CONDITIONAL(ENABLE_CEVAS_AND_PYTHON, test x$cevasandpython = xtrue)
+AM_CONDITIONAL(ENABLE_CUSES_AND_PYTHON, test x$cusesandpython = xtrue)
+AM_CONDITIONAL(ENABLE_MALAES_AND_PYTHON, test x$malaesandpython = xtrue)
+AM_CONDITIONAL(ENABLE_CCGS_AND_PYTHON, test x$ccgsandpython = xtrue)
+AM_CONDITIONAL(ENABLE_CELEDS_AND_PYTHON, test x$celedsandpython = xtrue)
+AM_CONDITIONAL(ENABLE_CELEDSEXPORT_AND_PYTHON, test x$celedsexportandpython = xtrue)
+AM_CONDITIONAL(ENABLE_CIS_AND_PYTHON, test x$cisandpython = xtrue)
+AM_CONDITIONAL(ENABLE_VACSS_AND_PYTHON, test x$vacssandpython = xtrue)
+AM_CONDITIONAL(ENABLE_RDF_AND_PYTHON, test x$rdfandpython = xtrue)
+
 AM_CONDITIONAL(ENABLE_EXAMPLES, test x$enable_examples = xtrue)
 
 # Checks for programs.
@@ -588,6 +660,8 @@ AC_SUBST([STLLINK])
 AC_SUBST([AM_CXXFLAGS])
 AC_SUBST([THREADFLAGS])
 AC_SUBST([LIBXML_CFLAGS])
+AC_SUBST([PYTHON_CFLAGS])
+AC_SUBST([PYTHON_LDFLAGS])
 AC_SUBST([PRE_NON_AS_NEEDED])
 AC_SUBST([POST_NON_AS_NEEDED])
 AC_SUBST([lt_cv_dlopen_libs])

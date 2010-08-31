@@ -6,10 +6,16 @@
 /* Are the GSL integrators enabled? */
 #undef ENABLE_GSL_INTEGRATORS
 
+/* Is Java enabled? */
+#undef ENABLE_JAVA
+
+/* Is Python enabled? */
+#undef ENABLE_PYTHON
+
 /* Is RDF enabled? */
 #undef ENABLE_RDF
 
-/* Is Java enabled? */
+/* Is XPCOM enabled? */
 #undef ENABLE_XPCOM
 
 /* Define to 1 if you have the <dlfcn.h> header file. */

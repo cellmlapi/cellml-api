@@ -39,3 +39,20 @@ libJavaSupport_la_CXXFLAGS = \
   -I$(top_builddir)/simple_interface_generators/glue/java -DIN_MODULE_JavaSupport \
   $(AM_CXXFLAGS)
 endif
+
+if ENABLE_PYTHON
+lib_LTLIBRARIES += libPythonSupport.la python/xpcom.la
+libPythonSupport_la_SOURCES = \
+  $(top_srcdir)/simple_interface_generators/glue/python/python_support.cxx
+
+libPythonSupport_la_CXXFLAGS = \
+  -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources \
+  -I$(top_builddir)/simple_interface_generators/glue/python -DIN_MODULE_PythonSupport \
+  $(AM_CXXFLAGS) $(PYTHON_CFLAGS)
+
+python_xpcom_la_SOURCES = \
+  $(top_srcdir)/simple_interface_generators/glue/python/xpcom.cxx
+python_xpcom_la_LIBADD = $(ALLPYTHONLIBADD)
+python_xpcom_la_LDFLAGS = $(ALLPYTHONLDFLAGS) -module
+python_xpcom_la_CXXFLAGS = $(ALLPYTHONCXXFLAGS)
+endif
