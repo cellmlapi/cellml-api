@@ -401,7 +401,7 @@ module cellml_api
      * The xml:base URI. If the attribute doesn't exist, retrieving asText on
      * the URI returns the empty string (and doesn't create the attribute),
      * while setting asText creates the attribute.
-     * @deprecated Use baseURI. This method may be removed from a
+     * @deprecated Use xmlBase. This method may be removed from a
      *             future release of the CellML API.
      */
     readonly attribute URI base_uri;
@@ -619,12 +619,12 @@ module cellml_api
      * the URI returns the empty string (and doesn't create the attribute),
      * while setting asText creates the attribute.
      */
-    readonly attribute URI baseURI;
+    readonly attribute URI xmlBase;
 
     /**
      * Removes the xml:base from the model entirely.
      */
-    void clearBaseURI();
+    void clearXMLBase();
   };
 #pragma terminal-interface
 #pragma cross-module-argument
