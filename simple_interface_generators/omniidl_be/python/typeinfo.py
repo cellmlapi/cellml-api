@@ -324,8 +324,9 @@ class Sequence(Type):
             return "PyObject* %s = PyList_New(_length_%s);\n" % (pyargName, pcmName) +\
                    "for (uint32_t _i = 0; _i < _length_%s; _i++)\n" % (pcmName) +\
                    "{\n" +\
-                   self.superti.makePyArgFromPCM("_tmp%s" % maybeo, pcmName, 1, 0) +\
+                   self.superti.makePyArgFromPCM("_tmp%s" % maybeo, '(%s[_i])' % pcmName, 1, 0) +\
                    doconvert +\
+                   "  Py_INCREF(_tmpo);\n" +\
                    "  PyList_SET_ITEM(%s, _i, _tmpo);\n" % pyargName +\
                    "}"
         elif hasOut and not hasIn:
@@ -357,7 +358,7 @@ class Sequence(Type):
         
         if hasIn and not hasOut:
             return "uint32_t _length_%s = PyList_Size(%s);\n" % (pcmName, pyargName) +\
-                   "%s* %s = new %s[];" % (self.superti.type_pcm, pcmName, self.superti.type_pcm) +\
+                   "%s* %s = new %s[_length_%s];" % (self.superti.type_pcm, pcmName, self.superti.type_pcm, pcmName) +\
                    "std::auto_ptr<%s> %s_release(%s);\n" % (self.superti.type_pcm, pcmName, pcmName) +\
                    "for (uint32_t _i = 0; _i < _length_%s; _i++)" % pcmName +\
                    "{\n" +\
@@ -414,13 +415,13 @@ class Objref(Declared):
         elif hasIn and not hasOut:
             return "PyObject* %s;\n" % pyargName +\
                    "{\n" +\
-                   "  ::p2py::XPCOM::IObject *_wrapper = dynamic_cast< ::p2py::XPCOM::IObject*>(%s);" % pcmName +\
+                   "  ::p2py::XPCOM::IObject *_wrapper = dynamic_cast< ::p2py::XPCOM::IObject*>(%s);\n" % pcmName +\
                    "  if (_wrapper != NULL) %s = _wrapper->unwrap();\n" % (pyargName) +\
                    "  else if (%s == NULL) { %s = Py_None; Py_INCREF(Py_None);}\n" % (pcmName, pyargName) +\
                    "  else\n" +\
-                   "  {" +\
+                   "  {\n" +\
                    self.getType +\
-                   "    PyObject* cobj = PyCObject_FromVoidPtr(reinterpret_cast<void*>(%s), NULL);\n" % pcmName +\
+                   "    PyObject* cobj = PyCObject_FromVoidPtr(reinterpret_cast<void*>(static_cast<iface::XPCOM::IObject*>(%s)), NULL);\n" % pcmName +\
                    "    %s = PyObject_CallFunctionObjArgs(type, cobj, NULL);\n" % pyargName +\
                    "    Py_DECREF(cobj);\n" +\
                    "    Py_DECREF(type);\n" +\
@@ -434,14 +435,15 @@ class Objref(Declared):
             return "PyObject* %s;\n" % pyargName +\
                    "{\n" +\
                    "  %s = PyList_New(1);\n" % pyargName +\
-                   "  ::p2py::XPCOM::IObject *_wrapper = dynamic_cast< ::p2py::XPCOM::IObject*>(%s);" % pcmName +\
-                   "  PyObject* _item;" +\
+                   "  ::p2py::XPCOM::IObject *_wrapper = dynamic_cast< ::p2py::XPCOM::IObject*>(%s);\n" % pcmName +\
+                   "  PyObject* _item;\n" +\
                    "  if (_wrapper != NULL) _item = _wrapper->unwrap();\n" +\
                    "  else if (%s == NULL) { _item = Py_None; Py_INCREF(Py_None); }\n" % pcmName +\
                    "  else\n" +\
                    "  {\n" +\
                    self.getType +\
-                   "    PyObject* cobj = PyCObject_FromVoidPtr(reinterpret_cast<void*>(*%s), NULL);\n" % pcmName +\
+                   "    PyObject* cobj = PyCObject_FromVoidPtr(reinterpret_cast<void*>(static_cast<iface::XPCOM::IObject*>(*%s)), NULL);\n" % pcmName +\
+                   "    if (%s) (*%s)->add_ref();\n" % (pcmName, pcmName) +\
                    "    _item = PyObject_CallFunctionObjArgs(type, cobj, NULL);\n" +\
                    "    Py_DECREF(cobj);\n" +\
                    "    Py_DECREF(type);\n" +\
@@ -474,6 +476,7 @@ class Objref(Declared):
                    (pyargName, self.iface_flat) +\
                    "  if (cptr == NULL)" +\
                    "  {\n" +\
+                   "    PyErr_Clear();\n" +\
                    "    %s = new ::p2py::%s(%s);" % (pcmName, self.scopedname, pyargName) +\
                    "  }\n" +\
                    "  else\n" +\

@@ -200,8 +200,14 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('{')
         self.out.inc_indent()
         self.out.out('PyObject* cptr = PyObject_GetAttrString(aSelf, "_iobject_cptr");')
+        self.out.out('if (cptr)')
+        self.out.out('{')
+        self.out.inc_indent()
         self.out.out('reinterpret_cast<iface::XPCOM::IObject*>(PyCObject_AsVoidPtr(cptr))->release_ref();')
         self.out.out('Py_DECREF(cptr);')
+        self.out.dec_indent()
+        self.out.out('}')
+        self.out.out('Py_TYPE(aSelf)->tp_free(aSelf);')
         self.out.dec_indent()
         self.out.out('}')
 
@@ -213,7 +219,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
                      '\",/* tp_name */')
         self.out.out('sizeof(PyPCMObject),/* tp_size */')
         self.out.out('0,/* tp_itemsize */')
-        self.out.out('0,/* tp_dealloc */')
+        self.out.out(node.simplecscoped + 'Del,/* tp_dealloc */')
         self.out.out('0,/* tp_print */')
         self.out.out('0,/* tp_getattr */')
         self.out.out('0,/* tp_setattr */')
@@ -228,7 +234,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('0,/* tp_getattro */')
         self.out.out('0,/* tp_setattro */')
         self.out.out('0,/* tp_as_buffer */')
-        self.out.out('Py_TPFLAGS_DEFAULT,/* tp_flags */')
+        self.out.out('Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,/* tp_flags */')
         self.out.out('0,/* tp_doc */')
         self.out.out('0,/* tp_traverse */')
         self.out.out('0,/* tp_clear */')
@@ -254,7 +260,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('0,/* tp_cache */')
         self.out.out('0,/* tp_subclasses */')
         self.out.out('0,/* tp_weaklist */')
-        self.out.out(node.simplecscoped + 'Del,/* tp_del */')
+        self.out.out('0,/* tp_del */')
         self.out.dec_indent()
         self.out.out('};')
 
@@ -450,10 +456,16 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         # Build all parameters, copying for in & in/out parameters...
         pcmarglist = ''
         for (p, i) in zip(params, range(0, len(params))):
-            if i > 0:
+            if ti.has_length:
+                if i > 0:
+                    pcmarglist = pcmarglist + ', '
+                if p.is_out():
+                    pcmarglist = pcmarglist + '&'
+                pcmarglist = pcmarglist + '_length_pcmparam%u' % i
+            if i > 0 or ti.has_length:
                 pcmarglist = pcmarglist + ', '
             if p.is_out():
-                pcmarglist = pcmarglist + '*'
+                pcmarglist = pcmarglist + '&'
             pcmarglist = pcmarglist + 'pcmparam%u' % i
             self.out.out(typeinfo.GetTypeInformation(p.paramType()).makePCMFromPyarg("pcmparam%u" % i, "pyparam%u" % i,\
                                                                                      p.is_in(), p.is_out()))

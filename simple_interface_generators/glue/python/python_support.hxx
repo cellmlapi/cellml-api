@@ -30,6 +30,10 @@
 #include <tupleobject.h>
 #include <abstract.h>
 #include <import.h>
+#include <pystate.h>
+#include <pyarena.h>
+#include <pythonrun.h>
+#include <ceval.h>
 #include <string>
 #include "Utilities.hxx"
 
@@ -174,6 +178,24 @@ protected:
   PyObject* mObject;
 };
 };
+};
+
+class ScopedPyGIL
+{
+public:
+  ScopedPyGIL()
+  {
+    PyEval_InitThreads();
+    mSt = PyGILState_Ensure();
+  }
+
+  ~ScopedPyGIL()
+  {
+    PyGILState_Release(mSt);
+  }
+
+private:
+  PyGILState_STATE mSt;
 };
 
 struct PyPCMObject

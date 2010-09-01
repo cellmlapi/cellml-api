@@ -7,6 +7,7 @@ bin_PROGRAMS =
 BUILT_SOURCES =
 CLEANFILES =
 EXTRA_LTLIBRARIES =
+PYTHON_BOOTSTRAPS =
 
 NULLSTRING :=
 
@@ -133,6 +134,10 @@ if ENABLE_ANNOTOOLS_AND_JAVA
 include $(top_srcdir)/AnnoTools/java_build.mk
 endif
 
+if ENABLE_ANNOTOOLS_AND_PYTHON
+include $(top_srcdir)/AnnoTools/python_build.mk
+endif
+
 if ENABLE_CEVAS_AND_XPCOM
 include $(top_srcdir)/CeVAS/xpcom_build.mk
 endif
@@ -141,12 +146,21 @@ if ENABLE_CEVAS_AND_JAVA
 include $(top_srcdir)/CeVAS/java_build.mk
 endif
 
+if ENABLE_CEVAS_AND_PYTHON
+include $(top_srcdir)/CeVAS/python_build.mk
+endif
+
+
 if ENABLE_CUSES_AND_XPCOM
 include $(top_srcdir)/CUSES/xpcom_build.mk
 endif
 
 if ENABLE_CUSES_AND_JAVA
 include $(top_srcdir)/CUSES/java_build.mk
+endif
+
+if ENABLE_CUSES_AND_PYTHON
+include $(top_srcdir)/CUSES/python_build.mk
 endif
 
 if ENABLE_MALAES_AND_XPCOM
@@ -157,12 +171,20 @@ if ENABLE_MALAES_AND_JAVA
 include $(top_srcdir)/MaLaES/java_build.mk
 endif
 
+if ENABLE_MALAES_AND_PYTHON
+include $(top_srcdir)/MaLaES/python_build.mk
+endif
+
 if ENABLE_VACSS_AND_XPCOM
 include $(top_srcdir)/VACSS/xpcom_build.mk
 endif
 
 if ENABLE_VACSS_AND_JAVA
 include $(top_srcdir)/VACSS/java_build.mk
+endif
+
+if ENABLE_VACSS_AND_PYTHON
+include $(top_srcdir)/VACSS/python_build.mk
 endif
 
 if ENABLE_CCGS_AND_XPCOM
@@ -173,6 +195,10 @@ if ENABLE_CCGS_AND_JAVA
 include $(top_srcdir)/CCGS/java_build.mk
 endif
 
+if ENABLE_CCGS_AND_PYTHON
+include $(top_srcdir)/CCGS/python_build.mk
+endif
+
 if ENABLE_CELEDS_AND_XPCOM
 include $(top_srcdir)/CeLEDS/xpcom_build.mk
 endif
@@ -181,12 +207,20 @@ if ENABLE_CELEDS_AND_JAVA
 include $(top_srcdir)/CeLEDS/java_build.mk
 endif
 
+if ENABLE_CELEDS_AND_PYTHON
+include $(top_srcdir)/CeLEDS/python_build.mk
+endif
+
 if ENABLE_CELEDSEXPORT_AND_XPCOM
 include $(top_srcdir)/CeLEDSExporter/xpcom_build.mk
 endif
 
 if ENABLE_CELEDSEXPORT_AND_JAVA
 include $(top_srcdir)/CeLEDSExporter/java_build.mk
+endif
+
+if ENABLE_CELEDSEXPORT_AND_PYTHON
+include $(top_srcdir)/CeLEDSExporter/python_build.mk
 endif
 
 if ENABLE_CIS
@@ -232,6 +266,10 @@ endif
 
 if ENABLE_CIS_AND_JAVA
 include $(top_srcdir)/CIS/java_build.mk
+endif
+
+if ENABLE_CIS_AND_PYTHON
+include $(top_srcdir)/CIS/python_build.mk
 endif
 
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh

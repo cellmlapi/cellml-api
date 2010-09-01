@@ -241,6 +241,8 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             p.pyname = 'pyparam%u' % i
             i = i + 1
             p.ti = typeinfo.GetTypeInformation(p.paramType())
+            if p.ti.has_length:
+                paramsigs.append('uint32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
         paramsig = string.join(paramsigs, ', ')
         
@@ -251,6 +253,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         self.cpp.out('  throw(std::exception&)')
         self.cpp.out('{')
         self.cpp.inc_indent()
+        self.cpp.out('ScopedPyGIL _lock;')
 
         callParams = ['']
         # Set up parameters for call to Python...
