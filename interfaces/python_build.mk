@@ -71,7 +71,7 @@ PYTHON_BOOTSTRAPS += -WbincludeCellML_APISPEC=CellMLBootstrap.hpp \
 $(top_builddir)/interfaces/P2Py%.cxx \
 $(top_builddir)/interfaces/P2Py%.hxx \
 $(top_builddir)/interfaces/Py2P%.cxx: \
-$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx \
+$(top_srcdir)/interfaces/%.idl $(top_builddir)/interfaces/Iface%.hxx \
 $(top_srcdir)/simple_interface_generators/omniidl_be/python/__init__.py \
 $(top_srcdir)/simple_interface_generators/omniidl_be/python/CToPythonWalker.py \
 $(top_srcdir)/simple_interface_generators/omniidl_be/python/PythonToCWalker.py \
