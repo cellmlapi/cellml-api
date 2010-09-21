@@ -355,7 +355,8 @@ CodeGenerationState::GenerateCode()
     std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
     // Build an index from variables required to systems...
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
-    CloneNamesIntoDelayedNames();
+    if (!mIDAStyle)
+      CloneNamesIntoDelayedNames();
   
     ProcessModellerSuppliedIVHints();
     
@@ -2163,7 +2164,9 @@ CodeGenerationState::CloneNamesIntoDelayedNames()
 {
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
          mCodeInfo->mTargets.begin(); i != mCodeInfo->mTargets.end(); i++)
+  {    
     (*i)->setDelayedName(NULL);
+  }
 }
 
 void

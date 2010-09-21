@@ -597,6 +597,8 @@ CDA_CodeExporter::getImplicitCodeGenerator()
   TRANSFER_ATTRIBUTE(L"residualPattern", residualPattern);
   TRANSFER_ATTRIBUTE(L"constrainedRateStateInfoPattern", constrainedRateStateInfoPattern);
   TRANSFER_ATTRIBUTE(L"unconstrainedRateStateInfoPattern", unconstrainedRateStateInfoPattern);
+  TRANSFER_ATTRIBUTE(L"infDelayedRatePattern", infDelayedRatePattern);
+  TRANSFER_ATTRIBUTE(L"infDelayedStatePattern", infDelayedStatePattern);
   TRANSFER_ATTRIBUTE(L"conditionalOutputIsRatePattern", conditionalOutputIsRatePattern);
   TRANSFER_ATTRIBUTE(L"conditionalOutputIsStatePattern", conditionalOutputIsStatePattern);
 

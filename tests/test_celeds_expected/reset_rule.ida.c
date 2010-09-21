@@ -18,7 +18,7 @@ RATES[0] = 0.1;
 void
 computeResiduals(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
-if (STATES[0]>10.0000)
+if (OLDSTATES[0]>10.0000)
 {
   resid[0] = STATES[0] - 1.00000;
 CONDOUT[0] |= 2;
