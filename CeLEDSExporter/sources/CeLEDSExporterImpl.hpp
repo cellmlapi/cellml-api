@@ -34,6 +34,9 @@ private:
   int generateCodeCommonHeader(std::wstring&,
                                iface::cellml_services::CodeGenerator*,
                                iface::cellml_services::CodeInformation*);
+  int generateCodeCommonBody(std::wstring&,
+                             iface::cellml_services::CodeGenerator*,
+                             iface::cellml_services::CodeInformation*);
   int generateCodeCommonFooter(std::wstring&,
                                iface::cellml_services::CodeInformation*);
 

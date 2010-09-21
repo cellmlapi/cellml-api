@@ -81,6 +81,8 @@
   <mal:mapping keyname="pi" precedence="999"> 3.14159265358979</mal:mapping>
   <mal:mapping keyname="eulergamma" precedence="999">0.577215664901533</mal:mapping>
   <mal:mapping keyname="infinity" precedence="900">1.0/0.0</mal:mapping>
+  <mal:mapping keyname="true" precedence="999">1</mal:mapping>
+  <mal:mapping keyname="false" precedence="999">0</mal:mapping>
 </mal:dictionary>
 
 <ccgs:dictionary>

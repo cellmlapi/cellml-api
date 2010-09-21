@@ -1,7 +1,7 @@
 /* Model is correctly constrained.
  * No equations needed Newton-Raphson evaluation.
  * The rate and state arrays need 1 entries.
- * The algebraic variables array needs 0 entries.
+ * The algebraic variables array needs 1 entries.
  * The constant array needs 0 entries.
  * Variable storage is as follows:
  * * Target d^1/dt^1 x in component main
@@ -26,12 +26,13 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
-if (STATES[0]>10.0000)
-{
-  STATES[0] = 0.00000;
-}
+ALGEBRAIC[0] = STATES[0];
 if (!(STATES[0]>10.0000))
 {
   RATES[0] = 1.00000;
+}
+if (ALGEBRAIC[0]>10.0000)
+{
+  STATES[0] = 1.00000;
 }
 }

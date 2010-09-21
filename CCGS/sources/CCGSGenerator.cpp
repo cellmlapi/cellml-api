@@ -1,6 +1,7 @@
 #include "CCGSImplementation.hpp"
 #include <map>
 #include <set>
+#include <iterator>
 #include <math.h>
 #include "CodeGenerationState.hxx"
 #include <stdio.h>
@@ -308,6 +309,7 @@ CodeGenerationState::GenerateCode()
   mCodeInfo->mRateIndexCount = 0;
   mCodeInfo->mConstantIndexCount = 0;
   mCodeInfo->mAlgebraicIndexCount = 0;
+  mCodeInfo->mConditionalOutputCount = 0;
 
   try
   {
@@ -602,7 +604,11 @@ CodeGenerationState::MarkRemainingVariablesAsPseudoState()
         RETURN_INTO_WSTRING(n, (*i)->name());
         std::wstring str;
         if (n == L"")
+        {
+          uint32_t idx = mNextStateVariableIndex;
           AllocateStateVariable(*i, str);
+          AllocateDelayed(*i, mInfDelayedStatePattern, idx);
+        }
         mKnown.insert(*i);
       }
       else
@@ -791,6 +797,66 @@ CodeGenerationState::GenerateResiduals
     {
       Piecewise* pw = static_cast<Piecewise*>(ms);
       std::list<std::pair<std::wstring, std::wstring> > cases;
+
+      std::set<ptr_tag<CDA_ComputationTarget> > undelayedInAll;
+      uint32_t pieceCount = 0;
+
+      for (std::list<std::pair<ptr_tag<Equation>,
+                              ptr_tag<MathMLMathStatement>
+                              >
+                    >::iterator ipw = pw->mPieces.begin(); ipw != pw->mPieces.end(); ipw++)
+      {
+        pieceCount++;
+        std::set<ptr_tag<CDA_ComputationTarget> > undelayedHere;
+        RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                           mTransform->transform(mCeVAS, mCUSES, mAnnoSet, (*ipw).first->mMaths,
+                                                 (*ipw).first->mContext, NULL, NULL, 0));
+        RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                           mr->iterateInvolvedVariablesByDegree());
+        
+        while (true)
+        {
+          RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
+          if (dv == NULL)
+            break;
+          
+          if (!dv->appearedUndelayed())
+            continue;
+
+          RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                             dv->variable());
+          std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+            ::iterator  mi = mTargetsBySource.find(cv);
+          ptr_tag<CDA_ComputationTarget> ct = GetTargetOfDegree((*mi).second, dv->degree());
+          undelayedHere.insert(ct);
+          if (ct->mDownDegree)
+            undelayedHere.insert(ct->mDownDegree);
+          if (ct->mUpDegree)
+            undelayedHere.insert(ct->mUpDegree);
+        }
+        
+        if (ipw == pw->mPieces.begin())
+          undelayedInAll = undelayedHere;
+        else
+        {
+          std::set<ptr_tag<CDA_ComputationTarget> > undelayedNew;
+          std::set_intersection(undelayedInAll.begin(), undelayedInAll.end(),
+                                undelayedHere.begin(), undelayedHere.end(),
+                                std::inserter<std::set<ptr_tag<CDA_ComputationTarget> > >(undelayedNew, undelayedNew.end()));
+          undelayedInAll = undelayedNew;
+        }
+      }
+      // Go through undelayedInAll and work out which variables have their up degree in the set as well.
+      std::map<ptr_tag<CDA_ComputationTarget>, uint32_t> outputByState;
+      for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j = undelayedInAll.begin();
+           j != undelayedInAll.end(); j++)
+        if ((*j)->mUpDegree && undelayedInAll.count((*j)->mUpDegree))
+        {
+          outputByState.insert(std::pair<ptr_tag<CDA_ComputationTarget>, uint32_t>
+                               (*j, mNextConditionalOutput++));
+          mCodeInfo->mConditionalOutputCount++;
+        }
+
       for (std::list<std::pair<ptr_tag<Equation>,
                                ptr_tag<MathMLMathStatement> > >::iterator j = pw->mPieces.begin();
            j != pw->mPieces.end(); j++)
@@ -803,6 +869,72 @@ CodeGenerationState::GenerateResiduals
                            (mCeVAS, mCUSES, mAnnoSet, (*j).second->mMaths, pw->mContext,
                             NULL, NULL, 0));
         RETURN_INTO_WSTRING(cond, mr->expression());
+
+        mr = already_AddRefd<iface::cellml_services::MaLaESResult>
+          (mTransform->transform
+           (mCeVAS, mCUSES, mAnnoSet, (*j).first->mMaths, pw->mContext,
+            NULL, NULL, 0));
+
+        RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                           mr->iterateInvolvedVariablesByDegree());
+        while (true)
+        {
+          RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
+          if (dv == NULL)
+            break;
+          
+          if (!dv->appearedUndelayed())
+            continue;
+
+          RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                             dv->variable());
+          std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+            ::iterator  mi = mTargetsBySource.find(cv);
+          ptr_tag<CDA_ComputationTarget> ct = GetTargetOfDegree((*mi).second, dv->degree());
+
+          std::map<ptr_tag<CDA_ComputationTarget>, uint32_t>::iterator osi = outputByState.find(ct);
+          if (osi != outputByState.end())
+          {
+            size_t offset = 0;
+            wchar_t buf[32];
+            std::wstring replaceFrom = mConditionalOutputIsStatePattern;
+            swprintf(buf, 32, L"%u", (*osi).second);
+            while (true)
+            {
+              offset = replaceFrom.find(L"<ID>", offset);
+              if (offset == std::wstring::npos)
+                break;
+              
+              replaceFrom.replace(offset, 4, buf);
+              offset++;
+            }
+            st += replaceFrom;
+          }
+
+          if (ct->mDownDegree != NULL)
+          {
+            osi = outputByState.find(ct->mDownDegree);
+
+            if (osi != outputByState.end())
+            {
+              size_t offset = 0;
+              wchar_t buf[32];
+              std::wstring replaceFrom = mConditionalOutputIsRatePattern;
+              swprintf(buf, 32, L"%u", (*osi).second);
+              while (true)
+              {
+                offset = replaceFrom.find(L"<ID>", offset);
+                if (offset == std::wstring::npos)
+                  break;
+                
+                replaceFrom.replace(offset, 4, buf);
+                offset++;
+              }
+              st += replaceFrom;
+            }
+          }
+        }
+
         cases.push_back(std::pair<std::wstring, std::wstring>(st, cond));
       }
       residNumber++;
@@ -1673,7 +1805,7 @@ CodeGenerationState::SetupMathMLMathStatement
   bvi = already_AddRefd<iface::cellml_api::CellMLVariableIterator>
     (mr->iterateLocallyBoundVariables());
   
-  while (true)
+  while (true)\
   {
     RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
                        bvi->nextVariable());
@@ -1811,6 +1943,9 @@ CodeGenerationState::FirstPassTargetClassification()
         tct->mEvaluationType = iface::cellml_services::STATE_VARIABLE;
         tct->mStateHasIV = false;
         AllocateStateVariable(tct, cname);
+        if (mIDAStyle)
+          AllocateDelayed(tct, mInfDelayedStatePattern,
+                          mNextStateVariableIndex - 1);
         if (tct == ct && hasImmedIV)
         {
           tct->mStateHasIV = true;
@@ -1829,6 +1964,8 @@ CodeGenerationState::FirstPassTargetClassification()
         uint32_t mrvi = mNextStateVariableIndex - 1;
         uint32_t count = 0;
         AllocateVariable(tct, cname, mRateNamePattern, mrvi, count);
+        if (mIDAStyle)
+          AllocateDelayed(tct, mInfDelayedRatePattern, mrvi);
       }
       else if (ct->mEvaluationType == iface::cellml_services::CONSTANT)
       {
@@ -1885,6 +2022,16 @@ CodeGenerationState::AllocateVariable(ptr_tag<CDA_ComputationTarget> aCT,
 }
 
 void
+CodeGenerationState::AllocateDelayed(ptr_tag<CDA_ComputationTarget> aCT,
+                                     std::wstring& aPattern,
+                                     uint32_t aNextIndex)
+{
+  std::wstring str;
+  GenerateVariableName(aCT, str, aPattern, aNextIndex);
+  aCT->setDelayedName(str.c_str());
+}
+
+void
 CodeGenerationState::ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT,
                                            std::wstring& aStr)
 {
@@ -1892,6 +2039,7 @@ CodeGenerationState::ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT,
   if (aCT->mInfDelayedAssignedIndex < 0)
   {
     index = mNextAlgebraicVariableIndex++;
+    mCodeInfo->mAlgebraicIndexCount++;
     aCT->mInfDelayedAssignedIndex = index;
     mInfDelayedTargets.push_back(aCT);
   }
@@ -2013,12 +2161,8 @@ CodeGenerationState::AllocateVOI(ptr_tag<CDA_ComputationTarget> aCT,
 void
 CodeGenerationState::CloneNamesIntoDelayedNames()
 {
-  std::set<ptr_tag<CDA_ComputationTarget> >::iterator i;
-  for (i = mKnown.begin(); i != mKnown.end(); i++)
-    (*i)->setDelayedName(NULL);
-  for (i = mFloating.begin(); i != mFloating.end(); i++)
-    (*i)->setDelayedName(NULL);
-  for (i = mUnwanted.begin(); i != mUnwanted.end(); i++)
+  for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
+         mCodeInfo->mTargets.begin(); i != mCodeInfo->mTargets.end(); i++)
     (*i)->setDelayedName(NULL);
 }
 

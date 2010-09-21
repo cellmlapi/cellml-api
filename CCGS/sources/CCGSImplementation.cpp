@@ -172,6 +172,12 @@ CDA_CodeInformation::constantIndexCount() throw()
   return mConstantIndexCount;
 }
 
+uint32_t
+CDA_CodeInformation::conditionalOutputCount() throw()
+{
+  return mConditionalOutputCount;
+}
+
 wchar_t*
 CDA_CodeInformation::initConstsString() throw()
 {
@@ -404,6 +410,16 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    (
     L"SI[<ID>] = 0.0;\r\n"
    ),
+   mInfDelayedRatePattern(L"OLDRATES[%]"),
+   mInfDelayedStatePattern(L"OLDSTATES[%]"),
+   mConditionalOutputIsRatePattern
+   (
+    L"CONDOUT[<ID>] |= 1;\r\n"
+   ),
+   mConditionalOutputIsStatePattern
+   (
+    L"CONDOUT[<ID>] |= 2;\r\n"
+   ),
    mArrayOffset(0),
    mIDAStyle(aIDAStyle)
 {
@@ -601,6 +617,60 @@ CDA_CodeGenerator::unconstrainedRateStateInfoPattern(const wchar_t* aPattern)
   mUnconstrainedRateStateInfoPattern = aPattern;
 }
 
+wchar_t*
+CDA_CodeGenerator::infDelayedRatePattern() throw()
+{
+  return CDA_wcsdup(mInfDelayedRatePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::infDelayedRatePattern(const wchar_t* aPattern)
+  throw()
+{
+  mInfDelayedRatePattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::infDelayedStatePattern()
+  throw()
+{
+  return CDA_wcsdup(mInfDelayedStatePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::infDelayedStatePattern(const wchar_t* aPattern)
+  throw()
+{
+  mInfDelayedStatePattern = aPattern;
+}
+
+
+wchar_t*
+CDA_CodeGenerator::conditionalOutputIsRatePattern() throw()
+{
+  return CDA_wcsdup(mConditionalOutputIsRatePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::conditionalOutputIsRatePattern(const wchar_t* aPattern) throw()
+
+{
+  mConditionalOutputIsRatePattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::conditionalOutputIsStatePattern() throw()
+{
+  return CDA_wcsdup(mConditionalOutputIsStatePattern.c_str());
+}
+
+void
+CDA_CodeGenerator::conditionalOutputIsStatePattern(const wchar_t* aPattern) throw()
+
+{
+  mConditionalOutputIsStatePattern = aPattern;
+}
+
 iface::cellml_services::MaLaESTransform*
 CDA_CodeGenerator::transform() throw()
 {
@@ -709,7 +779,10 @@ CDA_CodeGenerator::makeCodeGenerationState(iface::cellml_api::Model* aSourceMode
       mSolveNLSystemPattern, mTemporaryVariablePattern,
       mDeclareTemporaryPattern, mConditionalAssignmentPattern,
       mResidualPattern, mConstrainedRateStateInfoPattern,
-      mUnconstrainedRateStateInfoPattern, mArrayOffset, mTransform,
+      mUnconstrainedRateStateInfoPattern,
+      mInfDelayedRatePattern, mInfDelayedStatePattern,
+      mConditionalOutputIsRatePattern, mConditionalOutputIsStatePattern,
+      mArrayOffset, mTransform,
       mCeVAS, mCUSES, mAnnoSet, mIDAStyle
       )
     );
@@ -908,8 +981,8 @@ CDA_CustomGenerator::generateCode()
   std::wstring emp;
   CodeGenerationState cgs(mModel, emp, mStateVariableNamePattern, emp, emp, emp,
                           mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
-                          emp, emp, emp, emp, emp, emp, mArrayOffset,
-                          mTransform, mCeVAS, mCUSES, mAnnoSet, false);
+                          emp, emp, emp, emp, emp, emp, emp, emp, emp, emp,
+                          mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet, false);
   return cgs.GenerateCustomCode(mTargetSet, mRequestComputation, mKnown,
                                 mUnwanted);
 }

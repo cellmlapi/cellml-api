@@ -9,6 +9,7 @@
  * STATES[2] is c in component main (dimensionless).
  * VOI is t in component main (dimensionless).
  * RATES[0] is d/dt a in component main (dimensionless).
+ * There are a total of 0 entries in the conditional output status array.
  */
 void
 initConsts(double* CONSTANTS, double* RATES, double *STATES)

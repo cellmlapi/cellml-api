@@ -1,5 +1,5 @@
 /*
-   There are a total of 0 entries in the algebraic variable array.
+   There are a total of 1 entries in the algebraic variable array.
    There are a total of 1 entries in each of the rate and state variable arrays.
    There are a total of 0 entries in the constant variable array.
  */
@@ -16,16 +16,18 @@ STATES[0] = 0;
 void
 computeRates(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
-if (STATES[0]>10.0000)
-{
-  STATES[0] = 0.00000;
-}
+ALGEBRAIC[0] = STATES[0];
 if (!(STATES[0]>10.0000))
 {
   RATES[0] = 1.00000;
+}
+if (ALGEBRAIC[0]>10.0000)
+{
+  STATES[0] = 1.00000;
 }
 }
 void
 computeVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
+ALGEBRAIC[0] = STATES[0];
 }

@@ -154,6 +154,7 @@ public:
   wchar_t* functionsString() throw();
   wchar_t* essentialVariablesString() throw();
   wchar_t* stateInformationString() throw();
+  uint32_t conditionalOutputCount() throw();
   iface::cellml_services::ComputationTargetIterator* iterateTargets()
     throw();
   iface::mathml_dom::MathMLNodeList* flaggedEquations()
@@ -162,7 +163,7 @@ public:
   // CCGS implementation access only...
   std::wstring mErrorMessage;
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
-  uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount;
+  uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount, mConditionalOutputCount;
   std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr, mStateInformationStr;
   std::vector<iface::dom::Element*> mFlaggedEquations;
 };
@@ -274,6 +275,14 @@ public:
   void constrainedRateStateInfoPattern(const wchar_t* aPattern) throw();
   wchar_t* unconstrainedRateStateInfoPattern() throw();
   void unconstrainedRateStateInfoPattern(const wchar_t* aPattern) throw();
+  wchar_t* infDelayedRatePattern() throw();
+  void infDelayedRatePattern(const wchar_t* aPattern) throw();
+  wchar_t* infDelayedStatePattern() throw();
+  void infDelayedStatePattern(const wchar_t* aPattern) throw();
+  wchar_t* conditionalOutputIsRatePattern() throw();
+  void conditionalOutputIsRatePattern(const wchar_t* aPattern) throw();
+  wchar_t* conditionalOutputIsStatePattern() throw();
+  void conditionalOutputIsStatePattern(const wchar_t* aPattern) throw();
 
   iface::cellml_services::MaLaESTransform* transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
@@ -305,7 +314,8 @@ private:
     mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
     mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
     mConditionalAssignmentPattern, mResidualPattern, mConstrainedRateStateInfoPattern,
-    mUnconstrainedRateStateInfoPattern;
+    mUnconstrainedRateStateInfoPattern, mInfDelayedRatePattern, mInfDelayedStatePattern,
+    mConditionalOutputIsRatePattern, mConditionalOutputIsStatePattern;
   uint32_t mArrayOffset;
   bool mIDAStyle;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;

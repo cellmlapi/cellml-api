@@ -568,6 +568,14 @@ interface CustomGenerator
     * The string for setting up the state information descriptor.
     */
    readonly attribute wstring stateInformationString;
+
+   /**
+    * The number of conditional outputs (i.e. variables for which sometimes the
+    * state variable is constrained, and sometimes the rate variable is). Useful
+    * in conjunction with conditionalOutputIsRatePattern /
+    * conditionalOutputIsStatePattern to indicate the range of the IDs used.
+    */
+   readonly attribute unsigned long conditionalOutputCount;
  };
 #pragma terminal-interface
 #pragma cross-module-argument
@@ -605,6 +613,34 @@ interface CustomGenerator
     * Default: SI[<ID>] = 0.0;\r\n
     */
    attribute wstring unconstrainedRateStateInfoPattern;
+
+   /**
+    * The pattern used for an 'infinitesimally delayed' rate variable (usually
+    * approximated as the value at the previous timestep).
+    * Default: OLDRATE[%]
+    */
+   attribute wstring infDelayedRatePattern;
+
+   /**
+    * The pattern used for an 'infinitesimally delayed' state variable (usually
+    * approximated as the value at the previous timestep).
+    * Default: OLDSTATE[%]
+    */
+   attribute wstring infDelayedStatePattern;
+
+   /**
+    * The pattern used to indicate, within the residual function, that a
+    * residual is computed so as to constrain the rate.
+    * Default: CONDOUT[<ID>] |= 1;\r\n
+    */
+   attribute wstring conditionalOutputIsRatePattern;
+
+   /**
+    * The pattern used to indicate, within the residual function, that a
+    * residual is computed so as to constrain the state.
+    * Default: CONDOUT[<ID>] |= 2;\r\n
+    */
+   attribute wstring conditionalOutputIsStatePattern;
  };
 #pragma terminal-interface
 #pragma cross-module-argument

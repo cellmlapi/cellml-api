@@ -24,13 +24,13 @@ struct IDACompiledModelFunctions
 {
   int (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES);
   int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
-                            double *STATES, double* ALGEBRAIC);
+                           double *STATES, double* ALGEBRAIC);
   int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
-                                     double* STATES, double* ALGEBRAIC);
+                                    double* STATES, double* ALGEBRAIC);
 
   int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
-                           double* STATES, double* ALGEBRAIC,
-                           double* resids);
+                          double* OLDRATES, double* STATES, double* OLDSTATES,
+                          double* ALGEBRAIC, int* CONDOUT, double* resids);
   void (*SetupStateInfo)(double * SI);
 };
 
@@ -198,7 +198,8 @@ protected:
 
   void SolveDAEProblem(IDACompiledModelFunctions* f, uint32_t constSize,
                        double* constants, uint32_t rateSize, double* rates,
-                       uint32_t stateSize, double* states, uint32_t algSize, double* algebraic);
+                       uint32_t stateSize, double* states, uint32_t algSize, double* algebraic,
+                       uint32_t condOutSize);
 };
 
 class CDA_CellMLIntegrationService

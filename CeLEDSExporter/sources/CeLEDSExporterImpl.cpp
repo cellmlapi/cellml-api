@@ -148,6 +148,14 @@ CDA_CodeExporter::generateCodeCommonHeader(std::wstring& output,
   }
   output += getCodeSection(L"postVarList");
 
+  return 0;
+}
+
+int
+CDA_CodeExporter::generateCodeCommonBody(std::wstring& output,
+                                         iface::cellml_services::CodeGenerator* cg,
+                                         iface::cellml_services::CodeInformation* codeinfo)
+{
   // Write functions for calculating constants, rates and variables
   output += getCodeSection(L"preInitConsts");
   RETURN_INTO_WSTRING(ics, codeinfo->initConstsString());
@@ -201,6 +209,9 @@ CDA_CodeExporter::generateCodeExplicit(iface::cellml_api::Model* model)
   if (generateCodeCommonHeader(output, cg, codeinfo))
     return CDA_wcsdup(output.c_str());
 
+  if (generateCodeCommonBody(output, cg, codeinfo))
+    return CDA_wcsdup(output.c_str());
+
   generateCodeCommonFooter(output, codeinfo);
   
   return CDA_wcsdup(output.c_str());
@@ -221,6 +232,13 @@ CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
                      cg->generateIDACode(model));
 
   if (generateCodeCommonHeader(output, cg, codeinfo))
+    return CDA_wcsdup(output.c_str());
+
+  output += getCodeSection(L"preConditionalOutputCount");
+  output += toStr(codeinfo->conditionalOutputCount());
+  output += getCodeSection(L"postConditionalOutputCount");
+
+  if (generateCodeCommonBody(output, cg, codeinfo))
     return CDA_wcsdup(output.c_str());
 
   output += getCodeSection(L"preEssentialVariables");
@@ -579,6 +597,8 @@ CDA_CodeExporter::getImplicitCodeGenerator()
   TRANSFER_ATTRIBUTE(L"residualPattern", residualPattern);
   TRANSFER_ATTRIBUTE(L"constrainedRateStateInfoPattern", constrainedRateStateInfoPattern);
   TRANSFER_ATTRIBUTE(L"unconstrainedRateStateInfoPattern", unconstrainedRateStateInfoPattern);
+  TRANSFER_ATTRIBUTE(L"conditionalOutputIsRatePattern", conditionalOutputIsRatePattern);
+  TRANSFER_ATTRIBUTE(L"conditionalOutputIsStatePattern", conditionalOutputIsStatePattern);
 
   cg->add_ref();
   return cg;

@@ -13,10 +13,12 @@
         <piece id="the_piece">
           <apply id="reset_x"><eq/>
             <ci>x</ci>
-            <cn cellml:units="dimensionless">0</cn>
+            <cn cellml:units="dimensionless">1</cn>
           </apply>
           <apply id="x_condition"><gt/>
-            <ci>x</ci>
+            <apply id="delayx"><csymbol definitionURL="http://www.cellml.org/cellml/infinitesimal-delay"/>
+              <ci>x</ci>
+            </apply>
             <cn cellml:units="dimensionless">10</cn>
           </apply>
         </piece>
