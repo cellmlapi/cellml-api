@@ -19,11 +19,11 @@ AC_CONFIG_HEADER([cda_config.h])
 AM_INIT_AUTOMAKE([-Wno-portability])
 PKG_PROG_PKG_CONFIG
 
-LIBXML2_CONFIG_PATH=$(dirname $(which xml2-config))
+LIBXML2_CONFIG=$(which xml2-config)
 
 AC_ARG_WITH(libxml2,
-[  --with-libxml2          Path to directory containing libxml2 xml2-config (will auto-detect if omitted)],
-[LIBXML2_CONFIG_PATH=$withval], [])
+[  --with-libxml2          xml2-config path and command line (will auto-detect if omitted)],
+[LIBXML2_CONFIG=$withval], [])
 
 AC_ARG_ENABLE(examples,
 [  --enable-examples Build example programs],
@@ -637,17 +637,17 @@ case "$host-$CXX" in
         esac
         ;;
 *darwin*)
-        LIBXML_CFLAGS=`$LIBXML2_CONFIG_PATH/xml2-config --cflags`
+        LIBXML_CFLAGS=`$LIBXML2_CONFIG --cflags`
         if [[ x$xpcom != xfalse ]]; then
                 STLLINK="$STLLINK -L$xpcom/lib -L$xpcom/bin -Wl,-executable_path,$xpcom/bin"
         fi
         ;;
 *linux*)
-        LIBXML_CFLAGS=`$LIBXML2_CONFIG_PATH/xml2-config --cflags`
+        LIBXML_CFLAGS=`$LIBXML2_CONFIG --cflags`
         STLLINK="$STLLINK -lpthread"
         ;;
 *)
-        LIBXML_CFLAGS=`$LIBXML2_CONFIG_PATH/xml2-config --cflags`
+        LIBXML_CFLAGS=`$LIBXML2_CONFIG --cflags`
 esac
 
 if test x$cis = xtrue -a x$gslintegrators = xtrue; then
