@@ -25,6 +25,10 @@ AC_ARG_WITH(libxml2,
 [  --with-libxml2          xml2-config path and command line (will auto-detect if omitted)],
 [LIBXML2_CONFIG=$withval], [])
 
+LIBXML2_CFLAGS=$($LIBXML2_CONFIG --cflags)
+CFLAGS="$LIBXML2_CFLAGS $CFLAGS"
+AC_CHECK_HEADERS([libxml/tree.h], , [AC_MSG_ERROR(cannot find libxml2 headers - try using --with-libxml2)])
+
 AC_ARG_ENABLE(examples,
 [  --enable-examples Build example programs],
 [case "${enableval}" in
