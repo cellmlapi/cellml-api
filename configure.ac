@@ -98,20 +98,6 @@ AC_ARG_ENABLE(context,
 esac],[context=false])
 AM_CONDITIONAL(ENABLE_CONTEXT, test x$context = xtrue)
 
-AC_ARG_ENABLE(server,
-[  --enable-server    Build the CellML CORBA Server (requires CORBA and Context)],
-[case "${enableval}" in
-  yes)
-    server=true
-    if test x$contextandcorba = xfalse; then
-      AC_MSG_ERROR(You need --enable-context and --enable-corba to support --enable-server)
-    fi
-  ;;
-  no)  server=false ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-server) ;;
-esac],[server=false])
-AM_CONDITIONAL(ENABLE_CELLML_CORBA_SERVER, test x$server = xtrue)
-
 AC_ARG_ENABLE(annotools,
 [  --enable-annotools  Build the annotation tools],
 [case "${enableval}" in
