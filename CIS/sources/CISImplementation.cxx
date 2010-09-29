@@ -83,8 +83,10 @@ SetupIDACompiledModelFunctions(void* module)
     getsym(module, "EvaluateVariables");
   cmf->EvaluateEssentialVariables = (int (*)(double, double*, double*, double*, double*))
     getsym(module, "EvaluateEssentialVariables");
-  cmf->ComputeResiduals = (int (*)(double, double*, double*, double*, double*, double*, double*, int*, double*))
+  cmf->ComputeResiduals = (int (*)(double, double*, double*, double*, double*, double*, double*, double*, double*))
     getsym(module, "ComputeResiduals");
+  cmf->ComputeRootInformation = (int (*)(double, double*, double*, double*, double*, double*, double*, double*))
+    getsym(module, "ComputeRootInformation");
   cmf->SetupStateInfo = (void (*)(double*))
     getsym(module, "SetupStateInfo");
   return cmf;
@@ -408,6 +410,7 @@ CDA_ODESolverRun::runthread()
     states = buffer + 1;
     rates = states + rateSize;
     algebraic = rates + rateSize;
+    
 
     memset(rates, 0, rateSize * sizeof(double));
 
@@ -460,7 +463,7 @@ void
 CDA_DAESolverRun::runthread()
 {
   std::string emsg = "Unknown error";
-  double* constants = NULL, * buffer = NULL, * algebraic, * rates, * states;
+  double* constants = NULL, * buffer = NULL, * algebraic, * rates, * states, * condvars;
 
   try
   {
@@ -469,17 +472,19 @@ CDA_DAESolverRun::runthread()
     uint32_t constSize = mModel->mCCI->constantIndexCount();
     uint32_t rateSize = mModel->mCCI->rateIndexCount();
     DECLARE_QUERY_INTERFACE_OBJREF(cci, mModel->mCCI, cellml_services::IDACodeInformation);
-    uint32_t condOutSize = cci->conditionalOutputCount();
+    uint32_t condVarSize = cci->conditionVariableCount();
 
     constants = new double[constSize];
-    buffer = new double[2 * rateSize + algSize + 1];
+    buffer = new double[2 * rateSize + algSize + 1 + condVarSize];
     
     buffer[0] = mStartBvar;
     states = buffer + 1;
     rates = states + rateSize;
-    algebraic = rates + rateSize;
+    algebraic = rates + algSize;
+    condvars = algebraic + rateSize;
 
     memset(rates, 0, rateSize * sizeof(double));
+    memset(condvars, 0, condVarSize * sizeof(double));
 
     f->SetupFixedConstants(constants, rates, states);
 
@@ -498,7 +503,7 @@ CDA_DAESolverRun::runthread()
       mObserver->computedConstants(constSize, constants);
 
     SolveDAEProblem(f, constSize, constants, rateSize, rates, rateSize, states,
-                    algSize, algebraic, condOutSize);
+                    algSize, algebraic, condVarSize, condvars);
   }
   catch (...)
   {
@@ -810,8 +815,22 @@ CDA_CellMLIntegrationService::compileModelDAE
   delete [] frag8;
 
   ss << "int ComputeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
-    "double* STATES, double* OLDSTATES, double* ALGEBRAIC, int* CONDOUT, double* resid)" << std::endl;
+    "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR, double* resid)" << std::endl;
   frag = cci->ratesString();
+  fragLen = wcstombs(NULL, frag, 0) + 1;
+  frag8 = new char[fragLen];
+  wcstombs(frag8, frag, fragLen);
+  ss << "{" << std::endl
+     << "  int ret = 0, *pret = &ret;" << std::endl
+     << frag8 << std::endl
+     << "  return ret;" << std::endl
+     << "}" << std::endl;
+  free(frag);
+  delete [] frag8;
+
+  ss << "int ComputeRootInformation(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
+    "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR)" << std::endl;
+  frag = cci->rootInformationString();
   fragLen = wcstombs(NULL, frag, 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag, fragLen);

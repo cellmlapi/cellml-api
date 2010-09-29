@@ -185,6 +185,24 @@ module cellml_services
                            in cellml_api::CellMLVariable aBoundUnitsOf,
                            in unsigned long aUnitsDiffDegree
                           );
+
+    /**
+     * This function is used to modify a model from an untrusted source to make
+     * it so no part of the model is likely to be exposed in MaLaES generated code
+     * except as alphanumeric characters and _. This can be used to help ensure
+     * that the CellML API is not exploited.
+     * It makes the following changes to the model:
+     *   * Any passthrough csymbols are removed.
+     *   * name attributes on cellml:variable and cellml:component elements, and
+     *     text node children of mathml:ci elements are changed to contain only
+     *     characters matching [A-Za-z0-9_] (and whitespace in the case of mathml:ci).
+     * Depending on how the API is used, there may be other vectors by which
+     * code can get from the model into the generated code; preventing these is
+     * the responsibility of the user of the API.
+     * Note: This causes imports to be fully instantiated, if not already,
+     *       and changes the in-memory version of imported models recursively.
+     */
+    void stripPassthrough(in cellml_api::Model aModel);
   };
 
   /**

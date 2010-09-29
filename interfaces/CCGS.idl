@@ -421,6 +421,23 @@ module cellml_services
     * and arrayOffset - everything else is specific to generateCode.
     */
    CustomGenerator createCustomGenerator(in cellml_api::Model sourceModel);
+
+   /**
+    * If false, any text entered shall be passed through the MaLaES sanitiser to
+    * strip out passthrough text. This prevents the generated code from containing
+    * untrusted code from an untrusted model (depending on the target language
+    * and the MaLaES definitions used).
+    *
+    * If true, no such sanitisation shall be performed, and it is possible to
+    * inject arbitrary code from the model into the generated code by using
+    * a MathML csymbol element like the following:
+    *    <mathml:csymbol
+    *       definitionURL="http://www.cellml.org/tools/api#passthrough">
+    *  code-to-inject</mathml:csymbol>
+    *
+    * Default: false
+    */
+   attribute boolean allowPassthrough;
  };
 #pragma cross-module-argument
 
@@ -570,12 +587,15 @@ interface CustomGenerator
    readonly attribute wstring stateInformationString;
 
    /**
-    * The number of conditional outputs (i.e. variables for which sometimes the
-    * state variable is constrained, and sometimes the rate variable is). Useful
-    * in conjunction with conditionalOutputIsRatePattern /
-    * conditionalOutputIsStatePattern to indicate the range of the IDs used.
+    * The number of condition variables allocated by the trackPiecewiseConditions
+    * feature. This will be 0 if trackPiecewiseConditions was turned off.
     */
-   readonly attribute unsigned long conditionalOutputCount;
+   readonly attribute unsigned long conditionVariableCount;
+
+   /**
+    * A string for computing the roots controlling each condition variable.
+    */
+   readonly attribute wstring rootInformationString;
  };
 #pragma terminal-interface
 #pragma cross-module-argument
@@ -617,30 +637,31 @@ interface CustomGenerator
    /**
     * The pattern used for an 'infinitesimally delayed' rate variable (usually
     * approximated as the value at the previous timestep).
-    * Default: OLDRATE[%]
+    * Default: RATES[%]
     */
    attribute wstring infDelayedRatePattern;
 
    /**
     * The pattern used for an 'infinitesimally delayed' state variable (usually
     * approximated as the value at the previous timestep).
-    * Default: OLDSTATE[%]
+    * Default: STATES[%]
     */
    attribute wstring infDelayedStatePattern;
 
    /**
-    * The pattern used to indicate, within the residual function, that a
-    * residual is computed so as to constrain the rate.
-    * Default: CONDOUT[<ID>] |= 1;\r\n
+    * Whether or not all piecewise conditions should be refactored in terms of
+    * special variables which change sign, suitable for use with a rootfinder
+    * to restart the integrator.
+    * Default: true
     */
-   attribute wstring conditionalOutputIsRatePattern;
+   attribute boolean trackPiecewiseConditions;
 
    /**
-    * The pattern used to indicate, within the residual function, that a
-    * residual is computed so as to constrain the state.
-    * Default: CONDOUT[<ID>] |= 2;\r\n
+    * A pattern for condition variables. Only used if trackPiecewiseConditions
+    * is true. % is substituted for the allocated index.
+    * Default: CONDVAR[%]
     */
-   attribute wstring conditionalOutputIsStatePattern;
+   attribute wstring conditionVariablePattern;
  };
 #pragma terminal-interface
 #pragma cross-module-argument

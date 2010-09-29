@@ -154,7 +154,8 @@ public:
   wchar_t* functionsString() throw();
   wchar_t* essentialVariablesString() throw();
   wchar_t* stateInformationString() throw();
-  uint32_t conditionalOutputCount() throw();
+  uint32_t conditionVariableCount() throw();
+  wchar_t* rootInformationString() throw();
   iface::cellml_services::ComputationTargetIterator* iterateTargets()
     throw();
   iface::mathml_dom::MathMLNodeList* flaggedEquations()
@@ -163,8 +164,9 @@ public:
   // CCGS implementation access only...
   std::wstring mErrorMessage;
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
-  uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount, mConditionalOutputCount;
-  std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr, mStateInformationStr;
+  uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount, mConditionVariableCount;
+  std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr, mStateInformationStr,
+               mRootInformationStr;
   std::vector<iface::dom::Element*> mFlaggedEquations;
 };
 
@@ -279,10 +281,10 @@ public:
   void infDelayedRatePattern(const wchar_t* aPattern) throw();
   wchar_t* infDelayedStatePattern() throw();
   void infDelayedStatePattern(const wchar_t* aPattern) throw();
-  wchar_t* conditionalOutputIsRatePattern() throw();
-  void conditionalOutputIsRatePattern(const wchar_t* aPattern) throw();
-  wchar_t* conditionalOutputIsStatePattern() throw();
-  void conditionalOutputIsStatePattern(const wchar_t* aPattern) throw();
+  wchar_t* conditionVariablePattern() throw();
+  void conditionVariablePattern(const wchar_t* aPattern) throw();
+  bool trackPiecewiseConditions() throw();
+  void trackPiecewiseConditions(bool aTrack) throw();
 
   iface::cellml_services::MaLaESTransform* transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
@@ -308,6 +310,9 @@ public:
   iface::cellml_services::IDACodeInformation* generateIDACode
     (iface::cellml_api::Model* aSourceModel) throw();
 
+  bool allowPassthrough() throw();
+  void allowPassthrough(bool aPT) throw();
+
 private:
   std::wstring mConstantPattern, mStateVariableNamePattern,
     mAlgebraicVariableNamePattern,
@@ -315,7 +320,8 @@ private:
     mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
     mConditionalAssignmentPattern, mResidualPattern, mConstrainedRateStateInfoPattern,
     mUnconstrainedRateStateInfoPattern, mInfDelayedRatePattern, mInfDelayedStatePattern,
-    mConditionalOutputIsRatePattern, mConditionalOutputIsStatePattern;
+    mConditionVariablePattern;
+  bool mTrackPiecewiseConditions, mAllowPassthrough;
   uint32_t mArrayOffset;
   bool mIDAStyle;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;

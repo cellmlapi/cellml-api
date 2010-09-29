@@ -234,9 +234,9 @@ CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
   if (generateCodeCommonHeader(output, cg, codeinfo))
     return CDA_wcsdup(output.c_str());
 
-  output += getCodeSection(L"preConditionalOutputCount");
-  output += toStr(codeinfo->conditionalOutputCount());
-  output += getCodeSection(L"postConditionalOutputCount");
+  output += getCodeSection(L"preConditionVariableCount");
+  output += toStr(codeinfo->conditionVariableCount());
+  output += getCodeSection(L"postConditionVariableCount");
 
   if (generateCodeCommonBody(output, cg, codeinfo))
     return CDA_wcsdup(output.c_str());
@@ -247,7 +247,10 @@ CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
   output += getCodeSection(L"postEssentialVariables") + getCodeSection(L"preStateInformation");
   RETURN_INTO_WSTRING(sis, codeinfo->stateInformationString());
   output += sis;
-  output += getCodeSection(L"postStateInformation");
+  output += getCodeSection(L"postStateInformation") + getCodeSection(L"preRootInformation");
+  RETURN_INTO_WSTRING(ris, codeinfo->rootInformationString());
+  output += ris;
+  output += getCodeSection(L"postRootInformation");
 
   generateCodeCommonFooter(output, codeinfo);
   
@@ -560,6 +563,12 @@ CDA_CodeExporter::transferCommonCodeAttributes
       cg->arrayOffset(offset);
   }
 
+  {
+    RETURN_INTO_WSTRING(pattern, mLangDict->getValue(L"allowPassthrough"));
+    if (!pattern.empty())
+      cg->allowPassthrough(pattern == L"true");
+  }
+
   // Set MaLaES transform
   RETURN_INTO_OBJREF(mt, iface::cellml_services::MaLaESTransform, mLangDictGen->getMalTransform());
   cg->transform(mt);
@@ -599,8 +608,13 @@ CDA_CodeExporter::getImplicitCodeGenerator()
   TRANSFER_ATTRIBUTE(L"unconstrainedRateStateInfoPattern", unconstrainedRateStateInfoPattern);
   TRANSFER_ATTRIBUTE(L"infDelayedRatePattern", infDelayedRatePattern);
   TRANSFER_ATTRIBUTE(L"infDelayedStatePattern", infDelayedStatePattern);
-  TRANSFER_ATTRIBUTE(L"conditionalOutputIsRatePattern", conditionalOutputIsRatePattern);
-  TRANSFER_ATTRIBUTE(L"conditionalOutputIsStatePattern", conditionalOutputIsStatePattern);
+  TRANSFER_ATTRIBUTE(L"conditionVariablePattern", conditionVariablePattern);
+
+  {
+    RETURN_INTO_WSTRING(tpc, mCCGSLangDict->getValue(L"trackPiecewiseConditions"));
+    if (!tpc.empty())
+      cg->trackPiecewiseConditions(tpc == L"true");
+  }
 
   cg->add_ref();
   return cg;

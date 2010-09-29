@@ -15,7 +15,7 @@
             <ci>x</ci>
             <cn cellml:units="dimensionless">1</cn>
           </apply>
-          <apply id="x_condition"><gt/>
+          <apply id="x_condition"><geq/>
             <apply id="delayx"><csymbol definitionURL="http://www.cellml.org/cellml/infinitesimal-delay"/>
               <ci>x</ci>
             </apply>

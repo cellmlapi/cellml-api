@@ -200,8 +200,8 @@ double* STATES, double* ALGEBRAIC, int* pret)
   <mapping keyname="postConstantCount"> entries in the constant variable array.
  */
 </mapping>
-  <mapping keyname="preConditionalOutputCount"> * There are a total of </mapping>
-  <mapping keyname="postConditionalOutputCount"> entries in the conditional output status array.
+  <mapping keyname="preConditionVariableCount"> * There are a total of </mapping>
+  <mapping keyname="postConditionVariableCount"> condition variables.
  */
 </mapping>
   <mapping keyname="preInitConsts">void
@@ -211,7 +211,8 @@ initConsts(double* CONSTANTS, double* RATES, double *STATES)
   <mapping keyname="postInitConsts">}
 </mapping>
   <mapping keyname="preRates">void
-computeResiduals(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
+computeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, double* STATES,
+                 double* OLDSTATES, double* ALGEBRAIC, double* CONDVARS)
 {
 </mapping>
   <mapping keyname="postRates">}
@@ -233,6 +234,13 @@ getStateInformation(double* SI)
 {
 </mapping>
   <mapping keyname="postStateInformation">}
+</mapping>
+  <mapping keyname="preRootInformation">void
+computeRoots(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, double* STATES,
+             double* OLDSTATES, double* ALGEBRAIC, double* CONDVARS)
+{
+</mapping>
+  <mapping keyname="postRootInformation">}
 </mapping>
   <mapping keyname="topSection"></mapping>
   <mapping keyname="endSection"></mapping>

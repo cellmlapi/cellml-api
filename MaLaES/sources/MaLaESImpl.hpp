@@ -207,6 +207,7 @@ public:
   
   double parseConstant(iface::mathml_dom::MathMLCnElement* cnEl);
   void appendConstant(iface::mathml_dom::MathMLCnElement* cnEl);
+  void appendPassthrough(iface::mathml_dom::MathMLElement* csymEl);
   void setInvolvesExternalCode() { mInvolvesExternalCode = true; }
   uint32_t getDiffDegree(iface::cellml_api::CellMLVariable* aVar)
     throw(std::exception&);
@@ -268,6 +269,8 @@ public:
             uint32_t aUnitsDiffDegree)
     throw(std::exception&);
 
+  void stripPassthrough(iface::cellml_api::Model* aModel) throw(std::exception&);
+
   void RunTransformOnOperator(CDAMaLaESResult* aResult,
                               iface::mathml_dom::MathMLElement* aEl);
   void WriteConversion(CDAMaLaESResult* aResult,
@@ -324,6 +327,8 @@ public:
   CDAMaLaESBootstrap();
   ~CDAMaLaESBootstrap();
   iface::cellml_services::MaLaESTransform* compileTransformer(const wchar_t*)
+    throw(std::exception&);
+  void stripPassthrough(iface::cellml_api::Model* aModel)
     throw(std::exception&);
 };
 

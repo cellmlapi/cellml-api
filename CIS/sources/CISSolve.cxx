@@ -551,14 +551,15 @@ struct DefintInformation
 
 struct DAEEvaluationInformation
 {
-  double* constants, * rates, * oldrates, * algebraic, * states, * oldstates;
-  int * thisCondOut, * oldCondOut;
-  size_t condOutCount;
-  int needRestart;
-  double restartAfter;
+  double* constants, * rates, * oldrates, * algebraic, * states, * oldstates, * condvars;
+  uint32_t condVarSize;
   int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                           double* STATES, double* OLDSTATES, double* ALGEBRAIC,
-                          int* CONDOUT, double* resids);
+                          double* CONDVAR, double* resids);
+  int (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES,
+                                double* OLDRATES, double* STATES,
+                                double* OLDSTATES, double* ALGEBRAIC,
+                                double* CONDVAR);
   int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
                                     double* STATES, double* ALGEBRAIC);
   int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
@@ -566,14 +567,10 @@ struct DAEEvaluationInformation
 
   ~DAEEvaluationInformation()
   {
-    if (thisCondOut != NULL) delete [] thisCondOut;
-    if (oldCondOut != NULL) delete [] oldCondOut;
-    if (oldrates != NULL) delete [] oldrates;
-    if (oldstates != NULL) delete [] oldstates;
   }
 };
 
-int
+static int
 ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
 {
   DAEEvaluationInformation * d = reinterpret_cast<DAEEvaluationInformation*>(userdata);
@@ -584,41 +581,21 @@ ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
   if (ret != 0)
     return ret;
 
-  int isNew = 0;
-  if (d->thisCondOut == NULL)
-  {
-    isNew = 1;
-    d->thisCondOut = new int[d->condOutCount];
-    d->oldCondOut = new int[d->condOutCount];
-  }
-  else
-  {
-    // Switch buffers...
-    int * tmp = d->thisCondOut;
-    d->thisCondOut = d->oldCondOut;
-    d->oldCondOut = tmp;
-  }
-  memset(d->thisCondOut, 0, sizeof(int) * d->condOutCount);
+  return d->ComputeResiduals(t, d->constants, rates, d->oldrates,
+                             states, d->oldstates,
+                             d->algebraic, d->condvars, resids);
+}
 
-  ret = d->ComputeResiduals(t, d->constants, rates, d->oldrates,
-                            states, d->oldstates,
-                            d->algebraic, d->thisCondOut, resids);
-  if (ret != 0)
-    return ret;
+static int
+ida_rootfn(double t, N_Vector y, N_Vector yp, double *gout, void *userdata)
+{
+  DAEEvaluationInformation * d = reinterpret_cast<DAEEvaluationInformation*>(userdata);
+  double *states = N_VGetArrayPointer(y);
+  double *rates = N_VGetArrayPointer(y);
+  int ret = d->ComputeRootInformation(t, d->constants, rates, d->oldrates, states, d->oldstates,
+                                      d->algebraic, gout);
 
-  if (isNew)
-    return 0;
-
-  if (memcmp(d->thisCondOut, d->oldCondOut, sizeof(int) * d->condOutCount) == 0)
-    return 0;
-
-  d->needRestart++;
-  d->restartAfter = t;
-
-  if (d->needRestart > 10)
-    return -1;
-  else
-    return 1;
+  return ret;
 }
 
 static void
@@ -648,18 +625,17 @@ struct DAEIVFindingInformation
 {
   size_t n;
   double voi0;
-  double* constants, * rates, * oldrates, * algebraic, * states, * oldstates, * hxtmp, * icinfo;
-  size_t condOutCount;
+  double* constants, * rates, * oldrates, * algebraic, * states, * oldstates, * condvars, * hxtmp, * icinfo;
   int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                           double* STATES, double* OLDSTATES,
-                          double* ALGEBRAIC, int* CONDOUT, double* resids);
+                          double* ALGEBRAIC, double* CONDOUT, double* resids);
   int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
                                     double* STATES, double* ALGEBRAIC);
 };
 
-static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEIVFindingInformation* info,
-                                            int * condout)
+static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEIVFindingInformation* info)
 {
+  // printf("condvars[0] = %g\n", info->condvars[0]);
   for (int i = 0; i < n; i++)
   {
     double oldrate = info->rates[i], oldstate = info->states[i];
@@ -668,13 +644,13 @@ static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEI
                                      info->algebraic);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
-                           info->algebraic, condout, hx);
-    info->rates[i] = p[i] + 1E-20;
+                           info->algebraic, info->condvars, hx);
+    info->rates[i] = p[i] + 1E-14;
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
                                      info->algebraic);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
-                           info->algebraic, condout, info->hxtmp);
+                           info->algebraic, info->condvars, info->hxtmp);
     double gap1 = 0;
     for (int j = 0; j < n; j++)
       gap1 = fabs(hx[j] - info->hxtmp[j]);
@@ -686,17 +662,22 @@ static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEI
                                      info->algebraic);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
-                           info->algebraic, condout, hx);
-    info->states[i] = p[i] + 1E-20;
+                           info->algebraic, info->condvars, hx);
+    info->states[i] = p[i] + 1E-14;
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
                                      info->algebraic);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
-                           info->algebraic, condout, info->hxtmp);
+                           info->algebraic, info->condvars, info->hxtmp);
 
     double gap2 = 0;
     for (int j = 0; j < n; j++)
+    {
+      // printf("hx[%u] = %g, hxtmp[%u] = %g\n", j, hx[j], j, info->hxtmp[j]);
       gap2 += fabs(hx[j] - info->hxtmp[j]);
+    }
+
+    // printf("gap1 = %g, gap2 = %g\n", gap1, gap2);
 
     info->icinfo[i] = (gap1 > gap2);
     info->states[i] = oldstate;
@@ -706,9 +687,7 @@ static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEI
 static void levmar_dae_iv_paramfinder(double * p, double * hx, int m, int n, void *adata)
 {
   DAEIVFindingInformation * info = reinterpret_cast<DAEIVFindingInformation*>(adata);
-  int * ign = new int[info->condOutCount];
-
-  DetermineRateOrStateSensitivity(p, hx, n, info, ign);
+  DetermineRateOrStateSensitivity(p, hx, n, info);
 
   MergeParametersICInfoIntoRatesStates(info->n, info->rates, info->states,
                                        info->icinfo, p);
@@ -716,8 +695,7 @@ static void levmar_dae_iv_paramfinder(double * p, double * hx, int m, int n, voi
                                    info->algebraic);
   info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                          info->states, info->oldstates,
-                         info->algebraic, ign, hx);
-  delete [] ign;
+                         info->algebraic, info->condvars, hx);
 }
 
 void
@@ -726,7 +704,7 @@ CDA_DAESolverRun::SolveDAEProblem
  IDACompiledModelFunctions* f, uint32_t constSize,
  double* constants, uint32_t rateSize, double* rates,
  uint32_t stateSize, double* states, uint32_t algSize,
- double* algebraic, uint32_t condOutSize
+ double* algebraic, uint32_t condVarSize, double* condvars
 )
 {
   double* icinfo = new double[stateSize];
@@ -746,18 +724,18 @@ CDA_DAESolverRun::SolveDAEProblem
   dy0 = N_VMake_Serial(rateSize, rates);
 
   DAEEvaluationInformation ei;
-  ei.thisCondOut = ei.oldCondOut = NULL;
-  ei.condOutCount = condOutSize;
-  ei.needRestart = 0;
   ei.constants = constants;
   ei.states = states;
   ei.rates = rates;
   ei.algebraic = algebraic;
+  ei.condvars = condvars;
   ei.ComputeResiduals = f->ComputeResiduals;
+  ei.ComputeRootInformation = f->ComputeRootInformation;
   ei.EvaluateEssentialVariables = f->EvaluateEssentialVariables;
   ei.EvaluateVariables = f->EvaluateVariables;
   ei.oldrates = new double[rateSize];
   ei.oldstates = new double[stateSize];
+  ei.condVarSize = condVarSize;
   memcpy(ei.oldrates, rates, rateSize * sizeof(double));
   memcpy(ei.oldstates, states, stateSize * sizeof(double));
 
@@ -769,23 +747,28 @@ CDA_DAESolverRun::SolveDAEProblem
   ivf.rates = rates;
   ivf.algebraic = algebraic;
   ivf.states = states;
+  ivf.condvars = condvars;
   ivf.icinfo = icinfo;
   ivf.ComputeResiduals = f->ComputeResiduals;
   ivf.EvaluateEssentialVariables = f->EvaluateEssentialVariables;
-  ivf.condOutCount = condOutSize;
   ivf.oldrates = ei.oldrates;
   ivf.oldstates = ei.oldstates;
   double * hx = new double[stateSize];
 
   f->SetupStateInfo(icinfo);
-  RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
-  int * condout = new int[condOutSize];
-  DetermineRateOrStateSensitivity(params, hx, stateSize, &ivf, condout);
-  delete [] condout;
-  delete [] hx;
 
-  while (true)
+  
+  bool restart = true;
+  while (restart)
   {
+    restart = false;
+
+    f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
+                              algebraic, condvars);
+    DetermineRateOrStateSensitivity(params, hx, stateSize, &ivf);
+    // printf("Just determined sensitivity array:\n");
+    // for (uint32_t i = 0; i < stateSize; i++)
+    //   printf("  sens[%u] = %g\n", i, icinfo[i]);
     RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
 
     double info[LM_INFO_SZ];
@@ -803,8 +786,13 @@ CDA_DAESolverRun::SolveDAEProblem
                );
     MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
                                          icinfo, params);
+
+    
+    f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
+                              algebraic, condvars);
     
     IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
+    IDARootInit(idamem, condVarSize, ida_rootfn);
     IDASStolerances(idamem, mEpsRel, mEpsAbs);
     // IDASpgmr(idamem, 0);
     // IDASptfqmr(idamem, 0);
@@ -821,9 +809,12 @@ CDA_DAESolverRun::SolveDAEProblem
 
     if (mTabulationStepSize == 0.0)
       nextStopPoint = mStopBvar;
-    
+
     while (voi < mStopBvar)
     {
+      if (restart)
+        break;
+
       double bhl = mStopBvar;
       if (bhl - voi > mStepSizeMax)
         bhl = voi + mStepSizeMax;
@@ -831,13 +822,19 @@ CDA_DAESolverRun::SolveDAEProblem
         bhl = nextStopPoint;
       
       IDASetStopTime(idamem, bhl);
-      if (IDASolve(idamem, bhl, &voi, y0, dy0, IDA_ONE_STEP) < 0)
-      {
-        if (ei.needRestart)
-          break;
 
+      int ret = IDASolve(idamem, bhl, &voi, y0, dy0, IDA_ONE_STEP);
+
+      if (ret < 0)
+      {
         sendFailure = true;
         break;
+      }
+
+      if (ret == IDA_ROOT_RETURN)
+      {
+        // printf("Root hit at %g... restarting...\n",  voi);
+        restart = true;
       }
 
       memcpy(ei.oldrates, rates, rateSize * sizeof(double));
@@ -881,15 +878,9 @@ CDA_DAESolverRun::SolveDAEProblem
         storageSize = 0;
       }
     }
-
-    if (!ei.needRestart)
-      break;
-
-    voi = ei.restartAfter;
-    ei.needRestart = 0;
   }
 
-
+  delete [] hx;
   delete [] icinfo;
   delete [] params;
   delete [] ivf.hxtmp;

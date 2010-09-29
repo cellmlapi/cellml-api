@@ -5,7 +5,10 @@
 #include <sstream>
 
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
+#define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
+#define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
 #define INFDELAY L"http://www.cellml.org/cellml/infinitesimal-delay"
+#define PASSTHROUGH L"http://www.cellml.org/tools/api#passthrough"
 
 static const MaLaESQualifiers noQualifiers = {NULL, NULL, NULL, NULL};
 
@@ -885,6 +888,25 @@ CDAMaLaESResult::appendConstant
   mActive += buf;
 }
 
+void
+CDAMaLaESResult::appendPassthrough(iface::mathml_dom::MathMLElement* csymEl)
+{
+  std::string pt;
+  RETURN_INTO_OBJREF(c, iface::dom::Node, csymEl->firstChild());
+  // Append all text nodes...
+  for (; c != NULL; c = already_AddRefd<iface::dom::Node>(c->nextSibling()))
+  {
+    if (c == NULL)
+      break;
+    DECLARE_QUERY_INTERFACE_OBJREF(tn, c, dom::Text);
+    if (tn == NULL)
+      continue;
+
+    RETURN_INTO_WSTRING(d, tn->data());
+    mActive += d;
+  }
+}
+
 uint32_t
 CDAMaLaESResult::getDiffDegree(iface::cellml_api::CellMLVariable* aVar)
   throw(std::exception&)
@@ -1622,6 +1644,18 @@ CDAMaLaESTransform::RunTransformOnOperator
     return;
   }
 
+  DECLARE_QUERY_INTERFACE_OBJREF(csymTop, aEl, mathml_dom::MathMLCsymbolElement);
+  if (csymTop != NULL)
+  {
+    RETURN_INTO_WSTRING(opName, csymTop->definitionURL());
+
+    if (opName == PASSTHROUGH)
+    {
+      aResult->appendPassthrough(csymTop);
+      return;
+    }
+  }
+
   DECLARE_QUERY_INTERFACE_OBJREF(apply, aEl, mathml_dom::MathMLApplyElement);
 
   if (apply == NULL)
@@ -1699,15 +1733,9 @@ CDAMaLaESTransform::RunTransformOnOperator
 
   if (csym != NULL)
   {
-    wchar_t* str = csym->definitionURL();
-    opName = str;
-    free(str);
+    RETURN_INTO_WSTRING(opName, csym->definitionURL());
 
-    if (opName != INFDELAY)
-    {
-      aResult->setInvolvesExternalCode();
-    }
-    else
+    if (opName == INFDELAY)
     {
       if (aResult->infdelayed)
         throw MaLaESError(L"Cannot nest infinitesimal delays.");
@@ -1724,6 +1752,10 @@ CDAMaLaESTransform::RunTransformOnOperator
 
       aResult->infdelayed = false;
       return;
+    }
+    else
+    {
+      aResult->setInvolvesExternalCode();
     }
   }
   else
@@ -1826,6 +1858,99 @@ CDAMaLaESBootstrap::compileTransformer(const wchar_t* aSpec)
   throw(std::exception&)
 {
   return new CDAMaLaESTransform(aSpec);
+}
+
+static std::wstring
+DoSanitiseString(const std::wstring& aInput, bool aWhiteOk)
+{
+  std::wstring out;
+  for (std::wstring::const_iterator i = aInput.begin(); i != aInput.end(); i++)
+  {
+    char c = *i;
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9') || c == '_')
+      out += c;
+    if (aWhiteOk && (c == ' ' || c == '\r' || c == '\n' || c == '\t'))
+      out += c;
+  }
+
+  return out;
+}
+
+static void
+DoSanitiseElem(iface::dom::Element* aEl)
+{
+  RETURN_INTO_WSTRING(ln, aEl->localName());
+  RETURN_INTO_WSTRING(ns, aEl->namespaceURI());
+  if (ln == L"variable" || ln == L"component")
+  {
+    RETURN_INTO_WSTRING(ns, aEl->namespaceURI());
+    if (ns == CELLML_1_0_NS || ns == CELLML_1_1_NS)
+    {
+      RETURN_INTO_WSTRING(nameAttr, aEl->getAttributeNS(L"", L"name"));
+      aEl->setAttributeNS(L"", L"name", DoSanitiseString(nameAttr, false).c_str());
+    }
+  }
+  else if (ln == L"ci")
+  {
+    if (ns == MATHML_NS)
+    {
+      ObjRef<iface::dom::Node> child;
+      for (child = already_AddRefd<iface::dom::Node>(aEl->firstChild());
+           child != NULL;
+           child = already_AddRefd<iface::dom::Node>(child->nextSibling()))
+      {
+        DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
+        RETURN_INTO_WSTRING(d, tn->data());
+        tn->data(DoSanitiseString(d, true).c_str());
+      }
+    }
+  }
+  else if (ln == L"csymbol" && ns == MATHML_NS)
+  {
+    RETURN_INTO_WSTRING(ns, aEl->namespaceURI());
+    RETURN_INTO_WSTRING(defURI, aEl->getAttributeNS(L"", L"definitionURL"));
+    if (ns == MATHML_NS && defURI == PASSTHROUGH)
+      aEl->setAttributeNS(L"", L"definitionURL", L"http://www.cellml.org/tools/api#disabled-passthrough");
+  }
+
+  ObjRef<iface::dom::Node> n;
+  for (n = already_AddRefd<iface::dom::Node>(aEl->firstChild());
+       n != NULL;
+       n = already_AddRefd<iface::dom::Node>(n->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
+    if (el != NULL)
+      DoSanitiseElem(el);
+  }
+}
+
+void
+CDAMaLaESTransform::stripPassthrough(iface::cellml_api::Model* aModel)
+  throw(std::exception&)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(cde, aModel, cellml_api::CellMLDOMElement);
+  if (cde == NULL)
+    throw iface::cellml_api::CellMLException();
+
+  RETURN_INTO_OBJREF(el, iface::dom::Element, cde->domElement());
+  DoSanitiseElem(el);
+
+  RETURN_INTO_OBJREF(imps, iface::cellml_api::CellMLImportSet,
+                     aModel->imports());
+  RETURN_INTO_OBJREF(impi, iface::cellml_api::CellMLImportIterator, imps->iterateImports());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(imp, iface::cellml_api::CellMLImport,
+                       impi->nextImport());
+    if (imp == NULL)
+      break;
+
+    if (!imp->wasInstantiated())
+      imp->instantiate();
+    RETURN_INTO_OBJREF(mod, iface::cellml_api::Model, imp->importedModel());
+    stripPassthrough(mod);
+  }
 }
 
 iface::cellml_services::MaLaESBootstrap*

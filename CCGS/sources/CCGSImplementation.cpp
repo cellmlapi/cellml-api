@@ -173,9 +173,15 @@ CDA_CodeInformation::constantIndexCount() throw()
 }
 
 uint32_t
-CDA_CodeInformation::conditionalOutputCount() throw()
+CDA_CodeInformation::conditionVariableCount() throw()
 {
-  return mConditionalOutputCount;
+  return mConditionVariableCount;
+}
+
+wchar_t*
+CDA_CodeInformation::rootInformationString() throw()
+{
+  return CDA_wcsdup(mRootInformationStr.c_str());
 }
 
 wchar_t*
@@ -410,16 +416,14 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    (
     L"SI[<ID>] = 0.0;\r\n"
    ),
-   mInfDelayedRatePattern(L"OLDRATES[%]"),
-   mInfDelayedStatePattern(L"OLDSTATES[%]"),
-   mConditionalOutputIsRatePattern
+   mInfDelayedRatePattern(L"RATES[%]"),
+   mInfDelayedStatePattern(L"STATES[%]"),
+   mConditionVariablePattern
    (
-    L"CONDOUT[<ID>] |= 1;\r\n"
+    L"CONDVAR[%]"
    ),
-   mConditionalOutputIsStatePattern
-   (
-    L"CONDOUT[<ID>] |= 2;\r\n"
-   ),
+   mTrackPiecewiseConditions(true),
+   mAllowPassthrough(false),
    mArrayOffset(0),
    mIDAStyle(aIDAStyle)
 {
@@ -646,29 +650,27 @@ CDA_CodeGenerator::infDelayedStatePattern(const wchar_t* aPattern)
 
 
 wchar_t*
-CDA_CodeGenerator::conditionalOutputIsRatePattern() throw()
+CDA_CodeGenerator::conditionVariablePattern() throw()
 {
-  return CDA_wcsdup(mConditionalOutputIsRatePattern.c_str());
+  return CDA_wcsdup(mConditionVariablePattern.c_str());
 }
 
 void
-CDA_CodeGenerator::conditionalOutputIsRatePattern(const wchar_t* aPattern) throw()
-
+CDA_CodeGenerator::conditionVariablePattern(const wchar_t* aPattern) throw()
 {
-  mConditionalOutputIsRatePattern = aPattern;
+  mConditionVariablePattern = aPattern;
 }
 
-wchar_t*
-CDA_CodeGenerator::conditionalOutputIsStatePattern() throw()
+bool
+CDA_CodeGenerator::trackPiecewiseConditions() throw()
 {
-  return CDA_wcsdup(mConditionalOutputIsStatePattern.c_str());
+  return mTrackPiecewiseConditions;
 }
 
 void
-CDA_CodeGenerator::conditionalOutputIsStatePattern(const wchar_t* aPattern) throw()
-
+CDA_CodeGenerator::trackPiecewiseConditions(bool aTrack) throw()
 {
-  mConditionalOutputIsStatePattern = aPattern;
+  mTrackPiecewiseConditions = aTrack;
 }
 
 iface::cellml_services::MaLaESTransform*
@@ -781,7 +783,7 @@ CDA_CodeGenerator::makeCodeGenerationState(iface::cellml_api::Model* aSourceMode
       mResidualPattern, mConstrainedRateStateInfoPattern,
       mUnconstrainedRateStateInfoPattern,
       mInfDelayedRatePattern, mInfDelayedStatePattern,
-      mConditionalOutputIsRatePattern, mConditionalOutputIsStatePattern,
+      mConditionVariablePattern, mTrackPiecewiseConditions,
       mArrayOffset, mTransform,
       mCeVAS, mCUSES, mAnnoSet, mIDAStyle
       )
@@ -882,6 +884,9 @@ L"true: #prec[999]1.0\r\n"
                              ));
   }
 
+  if (!mAllowPassthrough)
+    cgs->mTransform->stripPassthrough(aSourceModel);
+
   if (cgs->mCeVAS == NULL)
   {
     RETURN_INTO_OBJREF(cb, iface::cellml_services::CeVASBootstrap,
@@ -897,6 +902,9 @@ L"true: #prec[999]1.0\r\n"
     cgs->mCUSES = already_AddRefd<iface::cellml_services::CUSES>
       (cb->createCUSESForModel(aSourceModel, false));
   }
+
+  if (!mAllowPassthrough)
+    cgs->mTransform->stripPassthrough(aSourceModel);
 
   return cgs;
 }
@@ -979,12 +987,25 @@ CDA_CustomGenerator::generateCode()
   throw(std::exception&)
 {
   std::wstring emp;
+
   CodeGenerationState cgs(mModel, emp, mStateVariableNamePattern, emp, emp, emp,
                           mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
-                          emp, emp, emp, emp, emp, emp, emp, emp, emp, emp,
+                          emp, emp, emp, emp, emp, emp, emp, emp, emp, false,
                           mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet, false);
   return cgs.GenerateCustomCode(mTargetSet, mRequestComputation, mKnown,
                                 mUnwanted);
+}
+
+bool
+CDA_CodeGenerator::allowPassthrough() throw()
+{
+  return mAllowPassthrough;
+}
+
+void
+CDA_CodeGenerator::allowPassthrough(bool aAllowPassthrough) throw()
+{
+  mAllowPassthrough = aAllowPassthrough;
 }
 
 iface::cellml_services::CodeGeneratorBootstrap*

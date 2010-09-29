@@ -309,7 +309,7 @@ CodeGenerationState::GenerateCode()
   mCodeInfo->mRateIndexCount = 0;
   mCodeInfo->mConstantIndexCount = 0;
   mCodeInfo->mAlgebraicIndexCount = 0;
-  mCodeInfo->mConditionalOutputCount = 0;
+  mCodeInfo->mConditionVariableCount = 0;
 
   try
   {
@@ -440,8 +440,181 @@ CodeGenerationState::GenerateCode()
 #define HINTS_NS L"http://www.cellml.org/metadata/simulation/solverhints/1.0#"
 
 void
+CodeGenerationState::TransformPiecewiseConditions()
+{
+  // Go through all unused math statements, and look for any form of piecewise to replace...
+  for (std::set<ptr_tag<MathStatement> >::iterator i = mUnusedMathStatements.begin();
+       i != mUnusedMathStatements.end(); i++)
+    TransformPiecewiseStatement(*i);
+}
+
+void
+CodeGenerationState::TransformPiecewiseStatement(MathStatement* aStatement)
+{
+  switch (aStatement->mType)
+  {
+  case MathStatement::EQUATION:
+      {
+        Equation* eq = static_cast<Equation*>(aStatement);
+
+        RETURN_INTO_OBJREF(nlhs, iface::dom::Node, eq->mLHS->cloneNode(true));
+        QUERY_INTERFACE(eq->mLHS, nlhs, mathml_dom::MathMLElement);
+
+        RETURN_INTO_OBJREF(nrhs, iface::dom::Node, eq->mRHS->cloneNode(true));
+        QUERY_INTERFACE(eq->mRHS, nrhs, mathml_dom::MathMLElement);
+        
+        TransformPiecewisesInMaths(eq->mLHS, eq->mContext);
+        TransformPiecewisesInMaths(eq->mRHS, eq->mContext);
+      }
+      break;
+  case MathStatement::INEQUALITY:
+      {
+        Inequality* ieq = static_cast<Inequality*>(aStatement);
+        RETURN_INTO_OBJREF(mm, iface::dom::Node, ieq->mMaths->cloneNode(true));
+        QUERY_INTERFACE(ieq->mMaths, mm, mathml_dom::MathMLElement);
+        TransformPiecewisesInMaths(ieq->mMaths, ieq->mContext);
+      }
+      break;
+  case MathStatement::PIECEWISE:
+      {
+        Piecewise* pw = static_cast<Piecewise*>(aStatement);
+        for (std::list<std::pair<ptr_tag<Equation>,
+                       ptr_tag<MathMLMathStatement> > >::iterator i =
+               pw->mPieces.begin();
+             i != pw->mPieces.end(); i++)
+        {
+          TransformPiecewiseStatement((*i).first);
+          // This matters if the condition contains further piecewises.
+          TransformPiecewiseStatement((*i).second);
+
+          TransformCaseCondition((*i).second->mMaths, (*i).second->mContext);
+        }
+      }
+      break;
+  default:
+      ; // Nothing to do.
+  }
+}
+
+void
+CodeGenerationState::TransformPiecewisesInMaths(iface::mathml_dom::MathMLElement* aChange,
+                                                iface::cellml_api::CellMLComponent* aContext)
+{
+  // Do a DFS, post-order search for piecewise elements...
+  RETURN_INTO_OBJREF(c, iface::dom::Node, aChange->firstChild());
+  for (; c != NULL; c = already_AddRefd<iface::dom::Node>(c->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(me, c, mathml_dom::MathMLElement);
+    if (me == NULL)
+      continue;
+
+    TransformPiecewisesInMaths(me, aContext);
+  }
+
+  // See if this *is* a piecewise...
+  DECLARE_QUERY_INTERFACE_OBJREF(pw, aChange, mathml_dom::MathMLPiecewiseElement);
+  if (pw == NULL)
+    return;
+
+  for (uint32_t i = 1; ; i++)
+  {
+    RETURN_INTO_OBJREF(pwc, iface::mathml_dom::MathMLCaseElement, pw->getCase(i));
+    if (pwc == NULL)
+      break;
+
+    RETURN_INTO_OBJREF(pwcc, iface::mathml_dom::MathMLContentElement,
+                       pwc->caseCondition());
+    TransformCaseCondition(pwcc, aContext);
+  }
+}
+
+void
+CodeGenerationState::TransformCaseCondition(iface::mathml_dom::MathMLElement* aEl,
+                                            iface::cellml_api::CellMLComponent* aContext)
+{
+  // We only deal with apply here, because cis & constants don't need to be
+  // processed, and nested piecewises have already been processed, and
+  // we can't interpret csymbol elements in general.
+  DECLARE_QUERY_INTERFACE_OBJREF(ap, aEl, mathml_dom::MathMLApplyElement);
+  if (ap == NULL)
+    return;
+
+  RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement, ap->_cxx_operator());
+  RETURN_INTO_WSTRING(opname, op->localName());
+  if (opname == L"and" || opname == L"not" || opname == L"or" || opname == L"xor")
+  {
+    // Logical operation.
+    uint32_t nargs = ap->nArguments();
+    for (uint32_t i = 2; i <= nargs; i++)
+    {
+      RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, ap->getArgument(i));
+      TransformCaseCondition(arg, aContext);
+    }
+
+    return;
+  }
+
+  // For now, we aren't doing anything with eq or neq. The reason is such a
+  // condition is only useful if the value is equal for a finite amount of time,
+  // as is the case with a finite state variable, and we don't want to add such
+  // variables for rootfinding.
+  if (opname == L"geq" || opname == L"gt" || opname == L"leq" ||
+      opname == L"lt")
+  {
+    RETURN_INTO_OBJREF(withMinusN, iface::dom::Node,
+                       ap->cloneNode(true));
+    DECLARE_QUERY_INTERFACE_OBJREF(withMinus, withMinusN, mathml_dom::MathMLApplyElement);
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, withMinus->ownerDocument());
+    RETURN_INTO_OBJREF(minusEl, iface::dom::Element,
+                       doc->createElementNS(MATHML_NS, L"minus"));
+    DECLARE_QUERY_INTERFACE_OBJREF(minus, minusEl, mathml_dom::MathMLElement);
+    withMinus->_cxx_operator(minus);
+
+    std::wstring str;
+    GenerateVariableName(str, mConditionVariablePattern, mNextConditionVariable++);
+    mCodeInfo->mConditionVariableCount++;
+
+    RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, withMinus, aContext,
+                                             NULL, NULL, 0));
+    RETURN_INTO_WSTRING(exp, mr->expression());
+    AppendAssign(mCodeInfo->mRootInformationStr, str, exp);
+    uint32_t l = mr->supplementariesLength(), i;
+    for (i = 0; i < l; i++)
+    {
+      RETURN_INTO_WSTRING(s, mr->getSupplementary(i));
+      mCodeInfo->mFuncsStr += s + L"\r\n";
+    }
+
+    // Make a passthrough csymbol for the allocated symbol.
+    RETURN_INTO_OBJREF(ptEl, iface::dom::Element,
+                       doc->createElementNS(MATHML_NS, L"csymbol"));
+    DECLARE_QUERY_INTERFACE_OBJREF(pt, ptEl, mathml_dom::MathMLCsymbolElement);
+    pt->definitionURL(L"http://www.cellml.org/tools/api#passthrough");
+    RETURN_INTO_OBJREF(pttn, iface::dom::Text, doc->createTextNode(str.c_str()));
+    pt->appendChild(pttn)->release_ref();
+
+    // Now we make the part we retain for the conditional:
+    // First part is the condition variable...
+    ap->setArgument(pt, 2)->release_ref();
+
+    // Second part of the inequality goes to equal...
+
+    RETURN_INTO_OBJREF(zeroEl, iface::dom::Element,
+                       doc->createElementNS(MATHML_NS, L"cn"));
+    RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(L"0"));
+    zeroEl->appendChild(tn)->release_ref();
+    DECLARE_QUERY_INTERFACE_OBJREF(zero, zeroEl, mathml_dom::MathMLElement);
+    ap->setArgument(zero, 3)->release_ref();
+  }
+}
+
+void
 CodeGenerationState::IDAStyleCodeGeneration()
 {
+  if (mTrackPiecewiseConditions)
+    TransformPiecewiseConditions();
+
   // We now want to identify variables which are currently marked as floating,
   // which can be computed from the constants, states, and VOI. However, we are
   // not aiming to solve systems here...
@@ -800,63 +973,6 @@ CodeGenerationState::GenerateResiduals
       std::list<std::pair<std::wstring, std::wstring> > cases;
 
       std::set<ptr_tag<CDA_ComputationTarget> > undelayedInAll;
-      uint32_t pieceCount = 0;
-
-      for (std::list<std::pair<ptr_tag<Equation>,
-                              ptr_tag<MathMLMathStatement>
-                              >
-                    >::iterator ipw = pw->mPieces.begin(); ipw != pw->mPieces.end(); ipw++)
-      {
-        pieceCount++;
-        std::set<ptr_tag<CDA_ComputationTarget> > undelayedHere;
-        RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
-                           mTransform->transform(mCeVAS, mCUSES, mAnnoSet, (*ipw).first->mMaths,
-                                                 (*ipw).first->mContext, NULL, NULL, 0));
-        RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
-                           mr->iterateInvolvedVariablesByDegree());
-        
-        while (true)
-        {
-          RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
-          if (dv == NULL)
-            break;
-          
-          if (!dv->appearedUndelayed())
-            continue;
-
-          RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
-                             dv->variable());
-          std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
-            ::iterator  mi = mTargetsBySource.find(cv);
-          ptr_tag<CDA_ComputationTarget> ct = GetTargetOfDegree((*mi).second, dv->degree());
-          undelayedHere.insert(ct);
-          if (ct->mDownDegree)
-            undelayedHere.insert(ct->mDownDegree);
-          if (ct->mUpDegree)
-            undelayedHere.insert(ct->mUpDegree);
-        }
-        
-        if (ipw == pw->mPieces.begin())
-          undelayedInAll = undelayedHere;
-        else
-        {
-          std::set<ptr_tag<CDA_ComputationTarget> > undelayedNew;
-          std::set_intersection(undelayedInAll.begin(), undelayedInAll.end(),
-                                undelayedHere.begin(), undelayedHere.end(),
-                                std::inserter<std::set<ptr_tag<CDA_ComputationTarget> > >(undelayedNew, undelayedNew.end()));
-          undelayedInAll = undelayedNew;
-        }
-      }
-      // Go through undelayedInAll and work out which variables have their up degree in the set as well.
-      std::map<ptr_tag<CDA_ComputationTarget>, uint32_t> outputByState;
-      for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j = undelayedInAll.begin();
-           j != undelayedInAll.end(); j++)
-        if ((*j)->mUpDegree && undelayedInAll.count((*j)->mUpDegree))
-        {
-          outputByState.insert(std::pair<ptr_tag<CDA_ComputationTarget>, uint32_t>
-                               (*j, mNextConditionalOutput++));
-          mCodeInfo->mConditionalOutputCount++;
-        }
 
       for (std::list<std::pair<ptr_tag<Equation>,
                                ptr_tag<MathMLMathStatement> > >::iterator j = pw->mPieces.begin();
@@ -870,71 +986,6 @@ CodeGenerationState::GenerateResiduals
                            (mCeVAS, mCUSES, mAnnoSet, (*j).second->mMaths, pw->mContext,
                             NULL, NULL, 0));
         RETURN_INTO_WSTRING(cond, mr->expression());
-
-        mr = already_AddRefd<iface::cellml_services::MaLaESResult>
-          (mTransform->transform
-           (mCeVAS, mCUSES, mAnnoSet, (*j).first->mMaths, pw->mContext,
-            NULL, NULL, 0));
-
-        RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
-                           mr->iterateInvolvedVariablesByDegree());
-        while (true)
-        {
-          RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
-          if (dv == NULL)
-            break;
-          
-          if (!dv->appearedUndelayed())
-            continue;
-
-          RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
-                             dv->variable());
-          std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
-            ::iterator  mi = mTargetsBySource.find(cv);
-          ptr_tag<CDA_ComputationTarget> ct = GetTargetOfDegree((*mi).second, dv->degree());
-
-          std::map<ptr_tag<CDA_ComputationTarget>, uint32_t>::iterator osi = outputByState.find(ct);
-          if (osi != outputByState.end())
-          {
-            size_t offset = 0;
-            wchar_t buf[32];
-            std::wstring replaceFrom = mConditionalOutputIsStatePattern;
-            swprintf(buf, 32, L"%u", (*osi).second);
-            while (true)
-            {
-              offset = replaceFrom.find(L"<ID>", offset);
-              if (offset == std::wstring::npos)
-                break;
-              
-              replaceFrom.replace(offset, 4, buf);
-              offset++;
-            }
-            st += replaceFrom;
-          }
-
-          if (ct->mDownDegree != NULL)
-          {
-            osi = outputByState.find(ct->mDownDegree);
-
-            if (osi != outputByState.end())
-            {
-              size_t offset = 0;
-              wchar_t buf[32];
-              std::wstring replaceFrom = mConditionalOutputIsRatePattern;
-              swprintf(buf, 32, L"%u", (*osi).second);
-              while (true)
-              {
-                offset = replaceFrom.find(L"<ID>", offset);
-                if (offset == std::wstring::npos)
-                  break;
-                
-                replaceFrom.replace(offset, 4, buf);
-                offset++;
-              }
-              st += replaceFrom;
-            }
-          }
-        }
 
         cases.push_back(std::pair<std::wstring, std::wstring>(st, cond));
       }
@@ -1980,7 +2031,6 @@ CodeGenerationState::FirstPassTargetClassification()
 void
 CodeGenerationState::GenerateVariableName
 (
- ptr_tag<CDA_ComputationTarget> aCT,
  std::wstring& aStr,
  std::wstring& aPattern,
  uint32_t index
@@ -2015,7 +2065,7 @@ CodeGenerationState::AllocateVariable(ptr_tag<CDA_ComputationTarget> aCT,
   {
     uint32_t index = aNextIndex++;
     aCount++;
-    GenerateVariableName(aCT, aStr, aPattern, index);
+    GenerateVariableName(aStr, aPattern, index);
     aCT->setNameAndIndex(index, aStr.c_str());
   }
   else
@@ -2028,7 +2078,7 @@ CodeGenerationState::AllocateDelayed(ptr_tag<CDA_ComputationTarget> aCT,
                                      uint32_t aNextIndex)
 {
   std::wstring str;
-  GenerateVariableName(aCT, str, aPattern, aNextIndex);
+  GenerateVariableName(str, aPattern, aNextIndex);
   aCT->setDelayedName(str.c_str());
 }
 
@@ -2047,7 +2097,7 @@ CodeGenerationState::ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT,
   else
     index = aCT->mInfDelayedAssignedIndex;
 
-  GenerateVariableName(aCT, aStr, mAlgebraicVariableNamePattern, index);
+  GenerateVariableName(aStr, mAlgebraicVariableNamePattern, index);
   aCT->setDelayedName(aStr.c_str());
 }
 
@@ -2103,7 +2153,7 @@ CodeGenerationState::AllocateRateNamesAsConstants(std::list<System*>& aSystems)
       // creating an alias not the original name.
       uint32_t index = mCodeInfo->mConstantIndexCount++;
       std::wstring tmpname;
-      GenerateVariableName(*j, tmpname, mConstantPattern, index);
+      GenerateVariableName(tmpname, mConstantPattern, index);
       (*j)->setNameAndIndex(oldIndex, tmpname.c_str());
     }
   }
@@ -3435,7 +3485,7 @@ CodeGenerationState::GenerateStateToRateCascades()
       RETURN_INTO_WSTRING(stateN, ct->name());
       std::wstring rateN;
 
-      GenerateVariableName(ct, rateN, mRateNamePattern,
+      GenerateVariableName(rateN, mRateNamePattern,
                            ct->mAssignedIndex - 1);
 
       AppendAssign(mCodeInfo->mRatesStr, rateN, stateN);

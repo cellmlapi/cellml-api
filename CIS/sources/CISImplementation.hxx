@@ -30,7 +30,10 @@ struct IDACompiledModelFunctions
 
   int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
                           double* OLDRATES, double* STATES, double* OLDSTATES,
-                          double* ALGEBRAIC, int* CONDOUT, double* resids);
+                          double* ALGEBRAIC, double* CONDVAR, double* resids);
+  int (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES,
+                                double* OLDRATES, double* STATES, double* OLDSTATES,
+                                double* ALGEBRAIC, double* CONDVAR);
   void (*SetupStateInfo)(double * SI);
 };
 
@@ -199,7 +202,7 @@ protected:
   void SolveDAEProblem(IDACompiledModelFunctions* f, uint32_t constSize,
                        double* constants, uint32_t rateSize, double* rates,
                        uint32_t stateSize, double* states, uint32_t algSize, double* algebraic,
-                       uint32_t condOutSize);
+                       uint32_t condVarSize, double* condvars);
 };
 
 class CDA_CellMLIntegrationService

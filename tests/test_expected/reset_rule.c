@@ -27,11 +27,11 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 ALGEBRAIC[0] = STATES[0];
-if (!(STATES[0]>10.0000))
+if (!(STATES[0]>=10.0000))
 {
   RATES[0] = 1.00000;
 }
-if (ALGEBRAIC[0]>10.0000)
+if (ALGEBRAIC[0]>=10.0000)
 {
   STATES[0] = 1.00000;
 }

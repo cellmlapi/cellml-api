@@ -7,7 +7,7 @@
  * VOI is time in component main (dimensionless).
  * STATES[0] is x in component main (dimensionless).
  * RATES[0] is d/dt x in component main (dimensionless).
- * There are a total of 1 entries in the conditional output status array.
+ * There are a total of 1 condition variables.
  */
 void
 initConsts(double* CONSTANTS, double* RATES, double *STATES)
@@ -16,17 +16,16 @@ STATES[0] = 0;
 RATES[0] = 0.1;
 }
 void
-computeResiduals(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
+computeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, double* STATES,
+                 double* OLDSTATES, double* ALGEBRAIC, double* CONDVARS)
 {
-if (OLDSTATES[0]>10.0000)
+if (CONDVAR[0]>=0.00000)
 {
   resid[0] = STATES[0] - 1.00000;
-CONDOUT[0] |= 2;
 }
 else if (1)
 {
   resid[0] = RATES[0] - 1.00000;
-CONDOUT[0] |= 1;
 }
 }
 void
@@ -41,4 +40,10 @@ void
 getStateInformation(double* SI)
 {
 SI[0] = 1.0;
+}
+void
+computeRoots(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, double* STATES,
+             double* OLDSTATES, double* ALGEBRAIC, double* CONDVARS)
+{
+CONDVAR[0] = STATES[0] - 10.0000;
 }

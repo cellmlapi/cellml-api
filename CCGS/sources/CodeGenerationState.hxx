@@ -133,8 +133,8 @@ public:
                       std::wstring& aUnconstrainedRateStateInfoPattern,
                       std::wstring& aInfDelayedRatePattern,
                       std::wstring& aInfDelayedStatePattern,
-                      std::wstring& aConditionalOutputIsRatePattern,
-                      std::wstring& aConditionalOutputIsStatePattern,
+                      std::wstring& aConditionVariablePattern,
+                      bool aTrackPiecewiseConditions,
                       uint32_t aArrayOffset,
                       iface::cellml_services::MaLaESTransform* aTransform,
                       iface::cellml_services::CeVAS* aCeVAS,
@@ -157,8 +157,8 @@ public:
       mUnconstrainedRateStateInfoPattern(aUnconstrainedRateStateInfoPattern),
       mInfDelayedRatePattern(aInfDelayedRatePattern),
       mInfDelayedStatePattern(aInfDelayedStatePattern),
-      mConditionalOutputIsRatePattern(aConditionalOutputIsRatePattern),
-      mConditionalOutputIsStatePattern(aConditionalOutputIsStatePattern),
+      mConditionVariablePattern(aConditionVariablePattern),
+      mTrackPiecewiseConditions(aTrackPiecewiseConditions),
       mArrayOffset(aArrayOffset),
       mTransform(aTransform),
       mCeVAS(aCeVAS),
@@ -168,7 +168,7 @@ public:
       mNextStateVariableIndex(aArrayOffset),
       mNextAlgebraicVariableIndex(aArrayOffset),
       mNextVOI(aArrayOffset),
-      mNextConditionalOutput(aArrayOffset),
+      mNextConditionVariable(aArrayOffset),
       mNextSolveId(0),
       mIDAStyle(aIDAStyle)
   {
@@ -234,7 +234,7 @@ public:
                         uint32_t& aCount);
   void AllocateDelayed(ptr_tag<CDA_ComputationTarget>  aCT,
                         std::wstring& aPattern, uint32_t aNextIndex);
-  void GenerateVariableName(ptr_tag<CDA_ComputationTarget>  aCT, std::wstring& aStr,
+  void GenerateVariableName(std::wstring& aStr,
                             std::wstring& aPattern, uint32_t index);
   void AllocateVariablesInSet(std::list<System*>& aSet,
                               iface::cellml_services::VariableEvaluationType aET,
@@ -391,6 +391,12 @@ public:
   void GenerateResidualForEquation(std::wstring& aCode, uint32_t aResidNo, Equation* aEq);
   void GenerateResidualForString(std::wstring& aCode, uint32_t aResidNo,
                                  const std::wstring& e1, const std::wstring& e2);
+  void TransformPiecewiseConditions();
+  void TransformPiecewiseStatement(MathStatement* aStatement);
+  void TransformPiecewisesInMaths(iface::mathml_dom::MathMLElement* aChange,
+                                  iface::cellml_api::CellMLComponent* aContext);
+  void TransformCaseCondition(iface::mathml_dom::MathMLElement* aEl,
+                              iface::cellml_api::CellMLComponent* aContext);
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
@@ -400,7 +406,8 @@ public:
     & mDeclareTemporaryPattern, & mConditionalAssignmentPattern, & mResidualPattern,
     & mConstrainedRateStateInfoPattern, & mUnconstrainedRateStateInfoPattern,
     & mInfDelayedRatePattern, & mInfDelayedStatePattern,
-    & mConditionalOutputIsRatePattern, & mConditionalOutputIsStatePattern;
+    & mConditionVariablePattern;
+  bool mTrackPiecewiseConditions;
   uint32_t mArrayOffset;
   ObjRef<iface::cellml_services::MaLaESTransform> mTransform;
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;
@@ -419,7 +426,7 @@ public:
     mTargetsBySource;
   std::set<ptr_tag<CDA_ComputationTarget> > mBoundTargs, mLocallyBoundTargs, mDelayedTargs;
   uint32_t mNextConstantIndex, mNextStateVariableIndex,
-    mNextAlgebraicVariableIndex, mNextVOI, mNextConditionalOutput, mNextSolveId;
+    mNextAlgebraicVariableIndex, mNextVOI, mNextConditionVariable, mNextSolveId;
   std::list<std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> > mRateNameBackup;
   std::list<ptr_tag<CDA_ComputationTarget> > mInfDelayedTargets;
   bool mIDAStyle;
