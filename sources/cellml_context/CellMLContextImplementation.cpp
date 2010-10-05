@@ -492,9 +492,9 @@ CDA_ModelNode::getWritable()
   // We are frozen, so need to clone model & make it a derivative...
 
   // There is no clone, so we abuse getAlternateVersion...
-  wchar_t* cv = mModel->cellmlVersion();
+  RETURN_INTO_WSTRING(cv, mModel->cellmlVersion());
   ObjRef<iface::cellml_api::Model> modclone =
-    already_AddRefd<iface::cellml_api::Model>(mModel->getAlternateVersion(cv));
+    already_AddRefd<iface::cellml_api::Model>(mModel->getAlternateVersion(cv.c_str()));
 
   if (modclone == NULL)
     throw iface::cellml_api::CellMLException();
@@ -829,8 +829,12 @@ CDA_ModelNode::removeModelMonitor
   {
     i2 = i;
     i++;
-    (*i2)->release_ref();
-    mModelMonitors.erase(i2);
+
+    if (!CDA_objcmp(*i2, monitor))
+    {
+      (*i2)->release_ref();
+      mModelMonitors.erase(i2);
+    }
   }
 }
 
@@ -905,8 +909,12 @@ CDA_ModelList::removeModelMonitor
   {
     i2 = i;
     i++;
-    (*i2)->release_ref();
-    mNodeMonitors.erase(i2);
+
+    if (!CDA_objcmp(monitor, *i2))
+    {
+      (*i2)->release_ref();
+      mNodeMonitors.erase(i2);
+    }
   }
 }
 
