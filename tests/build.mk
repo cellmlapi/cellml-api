@@ -71,3 +71,10 @@ tests_RunTestBin_SOURCES += \
 	tests/RDFTest.cpp
 tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/sources/rdf
 endif
+
+if ENABLE_CONTEXT
+tests_RunTestBin_SOURCES += \
+	tests/CellMLContextTest.cpp
+tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/sources/cellml_context
+tests_RunTestBin_LDADD += -lcellml_context
+endif
