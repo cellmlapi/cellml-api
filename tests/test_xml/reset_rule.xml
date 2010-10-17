@@ -9,7 +9,7 @@
     <variable name="time" units="dimensionless"/>
     <variable name="x" initial_value="0" units="dimensionless"/>
     <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq1">
-      <piecewise id="the_piecewsie">
+      <piecewise id="the_piecewise">
         <piece id="the_piece">
           <apply id="reset_x"><eq/>
             <ci>x</ci>
