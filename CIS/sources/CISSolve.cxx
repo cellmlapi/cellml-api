@@ -629,41 +629,48 @@ struct DAEIVFindingInformation
   int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                           double* STATES, double* OLDSTATES,
                           double* ALGEBRAIC, double* CONDOUT, double* resids);
+  int (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
+                                double* STATES, double* OLDSTATES,
+                                double* ALGEBRAIC, double* CONDOUT);
   int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
                                     double* STATES, double* ALGEBRAIC);
 };
 
-static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEIVFindingInformation* info)
+static void DetermineRateOrStateSensitivity(double * hx, int n, DAEIVFindingInformation* info)
 {
   // printf("condvars[0] = %g\n", info->condvars[0]);
   for (int i = 0; i < n; i++)
   {
     double oldrate = info->rates[i], oldstate = info->states[i];
-    info->rates[i] = p[i];
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
                                      info->algebraic);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
                            info->algebraic, info->condvars, hx);
-    info->rates[i] = p[i] + 1E-14;
+    info->rates[i] = oldrate * (1 + 1E-10);
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
                                      info->algebraic);
+    info->ComputeRootInformation(info->voi0, info->constants, info->rates, info->oldrates,
+                                 info->states, info->oldstates,
+                                 info->algebraic, info->condvars);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
                            info->algebraic, info->condvars, info->hxtmp);
     double gap1 = 0;
     for (int j = 0; j < n; j++)
-      gap1 = fabs(hx[j] - info->hxtmp[j]);
+    {
+      // printf("Rate: hx[%u] = %g, hxtmp[%u] = %g\n", j, hx[j], j, info->hxtmp[j]);
+      gap1 += fabs(hx[j] - info->hxtmp[j]);
+    }
 
     info->rates[i] = oldrate;
 
-    info->states[i] = p[i];
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
                                      info->algebraic);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
                            info->algebraic, info->condvars, hx);
-    info->states[i] = p[i] + 1E-14;
+    info->states[i] = oldstate * (1 + 1E-10);
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
                                      info->algebraic);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
@@ -673,13 +680,13 @@ static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEI
     double gap2 = 0;
     for (int j = 0; j < n; j++)
     {
-      // printf("hx[%u] = %g, hxtmp[%u] = %g\n", j, hx[j], j, info->hxtmp[j]);
+      // printf("State: hx[%u] = %g, hxtmp[%u] = %g\n", j, hx[j], j, info->hxtmp[j]);
       gap2 += fabs(hx[j] - info->hxtmp[j]);
     }
 
     // printf("gap1 = %g, gap2 = %g\n", gap1, gap2);
 
-    info->icinfo[i] = (gap1 > gap2);
+    info->icinfo[i] = (gap1 > 0 || gap2 <= 0.0);
     info->states[i] = oldstate;
   }
 }
@@ -687,10 +694,11 @@ static void DetermineRateOrStateSensitivity(double * p, double * hx, int n, DAEI
 static void levmar_dae_iv_paramfinder(double * p, double * hx, int m, int n, void *adata)
 {
   DAEIVFindingInformation * info = reinterpret_cast<DAEIVFindingInformation*>(adata);
-  DetermineRateOrStateSensitivity(p, hx, n, info);
 
   MergeParametersICInfoIntoRatesStates(info->n, info->rates, info->states,
                                        info->icinfo, p);
+  DetermineRateOrStateSensitivity(hx, n, info);
+
   info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->states,
                                    info->algebraic);
   info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
@@ -751,6 +759,7 @@ CDA_DAESolverRun::SolveDAEProblem
   ivf.icinfo = icinfo;
   ivf.ComputeResiduals = f->ComputeResiduals;
   ivf.EvaluateEssentialVariables = f->EvaluateEssentialVariables;
+  ivf.ComputeRootInformation = f->ComputeRootInformation;
   ivf.oldrates = ei.oldrates;
   ivf.oldstates = ei.oldstates;
   double * hx = new double[stateSize];
@@ -765,7 +774,7 @@ CDA_DAESolverRun::SolveDAEProblem
 
     f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
                               algebraic, condvars);
-    DetermineRateOrStateSensitivity(params, hx, stateSize, &ivf);
+    DetermineRateOrStateSensitivity(hx, stateSize, &ivf);
     // printf("Just determined sensitivity array:\n");
     // for (uint32_t i = 0; i < stateSize; i++)
     //   printf("  sens[%u] = %g\n", i, icinfo[i]);
