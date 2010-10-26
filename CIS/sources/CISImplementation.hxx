@@ -26,7 +26,9 @@ struct IDACompiledModelFunctions
   int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
                            double *STATES, double* ALGEBRAIC);
   int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
-                                    double* STATES, double* ALGEBRAIC);
+                                    double* OLDRATES, double* STATES,
+                                    double* OLDSTATES, double* ALGEBRAIC,
+                                    double* CONDVARS);
 
   int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
                           double* OLDRATES, double* STATES, double* OLDSTATES,

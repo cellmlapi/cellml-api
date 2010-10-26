@@ -37,6 +37,12 @@ CodeGenerationState::~CodeGenerationState()
   for (std::list<System*>::iterator i = mSystems.begin();
        i != mSystems.end(); i++)
     delete *i;
+
+  for (std::list<std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>, iface::mathml_dom::MathMLContentElement*> >::iterator i =
+         mRootInformation.begin();
+       i != mRootInformation.end();
+       i++)
+    (*i).second->release_ref();
 }
 
 iface::cellml_services::CustomGenerator*
@@ -574,17 +580,10 @@ CodeGenerationState::TransformCaseCondition(iface::mathml_dom::MathMLElement* aE
     GenerateVariableName(str, mConditionVariablePattern, mNextConditionVariable++);
     mCodeInfo->mConditionVariableCount++;
 
-    RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
-                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, withMinus, aContext,
-                                             NULL, NULL, 0));
-    RETURN_INTO_WSTRING(exp, mr->expression());
-    AppendAssign(mCodeInfo->mRootInformationStr, str, exp);
-    uint32_t l = mr->supplementariesLength(), i;
-    for (i = 0; i < l; i++)
-    {
-      RETURN_INTO_WSTRING(s, mr->getSupplementary(i));
-      mCodeInfo->mFuncsStr += s + L"\r\n";
-    }
+    withMinus->add_ref();
+    mRootInformation.push_back(std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>,
+                                         iface::mathml_dom::MathMLContentElement*>
+                               (std::pair<std::wstring, iface::cellml_api::CellMLComponent*>(str, aContext), withMinus));
 
     // Make a passthrough csymbol for the allocated symbol.
     RETURN_INTO_OBJREF(ptEl, iface::dom::Element,
@@ -606,6 +605,29 @@ CodeGenerationState::TransformCaseCondition(iface::mathml_dom::MathMLElement* aE
     zeroEl->appendChild(tn)->release_ref();
     DECLARE_QUERY_INTERFACE_OBJREF(zero, zeroEl, mathml_dom::MathMLElement);
     ap->setArgument(zero, 3)->release_ref();
+  }
+}
+
+void
+CodeGenerationState::GenerateRootInformation()
+{
+  while (!mRootInformation.empty())
+  {
+    std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>, iface::mathml_dom::MathMLContentElement*> p = mRootInformation.front();
+    mRootInformation.pop_front();
+    RETURN_INTO_OBJREF(math, iface::mathml_dom::MathMLContentElement, p.second);
+
+    RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, math, p.first.second,
+                                             NULL, NULL, 0));
+    RETURN_INTO_WSTRING(exp, mr->expression());
+    AppendAssign(mCodeInfo->mRootInformationStr, p.first.first, exp);
+    uint32_t l = mr->supplementariesLength(), i;
+    for (i = 0; i < l; i++)
+    {
+      RETURN_INTO_WSTRING(s, mr->getSupplementary(i));
+      mCodeInfo->mFuncsStr += s + L"\r\n";
+    }
   }
 }
 
@@ -652,6 +674,7 @@ CodeGenerationState::IDAStyleCodeGeneration()
 
   // Generate the code to set-up an array distinguishing state from pseudostate...
   GenerateStateInformation(mCodeInfo->mStateInformationStr);
+  GenerateRootInformation();
 }
 
 void

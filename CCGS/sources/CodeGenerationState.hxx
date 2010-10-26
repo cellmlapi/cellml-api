@@ -397,6 +397,7 @@ public:
                                   iface::cellml_api::CellMLComponent* aContext);
   void TransformCaseCondition(iface::mathml_dom::MathMLElement* aEl,
                               iface::cellml_api::CellMLComponent* aContext);
+  void GenerateRootInformation();
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
@@ -430,6 +431,7 @@ public:
   std::list<std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> > mRateNameBackup;
   std::list<ptr_tag<CDA_ComputationTarget> > mInfDelayedTargets;
   bool mIDAStyle;
+  std::list<std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>, iface::mathml_dom::MathMLContentElement*> > mRootInformation;
 };
 
 #endif // _CodeGenerationState_hxx
