@@ -945,7 +945,7 @@ debug_PrintNode(iface::rdf_api::Node* aNode)
   DECLARE_QUERY_INTERFACE_OBJREF(bn, aNode, rdf_api::BlankNode);
   if (bn != NULL)
   {
-    printf("<BlankNode %08X>", reinterpret_cast<uint32_t>(static_cast<iface::rdf_api::BlankNode*>(bn)));
+    //printf("<BlankNode %08X>", reinterpret_cast<uint32_t>(static_cast<iface::rdf_api::BlankNode*>(bn)));
     return;
   }
 
