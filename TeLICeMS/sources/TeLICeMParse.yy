@@ -838,7 +838,6 @@
 %token T_REACT "react"
 %token T_ROLE "role"
 %token T_STOICHIO "stoichio"
-%token T_TERA "tera"
 %token T_THEN "then"
 %token T_TYPE "type"
 %token T_UNIT "unit"
@@ -861,7 +860,7 @@
 %left T_AND
 %left '+' '-'
 %left '*' '/'
-%left T_EQEQ T_NEQ T_GE T_LE '<' '>'
+%left '=' T_EQEQ T_NEQ T_GE T_LE '<' '>'
 %left T_DIFF T_PARTIALDIFF
 
 %%
@@ -872,6 +871,8 @@ valid: model {
 } | math_expr {
   if (!aParseTarget->assertType("MathML"))
     return 1;
+  static_cast<TeLICeMSParseMathML*>(aParseTarget)->mElement->
+    appendChild($1.math())->release_ref();
 };
 
 model: modelstart modellist T_ENDDEF ';' ;
@@ -1167,9 +1168,29 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
   }
 } | '(' math_expr ')' {
   $$ = $2;
-} | math_expr inorder_op math_attrs math_expr {
+} | math_expr additive_op math_attrs math_expr %prec '+' {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression($2.string(), $1, $4, aDocument,
+                                         $3.propertyMap()));
+  $$.math(m);
+} | math_expr multiplicative_op math_attrs math_expr %prec '*' {
+  RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
+                     DoInorderExpression($2.string(), $1, $4, aDocument,
+                                         $3.propertyMap()));
+  $$.math(m);
+} | math_expr comparative_op math_attrs math_expr %prec T_EQEQ {
+  RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
+                     DoInorderExpression($2.string(), $1, $4, aDocument,
+                                         $3.propertyMap()));
+  $$.math(m);
+} | math_expr T_AND math_attrs math_expr {
+  RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
+                     DoInorderExpression("and", $1, $4, aDocument,
+                                         $3.propertyMap()));
+  $$.math(m);
+} | math_expr T_OR math_attrs math_expr {
+  RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
+                     DoInorderExpression("or", $1, $4, aDocument,
                                          $3.propertyMap()));
   $$.math(m);
 } | T_NUMBER math_attrs {
@@ -1181,7 +1202,7 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
                      MakePiecewiseElement($4.mathList(), $5.math(),
                                           $2.propertyMap(), aDocument));
   $$.math(m);
-} | unary_op math_attrs math_expr {
+} | unary_op math_attrs math_expr %prec T_NOT {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      MakePredefinedWrapElement($1.string(), $3.math(), $2.propertyMap(),
                                                aDocument));
@@ -1205,13 +1226,12 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
   $$.math(m);
 };
 
-inorder_op: '+' { $$.string("plus"); } | '-' { $$.string("minus"); } |
-            '*' { $$.string("times"); } | '/' { $$.string("divide"); } |
-            '=' { $$.string("eq"); } |
+additive_op: '+' { $$.string("plus"); } | '-' { $$.string("minus"); };
+multiplicative_op: '*' { $$.string("times"); } | '/' { $$.string("divide"); };
+comparative_op: '=' { $$.string("eq"); } |
             T_EQEQ { $$.string("eq"); } | T_NEQ { $$.string("neq"); } |
             '<' { $$.string("lt"); } | '>' { $$.string("gt"); } |
-            T_GE { $$.string("geq");} | T_LE { $$.string("leq"); } |
-            T_AND { $$.string("and"); } | T_OR { $$.string("or"); };
+            T_GE { $$.string("geq");} | T_LE { $$.string("leq"); };
 
 unary_op: '-' { $$.string("minus"); } | T_NOT { $$.string("not"); };
 
