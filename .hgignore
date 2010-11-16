@@ -35,3 +35,6 @@ examples/javaexample.*\.(class|classpath|project|cellml)
 cellml.jar
 .*\.(iml|ipr|iws)
 interfaces/docs
+.*\.tab.cc
+.*\.tab.hh
+TeLICemScanner.cpp

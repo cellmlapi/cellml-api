@@ -24,6 +24,12 @@ PRE_NON_AS_NEEDED := @PRE_NON_AS_NEEDED@
 POST_NON_AS_NEEDED := @POST_NON_AS_NEEDED@
 LIBADD_DL := @lt_cv_dlopen_libs@
 
+FLEX = @FLEX@
+LEX = work-around-unhelpful-automake-error
+BISON = @BISON@
+YACC = work-around-unhelpful-automake-error
+
+
 # Avoid bogus error...
 libcellml_java_bridge_la_SOURCES =
 libcellml_java_bridge_la_LIBADD =
@@ -115,6 +121,10 @@ endif
 
 if ENABLE_VACSS
 include $(top_srcdir)/VACSS/build.mk
+endif
+
+if ENABLE_TELICEMS
+include $(top_srcdir)/TeLICeMS/build.mk
 endif
 
 if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
@@ -265,6 +275,18 @@ endif
 
 if ENABLE_CIS_AND_PYTHON
 include $(top_srcdir)/CIS/python_build.mk
+endif
+
+if ENABLE_TELICEMS_AND_XPCOM
+include $(top_srcdir)/TeLICeMS/xpcom_build.mk
+endif
+
+if ENABLE_TELICEMS_AND_JAVA
+include $(top_srcdir)/TeLICeMS/java_build.mk
+endif
+
+if ENABLE_TELICEMS_AND_PYTHON
+include $(top_srcdir)/TeLICeMS/python_build.mk
 endif
 
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh

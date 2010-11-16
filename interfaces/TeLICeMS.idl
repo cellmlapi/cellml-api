@@ -1,0 +1,74 @@
+#include "CellML_APISPEC.idl"
+#include "MathML_content_APISPEC.idl"
+
+/**
+ * TeLICeMS (TeLICeM Service) is a serivce for processing CellML Models
+ * represented in the TeLICeM (*Te*xt-based *L*anguage for the *I*nput of *Ce*llML
+ * *M*odels) format. It can also be used to process MathML expressions equation
+ * using the relevant subset of the TeLICeM format.
+ */
+
+module cellml_services
+{
+  interface TeLICeMResult
+    : XPCOM::IObject
+  {
+    /**
+     * The error(s) that occurred processing the input text, or the empty string
+     * if no errors were detected.
+     */
+    readonly attribute wstring errorMessage;
+  };
+
+  interface TeLICeMModelResult
+    : TeLICeMResult
+  {
+    /**
+     * The model result from the TeLICeM parse, or null if parsing failed.
+     */
+    readonly attribute cellml_api::Model modelResult;
+  };
+#pragma terminal-interface
+
+  interface TeLICeMMathResult
+    : TeLICeMResult
+  {
+    /**
+     * The MathML result from the TeLICeM parse, or null if parsing failed.
+     */
+    readonly attribute mathml_dom::MathMLElement mathResult;
+  };
+#pragma terminal-interface
+
+  interface TeLICeMService
+    : XPCOM::IObject
+  {
+    /**
+     * Parses a TeLICeM text representation of a model, and returns a result
+     * from which the parse error or model, as applicable, can be retrieved.
+     * @param aModelText The TeLiCeM text representation of the model.
+     */
+    TeLICeMModelResult parseModel(in wstring aModelText);
+
+    /**
+     * Parses a TeLICeM text representation of a model, and returns a result
+     * from which the parse error or model, as applicable, can be retrieved.
+     * @param aDocument The document to use as the owner document for the
+     *                  newly parsed MathML.
+     * @param aModelText The TeLiCeM text representation of the model.
+     */
+    TeLICeMMathResult parseMaths(in dom::Document aDoc,
+                                 in wstring aMathText);
+
+    /**
+     * Converts a model into the TeLICeM text representation.
+     */
+    wstring showModel(in cellml_api::Model aModel);
+    
+    /**
+     * Converts MathML into the TeLICeM text representation.
+     */
+    wstring showMaths(in mathml_dom::MathMLElement aEl);
+  };
+#pragma terminal-interface
+};

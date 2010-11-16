@@ -15,6 +15,9 @@
 /* Is RDF enabled? */
 #undef ENABLE_RDF
 
+/* Is TeLiCeMs enabled? */
+#undef ENABLE_TELICEMS
+
 /* Is XPCOM enabled? */
 #undef ENABLE_XPCOM
 
