@@ -1,0 +1,40 @@
+#!/bin/bash
+
+BINDIR=`pwd`
+BASEDIR=`dirname $0`
+DIFF=diff
+TELICEMPARSE=$BINDIR/TestTeLICeMParser
+TEMPFILE=test_output
+
+if [[ ! -f "$TELICEMPARSE" ]]; then
+        echo TestTeLICeMParser not found. Not testing it.
+        exit 77
+fi
+
+if [[ -n $RUNNER ]]; then
+    TELICEMPARSE="$RUNNER $BINDIR/.libs/TestTeLICeMParser.exe"
+fi
+TELICEMPARSE="$TESTS_ENVIRONMENT $TELICEMPARSE"
+
+function runtest()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $TELICEMPARSE $BASEDIR/test_telicem/$name.tcm | tr -d "\r"  >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/test_xml/$name.xml
+  if [[ $? -ne 0 ]]; then
+    FAIL=1
+  fi
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name generated correct output.
+  rm -f $TEMPFILE
+}
+
+runtest trivial
+
+exit 0

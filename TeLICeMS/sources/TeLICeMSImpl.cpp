@@ -50,7 +50,7 @@ CDA_TeLICeMService::parseModel(const wchar_t* aModelText)
 
   size_t l = wcslen(aModelText);
   char* s = new char[l + 1];
-  if (wcstombs(s, aModelText, l) != l)
+  if (wcstombs(s, aModelText, l + 1) != l)
   {
     delete [] s;
     res->addMessage(L"The input model text could not be converted to UTF8.");

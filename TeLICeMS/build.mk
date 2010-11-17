@@ -11,6 +11,8 @@ libtelicems_la_SOURCES = \
 
 $(top_builddir)/%.tab.cc $(top_builddir)/%.tab.hh: $(top_srcdir)/TeLICeMS/sources/%.yy
 	$(BISON) $^
+	mv $(top_builddir)/$*.tab.cc $(top_builddir)/$*.tab.cc.tmp
+	sed $(top_builddir)/$*.tab.cc.tmp -e "s/YYERROR_VERBOSE_ARGS_MAXIMUM = [0-9]*/YYERROR_VERBOSE_ARGS_MAXIMUM = 100/" > $(top_builddir)/$*.tab.cc
 
 $(top_builddir)/TeLICeMScanner.cpp: $(top_srcdir)/TeLICeMS/sources/TeLICeMScan.l
 	$(FLEX) $^
@@ -28,4 +30,4 @@ BUILT_SOURCES += $(top_builddir)/interfaces/IfaceTeLICeMS.hxx \
 	$(top_builddir)/TeLICeMParse.tab.hh \
 	$(top_builddir)/TeLICeMScanner.cpp
 
-# include $(top_srcdir)/TeLICeMS/tests/build.mk
+include $(top_srcdir)/TeLICeMS/tests/build.mk

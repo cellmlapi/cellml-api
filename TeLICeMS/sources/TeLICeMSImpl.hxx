@@ -84,7 +84,7 @@ public:
       return true;
 
     wchar_t msg[80];
-    swprintf(msg, 80, L"Was trying to parse TeLICEMS input for %08S, but got syntax for %08S.",
+    swprintf(msg, 80, L"Was trying to parse TeLICEMS input for %8s, but got syntax for %8s.",
              type(), match);
     mResult->addMessage(msg);
     return false;

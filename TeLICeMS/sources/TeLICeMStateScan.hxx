@@ -12,7 +12,7 @@ convertStringToWString(const std::string& aString)
   mbstowcs(buf, aString.c_str(), aString.size() + 1);
   std::wstring s(buf);
   delete [] buf;
-  return buf;
+  return s;
 }
 
 template<class C>
