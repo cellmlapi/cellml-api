@@ -1156,7 +1156,7 @@
 		<variable name="TSSLTC"	units="per_minute" private_interface="none" public_interface="in"/>
 
 <!-- Internal variables -->
-		<variable name="VTS2"	initial_value="0.0"	units="litre" private_interface="none" public_interface="none"/>
+		<variable name="VTS2"	initial_value="0"	units="litre" private_interface="none" public_interface="none"/>
 
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
 			<apply id="CP7_to_CP7D">

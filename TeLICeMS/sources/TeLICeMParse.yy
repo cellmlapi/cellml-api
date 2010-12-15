@@ -15,6 +15,7 @@
 
   #include <stack>
   #include <cmath>
+  #include <assert.h>
 
 
   #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
@@ -22,7 +23,8 @@
   #define MAKE_MATHML_OBJECT(store,storetype,eltype) \
   ObjRef<iface::mathml_dom::storetype> store; \
   { \
-   RETURN_INTO_OBJREF(eltmp, iface::dom::Element, aDocument->createElementNS(MATHML_NS, eltype)); \
+   RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document()); \
+   RETURN_INTO_OBJREF(eltmp, iface::dom::Element, doc->createElementNS(MATHML_NS, eltype)); \
    QUERY_INTERFACE(store, eltmp, mathml_dom::storetype);\
   }
 
@@ -141,16 +143,7 @@
     NULL
   };
 
-  static int telicem_lex(TeLICeMSLValue* aLValue, TeLICeMStateScan* aLexer)
-  {
-    aLexer->mLValue = aLValue;
-    
-    int val = aLexer->yylex();
-    
-    aLexer->mEOF = (val == 0);
-    
-    return val;
-  }
+  int telicem_lex(TeLICeMSLValue* aLValue, TeLICeMStateScan* aLexer);
 
   static void ApplyPropertyList(iface::mathml_dom::MathMLContentElement* aEl,
                                 PropertyApplicator** aPropTables,
@@ -159,11 +152,14 @@
     PropertyApplicator ** p = aPropTables, * q;
     for (q = *p; (q = *p); p++)
     {
-      std::map<std::string, std::string>::const_iterator i(aProps.find(q->propertyName));
-      if (i == aProps.end())
-        continue;
+      for (; q->propertyName != NULL; q++)
+      {
+        std::map<std::string, std::string>::const_iterator i(aProps.find(q->propertyName));
+        if (i == aProps.end())
+          continue;
 
-      q->applyProperty(aEl, (*i).second);
+        q->applyProperty(aEl, (*i).second);
+      }
     }
   }
 
@@ -274,15 +270,18 @@
   MakeCIOrConstant(const std::string& aName,
                    bool aOverrideConstant,
                    const std::map<std::string,std::string>& aPropList,
-                   iface::dom::Document* aDocument)
+                   TeLICeMSParseTarget* aParseTarget)
   {
     if (aOverrideConstant || !IsConstant(aName))
     {
       MAKE_MATHML_OBJECT(ciEl, MathMLCiElement, L"ci");
       std::wstring name(convertStringToWString(aName));
-      RETURN_INTO_OBJREF(tEl, iface::dom::Text,
-                         aDocument->createTextNode(name.c_str()));
-      ciEl->insertArgument(tEl, 1)->release_ref();
+      {
+        RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
+        RETURN_INTO_OBJREF(tEl, iface::dom::Text,
+                           doc->createTextNode(name.c_str()));
+        ciEl->insertArgument(tEl, 1)->release_ref();
+      }
 
       ApplyPropertyList(ciEl, patt_ci, aPropList);
       
@@ -292,8 +291,9 @@
     else
     {
       std::wstring name(convertStringToWString(aName));
+      RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
       RETURN_INTO_OBJREF(tmpstore, iface::dom::Element,
-                         aDocument->createElementNS(MATHML_NS, name.c_str()));
+                         doc->createElementNS(MATHML_NS, name.c_str()));
       DECLARE_QUERY_INTERFACE_OBJREF(store, tmpstore,
                                      mathml_dom::MathMLContentElement);
 
@@ -309,7 +309,7 @@
   (
    iface::mathml_dom::MathMLContentElement* aCondition,
    iface::mathml_dom::MathMLContentElement* aValue,
-   iface::dom::Document* aDocument,
+   TeLICeMSParseTarget* aParseTarget,
    const std::map<std::string, std::string>& aPropList
   )
   {
@@ -328,7 +328,7 @@
   (
    const std::string& aOp,
    TeLICeMSLValue& aLHS, TeLICeMSLValue& aRHS,
-   iface::dom::Document* aDocument,
+   TeLICeMSParseTarget* aParseTarget,
    const std::map<std::string, std::string>& aPropList
   )
   {
@@ -354,19 +354,22 @@
     // We need a new apply element and operator...
     MAKE_MATHML_OBJECT(apply, MathMLApplyElement, L"apply");
     std::wstring waOp(convertStringToWString(aOp));
-    RETURN_INTO_OBJREF(operatorDOMEl,
-                       iface::dom::Element,
-                       aDocument->createElementNS(MATHML_NS, waOp.c_str()));
-    DECLARE_QUERY_INTERFACE_OBJREF(operatorEl, operatorDOMEl, mathml_dom::MathMLContentElement);
-
-    apply->appendChild(operatorEl)->release_ref();
+    {
+      RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
+      RETURN_INTO_OBJREF(operatorDOMEl,
+                         iface::dom::Element,
+                         doc->createElementNS(MATHML_NS, waOp.c_str()));
+      DECLARE_QUERY_INTERFACE_OBJREF(operatorEl, operatorDOMEl, mathml_dom::MathMLContentElement);
+      
+      apply->appendChild(operatorEl)->release_ref();
+    }
 
     // We now have a new element, so add the left and right hand sides...
     apply->appendChild(aLHS.math())->release_ref();
     apply->appendChild(aRHS.math())->release_ref();
     
     // Put attributes onto the apply...
-    ApplyPropertyList(operatorEl, patt_predef, aPropList);
+    ApplyPropertyList(apply, patt_predef, aPropList);
 
     apply->add_ref();
     return apply;
@@ -375,7 +378,7 @@
   static iface::mathml_dom::MathMLContentElement*
   MakeOtherwiseElement(iface::mathml_dom::MathMLElement* aExpression,
                        const std::map<std::string, std::string>& aPropList,
-                       iface::dom::Document* aDocument)
+                       TeLICeMSParseTarget* aParseTarget)
   {
     MAKE_MATHML_OBJECT(otherwise, MathMLContentElement, L"otherwise");
     otherwise->appendChild(aExpression)->release_ref();
@@ -391,12 +394,13 @@
   MakePredefinedWrapElement(const std::string& aType,
                             iface::mathml_dom::MathMLElement* aExpression,
                             const std::map<std::string,std::string>& aPropList,
-                            iface::dom::Document* aDocument)
+                            TeLICeMSParseTarget* aParseTarget)
   {
     MAKE_MATHML_OBJECT(apply, MathMLApplyElement, L"apply");
     std::wstring waType(convertStringToWString(aType));
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
     RETURN_INTO_OBJREF(wrapDOMEl, iface::dom::Element,
-                       aDocument->createElementNS(MATHML_NS, waType.c_str()));
+                       doc->createElementNS(MATHML_NS, waType.c_str()));
     DECLARE_QUERY_INTERFACE_OBJREF(wrapEl, wrapDOMEl, mathml_dom::MathMLPredefinedSymbol);
 
     apply->appendChild(wrapDOMEl)->release_ref();
@@ -413,7 +417,7 @@
   MakePiecewiseElement(const std::list<iface::mathml_dom::MathMLContentElement*>& aCases,
                        iface::mathml_dom::MathMLContentElement* aOtherwise,
                        const std::map<std::string,std::string>& aPropList,
-                       iface::dom::Document* aDocument)
+                       TeLICeMSParseTarget* aParseTarget)
   {
     MAKE_MATHML_OBJECT(piecewise, MathMLPiecewiseElement, L"piecewise");
     for (std::list<iface::mathml_dom::MathMLContentElement*>::const_iterator i = aCases.begin();
@@ -529,7 +533,7 @@
   static iface::mathml_dom::MathMLContentElement*
   DoFunction(const std::string& aName,
              const std::list<iface::mathml_dom::MathMLContentElement*>& aMathList,
-             iface::dom::Document* aDocument,
+             TeLICeMSParseTarget* aParseTarget,
              const std::map<std::string,std::string>& aPropList)
   {
     FuncInfo* fi = GetFunctionInformation(aName.c_str());
@@ -545,7 +549,8 @@
     else
       el = convertStringToWString(fi->el);
 
-    RETURN_INTO_OBJREF(namedElN, iface::dom::Element, aDocument->createElementNS(MATHML_NS, el.c_str()));
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
+    RETURN_INTO_OBJREF(namedElN, iface::dom::Element, doc->createElementNS(MATHML_NS, el.c_str()));
     DECLARE_QUERY_INTERFACE_OBJREF(namedEl, namedElN, mathml_dom::MathMLContentElement);
 
     std::list<iface::mathml_dom::MathMLContentElement*> notConsumed;
@@ -589,7 +594,7 @@
     }
 
     // Any remaining qualifiers get pushed onto the end of the list.
-    for (size_t i = QUALIFIER_TABLE_SIZE - 1; i >= 0; i--)
+    for (int i = QUALIFIER_TABLE_SIZE - 1; i >= 0; i--)
     {
       if ((sq & Qualifiers[i].flag) == 0)
         continue;
@@ -604,7 +609,7 @@
       std::wstring ln16(convertStringToWString(Qualifiers[i].localname));
 
       RETURN_INTO_OBJREF(namedElN, iface::dom::Element,
-                         aDocument->createElementNS(MATHML_NS, ln16.c_str()));
+                         doc->createElementNS(MATHML_NS, ln16.c_str()));
       DECLARE_QUERY_INTERFACE_OBJREF(namedEl, namedElN, mathml_dom::MathMLContentElement);
 
       namedEl->appendChild(notConsumed.back())->release_ref();
@@ -628,7 +633,7 @@
   }
 
   static iface::mathml_dom::MathMLContentElement*
-  MakeConstant(double aValue, iface::dom::Document* aDocument,
+  MakeConstant(double aValue, TeLICeMSParseTarget* aParseTarget,
                const std::map<std::string,std::string>& aPropList)
   {
     MAKE_MATHML_OBJECT(cn, MathMLCnElement, L"cn");
@@ -638,24 +643,32 @@
 
     wchar_t buf[40];
     int expn;
-    double aMant = frexp(aValue, &expn);
-    if (expn < -3 || expn > -3)
+    if (aValue == 0)
+      expn = 0;
+    else if (aValue < 0)
+       expn = -static_cast<int>(trunc(log10(-aValue)));
+    else 
+       expn = static_cast<int>(trunc(log10(aValue)));
+
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
+    if (expn < -3 || expn > 3)
     {
+      double mant = aValue / pow(10.0, expn);
       cn->type(L"e-notation");
       {
-        swprintf(buf, 40, L"%f", aMant);
-        RETURN_INTO_OBJREF(tn, iface::dom::Text, aDocument->createTextNode(buf));
+        swprintf(buf, 40, L"%10g", mant);
+        RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
         cn->insertArgument(tn, 1)->release_ref();
       }
 
       swprintf(buf, 40, L"%d", expn);
-      RETURN_INTO_OBJREF(tn, iface::dom::Text, aDocument->createTextNode(buf));
+      RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
       cn->insertArgument(tn, 2)->release_ref();
     }
     else
     {
-      swprintf(buf, 40, L"%f", aValue);
-      RETURN_INTO_OBJREF(tn, iface::dom::Text, aDocument->createTextNode(buf));
+      swprintf(buf, 40, L"%10g", aValue);
+      RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
       cn->insertArgument(tn, 1)->release_ref();
     }
 
@@ -671,11 +684,12 @@
    iface::mathml_dom::MathMLContentElement* aBvar,
    iface::mathml_dom::MathMLContentElement* aDegree,
    const std::map<std::string,std::string>& aPropList,
-   iface::dom::Document* aDocument
+   TeLICeMSParseTarget* aParseTarget
   )
   {
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
     RETURN_INTO_OBJREF(opN, iface::dom::Element,
-                       aDocument->createElementNS(MATHML_NS, aDifftype));
+                       doc->createElementNS(MATHML_NS, aDifftype));
     DECLARE_QUERY_INTERFACE_OBJREF(op, opN, mathml_dom::MathMLContentElement);
 
     MAKE_MATHML_OBJECT(apply, MathMLApplyElement, L"apply");
@@ -703,85 +717,8 @@
     return apply;
   }
 
-  static iface::dom::Element* CopyDomElement(iface::dom::Element* aIn)
-  {
-    // Make a deep copy of the "in" DOM element to the "out" DOM element
-    // Note: this code is based on some of Jonathan Cooper's CellML 1.1 to
-    //       CellML 1.0 converter code
 
-    // Retrieve the namespace URI and node name
-    RETURN_INTO_WSTRING(namespaceURI, aIn->namespaceURI());
-    RETURN_INTO_WSTRING(nodeName, aIn->nodeName());
-    RETURN_INTO_OBJREF(doc, iface::dom::Document, aIn->ownerDocument());
-    RETURN_INTO_OBJREF(out, iface::dom::Element,
-                       doc->createElementNS(namespaceURI.c_str(), nodeName.c_str()));
-
-    RETURN_INTO_OBJREF(attributes, iface::dom::NamedNodeMap,
-                       aIn->attributes());
-    uint32_t nAttributes(attributes->length());
-
-    for (uint32_t i = 0; i < nAttributes; i++)
-    {
-      // Retrieve the attribute
-      RETURN_INTO_OBJREF(attr, iface::dom::Node, attributes->item(i));
-
-      // Retrieve the namespace URI, name and value of the attribute
-      RETURN_INTO_WSTRING(attrNSURI, attr->namespaceURI());
-      RETURN_INTO_WSTRING(attrName, attr->nodeName());
-      RETURN_INTO_WSTRING(attrValue, attr->nodeValue());
-
-      // Create a copied attribute
-      RETURN_INTO_OBJREF(copiedAttribute, iface::dom::Attr,
-                         doc->createAttributeNS(attrNSURI.c_str(), attrName.c_str()));
-      // Set the value of the copied attribute
-      copiedAttribute->value(attrValue.c_str());
-      // Set the copied attribute to the copied element
-      out->setAttributeNodeNS(copiedAttribute)->release_ref();
-    }
-
-    // Copy the element and text children
-    RETURN_INTO_OBJREF(children, iface::dom::NodeList, aIn->childNodes());
-    uint32_t nChildren(children->length());
-
-    for (uint32_t i = 0; i < nChildren; i++)
-    {
-      // Retrieve the child
-      RETURN_INTO_OBJREF(child, iface::dom::Node, children->item(i));
-
-      // Retrieve the type of the child
-      uint16_t childType = child->nodeType();
-      switch (childType)
-      {
-      case iface::dom::Node::ELEMENT_NODE:
-        {
-          // Make a copy of the element child
-          DECLARE_QUERY_INTERFACE_OBJREF(childElement, child, dom::Element);
-          RETURN_INTO_OBJREF(copiedChild, iface::dom::Element,
-                             CopyDomElement(childElement));
- 
-          // Append the element child
-          out->appendChild(copiedChild)->release_ref();
-          break;
-        }
-        
-      case iface::dom::Node::TEXT_NODE:
-        {
-          // Retrieve the value of the text child
-          RETURN_INTO_WSTRING(childValue, child->nodeValue());
-          RETURN_INTO_OBJREF(childText, iface::dom::Text, doc->createTextNode(childValue.c_str()));
-
-          // Append the text child
-          out->appendChild(childText)->release_ref();          
-          break;
-        }
-      }
-    }
-    
-    out->add_ref();
-    return out;
-  }
-
-  void telicem_error(iface::dom::Document *aDoc, TeLICeMStateScan *aLexer,
+  void telicem_error(TeLICeMStateScan *aLexer,
                      TeLICeMSParseTarget* aParseTarget,
                      const char *aMessage)
   {
@@ -789,7 +726,6 @@
   }
 %}
 
-%parse-param {iface::dom::Document *aDocument}
 %parse-param {TeLICeMStateScan *aLexer}
 %parse-param {TeLICeMSParseTarget *aParseTarget}
 
@@ -841,7 +777,6 @@
 %token T_THEN "then"
 %token T_TYPE "type"
 %token T_UNIT "unit"
-%token T_URI "uri"
 %token T_VAR "var"
 %token T_VARS "vars"
 %token T_WITH "with"
@@ -889,22 +824,25 @@ modellist: modellist T_DEF modeldefsomething {
   } | /* empty */ {};
 modeldefsomething: units | comp | group | map | import;
 
-import: importstart importlist T_ENDDEF ';' {
-  // Add the import definition to the model
-  static_cast<TeLICeMSParseCellML*>(aParseTarget)->mModel
-    ->addElement($1.element());
- };
+import: importstart importlist T_ENDDEF ';' { $$ = $2; };
 
-importstart: T_IMPORT T_URI T_AS {
+importstart: T_IMPORT T_QUOTED T_AS {
   // We are importing something, which means the model should be a CellML 1.1
   // model (as opposed to a CellML 1.0 model, which is what it is by default)
   RETURN_INTO_WSTRING(v, static_cast<TeLICeMSParseCellML*>(aParseTarget)->
                       mModel->cellmlVersion());
-
+                      
   if (v == L"1.0")
-    static_cast<TeLICeMSParseCellML*>(aParseTarget)->mModel
-      = already_AddRefd<iface::cellml_api::Model>(static_cast<TeLICeMSParseCellML*>(aParseTarget)->mModel->
-                                                  getAlternateVersion(L"1.1"));
+  {
+    RETURN_INTO_OBJREF(altVer, iface::cellml_api::Model,
+                       static_cast<TeLICeMSParseCellML*>(aParseTarget)->mModel->
+                       getAlternateVersion(L"1.1"));
+
+    static_cast<CDA_TeLICeMModelResult*>(
+      static_cast<CDA_TeLICeMResultBase*>(
+        static_cast<TeLICeMSParseCellML*>(aParseTarget)->mResult))->mModel = altVer;
+    static_cast<TeLICeMSParseCellML*>(aParseTarget)->mModel = altVer;
+  }
 
   // Create the import definition
   RETURN_INTO_OBJREF(imp,
@@ -925,8 +863,8 @@ importstart: T_IMPORT T_URI T_AS {
 };
 
 importlist: importlist importsomething {
-  $1.element()->addElement($2.element());
   $$ = $1;
+  $$.element()->addElement($2.element());
  } | /* empty */ { $$ = $0; };
 
 importsomething: importunit | importcomp;
@@ -970,7 +908,7 @@ unitsbody: T_BASE T_UNIT {
   // Make the units definition a base unit definition
   DECLARE_QUERY_INTERFACE_OBJREF(u, $0.element(), cellml_api::Units);
   u->isBaseUnits(true);
-} | T_DEF unitlist T_ENDDEF ';' ;
+} | T_DEF unitlist T_ENDDEF ;
 
 unitsstart: T_UNIT T_IDENTIFIER T_AS {
   // Create the units definition
@@ -999,9 +937,7 @@ unititemstart: T_UNIT T_IDENTIFIER {
   // Set the units that the unit item refers to
   std::wstring unitItemUnits($2.widestring());
   cellmlUnit->units(unitItemUnits.c_str());
-
-  // Add the unit item to the units definition
-  cellmlUnit->addElement(cellmlUnit);
+  $$.element(cellmlUnit);
 };
 
 unititemattributes: '{'  unitattributelist '}' |
@@ -1046,12 +982,14 @@ compstart: T_COMP T_IDENTIFIER T_AS {
   $$.element(component);
 };
 
-complistdefsomething: units | math | reaction;
+complistdefsomething: units { $-1.element()->addElement($1.element()); } | math {
+    DECLARE_QUERY_INTERFACE_OBJREF(mathCont, $-1.element(), cellml_api::MathContainer);
+    mathCont->addMath($1.mathMath());
+  } | reaction  { $-1.element()->addElement($1.element()); };
 complistsomething: T_DEF complistdefsomething { $$ = $2; }
-  | var;
+  | var { $0.element()->addElement($1.element()); };
 
 complist: complist complistsomething {
-  $1.element()->addElement($2.element());
   $$ = $1;
  } | /* empty */ { $$ = $0; };
 
@@ -1080,12 +1018,12 @@ varparams: '{' varparamlist '}'
 varparamlist: varparamlist ',' varparamitem
               | varparamitem { $$ = $-1; };
 
-varparamitem: T_INIT ',' varparamiteminitval {
+varparamitem: T_INIT ':' varparamiteminitval {
   // Set the initial value for the variable definition
   std::wstring ivText($3.widestring());
   DECLARE_QUERY_INTERFACE_OBJREF(cv, $-1.element(), cellml_api::CellMLVariable);
   cv->initialValue(ivText.c_str());
-} | T_PUB ',' T_INTERFACETYPE {
+} | T_PUB ':' T_INTERFACETYPE {
   // Set the public interface for the variable definition
   DECLARE_QUERY_INTERFACE_OBJREF(cv, $-1.element(), cellml_api::CellMLVariable);
   cv->publicInterface($3.variableInterfaceType());
@@ -1103,16 +1041,16 @@ varparamiteminitval: T_NUMBER {
 
 math: mathstart math_list T_ENDDEF ';' {
   $$ = $1;
-  for (std::list<iface::mathml_dom::MathMLContentElement*>::iterator i =
+  for (std::list<iface::mathml_dom::MathMLContentElement*>::const_iterator i =
          $2.mathList().begin(); i != $2.mathList().end(); i++)
-    $$.math()->appendChild(*i)->release_ref();
+    $$.mathMath()->appendChild(*i)->release_ref();
  };
 
 mathstart: T_MATH T_AS {
   // Create a math container...
   RETURN_INTO_OBJREF(mathel, iface::dom::Element,
                      static_cast<TeLICeMSParseCellML*>(aParseTarget)->mModel->createMathElement());
-  $$.mathFromDOM(mathel);
+  $$.mathMathFromDOM(mathel);
 };
 
 math_list: math_list math_expr ';' {
@@ -1127,12 +1065,12 @@ math_attrs: '{' math_attr_list '}' {
   $$.propertyMap(empty);
 };
 
-math_attr_list: math_attr_list2 math_attr | /* empty */ {
+math_attr_list: math_attr_list2 math_attr { $$ = $2; } | /* empty */ {
   std::map<std::string, std::string> empty;
   $$.propertyMap(empty);
 };
 
-math_attr_list2: math_attr_list2 math_attr ',' | /* empty */ {
+math_attr_list2: math_attr_list2 math_attr ',' { $$ = $2; } | /* empty */ {
   std::map<std::string, std::string> empty;
   $$.propertyMap(empty);
 };
@@ -1155,7 +1093,7 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
   if ($3.mOverrideBuiltin)
   {
     RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                       DoFunction($1.string(), $3.mathList(), aDocument,
+                       DoFunction($1.string(), $3.mathList(), aParseTarget,
                                   $2.propertyMap()));
     $$.math(m);
   }
@@ -1163,49 +1101,49 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
   {
     RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                        MakeCIOrConstant($1.string(), $1.mOverrideBuiltin,
-                                        $2.propertyMap(), aDocument));
+                                        $2.propertyMap(), aParseTarget));
     $$.math(m);
   }
 } | '(' math_expr ')' {
   $$ = $2;
 } | math_expr additive_op math_attrs math_expr %prec '+' {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     DoInorderExpression($2.string(), $1, $4, aDocument,
+                     DoInorderExpression($2.string(), $1, $4, aParseTarget,
                                          $3.propertyMap()));
   $$.math(m);
 } | math_expr multiplicative_op math_attrs math_expr %prec '*' {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     DoInorderExpression($2.string(), $1, $4, aDocument,
+                     DoInorderExpression($2.string(), $1, $4, aParseTarget,
                                          $3.propertyMap()));
   $$.math(m);
 } | math_expr comparative_op math_attrs math_expr %prec T_EQEQ {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     DoInorderExpression($2.string(), $1, $4, aDocument,
+                     DoInorderExpression($2.string(), $1, $4, aParseTarget,
                                          $3.propertyMap()));
   $$.math(m);
 } | math_expr T_AND math_attrs math_expr {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     DoInorderExpression("and", $1, $4, aDocument,
+                     DoInorderExpression("and", $1, $4, aParseTarget,
                                          $3.propertyMap()));
   $$.math(m);
 } | math_expr T_OR math_attrs math_expr {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     DoInorderExpression("or", $1, $4, aDocument,
+                     DoInorderExpression("or", $1, $4, aParseTarget,
                                          $3.propertyMap()));
   $$.math(m);
 } | T_NUMBER math_attrs {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     MakeConstant($1.number(), aDocument, $2.propertyMap()));
+                     MakeConstant($1.number(), aParseTarget, $2.propertyMap()));
   $$.math(m);
 } | T_PIECEWISE math_attrs '(' piecewise_case_list piecewise_maybe_else ')' {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      MakePiecewiseElement($4.mathList(), $5.math(),
-                                          $2.propertyMap(), aDocument));
+                                          $2.propertyMap(), aParseTarget));
   $$.math(m);
 } | unary_op math_attrs math_expr %prec T_NOT {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      MakePredefinedWrapElement($1.string(), $3.math(), $2.propertyMap(),
-                                               aDocument));
+                                               aParseTarget));
   $$.math(m);
 } | '+' math_expr %prec T_NOT {
   /* Alan Garny's version introduced unary '+' and had it create a MathML
@@ -1217,12 +1155,12 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
 } | T_DIFF math_expr ')' '/' T_DIFF math_expr math_possible_degree ')' math_attrs {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoDerivative(L"diff", $2.math(), $6.math(), $7.math(),
-                                  $9.propertyMap(), aDocument));
+                                  $9.propertyMap(), aParseTarget));
   $$.math(m);
 } | T_PARTIALDIFF math_expr ')' '/' T_PARTIALDIFF math_expr math_possible_degree ')' math_attrs {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoDerivative(L"partialdiff", $2.math(), $6.math(), $7.math(),
-                                  $9.propertyMap(), aDocument));
+                                  $9.propertyMap(), aParseTarget));
   $$.math(m);
 };
 
@@ -1236,8 +1174,8 @@ comparative_op: '=' { $$.string("eq"); } |
 unary_op: '-' { $$.string("minus"); } | T_NOT { $$.string("not"); };
 
 math_maybefunction_args: '(' math_function_arg_list ')' {
-  $$.mOverrideBuiltin = true;
   $$ = $2;
+  $$.mOverrideBuiltin = true;
 } | /* empty */ {
   $$.mOverrideBuiltin = false;
 };
@@ -1259,7 +1197,7 @@ piecewise_case_list: piecewise_case_list piecewise_case_pair {
 
 piecewise_case_pair: T_CASE math_attrs math_expr T_THEN math_expr {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     MakeCaseElement($3.math(), $5.math(), aDocument,
+                     MakeCaseElement($3.math(), $5.math(), aParseTarget,
                                      $2.propertyMap()));
   $$.math(m);
 };
@@ -1267,7 +1205,7 @@ piecewise_case_pair: T_CASE math_attrs math_expr T_THEN math_expr {
 piecewise_maybe_else: T_ELSE math_attrs math_expr {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      MakeOtherwiseElement($3.math(), $2.propertyMap(),
-                                          aDocument));
+                                          aParseTarget));
   $$.math(m);
 } | /* empty */ {
   $$.math(NULL);
@@ -1383,12 +1321,12 @@ group_type_start: T_TYPE T_IDENTIFIER group_maybenamespace {
                      ->createRelationshipRef());
 
   std::wstring name($2.widestring()), ns($3.widestring());
-  rr->setRelationshipName(name.c_str(), ns.c_str());
+  rr->setRelationshipName(ns.c_str(), name.c_str());
   $$.element(rr);
 };
 
 group_maybenamespace: T_NAMESPACE T_QUOTED { $$ = $2; } |
-/* empty */ { $$.string(""); }
+/* empty */ { $$.string(""); } ;
 
 group_type_attributes: T_WITH T_NAME T_IDENTIFIER {
   DECLARE_QUERY_INTERFACE_OBJREF(rr, $0.element(), cellml_api::RelationshipRef);
@@ -1418,7 +1356,6 @@ group_item_start: T_COMP T_IDENTIFIER {
   std::wstring componentRefName($2.widestring());
   cr->componentName(componentRefName.c_str());
   $$.element(cr);
-  $0.element()->addElement(cr);
 };
 
 map: map_start map_list T_ENDDEF ';';

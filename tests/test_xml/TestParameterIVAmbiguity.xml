@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<model xmlns="http://www.cellml.org/cellml/1.1#">
+<model name="TestPIVA" xmlns="http://www.cellml.org/cellml/1.1#">
 	<component name="component1">
 		<variable name="t" units="dimensionless"/>
 		<variable initial_value="0" name="y" units="dimensionless"/>

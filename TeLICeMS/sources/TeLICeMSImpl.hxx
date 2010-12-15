@@ -9,6 +9,9 @@
 #define yyFlexLexer TeLICeMFlexLexer
 #include "FlexLexer.h"
 
+#define MAGIC_NEWLINE 9999
+#define MAGIC_WHITESPACE 9998
+
 class CDA_TeLICeMResultBase
   : public virtual iface::cellml_services::TeLICeMResult
 {
@@ -90,6 +93,8 @@ public:
     return false;
   }
 
+  virtual iface::dom::Document* document() = 0;
+
   ObjRef<CDA_TeLICeMResultBase> mResult;
   int mRow, mColumn;
   int mGroupingLevel;
@@ -117,8 +122,14 @@ public:
     return ret;
   }
 
-  // Precondition: mModel guaranteed to outlive this object.
+  iface::dom::Document* document()
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(de, mModel, cellml_api::CellMLDOMElement);
+    RETURN_INTO_OBJREF(el, iface::dom::Element, de->domElement());
+    return el->ownerDocument();
+  }
 
+  // Precondition: mModel guaranteed to outlive this object.
   iface::cellml_api::Model* mModel;
 };
 
@@ -164,6 +175,11 @@ public:
   {
     DECLARE_QUERY_INTERFACE(ret, mResult, cellml_services::TeLICeMMathResult);
     return ret;
+  }
+
+  iface::dom::Document* document()
+  {
+    return mElement->ownerDocument();
   }
 
   // Precondition: mElement guaranteed to outlive this object.

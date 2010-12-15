@@ -4,6 +4,7 @@ BINDIR=`pwd`
 BASEDIR=`dirname $0`
 DIFF=diff
 TELICEMPARSE=$BINDIR/TestTeLICeMParser
+TELICEMSER=$BINDIR/TestTeLICeMSerialiser
 TEMPFILE=test_output
 
 if [[ ! -f "$TELICEMPARSE" ]]; then
@@ -13,6 +14,7 @@ fi
 
 if [[ -n $RUNNER ]]; then
     TELICEMPARSE="$RUNNER $BINDIR/.libs/TestTeLICeMParser.exe"
+    TELICEMPARSE="$RUNNER $BINDIR/.libs/TestTeLICeMSerialiser.exe"
 fi
 TELICEMPARSE="$TESTS_ENVIRONMENT $TELICEMPARSE"
 
@@ -35,6 +37,58 @@ function runtest()
   rm -f $TEMPFILE
 }
 
+TEMPFILE_TCM1=test_output_1.tcm
+TEMPFILE_CELLML1=test_output_1.cellml
+TEMPFILE_TCM2=test_output_2.tcm
+TEMPFILE_CELLML2=test_output_2.cellml
+TEMPFILE_TCM3=test_output_3.tcm
+function roundtrip()
+{
+  name=$1
+  rm -f $TEMPFILE_TCM1 $TEMPFILE_CELLML1 $TEMPFILE_TCM2 $TEMPFILE_CELLML2 $TEMPFILE_TCM3
+  # We do an initial round trip when we expect minor changes...
+  $TELICEMSER $BASEDIR/test_xml/$name.xml | tr -d "\r"  >$TEMPFILE_TCM1
+  $TELICEMPARSE $TEMPFILE_TCM1 | tr -d "\r" >$TEMPFILE_CELLML1
+  # We now have a baseline CellML to test against...
+  $TELICEMSER $TEMPFILE_CELLML1 | tr -d "\r" >$TEMPFILE_TCM2
+  $TELICEMPARSE $TEMPFILE_TCM2 | tr -d "\r" >$TEMPFILE_CELLML2
+  FAIL=0
+  $DIFF -bu $TEMPFILE_CELLML1 $TEMPFILE_CELLML2
+  if [[ $? -ne 0 ]]; then
+    FAIL=1
+  fi
+  $TELICEMSER $TEMPFILE_CELLML2 | tr -d "\r" >$TEMPFILE_TCM3
+  $DIFF -bu $TEMPFILE_TCM2 $TEMPFILE_TCM3
+  if [[ $? -ne 0 ]]; then
+    FAIL=1
+  fi
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name generated correct output.
+  rm -f $TEMPFILE_TCM1 $TEMPFILE_CELLML1 $TEMPFILE_TCM2 $TEMPFILE_CELLML2 $TEMPFILE_TCM3
+}
+
 runtest trivial
+roundtrip modified_parabola
+roundtrip underconstrained_1
+roundtrip overconstrained_1
+roundtrip newton_raphson_parabola
+roundtrip import_eqn
+roundtrip number-minus
+roundtrip units
+roundtrip units-import
+roundtrip units-import-import
+roundtrip units-in-imported-component
+roundtrip SimpleDAE_NonLinear
+roundtrip newton_raphson_parabola_overrideiv
+roundtrip StateModel
+roundtrip reset_rule
+roundtrip definite_integral
+roundtrip TestParameterIVAmbiguity
+roundtrip IVComputation
+roundtrip valid_cellml_1
 
 exit 0

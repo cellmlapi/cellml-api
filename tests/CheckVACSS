@@ -20,7 +20,7 @@ function runtest()
 {
   name=$1;
   rm -f $TEMPFILE;
-  $VACSS $BASEDIR/test_xml/$name.cellml | tr -d "\r" >$TEMPFILE
+  $VACSS $BASEDIR/test_xml/$name.xml | tr -d "\r" >$TEMPFILE
   FAIL=0
   $DIFF -bu $TEMPFILE $BASEDIR/validate_expected/$name.out
   if [[ $? -ne 0 ]]; then

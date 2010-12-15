@@ -25,7 +25,20 @@ public:
 
   RefCountList(const RefCountList<C>& aClone)
   {
-    for (typename std::list<C*>::iterator i(aClone.mList.begin());
+    for (typename std::list<C*>::const_iterator i(aClone.mList.begin());
+         i != aClone.mList.end();
+         i++)
+    {
+      (*i)->add_ref();
+      mList.push_back(*i);
+    }
+  }
+
+  void
+  operator=(const RefCountList<C>& aClone)
+  {
+    clear();
+    for (typename std::list<C*>::const_iterator i(aClone.mList.begin());
          i != aClone.mList.end();
          i++)
     {
@@ -42,10 +55,13 @@ public:
   void
   clear()
   {
-    for (typename std::list<C*>::iterator i = mList.begin();
-         i != mList.end(); i++)
-      (*i)->release_ref();
-    mList.clear();
+    while (!mList.empty())
+    {
+      // Written this way to be re-entrant...
+      C* item = mList.back();
+      mList.pop_back();
+      item->release_ref();
+    }
   }
 
   void
@@ -77,6 +93,7 @@ public:
     mString = "";
     mPropertyMap.clear();
     mMath = NULL;
+    mMathMath = NULL;
     mElement = NULL;
     mMathList.clear();
   }
@@ -171,7 +188,6 @@ public:
   void
   plusstring(char c)
   {
-    release_storage();
     if (mDifferentiator != String)
       throw iface::cellml_api::CellMLException();
     mString += c;
@@ -209,8 +225,8 @@ public:
     mData.mBoolean = aBool;
   }
 
-  std::map<std::string, std::string>
-  propertyMap() const
+  std::map<std::string, std::string>&
+  propertyMap()
   {
     if (mDifferentiator != PropertyMap)
       throw iface::cellml_api::CellMLException();
@@ -242,14 +258,7 @@ public:
     mMath = el;
   }
 
-  void
-  mathFromDOM(iface::dom::Element* el)
-  {
-    DECLARE_QUERY_INTERFACE_OBJREF(mathEl, el, mathml_dom::MathMLContentElement);
-    math(mathEl);
-  }
-
-  std::list<iface::mathml_dom::MathMLContentElement*>&
+  const std::list<iface::mathml_dom::MathMLContentElement*>&
   mathList()
   {
     if (mDifferentiator != MathList)
@@ -275,6 +284,30 @@ public:
   addToMathList(iface::mathml_dom::MathMLContentElement* aEl)
   {
     mMathList.add(aEl);
+  }
+
+  //
+  iface::mathml_dom::MathMLMathElement*
+  mathMath()
+  {
+    if (mDifferentiator != MathMath)
+      throw iface::cellml_api::CellMLException();
+    return mMathMath;
+  }
+
+  void
+  mathMath(iface::mathml_dom::MathMLMathElement* el)
+  {
+    release_storage();
+    mDifferentiator = MathMath;
+    mMathMath = el;
+  }
+
+  void
+  mathMathFromDOM(iface::dom::Element* el)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(mathMathEl, el, mathml_dom::MathMLMathElement);
+    mathMath(mathMathEl);
   }
 
   void
@@ -307,6 +340,7 @@ private:
     PropertyMap,
     Math,
     MathList,
+    MathMath,
     Element
   } mDifferentiator;
   union {
@@ -322,6 +356,7 @@ private:
   ObjRef<iface::mathml_dom::MathMLContentElement> mMath;
   ObjRef<iface::cellml_api::CellMLElement> mElement;
   RefCountList<iface::mathml_dom::MathMLContentElement> mMathList;
+  ObjRef<iface::mathml_dom::MathMLMathElement> mMathMath;
 };
 
 class TeLICeMStateScan

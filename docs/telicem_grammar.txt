@@ -1,0 +1,90 @@
+valid: model | math_expr ;
+model: T_DEF T_MODEL T_IDENTIFIER T_AS modellist T_ENDDEF ';' ;
+modellist: modellist T_DEF modeldefsomething | /* empty */ ;
+modeldefsomething: units | comp | group | map | import ;
+
+import: T_IMPORT T_QUOTED T_AS importlist T_ENDDEF ';' ;
+importlist: importlist importsomething | /* empty */ ;
+importsomething: importunit | importcomp;
+importunit: T_UNIT T_IDENTIFIER T_AS T_IDENTIFIER ';' ;
+importcomp: T_COMP T_IDENTIFIER T_AS T_IDENTIFIER ';' ;
+
+units: T_UNIT T_IDENTIFIER T_AS unitsbody ';' ;
+unitsbody: T_BASE T_UNIT | T_DEF unitlist T_ENDDEF ';' ;
+unitlist: unitlist unititem | /* empty */ ;
+unititem: T_UNIT T_IDENTIFIER unititemattributes ';' ;
+unititemattributes: '{'  unitattributelist '}' | /* empty */;
+unitattributelist: unitattributelist ',' unitattributeitem |
+                   unitattributeitem { $$ = $-1; };
+
+siPrefixOrNumber: T_SIPREFIX | T_NUMBER;
+unitattributeitem: T_PREF ':' siPrefixOrNumber | T_EXPO ':' T_NUMBER |
+                   T_MULT ':' T_NUMBER  | T_OFF ':' T_NUMBER;
+
+comp: T_COMP T_IDENTIFIER T_AS complist T_ENDDEF ';';
+
+complistdefsomething: units | math | reaction;
+complistsomething: T_DEF complistdefsomething | var;
+complist: complist complistsomething | /* empty */;
+
+var: T_VAR T_IDENTIFIER ':' T_IDENTIFIER varparams ';' ;
+
+varparams: '{' varparamlist '}' | /* empty */ ;
+varparamlist: varparamlist ',' varparamitem | varparamitem ;
+varparamitem: T_INIT ':' varparamiteminitval | T_PUB ':' T_INTERFACETYPE | T_PRIV ':' T_INTERFACETYPE ;
+varparamiteminitval: T_NUMBER | T_IDENTIFIER ;
+
+math: T_MATH T_AS math_list T_ENDDEF ';' ;
+math_list: math_list math_expr ';' | /* empty */ ;
+math_attrs: '{' math_attr_list '}' | /* empty */ ;
+math_attr_list: math_attr_list2 math_attr | /* empty */ ;
+math_attr_list2: math_attr_list2 math_attr ',' | /* empty */ ;
+math_attr: math_attr_id ':' math_attr_value ;
+math_attr_id: T_IDENTIFIER | T_QUOTED | T_BASE | T_TYPE | T_UNIT ;
+math_attr_value: T_QUOTED | T_IDENTIFIER | T_NUMBER ;
+math_expr: T_IDENTIFIER math_attrs math_maybefunction_args | '(' math_expr ')' |
+           math_expr additive_op math_attrs math_expr %prec '+' |
+           math_expr multiplicative_op math_attrs math_expr %prec '*' |
+           math_expr comparative_op math_attrs math_expr %prec T_EQEQ |
+           math_expr T_AND math_attrs math_expr | math_expr T_OR math_attrs math_expr |
+           T_NUMBER math_attrs |
+           T_PIECEWISE math_attrs '(' piecewise_case_list piecewise_maybe_else ')' |
+           unary_op math_attrs math_expr %prec T_NOT  | '+' math_expr %prec T_NOT |
+           T_DIFF math_expr ')' '/' T_DIFF math_expr math_possible_degree ')' math_attrs |
+           T_PARTIALDIFF math_expr ')' '/' T_PARTIALDIFF math_expr math_possible_degree ')' math_attrs ;
+additive_op: '+' | '-' ;
+multiplicative_op: '*'  | '/' ;
+comparative_op: '=' | T_EQEQ  | T_NEQ  | '<' | '>' |
+                T_GE | T_LE ;
+unary_op: '-' | T_NOT ;
+math_maybefunction_args: '(' math_function_arg_list ')' | /* empty */ ;
+math_function_arg_list: math_function_arg_list ',' math_expr | math_expr ;
+piecewise_case_list: piecewise_case_list piecewise_case_pair | /* empty */ ;
+piecewise_case_pair: T_CASE math_attrs math_expr T_THEN math_expr ;
+piecewise_maybe_else: T_ELSE math_attrs math_expr | /* empty */ ;
+math_possible_degree: ',' math_expr | /* empty */ ;
+
+reaction: T_REVERSIBILITY T_REACT T_FOR reaction_list T_ENDDEF ';' ;
+reaction_list: reaction_list reaction_statement | /* empty */ ;
+reaction_statement: T_VAR T_IDENTIFIER T_WITH role_list T_ENDVAR ';' ;
+role_list: role_list role | /* empty */ ;
+role: T_ROLE T_ROLETYPE role_attributes role_maybe_with ';' ;
+role_maybe_with: T_WITH role_math_statements T_ENDROLE | /* empty */ ;
+role_attributes: '{' role_attribute_list '}' | /* empty */ ;
+role_attribute_list: role_attribute_list ',' role_attribute_item | role_attribute_item ;
+role_attribute_item: T_DIR ':' T_DIRECTIONTYPE | T_DVAR ':' T_IDENTIFIER |
+                     T_STOICHIO ':' T_NUMBER ;
+role_math_statements: role_math_statements T_DEF math | /* empty */ ;
+
+group: T_GROUP T_AS group_types group_list T_ENDDEF ';' ;
+group_types: group_types group_type | /* empty */ ;
+group_type: T_TYPE T_IDENTIFIER group_maybenamespace group_type_attributes ';' ;
+group_maybenamespace: T_NAMESPACE T_QUOTED | /* empty */ ;
+group_type_attributes: T_WITH T_NAME T_IDENTIFIER | /* empty */ ;
+group_list: group_list group_item | /* empty */ ;
+group_item: T_COMP T_IDENTIFIER group_maybe_incl ';' ;
+group_maybe_incl: T_INCL group_list T_ENDCOMP | /* empty */ ;
+
+map: T_MAP T_BETWEEN T_IDENTIFIER T_AND T_IDENTIFIER T_FOR map_list T_ENDDEF ';';
+map_list: map_list map_item | /* empty */ ;
+map_item: T_VARS T_IDENTIFIER T_AND T_IDENTIFIER ';' ;

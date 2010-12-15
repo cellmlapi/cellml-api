@@ -1,0 +1,665 @@
+def model capillary_dynamics_CellML1_0_model as
+  def group as
+    type containment;
+    comp capillary_dynamics incl
+      comp capillary_membrane_dynamics incl
+        comp capillary_pressure;
+        comp rate_of_fluid_out_of_capillaries;
+      endcomp;
+      comp plasma_volume_and_protein incl
+        comp plasma_volume;
+        comp plasma_protein_concentration;
+        comp protein_destruction_and_formation;
+        comp plasma_leakage;
+        comp protein_influx_into_interstitium;
+        comp total_plasma_protein;
+        comp plasma_colloid_osmotic_pressure;
+      endcomp;
+      comp systemic_tissue_fluid_volume_and_protein incl
+        comp total_systemic_fluid_volume;
+        comp interstitial_fluid_volume;
+        comp total_interstitial_protein;
+        comp interstitial_protein_concentration;
+        comp interstitial_colloid_osmotic_pressure;
+        comp lymph_protein_flow;
+      endcomp;
+      comp tissue_gel_and_fluid_and_lymph_flow incl
+        comp hydrostatic_pressure_of_tissue_gel;
+        comp total_osmotic_pressure_of_tissue_gel;
+        comp total_tissue_pressure;
+        comp interstial_free_fluid_pressure;
+        comp interstitial_solid_tissue_pressure;
+        comp lymph_flow;
+        comp interstitial_gel_volume;
+        comp interstitial_free_fluid_volume;
+      endcomp;
+    endcomp;
+  enddef;
+  def group as
+    type encapsulation;
+    comp capillary_dynamics incl
+      comp parameter_values;
+      comp capillary_membrane_dynamics;
+      comp capillary_pressure;
+      comp rate_of_fluid_out_of_capillaries;
+      comp plasma_volume_and_protein;
+      comp plasma_volume;
+      comp plasma_protein_concentration;
+      comp protein_destruction_and_formation;
+      comp plasma_leakage;
+      comp protein_influx_into_interstitium;
+      comp total_plasma_protein;
+      comp plasma_colloid_osmotic_pressure;
+      comp systemic_tissue_fluid_volume_and_protein;
+      comp total_systemic_fluid_volume;
+      comp interstitial_fluid_volume;
+      comp total_interstitial_protein;
+      comp interstitial_protein_concentration;
+      comp interstitial_colloid_osmotic_pressure;
+      comp lymph_protein_flow;
+      comp tissue_gel_and_fluid_and_lymph_flow;
+      comp hydrostatic_pressure_of_tissue_gel;
+      comp total_osmotic_pressure_of_tissue_gel;
+      comp total_tissue_pressure;
+      comp interstial_free_fluid_pressure;
+      comp interstitial_solid_tissue_pressure;
+      comp lymph_flow;
+      comp interstitial_gel_volume;
+      comp interstitial_free_fluid_volume;
+    endcomp;
+  enddef;
+  def unit minute as def
+    unit second{expo:1, mult:60};
+  enddef;
+  def unit per_minute as def
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit mmHg as def
+    unit newton{expo:1, mult:133.322};
+    unit metre{expo:-2, mult:1};
+  enddef;
+  def unit per_mmHg as def
+    unit mmHg{expo:-1, mult:1};
+  enddef;
+  def unit mmHg_per_mL as def
+    unit mmHg{expo:1, mult:1};
+    unit mL{expo:-1, mult:1};
+  enddef;
+  def unit mmHg_L as def
+    unit mmHg{expo:1, mult:1};
+    unit litre{expo:1, mult:1};
+  enddef;
+  def unit per_mmHg2 as def
+    unit mmHg{expo:-2, mult:1};
+  enddef;
+  def unit mmHg3 as def
+    unit mmHg{expo:3, mult:1};
+  enddef;
+  def unit monovalent_mEq as def
+    unit mole{pref:milli, expo:1, mult:1};
+  enddef;
+  def unit monovalent_mEq_per_minute as def
+    unit mole{pref:milli, expo:1, mult:1};
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit monovalent_mEq_per_litre as def
+    unit mole{pref:milli, expo:1, mult:1};
+    unit litre{expo:-1, mult:1};
+  enddef;
+  def unit monovalent_mEq_per_litre_per_minute as def
+    unit mole{pref:milli, expo:1, mult:1};
+    unit litre{expo:-1, mult:1};
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit litre2_per_monovalent_mEq_per_minute as def
+    unit litre{expo:2, mult:1};
+    unit mole{pref:milli, expo:-1, mult:1};
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit L_per_minute as def
+    unit litre{expo:1, mult:1};
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit mL as def
+    unit litre{pref:milli, expo:1, mult:1};
+  enddef;
+  def unit gram_per_L as def
+    unit gram{expo:1, mult:1};
+    unit litre{expo:-1, mult:1};
+  enddef;
+  def unit L_mmHg_per_gram as def
+    unit litre{expo:1, mult:1};
+    unit mmHg{expo:1, mult:1};
+    unit gram{expo:-1, mult:1};
+  enddef;
+  def unit L2_mmHg_per_gram2 as def
+    unit litre{expo:2, mult:1};
+    unit mmHg{expo:1, mult:1};
+    unit gram{expo:-2, mult:1};
+  enddef;
+  def unit mmHg_minute_per_L as def
+    unit minute{expo:1, mult:1};
+    unit mmHg{expo:1, mult:1};
+    unit litre{expo:-1, mult:1};
+  enddef;
+  def unit gram_per_minute as def
+    unit gram{expo:1, mult:1};
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit mL_per_L as def
+    unit litre{pref:milli, expo:1, mult:1};
+    unit litre{expo:-1, mult:1};
+  enddef;
+  def unit mL_per_L_per_mmHg as def
+    unit litre{pref:milli, expo:1, mult:1};
+    unit litre{expo:-1, mult:1};
+    unit mmHg{expo:-1, mult:1};
+  enddef;
+  def unit mL_per_L_per_minute as def
+    unit litre{pref:milli, expo:1, mult:1};
+    unit litre{expo:-1, mult:1};
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit mL_per_minute_per_mmHg as def
+    unit litre{pref:milli, expo:1, mult:1};
+    unit minute{expo:-1, mult:1};
+    unit mmHg{expo:-1, mult:1};
+  enddef;
+  def unit L_mL_per_minute_per_mmHg as def
+    unit litre{expo:1, mult:1};
+    unit litre{pref:milli, expo:1, mult:1};
+    unit minute{expo:-1, mult:1};
+    unit mmHg{expo:-1, mult:1};
+  enddef;
+  def unit L_per_mL as def
+    unit litre{pref:milli, expo:-1, mult:1};
+    unit litre{expo:1, mult:1};
+  enddef;
+  def unit mL_per_minute as def
+    unit mL{expo:1, mult:1};
+    unit minute{expo:-1, mult:1};
+  enddef;
+  def unit L_per_minute_per_mmHg as def
+    unit litre{expo:1, mult:1};
+    unit minute{expo:-1, mult:1};
+    unit mmHg{expo:-1, mult:1};
+  enddef;
+  def comp environment as
+    var time : minute { pub: out };
+  enddef;
+  def comp capillary_dynamics as
+    var time : minute { pub: in, priv: out };
+    var VEC : litre { init: 14.8548, priv: out };
+    var PPD : gram_per_minute { init: 4.4805e-06, priv: out };
+    var RVS : mmHg_minute_per_L { init: 2.77751, priv: out };
+    var DFP : L_per_minute { init: -4.078e-07, priv: out };
+    var VPF : litre { init: 0.0123238, priv: out };
+    var BFN : L_per_minute { init: 2.79521, priv: out };
+    var PVS : mmHg { init: 3.71612, priv: out };
+  enddef;
+  def comp capillary_membrane_dynamics as
+  enddef;
+  def comp capillary_pressure as
+    var RVS : mmHg_minute_per_L { pub: in };
+    var BFN : L_per_minute { pub: in };
+    var PVS : mmHg { pub: in };
+    var time : minute { pub: in };
+    var PC : mmHg { pub: out };
+    def math as
+      PC ={id: "CP1_and_CP2"} (RVS * 1.7{units: "dimensionless"} * BFN + PVS);
+    enddef;
+  enddef;
+  def comp rate_of_fluid_out_of_capillaries as
+    var PC : mmHg { pub: in };
+    var PGH : mmHg { pub: in };
+    var PTC : mmHg { pub: in };
+    var PPC : mmHg { pub: in };
+    var VTCPL : L_per_minute { pub: in };
+    var VTC : L_per_minute { pub: out };
+    var CFC : L_per_minute_per_mmHg { pub: in };
+    def math as
+      VTC ={id: "CP3_to_CP5"} ((PC - PPC - PGH + PTC) * CFC + VTCPL);
+    enddef;
+  enddef;
+  def comp plasma_volume_and_protein as
+  enddef;
+  def comp plasma_volume as
+    var DFP : L_per_minute { pub: in };
+    var VTC : L_per_minute { pub: in };
+    var VTL : L_per_minute { pub: in };
+    var time : minute { pub: in };
+    var VP : litre { init: 3.00449, pub: out };
+    var TRPL : L_per_minute { pub: in };
+    var VPD : L_per_minute;
+    def math as
+      VPD ={id: "CP10"} (VTL - VTC - DFP + TRPL);
+      d(VP)/d(unknown-element) ={id: "CP11"} VPD;
+    enddef;
+  enddef;
+  def comp plasma_protein_concentration as
+    var PRP : gram { pub: in };
+    var VP : litre { pub: in };
+    var CPP : gram_per_L { pub: out };
+    def math as
+      CPP ={id: "CP35"} (PRP / VP);
+    enddef;
+  enddef;
+  def comp protein_destruction_and_formation as
+    var CPP : gram_per_L { pub: in };
+    var DLP : gram_per_minute { pub: out };
+    var CPR : gram_per_L { pub: in };
+    var LPPR : gram_per_minute { pub: in };
+    var LPDE : dimensionless { pub: in };
+    var LPK : L_per_minute { pub: in };
+    var CPPD : gram_per_L;
+    def math as
+      CPPD ={id: "CP37_and_CP38"} piecewise(
+        case (CPP - CPR) < 0{units: "gram_per_L"} then 0{units: "gram_per_L"}
+        else CPP - CPR
+      );
+      DLP ={id: "CP39_to_CP41"} (LPPR - power(CPPD, 1{units: "dimensionless"}) * LPK);
+    enddef;
+  enddef;
+  def comp plasma_leakage as
+    var PC : mmHg { pub: in };
+    var VTCPL : L_per_minute { pub: out };
+    var PCR : mmHg { pub: in };
+    var CPK : L_per_minute_per_mmHg { pub: in };
+    var PCE : dimensionless { pub: in };
+    var PRCD : mmHg;
+    def math as
+      PRCD ={id: "CP25_and_CP26"} piecewise(
+        case (PC - PCR) < 0{units: "mmHg"} then 0{units: "mmHg"}
+        else PC - PCR
+      );
+      VTCPL ={id: "CP27_and_CP28"} power(PRCD * CPK, 1{units: "dimensionless"});
+    enddef;
+  enddef;
+  def comp protein_influx_into_interstitium as
+    var VTCPL : L_per_minute { pub: in };
+    var CPP : gram_per_L { pub: in };
+    var CPI : gram_per_L { pub: in };
+    var DPC : gram_per_minute { pub: out };
+    def math as
+      DPC ={id: "CP29_to_CP32"} (VTCPL * CPP + (CPP - CPI) * 0.00104{units: "L_per_minute"});
+    enddef;
+  enddef;
+  def comp total_plasma_protein as
+    var DPC : gram_per_minute { pub: in };
+    var PPD : gram_per_minute { pub: in };
+    var DPL : gram_per_minute { pub: in };
+    var DLP : gram_per_minute { pub: in };
+    var time : minute { pub: in };
+    var PRP : gram { init: 216.243, pub: out };
+    var TRPL : L_per_minute { pub: in };
+    var DPP : gram_per_minute;
+    def math as
+      DPP ={id: "CP33"} (DLP + DPL - DPC - PPD + TRPL * 72{units: "gram_per_L"});
+      d(PRP)/d(unknown-element) ={id: "CP34"} DPP;
+    enddef;
+  enddef;
+  def comp plasma_colloid_osmotic_pressure as
+    var CPP : gram_per_L { pub: in };
+    var PPC : mmHg { pub: out };
+    def math as
+      PPC ={id: "CP36"} (0.28{units: "L_mmHg_per_gram"} * CPP + 0.0019{units: "L2_mmHg_per_gram2"} * power(CPP, 2{units: "dimensionless"}));
+    enddef;
+  enddef;
+  def comp systemic_tissue_fluid_volume_and_protein as
+  enddef;
+  def comp total_systemic_fluid_volume as
+    var VEC : litre { pub: in };
+    var VP : litre { pub: in };
+    var VPF : litre { pub: in };
+    var VTS : litre { pub: out };
+    def math as
+      VTS ={id: "CP6"} (VEC - VP - VPF);
+    enddef;
+  enddef;
+  def comp interstitial_fluid_volume as
+    var VTS : litre { pub: in };
+    var time : minute { pub: in };
+    var VTS1 : litre { pub: out };
+    var TSSLML : dimensionless { pub: in };
+    var TSSLTC : per_minute { pub: in };
+    var VTS2 : litre { init: 0 };
+    def math as
+      d(VTS2)/d(unknown-element) ={id: "CP7_to_CP7D"} (((VTS - 12{units: "litre"}) * TSSLML - VTS2) * TSSLTC);
+      VTS1 ={id: "CP7E"} (VTS - VTS2);
+    enddef;
+  enddef;
+  def comp total_interstitial_protein as
+    var DPC : gram_per_minute { pub: in };
+    var DPL : gram_per_minute { pub: in };
+    var time : minute { pub: in };
+    var TSP : gram { init: 279.945, pub: out };
+    var DPI : gram_per_minute;
+    def math as
+      DPI ={id: "CP42"} (DPC - DPL);
+      d(TSP)/d(unknown-element) ={id: "CP43"} DPI;
+    enddef;
+  enddef;
+  def comp interstitial_protein_concentration as
+    var TSP : gram { pub: in };
+    var VTS : litre { pub: in };
+    var CPI : gram_per_L { pub: out };
+    def math as
+      CPI ={id: "CP44"} (TSP / VTS);
+    enddef;
+  enddef;
+  def comp interstitial_colloid_osmotic_pressure as
+    var CPI : gram_per_L { pub: in };
+    var PTCPR : mmHg { pub: out };
+    def math as
+      PTCPR ={id: "CP45"} (0.28{units: "L_mmHg_per_gram"} * CPI + 0.0019{units: "L2_mmHg_per_gram2"} * power(CPI, 2{units: "dimensionless"}));
+    enddef;
+  enddef;
+  def comp lymph_protein_flow as
+    var CPI : gram_per_L { pub: in };
+    var VTL : L_per_minute { pub: in };
+    var DPL : gram_per_minute { pub: out };
+    def math as
+      DPL ={id: "CP46"} (CPI * VTL);
+    enddef;
+  enddef;
+  def comp tissue_gel_and_fluid_and_lymph_flow as
+  enddef;
+  def comp hydrostatic_pressure_of_tissue_gel as
+    var VTS : litre { pub: in };
+    var PTT : mmHg { pub: in };
+    var CHY : gram_per_L { pub: out };
+    var PGH : mmHg { pub: out };
+    var HYL : gram { pub: in };
+    var CMPTSS : dimensionless { pub: in };
+    var PGHF : L_mmHg_per_gram { pub: in };
+    def math as
+      CHY ={id: "CP13_and_CP14"} power(HYL / VTS / 5{units: "dimensionless"}, 1{units: "dimensionless"});
+      PGH ={id: "CP15_and_CP16"} (CHY * PGHF + PTT);
+    enddef;
+  enddef;
+  def comp total_osmotic_pressure_of_tissue_gel as
+    var CHY : gram_per_L { pub: in };
+    var PTCPR : mmHg { pub: in };
+    var POSHYL : mmHg { pub: out };
+    var PTC : mmHg { pub: out };
+    var GCOPF : per_mmHg { pub: in };
+    def math as
+      POSHYL ={id: "CP17"} (CHY * 2{units: "L_mmHg_per_gram"});
+      PTC ={id: "CP18"} (POSHYL * PTCPR * GCOPF);
+    enddef;
+  enddef;
+  def comp total_tissue_pressure as
+    var VTS1 : litre { pub: in };
+    var PTT : mmHg { pub: out };
+    var VTSF : litre { pub: in };
+    def math as
+      PTT ={id: "CP12"} (power((VTS1 - VTSF) / VTSF, 2{units: "dimensionless"}) * 1{units: "mmHg"});
+    enddef;
+  enddef;
+  def comp interstial_free_fluid_pressure as
+    var PGH : mmHg { pub: in };
+    var POSHYL : mmHg { pub: in };
+    var PIF : mmHg { pub: out };
+    def math as
+      PIF ={id: "CP19"} (PGH - POSHYL);
+    enddef;
+  enddef;
+  def comp interstitial_solid_tissue_pressure as
+    var PIF : mmHg { pub: in };
+    var PTT : mmHg { pub: in };
+    var PTS : mmHg { pub: out };
+    def math as
+      PTS ={id: "CP20"} (PTT - PIF);
+    enddef;
+  enddef;
+  def comp lymph_flow as
+    var PIF : mmHg { pub: in };
+    var PTT : mmHg { pub: in };
+    var VTL : L_per_minute { pub: out };
+    var PLDF : mmHg { pub: in };
+    var PLD1 : mmHg;
+    var PLD : mmHg;
+    def math as
+      PLD1 ={id: "CP21"} (PIF + PLDF - PTT);
+      PLD ={id: "CP22"} piecewise(
+        case PLD1 > 7{units: "mmHg"} then 7{units: "mmHg"}
+        else PLD1
+      );
+      VTL ={id: "CP23_and_CP24"} piecewise(
+        case PLD < 0{units: "mmHg"} then 0{units: "L_per_minute"}
+        else PLD * 0.02{units: "L_per_minute_per_mmHg"}
+      );
+    enddef;
+  enddef;
+  def comp interstitial_gel_volume as
+    var VTS : litre { pub: in };
+    var VG : litre { pub: out };
+    def math as
+      VG ={id: "CP8"} piecewise(
+        case VTS <= 0{units: "litre"} then 0{units: "litre"}
+        case VTS > 0{units: "litre"} and VTS <= 12{units: "litre"} then 0{units: "litre"} + (11.4{units: "dimensionless"} - 0{units: "dimensionless"}) * (VTS - 0{units: "litre"}) / (12{units: "dimensionless"} - 0{units: "dimensionless"})
+        case VTS > 12{units: "litre"} and VTS <= 15{units: "litre"} then 11.4{units: "litre"} + (14{units: "dimensionless"} - 11.4{units: "dimensionless"}) * (VTS - 12{units: "litre"}) / (15{units: "dimensionless"} - 12{units: "dimensionless"})
+        case VTS > 15{units: "litre"} and VTS <= 18{units: "litre"} then 14{units: "litre"} + (16{units: "dimensionless"} - 14{units: "dimensionless"}) * (VTS - 15{units: "litre"}) / (18{units: "dimensionless"} - 15{units: "dimensionless"})
+        case VTS > 18{units: "litre"} and VTS <= 21{units: "litre"} then 16{units: "litre"} + (17.3{units: "dimensionless"} - 16{units: "dimensionless"}) * (VTS - 18{units: "litre"}) / (21{units: "dimensionless"} - 18{units: "dimensionless"})
+        case VTS > 21{units: "litre"} and VTS <= 24{units: "litre"} then 17.3{units: "litre"} + (18{units: "dimensionless"} - 17.3{units: "dimensionless"}) * (VTS - 21{units: "litre"}) / (24{units: "dimensionless"} - 21{units: "dimensionless"})
+        else 18{units: "litre"}
+      );
+    enddef;
+  enddef;
+  def comp interstitial_free_fluid_volume as
+    var VTS : litre { pub: in };
+    var VG : litre { pub: in };
+    var VIF : litre { pub: out };
+    def math as
+      VIF ={id: "CP9"} (VTS - VG);
+    enddef;
+  enddef;
+  def comp parameter_values as
+    var CFC : L_per_minute_per_mmHg { init: 0.01167, pub: out };
+    var TRPL : L_per_minute { init: 0, pub: out };
+    var CPR : gram_per_L { init: 40, pub: out };
+    var LPDE : dimensionless { init: 8, pub: out };
+    var PCE : dimensionless { init: 1, pub: out };
+    var PCR : mmHg { init: 15, pub: out };
+    var LPK : L_per_minute { init: 2.728e-14, pub: out };
+    var LPPR : gram_per_minute { init: 0.03, pub: out };
+    var CPK : L_per_minute_per_mmHg { init: 0.000253, pub: out };
+    var TSSLML : dimensionless { init: 0.15, pub: out };
+    var TSSLTC : per_minute { init: 0.005, pub: out };
+    var HYL : gram { init: 60, pub: out };
+    var CMPTSS : dimensionless { init: 2, pub: out };
+    var PGHF : L_mmHg_per_gram { init: -2, pub: out };
+    var GCOPF : per_mmHg { init: 0.8092, pub: out };
+    var VTSF : litre { init: 6, pub: out };
+    var PLDF : mmHg { init: 4.2, pub: out };
+  enddef;
+  def map between capillary_dynamics and environment for
+    vars time and time;
+  enddef;
+  def map between capillary_pressure and capillary_dynamics for
+    vars RVS and RVS;
+    vars BFN and BFN;
+    vars PVS and PVS;
+    vars time and time;
+  enddef;
+  def map between rate_of_fluid_out_of_capillaries and capillary_pressure for
+    vars PC and PC;
+  enddef;
+  def map between rate_of_fluid_out_of_capillaries and hydrostatic_pressure_of_tissue_gel for
+    vars PGH and PGH;
+  enddef;
+  def map between rate_of_fluid_out_of_capillaries and total_osmotic_pressure_of_tissue_gel for
+    vars PTC and PTC;
+  enddef;
+  def map between rate_of_fluid_out_of_capillaries and plasma_colloid_osmotic_pressure for
+    vars PPC and PPC;
+  enddef;
+  def map between rate_of_fluid_out_of_capillaries and plasma_leakage for
+    vars VTCPL and VTCPL;
+  enddef;
+  def map between rate_of_fluid_out_of_capillaries and parameter_values for
+    vars CFC and CFC;
+  enddef;
+  def map between plasma_volume and capillary_dynamics for
+    vars DFP and DFP;
+    vars time and time;
+  enddef;
+  def map between plasma_volume and rate_of_fluid_out_of_capillaries for
+    vars VTC and VTC;
+  enddef;
+  def map between plasma_volume and lymph_flow for
+    vars VTL and VTL;
+  enddef;
+  def map between plasma_volume and parameter_values for
+    vars TRPL and TRPL;
+  enddef;
+  def map between plasma_protein_concentration and total_plasma_protein for
+    vars PRP and PRP;
+  enddef;
+  def map between plasma_protein_concentration and plasma_volume for
+    vars VP and VP;
+  enddef;
+  def map between protein_destruction_and_formation and plasma_protein_concentration for
+    vars CPP and CPP;
+  enddef;
+  def map between protein_destruction_and_formation and parameter_values for
+    vars CPR and CPR;
+    vars LPPR and LPPR;
+    vars LPDE and LPDE;
+    vars LPK and LPK;
+  enddef;
+  def map between plasma_leakage and capillary_pressure for
+    vars PC and PC;
+  enddef;
+  def map between plasma_leakage and parameter_values for
+    vars PCR and PCR;
+    vars CPK and CPK;
+    vars PCE and PCE;
+  enddef;
+  def map between protein_influx_into_interstitium and plasma_leakage for
+    vars VTCPL and VTCPL;
+  enddef;
+  def map between protein_influx_into_interstitium and plasma_protein_concentration for
+    vars CPP and CPP;
+  enddef;
+  def map between protein_influx_into_interstitium and interstitial_protein_concentration for
+    vars CPI and CPI;
+  enddef;
+  def map between total_plasma_protein and protein_influx_into_interstitium for
+    vars DPC and DPC;
+  enddef;
+  def map between total_plasma_protein and lymph_protein_flow for
+    vars DPL and DPL;
+  enddef;
+  def map between total_plasma_protein and protein_destruction_and_formation for
+    vars DLP and DLP;
+  enddef;
+  def map between total_plasma_protein and capillary_dynamics for
+    vars PPD and PPD;
+    vars time and time;
+  enddef;
+  def map between total_plasma_protein and parameter_values for
+    vars TRPL and TRPL;
+  enddef;
+  def map between plasma_colloid_osmotic_pressure and plasma_protein_concentration for
+    vars CPP and CPP;
+  enddef;
+  def map between total_systemic_fluid_volume and capillary_dynamics for
+    vars VEC and VEC;
+    vars VPF and VPF;
+  enddef;
+  def map between total_systemic_fluid_volume and plasma_volume for
+    vars VP and VP;
+  enddef;
+  def map between interstitial_fluid_volume and total_systemic_fluid_volume for
+    vars VTS and VTS;
+  enddef;
+  def map between interstitial_fluid_volume and capillary_dynamics for
+    vars time and time;
+  enddef;
+  def map between interstitial_fluid_volume and parameter_values for
+    vars TSSLML and TSSLML;
+    vars TSSLTC and TSSLTC;
+  enddef;
+  def map between total_interstitial_protein and lymph_protein_flow for
+    vars DPL and DPL;
+  enddef;
+  def map between total_interstitial_protein and protein_influx_into_interstitium for
+    vars DPC and DPC;
+  enddef;
+  def map between total_interstitial_protein and capillary_dynamics for
+    vars time and time;
+  enddef;
+  def map between interstitial_protein_concentration and total_interstitial_protein for
+    vars TSP and TSP;
+  enddef;
+  def map between interstitial_protein_concentration and total_systemic_fluid_volume for
+    vars VTS and VTS;
+  enddef;
+  def map between interstitial_colloid_osmotic_pressure and interstitial_protein_concentration for
+    vars CPI and CPI;
+  enddef;
+  def map between lymph_protein_flow and interstitial_protein_concentration for
+    vars CPI and CPI;
+  enddef;
+  def map between lymph_protein_flow and lymph_flow for
+    vars VTL and VTL;
+  enddef;
+  def map between hydrostatic_pressure_of_tissue_gel and total_tissue_pressure for
+    vars PTT and PTT;
+  enddef;
+  def map between hydrostatic_pressure_of_tissue_gel and total_systemic_fluid_volume for
+    vars VTS and VTS;
+  enddef;
+  def map between hydrostatic_pressure_of_tissue_gel and parameter_values for
+    vars HYL and HYL;
+    vars CMPTSS and CMPTSS;
+    vars PGHF and PGHF;
+  enddef;
+  def map between total_osmotic_pressure_of_tissue_gel and hydrostatic_pressure_of_tissue_gel for
+    vars CHY and CHY;
+  enddef;
+  def map between total_osmotic_pressure_of_tissue_gel and interstitial_colloid_osmotic_pressure for
+    vars PTCPR and PTCPR;
+  enddef;
+  def map between total_osmotic_pressure_of_tissue_gel and parameter_values for
+    vars GCOPF and GCOPF;
+  enddef;
+  def map between total_tissue_pressure and interstitial_fluid_volume for
+    vars VTS1 and VTS1;
+  enddef;
+  def map between total_tissue_pressure and parameter_values for
+    vars VTSF and VTSF;
+  enddef;
+  def map between interstial_free_fluid_pressure and total_osmotic_pressure_of_tissue_gel for
+    vars POSHYL and POSHYL;
+  enddef;
+  def map between interstial_free_fluid_pressure and hydrostatic_pressure_of_tissue_gel for
+    vars PGH and PGH;
+  enddef;
+  def map between interstitial_solid_tissue_pressure and interstial_free_fluid_pressure for
+    vars PIF and PIF;
+  enddef;
+  def map between interstitial_solid_tissue_pressure and total_tissue_pressure for
+    vars PTT and PTT;
+  enddef;
+  def map between lymph_flow and interstial_free_fluid_pressure for
+    vars PIF and PIF;
+  enddef;
+  def map between lymph_flow and total_tissue_pressure for
+    vars PTT and PTT;
+  enddef;
+  def map between lymph_flow and parameter_values for
+    vars PLDF and PLDF;
+  enddef;
+  def map between interstitial_gel_volume and total_systemic_fluid_volume for
+    vars VTS and VTS;
+  enddef;
+  def map between interstitial_free_fluid_volume and total_systemic_fluid_volume for
+    vars VTS and VTS;
+  enddef;
+  def map between interstitial_free_fluid_volume and interstitial_gel_volume for
+    vars VG and VG;
+  enddef;
+enddef;
+

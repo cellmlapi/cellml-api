@@ -15,6 +15,8 @@
 
 %{
 #include "TeLICeMStateScan.hxx"
+#define MAGIC_NEWLINE 9999
+#define MAGIC_WHITESPACE 9998
 %}
 
 /*
@@ -33,8 +35,8 @@
 
 %%
 
-[ \t\r\f]+ /* Ignore */
-\n newRow();
+[ \t\r\f]+ return MAGIC_WHITESPACE;
+\n return MAGIC_NEWLINE;
 
   /* Reaction role types */
 reactant {
@@ -290,70 +292,6 @@ with return T_WITH;
 (\-)?[0-9]+(\.[0-9]*)?((E|e)(\-|\+)?[0-9]+)? {
   mLValue->number(strtod(YYText(), NULL));
   return T_NUMBER;
-}
-
-  /* XXX Move most of this to the parser? */
-\{[ \t\n]*uri[ \t\n]*\:[ \t\n]*([^:/?# \t\n]+:)?(\/\/[^/?# \t\n]*)?[^?# \t\n]*(\?[^# \t\n]*)?(#[^ \t\n]*)?[ \t\n]*\} {
-  /*
-   * The problem with URIs is to find a rule that can distinguish them from the
-   * rest and that's where the problem lies since URIs can be made of any kind
-   * of character. Now, what we do here is that we assume that the '}'
-   * character is not critical/essential when it comes to URIs (is that a safe
-   * assumption?!). As a result the above rule will allow to extract something
-   * like
-   *
-   *   {uri: mymodel.cellml}
-   *
-   * This means that we need to strip a few things, so that we can end up with
-   * something like
-   *
-   *   mymodel.cellml
-   */
-  const char* p = YYText();
-  // Skip '{'
-  p++;
-  // Skip whitespace...
-  while (*p == ' ' || *p == '\t' || *p == '\n')
-  {
-    if (*p == '\n')
-    {
-      newRow();
-      // mTarget->mColumn = yyleng - (p - YYText()) - 1;
-    }
-    p++;
-  }
-  // Skip uri
-  p += 3;
-  // Skip whitespace...
-  while (*p == ' ' || *p == '\t' || *p == '\n')
-  {
-    if (*p == '\n')
-    {
-      newRow();
-      // mTarget->mColumn = yyleng - (p - YYText()) - 1;
-    }
-    p++;
-  }
-  // Skip ':'
-  p++;
-  // Skip whitespace...
-  while (*p == ' ' || *p == '\t' || *p == '\n')
-  {
-    if (*p == '\n')
-    {
-      newRow();
-      // mTarget->mColumn = yyleng - (p - YYText()) - 1;
-    }
-    p++;
-  }
-  const char* uri = p;
-  // Find the end of the URI...
-  while (*p != ' ' && *p != '\n' && *p != '\t' && *p != 0)
-    p++;
-  *(const_cast<char*>(p)) = 0;
-
-  mLValue->string(uri);
-  return T_URI;
 }
 
 . return YYText()[0];

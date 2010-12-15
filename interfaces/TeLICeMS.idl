@@ -68,7 +68,7 @@ module cellml_services
     /**
      * Converts MathML into the TeLICeM text representation.
      */
-    wstring showMaths(in mathml_dom::MathMLElement aEl);
+    wstring showMaths(in mathml_dom::MathMLContentElement aEl);
   };
 #pragma terminal-interface
 };

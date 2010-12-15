@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<model xmlns="http://www.cellml.org/cellml/1.1#">
+<model name="StateModel" xmlns="http://www.cellml.org/cellml/1.1#">
   <component name="mainComp">
     <variable name="time" units="second"/>
     <variable name="x" initial_value="0" units="dimensionless"/>
