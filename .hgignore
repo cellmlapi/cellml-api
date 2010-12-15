@@ -38,6 +38,6 @@ interfaces/docs
 .*\.tab.cc
 .*\.tab.hh
 TAGS
-TeLICemScanner.cpp
+TeLICeMScanner.cpp
 TestTeLICeMParser
 TestTeLICeMSerialiser
