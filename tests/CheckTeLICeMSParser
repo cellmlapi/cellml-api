@@ -53,6 +53,14 @@ function roundtrip()
   $TELICEMSER $TEMPFILE_CELLML1 | tr -d "\r" >$TEMPFILE_TCM2
   $TELICEMPARSE $TEMPFILE_TCM2 | tr -d "\r" >$TEMPFILE_CELLML2
   FAIL=0
+
+  if [[ -f $BASEDIR/test_xml/$name-aftertelicem.xml ]]; then
+    $DIFF -bu $TEMPFILE_CELLML2 $BASEDIR/test_xml/$name-aftertelicem.xml
+    if [[ $? -ne 0 ]]; then
+      FAIL=1
+    fi
+  fi
+
   $DIFF -bu $TEMPFILE_CELLML1 $TEMPFILE_CELLML2
   if [[ $? -ne 0 ]]; then
     FAIL=1

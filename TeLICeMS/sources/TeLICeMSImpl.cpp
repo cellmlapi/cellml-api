@@ -730,7 +730,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
           RETURN_INTO_WSTRING(units1, mcne->getAttributeNS(CELLML_1_1_NS, L"units"));
           units = units1;
         }
-        attrs.insert(std::pair<std::wstring, std::wstring>(L"units", units));
+        attrs.insert(std::pair<std::wstring, std::wstring>(L"unit", units));
 
         AddContentTokenAttributes(mcne, attrs);
         txt += ShowAttributes(attrs);
