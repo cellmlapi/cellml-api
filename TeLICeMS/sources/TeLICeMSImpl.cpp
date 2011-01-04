@@ -86,7 +86,7 @@ CDA_TeLICeMService::parseMaths(iface::dom::Document* aDoc, const wchar_t* aMathT
 
   size_t l = wcslen(aMathText);
   char* s = new char[l + 1];
-  if (wcstombs(s, aMathText, l) != l)
+  if (wcstombs(s, aMathText, l + 1) != l)
   {
     delete [] s;
     res->addMessage(L"The input math text could not be converted to UTF8.");

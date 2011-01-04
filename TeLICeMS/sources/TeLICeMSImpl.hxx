@@ -142,8 +142,6 @@ public:
   {
   }
 
-  CDA_IMPL_REFCOUNT;
-  CDA_IMPL_ID;
   CDA_IMPL_QI2(cellml_services::TeLICeMResult, cellml_services::TeLICeMMathResult);
 
   iface::mathml_dom::MathMLMathElement*
