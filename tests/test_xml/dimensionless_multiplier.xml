@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<model xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.0/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" name="isolated" cmeta:id="isolated">
+  <units name="per_s">
+    <unit units="second" exponent="-1"/>
+  </units>
+  <units name="M">
+    <unit units="mole"/>
+    <unit units="liter" exponent="-1"/>
+  </units>
+  <units name="nM">
+    <unit units="M" prefix="nano"/>
+  </units>
+  <units name="attomoles_per_s">
+    <unit units="mole" prefix="atto"/>
+    <unit units="per_s"/>
+  </units>
+  <units name="femtoliter">
+    <unit units="liter" prefix="femto"/>
+  </units>
+  <units name="nM_per_s">
+    <unit units="nM"/>
+    <unit units="per_s"/>
+  </units>
+  <units name="nanospermilli">
+    <unit units="mole" prefix="nano"/>
+    <unit units="mole" prefix="milli" exponent="-1"/>
+  </units>
+  <component name="isolated">
+    <variable name="l" units="femtoliter" initial_value="1"/>
+    <variable name="h" units="attomoles_per_s" initial_value="2"/>
+    <variable name="J" units="nM_per_s" public_interface="out"/>
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply>
+        <eq/>
+        <ci>J</ci>
+        <apply>
+          <divide/>
+          <apply>
+            <times/>
+            <cn type="e-notation" cellml:units="nanospermilli">1   <sep/>
+                  6</cn>
+            <ci>h</ci>
+          </apply>
+          <ci>l</ci>
+        </apply>
+      </apply>
+    </math>
+  </component>
+</model>
