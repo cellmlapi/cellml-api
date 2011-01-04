@@ -1,3 +1,4 @@
+#define __STDC_FORMAT_MACROS
 #include "RDFTest.hpp"
 #include "DOMBootstrap.hxx"
 #include "CellMLBootstrap.hpp"
@@ -5,6 +6,11 @@
 #include "Utilities.hxx"
 #include <fstream>
 #include <iostream>
+#include <inttypes.h>
+
+#ifndef PRIxPTR
+#define PRIxPTR "x"
+#endif
 
 #include "cda_config.h"
 
@@ -945,7 +951,7 @@ debug_PrintNode(iface::rdf_api::Node* aNode)
   DECLARE_QUERY_INTERFACE_OBJREF(bn, aNode, rdf_api::BlankNode);
   if (bn != NULL)
   {
-    printf("<BlankNode %08X>", reinterpret_cast<uint32_t>(static_cast<iface::rdf_api::BlankNode*>(bn)));
+    printf("<BlankNode %08" PRIxPTR ">", reinterpret_cast<uintptr_t>(static_cast<iface::rdf_api::BlankNode*>(bn)));
     return;
   }
 
