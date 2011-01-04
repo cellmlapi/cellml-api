@@ -18,7 +18,7 @@ $(top_builddir)/TeLICeMScanner.cpp: $(top_srcdir)/TeLICeMS/sources/TeLICeMScan.l
 	$(FLEX) $^
 
 libtelicems_la_CXXFLAGS = \
-  -Wall -I$(top_srcdir)/sources -I$(top_srcdir)/TeLICeMS/sources -I$(top_builddir)/interfaces \
+  -Wall -I$(top_srcdir)/sources -I$(top_srcdir)/sources/cellml -I$(top_srcdir)/TeLICeMS/sources -I$(top_builddir)/interfaces \
   $(AM_CXXFLAGS)
 
 include_HEADERS += \
