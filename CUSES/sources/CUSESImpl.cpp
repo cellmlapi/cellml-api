@@ -148,7 +148,12 @@ CDACanonicalUnitRepresentation::compatibleWith
   if (l != aCompareWith->length())
     return false;
 
-  double mup1 = 1.0, mup2 = 1.0;
+  double mup1 = (unsafe_dynamic_cast<CDACanonicalUnitRepresentation*>(aCompareWith))->carry(),
+    mup2 = carry();
+
+#ifdef DEBUG_UNITS
+  printf("carry1 = %g, carry2 = %g\n", mup1, mup2);
+#endif
 
   uint32_t i;
   for (i = 0; i < l; i++)
@@ -184,6 +189,9 @@ CDACanonicalUnitRepresentation::compatibleWith
     }
 
     double mupErr = mup2 / mup1 - 1.0;
+#ifdef DEBUG_UNITS
+    printf("mup1=%g, mup2=%g, mupErr = %g\n", mup1, mup2, mup2 / mup1 - 1.0);
+#endif
     if (mupErr > 1E-15)
     {
 #ifdef DEBUG_UNITS
@@ -330,9 +338,11 @@ CDACanonicalUnitRepresentation::canonicalise()
                        fix->unit());
 #ifdef DEBUG_UNITS
     printf("Retrospectively applying carry %g\n", mCarry);
+    printf("New prefix for first item: %g\n", fix->prefix() * mCarry);
 #endif
     newBaseUnits[0] = new CDABaseUnitInstance(buFix, fix->prefix() * mCarry,
                                               fix->offset(), fix->exponent());
+    anyChanges = true;
     mCarry = 1.0;
     fix->release_ref();
   }

@@ -36,5 +36,6 @@ function runtest()
 }
 
 runtest valid_cellml_1
+runtest dimensionless_multiplier
 
 exit 0
