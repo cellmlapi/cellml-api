@@ -912,7 +912,7 @@ CodeGenerationState::FindSystemsNeededForTargets
     System* s = (*j).second;
 
     // Recursively check the dependencies...
-    if (!FindSystemsNeededForTargets(aSysByTargReq, (*j).second->mUnknowns, false,
+    if (!FindSystemsNeededForTargets(aSysByTargReq, (*j).second->mKnowns, false,
                                      aKnownTargets, aNeededSystems))
     {
       if (aMarkOnly)
