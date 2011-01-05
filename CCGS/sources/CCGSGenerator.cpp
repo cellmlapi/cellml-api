@@ -132,7 +132,7 @@ CodeGenerationState::GenerateCustomCode
     std::list<System*> systems;
     // Now, find everything computable from the information the user provided.
     DecomposeIntoSystems(known, mFloating, unwanted, systems, true);
-    
+
     std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
     // Build an index from variables required to systems...
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
@@ -2366,60 +2366,6 @@ CodeGenerationState::BuildFloatingAndKnownLists(bool aIncludeRates)
 }
 
 void
-CodeGenerationState::RuleOutCandidates
-(
- std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
- std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
- std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted
-)
-{
-  for (bool progress = true; progress;)
-  {
-    progress = false;
-    // Look for equations with a single unwanted candidate.
-    for (std::set<ptr_tag<MathStatement> >::iterator i = mUnusedMathStatements.begin();
-         i != mUnusedMathStatements.end(); i++)
-    {
-      // Don't use initial assignments to rule out computing IVs...
-      if ((*i)->mType == MathStatement::INITIAL_ASSIGNMENT)
-        continue;
-
-      uint32_t count = 0, ucount = 0;
-      std::list<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mTargets.begin(), f;
-      for (; j != (*i)->mTargets.end(); j++)
-      {
-        if (aStart.count(*j))
-          continue;
-        if (aCandidates.count(*j))
-        {
-          count++;
-          if (count > 1)
-            break;
-          f = j;
-        }
-        else if (aUnwanted.count(*j))
-          ucount++;
-        else
-        {
-          count = 0;
-          break;
-        }
-      }
-
-      if (count == 1 && ucount)
-      {
-        // So we have one or more unwanted variables, and just one wanted one.
-        // We therefore infer a dependency between the wanted and unwanted
-        // variables, and decide we will be unable to compute the wanted one.
-        progress = true;
-        aCandidates.erase(*f);
-        aUnwanted.insert(*f);
-      }
-    }
-  }
-}
-
-void
 CodeGenerationState::DecomposeIntoAssignments
 (
  std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
@@ -2540,8 +2486,6 @@ CodeGenerationState::DecomposeIntoSystems
 
   while (true)
   {
-    RuleOutCandidates(aStart, aCandidates, aUnwanted);
-
     // The first step is to cluster all candidate variables into disjoint sets,
     // where two variables are in the same set if there is an until now unused
     // equation involving both of them.

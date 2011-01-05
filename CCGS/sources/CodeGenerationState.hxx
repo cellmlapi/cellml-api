@@ -253,9 +253,6 @@ public:
   void BuildFloatingAndKnownLists(bool includeRates = true);
   void WriteForcedInitialVariables();
   void BuildStateAndConstantLists();
-  void RuleOutCandidates(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
-                         std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
-                         std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted);
   bool DecomposeIntoSystems(std::set<ptr_tag<CDA_ComputationTarget> >& aStart,
                             std::set<ptr_tag<CDA_ComputationTarget> >& aCandidates,
                             std::set<ptr_tag<CDA_ComputationTarget> >& aUnwanted,

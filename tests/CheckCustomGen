@@ -59,4 +59,5 @@ function runtest()
 }
 
 runtest modified_parabola main/x:0,main/y:1,main/z:0 main/time:0,main/offset:0 main/y:0
+runtest SimpleDAE_NonLinear main/a:0 main/c:0 main/a:1
 exit 0
