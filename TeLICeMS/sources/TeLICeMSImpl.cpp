@@ -693,10 +693,13 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
             txt += ShowMathExpression(newIndent, caseCond, 0) + L" then " +
                    ShowMathExpression(newIndent, caseValue, 0) + L"\n";
           }
-          RETURN_INTO_OBJREF(owmce, iface::mathml_dom::MathMLContentElement, mpe->otherwise());
-          // TODO: get attributes off parent ('otherwise' element itself)?
-          if (owmce != NULL)
-            txt += newIndent + L"else " + ShowMathExpression(newIndent, owmce, 0) + L"\n";
+          try
+          {
+            RETURN_INTO_OBJREF(owmce, iface::mathml_dom::MathMLContentElement, mpe->otherwise());
+            // TODO: get attributes off parent ('otherwise' element itself)?
+            if (owmce != NULL)
+              txt += newIndent + L"else " + ShowMathExpression(newIndent, owmce, 0) + L"\n";
+          } catch (...) {}
           txt += aIndent + L")";
         }
       }
