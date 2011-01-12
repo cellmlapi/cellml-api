@@ -14,6 +14,11 @@ CPPUNIT_TEST_SUITE_REGISTRATION( CellMLContextTest );
 #endif
 #endif
 
+#ifdef WIN32
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#endif
+
 void
 CellMLContextTest::setUp()
 {
