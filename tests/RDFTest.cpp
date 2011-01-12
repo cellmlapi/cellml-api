@@ -6,7 +6,9 @@
 #include "Utilities.hxx"
 #include <fstream>
 #include <iostream>
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#endif
 
 #ifndef PRIxPTR
 #define PRIxPTR "x"
