@@ -22,6 +22,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION( CellMLContextTest );
 void
 CellMLContextTest::setUp()
 {
+  mAchCascade = NULL;
+  mBeelerReuter = NULL;
   mContext = CreateCellMLContext();
   RETURN_INTO_OBJREF(cb, iface::cellml_api::CellMLBootstrap,
                      mContext->cellmlBootstrap());
