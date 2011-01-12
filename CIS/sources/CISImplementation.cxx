@@ -134,8 +134,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     si.cb = sizeof(si);
     ZeroMemory( &pi, sizeof(pi) );
 
-    char *commandstring = (char*) malloc(strlen(cmd.c_str()));
-    strcpy(commandstring, cmd.c_str());
+    char *commandstring = strdup(cmd.c_str());
 
     // Start the child process. 
     if( !CreateProcess( NULL,   // No module name (use command line)
@@ -150,8 +149,9 @@ CompileSource(std::string& destDir, std::string& sourceFile,
         &pi )           // Pointer to PROCESS_INFORMATION structure
     ) 
     {
-        printf( "CreateProcess failed (%d)\n", GetLastError() );
-        throw iface::cellml_api::CellMLException();
+      free(commandstring);
+      printf( "CreateProcess failed (%d)\n", GetLastError() );
+      throw iface::cellml_api::CellMLException();
     }
     free(commandstring);
     // Wait until child process exits.
