@@ -88,7 +88,7 @@ EvaluateJacobianGSL
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
   
   // Back up the states, so we can perturb them...
-  double* states = new double[ei->rateSize];  
+  double* states = new double[ei->rateSize];
   memcpy(states, vars, ei->rateSizeBytes);
 
   double* rate0 = new double[ei->rateSize];
@@ -365,7 +365,9 @@ CDA_ODESolverRun::SolveODEProblemCVODE
  double* states, uint32_t algSize, double* algebraic
 )
 {
-  N_Vector y = N_VMake_Serial(rateSize, states);
+  N_Vector y = NULL;
+  if (rateSize != 0)
+    y = N_VMake_Serial(rateSize, states);
   void* solver;
   
   switch (mStepType)
@@ -383,11 +385,14 @@ CDA_ODESolverRun::SolveODEProblemCVODE
 
   EvaluationInformation ei;
 
-  CVodeInit(solver, EvaluateRatesCVODE, mStartBvar, y);
-  CVodeSStolerances(solver, mEpsRel, mEpsAbs);
-  if (mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
-    CVDense(solver, rateSize);
-  CVodeSetUserData(solver, &ei);
+  if (rateSize != 0)
+  {
+    CVodeInit(solver, EvaluateRatesCVODE, mStartBvar, y);
+    CVodeSStolerances(solver, mEpsRel, mEpsAbs);
+    if (mStepType == iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE)
+      CVDense(solver, rateSize);
+    CVodeSetUserData(solver, &ei);
+  }
 
   ei.constants = constants;
   ei.states = states;
@@ -416,58 +421,61 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   if (mTabulationStepSize == 0.0)
     nextStopPoint = mStopBvar;
 
-  while (voi < mStopBvar)
+  if (rateSize != 0)
   {
-    double bhl = mStopBvar;
-    if (bhl - voi > mStepSizeMax)
-      bhl = voi + mStepSizeMax;
-    if(bhl > nextStopPoint)
-      bhl = nextStopPoint;
-
-    CVodeSetStopTime(solver, bhl);
-    if (CVode(solver, bhl, y, &voi, CV_ONE_STEP) < 0)
+    while (voi < mStopBvar)
     {
-      sendFailure = true;
-      break;
-    }
+      double bhl = mStopBvar;
+      if (bhl - voi > mStepSizeMax)
+        bhl = voi + mStepSizeMax;
+      if(bhl > nextStopPoint)
+        bhl = nextStopPoint;
+      
+      CVodeSetStopTime(solver, bhl);
+      if (CVode(solver, bhl, y, &voi, CV_ONE_STEP) < 0)
+      {
+        sendFailure = true;
+        break;
+      }
+      
+      if (mCancelIntegration)
+        break;
+      
+      if (isFirst)
+        isFirst = false;
+      else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
+        continue;
 
-    if (mCancelIntegration)
-      break;
+      if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
+        continue;
 
-    if (isFirst)
-      isFirst = false;
-    else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
-      continue;
+      if (voi==nextStopPoint)
+        nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
 
-    if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
-      continue;
+      lastVOI = voi;
 
-    if (voi==nextStopPoint)
-      nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
+      f->    ComputeRates(voi, constants, rates, states, algebraic);
+      f->ComputeVariables(voi, constants, rates, states, algebraic);
 
-    lastVOI = voi;
+      // Add to storage...
+      storage[storageSize] = voi;
+      memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+      memcpy(storage + storageSize + 1 + rateSize, rates,
+             rateSize * sizeof(double));
+      memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+             algSize * sizeof(double));
 
-    f->    ComputeRates(voi, constants, rates, states, algebraic);
-    f->ComputeVariables(voi, constants, rates, states, algebraic);
+      storageSize += recsize;
 
-    // Add to storage...
-    storage[storageSize] = voi;
-    memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
-    memcpy(storage + storageSize + 1 + rateSize, rates,
-           rateSize * sizeof(double));
-    memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
-           algSize * sizeof(double));
-
-    storageSize += recsize;
-
-    // Are we ready to send?
-    uint32_t timeNow = time(0);
-    if (timeNow >= storageExpiry || storageSize == storageCapacity)
-    {
-      if (mObserver != NULL)
-        mObserver->results(storageSize, storage);
-      storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
-      storageSize = 0;
+      // Are we ready to send?
+      uint32_t timeNow = time(0);
+      if (timeNow >= storageExpiry || storageSize == storageCapacity)
+      {
+        if (mObserver != NULL)
+          mObserver->results(storageSize, storage);
+        storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
+        storageSize = 0;
+      }
     }
   }
   if (storageSize != 0 && mObserver != NULL)
@@ -484,8 +492,11 @@ CDA_ODESolverRun::SolveODEProblemCVODE
 
   delete [] storage;
 
-  CVodeFree(&solver);
-  N_VDestroy_Serial(y);
+  if (rateSize != 0)
+  {
+    CVodeFree(&solver);
+    N_VDestroy_Serial(y);
+  }
 }
 
 #ifdef DEBUG_MODE
@@ -735,9 +746,13 @@ CDA_DAESolverRun::SolveDAEProblem
   uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
   bool sendFailure = false;
-  N_Vector y0, dy0;
-  y0 = N_VMake_Serial(stateSize, states);
-  dy0 = N_VMake_Serial(rateSize, rates);
+  N_Vector y0 = NULL, dy0 = NULL;
+
+  if (rateSize != 0)
+  {
+    y0 = N_VMake_Serial(stateSize, states);
+    dy0 = N_VMake_Serial(rateSize, rates);
+  }
 
   DAEEvaluationInformation ei;
   ei.constants = constants;
@@ -774,125 +789,127 @@ CDA_DAESolverRun::SolveDAEProblem
 
   f->SetupStateInfo(icinfo);
 
-  
-  bool restart = true;
-  while (restart)
+  if (rateSize > 0)
   {
-    restart = false;
-
-    f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
-                              algebraic, condvars);
-    DetermineRateOrStateSensitivity(hx, stateSize, &ivf);
-    // printf("Just determined sensitivity array:\n");
-    // for (uint32_t i = 0; i < stateSize; i++)
-    //   printf("  sens[%u] = %g\n", i, icinfo[i]);
-    RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
-
-    double info[LM_INFO_SZ];
-    dlevmar_dif(levmar_dae_iv_paramfinder,
-                params,
-                NULL, /* Target: Make all residuals 0. */
-                stateSize, /* There are stateSize unknowns. */
-                stateSize, /* There are stateSize residuals. */
-                1000, /* Max 1000 iterations (TODO - make configurable?). */
-                NULL, /* Default options (TODO - make configurable?). */
-                info, /* Information returned. */
-                NULL, /* Allocate work memory as required. */
-                NULL, /* Don't return covariance matrix. */
-                reinterpret_cast<void*>(&ivf)
-               );
-    MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
-                                         icinfo, params);
-
-    
-    f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
-                              algebraic, condvars);
-    
-    IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
-    IDARootInit(idamem, condVarSize, ida_rootfn);
-    IDASStolerances(idamem, mEpsRel, mEpsAbs);
-    // IDASpgmr(idamem, 0);
-    // IDASptfqmr(idamem, 0);
-    IDADense(idamem, stateSize);
-    IDASetErrHandlerFn(idamem, cda_ida_error_handler, this);
-    IDASetUserData(idamem, &ei);
-    
-    double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
-    bool isFirst = true;
-    
-    double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
-    uint32_t tabStepNumber = 1;
-    double nextStopPoint = mTabulationStepSize + voi;
-
-    if (mTabulationStepSize == 0.0)
-      nextStopPoint = mStopBvar;
-
-    while (voi < mStopBvar)
+    bool restart = true;
+    while (restart)
     {
-      if (restart)
-        break;
+      restart = false;
 
-      double bhl = mStopBvar;
-      if (bhl - voi > mStepSizeMax)
-        bhl = voi + mStepSizeMax;
-      if(bhl > nextStopPoint)
-        bhl = nextStopPoint;
-      
-      IDASetStopTime(idamem, bhl);
+      f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
+                                algebraic, condvars);
+      DetermineRateOrStateSensitivity(hx, stateSize, &ivf);
+      // printf("Just determined sensitivity array:\n");
+      // for (uint32_t i = 0; i < stateSize; i++)
+      //   printf("  sens[%u] = %g\n", i, icinfo[i]);
+      RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
 
-      int ret = IDASolve(idamem, bhl, &voi, y0, dy0, IDA_ONE_STEP);
+      double info[LM_INFO_SZ];
+      dlevmar_dif(levmar_dae_iv_paramfinder,
+                  params,
+                  NULL, /* Target: Make all residuals 0. */
+                  stateSize, /* There are stateSize unknowns. */
+                  stateSize, /* There are stateSize residuals. */
+                  1000, /* Max 1000 iterations (TODO - make configurable?). */
+                  NULL, /* Default options (TODO - make configurable?). */
+                  info, /* Information returned. */
+                  NULL, /* Allocate work memory as required. */
+                  NULL, /* Don't return covariance matrix. */
+                  reinterpret_cast<void*>(&ivf)
+                  );
+      MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
+                                           icinfo, params);
 
-      if (ret < 0)
+    
+      f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
+                                algebraic, condvars);
+    
+      IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
+      IDARootInit(idamem, condVarSize, ida_rootfn);
+      IDASStolerances(idamem, mEpsRel, mEpsAbs);
+      // IDASpgmr(idamem, 0);
+      // IDASptfqmr(idamem, 0);
+      IDADense(idamem, stateSize);
+      IDASetErrHandlerFn(idamem, cda_ida_error_handler, this);
+      IDASetUserData(idamem, &ei);
+    
+      double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
+      bool isFirst = true;
+    
+      double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
+      uint32_t tabStepNumber = 1;
+      double nextStopPoint = mTabulationStepSize + voi;
+
+      if (mTabulationStepSize == 0.0)
+        nextStopPoint = mStopBvar;
+
+      while (voi < mStopBvar)
       {
-        sendFailure = true;
-        break;
-      }
+        if (restart)
+          break;
 
-      if (ret == IDA_ROOT_RETURN)
-      {
-        // printf("Root hit at %g... restarting...\n",  voi);
-        restart = true;
-      }
+        double bhl = mStopBvar;
+        if (bhl - voi > mStepSizeMax)
+          bhl = voi + mStepSizeMax;
+        if(bhl > nextStopPoint)
+          bhl = nextStopPoint;
+      
+        IDASetStopTime(idamem, bhl);
 
-      memcpy(ei.oldrates, rates, rateSize * sizeof(double));
-      memcpy(ei.oldstates, states, stateSize * sizeof(double));
+        int ret = IDASolve(idamem, bhl, &voi, y0, dy0, IDA_ONE_STEP);
+
+        if (ret < 0)
+        {
+          sendFailure = true;
+          break;
+        }
+
+        if (ret == IDA_ROOT_RETURN)
+        {
+          // printf("Root hit at %g... restarting...\n",  voi);
+          restart = true;
+        }
+
+        memcpy(ei.oldrates, rates, rateSize * sizeof(double));
+        memcpy(ei.oldstates, states, stateSize * sizeof(double));
       
-      if (mCancelIntegration)
-        break;
+        if (mCancelIntegration)
+          break;
       
-      if (isFirst)
-        isFirst = false;
-      else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
-        continue;
+        if (isFirst)
+          isFirst = false;
+        else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
+          continue;
       
-      if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
-        continue;
+        if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
+          continue;
       
-      if (voi==nextStopPoint)
-        nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
+        if (voi==nextStopPoint)
+          nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
       
-      lastVOI = voi;
+        lastVOI = voi;
       
-      f->EvaluateVariables(voi, constants, rates, states, algebraic);
+        f->EvaluateVariables(voi, constants, rates, states, algebraic);
       
-      // Add to storage...
-      storage[storageSize] = voi;
-      memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
-      memcpy(storage + storageSize + 1 + rateSize, rates,
-             rateSize * sizeof(double));
-      memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
-             algSize * sizeof(double));
+        // Add to storage...
+        storage[storageSize] = voi;
+        memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+        memcpy(storage + storageSize + 1 + rateSize, rates,
+               rateSize * sizeof(double));
+        memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+               algSize * sizeof(double));
       
-      storageSize += recsize;
+        storageSize += recsize;
       
-      // Are we ready to send?
-      uint32_t timeNow = time(0);
-      if (timeNow >= storageExpiry || storageSize == storageCapacity)
-      {
-        if (mObserver != NULL)
-          mObserver->results(storageSize, storage);
-        storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
-        storageSize = 0;
+        // Are we ready to send?
+        uint32_t timeNow = time(0);
+        if (timeNow >= storageExpiry || storageSize == storageCapacity)
+        {
+          if (mObserver != NULL)
+            mObserver->results(storageSize, storage);
+          storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
+          storageSize = 0;
+        }
       }
     }
   }
@@ -901,7 +918,7 @@ CDA_DAESolverRun::SolveDAEProblem
   delete [] icinfo;
   delete [] params;
   delete [] ivf.hxtmp;
-    
+
   if (storageSize != 0 && mObserver != NULL)
   {
     mObserver->results(storageSize, storage);
@@ -915,10 +932,12 @@ CDA_DAESolverRun::SolveDAEProblem
   }
   delete [] storage;
 
-  IDAFree(&idamem);
-  N_VDestroy(y0);
-  N_VDestroy(dy0);
-  
+  if (rateSize != 0)
+  {
+    IDAFree(&idamem);
+    N_VDestroy(y0);
+    N_VDestroy(dy0);
+  }
 }
 
 int
