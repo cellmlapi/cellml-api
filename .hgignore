@@ -25,7 +25,6 @@ interfaces/I.*\.(idl|h)
 simple_interface_generators/glue/xpcom/IWrappedPCM.h
 .dirstamp
 tests/RunTestBin
-
 docs/api/html
 javacp
 libltdl
@@ -39,5 +38,5 @@ interfaces/docs
 .*\.tab.hh
 TAGS
 TeLICeMScanner.cpp
-TestTeLICeMParser
-TestTeLICeMSerialiser
+TestTeLICeMParser$
+TestTeLICeMSerialiser$
