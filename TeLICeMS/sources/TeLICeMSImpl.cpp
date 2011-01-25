@@ -394,7 +394,7 @@ ShowVariable(const std::wstring& indent, iface::cellml_api::CellMLVariable* aVar
   bool needComma = false;
   if (ivStr != L"")
   {
-    params += L"init: " + ivStr;
+    params += L"init: " + ShowIdentifier(ivStr);
     needComma = true;
   }
 
@@ -966,7 +966,7 @@ static std::wstring
 ShowVariableRef(const std::wstring& indent, iface::cellml_api::VariableRef* aRef)
 {
   RETURN_INTO_WSTRING(vname, aRef->variableName());
-  std::wstring txt = indent + L"var " + vname + L" with\n";
+  std::wstring txt = indent + L"var " + ShowIdentifier(vname) + L" with\n";
   std::wstring nextIndent = indent + L"  ";
   RETURN_INTO_OBJREF(rs, iface::cellml_api::RoleSet, aRef->roles());
   RETURN_INTO_OBJREF(ri, iface::cellml_api::RoleIterator, rs->iterateRoles());
@@ -1071,7 +1071,7 @@ ShowMapVariables(const std::wstring& indent, iface::cellml_api::MapVariables* aM
   RETURN_INTO_WSTRING(fvn, aMapVars->firstVariableName());
   RETURN_INTO_WSTRING(svn, aMapVars->secondVariableName());
 
-  return indent + L"vars " + fvn + L" and " + svn + L";\n";
+  return indent + L"vars " + ShowIdentifier(fvn) + L" and " + ShowIdentifier(svn) + L";\n";
 }
 
 static std::wstring
@@ -1084,7 +1084,7 @@ ShowConnection(const std::wstring& indent, iface::cellml_api::Connection* aConne
                      aConnection->componentMapping());
   RETURN_INTO_WSTRING(fcn, cms->firstComponentName());
   RETURN_INTO_WSTRING(scn, cms->secondComponentName());
-  txt += fcn + L" and " + scn + L" for\n";
+  txt += ShowIdentifier(fcn) + L" and " + ShowIdentifier(scn) + L" for\n";
   
   std::wstring nextIndent = indent + L"  ";
   RETURN_INTO_OBJREF(vms, iface::cellml_api::MapVariablesSet,
