@@ -1,0 +1,454 @@
+#include "DOM_APISPEC.idl"
+/**
+ * The SProS, or SEDML Processing Service, provides services for parsing SEDML
+ * descriptions, and retrieving all the associated information from it. It can
+ * be used with CellML or SEDML.
+ */
+
+module SProS
+{
+  interface Base;
+  interface BaseSet;
+  interface BaseIterator;
+  interface SEDMLElement;
+  interface NamedIdentifiedElement;
+  interface NamedElementSet;
+  interface NamedElementIterator;
+  interface Model;
+  interface ModelSet;
+  interface ModelIterator;
+
+  interface Bootstrap
+    : XPCOM::IObject
+  {
+  };
+
+  /**
+   * Base is implemented by all types of element in SEDML.
+   */
+  interface Base
+    : XPCOM::IObject
+  {
+    iface::dom::NodeList notes;
+    iface::dom::NodeList annotations;
+  };
+
+  /**
+   * The base interface for sets of elements in SEDML.
+   */
+  interface BaseSet
+    : XPCOM::IObject
+  {
+    BaseIterator iterateElements();
+  };
+
+  /**
+   * The base interface for iterating sets of SEDML elements.
+   */
+  interface BaseIterator
+    : XPCOM::IObject
+  {
+    Base nextElement();
+  };
+
+  /**
+   * The top-level SEDML element.
+   */
+  interface SEDMLElement
+    : Base
+  {
+  };
+
+  /**
+   * The base interface for all elements with name attributes.
+   */
+  interface NamedElement
+    : Base
+  {
+    /**
+     * The human readable name of the element (not guaranteed to be unique).
+     */
+    attribute wstring name;
+  };
+
+  /**
+   * The base type for all sets of elements with name attributes.
+   */
+  interface NamedElementSet
+    : BaseSet
+  {
+  };
+
+  /**
+   * The base type of all iterators of elements with name attributes.
+   */
+  interface NamedElementIterator
+    : BaseIterator
+  {
+  };
+
+  /**
+   * The base interface for all elements with name and id attributes.
+   */
+  interface NamedIdentifiedElement
+    : NamedElement
+  {
+    /**
+     * The unique identifier for the element.
+     */
+    attribute wstring id;
+  };
+
+  /**
+   * The base type for all sets of named, identified elements.
+   */
+  interface NamedIdentifiedElementSet
+    : NamedElementSet
+  {
+  };
+
+  /**
+   * Allows named, identified elements to be iterated.
+   */
+  interface NamedIdentifiedElementIterator
+    : NamedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML reference to a particular model.
+   */
+  interface Model
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
+   * A set of models.
+   */
+  interface ModelSet
+    : NamedIdentifiedElementSet
+  {
+  };
+
+  /**
+   * An iterator of models.
+   */
+  interface ModelIterator
+    : NamedIdentifiedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML simulation.
+   */
+  interface Simulation
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
+   * A set of simulations.
+   */
+  interface SimulationSet
+    : NamedIdentifiedElementSet
+  {
+  };
+
+  /**
+   * An iterator of simulations.
+   */
+  interface SimulationIterator
+    : NamedIdentifiedElementIterator
+  {
+  };
+
+  /**
+   * A Uniform Time Course simulation.
+   */
+  interface UniformTimeCourse
+    : Simulation
+  {
+  };
+
+  /**
+   * A SEDML task.
+   */
+  interface Task
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
+   * A set of SEDML tasks.
+   */
+  interface TaskSet
+    : NamedIdentifiedElementSet
+  {
+  };
+
+  /**
+   * An iterator of SEDML tasks.
+   */
+  interface TaskIterator
+    : NamedIdentifiedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML DataGenerator.
+   */
+  interface DataGenerator
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
+   * A set of DataGenerators.
+   */
+  interface DataGeneratorSet
+    : NamedIdentifiedElementSet
+  {
+  };
+
+  /**
+   * An interator of DataGenerators.
+   */
+  interface DataGeneratorIterator
+    : NamedIdentifiedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML Output.
+   */
+  interface Output
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
+   * A set of Outputs
+   */
+  interface OutputSet
+    : NamedIdentifiedElementSet
+  {
+  };
+
+  /**
+   * An iterator of Outputs
+   */
+  interface OutputIterator
+    : NamedIdentifiedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML 2D Plot output
+   */
+  interface Plot2D
+    : Output
+  {
+  };
+
+  /**
+   * A SEDML 3D Plot output
+   */
+  interface Plot3D
+    : Output
+  {
+  };
+
+  /**
+   * A SEDML Report output
+   */
+  interface Report
+    : Output
+  {
+  };
+
+  /**
+   * A SEDML Change.
+   */
+  interface Change
+    : Base
+  {
+  };
+
+  /**
+   * A set of Changes
+   */
+  interface ChangeSet
+    : BaseSet
+  {
+  };
+
+  /**
+   * An iterator of Changes
+   */
+  interface ChangeIterator
+    : BaseIterator
+  {
+  };
+
+  /**
+   * A SEDML ComputeChange style change.
+   */
+  interface ComputeChange
+    : Change
+  {
+  };
+
+  /**
+   * A SEDML attribute change.
+   */
+  interface ChangeAttribute
+    : Change
+  {
+  };
+
+  /**
+   * A SEDML XML change.
+   */
+  interface ChangeXML
+    : Change
+  {
+  };
+
+  /**
+   * A SEDML XML addition.
+   */
+  interface AddXML
+    : Change
+  {
+  };
+
+  /**
+   * A SEDML XML removal.
+   */
+  interface RemoveXML
+    : Change
+
+  {
+  };
+
+  /**
+   * A SEDML Variable.
+   */
+  interface Variable
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
+   * A set of Variables.
+   */
+  interface VariableSet
+    : NamedIdentifiedElementSet
+  {
+  };
+
+  /**
+   * An iterator of Variables.
+   */
+  interface VariableIterator
+    : NamedIdentifiedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML Parameter.
+   */
+  interface Parameter
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
+   * A set of Parameters.
+   */
+  interface ParameterSet
+    : NamedIdentifiedElementSet
+  {
+  };
+
+  /**
+   * An iterator of Parameters.
+   */
+  interface ParameterIterator
+    : NamedIdentifiedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML Curve.
+   */
+  interface Curve
+    : NamedElement
+  {
+  };
+
+  /**
+   * A set of SEDML Curve.
+   */
+  interface CurveSet
+    : NamedElementSet
+  {
+  };
+
+  /**
+   * Allows SEDML Curves to be iterated.
+   */
+  interface CurveIterator
+    : NamedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML Surface.
+   */
+  interface Surface
+    : NamedElement
+  {
+  };
+
+  /**
+   * A set of SEDML Surfaces.
+   */
+  interface SurfaceSet
+    : NamedElementSet
+  {
+  };
+
+  /**
+   * Allows SEDML Surfaces to be iterated.
+   */
+  interface SurfaceIterator
+    : NamedElementIterator
+  {
+  };
+
+  /**
+   * A SEDML DataSet.
+   */
+  interface DataSet
+    : NamedElement
+  {
+  };
+
+  /**
+   * A set of SEDML DataSets.
+   */
+  interface DataSetSet
+    : NamedElementSet
+  {
+  };
+
+  /**
+   * Allows SEDML DataSets to be iterated.
+   */
+  interface DataSetIterator
+    : NamedElementIterator
+  {
+  };
+};
