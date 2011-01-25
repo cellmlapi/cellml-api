@@ -673,11 +673,11 @@ if test x$cis = xtrue -a x$gslintegrators = xtrue; then
 fi
 
 AC_CHECK_TOOL([FLEX], [flex], [no])
-if test x$flex = xno; then
+if test x$FLEX = xno; then
    AC_MSG_ERROR(Flex is required to build the CellML API)
 fi
 AC_CHECK_TOOL([BISON], [bison], [no])
-if test x$bison = xno; then
+if test x$BISON = xno; then
    AC_MSG_ERROR(Bison is required to build the CellML API)
 fi
 
