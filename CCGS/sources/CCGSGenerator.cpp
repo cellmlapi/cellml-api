@@ -967,7 +967,10 @@ CodeGenerationState::CheckStateVariableIVConstraints(const std::list<System*>& a
     {
       // If it has an updegree, it is a state variable, so it must have an IV...
       if (!ct->mStateHasIV)
+      {
+        ct->mEvaluationType = iface::cellml_services::FLOATING;
         throw UnderconstrainedError();
+      }
     }
   }
 }
