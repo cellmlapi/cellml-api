@@ -1,8 +1,8 @@
 #include "DOM_APISPEC.idl"
+#include "CellML_APISPEC.idl"
 /**
  * The SProS, or SEDML Processing Service, provides services for parsing SEDML
- * descriptions, and retrieving all the associated information from it. It can
- * be used with CellML or SEDML.
+ * descriptions, and retrieving all the associated information from it.
  */
 
 module SProS
@@ -11,16 +11,77 @@ module SProS
   interface BaseSet;
   interface BaseIterator;
   interface SEDMLElement;
-  interface NamedIdentifiedElement;
+  interface NamedElement;
   interface NamedElementSet;
   interface NamedElementIterator;
+  interface NamedIdentifiedElement;
+  interface NamedIdentifiedElementSet;
+  interface NamedIdentifiedElementIterator;
   interface Model;
   interface ModelSet;
   interface ModelIterator;
+  interface Simulation;
+  interface SimulationSet;
+  interface SimulationIterator;
+  interface UniformTimeCourse;
+  interface Task;
+  interface TaskSet;
+  interface TaskIterator;
+  interface DataGenerator;
+  interface DataGeneratorSet;
+  interface DataGeneratorIterator;
+  interface Output;
+  interface OutputSet;
+  interface OutputIterator;
+  interface Plot2D;
+  interface Plot3D;
+  interface Report;
+  interface Change;
+  interface ChangeSet;
+  interface ChangeIterator;
+  interface ComputeChange;
+  interface ChangeAttribute;
+  interface AddXML;
+  interface ChangeXML;
+  interface RemoveXML;
+  interface Variable;
+  interface VariableSet;
+  interface VariableIterator;
+  interface Parameter;
+  interface ParameterSet;
+  interface ParameterIterator;
+  interface Curve;
+  interface CurveSet;
+  interface CurveIterator;
+  interface Surface;
+  interface SurfaceSet;
+  interface SurfaceIterator;
+  interface DataSet;
+  interface DataSetSet;
+  interface DataSetIterator;
 
   interface Bootstrap
     : XPCOM::IObject
   {
+    /**
+     * Creates an empty SEDML element in a new document.
+     */
+    SEDMLElement createEmptySEDML();
+
+    /**
+     * Parses SEDML from a specified URL, using the specified relative URL.
+     */
+    SEDMLElement parseSEDMLFromURI(in wstring uri, in wstring relativeTo);
+
+    /**
+     * Parses SEDML from a specified blob of text, using the specified base URI.
+     */
+    SEDMLElement parseSEDMLFromText(in wstring txt, in wstring baseURI);
+
+    /**
+     * Serialises a SEDML element to text.
+     */
+    wstring sedmlToText(in SEDMLElement txt);
   };
 
   /**
@@ -29,8 +90,20 @@ module SProS
   interface Base
     : XPCOM::IObject
   {
-    iface::dom::NodeList notes;
-    iface::dom::NodeList annotations;
+    /**
+     * The underlying DOM element.
+     */
+    readonly attribute dom::Element domElement;
+
+    /**
+     * The list of all note elements associated with this element.
+     */
+    readonly attribute dom::NodeList notes;
+
+    /**
+     * The list of all annotations associated with this element.
+     */
+    readonly attribute dom::NodeList annotations;
   };
 
   /**
@@ -39,7 +112,20 @@ module SProS
   interface BaseSet
     : XPCOM::IObject
   {
+    /**
+     * Obtain an iterator for iterating through the elements.
+     */
     BaseIterator iterateElements();
+
+    /**
+     * Inserts an element into the set.
+     */
+    void insert(in Base b);
+
+    /**
+     * Removes an element from the set.
+     */
+    void remove(in Base b);
   };
 
   /**
@@ -48,6 +134,10 @@ module SProS
   interface BaseIterator
     : XPCOM::IObject
   {
+    /**
+     * Fetch the next element from the iterator, or null if there are no more
+     * elements.
+     */
     Base nextElement();
   };
 
@@ -57,6 +147,144 @@ module SProS
   interface SEDMLElement
     : Base
   {
+    /**
+     * The SEDML level; defaults to the latest level supported by the
+     * implementation.
+     */
+    attribute unsigned long level;
+    
+    /**
+     * The SEDML version; defaults to the latest version of SEDML supported by
+     * the implementation.
+     */
+    attribute unsigned long version;
+
+    /**
+     * The set of all models.
+     */
+    readonly attribute ModelSet models;
+
+    /**
+     * The set of all tasks.
+     */
+    readonly attribute TaskSet tasks;
+
+    /**
+     * The set of all simulations.
+     */
+    readonly attribute SimulationSet simulations;
+
+    /**
+     * The set of all generators.
+     */
+    readonly attribute DataGeneratorSet generators;
+
+    /**
+     * The set of all outputs.
+     */
+    readonly attribute OutputSet outputs;
+
+    /**
+     * Creates a new Model. It is created with no parent and must be
+     * explicitly added.
+     */
+    Model createModel();
+
+    /**
+     * Creates a new UniformTimeCourse. It is created with no parent and must be
+     * explicitly added.
+     */
+    UniformTimeCourse createUniformTimeCourse();
+
+    /**
+     * Creates a new Task. It is created with no parent and must be
+     * explicitly added.
+     */
+    Task createTask();
+
+    /**
+     * Creates a new DataGenerator. It is created with no parent and must be
+     * explicitly added.
+     */
+    DataGenerator createDataGenerator();
+
+    /**
+     * Creates a new Plot2D. It is created with no parent and must be
+     * explicitly added.
+     */
+    Plot2D createPlot2D();
+
+    /**
+     * Creates a new Plot3D. It is created with no parent and must be
+     * explicitly added.
+     */
+    Plot3D createPlot3D();
+
+    /**
+     * Creates a new Report. It is created with no parent and must be
+     * explicitly added.
+     */
+    Report createReport();
+
+    /**
+     * Creates a new ComputeChange. It is created with no parent and must be
+     * explicitly added.
+     */
+    ComputeChange createComputeChange();
+
+    /**
+     * Creates a new ChangeAttribute. It is created with no parent and must be
+     * explicitly added.
+     */
+    ChangeAttribute createChangeAttribute();
+
+    /**
+     * Creates a new AddXML. It is created with no parent and must be
+     * explicitly added.
+     */
+    AddXML createAddXML();
+
+    /**
+     * Creates a new RemoveXML. It is created with no parent and must be
+     * explicitly added.
+     */
+    RemoveXML createRemoveXML();
+
+    /**
+     * Creates a new ChangeXML. It is created with no parent and must be
+     * explicitly added.
+     */
+    ChangeXML createChangeXML();
+
+    /**
+     * Creates a new Variable. It is created with no parent and must be
+     * explicitly added.
+     */
+    Variable createVariable();
+
+    /**
+     * Creates a new Parameter. It is created with no parent and must be
+     * explicitly added.
+     */
+    Parameter createParameter();
+
+    /**
+     * Creates a new Curve. It is created with no parent and must be
+     * explicitly added.
+     */
+    Curve createCurve();
+
+    /**
+     * Creates a new Surface. It is created with no parent and must be
+     * explicitly added.
+     */
+    Surface createSurface();
+
+    /**
+     * Creates a new DataSet. It is created with no parent and must be
+     * explicitly added.
+     */
+    DataSet createDataSet();
   };
 
   /**
@@ -77,6 +305,14 @@ module SProS
   interface NamedElementSet
     : BaseSet
   {
+    /**
+     * Iterate through all named elements.
+     */
+    NamedElementIterator iterateNamedElement();
+
+    /* Note: Names aren't guaranteed to be unique, they are for human use, so
+     * we don't provide a way to find by name.
+     */
   };
 
   /**
@@ -85,6 +321,10 @@ module SProS
   interface NamedElementIterator
     : BaseIterator
   {
+    /**
+     * Fetch the next named element, or null if there are no more elements.
+     */
+    NamedElement nextNamedElement();
   };
 
   /**
@@ -105,6 +345,15 @@ module SProS
   interface NamedIdentifiedElementSet
     : NamedElementSet
   {
+    /**
+     * Iterates through all the named, identified elements...
+     */
+    NamedIdentifiedElement iterateNamedIdentifiedElements();
+
+    /**
+     * Finds an element by identifier
+     */
+    NamedIdentifiedElement findNamedIdentifiedElementByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -113,6 +362,11 @@ module SProS
   interface NamedIdentifiedElementIterator
     : NamedElementIterator
   {
+    /**
+     * Fetches the next named, identified element, or null if there are no more
+     * such elements.
+     */
+    NamedIdentifiedElement nextNamedIdentifiedElement();
   };
 
   /**
@@ -121,6 +375,16 @@ module SProS
   interface Model
     : NamedIdentifiedElement
   {
+    /** The language the model is in. */
+    attribute wstring language;
+
+    /** The location of the model. */
+    attribute wstring source;
+
+    /**
+     * The set of changes to make to the model.
+     */
+    readonly attribute ChangeSet changes;
   };
 
   /**
@@ -129,6 +393,15 @@ module SProS
   interface ModelSet
     : NamedIdentifiedElementSet
   {
+    /**
+     * Iterates through all models in the set.
+     */
+    ModelIterator iterateModels();
+
+    /**
+     * Search for a model in the set by identifier.
+     */
+    Model findModelByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -137,6 +410,10 @@ module SProS
   interface ModelIterator
     : NamedIdentifiedElementIterator
   {
+    /**
+     * Fetches the next model, or null if there are no more.
+     */
+    Model nextModel();
   };
 
   /**
@@ -145,6 +422,10 @@ module SProS
   interface Simulation
     : NamedIdentifiedElement
   {
+    /**
+     * The KISAO identifier for the corresponding algorithm.
+     */
+    attribute wstring algorithmKisaoID;
   };
 
   /**
@@ -153,6 +434,15 @@ module SProS
   interface SimulationSet
     : NamedIdentifiedElementSet
   {
+    /**
+     * Iterates through the simulations in the set.
+     */
+    SimulationIterator iterateSimulations();
+
+    /**
+     * Finds a simulation in the set by identifier.
+     */
+    Simulation getSimulationByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -161,6 +451,10 @@ module SProS
   interface SimulationIterator
     : NamedIdentifiedElementIterator
   {
+    /**
+     * Fetches the next Simulation, or null if there are no more.
+     */
+    Simulation nextSimulation();
   };
 
   /**
@@ -169,6 +463,25 @@ module SProS
   interface UniformTimeCourse
     : Simulation
   {
+    /**
+     * The time the simulation starts.
+     */
+    attribute double initialTime;
+
+    /**
+     * The time of the first point to generate output for.
+     */
+    attribute double outputStartTime;
+
+    /**
+     * The time of the last point to generate output for.
+     */
+    attribute double outputEndTime;
+
+    /**
+     * The number of points of output to produce.
+     */
+    attribute unsigned long numberOfPoints;
   };
 
   /**
@@ -185,6 +498,15 @@ module SProS
   interface TaskSet
     : NamedIdentifiedElementSet
   {
+    /**
+     * Iterate through the tasks in this set.
+     */
+    TaskIterator iterateTasks();
+
+    /**
+     * Find a task in the set by the identifier.
+     */
+    Task findTaskByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -193,6 +515,10 @@ module SProS
   interface TaskIterator
     : NamedIdentifiedElementIterator
   {
+    /**
+     * Fetch the next task, or null if there are no more.
+     */
+    Task nextTask();
   };
 
   /**
@@ -201,6 +527,20 @@ module SProS
   interface DataGenerator
     : NamedIdentifiedElement
   {
+    /**
+     * The set of parameters for this DataGenerator.
+     */
+    readonly attribute ParameterSet parameters;
+
+    /**
+     * The set of variables for this DataGenerator.
+     */
+    readonly attribute VariableSet variables;
+
+    /**
+     * The list of MathML on this DataGenerator.
+     */
+    readonly attribute cellml_api::MathList math;
   };
 
   /**
@@ -209,6 +549,15 @@ module SProS
   interface DataGeneratorSet
     : NamedIdentifiedElementSet
   {
+    /**
+     * Iterate through the DataGenerators in this set.
+     */
+    DataGeneratorIterator iterateDataGenerators();
+
+    /**
+     * Find a DataGenerator by identfier.
+     */
+    DataGenerator getDataGeneratorByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -217,6 +566,10 @@ module SProS
   interface DataGeneratorIterator
     : NamedIdentifiedElementIterator
   {
+    /**
+     * Fetches the next DataGenerator, or null if there are no more.
+     */
+    DataGenerator nextDataGenerator();
   };
 
   /**
@@ -233,6 +586,15 @@ module SProS
   interface OutputSet
     : NamedIdentifiedElementSet
   {
+    /**
+     * Iterates through all the outputs in this set.
+     */
+    OutputIterator iterateOutputs();
+    
+    /**
+     * Finds an output in this set by identifier.
+     */
+    Output getOutputByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -241,6 +603,10 @@ module SProS
   interface OutputIterator
     : NamedIdentifiedElementIterator
   {
+    /**
+     * Fetches the next Output, or null if there are no more.
+     */
+    Output nextOutput();
   };
 
   /**
@@ -249,6 +615,10 @@ module SProS
   interface Plot2D
     : Output
   {
+    /**
+     * Gets the set of all curves.
+     */
+    readonly attribute CurveSet curves;
   };
 
   /**
@@ -257,6 +627,10 @@ module SProS
   interface Plot3D
     : Output
   {
+    /**
+     *  Gets the set of all surfaces.
+     */
+    readonly attribute SurfaceSet surfaces;
   };
 
   /**
@@ -265,6 +639,10 @@ module SProS
   interface Report
     : Output
   {
+    /**
+     * Gets the set of all DataSets
+     */
+    readonly attribute DataSet datasets;
   };
 
   /**
@@ -273,6 +651,7 @@ module SProS
   interface Change
     : Base
   {
+    attribute wstring target;
   };
 
   /**
@@ -281,6 +660,10 @@ module SProS
   interface ChangeSet
     : BaseSet
   {
+    /**
+     * Iterate through all the Changes in the set.
+     */
+    ChangeIterator iterateChanges();
   };
 
   /**
@@ -289,6 +672,10 @@ module SProS
   interface ChangeIterator
     : BaseIterator
   {
+    /**
+     * Fetch the next Change, or null if there are no more.
+     */
+    Change nextChange();
   };
 
   /**
@@ -297,6 +684,20 @@ module SProS
   interface ComputeChange
     : Change
   {
+    /**
+     * All variables involved.
+     */
+    readonly attribute VariableSet variables;
+
+    /**
+     * All parameters involved.
+     */
+    readonly attribute ParameterSet parameters;
+
+    /**
+     * All MathML involved.
+     */
+    readonly attribute cellml_api::MathList maths;
   };
 
   /**
@@ -305,14 +706,10 @@ module SProS
   interface ChangeAttribute
     : Change
   {
-  };
-
-  /**
-   * A SEDML XML change.
-   */
-  interface ChangeXML
-    : Change
-  {
+    /**
+     * The new value of the attribute.
+     */
+    readonly attribute wstring newValue;
   };
 
   /**
@@ -320,6 +717,18 @@ module SProS
    */
   interface AddXML
     : Change
+  {
+    /**
+     * The XML content to add.
+     */
+    readonly attribute dom::NodeList anyXML;
+  };
+
+  /**
+   * A SEDML XML change.
+   */
+  interface ChangeXML
+    : AddXML
   {
   };
 
@@ -338,6 +747,8 @@ module SProS
   interface Variable
     : NamedIdentifiedElement
   {
+    attribute wstring target;
+    attribute wstring symbol;
   };
 
   /**
@@ -346,6 +757,15 @@ module SProS
   interface VariableSet
     : NamedIdentifiedElementSet
   {
+    /**
+     * Iterates through the variables.
+     */
+    VariableIterator iterateVariables();
+
+    /**
+     * Finds a variable in the set by identifier.
+     */
+    Variable getVariableByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -354,6 +774,10 @@ module SProS
   interface VariableIterator
     : NamedIdentifiedElementIterator
   {
+    /**
+     * Gets the next variable, or null if there are no more.
+     */
+    Variable nextVariable();
   };
 
   /**
@@ -362,6 +786,7 @@ module SProS
   interface Parameter
     : NamedIdentifiedElement
   {
+    attribute double value;
   };
 
   /**
@@ -370,6 +795,15 @@ module SProS
   interface ParameterSet
     : NamedIdentifiedElementSet
   {
+    /**
+     * Iterates through the parameters.
+     */
+    ParameterIterator iterateParameters();
+
+    /**
+     * Finds a parameter in the set by identifier.
+     */
+    Parameter getParameterByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -378,6 +812,10 @@ module SProS
   interface ParameterIterator
     : NamedIdentifiedElementIterator
   {
+    /**
+     * Gets the next parameter, or null if there are no more.
+     */
+    Parameter nextParameter();
   };
 
   /**
@@ -386,6 +824,37 @@ module SProS
   interface Curve
     : NamedElement
   {
+    /**
+     * If true, log-transform the X axis.
+     */
+    attribute boolean logX;
+
+    /**
+     * If true, log-transform the Y axis.
+     */
+    attribute boolean logY;
+
+    /**
+     * The identifier of the X-axis data generator.
+     */
+    attribute wstring xDataGeneratorID;
+
+    /**
+     * The identifier of the Y-axis data generator.
+     */
+    attribute wstring yDataGeneratorID;
+
+    /**
+     * The X-axis data generator (if it can be found, otherwise
+     * null).
+     */
+    attribute DataGenerator xDataGenerator;
+
+    /**
+     * The Y-axis data generator (if it can be found, otherwise
+     * null).
+     */
+    attribute DataGenerator yDataGenerator;
   };
 
   /**
@@ -394,6 +863,10 @@ module SProS
   interface CurveSet
     : NamedElementSet
   {
+    /**
+     * Iterates through the curves in the set.
+     */
+    CurveIterator iterateCurves();
   };
 
   /**
@@ -402,30 +875,57 @@ module SProS
   interface CurveIterator
     : NamedElementIterator
   {
+    /**
+     * Fetches the next curve in the set, or null if there are no more.
+     */
+    Curve nextCurve();
   };
 
   /**
    * A SEDML Surface.
    */
   interface Surface
-    : NamedElement
+    : Curve
   {
+    /**
+     * If true, log the Z axis.
+     */
+    attribute boolean logZ;
+
+    /**
+     * The identifier of the Z-axis data generator.
+     */
+    attribute wstring zDataGeneratorID;
+
+    /**
+     * The Z-axis data generator (if it can be found, otherwise
+     * null).
+     */
+    attribute DataGenerator zDataGenerator;
   };
 
   /**
    * A set of SEDML Surfaces.
    */
   interface SurfaceSet
-    : NamedElementSet
+    : CurveSet
   {
+    /**
+     * Iterates the surfaces in this set.
+     */
+    SurfaceIterator iterateSurfaces();
   };
 
   /**
    * Allows SEDML Surfaces to be iterated.
    */
   interface SurfaceIterator
-    : NamedElementIterator
+    : CurveIterator
   {
+    /**
+     * Fetches the next surface in the set, or null if there are no more.
+     */
+    Surface nextSurface();
   };
 
   /**
@@ -434,6 +934,17 @@ module SProS
   interface DataSet
     : NamedElement
   {
+    /**
+     * The identifier of the data generator.
+     */
+    attribute wstring dataGeneratorID;
+
+    /**
+     * The data generator (if it can be found, otherwise
+     * null). It must already be in the main set of
+     * DataGenerators and have an ID.
+     */
+    attribute DataGenerator datagen;
   };
 
   /**
@@ -442,6 +953,10 @@ module SProS
   interface DataSetSet
     : NamedElementSet
   {
+    /**
+     * Iterates through the DataSets in this set.
+     */
+    DataSetIterator iterateDataSets();
   };
 
   /**
@@ -450,5 +965,9 @@ module SProS
   interface DataSetIterator
     : NamedElementIterator
   {
+    /**
+     * Fetches the next DataSet, or null if there are no more.
+     */
+    DataSet nextDataSet();
   };
 };
