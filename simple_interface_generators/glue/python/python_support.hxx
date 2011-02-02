@@ -41,6 +41,11 @@
 #define Py_TYPE(o) ((o)->ob_type)
 #endif
 
+#ifndef PyVarObject_HEAD_INIT
+#define PyVarObject_HEAD_INIT(type, size)       \
+        PyObject_HEAD_INIT(type) size,
+#endif
+
 PUBLIC_PYTHONSUPPORT_PRE
 class PUBLIC_PYTHONSUPPORT_POST ScopedPyObjectReference
 {

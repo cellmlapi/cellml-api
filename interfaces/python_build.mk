@@ -80,7 +80,7 @@ $(top_srcdir)/simple_interface_generators/omniidl_be/python/typeinfo.py
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
 	$(CYGWIN_WRAPPER) omniidl -p$$SAVEDIR/$(top_srcdir)/simple_interface_generators/omniidl_be \
-	-bpython $(PYTHON_BOOTSTRAPS) -DIN_CELLML_MODULE $$SAVEDIR/$< && \
+	-bpcmpy $(PYTHON_BOOTSTRAPS) -DIN_CELLML_MODULE $$SAVEDIR/$< && \
 	cd $$SAVEDIR
 
 BUILT_SOURCES += $(top_builddir)/interfaces/P2PyCellML_APISPEC.cxx \
