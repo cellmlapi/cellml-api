@@ -37,6 +37,10 @@
 #include <string>
 #include "Utilities.hxx"
 
+#ifndef Py_TYPE
+#define Py_TYPE(o) ((o)->ob_type)
+#endif
+
 PUBLIC_PYTHONSUPPORT_PRE
 class PUBLIC_PYTHONSUPPORT_POST ScopedPyObjectReference
 {
