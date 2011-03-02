@@ -1023,9 +1023,10 @@ public:
     : CDA_DOMElementIteratorBase(parentEl), _cda_refcount(1)
   {
   }
+
   virtual ~CDA_MathMLElementIterator()
   {
-  };
+  }
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_api::MathMLElementIterator);

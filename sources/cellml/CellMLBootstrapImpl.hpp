@@ -75,6 +75,7 @@ public:
   iface::cellml_api::Model* createModel(const wchar_t* version)
     throw(std::exception&);
   wchar_t* serialiseNode(iface::dom::Node* aNode) throw(std::exception&);
+  wchar_t* makeURLAbsolute(const wchar_t* aRelTo, const wchar_t* aRelURL) throw();
 private:
   CellML_DOMImplementationBase* domimpl;
 };

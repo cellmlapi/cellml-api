@@ -59,6 +59,12 @@ module SProS
   interface DataSet;
   interface DataSetSet;
   interface DataSetIterator;
+#if 0
+  interface NotesSet;
+  interface NotesIterator;
+  interface AnnotationSet;
+  interface AnnotationIterator;
+#endif
 
   interface Bootstrap
     : XPCOM::IObject
@@ -79,9 +85,14 @@ module SProS
     SEDMLElement parseSEDMLFromText(in wstring txt, in wstring baseURI);
 
     /**
+     * Makes a SEDML structure from an element.
+     */
+    SEDMLElement makeSEDMLFromElement(in dom::Element el);
+
+    /**
      * Serialises a SEDML element to text.
      */
-    wstring sedmlToText(in SEDMLElement txt);
+    wstring sedmlToText(in SEDMLElement el);
   };
 
   /**
@@ -106,6 +117,10 @@ module SProS
     readonly attribute dom::NodeList annotations;
   };
 
+  exception SProSException
+  {
+  };
+
   /**
    * The base interface for sets of elements in SEDML.
    */
@@ -118,9 +133,10 @@ module SProS
     BaseIterator iterateElements();
 
     /**
-     * Inserts an element into the set.
+     * Inserts an element into the set. Raises an exception if the element is
+     * already in another set, or was created for the wrong document.
      */
-    void insert(in Base b);
+    void insert(in Base b) raises(SProSException);
 
     /**
      * Removes an element from the set.
@@ -348,12 +364,12 @@ module SProS
     /**
      * Iterates through all the named, identified elements...
      */
-    NamedIdentifiedElement iterateNamedIdentifiedElements();
+    NamedIdentifiedElementIterator iterateNamedIdentifiedElements();
 
     /**
      * Finds an element by identifier
      */
-    NamedIdentifiedElement findNamedIdentifiedElementByIdentifier(in wstring idMatch);
+    NamedIdentifiedElement getNamedIdentifiedElementByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -401,7 +417,7 @@ module SProS
     /**
      * Search for a model in the set by identifier.
      */
-    Model findModelByIdentifier(in wstring idMatch);
+    Model getModelByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -490,6 +506,25 @@ module SProS
   interface Task
     : NamedIdentifiedElement
   {
+    /**
+     * The referenced simulation, as an identifier.
+     */
+    attribute wstring simulationReferenceIdentifier;
+
+    /**
+     * The referenced simulation object.
+     */
+    attribute Simulation simulationReference;
+
+    /**
+     * The referenced model, as an identifier.
+     */
+    attribute wstring modelReferenceIdentifier;
+
+    /**
+     * The referenced model object.
+     */
+    attribute Model modelReference;
   };
 
   /**
@@ -506,7 +541,7 @@ module SProS
     /**
      * Find a task in the set by the identifier.
      */
-    Task findTaskByIdentifier(in wstring idMatch);
+    Task getTaskByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -525,7 +560,7 @@ module SProS
    * A SEDML DataGenerator.
    */
   interface DataGenerator
-    : NamedIdentifiedElement
+    : NamedIdentifiedElement, cellml_api::MathContainer
   {
     /**
      * The set of parameters for this DataGenerator.
@@ -536,11 +571,6 @@ module SProS
      * The set of variables for this DataGenerator.
      */
     readonly attribute VariableSet variables;
-
-    /**
-     * The list of MathML on this DataGenerator.
-     */
-    readonly attribute cellml_api::MathList math;
   };
 
   /**
@@ -642,7 +672,7 @@ module SProS
     /**
      * Gets the set of all DataSets
      */
-    readonly attribute DataSet datasets;
+    readonly attribute DataSetSet datasets;
   };
 
   /**
@@ -682,7 +712,7 @@ module SProS
    * A SEDML ComputeChange style change.
    */
   interface ComputeChange
-    : Change
+    : Change, cellml_api::MathContainer
   {
     /**
      * All variables involved.
@@ -693,11 +723,6 @@ module SProS
      * All parameters involved.
      */
     readonly attribute ParameterSet parameters;
-
-    /**
-     * All MathML involved.
-     */
-    readonly attribute cellml_api::MathList maths;
   };
 
   /**
@@ -737,7 +762,6 @@ module SProS
    */
   interface RemoveXML
     : Change
-
   {
   };
 
@@ -944,7 +968,7 @@ module SProS
      * null). It must already be in the main set of
      * DataGenerators and have an ID.
      */
-    attribute DataGenerator datagen;
+    attribute DataGenerator dataGen;
   };
 
   /**
@@ -970,4 +994,40 @@ module SProS
      */
     DataSet nextDataSet();
   };
+
+#if 0
+  interface Notes
+    : Base
+  {
+  };
+
+  interface NotesSet
+    : BaseSet
+  {
+    NotesIterator iterateNotes();
+  };
+
+  interface NotesIterator
+    : BaseIterator
+  {
+    Notes nextNotes();
+  };
+
+  interface Annotation
+    : Base
+  {
+  };
+
+  interface AnnotationSet
+    : BaseSet
+  {
+    AnnotationIterator iterateAnnotations();
+  };
+
+  interface AnnotationIterator
+    : BaseIterator
+  {
+    Annotation nextAnnotation();
+  };
+#endif
 };

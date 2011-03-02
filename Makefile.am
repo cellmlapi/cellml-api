@@ -127,6 +127,10 @@ if ENABLE_TELICEMS
 include $(top_srcdir)/TeLICeMS/build.mk
 endif
 
+if ENABLE_SPROS
+include $(top_srcdir)/SProS/build.mk
+endif
+
 if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
 include $(top_srcdir)/CCGS/corba_build.mk
 endif
@@ -287,6 +291,18 @@ endif
 
 if ENABLE_TELICEMS_AND_PYTHON
 include $(top_srcdir)/TeLICeMS/python_build.mk
+endif
+
+if ENABLE_SPROS_AND_XPCOM
+include $(top_srcdir)/SProS/xpcom_build.mk
+endif
+
+if ENABLE_SPROS_AND_JAVA
+include $(top_srcdir)/SProS/java_build.mk
+endif
+
+if ENABLE_SPROS_AND_PYTHON
+include $(top_srcdir)/SProS/python_build.mk
 endif
 
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh

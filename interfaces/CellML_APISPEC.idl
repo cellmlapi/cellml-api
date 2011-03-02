@@ -2173,6 +2173,8 @@ module cellml_api
      * @return The node, as a serialised string.
      */
     dom::DOMString serialiseNode(in dom::Node node);
+
+    wstring makeURLAbsolute(in wstring relTo, in wstring relURL);
   };
 #pragma terminal-interface
 #pragma cross-module-argument

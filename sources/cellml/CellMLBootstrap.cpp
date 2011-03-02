@@ -71,6 +71,120 @@ CDA_CellMLBootstrap::serialiseNode(iface::dom::Node* aNode)
   return CDA_wcsdup(str.c_str());
 }
 
+wchar_t*
+CDA_CellMLBootstrap::makeURLAbsolute
+(const wchar_t* aRelTo, const wchar_t* aRelURL) throw()
+{
+  std::wstring aURL(aRelURL);
+
+  // It may already be an absolute URL...
+  if (aURL.find(L"://") != std::wstring::npos)
+    return CDA_wcsdup(aRelURL);
+
+  if (aURL.find(L"://") != std::wstring::npos)
+    return CDA_wcsdup(aRelURL);
+
+  std::wstring base(aRelTo);
+
+  // See if it is a '/' type URL...
+  if (aURL[0] == L'/')
+  {
+    size_t pos = base.find(L"://");
+    // Bail if we are trying to resolve relative to a relative URL...
+    if (pos == std::wstring::npos)
+      return CDA_wcsdup(aRelURL);
+
+    // Assume protocol://host/path, where host may be zero length e.g. file:///
+    pos = base.find(L"/", pos + 3);
+    std::wstring absURL;
+    if (pos == std::wstring::npos)
+      absURL = base;
+    else
+      // Don't include the slash, only everything up to it...
+      absURL = base.substr(0, pos);
+    absURL += aURL;
+    aURL.assign(absURL);
+    return CDA_wcsdup(aURL.c_str());
+  }
+
+  // No point trying to deal with a zero-length base URI.
+  if (base.length() == 0)
+    return CDA_wcsdup(aRelURL);
+
+  // It is a completely relative URL.
+  // See if base ends in a /...
+  size_t pos = base.find(L"://");
+  if (base[base.length() - 1] != L'/')
+  {
+    // aURL last component needs to be removed...
+    size_t tpos = base.rfind(L"/");
+    if (tpos == std::wstring::npos || tpos < pos + 3)
+      base += L"/";
+    else
+      base = base.substr(0, tpos + 1);
+  }
+  base += aURL;
+
+  // Substitute [^/]*/../ => / and /./ => /
+  size_t prepathlength = 3;
+  size_t pos2 = base.find(L"/", pos + 3);
+
+  if (pos2 != std::wstring::npos)
+    prepathlength = pos2 - pos + 1;
+
+  pos += prepathlength;
+
+  aURL.assign(base.substr(0, pos));
+
+  std::list<std::wstring> pathComponents;
+  bool last = false;
+
+  do
+  {
+    pos2 = base.find(L"/", pos);
+    if (pos2 == std::wstring::npos)
+    {
+      last = true;
+      pos2 = base.length();
+    }
+
+    // Don't bother putting an empty path component for //
+    if (pos2 != pos)
+    {
+      std::wstring str = base.substr(pos, pos2 - pos);
+      if (str == L"..")
+      {
+        if (!pathComponents.empty())
+          pathComponents.pop_back();
+      }
+      else if (str == L".")
+        ;
+      else
+        pathComponents.push_back(str);
+    }
+    pos = pos2 + 1;
+  }
+  while (!last);
+
+  bool first = true;
+
+  // Now go through the path components and make a path...
+  std::list<std::wstring>::iterator i;
+  for (i = pathComponents.begin(); i != pathComponents.end(); i++)
+  {
+    if (first)
+      first = false;
+    else
+      aURL += L'/';
+
+    aURL += *i;
+  }
+  if (base[base.length() - 1] == L'/')
+    aURL += L'/';
+
+  return CDA_wcsdup(aURL.c_str());
+}
+
 CDA_DOMURLLoader::CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl)
   : _cda_refcount(1), mDOMImpl(aDOMImpl)
 {

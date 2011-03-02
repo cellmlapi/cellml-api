@@ -233,6 +233,16 @@ AC_ARG_ENABLE(telicems,
 esac], [telicems=false])
 AM_CONDITIONAL(ENABLE_TELICEMS, test x$telicems = xtrue)
 
+AC_ARG_ENABLE(spros,
+[  --enable-spros    Enable the SED-ML Processing Service (SProS)],
+[case "${enableval}" in
+  no) spros=false ;;
+  *) spros=true
+     AC_DEFINE(ENABLE_SPROS, 1, [Is SProS enabled?])
+  ;;
+esac], [spros=false])
+AM_CONDITIONAL(ENABLE_SPROS, test x$spros = xtrue)
+
 celedsexport=false
 if test x$ccgs = xtrue; then
   if test x$celeds = xtrue; then
@@ -352,6 +362,9 @@ if test x$xpcom != xfalse; then
    if test x$telicems = xtrue; then
       telicemsandxpcom=true
    fi
+   if test x$spros = xtrue; then
+      sprosandxpcom=true
+   fi
 fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_CORBA, test x$contextandcorba = xtrue)
@@ -389,6 +402,7 @@ AM_CONDITIONAL(ENABLE_CIS_AND_XPCOM, test x$cisandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_XPCOM, test x$vacssandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_XPCOM, test x$rdfandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_TELICEMS_AND_XPCOM, test x$telicemsandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_SPROS_AND_XPCOM, test x$sprosandxpcom = xtrue)
 
 if test x$java != xfalse; then
    if test x$annotools = xtrue; then
@@ -434,6 +448,10 @@ if test x$java != xfalse; then
    if test x$telicems = xtrue; then
       telicemsandjava=true
    fi
+
+   if test x$spros = xtrue; then
+      sprosandjava=true
+   fi
 fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_JAVA, test x$contextandjava = xtrue)
@@ -448,6 +466,7 @@ AM_CONDITIONAL(ENABLE_CIS_AND_JAVA, test x$cisandjava = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_JAVA, test x$vacssandjava = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_JAVA, test x$rdfandjava = xtrue)
 AM_CONDITIONAL(ENABLE_TELICEMS_AND_JAVA, test x$telicemsandjava = xtrue)
+AM_CONDITIONAL(ENABLE_SPROS_AND_JAVA, test x$sprosandjava = xtrue)
 
 if test x$python != xfalse; then
    if test x$annotools = xtrue; then
@@ -493,6 +512,10 @@ if test x$python != xfalse; then
    if test x$telicems = xtrue; then
       telicemsandpython=true
    fi
+
+   if test x$spros = xtrue; then
+      sprosandpython=true
+   fi
 fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_PYTHON, test x$contextandpython = xtrue)
@@ -507,6 +530,7 @@ AM_CONDITIONAL(ENABLE_CIS_AND_PYTHON, test x$cisandpython = xtrue)
 AM_CONDITIONAL(ENABLE_VACSS_AND_PYTHON, test x$vacssandpython = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_PYTHON, test x$rdfandpython = xtrue)
 AM_CONDITIONAL(ENABLE_TELICEMS_AND_PYTHON, test x$telicemsandpython = xtrue)
+AM_CONDITIONAL(ENABLE_SPROS_AND_PYTHON, test x$sprosandpython = xtrue)
 
 AM_CONDITIONAL(ENABLE_EXAMPLES, test x$enable_examples = xtrue)
 

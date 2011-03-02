@@ -18,10 +18,6 @@
 #define RDF_NS L"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define XLINK_NS L"http://www.w3.org/1999/xlink"
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 static CDA_CellMLElement*
 WrapCellMLElement(iface::XPCOM::IObject* newParent,
                   iface::dom::Element* el) throw(std::exception&);
@@ -3514,7 +3510,7 @@ CDA_CellMLImport::importedConnections()
   return mImportConnectionSet;
 }
 
-void
+static void
 CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
   throw (std::exception&)
 {

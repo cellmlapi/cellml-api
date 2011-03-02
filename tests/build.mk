@@ -78,3 +78,10 @@ tests_RunTestBin_SOURCES += \
 tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/sources/cellml_context
 tests_RunTestBin_LDADD += -lcellml_context
 endif
+
+if ENABLE_SPROS
+tests_RunTestBin_SOURCES += \
+	tests/SProSTest.cpp
+tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/SProS/sources
+tests_RunTestBin_LDADD += -lspros
+endif
