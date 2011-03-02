@@ -8,6 +8,7 @@ ALLPYTHONLDFLAGS=-no-undefined $(PYTHON_LDFLAGS)
 ALLPYTHONCXXFLAGS=\
   -I$(top_builddir)/interfaces \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
+  -I$(top_srcdir)/sources/cellml \
   -I$(top_srcdir)/simple_interface_generators/glue/python \
   $(PYTHON_CFLAGS) $(AM_CXXFLAGS)
 
