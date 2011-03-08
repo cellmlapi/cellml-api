@@ -1,4 +1,5 @@
 #include "SProSTest.hpp"
+#include "CellMLBootstrap.hpp"
 
 #ifndef BASE_DIRECTORY
 #ifdef WIN32
@@ -7,6 +8,8 @@
 #define BASE_DIRECTORY L"file://" TESTDIR L"/test_xml/"
 #endif
 #endif
+
+#define SEDML_NS L"http://www.biomodels.net/sed-ml"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( SProSTest );
 
@@ -28,14 +31,14 @@ SProSTest::tearDown()
 void
 SProSTest::testSProSBootstrap()
 {
-  RETURN_INTO_OBJREF(cb, iface::SProS::Bootstrap,
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
                      CreateSProSBootstrap());
 //   {
 //     /**
 //      * Creates an empty SEDML element in a new document.
 //      */
 //     SEDMLElement createEmptySEDML();
-  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement, cb->createEmptySEDML());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement, sb->createEmptySEDML());
   CPPUNIT_ASSERT(es);
   RETURN_INTO_OBJREF(ms, iface::SProS::ModelSet, es->models());
   RETURN_INTO_OBJREF(msi, iface::SProS::BaseIterator, ms->iterateElements());
@@ -46,7 +49,7 @@ SProSTest::testSProSBootstrap()
 //      * Parses SEDML from a specified URL, using the specified relative URL.
 //      */
 //     SEDMLElement parseSEDMLFromURI(in wstring uri, in wstring relativeTo);
-  es = already_AddRefd<iface::SProS::SEDMLElement>(cb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  es = already_AddRefd<iface::SProS::SEDMLElement>(sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
   RETURN_INTO_OBJREF(sims, iface::SProS::SimulationSet,
                      es->simulations());
   RETURN_INTO_OBJREF(sim, iface::SProS::Simulation,
@@ -59,6 +62,15 @@ SProSTest::testSProSBootstrap()
 //      * Parses SEDML from a specified blob of text, using the specified base URI.
 //      */
 //     SEDMLElement parseSEDMLFromText(in wstring txt, in wstring baseURI);
+#define TRIVIAL_SEDML \
+  L"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"      \
+  L"<sedML xmlns=\"http://www.biomodels.net/sed-ml\">\n"    \
+  L"</sedML>\n"
+  es = already_AddRefd<iface::SProS::SEDMLElement>(sb->parseSEDMLFromText(TRIVIAL_SEDML, L""));
+  ms = already_AddRefd<iface::SProS::ModelSet>(es->models());
+  msi = already_AddRefd<iface::SProS::BaseIterator>(ms->iterateElements());
+  CPPUNIT_ASSERT(NULL == msi->nextElement());
+
 // 
 //     /**
 //      * Makes a SEDML structure from an element.
@@ -69,6 +81,20 @@ SProSTest::testSProSBootstrap()
 //      * Serialises a SEDML element to text.
 //      */
 //     wstring sedmlToText(in SEDMLElement el);
+  RETURN_INTO_WSTRING(st, sb->sedmlToText(es));
+  RETURN_INTO_OBJREF(cb, iface::cellml_api::CellMLBootstrap,
+                     CreateCellMLBootstrap());
+  RETURN_INTO_OBJREF(ul, iface::cellml_api::DOMURLLoader,
+                     cb->localURLLoader());
+  RETURN_INTO_OBJREF(doc, iface::dom::Document,
+                     ul->loadDocumentFromText(st.c_str()));
+  RETURN_INTO_OBJREF(de, iface::dom::Element,
+                     doc->documentElement());
+  
+  es = already_AddRefd<iface::SProS::SEDMLElement>(sb->makeSEDMLFromElement(de));
+  ms = already_AddRefd<iface::SProS::ModelSet>(es->models());
+  msi = already_AddRefd<iface::SProS::BaseIterator>(ms->iterateElements());
+  CPPUNIT_ASSERT(NULL == msi->nextElement());
 //   };
 }
 // 
@@ -78,20 +104,57 @@ SProSTest::testSProSBootstrap()
 //   interface Base
 //     : XPCOM::IObject
 //   {
+
+void
+SProSTest::testSProSBase()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement, sb->createEmptySEDML());
+  CPPUNIT_ASSERT(es);
 //     /**
 //      * The underlying DOM element.
 //      */
 //     readonly attribute dom::Element domElement;
+  RETURN_INTO_OBJREF(domel, iface::dom::Element, es->domElement());
+  CPPUNIT_ASSERT(NULL != domel);
+  RETURN_INTO_WSTRING(domelln, domel->localName());
+  CPPUNIT_ASSERT(domelln == L"sedML");
+
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, domel->ownerDocument());
+  RETURN_INTO_OBJREF(noteEl, iface::dom::Element,
+                     doc->createElementNS(SEDML_NS, L"notes"));
+  RETURN_INTO_OBJREF(noteText, iface::dom::Text,
+                     doc->createTextNode(L"Hello world"));
+  noteEl->appendChild(noteText)->release_ref();
+  domel->appendChild(noteEl)->release_ref();
+  RETURN_INTO_OBJREF(annotationEl, iface::dom::Element,
+                     doc->createElementNS(SEDML_NS, L"annotations"));
+  RETURN_INTO_OBJREF(annotationText, iface::dom::Text,
+                     doc->createTextNode(L"Hello world"));
+  annotationEl->appendChild(annotationText)->release_ref();
+  domel->appendChild(annotationEl)->release_ref();
+
 // 
 //     /**
 //      * The list of all note elements associated with this element.
 //      */
 //     readonly attribute dom::NodeList notes;
+  RETURN_INTO_OBJREF(nl, iface::dom::NodeList, es->notes());
+  CPPUNIT_ASSERT_EQUAL(1, (int)nl->length());
+  RETURN_INTO_OBJREF(item0, iface::dom::Node, nl->item(0));
+  CPPUNIT_ASSERT(!CDA_objcmp(item0, noteText));
+
 // 
 //     /**
 //      * The list of all annotations associated with this element.
 //      */
 //     readonly attribute dom::NodeList annotations;
+  nl = already_AddRefd<iface::dom::NodeList>(es->annotations());
+  CPPUNIT_ASSERT_EQUAL(1, (int)nl->length());
+  item0 = already_AddRefd<iface::dom::Node>(nl->item(0));
+  CPPUNIT_ASSERT(!CDA_objcmp(item0, annotationText));
+}
 //   };
 // 
 //   exception SProSException
@@ -104,21 +167,52 @@ SProSTest::testSProSBootstrap()
 //   interface BaseSet
 //     : XPCOM::IObject
 //   {
+
+void
+SProSTest::testSProSBaseSet()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
+                     sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  RETURN_INTO_OBJREF(ms, iface::SProS::ModelSet,
+                     es->models());
+
 //     /**
 //      * Obtain an iterator for iterating through the elements.
 //      */
 //     BaseIterator iterateElements();
+  RETURN_INTO_OBJREF(it1, iface::SProS::BaseIterator,
+                     ms->iterateElements());
+  RETURN_INTO_OBJREF(it2, iface::SProS::BaseIterator,
+                     ms->iterateElements());
+  CPPUNIT_ASSERT(it1);
+  CPPUNIT_ASSERT(it2);
+
+  RETURN_INTO_OBJREF(firstBase, iface::SProS::Base, it1->nextElement());
+  CPPUNIT_ASSERT(firstBase);
+
 // 
 //     /**
 //      * Inserts an element into the set. Raises an exception if the element is
 //      * already in another set, or was created for the wrong document.
 //      */
 //     void insert(in Base b) raises(SProSException);
+  RETURN_INTO_OBJREF(newModel, iface::SProS::Model, es->createModel());
+  ms->insert(newModel);
+
+  RETURN_INTO_OBJREF(nextBase, iface::SProS::Base, it1->nextElement());
+  CPPUNIT_ASSERT(!CDA_objcmp(nextBase, newModel));
+
 // 
 //     /**
 //      * Removes an element from the set.
 //      */
 //     void remove(in Base b);
+  ms->remove(firstBase);
+  RETURN_INTO_OBJREF(firstBase2, iface::SProS::Base, it2->nextElement());
+  CPPUNIT_ASSERT(!CDA_objcmp(firstBase2, nextBase));
+}
 //   };
 // 
 //   /**

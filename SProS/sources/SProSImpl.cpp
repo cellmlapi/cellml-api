@@ -176,6 +176,9 @@ CDA_SProSBase::reparent(CDA_SProSBase* aParent)
   if (mParent != NULL)
     for (i = 0; i < _cda_refcount; i++)
       mParent->add_ref();
+
+  if (mParent == NULL && _cda_refcount == 0)
+    delete this;
 }
 
 iface::dom::Element*
@@ -244,7 +247,7 @@ CDA_SomeSet::insert(iface::SProS::Base* b)
     throw iface::SProS::SProSException();
   }
 
-  char* id = sb->objid();
+  char* id = sb->mDomEl->objid();
   std::string ids(id);
   free(id);
 
@@ -281,13 +284,10 @@ CDA_SomeSet::cache(const std::string& ids, CDA_SProSBase* aSB)
     mElCache.find(ids);
   if (i == mElCache.end())
   {
-    aSB->add_ref();
     mElCache.insert(std::pair<std::string, CDA_SProSBase*>(ids, aSB));
   }
   else
   {
-    aSB->add_ref();
-    (*i).second->release_ref();
     (*i).second = aSB;
   }
 }
@@ -304,7 +304,7 @@ CDA_SomeSet::decache(CDA_SProSBase* aSB)
 
   if (i != mElCache.end())
   {
-    (*i).second->release_ref();
+    (*i).second->reparent(NULL);
     mElCache.erase(i);
   }
 }
@@ -314,7 +314,7 @@ CDA_SomeSet::emptyElementCache()
 {
   for (std::map<std::string, CDA_SProSBase*>::iterator i = mElCache.begin();
        i != mElCache.end(); i++)
-    (*i).second->release_ref();
+    (*i).second->reparent(NULL);
   mElCache.clear();
 }
 
@@ -1062,7 +1062,7 @@ CDA_SProSSEDMLElement::createModel()
   throw()
 {
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
-  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"sedML"));
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"model"));
 
   return new CDA_SProSModel(this, el);
 }
@@ -1351,7 +1351,31 @@ CDA_SProSSimulation::algorithmKisaoID() throw()
 void
 CDA_SProSSimulation::algorithmKisaoID(const wchar_t* aID) throw()
 {
-  return mDomEl->setAttribute(L"kisaoID", aID);
+  RETURN_INTO_OBJREF(n, iface::dom::Node, mDomEl->firstChild());
+  while (true)
+  {
+    if (n == NULL)
+    {
+      RETURN_INTO_OBJREF(od, iface::dom::Document, mDomEl->ownerDocument());
+      RETURN_INTO_OBJREF(el, iface::dom::Element,
+                         od->createElementNS(SEDML_NS, L"algorithm"));
+      el->setAttribute(L"kisaoID", aID);
+      mDomEl->appendChild(el)->release_ref();
+    }
+    DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
+    if (el != NULL)
+    {
+      RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
+      if (nsURI == SEDML_NS)
+      {
+        RETURN_INTO_WSTRING(ln, el->localName());
+        if (ln == L"algorithm")
+          el->setAttribute(L"kisaoID", aID);
+      }
+    }
+
+    n = already_AddRefd<iface::dom::Node>(n->nextSibling());
+  }
 }
 
 SomeSProSSet(Simulation, L"listOfSimulations", L"uniformTimeCourse");
