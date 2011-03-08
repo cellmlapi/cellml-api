@@ -59,12 +59,6 @@ module SProS
   interface DataSet;
   interface DataSetSet;
   interface DataSetIterator;
-#if 0
-  interface NotesSet;
-  interface NotesIterator;
-  interface AnnotationSet;
-  interface AnnotationIterator;
-#endif
 
   interface Bootstrap
     : XPCOM::IObject
@@ -994,40 +988,4 @@ module SProS
      */
     DataSet nextDataSet();
   };
-
-#if 0
-  interface Notes
-    : Base
-  {
-  };
-
-  interface NotesSet
-    : BaseSet
-  {
-    NotesIterator iterateNotes();
-  };
-
-  interface NotesIterator
-    : BaseIterator
-  {
-    Notes nextNotes();
-  };
-
-  interface Annotation
-    : Base
-  {
-  };
-
-  interface AnnotationSet
-    : BaseSet
-  {
-    AnnotationIterator iterateAnnotations();
-  };
-
-  interface AnnotationIterator
-    : BaseIterator
-  {
-    Annotation nextAnnotation();
-  };
-#endif
 };
