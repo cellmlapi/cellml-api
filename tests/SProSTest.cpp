@@ -1,5 +1,13 @@
 #include "SProSTest.hpp"
 
+#ifndef BASE_DIRECTORY
+#ifdef WIN32
+#define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"
+#else
+#define BASE_DIRECTORY L"file://" TESTDIR L"/test_xml/"
+#endif
+#endif
+
 CPPUNIT_TEST_SUITE_REGISTRATION( SProSTest );
 
 void
@@ -38,6 +46,13 @@ SProSTest::testSProSBootstrap()
 //      * Parses SEDML from a specified URL, using the specified relative URL.
 //      */
 //     SEDMLElement parseSEDMLFromURI(in wstring uri, in wstring relativeTo);
+  es = already_AddRefd<iface::SProS::SEDMLElement>(cb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  RETURN_INTO_OBJREF(sims, iface::SProS::SimulationSet,
+                     es->simulations());
+  RETURN_INTO_OBJREF(sim, iface::SProS::Simulation,
+                     sims->getSimulationByIdentifier(L"simulation1"));
+  RETURN_INTO_WSTRING(kisaoID, sim->algorithmKisaoID());
+  CPPUNIT_ASSERT(kisaoID == L"KISAO:0000019");
 
 // 
 //     /**

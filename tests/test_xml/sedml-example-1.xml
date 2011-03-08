@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sedML xmlns="http://www.biomodels.net/sed-ml">
+  <!-- From libsedml by Frank Bergmann, apparently licensed under the BSD license. -->
+  <listOfSimulations>
+    <uniformTimeCourse id="simulation1" initialTime="0" outputStartTime="0" outputEndTime="200" numberOfPoints="1000">
+      <algorithm kisaoID="KISAO:0000019"/>
+    </uniformTimeCourse>
+  </listOfSimulations>
+  <listOfModels>
+    <model id="model1" type="SBML" source="urn:miriam:biomodels.db:BIOMD0000000003"/>
+  </listOfModels>
+  <listOfTasks>
+    <task id="task1" modelReference="model1" simulationReference="simulation1"/>
+  </listOfTasks>
+  <listOfDataGenerators>
+    <dataGenerator id="time" name="time">
+      <listOfVariables>
+        <variable id="time" taskReference="task1" target="time"/>
+      </listOfVariables><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <ci> time </ci>
+</math></dataGenerator>
+    <dataGenerator id="C1" name="C1">
+      <listOfVariables>
+        <variable id="C" taskReference="task1" target="/sbml:sbml/sbml:model/sbml:listOfSpecies/sbml:species[@id='C']"/>
+      </listOfVariables><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <ci> C </ci>
+</math></dataGenerator>
+    <dataGenerator id="M1" name="M1">
+      <listOfVariables>
+        <variable id="M" taskReference="task1" target="/sbml:sbml/sbml:model/sbml:listOfSpecies/sbml:species[@id='M']"/>
+      </listOfVariables><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <ci> M </ci>
+</math></dataGenerator>
+    <dataGenerator id="X1" name="X1">
+      <listOfVariables>
+        <variable id="X" taskReference="task1" target="/sbml:sbml/sbml:model/sbml:listOfSpecies/sbml:species[@id='X']"/>
+      </listOfVariables><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <ci> X </ci>
+</math></dataGenerator>
+    <dataGenerator id="Total" name="Total">
+      <listOfVariables>
+        <variable id="X" taskReference="task1" target="/sbml:sbml/sbml:model/sbml:listOfSpecies/sbml:species[@id='X']"/>
+        <variable id="M" taskReference="task1" target="/sbml:sbml/sbml:model/sbml:listOfSpecies/sbml:species[@id='M']"/>
+      </listOfVariables><math xmlns="http://www.w3.org/1998/Math/MathML">
+  <apply>
+    <plus/>
+    <ci> M </ci>
+    <ci> X </ci>
+    <cn type="integer"> 1 </cn>
+  </apply>
+</math></dataGenerator>
+  </listOfDataGenerators>
+  <listOfOutputs>
+    <plot2D id="plot1" name="BioModel 3" logX="false" logY="false">
+      <listOfCurves>
+        <curve xDataReference="time" yDataReference="C1"/>
+        <curve xDataReference="time" yDataReference="M1"/>
+        <curve xDataReference="time" yDataReference="X1"/>
+        <curve xDataReference="time" yDataReference="Total"/>
+      </listOfCurves>
+    </plot2D>
+  </listOfOutputs>
+</sedML>

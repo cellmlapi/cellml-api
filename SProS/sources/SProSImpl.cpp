@@ -30,7 +30,7 @@ CDA_SProSBootstrap::parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativ
 {
   RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
   RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
-  RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(uri, relativeTo));
+  RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
   RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
   RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
   return new CDA_SProSSEDMLElement(de);  
@@ -270,6 +270,7 @@ CDA_SomeSet::remove(iface::SProS::Base* b)
 iface::SProS::BaseIterator*
 CDA_SomeSet::iterateElements() throw()
 {
+  findOrCreateListElement();
   return new CDA_SProSBaseIterator(this);
 }
 
@@ -575,10 +576,9 @@ CDA_SProSDOMIteratorBase::CDA_SProSDOMIteratorBase
 (
  iface::dom::Element* parentElement
 )
-  : mPrevElement(NULL), mNextElement(NULL), mParentElement(parentElement),
+  : mParentElement(parentElement),
     icml(this)
 {
-  mParentElement->add_ref();
   mNodeList = mParentElement->childNodes();
   DECLARE_QUERY_INTERFACE_OBJREF(targ, mParentElement, events::EventTarget);
   targ->addEventListener(L"DOMNodeInserted", &icml, false);
@@ -592,20 +592,16 @@ CDA_SProSDOMIteratorBase::~CDA_SProSDOMIteratorBase()
     DECLARE_QUERY_INTERFACE_OBJREF(targ, mParentElement, events::EventTarget);
     targ->removeEventListener(L"DOMNodeInserted", &icml, false);
   }
-  mParentElement->release_ref();
 
   if (mNextElement != NULL)
   {
     DECLARE_QUERY_INTERFACE_OBJREF(targ, mNextElement, events::EventTarget);
     targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
-    mNextElement->release_ref();
-    mNextElement = NULL;
   }
   if (mPrevElement != NULL)
   {
     DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
     targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
-    mPrevElement->release_ref();
   }
 }
 
@@ -643,9 +639,9 @@ CDA_SProSDOMIteratorBase::fetchNextElement()
       {
         return NULL;
       }
+
       DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
       targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
-      mPrevElement->release_ref();
       mPrevElement = mNextElement;
       mNextElement = NULL;
     }
@@ -665,6 +661,7 @@ CDA_SProSDOMIteratorBase::fetchNextElement()
       nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
     }
     
+    mPrevElement->add_ref();
     return mPrevElement;
   }
   catch (iface::dom::DOMException& de)
@@ -715,7 +712,6 @@ CDA_SProSDOMIteratorBase::fetchNextElement(const wchar_t* aWantEl)
       }
       DECLARE_QUERY_INTERFACE_OBJREF(targ, mPrevElement, events::EventTarget);
       targ->removeEventListener(L"DOMNodeRemoved", &icml, false);
-      mPrevElement->release_ref();
       mPrevElement = mNextElement;
       mNextElement = NULL;
     }
@@ -740,7 +736,8 @@ CDA_SProSDOMIteratorBase::fetchNextElement(const wchar_t* aWantEl)
       }
       nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
     }
-    
+
+    mPrevElement->add_ref();
     return mPrevElement;
   }
   catch (iface::dom::DOMException& de)
@@ -803,7 +800,6 @@ handleEvent(iface::events::Event* evt)
         targ->removeEventListener(L"DOMNodeRemoved", this, false);
         RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
                            mIterator->mPrevElement->previousSibling());
-        mIterator->mPrevElement->release_ref();
         mIterator->mPrevElement = NULL;
         while (true)
         {
@@ -813,7 +809,6 @@ handleEvent(iface::events::Event* evt)
             // iterator state...
             if (mIterator->mNextElement != NULL)
             {
-              mIterator->mNextElement->release_ref();
               DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
                                              events::EventTarget);
               targ->removeEventListener(L"DOMNodeRemoved", this, false);
@@ -839,7 +834,6 @@ handleEvent(iface::events::Event* evt)
         // The next node is about to be removed. Advance to a later next...
         RETURN_INTO_OBJREF(nodeHit, iface::dom::Node,
                            mIterator->mNextElement->nextSibling());
-        mIterator->mNextElement->release_ref();
         mIterator->mNextElement = NULL;
 
         while (true)
@@ -868,7 +862,7 @@ handleEvent(iface::events::Event* evt)
 
       RETURN_INTO_OBJREF(rn, iface::dom::Node, mevt->relatedNode());
       if (dynamic_cast<void*>(rn.getPointer()) !=
-          dynamic_cast<void*>(mIterator->mParentElement))
+          dynamic_cast<void*>(static_cast<iface::dom::Element*>(mIterator->mParentElement)))
         return;
       
       RETURN_INTO_OBJREF(tn, iface::events::EventTarget, mevt->target());
@@ -941,10 +935,8 @@ handleEvent(iface::events::Event* evt)
         DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
                                        events::EventTarget);
         targ->removeEventListener(L"DOMNodeRemoved", this, false);
-        mIterator->mNextElement->release_ref();
       }
       mIterator->mNextElement = curE;
-      mIterator->mNextElement->add_ref();
       DECLARE_QUERY_INTERFACE_OBJREF(targ, mIterator->mNextElement,
                                      events::EventTarget);
       targ->addEventListener(L"DOMNodeRemoved", this, false);
@@ -958,7 +950,7 @@ handleEvent(iface::events::Event* evt)
 
 
 CDA_SProSIteratorBase::CDA_SProSIteratorBase(CDA_SomeSet* aSet)
-  : CDA_SProSDOMIteratorBase(aSet->mParent->mDomEl), _cda_refcount(1), mSet(aSet)
+  : CDA_SProSDOMIteratorBase(aSet->mListElement), _cda_refcount(1), mSet(aSet)
 {
 }
 
@@ -1239,12 +1231,14 @@ iface::SProS::NamedElementIterator*
 CDA_SProSNamedElementSet::iterateNamedElement()
   throw()
 {
+  findOrCreateListElement();
   return new CDA_SProSNamedElementIterator(this);
 }
 
 iface::SProS::NamedIdentifiedElementIterator*
 CDA_SProSNamedIdentifiedElementSet::iterateNamedIdentifiedElements() throw()
 {
+  findOrCreateListElement();
   return new CDA_SProSNamedIdentifiedElementIterator(this);
 }
 
@@ -1275,25 +1269,25 @@ CDA_SProSNamedIdentifiedElementSet::getNamedIdentifiedElementByIdentifier(const 
 wchar_t* CDA_SProSModel::language()
   throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"language");
+  return mDomEl->getAttribute(L"language");
 }
 
 void CDA_SProSModel::language(const wchar_t* aLang)
   throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"language", aLang);
+  return mDomEl->setAttribute(L"language", aLang);
 }
 
 wchar_t* CDA_SProSModel::source()
   throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"source");
+  return mDomEl->getAttribute(L"source");
 }
 
 void CDA_SProSModel::source(const wchar_t* aSource)
   throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"source", aSource);
+  return mDomEl->setAttribute(L"source", aSource);
 }
 
 iface::SProS::ChangeSet*
@@ -1311,6 +1305,7 @@ CDA_SProSModel::changes()
 iface::SProS::whatUpper##Iterator* \
 CDA_SProS##whatUpper##Set::iterate##whatUpper##s() throw() \
 { \
+  findOrCreateListElement(); \
   return new CDA_SProS##whatUpper##Iterator(this); \
 }
 
@@ -1321,6 +1316,7 @@ CDA_SProS##whatUpper##Set::iterate##whatUpper##s() throw() \
 iface::SProS::whatUpper##Iterator* \
 CDA_SProS##whatUpper##Set::iterate##whatUpper##s() throw() \
 { \
+  findOrCreateListElement();                       \
   return new CDA_SProS##whatUpper##Iterator(this); \
 }
 
@@ -1329,13 +1325,33 @@ SomeSProSSet(Model, L"listOfModels", L"model");
 wchar_t*
 CDA_SProSSimulation::algorithmKisaoID() throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"kisaoID");
+  RETURN_INTO_OBJREF(n, iface::dom::Node, mDomEl->firstChild());
+  while (true)
+  {
+    if (n == NULL)
+      return CDA_wcsdup(L"");
+    DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
+    if (el != NULL)
+    {
+      RETURN_INTO_WSTRING(nsURI, el->namespaceURI());
+      if (nsURI == SEDML_NS)
+      {
+        RETURN_INTO_WSTRING(ln, el->localName());
+        if (ln == L"algorithm")
+        {
+          return el->getAttribute(L"kisaoID");
+        }
+      }
+    }
+
+    n = already_AddRefd<iface::dom::Node>(n->nextSibling());
+  }
 }
 
 void
 CDA_SProSSimulation::algorithmKisaoID(const wchar_t* aID) throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"kisaoID", aID);
+  return mDomEl->setAttribute(L"kisaoID", aID);
 }
 
 SomeSProSSet(Simulation, L"listOfSimulations", L"uniformTimeCourse");
@@ -1344,7 +1360,7 @@ double
 CDA_SProSUniformTimeCourse::initialTime()
   throw()
 {
-  RETURN_INTO_WSTRING(it, mDomEl->getAttributeNS(SEDML_NS, L"initialTime"));
+  RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"initialTime"));
   return wcstod(it.c_str(), NULL);
 }
 
@@ -1354,14 +1370,14 @@ CDA_SProSUniformTimeCourse::initialTime(double aValue)
 {
   wchar_t buf[32];
   swprintf(buf, sizeof(buf), L"%g", aValue);
-  mDomEl->setAttributeNS(SEDML_NS, L"initialTime", buf);
+  mDomEl->setAttribute(L"initialTime", buf);
 }
 
 double
 CDA_SProSUniformTimeCourse::outputStartTime()
   throw()
 {
-  RETURN_INTO_WSTRING(it, mDomEl->getAttributeNS(SEDML_NS, L"outputStartTime"));
+  RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"outputStartTime"));
   return wcstod(it.c_str(), NULL);
 }
 
@@ -1371,14 +1387,14 @@ CDA_SProSUniformTimeCourse::outputStartTime(double aValue)
 {
   wchar_t buf[32];
   swprintf(buf, sizeof(buf), L"%g", aValue);
-  mDomEl->setAttributeNS(SEDML_NS, L"outputStartTime", buf);
+  mDomEl->setAttribute(L"outputStartTime", buf);
 }
 
 double
 CDA_SProSUniformTimeCourse::outputEndTime()
   throw()
 {
-  RETURN_INTO_WSTRING(it, mDomEl->getAttributeNS(SEDML_NS, L"outputEndTime"));
+  RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"outputEndTime"));
   return wcstod(it.c_str(), NULL);
 }
 
@@ -1388,7 +1404,7 @@ CDA_SProSUniformTimeCourse::outputEndTime(double aValue)
 {
   wchar_t buf[32];
   swprintf(buf, sizeof(buf), L"%g", aValue);
-  mDomEl->setAttributeNS(SEDML_NS, L"outputEndTime", buf);
+  mDomEl->setAttribute(L"outputEndTime", buf);
 }
 
 void
@@ -1397,14 +1413,14 @@ CDA_SProSUniformTimeCourse::numberOfPoints(uint32_t aNumPoints)
 {
   wchar_t buf[32];
   swprintf(buf, sizeof(buf), L"%lu", aNumPoints);
-  mDomEl->setAttributeNS(SEDML_NS, L"numberOfPoints", buf);
+  mDomEl->setAttribute(L"numberOfPoints", buf);
 }
 
 uint32_t
 CDA_SProSUniformTimeCourse::numberOfPoints()
   throw()
 {
-  RETURN_INTO_WSTRING(it, mDomEl->getAttributeNS(SEDML_NS, L"numberOfPoints"));
+  RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"numberOfPoints"));
   return wcstoul(it.c_str(), NULL, 10);
 }
 SomeSProSSet(Task, L"listOfTasks", L"task");
@@ -1413,14 +1429,14 @@ wchar_t*
 CDA_SProSTask::simulationReferenceIdentifier()
   throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"simulationReference");
+  return mDomEl->getAttribute(L"simulationReference");
 }
 
 void
 CDA_SProSTask::simulationReferenceIdentifier(const wchar_t* aSim)
   throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"simulationReference", aSim);
+  return mDomEl->setAttribute(L"simulationReference", aSim);
 }
 
 iface::SProS::Simulation*
@@ -1446,14 +1462,14 @@ wchar_t*
 CDA_SProSTask::modelReferenceIdentifier()
   throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"modelReference");
+  return mDomEl->getAttribute(L"modelReference");
 }
 
 void
 CDA_SProSTask::modelReferenceIdentifier(const wchar_t* aSim)
   throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"modelReference", aSim);
+  return mDomEl->setAttribute(L"modelReference", aSim);
 }
 
 iface::SProS::Model*
@@ -1667,14 +1683,14 @@ wchar_t*
 CDA_SProSChange::target()
   throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"target");
+  return mDomEl->getAttribute(L"target");
 }
 
 void
 CDA_SProSChange::target(const wchar_t* aTarget)
   throw()
 {
-  mDomEl->setAttributeNS(SEDML_NS, L"target", aTarget);
+  mDomEl->setAttribute(L"target", aTarget);
 }
 
 #define ChangeTypes L"computeChange", L"changeAttribute", L"changeXML", L"addXML", L"removeXML"
@@ -1700,14 +1716,14 @@ wchar_t*
 CDA_SProSChangeAttribute::newValue()
   throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"newValue");
+  return mDomEl->getAttribute(L"newValue");
 }
 
 void
 CDA_SProSChangeAttribute::newValue(const wchar_t* aValue)
   throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"newValue", aValue);
+  return mDomEl->setAttribute(L"newValue", aValue);
 }
 
 iface::dom::NodeList*
@@ -1720,26 +1736,26 @@ CDA_SProSAddXML::anyXML()
 wchar_t*
 CDA_SProSVariable::target() throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"target");
+  return mDomEl->getAttribute(L"target");
 }
 
 void
 CDA_SProSVariable::target(const wchar_t* aTarget) throw()
 {
-  mDomEl->setAttributeNS(SEDML_NS, L"target", aTarget);
+  mDomEl->setAttribute(L"target", aTarget);
 }
 
 wchar_t*
 CDA_SProSVariable::symbol() throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"symbol");
+  return mDomEl->getAttribute(L"symbol");
 }
 
 void
 CDA_SProSVariable::symbol(const wchar_t* aSymbol)
   throw()
 {
-  mDomEl->setAttributeNS(SEDML_NS, L"symbol", aSymbol);
+  mDomEl->setAttribute(L"symbol", aSymbol);
 }
 
 SomeSProSSet(Variable, L"listOfVariables", L"variable");
@@ -1748,7 +1764,7 @@ double
 CDA_SProSParameter::value()
   throw()
 {
-  RETURN_INTO_WSTRING(value, mDomEl->getAttributeNS(SEDML_NS, L"value"));
+  RETURN_INTO_WSTRING(value, mDomEl->getAttribute(L"value"));
   if (value == L"")
     return 0.0;
   return wcstod(value.c_str(), NULL);
@@ -1759,14 +1775,14 @@ CDA_SProSParameter::value(double aValue) throw()
 {
   wchar_t value[64];
   swprintf(value, 64, L"%e", aValue);
-  mDomEl->setAttributeNS(SEDML_NS, L"value", value);
+  mDomEl->setAttribute(L"value", value);
 }
 SomeSProSSet(Parameter, L"listOfParameters", L"parameter");
 
 bool
 CDA_SProSCurve::logX() throw()
 {
-  RETURN_INTO_WSTRING(v, mDomEl->getAttributeNS(SEDML_NS, L"logX"));
+  RETURN_INTO_WSTRING(v, mDomEl->getAttribute(L"logX"));
   if (v == L"true")
     return true;
   return false;
@@ -1775,13 +1791,13 @@ CDA_SProSCurve::logX() throw()
 void
 CDA_SProSCurve::logX(bool aValue) throw()
 {
-  mDomEl->setAttributeNS(SEDML_NS, L"logX", aValue ? L"true" : L"false");
+  mDomEl->setAttribute(L"logX", aValue ? L"true" : L"false");
 }
 
 bool
 CDA_SProSCurve::logY() throw()
 {
-  RETURN_INTO_WSTRING(v, mDomEl->getAttributeNS(SEDML_NS, L"logY"));
+  RETURN_INTO_WSTRING(v, mDomEl->getAttribute(L"logY"));
   if (v == L"true")
     return true;
   return false;
@@ -1790,31 +1806,31 @@ CDA_SProSCurve::logY() throw()
 void
 CDA_SProSCurve::logY(bool aValue) throw()
 {
-  mDomEl->setAttributeNS(SEDML_NS, L"logY", aValue ? L"true" : L"false");
+  mDomEl->setAttribute(L"logY", aValue ? L"true" : L"false");
 }
 
 wchar_t*
 CDA_SProSCurve::xDataGeneratorID() throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"xDataReference");
+  return mDomEl->getAttribute(L"xDataReference");
 }
 
 void
 CDA_SProSCurve::xDataGeneratorID(const wchar_t* aRef) throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"xDataReference", aRef);
+  return mDomEl->setAttribute(L"xDataReference", aRef);
 }
 
 wchar_t*
 CDA_SProSCurve::yDataGeneratorID() throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"yDataReference");
+  return mDomEl->getAttribute(L"yDataReference");
 }
 
 void
 CDA_SProSCurve::yDataGeneratorID(const wchar_t* aRef) throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"yDataReference", aRef);
+  return mDomEl->setAttribute(L"yDataReference", aRef);
 }
 
 iface::SProS::DataGenerator*
@@ -1833,14 +1849,14 @@ void
 CDA_SProSCurve::xDataGenerator(iface::SProS::DataGenerator* aGen) throw()
 {
   RETURN_INTO_WSTRING(ident, aGen->id());
-  mDomEl->setAttributeNS(SEDML_NS, L"xDataReference", ident.c_str());
+  mDomEl->setAttribute(L"xDataReference", ident.c_str());
 }
 
 void
 CDA_SProSCurve::yDataGenerator(iface::SProS::DataGenerator* aGen) throw()
 {
   RETURN_INTO_WSTRING(ident, aGen->id());
-  mDomEl->setAttributeNS(SEDML_NS, L"yDataReference", ident.c_str());
+  mDomEl->setAttribute(L"yDataReference", ident.c_str());
 }
 
 iface::SProS::DataGenerator*
@@ -1864,13 +1880,14 @@ CDA_SProSCurveSetBase::CDA_SProSCurveSetBase(CDA_SProSBase* aParent)
 iface::SProS::CurveIterator*
 CDA_SProSCurveSetBase::iterateCurves() throw()
 {
+  findOrCreateListElement();
   return new CDA_SProSCurveIterator(this);
 }
 
 bool
 CDA_SProSSurface::logZ() throw()
 {
-  RETURN_INTO_WSTRING(v, mDomEl->getAttributeNS(SEDML_NS, L"logZ"));
+  RETURN_INTO_WSTRING(v, mDomEl->getAttribute(L"logZ"));
   if (v == L"true")
     return true;
   return false;
@@ -1879,19 +1896,19 @@ CDA_SProSSurface::logZ() throw()
 void
 CDA_SProSSurface::logZ(bool aValue) throw()
 {
-  mDomEl->setAttributeNS(SEDML_NS, L"logZ", aValue ? L"true" : L"false");
+  mDomEl->setAttribute(L"logZ", aValue ? L"true" : L"false");
 }
 
 wchar_t*
 CDA_SProSSurface::zDataGeneratorID() throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"zDataReference");
+  return mDomEl->getAttribute(L"zDataReference");
 }
 
 void
 CDA_SProSSurface::zDataGeneratorID(const wchar_t* aRef) throw()
 {
-  return mDomEl->setAttributeNS(SEDML_NS, L"zDataReference", aRef);
+  return mDomEl->setAttribute(L"zDataReference", aRef);
 }
 
 iface::SProS::DataGenerator*
@@ -1910,12 +1927,13 @@ void
 CDA_SProSSurface::zDataGenerator(iface::SProS::DataGenerator* aGen) throw()
 {
   RETURN_INTO_WSTRING(ident, aGen->id());
-  mDomEl->setAttributeNS(SEDML_NS, L"zDataReference", ident.c_str());
+  mDomEl->setAttribute(L"zDataReference", ident.c_str());
 }
 
 iface::SProS::SurfaceIterator*
 CDA_SProSSurfaceSet::iterateSurfaces() throw()
 {
+  findOrCreateListElement();
   return new CDA_SProSSurfaceIterator(this);
 }
 
@@ -1929,14 +1947,14 @@ wchar_t*
 CDA_SProSDataSet::dataGeneratorID()
   throw()
 {
-  return mDomEl->getAttributeNS(SEDML_NS, L"dataReference");
+  return mDomEl->getAttribute(L"dataReference");
 }
 
 void
 CDA_SProSDataSet::dataGeneratorID(const wchar_t* aRef)
   throw()
 {
-  mDomEl->setAttributeNS(SEDML_NS, L"dataReference", aRef);
+  mDomEl->setAttribute(L"dataReference", aRef);
 }
 
 iface::SProS::DataGenerator*
@@ -1976,5 +1994,6 @@ iface::SProS::DataSetIterator*
 CDA_SProSDataSetSet::iterateDataSets()
   throw()
 {
+  findOrCreateListElement();
   return new CDA_SProSDataSetIterator(this);
 }

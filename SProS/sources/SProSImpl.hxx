@@ -108,7 +108,7 @@ public:
   iface::dom::Element* fetchNextElement(const wchar_t* aWantEl);
 
 private:
-  iface::dom::Element *mPrevElement, *mNextElement, *mParentElement;
+  ObjRef<iface::dom::Element> mPrevElement, mNextElement, mParentElement;
   iface::dom::NodeList *mNodeList;
 
   class IteratorChildrenModificationListener
