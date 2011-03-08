@@ -92,9 +92,9 @@ void (*__malloc_initialize_hook)(void) = tests_init_hook;
 
 int main(int argc, char* argv[])
 {
-  if (argc > 1 && !strcmp(argv[1], "--help"))
+  if (argc > 2 || (argc > 1 && !strcmp(argv[1], "--help")))
   {
-    printf("This program takes no arguments.\n");
+    printf("Usage: RunTestBin [--help|test_to_run]\n");
     exit(0);
   }
 
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
   runner.setOutputter( new CppUnit::CompilerOutputter( &runner.result(),
                                                        std::cerr ) );
   // Run the tests.
-  bool wasSucessful = runner.run();
+  bool wasSucessful = runner.run(argc > 1 ? argv[1] : "");
 
 #ifdef SHOW_MEMORY_BREAK
   void* finalbreak = sbrk(0);

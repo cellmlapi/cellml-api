@@ -157,7 +157,7 @@ CDA_SProSBase::release_ref() throw()
     mParent->release_ref();
 
   _cda_refcount--;
-  if (_cda_refcount == 0)
+  if (_cda_refcount == 0 && mParent == NULL)
     delete this;
 }
 
@@ -958,7 +958,7 @@ handleEvent(iface::events::Event* evt)
 
 
 CDA_SProSIteratorBase::CDA_SProSIteratorBase(CDA_SomeSet* aSet)
-  : CDA_SProSDOMIteratorBase(aSet->mParent->mDomEl), mSet(aSet)
+  : CDA_SProSDOMIteratorBase(aSet->mParent->mDomEl), _cda_refcount(1), mSet(aSet)
 {
 }
 
@@ -1029,35 +1029,40 @@ iface::SProS::ModelSet*
 CDA_SProSSEDMLElement::models()
   throw()
 {
-  return new CDA_SProSModelSet(this);
+  add_ref();
+  return &mModelSet;
 }
 
 iface::SProS::TaskSet*
 CDA_SProSSEDMLElement::tasks()
   throw()
 {
-  return new CDA_SProSTaskSet(this);
+  add_ref();
+  return &mTaskSet;
 }
 
 iface::SProS::SimulationSet*
 CDA_SProSSEDMLElement::simulations()
   throw()
 {
-  return new CDA_SProSSimulationSet(this);
+  add_ref();
+  return &mSimulationSet;
 }
 
 iface::SProS::DataGeneratorSet*
 CDA_SProSSEDMLElement::generators()
   throw()
 {
-  return new CDA_SProSDataGeneratorSet(this);
+  add_ref();
+  return &mDataGeneneratorSet;
 }
 
 iface::SProS::OutputSet*
 CDA_SProSSEDMLElement::outputs()
   throw()
 {
-  return new CDA_SProSOutputSet(this);
+  add_ref();
+  return &mOutputSet;
 }
 
 iface::SProS::Model*
@@ -1295,7 +1300,8 @@ iface::SProS::ChangeSet*
 CDA_SProSModel::changes()
   throw()
 {
-  return new CDA_SProSChangeSet(this);
+  add_ref();
+  return &mChangeSet;
 }
 
 #undef SomeSProSSet
@@ -1618,13 +1624,15 @@ CDA_SProSMathIterator::next()
 iface::SProS::ParameterSet*
 CDA_SProSDataGenerator::parameters() throw()
 {
-  return new CDA_SProSParameterSet(this);
+  add_ref();
+  return &mParameterSet;
 }
 
 iface::SProS::VariableSet*
 CDA_SProSDataGenerator::variables() throw()
 {
-  return new CDA_SProSVariableSet(this);
+  add_ref();
+  return &mVariableSet;
 }
 
 SomeSProSSet(DataGenerator, L"listOfDataGenerators", L"dataGenerator");
@@ -1635,21 +1643,24 @@ iface::SProS::CurveSet*
 CDA_SProSPlot2D::curves()
   throw()
 {
-  return new CDA_SProSCurveSet(this);
+  add_ref();
+  return &mCurveSet;
 }
 
 iface::SProS::SurfaceSet*
 CDA_SProSPlot3D::surfaces()
   throw()
 {
-  return new CDA_SProSSurfaceSet(this);
+  add_ref();
+  return &mSurfaceSet;
 }
 
 iface::SProS::DataSetSet*
 CDA_SProSReport::datasets()
   throw()
 {
-  return new CDA_SProSDataSetSet(this);
+  add_ref();
+  return &mDataSetSet;
 }
 
 wchar_t*
@@ -1673,14 +1684,16 @@ iface::SProS::VariableSet*
 CDA_SProSComputeChange::variables()
   throw()
 {
-  return new CDA_SProSVariableSet(this);
+  add_ref();
+  return &mVariables;
 }
 
 iface::SProS::ParameterSet*
 CDA_SProSComputeChange::parameters()
   throw()
 {
-  return new CDA_SProSParameterSet(this);
+  add_ref();
+  return &mParameters;
 }
 
 wchar_t*

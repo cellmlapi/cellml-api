@@ -162,44 +162,6 @@ public:
   CDA_IMPL_QI1(SProS::BaseIterator);
 };
 
-class CDA_SProSSEDMLElement
-  : public CDA_SProSBase, public iface::SProS::SEDMLElement
-{
-public:
-  CDA_SProSSEDMLElement(iface::dom::Element* aElement)
-    : CDA_SProSBase(NULL, aElement) {}
-
-  CDA_IMPL_QI2(SProS::Base, SProS::SEDMLElement);
-
-  uint32_t level() throw();
-  void level(uint32_t aLevel) throw();
-  uint32_t version() throw();
-  void version(uint32_t aVersion) throw();
-  
-  iface::SProS::ModelSet* models() throw();
-  iface::SProS::TaskSet* tasks() throw();
-  iface::SProS::SimulationSet* simulations() throw();
-  iface::SProS::DataGeneratorSet* generators() throw();
-  iface::SProS::OutputSet* outputs() throw();
-
-  iface::SProS::Model* createModel() throw();
-  iface::SProS::UniformTimeCourse* createUniformTimeCourse() throw();
-  iface::SProS::Task* createTask() throw();
-  iface::SProS::DataGenerator* createDataGenerator() throw();
-  iface::SProS::Plot2D* createPlot2D() throw();
-  iface::SProS::Plot3D* createPlot3D() throw();
-  iface::SProS::Report* createReport() throw();
-  iface::SProS::ComputeChange* createComputeChange() throw();
-  iface::SProS::ChangeAttribute* createChangeAttribute() throw();
-  iface::SProS::AddXML* createAddXML() throw();
-  iface::SProS::RemoveXML* createRemoveXML() throw();
-  iface::SProS::ChangeXML* createChangeXML() throw();
-  iface::SProS::Variable* createVariable() throw();
-  iface::SProS::Parameter* createParameter() throw();
-  iface::SProS::Curve* createCurve() throw();
-  iface::SProS::Surface* createSurface() throw();
-  iface::SProS::DataSet* createDataSet() throw();
-};
 
 class CDA_SProSNamedElement
   : public virtual CDA_SProSBase, public virtual iface::SProS::NamedElement
@@ -345,24 +307,6 @@ public:
   CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator, SProS::NamedIdentifiedElementIterator);
 };
 
-class CDA_SProSModel
-  : public CDA_SProSNamedIdentifiedElement, public iface::SProS::Model
-{
-public:
-  CDA_SProSModel(CDA_SProSBase* aParent,
-                 iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl) {}
-  ~CDA_SProSModel() {}
-
-  CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Model);
-
-  wchar_t* language() throw();
-  void language(const wchar_t*) throw();
-  wchar_t* source() throw();
-  void source(const wchar_t*) throw();
-  iface::SProS::ChangeSet* changes() throw();
-};
-
 #define SomeSProSSet(whatUpper) \
 class CDA_SProS##whatUpper##Set \
   : public CDA_SProSNamedIdentifiedElementSet, public iface::SProS::whatUpper##Set \
@@ -430,7 +374,94 @@ public: \
   } \
 };
 
+class CDA_SProSModel;
+class CDA_SProSTask;
+class CDA_SProSSimulation;
+class CDA_SProSDataGenerator;
+class CDA_SProSOutput;
+class CDA_SProSVariable;
+class CDA_SProSParameter;
+class CDA_SProSChange;
+class CDA_SProSCurve;
 SomeSProSSet(Model);
+SomeSProSSet(Task);
+SomeSProSSet(Simulation);
+SomeSProSSet(DataGenerator);
+SomeSProSSet(Output);
+SomeSProSSet(Variable);
+SomeSProSSet(Parameter);
+SomeAnonSProSSet(Change);
+
+class CDA_SProSSEDMLElement
+  : public CDA_SProSBase, public iface::SProS::SEDMLElement
+{
+public:
+  CDA_SProSSEDMLElement(iface::dom::Element* aElement)
+    : CDA_SProSBase(NULL, aElement), mModelSet(this), mTaskSet(this),
+      mSimulationSet(this), mDataGeneneratorSet(this), mOutputSet(this) {}
+
+  CDA_IMPL_QI2(SProS::Base, SProS::SEDMLElement);
+
+  uint32_t level() throw();
+  void level(uint32_t aLevel) throw();
+  uint32_t version() throw();
+  void version(uint32_t aVersion) throw();
+  
+  iface::SProS::ModelSet* models() throw();
+  iface::SProS::TaskSet* tasks() throw();
+  iface::SProS::SimulationSet* simulations() throw();
+  iface::SProS::DataGeneratorSet* generators() throw();
+  iface::SProS::OutputSet* outputs() throw();
+
+  iface::SProS::Model* createModel() throw();
+  iface::SProS::UniformTimeCourse* createUniformTimeCourse() throw();
+  iface::SProS::Task* createTask() throw();
+  iface::SProS::DataGenerator* createDataGenerator() throw();
+  iface::SProS::Plot2D* createPlot2D() throw();
+  iface::SProS::Plot3D* createPlot3D() throw();
+  iface::SProS::Report* createReport() throw();
+  iface::SProS::ComputeChange* createComputeChange() throw();
+  iface::SProS::ChangeAttribute* createChangeAttribute() throw();
+  iface::SProS::AddXML* createAddXML() throw();
+  iface::SProS::RemoveXML* createRemoveXML() throw();
+  iface::SProS::ChangeXML* createChangeXML() throw();
+  iface::SProS::Variable* createVariable() throw();
+  iface::SProS::Parameter* createParameter() throw();
+  iface::SProS::Curve* createCurve() throw();
+  iface::SProS::Surface* createSurface() throw();
+  iface::SProS::DataSet* createDataSet() throw();
+
+private:
+  CDA_SProSModelSet mModelSet;
+  CDA_SProSTaskSet mTaskSet;
+  CDA_SProSSimulationSet mSimulationSet;
+  CDA_SProSDataGeneratorSet mDataGeneneratorSet;
+  CDA_SProSOutputSet mOutputSet;
+};
+
+class CDA_SProSModel
+  : public CDA_SProSNamedIdentifiedElement, public iface::SProS::Model
+{
+public:
+  CDA_SProSModel(CDA_SProSBase* aParent,
+                 iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl),
+      mChangeSet(this) {}
+  ~CDA_SProSModel() {}
+
+  CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Model);
+
+  wchar_t* language() throw();
+  void language(const wchar_t*) throw();
+  wchar_t* source() throw();
+  void source(const wchar_t*) throw();
+
+  iface::SProS::ChangeSet* changes() throw();
+
+private:
+  CDA_SProSChangeSet mChangeSet;
+};
+
 
 class CDA_SProSSimulation
   : public CDA_SProSNamedIdentifiedElement, public virtual iface::SProS::Simulation
@@ -446,8 +477,6 @@ public:
   wchar_t* algorithmKisaoID() throw();
   void algorithmKisaoID(const wchar_t* aID) throw();
 };
-
-SomeSProSSet(Simulation);
 
 class CDA_SProSUniformTimeCourse
   : public CDA_SProSSimulation, public iface::SProS::UniformTimeCourse
@@ -497,7 +526,6 @@ public:
   iface::SProS::Model* modelReference() throw();
   void modelReference(iface::SProS::Model* aModel) throw();
 };
-SomeSProSSet(Task);
 
 class CDA_SProSMathContainer
   : public virtual iface::cellml_api::MathContainer,
@@ -561,7 +589,8 @@ public:
   CDA_SProSDataGenerator(CDA_SProSBase* aParent,
                          iface::dom::Element* aEl)
     : CDA_SProSBase(aParent, aEl),
-      CDA_SProSNamedIdentifiedElement(aParent, aEl)
+      CDA_SProSNamedIdentifiedElement(aParent, aEl),
+      mParameterSet(this), mVariableSet(this)
   {
   }
   ~CDA_SProSDataGenerator() {}
@@ -571,8 +600,94 @@ public:
 
   iface::SProS::ParameterSet* parameters() throw();
   iface::SProS::VariableSet* variables() throw();
+
+private:
+  CDA_SProSParameterSet mParameterSet;
+  CDA_SProSVariableSet mVariableSet;
 };
-SomeSProSSet(DataGenerator);
+
+class CDA_SProSCurve;
+class CDA_SProSSurface;
+class CDA_SProSCurveSetBase
+  : public CDA_SProSNamedElementSet, public virtual iface::SProS::CurveSet
+{
+public:
+  CDA_SProSCurveSetBase(CDA_SProSBase* aParent);
+  ~CDA_SProSCurveSetBase() {}
+  
+  iface::SProS::CurveIterator* iterateCurves() throw();
+};
+
+class CDA_SProSCurveSet
+  : public CDA_SProSCurveSetBase
+{
+public:
+  CDA_SProSCurveSet(CDA_SProSBase* aParent)
+    : CDA_SProSCurveSetBase(aParent) {}
+  ~CDA_SProSCurveSet() {}
+
+  CDA_IMPL_QI3(SProS::BaseSet, SProS::NamedElementSet, SProS::CurveSet);
+};
+
+class CDA_SProSCurveIteratorBase
+  : public CDA_SProSNamedElementIteratorBase, public virtual iface::SProS::CurveIterator
+{
+public:
+  CDA_SProSCurveIteratorBase(CDA_SomeSet* aParent)
+    : CDA_SProSNamedElementIteratorBase(aParent) {}
+  ~CDA_SProSCurveIteratorBase() {}
+  
+  iface::SProS::Curve* nextCurve() throw()
+  {
+    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    DECLARE_QUERY_INTERFACE(ret, el, SProS::Curve);
+    return ret;
+  }
+};
+
+class CDA_SProSCurveIterator
+  : public CDA_SProSCurveIteratorBase
+{
+public:
+  CDA_SProSCurveIterator(CDA_SomeSet* aParent)
+    : CDA_SProSCurveIteratorBase(aParent)
+  {
+  }
+  ~CDA_SProSCurveIterator() {}
+
+  CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator, SProS::CurveIterator);
+};
+
+class CDA_SProSSurfaceSet
+  : public CDA_SProSCurveSetBase, public iface::SProS::SurfaceSet
+{
+public:
+  CDA_SProSSurfaceSet(CDA_SProSBase* aParent)
+    : CDA_SProSCurveSetBase(aParent) {}
+  ~CDA_SProSSurfaceSet() {}
+
+  CDA_IMPL_QI3(SProS::BaseSet, SProS::CurveSet, SProS::SurfaceSet);
+
+  iface::SProS::SurfaceIterator* iterateSurfaces() throw();
+};
+
+class CDA_SProSSurfaceIterator
+  : public CDA_SProSCurveIteratorBase, public iface::SProS::SurfaceIterator
+{
+public:
+  CDA_SProSSurfaceIterator(CDA_SomeSet* aParent)
+    : CDA_SProSCurveIteratorBase(aParent) {}
+  ~CDA_SProSSurfaceIterator() {}
+
+  CDA_IMPL_QI3(SProS::BaseIterator, SProS::CurveIterator, SProS::SurfaceIterator);
+  
+  iface::SProS::Surface* nextSurface() throw()
+  {
+    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    DECLARE_QUERY_INTERFACE(ret, el, SProS::Surface);
+    return ret;
+  }
+};
 
 class CDA_SProSOutput
   : public virtual iface::SProS::Output,
@@ -586,21 +701,23 @@ public:
   ~CDA_SProSOutput() {};
 };
 
-SomeSProSSet(Output);
-
 class CDA_SProSPlot2D
   : public iface::SProS::Plot2D,
     public CDA_SProSOutput
 {
 public:
   CDA_SProSPlot2D(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl), CDA_SProSOutput(aParent, aEl) {}
+    : CDA_SProSBase(aParent, aEl), CDA_SProSOutput(aParent, aEl),
+      mCurveSet(this) {}
   ~CDA_SProSPlot2D() {}
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::Output, SProS::Plot2D);
 
   iface::SProS::CurveSet* curves() throw();
+
+private:
+  CDA_SProSCurveSet mCurveSet;
 };
 
 class CDA_SProSPlot3D
@@ -609,13 +726,50 @@ class CDA_SProSPlot3D
 {
 public:
   CDA_SProSPlot3D(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl), CDA_SProSOutput(aParent, aEl) {}
+    : CDA_SProSBase(aParent, aEl), CDA_SProSOutput(aParent, aEl),
+      mSurfaceSet(this) {}
   ~CDA_SProSPlot3D() {}
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::Output, SProS::Plot3D);
 
   iface::SProS::SurfaceSet* surfaces() throw();
+
+private:
+  CDA_SProSSurfaceSet mSurfaceSet;
+};
+
+class CDA_SProSDataSet;
+
+class CDA_SProSDataSetSet
+  : public CDA_SProSNamedElementSet, public iface::SProS::DataSetSet
+{
+public:
+  CDA_SProSDataSetSet(CDA_SProSBase* aParent);
+  ~CDA_SProSDataSetSet() {}
+
+  CDA_IMPL_QI3(SProS::BaseSet, SProS::NamedElementSet, SProS::DataSetSet);
+  
+  iface::SProS::DataSetIterator* iterateDataSets() throw();
+};
+
+class CDA_SProSDataSetIterator
+  : public CDA_SProSNamedElementIterator, public iface::SProS::DataSetIterator
+{
+public:
+  CDA_SProSDataSetIterator(CDA_SProSDataSetSet* aSet)
+    : CDA_SProSNamedElementIterator(aSet) {}
+  ~CDA_SProSDataSetIterator() {}
+
+  CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator,
+               SProS::DataSetIterator);
+  
+  iface::SProS::DataSet* nextDataSet() throw()
+  {
+    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    DECLARE_QUERY_INTERFACE(ret, el, SProS::DataSet);
+    return ret;
+  }
 };
 
 class CDA_SProSReport
@@ -624,13 +778,17 @@ class CDA_SProSReport
 {
 public:
   CDA_SProSReport(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl), CDA_SProSOutput(aParent, aEl) {}
+    : CDA_SProSBase(aParent, aEl), CDA_SProSOutput(aParent, aEl),
+      mDataSetSet(this) {}
   ~CDA_SProSReport() {}
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::Output, SProS::Report);
 
   iface::SProS::DataSetSet* datasets() throw();
+
+private:
+  CDA_SProSDataSetSet mDataSetSet;
 };
 
 class CDA_SProSChange
@@ -645,7 +803,6 @@ public:
   wchar_t* target() throw();
   void target(const wchar_t* aTarg) throw();
 };
-SomeAnonSProSSet(Change);
 
 class CDA_SProSComputeChange
   : public iface::SProS::ComputeChange,
@@ -654,13 +811,18 @@ class CDA_SProSComputeChange
 {
 public:
   CDA_SProSComputeChange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl), CDA_SProSChange(aParent, aEl) {}
+    : CDA_SProSBase(aParent, aEl), CDA_SProSChange(aParent, aEl),
+      mVariables(this), mParameters(this) {}
   ~CDA_SProSComputeChange() {}
 
   CDA_IMPL_QI4(SProS::Base, SProS::Change, SProS::ComputeChange, cellml_api::MathContainer)
 
   iface::SProS::VariableSet* variables() throw();
   iface::SProS::ParameterSet* parameters() throw();
+
+private:
+  CDA_SProSVariableSet mVariables;
+  CDA_SProSParameterSet mParameters;
 };
 
 class CDA_SProSChangeAttribute
@@ -756,7 +918,6 @@ public:
   wchar_t* symbol() throw();
   void symbol(const wchar_t* aTarget) throw();
 };
-SomeSProSSet(Variable);
 
 class CDA_SProSParameter
   : public iface::SProS::Parameter,
@@ -775,7 +936,6 @@ public:
   double value() throw();
   void value(double aTarget) throw();
 };
-SomeSProSSet(Parameter);
 
 class CDA_SProSCurve
   : public CDA_SProSNamedElement,
@@ -804,56 +964,6 @@ public:
   void yDataGenerator(iface::SProS::DataGenerator* aValue) throw();
 };
 
-class CDA_SProSCurveSetBase
-  : public CDA_SProSNamedElementSet, public virtual iface::SProS::CurveSet
-{
-public:
-  CDA_SProSCurveSetBase(CDA_SProSBase* aParent);
-  ~CDA_SProSCurveSetBase() {}
-  
-  iface::SProS::CurveIterator* iterateCurves() throw();
-};
-
-class CDA_SProSCurveSet
-  : public CDA_SProSCurveSetBase
-{
-public:
-  CDA_SProSCurveSet(CDA_SProSBase* aParent)
-    : CDA_SProSCurveSetBase(aParent) {}
-  ~CDA_SProSCurveSet() {}
-
-  CDA_IMPL_QI3(SProS::BaseSet, SProS::NamedElementSet, SProS::CurveSet);
-};
-
-class CDA_SProSCurveIteratorBase
-  : public CDA_SProSNamedElementIteratorBase, public virtual iface::SProS::CurveIterator
-{
-public:
-  CDA_SProSCurveIteratorBase(CDA_SomeSet* aParent)
-    : CDA_SProSNamedElementIteratorBase(aParent) {}
-  ~CDA_SProSCurveIteratorBase() {}
-  
-  iface::SProS::Curve* nextCurve() throw()
-  {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
-    DECLARE_QUERY_INTERFACE(ret, el, SProS::Curve);
-    return ret;
-  }
-};
-
-class CDA_SProSCurveIterator
-  : public CDA_SProSCurveIteratorBase
-{
-public:
-  CDA_SProSCurveIterator(CDA_SomeSet* aParent)
-    : CDA_SProSCurveIteratorBase(aParent)
-  {
-  }
-  ~CDA_SProSCurveIterator() {}
-
-  CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator, SProS::CurveIterator);
-};
-
 class CDA_SProSSurface
   : public CDA_SProSCurve,
     public iface::SProS::Surface
@@ -873,37 +983,6 @@ public:
   iface::SProS::DataGenerator* zDataGenerator() throw();
   void zDataGenerator(iface::SProS::DataGenerator* aValue) throw();
 };
-
-class CDA_SProSSurfaceSet
-  : public CDA_SProSCurveSetBase, public iface::SProS::SurfaceSet
-{
-public:
-  CDA_SProSSurfaceSet(CDA_SProSBase* aParent)
-    : CDA_SProSCurveSetBase(aParent) {}
-  ~CDA_SProSSurfaceSet() {}
-
-  CDA_IMPL_QI3(SProS::BaseSet, SProS::CurveSet, SProS::SurfaceSet);
-
-  iface::SProS::SurfaceIterator* iterateSurfaces() throw();
-};
-
-class CDA_SProSSurfaceIterator
-  : public CDA_SProSCurveIteratorBase, public iface::SProS::SurfaceIterator
-{
-public:
-  CDA_SProSSurfaceIterator(CDA_SomeSet* aParent)
-    : CDA_SProSCurveIteratorBase(aParent) {}
-  ~CDA_SProSSurfaceIterator() {}
-
-  CDA_IMPL_QI3(SProS::BaseIterator, SProS::CurveIterator, SProS::SurfaceIterator);
-  
-  iface::SProS::Surface* nextSurface() throw()
-  {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
-    DECLARE_QUERY_INTERFACE(ret, el, SProS::Surface);
-    return ret;
-  }
-};
   
 class CDA_SProSDataSet
   : public CDA_SProSNamedElement, public iface::SProS::DataSet
@@ -918,37 +997,6 @@ public:
   void dataGeneratorID(const wchar_t*) throw();
   iface::SProS::DataGenerator* dataGen() throw();
   void dataGen(iface::SProS::DataGenerator*) throw();
-};
-
-class CDA_SProSDataSetSet
-  : public CDA_SProSNamedElementSet, public iface::SProS::DataSetSet
-{
-public:
-  CDA_SProSDataSetSet(CDA_SProSBase* aParent);
-  ~CDA_SProSDataSetSet() {}
-
-  CDA_IMPL_QI3(SProS::BaseSet, SProS::NamedElementSet, SProS::DataSetSet);
-  
-  iface::SProS::DataSetIterator* iterateDataSets() throw();
-};
-
-class CDA_SProSDataSetIterator
-  : public CDA_SProSNamedElementIterator, public iface::SProS::DataSetIterator
-{
-public:
-  CDA_SProSDataSetIterator(CDA_SProSDataSetSet* aSet)
-    : CDA_SProSNamedElementIterator(aSet) {}
-  ~CDA_SProSDataSetIterator() {}
-
-  CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator,
-               SProS::DataSetIterator);
-  
-  iface::SProS::DataSet* nextDataSet() throw()
-  {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
-    DECLARE_QUERY_INTERFACE(ret, el, SProS::DataSet);
-    return ret;
-  }
 };
 
 #if 0
