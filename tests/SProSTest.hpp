@@ -13,6 +13,11 @@ class SProSTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSProSBase);
   CPPUNIT_TEST(testSProSBaseSet);
   CPPUNIT_TEST(testSProSSEDMLElement);
+  CPPUNIT_TEST(testSProSNamedElementSet);
+  CPPUNIT_TEST(testSProSNamedIdentifiedElementSet);
+  CPPUNIT_TEST(testSProSModel);
+  CPPUNIT_TEST(testSProSSimulationSet);
+  CPPUNIT_TEST(testSProSTaskSet);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -23,6 +28,11 @@ public:
   void testSProSBase();
   void testSProSBaseSet();
   void testSProSSEDMLElement();
+  void testSProSNamedElementSet();
+  void testSProSNamedIdentifiedElementSet();
+  void testSProSModel();
+  void testSProSSimulationSet();
+  void testSProSTaskSet();
 };
 
 #endif // SPROSTEST_H

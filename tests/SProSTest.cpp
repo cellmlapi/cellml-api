@@ -249,6 +249,8 @@ SProSTest::testSProSSEDMLElement()
 //      */
 //     attribute unsigned long level;
   CPPUNIT_ASSERT_EQUAL(1, (int)es->level());
+  es->level(2);
+  CPPUNIT_ASSERT_EQUAL(2, (int)es->level());
 
 //     
 //     /**
@@ -257,6 +259,9 @@ SProSTest::testSProSSEDMLElement()
 //      */
 //     attribute unsigned long version;
   CPPUNIT_ASSERT_EQUAL(1, (int)es->version());
+  es->version(2);
+  CPPUNIT_ASSERT_EQUAL(2, (int)es->version());
+
 // 
 //     /**
 //      * The set of all models.
@@ -537,6 +542,7 @@ SProSTest::testSProSSEDMLElement()
 //      * The human readable name of the element (not guaranteed to be unique).
 //      */
 //     attribute wstring name;
+          // Tested below.
 //   };
 // 
 //   /**
@@ -545,10 +551,25 @@ SProSTest::testSProSSEDMLElement()
 //   interface NamedElementSet
 //     : BaseSet
 //   {
+
+void
+SProSTest::testSProSNamedElementSet()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
+                     sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  RETURN_INTO_OBJREF(os, iface::SProS::OutputSet,
+                     es->outputs());
+
 //     /**
 //      * Iterate through all named elements.
 //      */
 //     NamedElementIterator iterateNamedElement();
+  RETURN_INTO_OBJREF(nei, iface::SProS::NamedElementIterator,
+                     os->iterateNamedElement());
+  CPPUNIT_ASSERT(nei);
+
 // 
 //     /* Note: Names aren't guaranteed to be unique, they are for human use, so
 //      * we don't provide a way to find by name.
@@ -565,7 +586,22 @@ SProSTest::testSProSSEDMLElement()
 //      * Fetch the next named element, or null if there are no more elements.
 //      */
 //     NamedElement nextNamedElement();
+  RETURN_INTO_OBJREF(ne1, iface::SProS::NamedElement, nei->nextNamedElement());
+  CPPUNIT_ASSERT(ne1);
+  {
+    RETURN_INTO_WSTRING(n, ne1->name());
+    CPPUNIT_ASSERT(n == L"BioModel 3");
+  }
+  ne1->name(L"BioModel 4");
+  {
+    RETURN_INTO_WSTRING(n, ne1->name());
+    CPPUNIT_ASSERT(n == L"BioModel 4");
+  }
+
+  CPPUNIT_ASSERT(nei->nextNamedElement() == NULL);
 //   };
+}
+
 // 
 //   /**
 //    * The base interface for all elements with name and id attributes.
@@ -577,6 +613,7 @@ SProSTest::testSProSSEDMLElement()
 //      * The unique identifier for the element.
 //      */
 //     attribute wstring id;
+         // Tested below...
 //   };
 // 
 //   /**
@@ -585,15 +622,41 @@ SProSTest::testSProSSEDMLElement()
 //   interface NamedIdentifiedElementSet
 //     : NamedElementSet
 //   {
+void
+SProSTest::testSProSNamedIdentifiedElementSet()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
+                     sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  RETURN_INTO_OBJREF(dgs, iface::SProS::NamedIdentifiedElementSet,
+                     es->generators());
+
 //     /**
 //      * Iterates through all the named, identified elements...
 //      */
 //     NamedIdentifiedElementIterator iterateNamedIdentifiedElements();
+  RETURN_INTO_OBJREF(niei, iface::SProS::NamedIdentifiedElementIterator,
+                     dgs->iterateNamedIdentifiedElements());
+
 // 
 //     /**
 //      * Finds an element by identifier
 //      */
 //     NamedIdentifiedElement getNamedIdentifiedElementByIdentifier(in wstring idMatch);
+  RETURN_INTO_OBJREF(nie1, iface::SProS::NamedIdentifiedElement,
+                     dgs->getNamedIdentifiedElementByIdentifier(L"time"));
+  CPPUNIT_ASSERT(nie1);
+  {
+    RETURN_INTO_WSTRING(id1, nie1->id());
+    CPPUNIT_ASSERT(id1 == L"time");
+  }
+  nie1->id(L"time2");
+  {
+    RETURN_INTO_WSTRING(id1, nie1->id());
+    CPPUNIT_ASSERT(id1 == L"time2");
+  }
+
 //   };
 // 
 //   /**
@@ -607,24 +670,18 @@ SProSTest::testSProSSEDMLElement()
 //      * such elements.
 //      */
 //     NamedIdentifiedElement nextNamedIdentifiedElement();
-//   };
-// 
-//   /**
-//    * A SEDML reference to a particular model.
-//    */
-//   interface Model
-//     : NamedIdentifiedElement
-//   {
-//     /** The language the model is in. */
-//     attribute wstring language;
-// 
-//     /** The location of the model. */
-//     attribute wstring source;
-// 
-//     /**
-//      * The set of changes to make to the model.
-//      */
-//     readonly attribute ChangeSet changes;
+  RETURN_INTO_OBJREF(nie2, iface::SProS::NamedIdentifiedElement,
+                     niei->nextNamedIdentifiedElement());
+  CPPUNIT_ASSERT(nie2);
+  RETURN_INTO_WSTRING(id2, nie2->id());
+  CPPUNIT_ASSERT(id2 == L"time2");
+  RETURN_INTO_OBJREF(nie3, iface::SProS::NamedIdentifiedElement,
+                     niei->nextNamedIdentifiedElement());
+  CPPUNIT_ASSERT(nie3);
+  RETURN_INTO_WSTRING(id3, nie3->id());
+  CPPUNIT_ASSERT(id3 == L"C1");
+
+}
 //   };
 // 
 //   /**
@@ -633,15 +690,31 @@ SProSTest::testSProSSEDMLElement()
 //   interface ModelSet
 //     : NamedIdentifiedElementSet
 //   {
+void
+SProSTest::testSProSModel()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
+                     sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  RETURN_INTO_OBJREF(ms, iface::SProS::ModelSet,
+                     es->models());
+
 //     /**
 //      * Iterates through all models in the set.
 //      */
 //     ModelIterator iterateModels();
+  RETURN_INTO_OBJREF(mi, iface::SProS::ModelIterator, ms->iterateModels());
+  CPPUNIT_ASSERT(mi);
+
 // 
 //     /**
 //      * Search for a model in the set by identifier.
 //      */
 //     Model getModelByIdentifier(in wstring idMatch);
+  RETURN_INTO_OBJREF(m1, iface::SProS::Model, ms->getModelByIdentifier(L"model1"));
+  CPPUNIT_ASSERT(m1);
+
 //   };
 // 
 //   /**
@@ -654,19 +727,52 @@ SProSTest::testSProSSEDMLElement()
 //      * Fetches the next model, or null if there are no more.
 //      */
 //     Model nextModel();
+  RETURN_INTO_OBJREF(m2, iface::SProS::Model, mi->nextModel());
+  CPPUNIT_ASSERT(!CDA_objcmp(m1, m2));
+
 //   };
 // 
 //   /**
-//    * A SEDML simulation.
+//    * A SEDML reference to a particular model.
 //    */
-//   interface Simulation
+//   interface Model
 //     : NamedIdentifiedElement
 //   {
+//     /** The language the model is in. */
+//     attribute wstring language;
+  {
+    RETURN_INTO_WSTRING(lang, m1->language());
+    CPPUNIT_ASSERT(lang == L"SBML");
+  }
+  m1->language(L"CellML");
+  {
+    RETURN_INTO_WSTRING(lang, m1->language());
+    CPPUNIT_ASSERT(lang == L"CellML");
+  }
+
+// 
+//     /** The location of the model. */
+//     attribute wstring source;
+  {
+    RETURN_INTO_WSTRING(src, m1->source());
+    CPPUNIT_ASSERT(src == L"urn:miriam:biomodels.db:BIOMD0000000003");
+  }
+  m1->source(L"http://example.org/mymodel.xml");
+  {
+    RETURN_INTO_WSTRING(src, m1->source());
+    CPPUNIT_ASSERT(src == L"http://example.org/mymodel.xml");
+  }
+
+// 
 //     /**
-//      * The KISAO identifier for the corresponding algorithm.
+//      * The set of changes to make to the model.
 //      */
-//     attribute wstring algorithmKisaoID;
+//     readonly attribute ChangeSet changes;
+  RETURN_INTO_OBJREF(cs, iface::SProS::ChangeSet,
+                     m1->changes());
+  CPPUNIT_ASSERT(cs);
 //   };
+}
 // 
 //   /**
 //    * A set of simulations.
@@ -674,15 +780,31 @@ SProSTest::testSProSSEDMLElement()
 //   interface SimulationSet
 //     : NamedIdentifiedElementSet
 //   {
+void
+SProSTest::testSProSSimulationSet()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
+                     sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  RETURN_INTO_OBJREF(ss, iface::SProS::SimulationSet,
+                     es->simulations());
+
 //     /**
 //      * Iterates through the simulations in the set.
 //      */
 //     SimulationIterator iterateSimulations();
+  RETURN_INTO_OBJREF(ssi, iface::SProS::SimulationIterator, ss->iterateSimulations());
+  CPPUNIT_ASSERT(ssi);
+  
 // 
 //     /**
 //      * Finds a simulation in the set by identifier.
 //      */
 //     Simulation getSimulationByIdentifier(in wstring idMatch);
+  RETURN_INTO_OBJREF(s1, iface::SProS::Simulation, ss->getSimulationByIdentifier(L"simulation1"));
+  CPPUNIT_ASSERT(s1);
+  
 //   };
 // 
 //   /**
@@ -695,6 +817,30 @@ SProSTest::testSProSSEDMLElement()
 //      * Fetches the next Simulation, or null if there are no more.
 //      */
 //     Simulation nextSimulation();
+  RETURN_INTO_OBJREF(s2, iface::SProS::Simulation, ssi->nextSimulation());
+  CPPUNIT_ASSERT(!CDA_objcmp(s1, s2));
+  
+//   };
+// 
+//   /**
+//    * A SEDML simulation.
+//    */
+//   interface Simulation
+//     : NamedIdentifiedElement
+//   {
+//     /**
+//      * The KISAO identifier for the corresponding algorithm.
+//      */
+//     attribute wstring algorithmKisaoID;
+  {
+    RETURN_INTO_WSTRING(ksid, s1->algorithmKisaoID());
+    CPPUNIT_ASSERT(ksid == L"KISAO:0000019");
+  }
+  s1->algorithmKisaoID(L"KISAO:12345");
+  {
+    RETURN_INTO_WSTRING(ksid, s1->algorithmKisaoID());
+    CPPUNIT_ASSERT(ksid == L"KISAO:12345");
+  }
 //   };
 // 
 //   /**
@@ -703,52 +849,44 @@ SProSTest::testSProSSEDMLElement()
 //   interface UniformTimeCourse
 //     : Simulation
 //   {
+  DECLARE_QUERY_INTERFACE_OBJREF(utc, s1, SProS::UniformTimeCourse);
+  CPPUNIT_ASSERT(utc);
+
 //     /**
 //      * The time the simulation starts.
 //      */
 //     attribute double initialTime;
+  CPPUNIT_ASSERT_EQUAL(0.0, utc->initialTime());
+  utc->initialTime(1.5);
+  CPPUNIT_ASSERT_EQUAL(1.5, utc->initialTime());
+
 // 
 //     /**
 //      * The time of the first point to generate output for.
 //      */
 //     attribute double outputStartTime;
+  CPPUNIT_ASSERT_EQUAL(0.0, utc->outputStartTime());
+  utc->outputStartTime(1.5);
+  CPPUNIT_ASSERT_EQUAL(1.5, utc->outputStartTime());
+
 // 
 //     /**
 //      * The time of the last point to generate output for.
 //      */
 //     attribute double outputEndTime;
+  CPPUNIT_ASSERT_EQUAL(200.0, utc->outputEndTime());
+  utc->outputEndTime(300.0);
+  CPPUNIT_ASSERT_EQUAL(300.0, utc->outputEndTime());
+
 // 
 //     /**
 //      * The number of points of output to produce.
 //      */
 //     attribute unsigned long numberOfPoints;
-//   };
-// 
-//   /**
-//    * A SEDML task.
-//    */
-//   interface Task
-//     : NamedIdentifiedElement
-//   {
-//     /**
-//      * The referenced simulation, as an identifier.
-//      */
-//     attribute wstring simulationReferenceIdentifier;
-// 
-//     /**
-//      * The referenced simulation object.
-//      */
-//     attribute Simulation simulationReference;
-// 
-//     /**
-//      * The referenced model, as an identifier.
-//      */
-//     attribute wstring modelReferenceIdentifier;
-// 
-//     /**
-//      * The referenced model object.
-//      */
-//     attribute Model modelReference;
+  CPPUNIT_ASSERT_EQUAL(1000, (int)utc->numberOfPoints());
+  utc->numberOfPoints(500);
+  CPPUNIT_ASSERT_EQUAL(500, (int)utc->numberOfPoints());
+}
 //   };
 // 
 //   /**
@@ -757,15 +895,30 @@ SProSTest::testSProSSEDMLElement()
 //   interface TaskSet
 //     : NamedIdentifiedElementSet
 //   {
+void
+SProSTest::testSProSTaskSet()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
+                     sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  RETURN_INTO_OBJREF(ts, iface::SProS::TaskSet,
+                     es->tasks());
+
 //     /**
 //      * Iterate through the tasks in this set.
 //      */
 //     TaskIterator iterateTasks();
+  RETURN_INTO_OBJREF(ti, iface::SProS::TaskIterator, ts->iterateTasks());
+  CPPUNIT_ASSERT(ti != NULL);
+
 // 
 //     /**
 //      * Find a task in the set by the identifier.
 //      */
 //     Task getTaskByIdentifier(in wstring idMatch);
+  RETURN_INTO_OBJREF(t1, iface::SProS::Task, ts->getTaskByIdentifier(L"task1"));
+  CPPUNIT_ASSERT(t1 != NULL);
 //   };
 // 
 //   /**
@@ -778,8 +931,67 @@ SProSTest::testSProSSEDMLElement()
 //      * Fetch the next task, or null if there are no more.
 //      */
 //     Task nextTask();
+  RETURN_INTO_OBJREF(t2, iface::SProS::Task, ti->nextTask());
+  CPPUNIT_ASSERT(!CDA_objcmp(t1, t2));
+  CPPUNIT_ASSERT(ti->nextTask() == NULL);
+
 //   };
 // 
+//   /**
+//    * A SEDML task.
+//    */
+//   interface Task
+//     : NamedIdentifiedElement
+//   {
+//     /**
+//      * The referenced simulation, as an identifier.
+//      */
+//     attribute wstring simulationReferenceIdentifier;  
+  RETURN_INTO_WSTRING(sri, t1->simulationReferenceIdentifier());
+  CPPUNIT_ASSERT(sri == L"simulation1");
+  
+// 
+//     /**
+//      * The referenced simulation object.
+//      */
+//     attribute Simulation simulationReference;
+  RETURN_INTO_OBJREF(sr, iface::SProS::Simulation, t1->simulationReference());
+  CPPUNIT_ASSERT(sr);
+  RETURN_INTO_WSTRING(sri2, sr->id());
+  CPPUNIT_ASSERT(sri2 == L"simulation1");  
+
+  t1->simulationReferenceIdentifier(L"simulation2");
+  CPPUNIT_ASSERT(!t1->simulationReference());
+  t1->simulationReference(sr);
+  RETURN_INTO_WSTRING(sri3, t1->simulationReferenceIdentifier());
+  CPPUNIT_ASSERT(sri3 == L"simulation1");
+
+// 
+//     /**
+//      * The referenced model, as an identifier.
+//      */
+//     attribute wstring modelReferenceIdentifier;
+  RETURN_INTO_WSTRING(mri, t1->modelReferenceIdentifier());
+  CPPUNIT_ASSERT(mri == L"model1");
+  
+// 
+//     /**
+//      * The referenced model object.
+//      */
+//     attribute Model modelReference;
+  RETURN_INTO_OBJREF(mr, iface::SProS::Model, t1->modelReference());
+  CPPUNIT_ASSERT(mr);
+  RETURN_INTO_WSTRING(mri2, mr->id());
+  CPPUNIT_ASSERT(mri2 == L"model1");
+
+  t1->modelReferenceIdentifier(L"model2");
+  CPPUNIT_ASSERT(!t1->modelReference());
+  t1->modelReference(mr);
+  RETURN_INTO_WSTRING(mri3, t1->modelReferenceIdentifier());
+  CPPUNIT_ASSERT(mri3 == L"model1");
+}
+//   };
+
 //   /**
 //    * A SEDML DataGenerator.
 //    */

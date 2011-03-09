@@ -1363,6 +1363,7 @@ CDA_SProSSimulation::algorithmKisaoID(const wchar_t* aID) throw()
                          od->createElementNS(SEDML_NS, L"algorithm"));
       el->setAttribute(L"kisaoID", aID);
       mDomEl->appendChild(el)->release_ref();
+      return;
     }
     DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
     if (el != NULL)
@@ -1372,7 +1373,10 @@ CDA_SProSSimulation::algorithmKisaoID(const wchar_t* aID) throw()
       {
         RETURN_INTO_WSTRING(ln, el->localName());
         if (ln == L"algorithm")
+        {
           el->setAttribute(L"kisaoID", aID);
+          return;
+        }
       }
     }
 

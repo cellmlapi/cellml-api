@@ -7,7 +7,7 @@
     </uniformTimeCourse>
   </listOfSimulations>
   <listOfModels>
-    <model id="model1" type="SBML" source="urn:miriam:biomodels.db:BIOMD0000000003"/>
+    <model id="model1" language="SBML" source="urn:miriam:biomodels.db:BIOMD0000000003"/>
   </listOfModels>
   <listOfTasks>
     <task id="task1" modelReference="model1" simulationReference="simulation1"/>
