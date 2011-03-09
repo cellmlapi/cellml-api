@@ -247,6 +247,8 @@ CDA_SomeSet::insert(iface::SProS::Base* b)
     throw iface::SProS::SProSException();
   }
 
+  sb->reparent(mParent);
+
   char* id = sb->mDomEl->objid();
   std::string ids(id);
   free(id);
@@ -1064,7 +1066,7 @@ CDA_SProSSEDMLElement::createModel()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"model"));
 
-  return new CDA_SProSModel(this, el);
+  return new CDA_SProSModel(NULL, el);
 }
 
 iface::SProS::UniformTimeCourse*
@@ -1074,7 +1076,7 @@ CDA_SProSSEDMLElement::createUniformTimeCourse()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"uniformTimeCourse"));
 
-  return new CDA_SProSUniformTimeCourse(this, el);
+  return new CDA_SProSUniformTimeCourse(NULL, el);
 }
 
 iface::SProS::Task*
@@ -1084,7 +1086,7 @@ CDA_SProSSEDMLElement::createTask()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"task"));
 
-  return new CDA_SProSTask(this, el);
+  return new CDA_SProSTask(NULL, el);
 }
 
 iface::SProS::DataGenerator*
@@ -1094,7 +1096,7 @@ CDA_SProSSEDMLElement::createDataGenerator()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"dataGenerator"));
 
-  return new CDA_SProSDataGenerator(this, el);
+  return new CDA_SProSDataGenerator(NULL, el);
 }
 
 iface::SProS::Plot2D*
@@ -1104,7 +1106,7 @@ CDA_SProSSEDMLElement::createPlot2D()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"plot2D"));
 
-  return new CDA_SProSPlot2D(this, el);
+  return new CDA_SProSPlot2D(NULL, el);
 }
 
 iface::SProS::Plot3D*
@@ -1114,7 +1116,7 @@ CDA_SProSSEDMLElement::createPlot3D()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"plot3D"));
 
-  return new CDA_SProSPlot3D(this, el);
+  return new CDA_SProSPlot3D(NULL, el);
 }
 
 iface::SProS::Report*
@@ -1124,7 +1126,7 @@ CDA_SProSSEDMLElement::createReport()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"report"));
 
-  return new CDA_SProSReport(this, el);
+  return new CDA_SProSReport(NULL, el);
 }
 
 iface::SProS::ComputeChange*
@@ -1134,7 +1136,7 @@ CDA_SProSSEDMLElement::createComputeChange()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"computeChange"));
 
-  return new CDA_SProSComputeChange(this, el);
+  return new CDA_SProSComputeChange(NULL, el);
 }
 
 iface::SProS::ChangeAttribute*
@@ -1144,7 +1146,7 @@ CDA_SProSSEDMLElement::createChangeAttribute()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"changeAttribute"));
 
-  return new CDA_SProSChangeAttribute(this, el);
+  return new CDA_SProSChangeAttribute(NULL, el);
 }
 
 iface::SProS::AddXML*
@@ -1154,7 +1156,7 @@ CDA_SProSSEDMLElement::createAddXML()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"addXML"));
 
-  return new CDA_SProSAddXML(this, el);
+  return new CDA_SProSAddXML(NULL, el);
 }
 
 iface::SProS::RemoveXML*
@@ -1164,7 +1166,7 @@ CDA_SProSSEDMLElement::createRemoveXML()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"removeXML"));
 
-  return new CDA_SProSRemoveXML(this, el);
+  return new CDA_SProSRemoveXML(NULL, el);
 }
 
 iface::SProS::ChangeXML*
@@ -1174,7 +1176,7 @@ CDA_SProSSEDMLElement::createChangeXML()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"changeXML"));
 
-  return new CDA_SProSChangeXML(this, el);
+  return new CDA_SProSChangeXML(NULL, el);
 }
 
 iface::SProS::Variable*
@@ -1184,7 +1186,7 @@ CDA_SProSSEDMLElement::createVariable()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"variable"));
 
-  return new CDA_SProSVariable(this, el);
+  return new CDA_SProSVariable(NULL, el);
 }
 
 iface::SProS::Parameter*
@@ -1194,7 +1196,7 @@ CDA_SProSSEDMLElement::createParameter()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"parameter"));
 
-  return new CDA_SProSParameter(this, el);
+  return new CDA_SProSParameter(NULL, el);
 }
 
 iface::SProS::Curve*
@@ -1204,7 +1206,7 @@ CDA_SProSSEDMLElement::createCurve()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"curve"));
 
-  return new CDA_SProSCurve(this, el);
+  return new CDA_SProSCurve(NULL, el);
 }
 
 iface::SProS::Surface*
@@ -1214,7 +1216,7 @@ CDA_SProSSEDMLElement::createSurface()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"surface"));
 
-  return new CDA_SProSSurface(this, el);
+  return new CDA_SProSSurface(NULL, el);
 }
 
 iface::SProS::DataSet*
@@ -1224,7 +1226,7 @@ CDA_SProSSEDMLElement::createDataSet()
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"dataSet"));
 
-  return new CDA_SProSDataSet(this, el);
+  return new CDA_SProSDataSet(NULL, el);
 }
 
 iface::SProS::NamedElementIterator*

@@ -12,6 +12,7 @@ class SProSTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSProSBootstrap);
   CPPUNIT_TEST(testSProSBase);
   CPPUNIT_TEST(testSProSBaseSet);
+  CPPUNIT_TEST(testSProSSEDMLElement);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -21,6 +22,7 @@ public:
   void testSProSBootstrap();
   void testSProSBase();
   void testSProSBaseSet();
+  void testSProSSEDMLElement();
 };
 
 #endif // SPROSTEST_H

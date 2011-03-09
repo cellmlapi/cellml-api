@@ -226,6 +226,7 @@ SProSTest::testSProSBaseSet()
 //      * elements.
 //      */
 //     Base nextElement();
+         // Tested above.
 //   };
 // 
 //   /**
@@ -234,144 +235,296 @@ SProSTest::testSProSBaseSet()
 //   interface SEDMLElement
 //     : Base
 //   {
+void
+SProSTest::testSProSSEDMLElement()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
+                     sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
+  
 //     /**
 //      * The SEDML level; defaults to the latest level supported by the
 //      * implementation.
 //      */
 //     attribute unsigned long level;
+  CPPUNIT_ASSERT_EQUAL(1, (int)es->level());
+
 //     
 //     /**
 //      * The SEDML version; defaults to the latest version of SEDML supported by
 //      * the implementation.
 //      */
 //     attribute unsigned long version;
+  CPPUNIT_ASSERT_EQUAL(1, (int)es->version());
 // 
 //     /**
 //      * The set of all models.
 //      */
 //     readonly attribute ModelSet models;
+  RETURN_INTO_OBJREF(ms, iface::SProS::ModelSet, es->models());
+  CPPUNIT_ASSERT(ms);
+  RETURN_INTO_OBJREF(msi, iface::SProS::ModelIterator, ms->iterateModels());
+  RETURN_INTO_OBJREF(m, iface::SProS::Model, msi->nextModel());
+  CPPUNIT_ASSERT(m);
+  RETURN_INTO_WSTRING(modelId, m->id());
+  CPPUNIT_ASSERT(modelId == L"model1");
+
 // 
 //     /**
 //      * The set of all tasks.
 //      */
 //     readonly attribute TaskSet tasks;
+  RETURN_INTO_OBJREF(ts, iface::SProS::TaskSet, es->tasks());
+  CPPUNIT_ASSERT(ts);
+  RETURN_INTO_OBJREF(tsi, iface::SProS::TaskIterator, ts->iterateTasks());
+  RETURN_INTO_OBJREF(t, iface::SProS::Task, tsi->nextTask());
+  CPPUNIT_ASSERT(t);
+  RETURN_INTO_WSTRING(taskId, t->id());
+  CPPUNIT_ASSERT(taskId == L"task1");
+
 // 
 //     /**
 //      * The set of all simulations.
 //      */
 //     readonly attribute SimulationSet simulations;
+  RETURN_INTO_OBJREF(ss, iface::SProS::SimulationSet, es->simulations());
+  CPPUNIT_ASSERT(ss);
+  RETURN_INTO_OBJREF(ssi, iface::SProS::SimulationIterator, ss->iterateSimulations());
+  RETURN_INTO_OBJREF(s, iface::SProS::Simulation, ssi->nextSimulation());
+  CPPUNIT_ASSERT(s);
+  RETURN_INTO_WSTRING(simulationId, s->id());
+  CPPUNIT_ASSERT(simulationId == L"simulation1");
+
 // 
 //     /**
 //      * The set of all generators.
 //      */
 //     readonly attribute DataGeneratorSet generators;
+  RETURN_INTO_OBJREF(gs, iface::SProS::DataGeneratorSet, es->generators());
+  CPPUNIT_ASSERT(gs);
+  RETURN_INTO_OBJREF(gsi, iface::SProS::DataGeneratorIterator, gs->iterateDataGenerators());
+  RETURN_INTO_OBJREF(g, iface::SProS::DataGenerator, gsi->nextDataGenerator());
+  CPPUNIT_ASSERT(g);
+  RETURN_INTO_WSTRING(generatorId, g->id());
+  CPPUNIT_ASSERT(generatorId == L"time");
+
 // 
 //     /**
 //      * The set of all outputs.
 //      */
 //     readonly attribute OutputSet outputs;
+  RETURN_INTO_OBJREF(os, iface::SProS::OutputSet, es->outputs());
+  CPPUNIT_ASSERT(os);
+  RETURN_INTO_OBJREF(osi, iface::SProS::OutputIterator, os->iterateOutputs());
+  RETURN_INTO_OBJREF(o, iface::SProS::Output, osi->nextOutput());
+  CPPUNIT_ASSERT(o);
+  RETURN_INTO_WSTRING(outputId, o->id());
+  CPPUNIT_ASSERT(outputId == L"plot1");
+
 // 
 //     /**
 //      * Creates a new Model. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Model createModel();
+  {
+    RETURN_INTO_OBJREF(nm, iface::SProS::Model, es->createModel());
+    CPPUNIT_ASSERT(nm);
+  }
+
 // 
 //     /**
 //      * Creates a new UniformTimeCourse. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     UniformTimeCourse createUniformTimeCourse();
+  {
+    RETURN_INTO_OBJREF(utc, iface::SProS::UniformTimeCourse,
+                       es->createUniformTimeCourse());
+    CPPUNIT_ASSERT(utc);
+  }
+
 // 
 //     /**
 //      * Creates a new Task. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Task createTask();
+  {
+    RETURN_INTO_OBJREF(nt, iface::SProS::Task,
+                       es->createTask());
+    CPPUNIT_ASSERT(nt);
+  }
+
 // 
 //     /**
 //      * Creates a new DataGenerator. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     DataGenerator createDataGenerator();
+  {
+    RETURN_INTO_OBJREF(dg, iface::SProS::DataGenerator,
+                       es->createDataGenerator());
+    CPPUNIT_ASSERT(dg);
+  }
+
 // 
 //     /**
 //      * Creates a new Plot2D. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Plot2D createPlot2D();
+  {
+    RETURN_INTO_OBJREF(p2d, iface::SProS::Plot2D,
+                       es->createPlot2D());
+    CPPUNIT_ASSERT(p2d);
+  }
+
 // 
 //     /**
 //      * Creates a new Plot3D. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Plot3D createPlot3D();
+  {
+    RETURN_INTO_OBJREF(p3d, iface::SProS::Plot3D,
+                       es->createPlot3D());
+    CPPUNIT_ASSERT(p3d);
+  }
+
 // 
 //     /**
 //      * Creates a new Report. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Report createReport();
+  {
+    RETURN_INTO_OBJREF(r, iface::SProS::Report,
+                       es->createReport());
+    CPPUNIT_ASSERT(r);
+  }
+
 // 
 //     /**
 //      * Creates a new ComputeChange. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     ComputeChange createComputeChange();
+  {
+    RETURN_INTO_OBJREF(cc, iface::SProS::ComputeChange,
+                       es->createComputeChange());
+    CPPUNIT_ASSERT(cc);
+  }
+
 // 
 //     /**
 //      * Creates a new ChangeAttribute. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     ChangeAttribute createChangeAttribute();
+  {
+    RETURN_INTO_OBJREF(ca, iface::SProS::ChangeAttribute,
+                       es->createChangeAttribute());
+    CPPUNIT_ASSERT(ca);
+  }
+
 // 
 //     /**
 //      * Creates a new AddXML. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     AddXML createAddXML();
+  {
+    RETURN_INTO_OBJREF(ax, iface::SProS::AddXML,
+                       es->createAddXML());
+    CPPUNIT_ASSERT(ax);
+  }
+
 // 
 //     /**
 //      * Creates a new RemoveXML. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     RemoveXML createRemoveXML();
+  {
+    RETURN_INTO_OBJREF(rx, iface::SProS::RemoveXML,
+                       es->createRemoveXML());
+    CPPUNIT_ASSERT(rx);
+  }
+
 // 
 //     /**
 //      * Creates a new ChangeXML. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     ChangeXML createChangeXML();
+  {
+    RETURN_INTO_OBJREF(cx, iface::SProS::ChangeXML,
+                       es->createChangeXML());
+    CPPUNIT_ASSERT(cx);
+  }
+
 // 
 //     /**
 //      * Creates a new Variable. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Variable createVariable();
+  {
+    RETURN_INTO_OBJREF(var, iface::SProS::Variable,
+                       es->createVariable());
+    CPPUNIT_ASSERT(var);
+  }
+
 // 
 //     /**
 //      * Creates a new Parameter. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Parameter createParameter();
+  {
+    RETURN_INTO_OBJREF(p, iface::SProS::Parameter,
+                       es->createParameter());
+    CPPUNIT_ASSERT(p);
+  }
+
 // 
 //     /**
 //      * Creates a new Curve. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Curve createCurve();
+  {
+    RETURN_INTO_OBJREF(curve, iface::SProS::Curve,
+                       es->createCurve());
+    CPPUNIT_ASSERT(curve);
+  }
+
 // 
 //     /**
 //      * Creates a new Surface. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     Surface createSurface();
+  {
+    RETURN_INTO_OBJREF(surf, iface::SProS::Surface,
+                       es->createSurface());
+    CPPUNIT_ASSERT(surf);
+  }
+
 // 
 //     /**
 //      * Creates a new DataSet. It is created with no parent and must be
 //      * explicitly added.
 //      */
 //     DataSet createDataSet();
+  {
+    RETURN_INTO_OBJREF(ds, iface::SProS::DataSet,
+                       es->createDataSet());
+    CPPUNIT_ASSERT(ds);
+  }
+}
 //   };
 // 
 //   /**
