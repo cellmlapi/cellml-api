@@ -18,6 +18,13 @@ class SProSTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSProSModel);
   CPPUNIT_TEST(testSProSSimulationSet);
   CPPUNIT_TEST(testSProSTaskSet);
+  CPPUNIT_TEST(testSProSDataGeneratorSet);
+  CPPUNIT_TEST(testSProSOutputSet);
+  CPPUNIT_TEST(testSProSChangeSet);
+  CPPUNIT_TEST(testSProSVariable);
+  CPPUNIT_TEST(testSProSCurve);
+  CPPUNIT_TEST(testSProSSurface);
+  CPPUNIT_TEST(testSProSDataSet);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -33,6 +40,14 @@ public:
   void testSProSModel();
   void testSProSSimulationSet();
   void testSProSTaskSet();
+  void testSProSDataGeneratorSet();
+  void testSProSOutputSet();
+  void testSProSChangeSet();
+  void testSProSVariable();
+  void testSProSParameter();
+  void testSProSCurve();
+  void testSProSSurface();
+  void testSProSDataSet();
 };
 
 #endif // SPROSTEST_H

@@ -1,13 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sedML xmlns="http://www.biomodels.net/sed-ml">
-  <!-- From libsedml by Frank Bergmann, apparently licensed under the BSD license. -->
+  <!-- From libsedml by Frank Bergmann, apparently licensed under the BSD license. Changed to make a better test, but probably not useful for actual simulations anymore. -->
   <listOfSimulations>
     <uniformTimeCourse id="simulation1" initialTime="0" outputStartTime="0" outputEndTime="200" numberOfPoints="1000">
       <algorithm kisaoID="KISAO:0000019"/>
     </uniformTimeCourse>
   </listOfSimulations>
   <listOfModels>
-    <model id="model1" language="SBML" source="urn:miriam:biomodels.db:BIOMD0000000003"/>
+    <model id="model1" language="SBML" source="urn:miriam:biomodels.db:BIOMD0000000003">
+      <listOfChanges>
+        <changeAttribute target="foo" newValue="bar" />
+        <changeXML target="foo">
+          <newXML>Hello World</newXML>
+        </changeXML>
+        <addXML target="foo">
+          <newXML>Hello World</newXML>
+        </addXML>
+        <removeXML target="foo"/>
+        <computeChange target="foo">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <ci> time </ci>
+          </math>
+          <listOfVariables>
+            <variable id="time" taskReference="task1" target="time"/>
+          </listOfVariables>
+          <listOfParameters>
+            <parameter id="time" value="1.234"/>
+          </listOfParameters>
+        </computeChange>
+      </listOfChanges>
+    </model>
   </listOfModels>
   <listOfTasks>
     <task id="task1" modelReference="model1" simulationReference="simulation1"/>
@@ -15,8 +37,11 @@
   <listOfDataGenerators>
     <dataGenerator id="time" name="time">
       <listOfVariables>
-        <variable id="time" taskReference="task1" target="time"/>
+        <variable id="time" symbol="timeSym" taskReference="task1" target="time"/>
       </listOfVariables><math xmlns="http://www.w3.org/1998/Math/MathML">
+      <listOfParameters>
+        <parameter id="param1" value="1.234"/>
+      </listOfParameters>
   <ci> time </ci>
 </math></dataGenerator>
     <dataGenerator id="C1" name="C1">
@@ -51,13 +76,23 @@
 </math></dataGenerator>
   </listOfDataGenerators>
   <listOfOutputs>
-    <plot2D id="plot1" name="BioModel 3" logX="false" logY="false">
+    <plot2D id="plot1" name="BioModel 3">
       <listOfCurves>
-        <curve xDataReference="time" yDataReference="C1"/>
+        <curve xDataReference="time" yDataReference="C1"  logX="true" logY="true"/>
         <curve xDataReference="time" yDataReference="M1"/>
         <curve xDataReference="time" yDataReference="X1"/>
         <curve xDataReference="time" yDataReference="Total"/>
       </listOfCurves>
     </plot2D>
+    <plot3D id="plot2" name="My Plot">
+      <listOfSurfaces>
+        <surface xDataReference="time" yDataReference="C1" zDataReference="M1"  logZ="true"/>
+      </listOfSurfaces>
+    </plot3D>
+    <report id="report1" name="My Report">
+      <listOfDataSets>
+        <dataSet label="Set1" dataReference="time"/>
+      </listOfDataSets>
+    </report>
   </listOfOutputs>
 </sedML>
