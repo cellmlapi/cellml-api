@@ -612,7 +612,7 @@ class CDA_SProSCurveSetBase
   : public CDA_SProSNamedElementSet, public virtual iface::SProS::CurveSet
 {
 public:
-  CDA_SProSCurveSetBase(CDA_SProSBase* aParent);
+  CDA_SProSCurveSetBase(CDA_SProSBase* aParent, const wchar_t* aName, const wchar_t** aElNames);
   ~CDA_SProSCurveSetBase() {}
   
   iface::SProS::CurveIterator* iterateCurves() throw();
@@ -622,8 +622,7 @@ class CDA_SProSCurveSet
   : public CDA_SProSCurveSetBase
 {
 public:
-  CDA_SProSCurveSet(CDA_SProSBase* aParent)
-    : CDA_SProSCurveSetBase(aParent) {}
+  CDA_SProSCurveSet(CDA_SProSBase* aParent);
   ~CDA_SProSCurveSet() {}
 
   CDA_IMPL_QI3(SProS::BaseSet, SProS::NamedElementSet, SProS::CurveSet);
@@ -662,8 +661,7 @@ class CDA_SProSSurfaceSet
   : public CDA_SProSCurveSetBase, public iface::SProS::SurfaceSet
 {
 public:
-  CDA_SProSSurfaceSet(CDA_SProSBase* aParent)
-    : CDA_SProSCurveSetBase(aParent) {}
+  CDA_SProSSurfaceSet(CDA_SProSBase* aParent);
   ~CDA_SProSSurfaceSet() {}
 
   CDA_IMPL_QI3(SProS::BaseSet, SProS::CurveSet, SProS::SurfaceSet);
@@ -831,7 +829,7 @@ class CDA_SProSChangeAttribute
 {
 public:
   CDA_SProSChangeAttribute(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-    : CDA_SProSBase(NULL, NULL), CDA_SProSChange(aParent, aEl) {}
+    : CDA_SProSBase(aParent, aEl), CDA_SProSChange(aParent, aEl) {}
   ~CDA_SProSChangeAttribute() {}
 
   CDA_IMPL_QI3(SProS::Base, SProS::Change, SProS::ChangeAttribute);

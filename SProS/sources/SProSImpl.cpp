@@ -133,6 +133,7 @@ CDA_SProSPrecomputedNodeList::length() throw()
 CDA_SProSBase::CDA_SProSBase(CDA_SProSBase* aParent, iface::dom::Element* aEl)
   : mParent(NULL), mDomEl(aEl), _cda_refcount(1)
 {
+  assert(mDomEl != NULL);
   reparent(aParent);
 }
 
@@ -1901,9 +1902,8 @@ CDA_SProSCurve::yDataGenerator() throw()
   return gs->getDataGeneratorByIdentifier(ident.c_str());
 }
 
-static const wchar_t* sCurveSetNames[] = {L"curve", NULL};
-CDA_SProSCurveSetBase::CDA_SProSCurveSetBase(CDA_SProSBase* aParent)
-  : CDA_SProSNamedElementSet(aParent, L"listOfCurves", sCurveSetNames)
+CDA_SProSCurveSetBase::CDA_SProSCurveSetBase(CDA_SProSBase* aParent, const wchar_t* aName, const wchar_t** aElNames)
+  : CDA_SProSNamedElementSet(aParent, aName, aElNames)
 {
 }
 
@@ -1913,6 +1913,10 @@ CDA_SProSCurveSetBase::iterateCurves() throw()
   findOrCreateListElement();
   return new CDA_SProSCurveIterator(this);
 }
+
+static const wchar_t* sCurveSetNames[] = {L"curve", NULL};
+CDA_SProSCurveSet::CDA_SProSCurveSet(CDA_SProSBase* aParent)
+  : CDA_SProSCurveSetBase(aParent, L"listOfCurves", sCurveSetNames) {}
 
 bool
 CDA_SProSSurface::logZ() throw()
@@ -1959,6 +1963,10 @@ CDA_SProSSurface::zDataGenerator(iface::SProS::DataGenerator* aGen) throw()
   RETURN_INTO_WSTRING(ident, aGen->id());
   mDomEl->setAttribute(L"zDataReference", ident.c_str());
 }
+
+static const wchar_t* sSurfaceSetNames[] = {L"curve", L"surface", NULL};
+CDA_SProSSurfaceSet::CDA_SProSSurfaceSet(CDA_SProSBase* aParent)
+  : CDA_SProSCurveSetBase(aParent, L"listOfSurfaces", sSurfaceSetNames) {}
 
 iface::SProS::SurfaceIterator*
 CDA_SProSSurfaceSet::iterateSurfaces() throw()
