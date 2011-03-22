@@ -4,6 +4,8 @@
 #include "xpcom.idl"
 #include "DOM_APISPEC.idl"
 #include "MathML_content_APISPEC.idl"
+#include "xpath.idl"
+
 /**
  * This module contains a description of the CellML Application Programming
  * Interface in the language-neutral IDL form.
@@ -2174,7 +2176,19 @@ module cellml_api
      */
     dom::DOMString serialiseNode(in dom::Node node);
 
+    /**
+     * Tries to make a relative URL absolute, using a URL specifying what the
+     * URL is relative to.
+     * @param relTo The absolute URL to evaluate relative to.
+     * @param relURL A possibly relative URL to make absolute.
+     * @return An absolute URL, if it is possible to produce one, otherwise a relative one.
+     */
     wstring makeURLAbsolute(in wstring relTo, in wstring relURL);
+
+    /**
+     * The XPathEvaluator, or nil if XPath support is not available.
+     */
+    readonly attribute xpath::XPathEvaluator xpath;
   };
 #pragma terminal-interface
 #pragma cross-module-argument

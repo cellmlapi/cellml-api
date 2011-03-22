@@ -1,0 +1,113 @@
+// From: http://www.w3.org/TR/DOM-Level-3-XPath/idl-definitions.html
+// Minor modifications for the CellML API implementation:
+//   * Fix DOM #include to use the filename used in the CellML API.
+//   * Remove W3C pragma, add our pragmas.
+//   * Make this XPath 1.0 specific by removing DOMObject and replacing with
+//     XPathResult, the type according to the XPath DOM specification. Also
+//     added a forward definition for XPathResult to make this valid.
+// File: xpath.idl
+
+#ifndef _XPATH_IDL_
+#define _XPATH_IDL_
+
+#include "DOM_APISPEC.idl"
+
+module xpath
+{
+
+  typedef dom::DOMString DOMString;
+  typedef dom::Node Node;
+  typedef dom::Element Element;
+
+  interface XPathNSResolver;
+  interface XPathExpression;
+  interface XPathResult;
+
+  exception XPathException {
+    unsigned short   code;
+  };
+  // XPathExceptionCode
+  const unsigned short      INVALID_EXPRESSION_ERR         = 51;
+  const unsigned short      TYPE_ERR                       = 52;
+
+
+  interface XPathEvaluator {
+    XPathExpression    createExpression(in DOMString expression, 
+                                        in XPathNSResolver resolver)
+                                        raises(XPathException, 
+                                               dom::DOMException);
+    XPathNSResolver    createNSResolver(in Node nodeResolver);
+    XPathResult        evaluate(in DOMString expression, 
+                                in Node contextNode, 
+                                in XPathNSResolver resolver, 
+                                in unsigned short type, 
+                                in XPathResult result)
+                                        raises(XPathException, 
+                                               dom::DOMException);
+  };
+#pragma terminal-interface
+
+  interface XPathExpression {
+    XPathResult        evaluate(in Node contextNode, 
+                                in unsigned short type, 
+                                in XPathResult result)
+                                        raises(XPathException, 
+                                               dom::DOMException);
+  };
+#pragma terminal-interface
+
+  interface XPathNSResolver {
+    DOMString          lookupNamespaceURI(in DOMString prefix);
+  };
+#pragma cross-module-argument
+
+  interface XPathResult {
+
+    // XPathResultType
+    const unsigned short      ANY_TYPE                       = 0;
+    const unsigned short      NUMBER_TYPE                    = 1;
+    const unsigned short      STRING_TYPE                    = 2;
+    const unsigned short      BOOLEAN_TYPE                   = 3;
+    const unsigned short      UNORDERED_NODE_ITERATOR_TYPE   = 4;
+    const unsigned short      ORDERED_NODE_ITERATOR_TYPE     = 5;
+    const unsigned short      UNORDERED_NODE_SNAPSHOT_TYPE   = 6;
+    const unsigned short      ORDERED_NODE_SNAPSHOT_TYPE     = 7;
+    const unsigned short      ANY_UNORDERED_NODE_TYPE        = 8;
+    const unsigned short      FIRST_ORDERED_NODE_TYPE        = 9;
+
+    readonly attribute unsigned short  resultType;
+    readonly attribute double          numberValue;
+                                        // raises(XPathException) on retrieval
+
+    readonly attribute DOMString       stringValue;
+                                        // raises(XPathException) on retrieval
+
+    readonly attribute boolean         booleanValue;
+                                        // raises(XPathException) on retrieval
+
+    readonly attribute Node            singleNodeValue;
+                                        // raises(XPathException) on retrieval
+
+    readonly attribute boolean         invalidIteratorState;
+    readonly attribute unsigned long   snapshotLength;
+                                        // raises(XPathException) on retrieval
+
+    Node               iterateNext()
+                                        raises(XPathException, 
+                                               dom::DOMException);
+    Node               snapshotItem(in unsigned long index)
+                                        raises(XPathException);
+  };
+#pragma terminal-interface
+
+  interface XPathNamespace : Node {
+
+    // XPathNodeType
+    const unsigned short      XPATH_NAMESPACE_NODE           = 13;
+
+    readonly attribute Element         ownerElement;
+  };
+#pragma terminal-interface
+};
+
+#endif // _XPATH_IDL_
