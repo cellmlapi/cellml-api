@@ -721,6 +721,8 @@ AC_SUBST([PYTHON_LDFLAGS])
 AC_SUBST([PRE_NON_AS_NEEDED])
 AC_SUBST([POST_NON_AS_NEEDED])
 AC_SUBST([lt_cv_dlopen_libs])
+AC_SUBST([libext])
+AC_SUBST([shrext_cmds])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])

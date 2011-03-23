@@ -306,3 +306,25 @@ include $(top_srcdir)/SProS/python_build.mk
 endif
 
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh
+
+$(top_builddir)/cellml-sdk.tar.bz2:
+	mkdir -p $(top_builddir)/cellml-sdk/lib
+	mkdir -p $(top_builddir)/cellml-sdk/include
+	cp $(top_srcdir)/sources/cda_compiler_support.h $(top_builddir)/cellml-sdk/include
+	cp $(top_srcdir)/sources/Utilities.hxx $(top_builddir)/cellml-sdk/include
+	cp $(top_builddir)/cda_config.h $(top_builddir)/cellml-sdk/include
+	cp $(top_builddir)/interfaces/Iface*.hxx $(top_builddir)/cellml-sdk/include
+	cp `find $(top_builddir) -iname "*Bootstrap.h??" -and -not -wholename "*sdk*"` $(top_builddir)/cellml-sdk/include
+	cp $(top_builddir)/.libs/*$(shrext_cmds) $(top_builddir)/cellml-sdk/lib
+	LIBFILES=`find "$(top_builddir)/.libs/" -name "*.$(libext)" -and -not -wholename "*.hg*" -and -not -name "*rdf\.*" -and -not -wholename "*sdk*" -and -not -name "*only*"`; \
+	if test -n "$$LIBFILES"; \
+        then \
+	  cp $$LIBFILES $(top_builddir)/cellml-sdk/lib/ ; \
+	fi
+	JARFILES=`find "$(top_builddir)/.libs/" -name "*.jar" -and -not -wholename "*.hg*" -and -not -wholename "*sdk*"`; \
+	if test -n "$$JARFILES"; \
+        then \
+	  cp $$JARFILES $(top_builddir)/cellml-sdk/lib/ ; \
+	fi
+	tar -cjf $(top_builddir)/cellml-sdk.tar.bz2 -C $(top_builddir) cellml-sdk
+	rm -fr cellml-sdk

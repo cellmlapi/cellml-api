@@ -4985,13 +4985,12 @@ EOF
 	    cat >> $cwrappersource<<"EOF"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
-#include <process.h>
-#undef __STDC__
 #include <sys/stat.h>
 
 #if defined(PATH_MAX)
@@ -5098,7 +5097,7 @@ EOF
               ;;
               *)
                 cat >> $cwrappersource <<EOF
-  return _spawnv(_P_WAIT, "$SHELL",newargz);
+  execv("$SHELL",newargz);
 EOF
               ;;
             esac
@@ -5159,13 +5158,8 @@ check_executable(const char * path)
 #if defined (S_IXGRP)
        ((st.st_mode & S_IXGRP) == S_IXGRP) ||
 #endif
-#if defined (S_IXUSR)
-       ((st.st_mode & S_IXUSR) == S_IXUSR)
-#else
-       ((st.st_mode & S_IEXEC) == S_IEXEC)
-#endif
+       ((st.st_mode & S_IXUSR) == S_IXUSR))
       )
-     )
     return 1;
   else
     return 0;
