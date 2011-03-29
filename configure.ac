@@ -72,6 +72,8 @@ AC_ARG_ENABLE(java,
 esac], [java=false])
 AM_CONDITIONAL(ENABLE_JAVA, test x$java != xfalse)
 
+AC_CHECK_HEADERS(jni.h JavaVM/jni.h)
+
 PYTHON_CFLAGS=
 PYTHON_LDFLAGS=
 AC_ARG_ENABLE(python,

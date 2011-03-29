@@ -1,5 +1,5 @@
 #include <exception>
-#include <jni.h>
+#include "pick-jni.h"
 #include "j2pCCGS.hxx"
 #include "CCGSBootstrap.hpp"
 #include "Utilities.hxx"

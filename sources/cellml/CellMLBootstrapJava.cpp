@@ -1,5 +1,5 @@
 #include <exception>
-#include <jni.h>
+#include "pick-jni.h"
 #include "j2pCellML_APISPEC.hxx"
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"

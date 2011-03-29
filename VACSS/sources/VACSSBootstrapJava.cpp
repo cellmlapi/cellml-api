@@ -1,5 +1,5 @@
 #include <exception>
-#include <jni.h>
+#include "pick-jni.h"
 #include "j2pVACSS.hxx"
 #include "VACSSBootstrap.hpp"
 #include "Utilities.hxx"

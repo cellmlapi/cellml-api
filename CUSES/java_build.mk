@@ -11,7 +11,6 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pCUSES.cpp
 
 cellml_jar_java += \
-  $(top_srcdir)/java/cellml_bootstrap/CUSESBootstrap.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/BaseUnit.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/UserBaseUnit.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/BaseUnitInstance.java \
@@ -26,7 +25,6 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/CUSESBootstrap.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/CUSESBootstrap.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/BaseUnit.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/UserBaseUnit.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/BaseUnitInstance.class \

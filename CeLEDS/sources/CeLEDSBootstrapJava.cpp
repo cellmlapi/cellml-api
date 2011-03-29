@@ -1,5 +1,5 @@
 #include <exception>
-#include <jni.h>
+#include "pick-jni.h"
 #include "j2pCeLEDS.hxx"
 #include "CeLEDSBootstrap.hpp"
 #include "Utilities.hxx"

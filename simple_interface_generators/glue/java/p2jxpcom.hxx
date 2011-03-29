@@ -5,7 +5,7 @@
 #include <string>
 #include "Utilities.hxx"
 #include "Ifacexpcom.hxx"
-#include <jni.h>
+#include "pick-jni.h"
 #include <map>
 
 #ifdef IN_MODULE_JavaSupport

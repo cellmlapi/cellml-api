@@ -11,7 +11,6 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pCCGS.cpp
 
 cellml_jar_java += \
-  $(top_srcdir)/java/cellml_bootstrap/CCGSBootstrap.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/ComputationTarget.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/ComputationTargetIterator.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeInformation.java \
@@ -26,7 +25,6 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/CodeGeneratorBootstrap.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/CCGSBootstrap.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/ComputationTarget.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/ComputationTargetIterator.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeInformation.class \

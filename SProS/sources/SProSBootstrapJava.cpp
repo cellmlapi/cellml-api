@@ -1,5 +1,5 @@
 #include <exception>
-#include <jni.h>
+#include "pick-jni.h"
 #include "j2pSProSBootstrap.hxx"
 #include "SProSBootstrap.hpp"
 #include "Utilities.hxx"
