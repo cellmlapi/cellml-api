@@ -23,4 +23,4 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/TeLICeMMathResult.class \
   $(top_builddir)/javacp/cellml_services/TeLICeMModelResult.class
 
-pure_java += cellml_bootstrap/TeLICeMBootstrap
+pure_java += cellml_bootstrap/TeLICeMSBootstrap
