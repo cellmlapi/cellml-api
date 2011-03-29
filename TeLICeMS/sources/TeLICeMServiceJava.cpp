@@ -1,6 +1,6 @@
 #include <exception>
 #include "pick-jni.h"
-#include "j2pTeLICeMService.hxx"
+#include "j2pTeLICeMS.hxx"
 #include "TeLICeMService.hpp"
 #include "Utilities.hxx"
 
