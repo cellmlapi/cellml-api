@@ -369,21 +369,22 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   if (rateSize != 0)
     y = N_VMake_Serial(rateSize, states);
   void* solver = NULL;
-  
-  switch (mStepType)
-  {
-  case iface::cellml_services::ADAMS_MOULTON_1_12:
-    if (rateSize != 0)
-      solver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
-    break;
-  case iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE:
-  default:
-    if (rateSize != 0)
-      solver = CVodeCreate(CV_BDF, CV_NEWTON);
-    break;
-  }
 
-  CVodeSetErrHandlerFn(solver, cda_cvode_error_handler, this);
+  if (rateSize != 0)
+  {  
+    switch (mStepType)
+    {
+    case iface::cellml_services::ADAMS_MOULTON_1_12:
+      solver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
+      break;
+    case iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE:
+    default:
+      solver = CVodeCreate(CV_BDF, CV_NEWTON);
+      break;
+    }
+
+    CVodeSetErrHandlerFn(solver, cda_cvode_error_handler, this);
+  }
 
   EvaluationInformation ei;
 
