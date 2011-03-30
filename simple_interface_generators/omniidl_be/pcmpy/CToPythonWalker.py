@@ -243,7 +243,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             i = i + 1
             p.ti = typeinfo.GetTypeInformation(p.paramType())
             if p.ti.has_length:
-                paramsigs.append('u_int32_t _length_' + p.pcmname)
+                paramsigs.append('uint32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
         paramsig = string.join(paramsigs, ', ')
         
