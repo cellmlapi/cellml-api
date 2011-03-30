@@ -199,6 +199,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             self.hxx.out('public:')
             self.hxx.inc_indent()
             self.hxx.out('%sFactory() : ::P2PyFactory("%s") {};' % (node.simplename, node.corbacxxscoped))
+            self.hxx.out('virtual ~%sFactory() {};' % (node.simplename))
             self.hxx.out("void* create(PyObject* aObj) {\n" +\
                          "  return reinterpret_cast<void*>(static_cast< ::iface::%s*>(new ::p2py::%s(aObj)));\n" %\
                          (node.corbacxxscoped, node.corbacxxscoped) +\
@@ -242,7 +243,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             i = i + 1
             p.ti = typeinfo.GetTypeInformation(p.paramType())
             if p.ti.has_length:
-                paramsigs.append('uint32_t _length_' + p.pcmname)
+                paramsigs.append('u_int32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
         paramsig = string.join(paramsigs, ', ')
         
