@@ -2248,15 +2248,17 @@ ModelValidation::validateMathMLConstant
     switch (nt)
     {
     case iface::dom::Node::ELEMENT_NODE:
-      RETURN_INTO_WSTRING(name, child->nodeName());
-      if (type != L"e-notation")
-        REPR_ERROR(L"MathML cn elements without the attribute type=e-notation "
-                   L"shouldn't have element children", aEl);
-      else if (name != L"sep")
-        REPR_ERROR(L"MathML cn elements with the attribute type=e-notation "
-                   L"shouldn't have non sep element children", aEl);
-      else
-        txt += L"<sep/>";
+      {
+        RETURN_INTO_WSTRING(name, child->nodeName());
+        if (type != L"e-notation")
+          REPR_ERROR(L"MathML cn elements without the attribute type=e-notation "
+                     L"shouldn't have element children", aEl);
+        else if (name != L"sep")
+          REPR_ERROR(L"MathML cn elements with the attribute type=e-notation "
+                     L"shouldn't have non sep element children", aEl);
+        else
+          txt += L"<sep/>";
+      }
       break;
     case iface::dom::Node::TEXT_NODE:
     case iface::dom::Node::CDATA_SECTION_NODE:
