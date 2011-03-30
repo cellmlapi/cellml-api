@@ -2248,7 +2248,7 @@ ModelValidation::validateMathMLConstant
     switch (nt)
     {
     case iface::dom::Node::ELEMENT_NODE:
-      name = child->nodeName();
+      RETURN_INTO_WSTRING(name, child->nodeName());
       if (type != L"e-notation")
         REPR_ERROR(L"MathML cn elements without the attribute type=e-notation "
                    L"shouldn't have element children", aEl);
