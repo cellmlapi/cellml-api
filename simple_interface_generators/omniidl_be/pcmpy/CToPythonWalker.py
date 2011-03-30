@@ -246,7 +246,8 @@ class CToPythonWalker(idlvisitor.AstVisitor):
                 paramsigs.append('uint32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
         paramsig = string.join(paramsigs, ', ')
-        
+        if cxxName[0:2] == '::':
+            cxxName = cxxName[2:]
         self.hxx.out('@rettype@ @cxxName@(@paramsig@) throw(std::exception&);',
                      rettype=rettype, cxxName=cxxName, paramsig=paramsig)
         self.cpp.out('@rettype@ ::@classname@::@cxxName@(@paramsig@)',
