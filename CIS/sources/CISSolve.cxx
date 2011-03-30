@@ -368,16 +368,18 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   N_Vector y = NULL;
   if (rateSize != 0)
     y = N_VMake_Serial(rateSize, states);
-  void* solver;
+  void* solver = NULL;
   
   switch (mStepType)
   {
   case iface::cellml_services::ADAMS_MOULTON_1_12:
-    solver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
+    if (rateSize != 0)
+      solver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
     break;
   case iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE:
   default:
-    solver = CVodeCreate(CV_BDF, CV_NEWTON);
+    if (rateSize != 0)
+      solver = CVodeCreate(CV_BDF, CV_NEWTON);
     break;
   }
 
