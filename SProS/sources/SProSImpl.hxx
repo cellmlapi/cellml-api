@@ -368,7 +368,7 @@ public: \
   \
   iface::SProS::whatUpper* next##whatUpper() throw() \
   { \
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement()); \
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());  \
     DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpper); \
     return ret; \
   } \
