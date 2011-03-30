@@ -6,6 +6,8 @@ AM_CXXFLAGS=
 AC_INIT(CellMLAPI, 0.1, [[ak.miller@auckland.ac.nz]])
 AC_PREREQ(2.59)
 
+AC_CONFIG_MACRO_DIR([m4])
+
 command -v omniidl >/dev/null
 has_omniidl=$?
 if test $has_omniidl != 0; then
