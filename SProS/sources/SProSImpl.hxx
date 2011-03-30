@@ -145,7 +145,7 @@ public:
   CDA_SProSIteratorBase(CDA_SomeSet*);
   ~CDA_SProSIteratorBase();
 
-  CDA_SProSBase* nextElement() throw();
+  iface::SProS::Base* nextElement() throw();
 
 protected:
 

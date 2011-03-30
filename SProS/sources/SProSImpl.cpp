@@ -961,7 +961,7 @@ CDA_SProSIteratorBase::~CDA_SProSIteratorBase()
 {
 }
 
-CDA_SProSBase*
+iface::SProS::Base*
 CDA_SProSIteratorBase::nextElement() throw()
 {
   while (true)
