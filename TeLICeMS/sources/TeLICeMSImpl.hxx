@@ -77,6 +77,7 @@ public:
     : mRow(1), mColumn(0), mGroupingLevel(0)
   {
   }
+  ~TeLICeMSParseTarget() {}
 
   virtual Target target() const = 0;
   virtual const char* type() = 0;
