@@ -6,8 +6,10 @@
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else
-typedef signed long long int64_t;
-typedef unsigned long long uint64_t;
+#ifdef WIN32
+typedef signed __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+#endif
 #endif
 
 #ifdef _MSC_VER
