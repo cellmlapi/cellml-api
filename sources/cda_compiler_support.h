@@ -6,7 +6,7 @@
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else
-#ifdef WIN32
+#ifdef _MSC_VER
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #endif
