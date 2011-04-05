@@ -213,7 +213,7 @@ public:
   iface::SProS::NamedElement*
   nextNamedElement() throw()
   {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::NamedElement);
     return ret;
   }
@@ -289,7 +289,7 @@ public:
   iface::SProS::NamedIdentifiedElement*
   nextNamedIdentifiedElement() throw()
   {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::NamedIdentifiedElement);
     return ret;
   }
@@ -339,7 +339,7 @@ public: \
   \
   iface::SProS::whatUpper* next##whatUpper() throw() \
   { \
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement()); \
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());  \
     DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpper); \
     return ret; \
   } \
@@ -638,7 +638,7 @@ public:
   
   iface::SProS::Curve* nextCurve() throw()
   {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::Curve);
     return ret;
   }
@@ -681,7 +681,7 @@ public:
   
   iface::SProS::Surface* nextSurface() throw()
   {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::Surface);
     return ret;
   }
@@ -764,7 +764,7 @@ public:
   
   iface::SProS::DataSet* nextDataSet() throw()
   {
-    RETURN_INTO_OBJREF(el, CDA_SProSBase, nextElement());
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::DataSet);
     return ret;
   }
