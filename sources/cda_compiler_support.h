@@ -7,8 +7,10 @@
 #include <inttypes.h>
 #else
 #ifdef _MSC_VER
-typedef signed __int64 int64_t;
-typedef unsigned __int64 uint64_t;
+#undef int64_t
+#undef uint64_t
+#define int64_t signed __int64
+#define uint64_t unsigned __int64
 #endif
 #endif
 
