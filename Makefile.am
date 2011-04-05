@@ -316,14 +316,14 @@ $(top_builddir)/cellml-sdk.tar.bz2:
 	cp $(top_srcdir)/sources/Utilities.hxx $(top_builddir)/cellml-sdk/include
 	cp $(top_builddir)/cda_config.h $(top_builddir)/cellml-sdk/include
 	cp $(top_builddir)/interfaces/Iface*.hxx $(top_builddir)/cellml-sdk/include
-	cp `find $(top_builddir) -iname "*Bootstrap.h??" -and -not -wholename "*sdk*"` $(top_builddir)/cellml-sdk/include
+	cp `find $(top_builddir) -iname "*Bootstrap.h??" -and -not -path "*sdk*"` $(top_builddir)/cellml-sdk/include
 	cp $(top_builddir)/.libs/*$(shrext_cmds) $(top_builddir)/cellml-sdk/lib
-	LIBFILES=`find "$(top_builddir)/.libs/" -name "*.$(libext)" -and -not -wholename "*.hg*" -and -not -name "*rdf\.*" -and -not -wholename "*sdk*" -and -not -name "*only*"`; \
+	LIBFILES=`find "$(top_builddir)/.libs/" -name "*.$(libext)" -and -not -path "*.hg*" -and -not -name "*rdf\.*" -and -not -path "*sdk*" -and -not -name "*only*"`; \
 	if test -n "$$LIBFILES"; \
         then \
 	  cp $$LIBFILES $(top_builddir)/cellml-sdk/lib/ ; \
 	fi
-	JARFILES=`find "$(top_builddir)/.libs/" -name "*.jar" -and -not -wholename "*.hg*" -and -not -wholename "*sdk*"`; \
+	JARFILES=`find "$(top_builddir)/.libs/" -name "*.jar" -and -not -path "*.hg*" -and -not -path "*sdk*"`; \
 	if test -n "$$JARFILES"; \
         then \
 	  cp $$JARFILES $(top_builddir)/cellml-sdk/lib/ ; \
