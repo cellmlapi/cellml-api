@@ -2,11 +2,7 @@
 #define CUSESTEST_H
 
 #include <cppunit/extensions/HelperMacros.h>
-#include "cda_config.h"
-
-#ifdef HAVE_INTTYPES
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCUSES.hxx"

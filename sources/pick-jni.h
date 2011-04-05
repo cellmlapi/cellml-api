@@ -1,4 +1,4 @@
-#include "cda_config.h"
+#include "cda_compiler_support.h"
 #ifdef HAVE_JNI_H
 #include <jni.h>
 #else

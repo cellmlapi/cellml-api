@@ -1,11 +1,7 @@
 #ifndef RDFTEST_H
 #define RDFTEST_H
 #include <cppunit/extensions/HelperMacros.h>
-#include "cda_config.h"
-
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 
 #include "IfaceRDF_APISPEC.hxx"
 

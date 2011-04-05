@@ -1,7 +1,4 @@
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include "IfaceDOM_APISPEC.hxx"
 
 #include "cda_compiler_support.h"

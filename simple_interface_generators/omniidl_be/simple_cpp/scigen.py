@@ -27,10 +27,7 @@ class Walker(idlvisitor.AstVisitor):
         if not self.doing_header:
             self.sci.out("""
 #include <omniORB4/CORBA.h>
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include <strings.h>
 #include <wchar.h>
 #include <exception>

@@ -6,7 +6,7 @@
 #include "AnnoToolsBootstrap.hpp"
 #include "Utilities.hxx"
 
-#include "cda_config.h"
+#include "cda_compiler_support.h"
 #ifndef BASE_DIRECTORY
 #ifdef WIN32
 #define BASE_DIRECTORY L"file:///" TESTDIR L"/test_xml/"

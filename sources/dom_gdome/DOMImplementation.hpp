@@ -1,8 +1,5 @@
 #include <exception>
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include "IfaceDOM-APISPEC.hxx"
 #include "IfaceMathML-content-APISPEC.hxx"
 #include <libgdome/gdome.h>

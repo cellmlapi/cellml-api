@@ -1,4 +1,5 @@
 #define __STDC_FORMAT_MACROS
+#include "cda_compiler_support.h"
 #include "RDFTest.hpp"
 #include "DOMBootstrap.hxx"
 #include "CellMLBootstrap.hpp"
@@ -6,15 +7,10 @@
 #include "Utilities.hxx"
 #include <fstream>
 #include <iostream>
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
 
 #ifndef PRIxPTR
 #define PRIxPTR "x"
 #endif
-
-#include "cda_config.h"
 
 #ifndef BASE_DIRECTORY_NTRIP
 #define BASE_DIRECTORY_NTRIP TESTDIR8 "/test_rdf/"

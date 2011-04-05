@@ -2,7 +2,7 @@
 #include "IfaceCIS.hxx"
 #include "ThreadWrapper.hxx"
 #include <string>
-#include "cda_config.h"
+#include "cda_compiler_support.h"
 
 #ifdef ENABLE_CONTEXT
 #include "IfaceCellML_Context.hxx"

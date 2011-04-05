@@ -9,12 +9,8 @@
  *  [2] https://tracker.physiomeproject.org/show_bug.cgi?id=1514#c16
  *  [3] http://www.cellml.org/pipermail/cellml-tools-developers/2009-January/000140.html
  */
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-#include <exception>
 #include "cda_compiler_support.h"
+#include <exception>
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCCGS.hxx"
 #include "IfaceMaLaES.hxx"

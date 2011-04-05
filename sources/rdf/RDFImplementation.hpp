@@ -1,4 +1,4 @@
-#include "cda_config.h"
+#include "cda_compiler_support.h"
 #include "Utilities.hxx"
 #include "IfaceRDF_APISPEC.hxx"
 #include <map>

@@ -1,8 +1,6 @@
 #include "CellMLEventsTest.hpp"
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
-#include "cda_config.h"
-
 
 #ifndef BASE_DIRECTORY
 #ifdef WIN32

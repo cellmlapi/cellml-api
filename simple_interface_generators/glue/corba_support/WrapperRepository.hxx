@@ -1,10 +1,6 @@
 #include <exception>
 #include <map>
 #include <string>
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
 #include "cda_compiler_support.h"
 #include "Ifacexpcom.hxx"
 #include "xpcom.hh"

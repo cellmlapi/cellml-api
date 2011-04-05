@@ -1,9 +1,6 @@
 #define GSL_DLL
 #include <exception>
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include <limits>
 #include "Utilities.hxx"
 #include "CISImplementation.hxx"
@@ -1273,7 +1270,6 @@ static const double levMarOpts[] =
     1E-3, /* tau */
     1E-17, /* epsilon1 */
     1E-17, /* epsilon2 */
-    1E-17 * 1E-17, /* epsilon2 squared */
     1E-17, /* epsilon3 */
     1E-8 /* delta */
   };
@@ -1295,6 +1291,7 @@ do_levmar
   uint32_t i = 0, k;
   double tolerance = SUBSOL_TOLERANCE * size;
 
+  memset(work, 0, LM_DIF_WORKSZ(size, size) * sizeof(double));
   memcpy(bp, params, sizeof(double) * size);
 
   srand(RANDOM_SEED);
