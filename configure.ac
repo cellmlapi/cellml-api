@@ -550,6 +550,8 @@ AC_DISABLE_STATIC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_LIBTOOL_CXX
+library_names_spec=$(echo $library_names_spec | tr " " "\n" | egrep -v \.lib$ | xargs echo)
+
 AC_SUBST([LIBTOOL_DEPS])
 
 # Checks for types...
