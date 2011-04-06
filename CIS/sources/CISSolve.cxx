@@ -968,7 +968,6 @@ defint(
   double epsAbs = SUBSOL_TOLERANCE;
   CVodeInit(subsolver, EvaluateDefintCVODE, lowV, y);
   CVodeSStolerances(subsolver, SUBSOL_TOLERANCE, epsAbs);
-  CVDense(subsolver, 1);
 
   DefintInformation ei;
   ei.voi = VOI;
