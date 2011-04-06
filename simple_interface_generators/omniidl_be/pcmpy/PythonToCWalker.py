@@ -2,6 +2,7 @@
 import os.path
 import identifier
 import typeinfo
+import string
 from omniidl import idlast, idlvisitor, idlutil, idltype, output
 
 class PythonToCWalker(idlvisitor.AstVisitor):
@@ -40,7 +41,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
                         self.out.out("%sFinaliseType();" % n2.simplecscoped)
                         self.out.out("PyModule_AddObject(mod, \"%s\", (PyObject*)&%sType);" %
                                      (
-                                      n2.identifier()[0].upper() + n2.identifier()[1:],
+                                      string.upper(n2.identifier()[0]) + n2.identifier()[1:],
                                       n2.simplecscoped
                                      )
                                     )
@@ -290,7 +291,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
                     self.out.out('}')
                     bases.append(bn)
             self.out.out('%sType.tp_bases = PyTuple_Pack(%u, %s);' %
-                         (node.simplecscoped, len(bases), str.join(', ', bases)))
+                         (node.simplecscoped, len(bases), string.join(bases, ', ')))
             for i in range(0, nextbase):
                 self.out.out('Py_DECREF(base%u);' % i)
         self.out.out('PyType_Ready(&%sType);' % node.simplecscoped)
