@@ -231,5 +231,5 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pCellML_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pCellML_events.cpp \
-  $(top_builddir)/interfaces/j2pRDF_APISPEC.cpp \
-  $(top_builddir)/cellml.jar
+  $(top_builddir)/interfaces/j2pRDF_APISPEC.cpp
+dist_pkgdata_DATA = $(top_builddir)/cellml.jar
