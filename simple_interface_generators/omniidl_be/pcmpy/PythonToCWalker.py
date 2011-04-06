@@ -441,7 +441,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         # Read PyArg params...
         pyargformat = ''
         pyarglist = ''
-        for (p, i) in zip(params, range(0, len(params))):
+        for (p, i) in map(None, params, range(0, len(params))):
             ti = typeinfo.GetTypeInformation(p.paramType())
             pyparam = "pyparam%u" % i
             self.out.out(ti.makePyArgStorage(pyparam, p.is_in(), p.is_out()))
@@ -455,7 +455,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
 
         # Build all parameters, copying for in & in/out parameters...
         pcmarglist = ''
-        for (p, i) in zip(params, range(0, len(params))):
+        for (p, i) in map(None, params, range(0, len(params))):
             if ti.has_length:
                 if i > 0:
                     pcmarglist = pcmarglist + ', '
@@ -484,7 +484,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('%snative->%s(%s%s);' % (retPrefix, cxxName, pcmarglist, retExtra))
 
         # Copy out & in/out parameters from PCM to Python...
-        for (p, i) in zip(params, range(0, len(params))):
+        for (p, i) in map(None, params, range(0, len(params))):
             if not p.is_out():
                 continue
             self.out.out(typeinfo.GetTypeInformation(p.paramType()).makePyArgFromPCM("pyparam%u" % i, "pcmparam%u" % i, 0, 0, 1))
