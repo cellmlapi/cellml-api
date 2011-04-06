@@ -10,6 +10,10 @@ p2j::XPCOM::IObject::~IObject()
   env->DeleteGlobalRef(mObject);
 }
 
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
+
 char*
 p2j::XPCOM::IObject::objid()
   throw()
