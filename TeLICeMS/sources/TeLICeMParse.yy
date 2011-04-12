@@ -1,4 +1,8 @@
 %{
+#include "cda_compiler_support.h"
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
   #define YYSTYPE TeLICeMSLValue
   #define YYSTYPE_IS_TRIVIAL 0
 %}
