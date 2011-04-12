@@ -646,9 +646,9 @@
     if (aValue == 0)
       expn = 0;
     else if (aValue < 0)
-       expn = -static_cast<int>(trunc(log10(-aValue)));
+       expn = -static_cast<int>(floor(log10(-aValue)));
     else 
-       expn = static_cast<int>(trunc(log10(aValue)));
+       expn = static_cast<int>(floor(log10(aValue)));
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
     if (expn < -3 || expn > 3)
