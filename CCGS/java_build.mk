@@ -20,7 +20,7 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeGenerator.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/IDACodeGenerator.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CustomGenerator.java \
-  $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeGeneratorBootstrap.java
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeGeneratorBootstrap.java \
   $(top_builddir)/interfaces/cellml_services/VariableEvaluationType.java \
   $(top_builddir)/interfaces/cellml_services/ModelConstraintLevel.java \
   $(top_builddir)/interfaces/cellml_services/ComputationTarget.java \
