@@ -4,6 +4,7 @@
 #include "CellMLBootstrap.hpp"
 #include <assert.h>
 #include <string>
+#include <algorithm>
 
 #define SEDML_NS L"http://www.biomodels.net/sed-ml"
 
