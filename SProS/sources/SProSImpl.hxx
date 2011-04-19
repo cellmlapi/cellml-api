@@ -533,7 +533,7 @@ class CDA_SProSMathContainer
 {
 public:
   CDA_SProSMathContainer() : CDA_SProSBase(NULL, NULL) {}
-  iface::cellml_api::MathList* math() throw();
+  iface::cellml_api::MathList* math() throw(std::exception&);
   void addMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
   void removeMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
   void replaceMath(iface::mathml_dom::MathMLElement* aEl1,

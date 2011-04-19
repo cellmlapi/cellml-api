@@ -1524,7 +1524,7 @@ CDA_SProSTask::modelReference(iface::SProS::Model* aSim) throw()
 }
 
 iface::cellml_api::MathList*
-CDA_SProSMathContainer::math() throw()
+CDA_SProSMathContainer::math() throw(std::exception&)
 {
   try
   {
