@@ -66,6 +66,7 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/SProS/Base.java \
   $(top_builddir)/interfaces/SProS/BaseSet.java \
   $(top_builddir)/interfaces/SProS/BaseIterator.java \
+  $(top_builddir)/interfaces/SProS/Bootstrap.java \
   $(top_builddir)/interfaces/SProS/SEDMLElement.java \
   $(top_builddir)/interfaces/SProS/NamedElement.java \
   $(top_builddir)/interfaces/SProS/NamedElementSet.java \
@@ -172,6 +173,7 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/SProS/Base.class \
   $(top_builddir)/javacp/SProS/BaseSet.class \
   $(top_builddir)/javacp/SProS/BaseIterator.class \
+  $(top_builddir)/javacp/SProS/Bootstrap.java \
   $(top_builddir)/javacp/SProS/SEDMLElement.class \
   $(top_builddir)/javacp/SProS/NamedElement.class \
   $(top_builddir)/javacp/SProS/NamedElementSet.class \

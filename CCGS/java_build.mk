@@ -22,6 +22,8 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/ComputationTargetIterator.java \
   $(top_builddir)/interfaces/cellml_services/CodeInformation.java \
   $(top_builddir)/interfaces/cellml_services/CodeGenerator.java \
+  $(top_builddir)/interfaces/cellml_services/IDACodeGenerator.java \
+  $(top_builddir)/interfaces/cellml_services/CustomGenerator.java \
   $(top_builddir)/interfaces/cellml_services/CodeGeneratorBootstrap.java
 
 cellml_jar_classes += \
@@ -36,6 +38,8 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/ComputationTargetIterator.class \
   $(top_builddir)/javacp/cellml_services/CodeInformation.class \
   $(top_builddir)/javacp/cellml_services/CodeGenerator.class \
+  $(top_builddir)/interfaces/cellml_services/IDACodeGenerator.class \
+  $(top_builddir)/interfaces/cellml_services/CustomGenerator.class \
   $(top_builddir)/javacp/cellml_services/CodeGeneratorBootstrap.class
 
 pure_java += cellml_bootstrap/CCGSBootstrap

@@ -13,7 +13,7 @@ BUILT_SOURCES += \
 cellml_jar_java += \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CeLEDSExporterBootstrap.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeExporter.java \
-  $(top_builddir)/interfaces/cellml_services/CeLEDSBootstrap.java \
+  $(top_builddir)/interfaces/cellml_services/CeLEDSExporterBootstrap.java \
   $(top_builddir)/interfaces/cellml_services/CodeExporter.java
 
 cellml_jar_classes += \

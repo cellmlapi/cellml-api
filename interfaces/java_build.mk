@@ -126,6 +126,7 @@ interface_list =\
   cellml_api/Unit \
   cellml_api/ReactionIterator \
   cellml_api/ExtensionElementList \
+  cellml_api/ExtensionAttributeSet \
   cellml_api/GroupIterator \
   cellml_api/ImportUnitsIterator \
   cellml_api/CellMLVariableSet \
