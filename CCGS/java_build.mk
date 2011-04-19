@@ -33,17 +33,26 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/CodeGeneratorBootstrap.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/ComputationTarget.class \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/ComputationTargetIterator.class \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeInformation.class \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeGenerator.class \
-  $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeGeneratorBootstrap.class \
-  $(top_builddir)/javacp/cellml_services/VariableEvaluationType.class \
-  $(top_builddir)/javacp/cellml_services/ModelConstraintLevel.class \
-  $(top_builddir)/javacp/cellml_services/ComputationTarget.class \
-  $(top_builddir)/javacp/cellml_services/ComputationTargetIterator.class \
-  $(top_builddir)/javacp/cellml_services/CodeInformation.class \
-  $(top_builddir)/javacp/cellml_services/CodeGenerator.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/VariableEvaluationType.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/ModelConstraintLevel.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/ComputationTarget.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/ComputationTargetIterator.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeInformation.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/IDACodeInformation.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeGenerator.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/IDACodeGenerator.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CustomGenerator.java \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/CodeGeneratorBootstrap.java
+  $(top_builddir)/javacp/cellml_services/VariableEvaluationType.java \
+  $(top_builddir)/javacp/cellml_services/ModelConstraintLevel.java \
+  $(top_builddir)/javacp/cellml_services/ComputationTarget.java \
+  $(top_builddir)/javacp/cellml_services/ComputationTargetIterator.java \
+  $(top_builddir)/javacp/cellml_services/CodeInformation.java \
+  $(top_builddir)/javacp/cellml_services/IDACodeInformation.java \
+  $(top_builddir)/javacp/cellml_services/CodeGenerator.java \
+  $(top_builddir)/javacp/cellml_services/IDACodeGenerator.java \
+  $(top_builddir)/javacp/cellml_services/CustomGenerator.java \
+  $(top_builddir)/javacp/cellml_services/CodeGeneratorBootstrap.java
   $(top_builddir)/interfaces/cellml_services/IDACodeGenerator.class \
   $(top_builddir)/interfaces/cellml_services/CustomGenerator.class \
   $(top_builddir)/javacp/cellml_services/CodeGeneratorBootstrap.class
