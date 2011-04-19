@@ -12,17 +12,21 @@ BUILT_SOURCES += \
 
 cellml_jar_java += \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/TeLICeMService.java \
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/TeLICeMResult.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/TeLICeMMathResult.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/TeLICeMModelResult.java \
   $(top_builddir)/interfaces/cellml_services/TeLICeMService.java \
+  $(top_builddir)/interfaces/cellml_services/TeLICeMResult.java \
   $(top_builddir)/interfaces/cellml_services/TeLICeMMathResult.java \
   $(top_builddir)/interfaces/cellml_services/TeLICeMModelResult.java
 
 cellml_jar_classes += \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/TeLICeMService.class \
+  $(top_builddir)/javacp/pjm2pcm/cellml_services/TeLICeMResult.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/TeLICeMMathResult.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/TeLICeMModelResult.class \
   $(top_builddir)/javacp/cellml_services/TeLICeMService.class \
+  $(top_builddir)/javacp/cellml_services/TeLICeMResult.class \
   $(top_builddir)/javacp/cellml_services/TeLICeMMathResult.class \
   $(top_builddir)/javacp/cellml_services/TeLICeMModelResult.class
 
