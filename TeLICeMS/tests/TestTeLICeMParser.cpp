@@ -6,7 +6,9 @@
 #include <cstdio>
 #include <string.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <sys/errno.h>
+#endif
 #include <iostream>
 
 int
@@ -25,7 +27,11 @@ main(int argc, char** argv)
   FILE* f = fopen(argv[1], "r");
   if (f == NULL)
   {
+#ifdef WIN32
+    printf("Error opening file.\n");
+#else
     printf("Error opening file: %s\n", strerror(errno));
+#endif
     return 2;
   }
 
