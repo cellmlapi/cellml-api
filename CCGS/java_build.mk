@@ -11,16 +11,22 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pCCGS.cpp
 
 cellml_jar_java += \
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/VariableEvaluationType.java \
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/ModelConstraintLevel.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/ComputationTarget.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/ComputationTargetIterator.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeInformation.java \
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/IDACodeInformation.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeGenerator.java \
-  $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeGeneratorBootstrap.java \
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/IDACodeGenerator.java \
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/CustomGenerator.java \
+  $(top_builddir)/interfaces/pjm2pcm/cellml_services/CodeGeneratorBootstrap.java
   $(top_builddir)/interfaces/cellml_services/VariableEvaluationType.java \
   $(top_builddir)/interfaces/cellml_services/ModelConstraintLevel.java \
   $(top_builddir)/interfaces/cellml_services/ComputationTarget.java \
   $(top_builddir)/interfaces/cellml_services/ComputationTargetIterator.java \
   $(top_builddir)/interfaces/cellml_services/CodeInformation.java \
+  $(top_builddir)/interfaces/cellml_services/IDACodeInformation.java \
   $(top_builddir)/interfaces/cellml_services/CodeGenerator.java \
   $(top_builddir)/interfaces/cellml_services/IDACodeGenerator.java \
   $(top_builddir)/interfaces/cellml_services/CustomGenerator.java \
