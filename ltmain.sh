@@ -9019,7 +9019,7 @@ EOF
 	  *) exeext= ;;
 	esac
 	case $host in
-	  *cygwin* | *mingw* )
+	  *mingw* )
 	    func_dirname_and_basename "$output" "" "."
 	    output_name=$func_basename_result
 	    output_path=$func_dirname_result

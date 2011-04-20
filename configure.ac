@@ -666,6 +666,9 @@ case "$host-$CXX" in
 	STLLINK=-no-undefined
 	OMNILINK="-lomniORB410_rt -lomnithread32_rt -lws2_32"
         CYGWIN_WRAPPER="\"${abssrcdir}/build/cygwin-wrapper\""
+        # Unintuitive, but produces the desired results with libtool since it generates
+        # a wrapper script.
+        EXEEXT=
 	;;
 *cygwin*|*mks*|*mingw*)
         case "$build" in
