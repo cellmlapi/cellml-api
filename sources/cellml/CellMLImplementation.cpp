@@ -3230,8 +3230,9 @@ CDA_Unit::prefix(int32_t attr)
     }
 
     // We have a non-SI prefix, so we need to express it as a number...
-    wchar_t buf[12];
-    swprintf(buf, 12, L"%d", attr);
+    wchar_t buf[24];
+    swprintf(buf, 24, L"%d", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"prefix", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -3290,7 +3291,8 @@ CDA_Unit::multiplier(double attr)
     }
 
     wchar_t buf[24];
-    swprintf(buf, 12, L"%g", attr);
+    swprintf(buf, 24, L"%g", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"multiplier", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -3349,7 +3351,8 @@ CDA_Unit::offset(double attr)
     }
 
     wchar_t buf[24];
-    swprintf(buf, 12, L"%g", attr);
+    swprintf(buf, 24, L"%g", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"offset", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -3408,7 +3411,8 @@ CDA_Unit::exponent(double attr)
     }
 
     wchar_t buf[24];
-    swprintf(buf, 12, L"%g", attr);
+    swprintf(buf, 24, L"%g", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"exponent", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -5903,6 +5907,7 @@ CDA_Role::stoichiometry(double attr)
 
   wchar_t buf[40];
   swprintf(buf, 40, L"%g", attr);
+  buf[39] = 0;
   datastore->setAttributeNS(NULL_NS, L"stoichiometry", buf);
 }
 
