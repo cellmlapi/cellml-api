@@ -52,8 +52,6 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/cellml_services/CodeGenerator.class \
   $(top_builddir)/javacp/cellml_services/IDACodeGenerator.class \
   $(top_builddir)/javacp/cellml_services/CustomGenerator.class \
-  $(top_builddir)/interfaces/cellml_services/IDACodeGenerator.class \
-  $(top_builddir)/interfaces/cellml_services/CustomGenerator.class \
   $(top_builddir)/javacp/cellml_services/CodeGeneratorBootstrap.class
 
 pure_java += cellml_bootstrap/CCGSBootstrap
