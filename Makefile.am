@@ -309,7 +309,8 @@ endif
 
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh
 
-$(top_builddir)/cellml-sdk.tar.bz2:
+nonexistent-filename:
+$(top_builddir)/cellml-sdk.tar.bz2: nonexistent-filename
 	mkdir -p $(top_builddir)/cellml-sdk/lib
 	mkdir -p $(top_builddir)/cellml-sdk/include
 	cp $(top_srcdir)/sources/cda_compiler_support.h $(top_builddir)/cellml-sdk/include
@@ -317,7 +318,10 @@ $(top_builddir)/cellml-sdk.tar.bz2:
 	cp $(top_builddir)/cda_config.h $(top_builddir)/cellml-sdk/include
 	cp $(top_builddir)/interfaces/Iface*.hxx $(top_builddir)/cellml-sdk/include
 	cp `find $(top_builddir) -iname "*Bootstrap.h??" -and -not -path "*sdk*"` $(top_builddir)/cellml-sdk/include
-	cp $(top_builddir)/.libs/*$(shrext_cmds) $(top_builddir)/cellml-sdk/lib
+	module=no; \
+	cp -R $(top_builddir)/.libs/*$(shrext_cmds)* $(top_builddir)/cellml-sdk/lib; \
+	module=yes; \
+	cp -R $(top_builddir)/.libs/*$(shrext_cmds) $(top_builddir)/cellml-sdk/lib
 	LIBFILES=`find "$(top_builddir)/.libs/" -name "*.$(libext)" -and -not -path "*.hg*" -and -not -name "*rdf\.*" -and -not -path "*sdk*" -and -not -name "*only*"`; \
 	if test -n "$$LIBFILES"; \
         then \
