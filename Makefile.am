@@ -319,7 +319,7 @@ $(top_builddir)/cellml-sdk.tar.bz2: nonexistent-filename
 	cp $(top_builddir)/interfaces/Iface*.hxx $(top_builddir)/cellml-sdk/include
 	cp `find $(top_builddir) -iname "*Bootstrap.h??" -and -not -path "*sdk*"` $(top_builddir)/cellml-sdk/include
 	cp -R $(top_builddir)/.libs/*$(shrext_cmds)* $(top_builddir)/cellml-sdk/lib
-	if [[ $(uname) == "Darwin" ]]; then \
+	if [[ `uname` == "Darwin" ]]; then \
 		cp -R $(top_builddir)/.libs/*.so $(top_builddir)/cellml-sdk/lib \
 	fi
 	LIBFILES=`find "$(top_builddir)/.libs/" -name "*.$(libext)" -and -not -path "*.hg*" -and -not -name "*rdf\.*" -and -not -path "*sdk*" -and -not -name "*only*"`; \
