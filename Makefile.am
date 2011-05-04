@@ -321,7 +321,7 @@ $(top_builddir)/cellml-sdk.tar.bz2: nonexistent-filename
 	module=no; \
 	cp -R $(top_builddir)/.libs/*$(shrext_cmds)* $(top_builddir)/cellml-sdk/lib; \
 	module=yes; \
-	cp -R $(top_builddir)/.libs/*$(shrext_cmds) $(top_builddir)/cellml-sdk/lib
+	cp -R $(top_builddir)/.libs/*$(shrext_cmds)* $(top_builddir)/cellml-sdk/lib
 	LIBFILES=`find "$(top_builddir)/.libs/" -name "*.$(libext)" -and -not -path "*.hg*" -and -not -name "*rdf\.*" -and -not -path "*sdk*" -and -not -name "*only*"`; \
 	if test -n "$$LIBFILES"; \
         then \
