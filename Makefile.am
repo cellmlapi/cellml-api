@@ -327,7 +327,7 @@ $(top_builddir)/cellml-sdk.tar.bz2: nonexistent-filename
         then \
 	  cp $$LIBFILES $(top_builddir)/cellml-sdk/lib/ ; \
 	fi
-	JARFILES=`find "$(top_builddir)/.libs/" -name "*.jar" -and -not -path "*.hg*" -and -not -path "*sdk*"`; \
+	JARFILES=`find "$(top_builddir)/" -name "*.jar" -and -not -path "*.hg*" -and -not -path "*sdk*"`; \
 	if test -n "$$JARFILES"; \
         then \
 	  cp $$JARFILES $(top_builddir)/cellml-sdk/lib/ ; \
