@@ -8,10 +8,6 @@
 #include <string>
 #include <stdio.h>
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 std::wstring
 ConvertRepresentationValidityError
 (

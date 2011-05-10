@@ -43,7 +43,6 @@
 #undef GetObject
 #undef GetClassName
 #undef AddMonitor
-#define swprintf _snwprintf
 #endif
 
 #include <stdlib.h>

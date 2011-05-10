@@ -28,10 +28,6 @@
 #include <string>
 #include "Utilities.hxx"
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 const wchar_t*
 TypeToString(iface::cellml_services::VariableEvaluationType vet)
 {

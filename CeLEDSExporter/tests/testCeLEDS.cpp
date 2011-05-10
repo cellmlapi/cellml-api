@@ -14,10 +14,6 @@
 #include "Utilities.hxx"
 #include <iostream>
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 int
 main(int argc, char** argv)
 {

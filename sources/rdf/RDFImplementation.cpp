@@ -8,10 +8,6 @@
 #include "DOMWriter.hxx"
 #include "RDFBootstrap.hpp"
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 #define RDF_NS L"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
 CDA_DataSource::CDA_DataSource()

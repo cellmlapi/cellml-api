@@ -1,15 +1,11 @@
 #define IN_CELLMLCONTEXT_MODULE
+#include "cda_compiler_support.h"
 #include "CellMLContextImplementation.hxx"
 #include "CellMLContextBootstrap.hxx"
 #include "CellMLBootstrap.hpp"
 #include <locale>
 #include <sstream>
 #include <algorithm>
-
-// Win32 hack...
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
 
 CDA_TypeAnnotationManager::~CDA_TypeAnnotationManager()
 {

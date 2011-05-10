@@ -15,11 +15,6 @@
 #include "RDFBootstrap.hpp"
 #endif
 
-// Win32 hack...
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 // Asymptotic complexity is bound around O(n^(((t^2)+t)/2)) for t=SEARCH_DEPTH. This is a pretty poor upper bound.
 #define SEARCH_DEPTH 3
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"

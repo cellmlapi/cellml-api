@@ -3,10 +3,6 @@
 #include <string>
 #include "libxml2/libxml/xmlerror.h"
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 std::map<iface::events::EventListener*,CDA_Node::EventListenerData*> CDA_Node::activeEventListeners;
 CDAMutex CDA_Node::mStaticMutex;
 

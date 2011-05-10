@@ -7,10 +7,7 @@
 #include "MaLaESBootstrap.hpp"
 #include "CeVASBootstrap.hpp"
 #include "CUSESBootstrap.hpp"
-
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
+#include "cda_compiler_support.h"
 
 iface::cellml_api::CellMLVariable*
 CDA_ComputationTarget::variable() throw()

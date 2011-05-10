@@ -4,9 +4,7 @@
 #include "DOMWriter.hxx"
 
 #ifdef _WIN32
-#undef __STDC__
 #include <stdio.h>
-#define swprintf _snwprintf
 #endif
 
 // These tables were adapted from the Mozilla code.

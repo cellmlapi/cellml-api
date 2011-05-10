@@ -7,10 +7,6 @@
 #endif
 #include <libxml/tree.h>
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 struct CDA_utf8_data_t
 {
   unsigned char len;
