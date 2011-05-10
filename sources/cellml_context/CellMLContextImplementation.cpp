@@ -345,7 +345,7 @@ CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
   time_t t = time(0);
   struct tm* lttm = localtime(&t);
   wchar_t buf[20];
-  swprintf(buf, 20, L"%02u:%02u:%02u %04u-%02u-%02u",
+  any_swprintf(buf, 20, L"%02u:%02u:%02u %04u-%02u-%02u",
            lttm->tm_hour, lttm->tm_min, lttm->tm_sec,
            lttm->tm_year + 1900, lttm->tm_mon + 1, lttm->tm_mday);
   mName = buf;

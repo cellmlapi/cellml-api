@@ -3500,7 +3500,7 @@ ModelValidation::validateMathMLApply
     if (unitsList.size() != 1)
     {
       wchar_t buf[30];
-      swprintf(buf, 30, L"%d", unitsList.size());
+      any_swprintf(buf, 30, L"%d", unitsList.size());
       REPR_ERROR(std::wstring(L"Operator \"") +
                  opinfo->mName + L"\" is unary (i.e. takes exactly one argument), but was given " + buf + L" arguments.",
                  op);
@@ -3516,7 +3516,7 @@ ModelValidation::validateMathMLApply
         if (unitsList.size() != 1)
         {
           wchar_t buf[30];
-          swprintf(buf, 30, L"%d", unitsList.size());
+          any_swprintf(buf, 30, L"%d", unitsList.size());
           REPR_ERROR(std::wstring(
                        L"Expected operator \"minus\" to be unary or binary (i.e. "
                        L"have one or two arguments), not ") + buf, op);
@@ -3526,7 +3526,7 @@ ModelValidation::validateMathMLApply
       else
       {
         wchar_t buf[30];
-        swprintf(buf, 30, L"%d", unitsList.size());
+        any_swprintf(buf, 30, L"%d", unitsList.size());
         REPR_ERROR(std::wstring(L"Expected operator \"") + opinfo->mName +
                    L"\" to be binary (i.e. have exactly "
                    L"two arguments), not " + buf, op);

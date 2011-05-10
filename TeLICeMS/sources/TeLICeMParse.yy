@@ -660,18 +660,18 @@
       double mant = aValue / pow(10.0, expn);
       cn->type(L"e-notation");
       {
-        swprintf(buf, 40, L"%10g", mant);
+        any_swprintf(buf, 40, L"%10g", mant);
         RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
         cn->insertArgument(tn, 1)->release_ref();
       }
 
-      swprintf(buf, 40, L"%d", expn);
+      any_swprintf(buf, 40, L"%d", expn);
       RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
       cn->insertArgument(tn, 2)->release_ref();
     }
     else
     {
-      swprintf(buf, 40, L"%10g", aValue);
+      any_swprintf(buf, 40, L"%10g", aValue);
       RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
       cn->insertArgument(tn, 1)->release_ref();
     }

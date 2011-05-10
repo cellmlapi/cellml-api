@@ -41,7 +41,7 @@ CDA_ComputationTarget::name() throw()
     annoname = L"expression";
   else
   {
-    swprintf(annobuf, 30, L"expression_d%u", mDegree);
+    any_swprintf(annobuf, 30, L"expression_d%u", mDegree);
     annoname = annobuf;
   }
 
@@ -71,8 +71,8 @@ CDA_ComputationTarget::setDelayedName(const wchar_t* aSetTo)
   }
   else
   {
-    swprintf(buf, 30, L"expression_d%u", mDegree);
-    swprintf(dbuf, 40, L"delayed_expression_d%u", mDegree);
+    any_swprintf(buf, 30, L"expression_d%u", mDegree);
+    any_swprintf(dbuf, 40, L"delayed_expression_d%u", mDegree);
     annoname = buf;
     dannoname = dbuf;
   }
@@ -103,7 +103,7 @@ CDA_ComputationTarget::setNameAndIndex
     annoname = L"expression";
   else
   {
-    swprintf(annobuf, 30, L"expression_d%u", mDegree);
+    any_swprintf(annobuf, 30, L"expression_d%u", mDegree);
     annoname = annobuf;
   }
 

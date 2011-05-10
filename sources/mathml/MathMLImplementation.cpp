@@ -2293,7 +2293,7 @@ CDA_MathMLDeclareElement::nargs(uint32_t attr)
   CNumericLocale locobj;
 
   wchar_t str[20];
-  swprintf(str, 20, L"%u", attr);
+  any_swprintf(str, 20, L"%u", attr);
   static_cast<CDA_Element*>(this)->setAttributeNS(NULL_NS, L"nargs", str);
 }
 

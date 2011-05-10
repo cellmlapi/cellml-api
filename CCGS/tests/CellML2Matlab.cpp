@@ -86,7 +86,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -135,7 +135,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -214,7 +214,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -331,7 +331,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
     {
       str += L"d^";
       wchar_t buf[20];
-      swprintf(buf, 20, L"%u", deg);
+      any_swprintf(buf, 20, L"%u", deg);
       str += buf;
       str += L"/dt^";
       str += buf;

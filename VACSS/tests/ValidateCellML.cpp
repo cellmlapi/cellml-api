@@ -22,7 +22,7 @@ ConvertRepresentationValidityError
                                          crve->errorNodalOffset(),
                                          &col);
   wchar_t buf[40];
-  swprintf(buf, 40, L"line %u, column %u", row, col);
+  any_swprintf(buf, 40, L"line %u, column %u", row, col);
   errorNode->release_ref();
 
   return buf;
@@ -43,7 +43,7 @@ ConvertSemanticValidityError
   uint32_t col;
   uint32_t row = vacss->getPositionInXML(de, 0, &col);
   wchar_t buf[40];
-  swprintf(buf, 40, L"line %u, column %u", row, col);
+  any_swprintf(buf, 40, L"line %u, column %u", row, col);
 
   // Up to the model...
   while (true)

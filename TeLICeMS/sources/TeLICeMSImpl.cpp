@@ -301,7 +301,7 @@ ShowUnit(const std::wstring& indent, iface::cellml_api::Unit* aUnit)
     else if (prefix > 24 || prefix < -24 || prefix % 3)
     {
       wchar_t buf[40];
-      swprintf(buf, 40, L"%d", prefix);
+      any_swprintf(buf, 40, L"%d", prefix);
       attrs += buf;
     }
     else // non-zero, multiple of 3 between -24 and 24 inclusive.
@@ -314,7 +314,7 @@ ShowUnit(const std::wstring& indent, iface::cellml_api::Unit* aUnit)
     if (attrs != L"")
       attrs += L", ";
     wchar_t buf[30];
-    swprintf(buf, 30, L"%g", expo);
+    any_swprintf(buf, 30, L"%g", expo);
     attrs = attrs + L"expo:" + buf;
   }
   
@@ -325,7 +325,7 @@ ShowUnit(const std::wstring& indent, iface::cellml_api::Unit* aUnit)
       attrs += L", ";
 
     wchar_t buf[30];
-    swprintf(buf, 30, L"%g", mult);
+    any_swprintf(buf, 30, L"%g", mult);
     attrs = attrs + L"mult:" + buf;
   }
 
@@ -336,7 +336,7 @@ ShowUnit(const std::wstring& indent, iface::cellml_api::Unit* aUnit)
       attrs += L", ";
 
     wchar_t buf[30];
-    swprintf(buf, 30, L"%g", offs);
+    any_swprintf(buf, 30, L"%g", offs);
     attrs = attrs + L"off:" + buf;
   }
 
@@ -922,7 +922,7 @@ ShowRole(const std::wstring& indent, iface::cellml_api::Role* aRole)
     if (attrs != L"")
       attrs += L", ";
     wchar_t buf[40];
-    swprintf(buf, 40, L"%g", stoich);
+    any_swprintf(buf, 40, L"%g", stoich);
     attrs += L"stoichio: ";
     attrs += buf;
   }
@@ -1233,7 +1233,7 @@ TeLICeMStateScan::lexerError(const char* m)
 {
   mTarget->mResult->addMessage(convertStringToWString(m));
   wchar_t buf[80];
-  swprintf(buf, 80, L"at line %d, column %d", mTarget->mRow, mTarget->mColumn);
+  any_swprintf(buf, 80, L"at line %d, column %d", mTarget->mRow, mTarget->mColumn);
   mTarget->mResult->addMessage(buf);
 }
 

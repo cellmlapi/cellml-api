@@ -978,7 +978,7 @@ CDA_DOMImplementation::ProcessXMLError(std::wstring& aErrorMessage, _xmlError* e
   case XML_I18N_NO_OUTPUT:
 #endif
     aErrorMessage = L"badxml/";
-    swprintf(buf, 20, L"%d", err->line);
+    any_swprintf(buf, 20, L"%d", err->line);
     aErrorMessage += buf;
     aErrorMessage += L"/0/";
     aErrorMessage += fname + L"/";

@@ -17,7 +17,12 @@
 #ifdef _MSC_VER
 #define WIN32
 #undef __STDC__
-#define swprintf _snwprintf
+#endif
+
+#ifdef WIN32
+#define any_swprintf _snwprintf
+#else
+#define any_swprintf swprintf
 #endif
 
 #ifdef __BORLANDC__

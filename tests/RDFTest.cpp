@@ -898,7 +898,7 @@ RDFTest::testW3CSuite()
 
     std::wstring url(BASE_URI);
     wchar_t wbuf[30];
-    swprintf(wbuf, 30, L"test%u.rdf", i);
+    any_swprintf(wbuf, 30, L"test%u.rdf", i);
     url += wbuf;
 
     std::wstring msg;

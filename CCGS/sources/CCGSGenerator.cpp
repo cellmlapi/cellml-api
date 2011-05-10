@@ -683,7 +683,7 @@ CodeGenerationState::GenerateStateInformation(std::wstring& aStr)
     for (CDA_ComputationTarget* ct = *i; ct != NULL; ct = ct->mUpDegree)
     {
       wchar_t id[32];
-      swprintf(id, 32, L"%lu", ct->mAssignedIndex);
+      any_swprintf(id, 32, L"%lu", ct->mAssignedIndex);
       if (ct->mEvaluationType == iface::cellml_services::STATE_VARIABLE)
       {
         aStr += ReplaceIDs(mConstrainedRateStateInfoPattern, id, L"", L"");
@@ -720,7 +720,7 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
     {
       double iv = GetPseudoStateIV(*i);
       wchar_t ivv[30];
-      swprintf(ivv, 30, L"%g", iv);
+      any_swprintf(ivv, 30, L"%g", iv);
       RETURN_INTO_WSTRING(n, (*i)->name());
       AppendAssign(aCode, n, ivv);
     }
@@ -1095,7 +1095,7 @@ CodeGenerationState::GenerateResidualForString
       break;
 
     wchar_t buf[30];
-    swprintf(buf, 30, L"%lu", aResidNo);
+    any_swprintf(buf, 30, L"%lu", aResidNo);
     
     r.replace(pos, 5, buf);
   }
@@ -2069,7 +2069,7 @@ CodeGenerationState::GenerateVariableName
 
   aStr.assign(aPattern.substr(0, cursor));
   wchar_t buf[30];
-  swprintf(buf, 30, L"%lu", index);
+  any_swprintf(buf, 30, L"%lu", index);
   aStr.append(buf);
   aStr.append(aPattern.substr(cursor + 1));
 }
@@ -3563,14 +3563,14 @@ CodeGenerationState::GenerateSolveCode
    // Scoped locale change.
   CNumericLocale locobj;
    wchar_t id[20];
-  swprintf(id, 20, L"%u", mNextSolveId++);
+  any_swprintf(id, 20, L"%u", mNextSolveId++);
    RETURN_INTO_WSTRING(vname, aComputedTarget->name());
 
   wchar_t iv[30] = { L'0', L'.', L'1', L'\0' };
   std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator ivIt
     (mInitialOverrides.find(aComputedTarget));
   if (ivIt != mInitialOverrides.end())
-    swprintf(iv, 30, L"%g", (*ivIt).second);
+    any_swprintf(iv, 30, L"%g", (*ivIt).second);
   uint32_t state = 0;
   uint32_t idx = 0;
   std::wstring* dest = &aCodeTo;
@@ -3871,7 +3871,7 @@ CodeGenerationState::GenerateMultivariateSolveCode
   // Scoped locale change.
   CNumericLocale locobj;
   wchar_t id[20];
-  swprintf(id, 20, L"%u", mNextSolveId++);
+  any_swprintf(id, 20, L"%u", mNextSolveId++);
 
   // See if there is a <SUP> marker...
   size_t supPos = mSolveNLSystemPattern.find(L"<SUP>");
@@ -3941,7 +3941,7 @@ CodeGenerationState::GenerateMultivariateSolveCodeTo
   size_t occurrence;
 
   wchar_t countStr[15];
-  swprintf(countStr, 15, L"%u", aSys->mMathStatements.size());
+  any_swprintf(countStr, 15, L"%u", aSys->mMathStatements.size());
 
   while ((occurrence = aPattern.find(L"<EQUATIONS>", offset))
          != std::wstring::npos)
@@ -3978,10 +3978,10 @@ CodeGenerationState::GenerateMultivariateSolveCodeTo
       wchar_t ivStr[30] = {L'0', L'.', L'1', L'\0'};
       std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator ioi(mInitialOverrides.find(*j));
       if (ioi != mInitialOverrides.end())
-        swprintf(ivStr, 30, L"%g", (*ioi).second);
+        any_swprintf(ivStr, 30, L"%g", (*ioi).second);
 
       wchar_t indexStr[15];
-      swprintf(indexStr, 15, L"%u", index);
+      any_swprintf(indexStr, 15, L"%u", index);
       index++;
       if (i != aSys->mMathStatements.begin())
         aCodeTo += ReplaceIDs(join, aId, indexStr, countStr);

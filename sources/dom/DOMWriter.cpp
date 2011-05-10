@@ -606,7 +606,7 @@ DOMNamespaceContext::resolveOrInventPrefixes()
     {
       attempt = suggestion;
       wchar_t buf[24];
-      swprintf(buf, 24, L"%u", attemptCount++);
+      any_swprintf(buf, 24, L"%u", attemptCount++);
       attempt += buf;
     }
     // We found a unique prefix...

@@ -997,7 +997,7 @@ CDA_SProSSEDMLElement::level(uint32_t aLevel)
   throw()
 {
   wchar_t buf[64];
-  swprintf(buf, sizeof(buf), L"%d", aLevel);
+  any_swprintf(buf, sizeof(buf), L"%d", aLevel);
   mDomEl->setAttribute(L"level", buf);
 }
 
@@ -1017,7 +1017,7 @@ CDA_SProSSEDMLElement::version(uint32_t aVersion)
   throw()
 {
   wchar_t buf[64];
-  swprintf(buf, sizeof(buf), L"%d", aVersion);
+  any_swprintf(buf, sizeof(buf), L"%d", aVersion);
   mDomEl->setAttribute(L"version", buf);
 }
 
@@ -1401,7 +1401,7 @@ CDA_SProSUniformTimeCourse::initialTime(double aValue)
   throw()
 {
   wchar_t buf[32];
-  swprintf(buf, sizeof(buf), L"%g", aValue);
+  any_swprintf(buf, sizeof(buf), L"%g", aValue);
   mDomEl->setAttribute(L"initialTime", buf);
 }
 
@@ -1418,7 +1418,7 @@ CDA_SProSUniformTimeCourse::outputStartTime(double aValue)
   throw()
 {
   wchar_t buf[32];
-  swprintf(buf, sizeof(buf), L"%g", aValue);
+  any_swprintf(buf, sizeof(buf), L"%g", aValue);
   mDomEl->setAttribute(L"outputStartTime", buf);
 }
 
@@ -1435,7 +1435,7 @@ CDA_SProSUniformTimeCourse::outputEndTime(double aValue)
   throw()
 {
   wchar_t buf[32];
-  swprintf(buf, sizeof(buf), L"%g", aValue);
+  any_swprintf(buf, sizeof(buf), L"%g", aValue);
   mDomEl->setAttribute(L"outputEndTime", buf);
 }
 
@@ -1444,7 +1444,7 @@ CDA_SProSUniformTimeCourse::numberOfPoints(uint32_t aNumPoints)
   throw()
 {
   wchar_t buf[32];
-  swprintf(buf, sizeof(buf), L"%lu", aNumPoints);
+  any_swprintf(buf, sizeof(buf), L"%lu", aNumPoints);
   mDomEl->setAttribute(L"numberOfPoints", buf);
 }
 
@@ -1806,7 +1806,7 @@ void
 CDA_SProSParameter::value(double aValue) throw()
 {
   wchar_t value[64];
-  swprintf(value, 64, L"%e", aValue);
+  any_swprintf(value, 64, L"%e", aValue);
   mDomEl->setAttribute(L"value", value);
 }
 SomeSProSSet(Parameter, L"listOfParameters", L"parameter");

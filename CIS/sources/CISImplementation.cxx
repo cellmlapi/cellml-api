@@ -197,7 +197,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     char* msg = dlerror();
     uint32_t l = strlen(msg) + 1;
     wchar_t buf[l];
-    swprintf(buf, l, L"%s", msg);
+    any_swprintf(buf, l, L"%s", msg);
     lastError += L" (";
     lastError += buf;
     lastError += L").";
