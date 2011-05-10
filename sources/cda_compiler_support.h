@@ -21,8 +21,10 @@
 
 #ifdef WIN32
 #define any_swprintf _snwprintf
+#define any_snprintf _snprintf
 #else
 #define any_swprintf swprintf
+#define any_snprintf snprintf
 #endif
 
 #ifdef __BORLANDC__
