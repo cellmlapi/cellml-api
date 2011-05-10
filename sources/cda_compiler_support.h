@@ -54,8 +54,4 @@
 #define WARN_IF_RETURN_UNUSED
 #endif
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 #endif // compiler_support_h
