@@ -1,8 +1,5 @@
 %{
-#include "cda_compiler_support.h"
-#ifdef WIN32
-#define snprintf _snprintf
-#endif
+  #include "cda_compiler_support.h"
   #define YYSTYPE TeLICeMSLValue
   #define YYSTYPE_IS_TRIVIAL 0
 %}
@@ -1039,7 +1036,7 @@ varparamitem: T_INIT ':' varparamiteminitval {
 
 varparamiteminitval: T_NUMBER {
   char buf[30];
-  snprintf(buf, sizeof(buf), "%g", $1.number());
+  any_snprintf(buf, sizeof(buf), "%g", $1.number());
   $$.string(buf);
 } | T_IDENTIFIER;
 
@@ -1089,7 +1086,7 @@ math_attr_id: T_IDENTIFIER | T_QUOTED | T_BASE { $$.string("base"); } |
 
 math_attr_value: T_QUOTED | T_IDENTIFIER | T_NUMBER {
     char buf[30];
-    snprintf(buf, sizeof(buf), "%g", $1.number());
+    any_snprintf(buf, sizeof(buf), "%g", $1.number());
     $$.string(buf);
   };
 
