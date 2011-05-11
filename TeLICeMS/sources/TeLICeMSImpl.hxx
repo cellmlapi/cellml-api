@@ -1,7 +1,7 @@
 #ifndef _INCLUDED_TELICEMS_IMPL_HXX
 #define _INCLUDED_TELICEMS_IMPL_HXX
 
-#define IN_TELICEMS_MODULE
+#define IN_TeLICeMS_MODULE
 #include "TeLICeMService.hpp"
 #include "Utilities.hxx"
 #include "IfaceCellML_APISPEC.hxx"
