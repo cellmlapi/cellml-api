@@ -1,3 +1,7 @@
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_DOMevents
+#define MODULE_CONTAINS_DOMevents
+#define MODULE_CONTAINS_MathMLcontentAPISPEC
 #include "Utilities.hxx"
 #include "MathMLImplementation.hxx"
 

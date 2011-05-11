@@ -1,10 +1,14 @@
 // CellML gets linked into the same module as DOMWriter...
 #define IN_DOMWRITER_MODULE
+#define MODULE_CONTAINS_xpcom
 #define MODULE_CONTAINS_RDFAPISPEC
 #define MODULE_CONTAINS_CellMLAPISPEC
 #define MODULE_CONTAINS_CellMLBootstrap
+#define MODULE_CONTAINS_CellMLEvents
 #define MODULE_CONTAINS_DOMAPISPEC
 #define MODULE_CONTAINS_DOMevents
+#define MODULE_CONTAINS_DOMevents
+#define MODULE_CONTAINS_MathMLcontentAPISPEC
 #include "CellMLImplementation.hpp"
 #include "DOMWriter.hxx"
 #ifdef ENABLE_RDF
