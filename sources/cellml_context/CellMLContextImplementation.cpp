@@ -1,5 +1,5 @@
 #define IN_CELLMLCONTEXT_MODULE
-#define MODULE_CONTAINS_CELLMLCONTEXT
+#define MODULE_CONTAINS_CellMLContext
 #include "cda_compiler_support.h"
 #include "CellMLContextImplementation.hxx"
 #include "CellMLContextBootstrap.hxx"
