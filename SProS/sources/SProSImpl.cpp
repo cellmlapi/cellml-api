@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_SProS
 #include "SProSImpl.hxx"
 #include "SProSBootstrap.hpp"
 #include "DOMBootstrap.hxx"
@@ -5,7 +6,6 @@
 #include <assert.h>
 #include <string>
 #include <algorithm>
-#define MODULE_CONTAINS_SProS
 
 #define SEDML_NS L"http://www.biomodels.net/sed-ml"
 
