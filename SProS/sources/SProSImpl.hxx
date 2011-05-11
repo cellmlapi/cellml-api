@@ -1,3 +1,4 @@
+#define IN_SProS_MODULE
 #include "Utilities.hxx"
 #include "IfaceSProS.hxx"
 #include "IfaceDOM_events.hxx"
