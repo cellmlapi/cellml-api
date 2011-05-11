@@ -1,4 +1,5 @@
 #define IN_MALAES_MODULE
+#define MODULE_CONTAINS_MaLaES
 #include "MaLaESImpl.hpp"
 #include "MaLaESBootstrap.hpp"
 #include <math.h>

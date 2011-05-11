@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_CCGS
 #include "CCGSImplementation.hpp"
 #include <map>
 #include <set>

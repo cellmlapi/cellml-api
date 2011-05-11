@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_CIS
 #define GSL_DLL
 #include <exception>
 #include "cda_compiler_support.h"

@@ -1,4 +1,5 @@
 #define IN_CEVAS_MODULE
+#define MODULE_CONTAINS_CeVAS
 #include "CeVASImpl.hpp"
 #include "CeVASBootstrap.hpp"
 #include <set>

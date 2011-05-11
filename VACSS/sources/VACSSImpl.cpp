@@ -1,4 +1,5 @@
 #define IN_VACSS_MODULE
+#define MODULE_CONTAINS_VACSS
 #include "VACSSImpl.hpp"
 #include "VACSSBootstrap.hpp"
 #include "CUSESBootstrap.hpp"

@@ -1,4 +1,5 @@
 #define IN_ANNOTOOLS_MODULE
+#define MODULE_CONTAINS_AnnoTools
 #include "ATImplementation.hpp"
 #include "AnnoToolsBootstrap.hpp"
 

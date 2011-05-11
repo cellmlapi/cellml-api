@@ -1,4 +1,5 @@
 #define IN_CCGS_MODULE
+#define MODULE_CONTAINS_CCGS
 #include "CCGSImplementation.hpp"
 #include "CodeGenerationError.hxx"
 #include "CodeGenerationState.hxx"

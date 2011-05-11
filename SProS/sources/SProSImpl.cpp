@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string>
 #include <algorithm>
+#define MODULE_CONTAINS_SProS
 
 #define SEDML_NS L"http://www.biomodels.net/sed-ml"
 

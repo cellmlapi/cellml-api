@@ -2,6 +2,7 @@
 #include "CellMLBootstrap.hpp"
 #include "IfaceCellML_APISPEC.hxx"
 #include <sstream>
+#define MODULE_CONTAINS_TeLICeMS
 
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
 #define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"

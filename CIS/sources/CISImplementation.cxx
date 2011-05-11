@@ -1,4 +1,5 @@
 #define IN_CIS_MODULE
+#define MODULE_CONTAINS_CIS
 #include "Utilities.hxx"
 #include <stdlib.h>
 #include <string>
