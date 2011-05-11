@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_xpcom
 #define MODULE_CONTAINS_DOMAPISPEC
 #define MODULE_CONTAINS_DOMevents
 #include "cda_compiler_support.h"
