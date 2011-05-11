@@ -1,3 +1,5 @@
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_DOMevents
 #include "cda_compiler_support.h"
 #include "DOMImplementation.hpp"
 #include <stdexcept>

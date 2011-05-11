@@ -1,3 +1,8 @@
+#define MODULE_CONTAINS_RDFAPISPEC
+#define MODULE_CONTAINS_CellMLAPISPEC
+#define MODULE_CONTAINS_CellMLBootstrap
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_DOMevents
 #include "CellMLImplementation.hpp"
 #include "IfaceCellML_events.hxx"
 
