@@ -39,7 +39,7 @@ libJavaSupport_la_CXXFLAGS = \
   -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources \
   -I$(top_builddir)/simple_interface_generators/glue/java -DIN_MODULE_JavaSupport \
   $(AM_CXXFLAGS)
-libJavaSupport_la_LDFLAGS = -lcellml
+libJavaSupport_la_LDFLAGS = -lcellml  $(XPCOM_LDFLAGS_NOTMOD)
 endif
 
 if ENABLE_PYTHON
