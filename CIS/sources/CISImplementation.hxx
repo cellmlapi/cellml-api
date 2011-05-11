@@ -4,6 +4,7 @@
 #include <string>
 #include "cda_compiler_support.h"
 
+#undef ENABLE_CONTEXT
 #ifdef ENABLE_CONTEXT
 #include "IfaceCellML_Context.hxx"
 
