@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_xpcom
 #include <algorithm>
 #include "cda_compiler_support.h"
 #include "DOMImplementation.hpp"

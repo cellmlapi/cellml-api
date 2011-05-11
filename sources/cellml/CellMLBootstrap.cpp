@@ -3,6 +3,7 @@
 // CellML and DOM are in the same module...
 #define IN_DOM_MODULE
 #define IN_DOMWRITER_MODULE
+#define MODULE_CONTAINS_xpcom
 #define MODULE_CONTAINS_RDFAPISPEC
 #define MODULE_CONTAINS_CellMLAPISPEC
 #define MODULE_CONTAINS_CellMLBootstrap

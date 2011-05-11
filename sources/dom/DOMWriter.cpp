@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_xpcom
 #define IN_DOMWRITER_MODULE
 #include "Utilities.hxx"
 #include <string>

@@ -1,5 +1,5 @@
+#define MODULE_CONTAINS_xpcom
 #define MODULE_CONTAINS_DOMAPISPEC
-#define MODULE_CONTAINS_DOMevents
 #define MODULE_CONTAINS_DOMevents
 #define MODULE_CONTAINS_MathMLcontentAPISPEC
 #include "Utilities.hxx"
