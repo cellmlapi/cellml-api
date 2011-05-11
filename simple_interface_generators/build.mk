@@ -54,7 +54,7 @@ libPythonSupport_la_CXXFLAGS = \
   $(AM_CXXFLAGS) $(PYTHON_CFLAGS)
 
 libPythonSupport_la_LDFLAGS =
-libPythonSupoprt_la_LIBADD = $(top_builddir)/libcellml.la
+libPythonSupport_la_LIBADD = $(top_builddir)/libcellml.la
 python_xpcom_la_SOURCES = \
   $(top_srcdir)/simple_interface_generators/glue/python/xpcom.cxx
 python_xpcom_la_LIBADD = $(ALLPYTHONLIBADD)
