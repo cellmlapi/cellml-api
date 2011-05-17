@@ -33,9 +33,6 @@ endif
 if ENABLE_JAVA
 libcellml_java_bridge_la_SOURCES += \
   $(top_srcdir)/simple_interface_generators/glue/java/p2jxpcom.cpp
-
-libcellml_java_bridge_la_LDFLAGS = $(JAVA_LDFLAGS_NOTMOD)
-libcellml_java_bridge_la_LIBADD =  $(top_builddir)/libcellml.la
 endif
 
 if ENABLE_PYTHON
