@@ -334,7 +334,7 @@ $(top_builddir)/cellml-sdk.tar.bz2: nonexistent-filename
 	  cp $$JARFILES $(top_builddir)/cellml-sdk/lib/ ; \
 	fi
 	for FN in $(top_builddir)/cellml-sdk/lib/lib*_java_bridge.so; do \
-          DIRNAME=$(dirname $FN)
+          DIRNAME=$(dirname $FN) \
 	  BASENAME=$(basename $FN .so) \
 	  ln -s $BASENAME.so $DIRNAME/$BASENAME.jnilib \
 	done
