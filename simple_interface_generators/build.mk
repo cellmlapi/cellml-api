@@ -31,16 +31,11 @@ $(top_srcdir)/simple_interface_generators/glue/xpcom/IWrappedPCM.idl
 endif
 
 if ENABLE_JAVA
-lib_LTLIBRARIES += libJavaSupport.la
-libJavaSupport_la_SOURCES = \
+libcellml_java_bridge_la_SOURCES = \
   $(top_srcdir)/simple_interface_generators/glue/java/p2jxpcom.cpp
 
-libJavaSupport_la_CXXFLAGS = \
-  -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources \
-  -I$(top_builddir)/simple_interface_generators/glue/java -DIN_MODULE_JavaSupport \
-  $(AM_CXXFLAGS)
-libJavaSupport_la_LDFLAGS = $(JAVA_LDFLAGS_NOTMOD)
-libJavaSupport_la_LIBADD =  $(top_builddir)/libcellml.la
+libcellml_java_bridge_la_LDFLAGS = $(JAVA_LDFLAGS_NOTMOD)
+libcellml_java_bridge_la_LIBADD =  $(top_builddir)/libcellml.la
 endif
 
 if ENABLE_PYTHON

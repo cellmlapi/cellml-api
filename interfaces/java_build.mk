@@ -19,8 +19,7 @@ libcellml_java_bridge_la_SOURCES += \
 
 libcellml_java_bridge_la_LIBADD += \
   $(STLLINK) \
-  $(top_builddir)/libcellml.la \
-  $(top_builddir)/libJavaSupport.la
+  $(top_builddir)/libcellml.la
 libcellml_java_bridge_la_LDFLAGS = \
   -no-undefined -module
 
@@ -28,7 +27,7 @@ libcellml_java_bridge_la_CXXFLAGS = \
   -I$(top_builddir)/interfaces \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
   -I$(top_srcdir)/simple_interface_generators/glue/java \
-  -I$(top_builddir)/simple_interface_generators/glue/java \
+  -I$(top_builddir)/simple_interface_generators/glue/java -DIN_MODULE_JavaSupport\
   $(AM_CXXFLAGS)
 
 $(top_builddir)/interfaces/p2j%.cpp \
