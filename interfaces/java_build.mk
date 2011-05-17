@@ -29,9 +29,7 @@ libcellml_java_bridge_la_CXXFLAGS = \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
   -I$(top_srcdir)/simple_interface_generators/glue/java \
   -I$(top_builddir)/simple_interface_generators/glue/java \
-  $(AM_CXXFLAGS) -DMODULE_CONTAINS_DOMAPISPEC \
-  -DMODULE_CONTAINS_MathMLcontentAPISPEC -DMODULE_CONTAINS_CellMLAPISPEC \
-  -DMODULE_CONTAINS_CellMLevents -DMODULE_CONTAINS_RDFAPISPEC -DIN_JAVA_WRAPPER
+  $(AM_CXXFLAGS)
 
 $(top_builddir)/interfaces/p2j%.cpp \
 $(top_builddir)/interfaces/p2j%.hxx \
