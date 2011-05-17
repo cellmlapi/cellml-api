@@ -1,3 +1,4 @@
+#define IN_MODULE_JavaSupport
 #include "p2jxpcom.hxx"
 
 p2j::XPCOM::IObject::IObject(JNIEnv* aEnv, jobject aObject)
