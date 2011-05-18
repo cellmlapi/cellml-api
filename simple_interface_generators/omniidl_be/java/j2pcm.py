@@ -90,7 +90,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         cxxclass = 'iface::' + scopedn
         self.cxxclass = cxxclass
         self.hxx.out('JWRAP_PUBLIC_PRE jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj) JWRAP_PUBLIC_POST;')
-        self.cpp.out('JWRAP_PUBLIC_PRE jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj) JWRAP_PUBLIC_POST')
+        self.cpp.out('jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj)')
         self.cpp.out('{')
         self.cpp.inc_indent()
         self.cpp.out("if (obj == NULL)")
@@ -128,7 +128,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.calculateMangled()
         self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE void ' + self.mangled +
                      '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('JWRAP_PUBLIC_PRE void ' + self.mangled + '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST')
+        self.cpp.out('void ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
         self.cpp.out('{')
         self.cpp.inc_indent()
         self.cpp.out('jclass thisclazz = env->GetObjectClass(thisptr);')
@@ -143,7 +143,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.calculateMangled()
         self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE jobject ' + self.mangled +
                      '(JNIEnv* env, jclass* clazz, jlong fromptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('JWRAP_PUBLIC_PRE jobject ' + self.mangled + '(JNIEnv* env, jclass* clazz, jlong fromptr) JWRAP_PUBLIC_POST')
+        self.cpp.out('jobject ' + self.mangled + '(JNIEnv* env, jclass* clazz, jlong fromptr)')
         self.cpp.out('{')
         self.cpp.inc_indent()
         self.cpp.out('iface::XPCOM::IObject * obj = reinterpret_cast<iface::XPCOM::IObject*>' +
@@ -162,7 +162,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.calculateMangled()
         self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE jint ' + self.mangled +
                      '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('JWRAP_PUBLIC_PRE jint ' + self.mangled + '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST')
+        self.cpp.out('jint ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
         self.cpp.out('{')
         self.cpp.inc_indent()
         self.cpp.out('jclass thisclazz = env->GetObjectClass(thisptr);')
@@ -257,7 +257,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         
         self.hxx.out('extern "C" { JWRAP_PUBLIC_PRE ' + rtypeName + ' ' + name +
                      '(' + paramString + ') JWRAP_PUBLIC_POST; };')
-        self.cpp.out('JWRAP_PUBLIC_PRE ' + rtypeName + ' ' + name + '(' + paramString + ') JWRAP_PUBLIC_POST')
+        self.cpp.out(rtypeName + ' ' + name + '(' + paramString + ')')
         self.cpp.out('{')
         self.cpp.inc_indent()
 
