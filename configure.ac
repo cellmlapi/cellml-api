@@ -661,7 +661,7 @@ if test "$with_gnu_ld" = yes; then
   POST_NON_AS_NEEDED="\$(NULLSTRING) -Wl,-as-needed"
 fi
 
-case "$host-$CXX" in
+case "$host" in
 *msvc*|*wince*)
 	STLLINK=-no-undefined
 	OMNILINK="-lomniORB410_rt -lomnithread32_rt -lws2_32"
