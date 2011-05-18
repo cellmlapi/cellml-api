@@ -338,8 +338,8 @@ $(top_builddir)/cellml-sdk.tar.bz2: nonexistent-filename
 	  BASENAME=`basename $$FN .so` ; \
 	  ln -s $$BASENAME.so $$DIRNAME/$$BASENAME.jnilib ; \
 	done
-        if [[ -f $(top_builddir)/cellml-sdk/lib/libcellml_java_bridge-0.dll ]]; then \
-          mv $(top_builddir)/cellml-sdk/lib/libcellml_java_bridge-0.dll $(top_builddir)/cellml-sdk/lib/cellml_java_bridge.dll ; \
+	if [[ -f $(top_builddir)/cellml-sdk/lib/libcellml_java_bridge-0.dll ]]; then \
+	  mv $(top_builddir)/cellml-sdk/lib/libcellml_java_bridge-0.dll $(top_builddir)/cellml-sdk/lib/cellml_java_bridge.dll ; \
 	fi
 	tar -cjf $(top_builddir)/cellml-sdk.tar.bz2 -C $(top_builddir) cellml-sdk
 	rm -fr $(top_builddir)/cellml-sdk
