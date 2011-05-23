@@ -277,7 +277,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
                 indirect = '&'
             if ti.needLength():
                 if pcmParams != '':
-                    pcmParams = pcmParams + ', '                
+                    pcmParams = pcmParams + ', '
                 self.cpp.out('uint32_t _length__pcm_' + pname + ';')
                 pcmParams = pcmParams + indirect + '_length__pcm_' + pname
             if pcmParams != '':
