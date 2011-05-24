@@ -15,6 +15,10 @@
 #include <memory>
 #include <set>
 
+// Disabled for now because modules aren't used by anyone and breaks MingW builds.
+// We can either fix the build system or remove it altogether later.
+#undef ENABLE_CONTEXT
+
 #ifdef ENABLE_CONTEXT
 #include "IfaceCellML_Context.hxx"
 #endif

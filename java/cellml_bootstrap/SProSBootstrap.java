@@ -2,5 +2,5 @@ package cellml_bootstrap;
 
 public class SProSBootstrap
 {
-    public static native SProS.SProSBootstrap createSProSBootstrap();
+    public static native SProS.Bootstrap createSProSBootstrap();
 };

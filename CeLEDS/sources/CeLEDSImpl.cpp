@@ -1,4 +1,5 @@
 #define IN_CELEDS_MODULE
+#define MODULE_CONTAINS_CeLEDS
 #include "CeLEDSImpl.hpp"
 #include "CeLEDSBootstrap.hpp"
 #include "IfaceCellML_APISPEC.hxx"

@@ -3,8 +3,8 @@
 lib_LTLIBRARIES += libtelicems_xpcom_bridge.la
 
 libtelicems_xpcom_bridge_la_SOURCES = \
-  $(top_builddir)/interfaces/p2xTeLICeMService.cpp \
-  $(top_builddir)/interfaces/x2pTeLICeMService.cpp \
+  $(top_builddir)/interfaces/p2xTeLICeMS.cpp \
+  $(top_builddir)/interfaces/x2pTeLICeMS.cpp \
   $(top_srcdir)/TeLICeMS/sources/TeLICeMServiceXPCOM.cpp
 
 libtelicems_xpcom_bridge_la_LIBADD = \

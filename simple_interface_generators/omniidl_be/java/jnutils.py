@@ -174,7 +174,7 @@ class Base(Type):
                     "jmethodID unboxmethod = env->GetMethodID(boxclazz, \"" +\
                     self.java_type + "Value\", \"()" + self.java_sig + "\");\n" +\
                     indo + pcmname + ' = static_cast<' + self.pcm_type + ">(" +\
-                    'env->Call' + self.java_type.capitalize() +\
+                    'env->Call' + string.capitalize(self.java_type) +\
                     "Method(tmpobj, unboxmethod));\n"
             return self.readJNIReference(unbox, jniname)
 
@@ -185,7 +185,7 @@ class Base(Type):
                    "jmethodID unboxmethod = env->GetMethodID(boxclazz, \"" +\
                     self.java_type + "Value\", \"()" + self.java_sig + "\");\n" +\
                     indo + pcmname + ' = static_cast<' + self.pcm_type + ">(" +\
-                    'env->Call' + self.java_type.capitalize() +\
+                    'env->Call' + string.capitalize(self.java_type) +\
                     "Method(" + jniname + ", unboxmethod));\n}\n"
         
         return indo + pcmname + ' = static_cast<' + self.pcm_type + '>(' + jniname + ');'

@@ -1,4 +1,5 @@
 #define IN_MALAES_MODULE
+#define MODULE_CONTAINS_MaLaES
 #include "MaLaESImpl.hpp"
 #include "MaLaESBootstrap.hpp"
 #include <math.h>
@@ -445,7 +446,7 @@ CDAMaLaESResult::writeConvertedVariable()
 
     const unsigned int bufferSize=40;
     wchar_t buf[bufferSize];
-    swprintf(buf, bufferSize, infdelayed ? L"delayed_expression_d%d" : L"expression_d%d", degree);
+    any_swprintf(buf, bufferSize, infdelayed ? L"delayed_expression_d%d" : L"expression_d%d", degree);
     RETURN_INTO_WSTRING(expr,
                         mAnnos->getStringAnnotation(processingVariable, buf));
     mActive += expr;
@@ -516,7 +517,7 @@ CDAMaLaESResult::appendCount
   CNumericLocale locobj;
 
   wchar_t buf[30];
-  swprintf(buf, 30, L"%lu", aArgs.size());
+  any_swprintf(buf, 30, L"%lu", aArgs.size());
   mActive += buf;
 }
 
@@ -797,7 +798,7 @@ CDAMaLaESResult::appendUnique
   CNumericLocale locobj;
 
   wchar_t buf[30];
-  swprintf(buf, 30, L"%lu", unique);
+  any_swprintf(buf, 30, L"%lu", unique);
   mActive += buf;
 }
 
@@ -884,7 +885,7 @@ CDAMaLaESResult::appendConstant
 
   double v = parseConstant(cnEl);
   wchar_t buf[30];
-  swprintf(buf, 30, L"%#g", v);
+  any_swprintf(buf, 30, L"%#g", v);
   mActive += buf;
 }
 
@@ -1069,7 +1070,7 @@ CDAMaLaESTransform::transform
         RETURN_INTO_OBJREF(cn, iface::dom::Element,
                            doc->createElementNS(MATHML_NS, L"cn"));
         wchar_t buf[30];
-        swprintf(buf, 30, L"%g", mup);
+        any_swprintf(buf, 30, L"%g", mup);
         RETURN_INTO_OBJREF(t, iface::dom::Text,
                            doc->createTextNode(buf));
         cn->appendChild(t)->release_ref();
@@ -1082,7 +1083,7 @@ CDAMaLaESTransform::transform
         RETURN_INTO_OBJREF(cn, iface::dom::Element,
                            doc->createElementNS(MATHML_NS, L"cn"));
         wchar_t buf[30];
-        swprintf(buf, 30, L"%g", offset);
+        any_swprintf(buf, 30, L"%g", offset);
         RETURN_INTO_OBJREF(t, iface::dom::Text,
                            doc->createTextNode(buf));
         cn->appendChild(t)->release_ref();
@@ -1538,7 +1539,7 @@ CDAMaLaESTransform::WriteConversion
     RETURN_INTO_OBJREF(cn, iface::dom::Element,
                        doc->createElementNS(MATHML_NS, L"cn"));
     wchar_t buf[30];
-    swprintf(buf, 30, L"%g", mup);
+    any_swprintf(buf, 30, L"%g", mup);
     RETURN_INTO_OBJREF(t, iface::dom::Text,
                        doc->createTextNode(buf));
     cn->appendChild(t)->release_ref();
@@ -1551,7 +1552,7 @@ CDAMaLaESTransform::WriteConversion
     RETURN_INTO_OBJREF(cn, iface::dom::Element,
                        doc->createElementNS(MATHML_NS, L"cn"));
     wchar_t buf[30];
-    swprintf(buf, 30, L"%g", offset);
+    any_swprintf(buf, 30, L"%g", offset);
     RETURN_INTO_OBJREF(t, iface::dom::Text,
                        doc->createTextNode(buf));
     cn->appendChild(t)->release_ref();
@@ -1819,10 +1820,10 @@ CDAMaLaESTransform::ExecuteTransform
     msg += opName;
     msg += L" has ";
     wchar_t buf[30];
-    swprintf(buf, 30, L"%u", o.maxarg);
+    any_swprintf(buf, 30, L"%u", o.maxarg);
     msg += buf;
     msg += L" arguments, but it actually has ";
-    swprintf(buf, 30, L"%u", args.size());
+    any_swprintf(buf, 30, L"%u", args.size());
     msg += buf;
     throw MaLaESError(msg);
   }

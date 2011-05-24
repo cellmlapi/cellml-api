@@ -21,8 +21,7 @@ libcellml_java_bridge_la_SOURCES += \
 
 libcellml_java_bridge_la_LIBADD += \
   $(STLLINK) \
-  $(top_builddir)/libcellml.la \
-  $(top_builddir)/libJavaSupport.la
+  $(top_builddir)/libcellml.la
 libcellml_java_bridge_la_LDFLAGS = \
   -no-undefined -module
 
@@ -30,10 +29,8 @@ libcellml_java_bridge_la_CXXFLAGS = \
   -I$(top_builddir)/interfaces \
   -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/rdf \
   -I$(top_srcdir)/simple_interface_generators/glue/java \
-  -I$(top_builddir)/simple_interface_generators/glue/java \
-  $(AM_CXXFLAGS) -DMODULE_CONTAINS_DOMAPISPEC \
-  -DMODULE_CONTAINS_MathMLcontentAPISPEC -DMODULE_CONTAINS_CellMLAPISPEC \
-  -DMODULE_CONTAINS_CellMLevents -DMODULE_CONTAINS_RDFAPISPEC -DIN_JAVA_WRAPPER
+  -I$(top_builddir)/simple_interface_generators/glue/java -DIN_MODULE_JavaSupport -DIN_JAVA_WRAPPER \
+  $(AM_CXXFLAGS)
 
 $(top_builddir)/interfaces/p2j%.cpp \
 $(top_builddir)/interfaces/p2j%.hxx \
@@ -128,6 +125,8 @@ interface_list =\
   cellml_api/Unit \
   cellml_api/ReactionIterator \
   cellml_api/ExtensionElementList \
+  cellml_api/ExtensionAttributeSet \
+  cellml_api/ExtensionAttributeIterator \
   cellml_api/GroupIterator \
   cellml_api/ImportUnitsIterator \
   cellml_api/CellMLVariableSet \
@@ -233,5 +232,5 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pCellML_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pCellML_events.cpp \
-  $(top_builddir)/interfaces/j2pRDF_APISPEC.cpp \
-  $(top_builddir)/cellml.jar
+  $(top_builddir)/interfaces/j2pRDF_APISPEC.cpp
+dist_pkgdata_DATA = $(top_builddir)/cellml.jar

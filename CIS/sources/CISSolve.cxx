@@ -1,9 +1,7 @@
+#define MODULE_CONTAINS_CIS
 #define GSL_DLL
 #include <exception>
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include <limits>
 #include "Utilities.hxx"
 #include "CISImplementation.hxx"
@@ -368,20 +366,23 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   N_Vector y = NULL;
   if (rateSize != 0)
     y = N_VMake_Serial(rateSize, states);
-  void* solver;
-  
-  switch (mStepType)
-  {
-  case iface::cellml_services::ADAMS_MOULTON_1_12:
-    solver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
-    break;
-  case iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE:
-  default:
-    solver = CVodeCreate(CV_BDF, CV_NEWTON);
-    break;
-  }
+  void* solver = NULL;
 
-  CVodeSetErrHandlerFn(solver, cda_cvode_error_handler, this);
+  if (rateSize != 0)
+  {  
+    switch (mStepType)
+    {
+    case iface::cellml_services::ADAMS_MOULTON_1_12:
+      solver = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
+      break;
+    case iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE:
+    default:
+      solver = CVodeCreate(CV_BDF, CV_NEWTON);
+      break;
+    }
+
+    CVodeSetErrHandlerFn(solver, cda_cvode_error_handler, this);
+  }
 
   EvaluationInformation ei;
 
@@ -968,7 +969,6 @@ defint(
   double epsAbs = SUBSOL_TOLERANCE;
   CVodeInit(subsolver, EvaluateDefintCVODE, lowV, y);
   CVodeSStolerances(subsolver, SUBSOL_TOLERANCE, epsAbs);
-  CVDense(subsolver, 1);
 
   DefintInformation ei;
   ei.voi = VOI;
@@ -1270,7 +1270,6 @@ static const double levMarOpts[] =
     1E-3, /* tau */
     1E-17, /* epsilon1 */
     1E-17, /* epsilon2 */
-    1E-17 * 1E-17, /* epsilon2 squared */
     1E-17, /* epsilon3 */
     1E-8 /* delta */
   };
@@ -1292,6 +1291,7 @@ do_levmar
   uint32_t i = 0, k;
   double tolerance = SUBSOL_TOLERANCE * size;
 
+  memset(work, 0, LM_DIF_WORKSZ(size, size) * sizeof(double));
   memcpy(bp, params, sizeof(double) * size);
 
   srand(RANDOM_SEED);

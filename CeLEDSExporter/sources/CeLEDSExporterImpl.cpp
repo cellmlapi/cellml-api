@@ -1,4 +1,5 @@
 #define IN_CELEDSEXPORTER_MODULE
+#define MODULE_CONTAINS_CeLEDSExporter
 #include "CeLEDSExporterImpl.hpp"
 #include "CeLEDSExporterBootstrap.hpp"
 #include "IfaceCellML_APISPEC.hxx"

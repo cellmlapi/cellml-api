@@ -6,6 +6,8 @@ AM_CXXFLAGS=
 AC_INIT(CellMLAPI, 0.1, [[ak.miller@auckland.ac.nz]])
 AC_PREREQ(2.59)
 
+AC_CONFIG_MACRO_DIR([m4])
+
 command -v omniidl >/dev/null
 has_omniidl=$?
 if test $has_omniidl != 0; then
@@ -71,6 +73,8 @@ AC_ARG_ENABLE(java,
   ;;
 esac], [java=false])
 AM_CONDITIONAL(ENABLE_JAVA, test x$java != xfalse)
+
+AC_CHECK_HEADERS(jni.h JavaVM/jni.h)
 
 PYTHON_CFLAGS=
 PYTHON_LDFLAGS=
@@ -546,6 +550,8 @@ AC_DISABLE_STATIC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_LIBTOOL_CXX
+library_names_spec=$(echo $library_names_spec | tr " " "\n" | egrep -v \.lib$ | xargs echo)
+
 AC_SUBST([LIBTOOL_DEPS])
 
 # Checks for types...
@@ -655,11 +661,14 @@ if test "$with_gnu_ld" = yes; then
   POST_NON_AS_NEEDED="\$(NULLSTRING) -Wl,-as-needed"
 fi
 
-case "$host-$CXX" in
+case "$host" in
 *msvc*|*wince*)
 	STLLINK=-no-undefined
 	OMNILINK="-lomniORB410_rt -lomnithread32_rt -lws2_32"
         CYGWIN_WRAPPER="\"${abssrcdir}/build/cygwin-wrapper\""
+        # Unintuitive, but produces the desired results with libtool since it generates
+        # a wrapper script.
+        EXEEXT=
 	;;
 *cygwin*|*mks*|*mingw*)
         case "$build" in
@@ -721,6 +730,8 @@ AC_SUBST([PYTHON_LDFLAGS])
 AC_SUBST([PRE_NON_AS_NEEDED])
 AC_SUBST([POST_NON_AS_NEEDED])
 AC_SUBST([lt_cv_dlopen_libs])
+AC_SUBST([libext])
+AC_SUBST([shrext_cmds])
 
 AC_DEFINE_UNQUOTED(TESTDIR, L"$testdir",
                    [Define TESTDIR to path of test sources.])

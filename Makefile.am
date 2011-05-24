@@ -9,6 +9,8 @@ CLEANFILES =
 EXTRA_LTLIBRARIES =
 PYTHON_BOOTSTRAPS =
 
+ACLOCAL_AMFLAGS = -I m4
+
 NULLSTRING :=
 
 CYGWIN_WRAPPER ?= @CYGWIN_WRAPPER@
@@ -40,6 +42,7 @@ pure_java =
 # This saves repeating this everywhere...
 XPCOM_LDFLAGS =  -no-undefined -module -L$(MOZILLA_DIR)/lib -L$(MOZILLA_DIR)/bin -lxpcomglue_s -lxpcom -lnspr4
 XPCOM_LDFLAGS_NOTMOD =  -no-undefined -L$(MOZILLA_DIR)/lib -L$(MOZILLA_DIR)/bin -lxpcomglue_s -lxpcom -lnspr4
+JAVA_LDFLAGS_NOTMOD = -no-undefined 
 XPCOM_CXXFLAGS = -I$(MOZILLA_DIR)/include \
   -I$(MOZILLA_DIR)/include/nspr -I$(MOZILLA_DIR)/include/xpcom \
   -I$(MOZILLA_DIR)/include/string -I$(top_builddir)/interfaces \
@@ -306,3 +309,37 @@ include $(top_srcdir)/SProS/python_build.mk
 endif
 
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh
+
+nonexistent-filename:
+$(top_builddir)/cellml-sdk.tar.bz2: nonexistent-filename
+	mkdir -p $(top_builddir)/cellml-sdk/lib
+	mkdir -p $(top_builddir)/cellml-sdk/include
+	cp $(top_srcdir)/sources/cda_compiler_support.h $(top_builddir)/cellml-sdk/include
+	cp $(top_srcdir)/sources/Utilities.hxx $(top_builddir)/cellml-sdk/include
+	cp $(top_builddir)/cda_config.h $(top_builddir)/cellml-sdk/include
+	cp $(top_builddir)/interfaces/Iface*.hxx $(top_builddir)/cellml-sdk/include
+	cp `find $(top_builddir) \( -iname "*Bootstrap.h??" -or -iname "*Service.h??" \) -and -not -path "*sdk*"` $(top_builddir)/cellml-sdk/include
+	cp -R $(top_builddir)/.libs/*$(shrext_cmds)* $(top_builddir)/cellml-sdk/lib
+	if [[ `uname` == "Darwin" ]]; then \
+		cp -R $(top_builddir)/.libs/*.so $(top_builddir)/cellml-sdk/lib; \
+	fi
+	LIBFILES=`find "$(top_builddir)/.libs/" -name "*.$(libext)" -and -not -path "*.hg*" -and -not -name "*rdf\.*" -and -not -path "*sdk*" -and -not -name "*only*"`; \
+	if test -n "$$LIBFILES"; \
+        then \
+	  cp $$LIBFILES $(top_builddir)/cellml-sdk/lib/ ; \
+	fi
+	JARFILES=`find "$(top_builddir)/" -name "*.jar" -and -not -path "*.hg*" -and -not -path "*sdk*"`; \
+	if test -n "$$JARFILES"; \
+        then \
+	  cp $$JARFILES $(top_builddir)/cellml-sdk/lib/ ; \
+	fi
+	for FN in "$(top_builddir)/cellml-sdk/lib/lib*_java_bridge.so"; do \
+          DIRNAME=`dirname $$FN` ; \
+	  BASENAME=`basename $$FN .so` ; \
+	  ln -s $$BASENAME.so $$DIRNAME/$$BASENAME.jnilib ; \
+	done
+	if [[ -f $(top_builddir)/cellml-sdk/lib/libcellml_java_bridge-0.dll ]]; then \
+	  mv $(top_builddir)/cellml-sdk/lib/libcellml_java_bridge-0.dll $(top_builddir)/cellml-sdk/lib/cellml_java_bridge.dll ; \
+	fi
+	tar -cjf $(top_builddir)/cellml-sdk.tar.bz2 -C $(top_builddir) cellml-sdk
+	rm -fr $(top_builddir)/cellml-sdk

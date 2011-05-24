@@ -11,7 +11,6 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pAnnoTools.cpp
 
 cellml_jar_java += \
-  $(top_srcdir)/java/cellml_bootstrap/AnnoToolsBootstrap.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/StringAnnotation.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/ObjectAnnotation.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/AnnotationSet.java \
@@ -22,7 +21,6 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/AnnotationToolService.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/AnnoToolsBootstrap.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/StringAnnotation.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/ObjectAnnotation.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/AnnotationSet.class \

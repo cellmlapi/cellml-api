@@ -199,6 +199,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             self.hxx.out('public:')
             self.hxx.inc_indent()
             self.hxx.out('%sFactory() : ::P2PyFactory("%s") {};' % (node.simplename, node.corbacxxscoped))
+            self.hxx.out('virtual ~%sFactory() {};' % (node.simplename))
             self.hxx.out("void* create(PyObject* aObj) {\n" +\
                          "  return reinterpret_cast<void*>(static_cast< ::iface::%s*>(new ::p2py::%s(aObj)));\n" %\
                          (node.corbacxxscoped, node.corbacxxscoped) +\
@@ -245,10 +246,9 @@ class CToPythonWalker(idlvisitor.AstVisitor):
                 paramsigs.append('uint32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
         paramsig = string.join(paramsigs, ', ')
-        
         self.hxx.out('@rettype@ @cxxName@(@paramsig@) throw(std::exception&);',
                      rettype=rettype, cxxName=cxxName, paramsig=paramsig)
-        self.cpp.out('@rettype@ ::@classname@::@cxxName@(@paramsig@)',
+        self.cpp.out('@rettype@ @classname@::@cxxName@(@paramsig@)',
                      rettype=rettype, classname=self.classname, cxxName=cxxName, paramsig=paramsig)
         self.cpp.out('  throw(std::exception&)')
         self.cpp.out('{')

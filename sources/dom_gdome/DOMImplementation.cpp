@@ -3,10 +3,6 @@
 #include <string>
 #include "libxml2/libxml/xmlerror.h"
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 std::map<iface::events::EventListener*,CDA_Node::EventListenerData*> CDA_Node::activeEventListeners;
 CDAMutex CDA_Node::mStaticMutex;
 
@@ -142,7 +138,7 @@ CDA_DOMImplementation::loadDocument(const wchar_t* sourceURL,
       wchar_t buf[27];
       errorMessage = L"badxml/";
       // badxml/line/column/msg
-      swprintf(buf, 27, L"%u/%u/", ep->line, ep->int2);
+      any_swprintf(buf, 27, L"%u/%u/", ep->line, ep->int2);
       errorMessage += buf;
       if (ep->message)
       {

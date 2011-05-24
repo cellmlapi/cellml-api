@@ -1,4 +1,5 @@
 #define IN_CUSES_MODULE
+#define MODULE_CONTAINS_CUSES
 #include "CUSESImpl.hpp"
 #include "CUSESBootstrap.hpp"
 #include "IfaceAnnoTools.hxx"

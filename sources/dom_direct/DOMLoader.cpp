@@ -1,7 +1,7 @@
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#define MODULE_CONTAINS_xpcom
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_DOMevents
+#include "cda_compiler_support.h"
 #include "DOMImplementation.hpp"
 #include <stdexcept>
 
@@ -9,10 +9,6 @@
 #define LIBXML_STATIC
 #endif
 #include <libxml/tree.h>
-
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
 
 struct CDA_utf8_data_t
 {
@@ -985,7 +981,7 @@ CDA_DOMImplementation::ProcessXMLError(std::wstring& aErrorMessage, _xmlError* e
   case XML_I18N_NO_OUTPUT:
 #endif
     aErrorMessage = L"badxml/";
-    swprintf(buf, 20, L"%d", err->line);
+    any_swprintf(buf, 20, L"%d", err->line);
     aErrorMessage += buf;
     aErrorMessage += L"/0/";
     aErrorMessage += fname + L"/";

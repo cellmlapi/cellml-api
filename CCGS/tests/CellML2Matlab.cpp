@@ -9,12 +9,8 @@
  *  [2] https://tracker.physiomeproject.org/show_bug.cgi?id=1514#c16
  *  [3] http://www.cellml.org/pipermail/cellml-tools-developers/2009-January/000140.html
  */
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-#include <exception>
 #include "cda_compiler_support.h"
+#include <exception>
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCCGS.hxx"
 #include "IfaceMaLaES.hxx"
@@ -31,10 +27,6 @@
 #include <algorithm>
 #include <string>
 #include "Utilities.hxx"
-
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
 
 const wchar_t*
 TypeToString(iface::cellml_services::VariableEvaluationType vet)
@@ -94,7 +86,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -143,7 +135,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -222,7 +214,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -339,7 +331,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
     {
       str += L"d^";
       wchar_t buf[20];
-      swprintf(buf, 20, L"%u", deg);
+      any_swprintf(buf, 20, L"%u", deg);
       str += buf;
       str += L"/dt^";
       str += buf;

@@ -1,7 +1,7 @@
 #ifndef _INCLUDED_TELICEMS_IMPL_HXX
 #define _INCLUDED_TELICEMS_IMPL_HXX
 
-#define IN_TELICEMS_MODULE
+#define IN_TeLICeMS_MODULE
 #include "TeLICeMService.hpp"
 #include "Utilities.hxx"
 #include "IfaceCellML_APISPEC.hxx"
@@ -77,6 +77,7 @@ public:
     : mRow(1), mColumn(0), mGroupingLevel(0)
   {
   }
+  ~TeLICeMSParseTarget() {}
 
   virtual Target target() const = 0;
   virtual const char* type() = 0;
@@ -87,7 +88,7 @@ public:
       return true;
 
     wchar_t msg[80];
-    swprintf(msg, 80, L"Was trying to parse TeLICEMS input for %8s, but got syntax for %8s.",
+    any_swprintf(msg, 80, L"Was trying to parse TeLICEMS input for %8s, but got syntax for %8s.",
              type(), match);
     mResult->addMessage(msg);
     return false;

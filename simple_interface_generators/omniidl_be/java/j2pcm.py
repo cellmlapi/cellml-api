@@ -28,7 +28,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         guardname='J2P__' + self.modname + '__INCLUDED'
         self.hxx.out('#ifndef ' + guardname)
         self.hxx.out("#define " + guardname)
-        self.hxx.out('#include <jni.h>')
+        self.hxx.out('#include "pick-jni.h"')
         self.hxx.out('#include "j2psupport.hxx"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
         self.cpp.out('#include <exception>')
@@ -277,7 +277,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
                 indirect = '&'
             if ti.needLength():
                 if pcmParams != '':
-                    pcmParams = pcmParams + ', '                
+                    pcmParams = pcmParams + ', '
                 self.cpp.out('uint32_t _length__pcm_' + pname + ';')
                 pcmParams = pcmParams + indirect + '_length__pcm_' + pname
             if pcmParams != '':

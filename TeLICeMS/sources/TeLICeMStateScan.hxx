@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_TeLICeMS
 #include "IfaceCellML_APISPEC.hxx"
 #include "Utilities.hxx"
 #include <map>

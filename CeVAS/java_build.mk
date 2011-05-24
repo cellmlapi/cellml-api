@@ -11,7 +11,6 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pCeVAS.cpp
 
 cellml_jar_java += \
-  $(top_srcdir)/java/cellml_bootstrap/CeVASBootstrap.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/ConnectedVariableSet.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CeVAS.java \
   $(top_builddir)/interfaces/pjm2pcm/cellml_services/CeVASBootstrap.java \
@@ -20,7 +19,6 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/cellml_services/CeVASBootstrap.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/CeVASBootstrap.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/ConnectedVariableSet.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/CeVAS.class \
   $(top_builddir)/javacp/pjm2pcm/cellml_services/CeVASBootstrap.class \

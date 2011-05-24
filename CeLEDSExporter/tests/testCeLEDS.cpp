@@ -1,9 +1,5 @@
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-#include <exception>
 #include "cda_compiler_support.h"
+#include <exception>
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCeLEDSExporter.hxx"
 #include "CeLEDSExporterBootstrap.hpp"
@@ -17,10 +13,6 @@
 #include <string>
 #include "Utilities.hxx"
 #include <iostream>
-
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
 
 int
 main(int argc, char** argv)

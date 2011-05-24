@@ -11,7 +11,6 @@ BUILT_SOURCES += \
   $(top_builddir)/interfaces/j2pSProS.cpp
 
 cellml_jar_java += \
-  $(top_srcdir)/java/cellml_bootstrap/SProSBootstrap.java \
   $(top_builddir)/interfaces/pjm2pcm/SProS/Base.java \
   $(top_builddir)/interfaces/pjm2pcm/SProS/BaseSet.java \
   $(top_builddir)/interfaces/pjm2pcm/SProS/BaseIterator.java \
@@ -67,6 +66,7 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/SProS/Base.java \
   $(top_builddir)/interfaces/SProS/BaseSet.java \
   $(top_builddir)/interfaces/SProS/BaseIterator.java \
+  $(top_builddir)/interfaces/SProS/Bootstrap.java \
   $(top_builddir)/interfaces/SProS/SEDMLElement.java \
   $(top_builddir)/interfaces/SProS/NamedElement.java \
   $(top_builddir)/interfaces/SProS/NamedElementSet.java \
@@ -118,7 +118,6 @@ cellml_jar_java += \
   $(top_builddir)/interfaces/SProS/DataSetIterator.java
 
 cellml_jar_classes += \
-  $(top_builddir)/javacp/cellml_bootstrap/SProSBootstrap.class \
   $(top_builddir)/javacp/pjm2pcm/SProS/Base.class \
   $(top_builddir)/javacp/pjm2pcm/SProS/BaseSet.class \
   $(top_builddir)/javacp/pjm2pcm/SProS/BaseIterator.class \
@@ -174,6 +173,7 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/SProS/Base.class \
   $(top_builddir)/javacp/SProS/BaseSet.class \
   $(top_builddir)/javacp/SProS/BaseIterator.class \
+  $(top_builddir)/javacp/SProS/Bootstrap.class \
   $(top_builddir)/javacp/SProS/SEDMLElement.class \
   $(top_builddir)/javacp/SProS/NamedElement.class \
   $(top_builddir)/javacp/SProS/NamedElementSet.class \
@@ -224,4 +224,4 @@ cellml_jar_classes += \
   $(top_builddir)/javacp/SProS/DataSetSet.class \
   $(top_builddir)/javacp/SProS/DataSetIterator.class
 
-pure_java += SProS/SProSBootstrap
+pure_java += cellml_bootstrap/SProSBootstrap

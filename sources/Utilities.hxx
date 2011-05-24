@@ -1,7 +1,6 @@
 #ifndef _UTILITIES_HXX
 #define _UTILITIES_HXX
 
-#include "cda_config.h"
 #include "cda_compiler_support.h"
 
 #ifdef HAVE_INTTYPES_H
@@ -44,7 +43,6 @@
 #undef GetObject
 #undef GetClassName
 #undef AddMonitor
-#define swprintf _snwprintf
 #endif
 
 #include <stdlib.h>

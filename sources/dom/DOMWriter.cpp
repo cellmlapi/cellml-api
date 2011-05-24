@@ -1,12 +1,12 @@
+#define MODULE_CONTAINS_xpcom
+#define MODULE_CONTAINS_DOMAPISPEC
 #define IN_DOMWRITER_MODULE
 #include "Utilities.hxx"
 #include <string>
 #include "DOMWriter.hxx"
 
 #ifdef _WIN32
-#undef __STDC__
 #include <stdio.h>
-#define swprintf _snwprintf
 #endif
 
 // These tables were adapted from the Mozilla code.
@@ -608,7 +608,7 @@ DOMNamespaceContext::resolveOrInventPrefixes()
     {
       attempt = suggestion;
       wchar_t buf[24];
-      swprintf(buf, 24, L"%u", attemptCount++);
+      any_swprintf(buf, 24, L"%u", attemptCount++);
       attempt += buf;
     }
     // We found a unique prefix...

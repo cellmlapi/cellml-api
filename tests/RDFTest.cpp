@@ -1,4 +1,5 @@
 #define __STDC_FORMAT_MACROS
+#include "cda_compiler_support.h"
 #include "RDFTest.hpp"
 #include "DOMBootstrap.hxx"
 #include "CellMLBootstrap.hpp"
@@ -6,15 +7,10 @@
 #include "Utilities.hxx"
 #include <fstream>
 #include <iostream>
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
 
 #ifndef PRIxPTR
 #define PRIxPTR "x"
 #endif
-
-#include "cda_config.h"
 
 #ifndef BASE_DIRECTORY_NTRIP
 #define BASE_DIRECTORY_NTRIP TESTDIR8 "/test_rdf/"
@@ -31,13 +27,6 @@
 #define BASE_DIRECTORY_CELLML L"file:///" TESTDIR L"/test_xml/"
 #else
 #define BASE_DIRECTORY_CELLML L"file://" TESTDIR L"/test_xml/"
-#endif
-#endif
-
-
-#ifdef _WIN32
-#ifndef swprintf
-#define swprintf _snwprintf
 #endif
 #endif
 
@@ -909,7 +898,7 @@ RDFTest::testW3CSuite()
 
     std::wstring url(BASE_URI);
     wchar_t wbuf[30];
-    swprintf(wbuf, 30, L"test%u.rdf", i);
+    any_swprintf(wbuf, 30, L"test%u.rdf", i);
     url += wbuf;
 
     std::wstring msg;

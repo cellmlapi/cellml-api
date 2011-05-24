@@ -1,8 +1,6 @@
+#define MODULE_CONTAINS_xpcom
 #include <algorithm>
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include "DOMImplementation.hpp"
 #include <stdexcept>
 

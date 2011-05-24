@@ -1,9 +1,8 @@
 #define IN_DOM_MODULE
+#define MODULE_CONTAINS_xpcom
+#define MODULE_CONTAINS_DOMAPISPEC
 
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include "DOMImplementation.hpp"
 
 CellML_DOMImplementationBase*

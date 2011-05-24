@@ -1,6 +1,14 @@
 // CellML gets linked into the same module as DOMWriter...
 #define IN_DOMWRITER_MODULE
+#define MODULE_CONTAINS_xpcom
 #define MODULE_CONTAINS_RDFAPISPEC
+#define MODULE_CONTAINS_CellMLAPISPEC
+#define MODULE_CONTAINS_CellMLBootstrap
+#define MODULE_CONTAINS_CellMLEvents
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_DOMevents
+#define MODULE_CONTAINS_DOMevents
+#define MODULE_CONTAINS_MathMLcontentAPISPEC
 #include "CellMLImplementation.hpp"
 #include "DOMWriter.hxx"
 #ifdef ENABLE_RDF
@@ -3230,8 +3238,9 @@ CDA_Unit::prefix(int32_t attr)
     }
 
     // We have a non-SI prefix, so we need to express it as a number...
-    wchar_t buf[12];
-    swprintf(buf, 12, L"%d", attr);
+    wchar_t buf[24];
+    any_swprintf(buf, 24, L"%d", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"prefix", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -3290,7 +3299,8 @@ CDA_Unit::multiplier(double attr)
     }
 
     wchar_t buf[24];
-    swprintf(buf, 12, L"%g", attr);
+    any_swprintf(buf, 24, L"%g", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"multiplier", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -3349,7 +3359,8 @@ CDA_Unit::offset(double attr)
     }
 
     wchar_t buf[24];
-    swprintf(buf, 12, L"%g", attr);
+    any_swprintf(buf, 24, L"%g", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"offset", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -3408,7 +3419,8 @@ CDA_Unit::exponent(double attr)
     }
 
     wchar_t buf[24];
-    swprintf(buf, 12, L"%g", attr);
+    any_swprintf(buf, 24, L"%g", attr);
+    buf[23] = 0;
     datastore->setAttribute(L"exponent", buf);
   }
   catch (iface::dom::DOMException& de)
@@ -5902,7 +5914,8 @@ CDA_Role::stoichiometry(double attr)
   CNumericLocale locobj;
 
   wchar_t buf[40];
-  swprintf(buf, 40, L"%g", attr);
+  any_swprintf(buf, 40, L"%g", attr);
+  buf[39] = 0;
   datastore->setAttributeNS(NULL_NS, L"stoichiometry", buf);
 }
 

@@ -31,10 +31,6 @@
 #include <algorithm>
 #include <string>
 
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
-
 const wchar_t*
 TypeToString(iface::cellml_services::VariableEvaluationType vet)
 {
@@ -94,7 +90,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -145,7 +141,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -226,7 +222,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
       {
         str += L"d^";
         wchar_t buf[20];
-        swprintf(buf, 20, L"%u", deg);
+        any_swprintf(buf, 20, L"%u", deg);
         str += buf;
         str += L"/dt^";
         str += buf;
@@ -339,7 +335,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
     {
       str += L"d^";
       wchar_t buf[20];
-      swprintf(buf, 20, L"%u", deg);
+      any_swprintf(buf, 20, L"%u", deg);
       str += buf;
       str += L"/dt^";
       str += buf;
@@ -359,7 +355,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci)
     str += TypeToString(ct->type());
     str += L"\n    Variable index: ";
     wchar_t buf[40];
-    swprintf(buf, 40, L"%u\n", ct->assignedIndex());
+    any_swprintf(buf, 40, L"%u\n", ct->assignedIndex());
     str += buf;
 
     str += L"    Variable storage: ";

@@ -233,7 +233,7 @@ class WString(Type):
                 return "{\n" +\
                        "  wchar_t* _retpcm;\n" +\
                        "  char* stmp = PyString_AsString(%s);\n" % pyargName +\
-                       "  if (stmp == NULL) _retpcm = wcsdup(L\"\");\n" +\
+                       "  if (stmp == NULL) _retpcm = CDA_wcsdup(L\"\");\n" +\
                        "  else\n" +\
                        "  {\n" +\
                        "    size_t ltmp = strlen(stmp);\n" +\
@@ -246,7 +246,7 @@ class WString(Type):
             return "{\n" +\
                    "  wchar_t* _tmp;\n" +\
                    "  char* stmp = PyString_AsString(%s);\n" % pyargName +\
-                   "  if (stmp == NULL) _retpcm = wcsdup(L\"\");\n" +\
+                   "  if (stmp == NULL) _retpcm = CDA_wcsdup(L\"\");\n" +\
                    "  else\n" +\
                    "  {\n" +\
                    "    size_t ltmp = strlen(stmp);\n" +\
@@ -260,7 +260,7 @@ class WString(Type):
             return "wchar_t* %s;\n" % pcmName +\
                    "{\n" +\
                    "  char* stmp = PyString_AsString(%s);\n" % pyargName +\
-                   "  if (stmp == NULL) %s = wcsdup(L\"\");\n" % pcmName +\
+                   "  if (stmp == NULL) %s = CDA_wcsdup(L\"\");\n" % pcmName +\
                    "  else\n" +\
                    "  {\n" +\
                    "    size_t ltmp = strlen(stmp);\n" +\
@@ -277,7 +277,7 @@ class WString(Type):
                    "{\n" +\
                    "  PyObject* stmp = PyList_GetItem(%s, 0);\n" % pyargName +\
                    "  char* strtmp = PyString_AsString(stmp);\n" +\
-                   "  if (strtmp == NULL) %s = wcsdup(L\"\");\n" % pcmName +\
+                   "  if (strtmp == NULL) %s = CDA_wcsdup(L\"\");\n" % pcmName +\
                    "  else\n" +\
                    "  {\n" +\
                    "    size_t ltmp = strlen(strtmp);\n" +\

@@ -1,10 +1,13 @@
+#define MODULE_CONTAINS_xpcom
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_DOMevents
+#define MODULE_CONTAINS_MathMLcontentAPISPEC
 #include "Utilities.hxx"
 #include "MathMLImplementation.hxx"
 
 #if defined(_WIN32)
 #undef __STDC__
 #include <stdio.h>
-#define swprintf _snwprintf
 #endif
 
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
@@ -2294,7 +2297,7 @@ CDA_MathMLDeclareElement::nargs(uint32_t attr)
   CNumericLocale locobj;
 
   wchar_t str[20];
-  swprintf(str, 20, L"%u", attr);
+  any_swprintf(str, 20, L"%u", attr);
   static_cast<CDA_Element*>(this)->setAttributeNS(NULL_NS, L"nargs", str);
 }
 

@@ -1,4 +1,5 @@
 #define IN_VACSS_MODULE
+#define MODULE_CONTAINS_VACSS
 #include "VACSSImpl.hpp"
 #include "VACSSBootstrap.hpp"
 #include "CUSESBootstrap.hpp"
@@ -2248,15 +2249,17 @@ ModelValidation::validateMathMLConstant
     switch (nt)
     {
     case iface::dom::Node::ELEMENT_NODE:
-      name = child->nodeName();
-      if (type != L"e-notation")
-        REPR_ERROR(L"MathML cn elements without the attribute type=e-notation "
-                   L"shouldn't have element children", aEl);
-      else if (name != L"sep")
-        REPR_ERROR(L"MathML cn elements with the attribute type=e-notation "
-                   L"shouldn't have non sep element children", aEl);
-      else
-        txt += L"<sep/>";
+      {
+        RETURN_INTO_WSTRING(name, child->nodeName());
+        if (type != L"e-notation")
+          REPR_ERROR(L"MathML cn elements without the attribute type=e-notation "
+                     L"shouldn't have element children", aEl);
+        else if (name != L"sep")
+          REPR_ERROR(L"MathML cn elements with the attribute type=e-notation "
+                     L"shouldn't have non sep element children", aEl);
+        else
+          txt += L"<sep/>";
+      }
       break;
     case iface::dom::Node::TEXT_NODE:
     case iface::dom::Node::CDATA_SECTION_NODE:
@@ -3498,7 +3501,7 @@ ModelValidation::validateMathMLApply
     if (unitsList.size() != 1)
     {
       wchar_t buf[30];
-      swprintf(buf, 30, L"%d", unitsList.size());
+      any_swprintf(buf, 30, L"%d", unitsList.size());
       REPR_ERROR(std::wstring(L"Operator \"") +
                  opinfo->mName + L"\" is unary (i.e. takes exactly one argument), but was given " + buf + L" arguments.",
                  op);
@@ -3514,7 +3517,7 @@ ModelValidation::validateMathMLApply
         if (unitsList.size() != 1)
         {
           wchar_t buf[30];
-          swprintf(buf, 30, L"%d", unitsList.size());
+          any_swprintf(buf, 30, L"%d", unitsList.size());
           REPR_ERROR(std::wstring(
                        L"Expected operator \"minus\" to be unary or binary (i.e. "
                        L"have one or two arguments), not ") + buf, op);
@@ -3524,7 +3527,7 @@ ModelValidation::validateMathMLApply
       else
       {
         wchar_t buf[30];
-        swprintf(buf, 30, L"%d", unitsList.size());
+        any_swprintf(buf, 30, L"%d", unitsList.size());
         REPR_ERROR(std::wstring(L"Expected operator \"") + opinfo->mName +
                    L"\" to be binary (i.e. have exactly "
                    L"two arguments), not " + buf, op);

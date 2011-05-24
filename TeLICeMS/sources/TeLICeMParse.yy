@@ -1,4 +1,5 @@
 %{
+  #include "cda_compiler_support.h"
   #define YYSTYPE TeLICeMSLValue
   #define YYSTYPE_IS_TRIVIAL 0
 %}
@@ -646,9 +647,9 @@
     if (aValue == 0)
       expn = 0;
     else if (aValue < 0)
-       expn = -static_cast<int>(trunc(log10(-aValue)));
+       expn = -static_cast<int>(floor(log10(-aValue)));
     else 
-       expn = static_cast<int>(trunc(log10(aValue)));
+       expn = static_cast<int>(floor(log10(aValue)));
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
     if (expn < -3 || expn > 3)
@@ -656,18 +657,18 @@
       double mant = aValue / pow(10.0, expn);
       cn->type(L"e-notation");
       {
-        swprintf(buf, 40, L"%10g", mant);
+        any_swprintf(buf, 40, L"%10g", mant);
         RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
         cn->insertArgument(tn, 1)->release_ref();
       }
 
-      swprintf(buf, 40, L"%d", expn);
+      any_swprintf(buf, 40, L"%d", expn);
       RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
       cn->insertArgument(tn, 2)->release_ref();
     }
     else
     {
-      swprintf(buf, 40, L"%10g", aValue);
+      any_swprintf(buf, 40, L"%10g", aValue);
       RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
       cn->insertArgument(tn, 1)->release_ref();
     }
@@ -1035,7 +1036,7 @@ varparamitem: T_INIT ':' varparamiteminitval {
 
 varparamiteminitval: T_NUMBER {
   char buf[30];
-  snprintf(buf, sizeof(buf), "%g", $1.number());
+  any_snprintf(buf, sizeof(buf), "%g", $1.number());
   $$.string(buf);
 } | T_IDENTIFIER;
 
@@ -1085,7 +1086,7 @@ math_attr_id: T_IDENTIFIER | T_QUOTED | T_BASE { $$.string("base"); } |
 
 math_attr_value: T_QUOTED | T_IDENTIFIER | T_NUMBER {
     char buf[30];
-    snprintf(buf, sizeof(buf), "%g", $1.number());
+    any_snprintf(buf, sizeof(buf), "%g", $1.number());
     $$.string(buf);
   };
 

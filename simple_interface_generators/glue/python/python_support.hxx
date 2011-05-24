@@ -9,7 +9,7 @@
 #define PUBLIC_PYTHONSUPPORT_POST CDA_IMPORT_POST
 #endif
 
-#include <inttypes.h>
+#include "cda_compiler_support.h"
 #include <cstdlib>
 #include <exception>
 #include <map>

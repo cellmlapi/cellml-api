@@ -1,14 +1,10 @@
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include <exception>
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceCCGS.hxx"
 #include "IfaceCIS.hxx"
 #include "CISBootstrap.hpp"
 #include "CCGSBootstrap.hpp"
-#include "cda_compiler_support.h"
 #include "CellMLBootstrap.hpp"
 #include <stdio.h>
 #include <stdlib.h>

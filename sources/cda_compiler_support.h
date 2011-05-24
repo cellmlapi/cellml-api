@@ -5,11 +5,26 @@
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#else
+#ifdef _MSC_VER
+#undef int64_t
+#undef uint64_t
+#define int64_t signed __int64
+#define uint64_t unsigned __int64
+#endif
 #endif
 
 #ifdef _MSC_VER
 #define WIN32
 #undef __STDC__
+#endif
+
+#ifdef WIN32
+#define any_swprintf _snwprintf
+#define any_snprintf _snprintf
+#else
+#define any_swprintf swprintf
+#define any_snprintf snprintf
 #endif
 
 #ifdef __BORLANDC__
@@ -44,10 +59,6 @@
 #define CDA_IMPORT_PRE
 #define CDA_IMPORT_POST
 #define WARN_IF_RETURN_UNUSED
-#endif
-
-#ifdef _WIN32
-#define swprintf _snwprintf
 #endif
 
 #endif // compiler_support_h

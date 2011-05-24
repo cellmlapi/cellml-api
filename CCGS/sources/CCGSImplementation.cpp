@@ -1,4 +1,5 @@
 #define IN_CCGS_MODULE
+#define MODULE_CONTAINS_CCGS
 #include "CCGSImplementation.hpp"
 #include "CodeGenerationError.hxx"
 #include "CodeGenerationState.hxx"
@@ -7,10 +8,7 @@
 #include "MaLaESBootstrap.hpp"
 #include "CeVASBootstrap.hpp"
 #include "CUSESBootstrap.hpp"
-
-#ifdef _WIN32
-#define swprintf _snwprintf
-#endif
+#include "cda_compiler_support.h"
 
 iface::cellml_api::CellMLVariable*
 CDA_ComputationTarget::variable() throw()
@@ -44,7 +42,7 @@ CDA_ComputationTarget::name() throw()
     annoname = L"expression";
   else
   {
-    swprintf(annobuf, 30, L"expression_d%u", mDegree);
+    any_swprintf(annobuf, 30, L"expression_d%u", mDegree);
     annoname = annobuf;
   }
 
@@ -74,8 +72,8 @@ CDA_ComputationTarget::setDelayedName(const wchar_t* aSetTo)
   }
   else
   {
-    swprintf(buf, 30, L"expression_d%u", mDegree);
-    swprintf(dbuf, 40, L"delayed_expression_d%u", mDegree);
+    any_swprintf(buf, 30, L"expression_d%u", mDegree);
+    any_swprintf(dbuf, 40, L"delayed_expression_d%u", mDegree);
     annoname = buf;
     dannoname = dbuf;
   }
@@ -106,7 +104,7 @@ CDA_ComputationTarget::setNameAndIndex
     annoname = L"expression";
   else
   {
-    swprintf(annobuf, 30, L"expression_d%u", mDegree);
+    any_swprintf(annobuf, 30, L"expression_d%u", mDegree);
     annoname = annobuf;
   }
 

@@ -1,5 +1,5 @@
 #include <exception>
-#include <jni.h>
+#include "pick-jni.h"
 #include "j2pAnnoTools.hxx"
 #include "AnnoToolsBootstrap.hpp"
 #include "Utilities.hxx"

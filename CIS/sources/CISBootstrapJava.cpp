@@ -1,5 +1,5 @@
 #include <exception>
-#include <jni.h>
+#include "pick-jni.h"
 #include "j2pCIS.hxx"
 #include "CISBootstrap.hpp"
 #include "Utilities.hxx"

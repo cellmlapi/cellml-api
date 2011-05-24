@@ -1,10 +1,7 @@
 #ifndef URITEST_H
 #define URITEST_H
 #include <cppunit/extensions/HelperMacros.h>
-#include "cda_config.h"
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "cda_compiler_support.h"
 #include "../sources/rdf/URITool.hpp"
 
 class URITest : public CppUnit::TestFixture

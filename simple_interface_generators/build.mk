@@ -3,7 +3,8 @@ if ENABLE_CORBA
 lib_LTLIBRARIES += libCORBASupport.la
 libCORBASupport_la_SOURCES = $(top_srcdir)/simple_interface_generators/glue/corba_support/WrapperRepository.cpp
 libCORBASupport_la_CXXFLAGS = -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources $(AM_CXXFLAGS)
-libCORBASupport_la_LIBADD = $(OMNILINK) $(STLLINK)
+libCORBASupport_la_LIBADD = $(OMNILINK) $(STLLINK) $(top_builddir)/libcellml.la
+libCORBASupport_la_LDFLAGS =
 endif
 if ENABLE_XPCOM
 lib_LTLIBRARIES += libXPCOMSupport.la
@@ -16,7 +17,7 @@ libXPCOMSupport_la_CXXFLAGS = \
   $(XPCOM_CXXFLAGS) \
   -I$(top_builddir)/simple_interface_generators/glue/xpcom -DIN_MODULE_XPCOMSupport \
   $(AM_CXXFLAGS)
-libXPCOMSupport_la_LIBADD = $(STLLINK)
+libXPCOMSupport_la_LIBADD = $(STLLINK) $(top_builddir)/libcellml.la
 libXPCOMSupport_la_LDFLAGS = $(XPCOM_LDFLAGS_NOTMOD)
 
 BUILT_SOURCES += \
@@ -30,14 +31,8 @@ $(top_srcdir)/simple_interface_generators/glue/xpcom/IWrappedPCM.idl
 endif
 
 if ENABLE_JAVA
-lib_LTLIBRARIES += libJavaSupport.la
-libJavaSupport_la_SOURCES = \
+libcellml_java_bridge_la_SOURCES += \
   $(top_srcdir)/simple_interface_generators/glue/java/p2jxpcom.cpp
-
-libJavaSupport_la_CXXFLAGS = \
-  -I$(top_builddir)/interfaces -I$(top_srcdir) -I$(top_srcdir)/sources \
-  -I$(top_builddir)/simple_interface_generators/glue/java -DIN_MODULE_JavaSupport \
-  $(AM_CXXFLAGS)
 endif
 
 if ENABLE_PYTHON
@@ -50,9 +45,11 @@ libPythonSupport_la_CXXFLAGS = \
   -I$(top_builddir)/simple_interface_generators/glue/python -DIN_MODULE_PythonSupport \
   $(AM_CXXFLAGS) $(PYTHON_CFLAGS)
 
+libPythonSupport_la_LDFLAGS =
+libPythonSupport_la_LIBADD = $(top_builddir)/libcellml.la
 python_xpcom_la_SOURCES = \
   $(top_srcdir)/simple_interface_generators/glue/python/xpcom.cxx
 python_xpcom_la_LIBADD = $(ALLPYTHONLIBADD)
-python_xpcom_la_LDFLAGS = $(ALLPYTHONLDFLAGS) -module
+python_xpcom_la_LDFLAGS = $(ALLPYTHONLDFLAGS) -module -lcellml
 python_xpcom_la_CXXFLAGS = $(ALLPYTHONCXXFLAGS)
 endif

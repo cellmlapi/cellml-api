@@ -1,3 +1,5 @@
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_DOMevents
 #include <exception>
 #include "Utilities.hxx"
 #include "IfaceDOM_APISPEC.hxx"
