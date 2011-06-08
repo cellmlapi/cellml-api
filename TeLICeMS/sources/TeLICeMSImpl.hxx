@@ -3,7 +3,6 @@
 
 #define IN_TeLICeMS_MODULE
 #include "TeLICeMService.hpp"
-#include "Utilities.hxx"
 #include "IfaceCellML_APISPEC.hxx"
 #include <string>
 #define yyFlexLexer TeLICeMFlexLexer

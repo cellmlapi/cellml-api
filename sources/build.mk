@@ -41,7 +41,8 @@ libmathmlonly_la_CXXFLAGS = \
 include_HEADERS += \
   sources/cellml/CellMLBootstrap.hpp \
   cda_config.h \
-  sources/cda_compiler_support.h
+  sources/cda_compiler_support.h \
+  sources/cellml-api-cxx-support.hpp
 
 libcellmlonly_la_SOURCES = \
   sources/cellml/CellMLImplementation.cpp \

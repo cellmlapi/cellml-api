@@ -3,6 +3,8 @@
 
 #include "cda_config.h"
 
+#include <exception>
+
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else

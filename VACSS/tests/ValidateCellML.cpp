@@ -2,7 +2,7 @@
 #include <exception>
 #include "IfaceCellML_APISPEC.hxx"
 #include "IfaceVACSS.hxx"
-#include "Utilities.hxx"
+#include "cellml-api-cxx-support.hpp"
 #include "VACSSBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
 #include <string>

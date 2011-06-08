@@ -1,6 +1,6 @@
 // This is not an official part of the API, but including it is not a problem
 // because it doesn't directly access any private APIs.
-#include "Utilities.hxx"
+#include "cellml-ai-cxx-support.hpp"
 
 // This is the standard C++ interface for the core CellML API.
 #include "IfaceCellML_APISPEC.hxx"
