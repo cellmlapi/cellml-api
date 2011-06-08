@@ -2188,7 +2188,7 @@ module cellml_api
     /**
      * The XPathEvaluator, or nil if XPath support is not available.
      */
-    readonly attribute xpath::XPathEvaluator xpath;
+    readonly attribute xpath::XPathEvaluator xpathEvaluator;
   };
 #pragma terminal-interface
 #pragma cross-module-argument

@@ -492,6 +492,13 @@ CDA_ModelLoader::asyncCreateFromDOM
   loader->asyncLoadDocument(URL, cfddll);
 }
 
+iface::xpath::XPathEvaluator*
+CDA_CellMLBootstrap::xpathEvaluator()
+  throw()
+{
+  return NULL;
+}
+
 int myfunc() { return 0; }
 
 CDA_EXPORT_PRE CDA_EXPORT_POST iface::cellml_api::CellMLBootstrap*

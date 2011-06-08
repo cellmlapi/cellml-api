@@ -31,7 +31,7 @@ module xpath
   const unsigned short      TYPE_ERR                       = 52;
 
 
-  interface XPathEvaluator {
+  interface XPathEvaluator : XPCOM::IObject {
     XPathExpression    createExpression(in DOMString expression, 
                                         in XPathNSResolver resolver)
                                         raises(XPathException, 
@@ -47,7 +47,7 @@ module xpath
   };
 #pragma terminal-interface
 
-  interface XPathExpression {
+  interface XPathExpression : XPCOM::IObject {
     XPathResult        evaluate(in Node contextNode, 
                                 in unsigned short type, 
                                 in XPathResult result)
@@ -56,12 +56,12 @@ module xpath
   };
 #pragma terminal-interface
 
-  interface XPathNSResolver {
+  interface XPathNSResolver : XPCOM::IObject {
     DOMString          lookupNamespaceURI(in DOMString prefix);
   };
 #pragma cross-module-argument
 
-  interface XPathResult {
+  interface XPathResult : XPCOM::IObject {
 
     // XPathResultType
     const unsigned short      ANY_TYPE                       = 0;

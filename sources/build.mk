@@ -1,6 +1,6 @@
 # The overall libcellml.la library...
 lib_LTLIBRARIES += libcellml.la
-noinst_LTLIBRARIES += libdomonly.la libdomdirectonly.la libmathmlonly.la libcellmlonly.la
+noinst_LTLIBRARIES += libdomonly.la libdomdirectonly.la libmathmlonly.la libcellmlonly.la libxpathonly.la
 libcellml_la_SOURCES = sources/Utilities.cpp
 libcellml_la_LIBADD = \
   libcellmlonly.la \

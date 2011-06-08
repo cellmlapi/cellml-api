@@ -7,7 +7,7 @@ include_HEADERS += \
   $(top_builddir)/interfaces/IfaceCellML_APISPEC.hxx \
   $(top_builddir)/interfaces/IfaceRDF_APISPEC.hxx \
   $(top_builddir)/interfaces/IfaceCellML_events.hxx \
-  $(top_builddir)/interfaces/Ifacexpath.hxx \
+  $(top_builddir)/interfaces/Ifacexpath.hxx
 
 $(top_builddir)/interfaces/Iface%.hxx \
 $(top_builddir)/interfaces/CCI%.hxx \

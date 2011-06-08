@@ -6,6 +6,7 @@ import os;
 import conversionutils;
 import simplecxx;
 import string
+import identifier
 
 class Walker(idlvisitor.AstVisitor):
     """Walks over the AST once and writes the CCI header or CCI as it goes.
@@ -618,6 +619,9 @@ class Walker(idlvisitor.AstVisitor):
             for ifa in current.inherits():
                 if not seen.has_key(ifa.simplecxxscoped):
                     seen[ifa.simplecxxscoped] = 1
+                    while isinstance(ifa, idlast.Declarator):
+                        ifa = ifa.alias().aliasType().decl()
+                        identifier.AnnotateByRepoID(ifa)
                     stack.append(ifa)
                     self.processBase(node, ifa)
 
