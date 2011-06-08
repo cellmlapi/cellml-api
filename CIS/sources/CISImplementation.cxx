@@ -481,8 +481,8 @@ CDA_DAESolverRun::runthread()
     buffer[0] = mStartBvar;
     states = buffer + 1;
     rates = states + rateSize;
-    algebraic = rates + algSize;
-    condvars = algebraic + rateSize;
+    algebraic = rates + rateSize;
+    condvars = algebraic + algSize;
 
     memset(rates, 0, rateSize * sizeof(double));
     memset(condvars, 0, condVarSize * sizeof(double));
