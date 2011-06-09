@@ -661,7 +661,7 @@ static void DetermineRateOrStateSensitivity(double * hx, int n, DAEIVFindingInfo
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
                            info->algebraic, info->condvars, hx);
-    info->rates[i] = oldrate * (1 + 1E-10);
+    info->rates[i] = oldrate * (1 + 1E-6);
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->oldrates, info->states,
                                      info->oldstates, info->algebraic, info->condvars);
     info->ComputeRootInformation(info->voi0, info->constants, info->rates, info->oldrates,
@@ -673,10 +673,10 @@ static void DetermineRateOrStateSensitivity(double * hx, int n, DAEIVFindingInfo
     double gap1 = 0;
     for (int j = 0; j < n; j++)
     {
-      // printf("Rate: hx[%u] = %g, hxtmp[%u] = %g\n", j, hx[j], j, info->hxtmp[j]);
+      // printf("Rate %u: hx[%u] = %g, hxtmp[%u] = %g, diff = %g\n", i, j, hx[j], j, info->hxtmp[j], hx[j] - info->hxtmp[j]);
       gap1 += fabs(hx[j] - info->hxtmp[j]);
     }
-    info->icinfo[i] = gap1 >= 0;
+    info->icinfo[i] = gap1 > 0;
     info->rates[i] = oldrate;
 
 #ifdef CONSIDER_BOTH_SENSITIVITIES
@@ -787,6 +787,8 @@ CDA_DAESolverRun::SolveDAEProblem
   ivf.oldrates = ei.oldrates;
   ivf.oldstates = ei.oldstates;
   double * hx = new double[stateSize];
+  int * roots = new int[condVarSize];
+  memset(roots, 0, sizeof(int) * condVarSize);
 
   f->SetupStateInfo(icinfo);
 
@@ -796,15 +798,20 @@ CDA_DAESolverRun::SolveDAEProblem
     while (restart)
     {
       restart = false;
-
+      
       f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
                                 algebraic, condvars);
+      for (uint32_t i = 0; i < condVarSize; i++)
+      {
+        if (condvars[i] == 0 && roots[i] != 0)
+          condvars[i] = roots[i] * 1E-100;
+      }
       DetermineRateOrStateSensitivity(hx, stateSize, &ivf);
       // printf("Just determined sensitivity array:\n");
       // for (uint32_t i = 0; i < stateSize; i++)
       //   printf("  sens[%u] = %g\n", i, icinfo[i]);
       RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
-
+      
       double info[LM_INFO_SZ];
       dlevmar_dif(levmar_dae_iv_paramfinder,
                   params,
@@ -820,11 +827,15 @@ CDA_DAESolverRun::SolveDAEProblem
                   );
       MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
                                            icinfo, params);
-
-    
+      
       f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
                                 algebraic, condvars);
-    
+      for (uint32_t i = 0; i < condVarSize; i++)
+      {
+        if (condvars[i] == 0 && roots[i] != 0)
+          condvars[i] = roots[i] * 1E-100;
+      }
+
       IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
       IDARootInit(idamem, condVarSize, ida_rootfn);
       IDASStolerances(idamem, mEpsRel, mEpsAbs);
@@ -833,22 +844,22 @@ CDA_DAESolverRun::SolveDAEProblem
       IDADense(idamem, stateSize);
       IDASetErrHandlerFn(idamem, cda_ida_error_handler, this);
       IDASetUserData(idamem, &ei);
-    
+      
       double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
       bool isFirst = true;
-    
+      
       double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
       uint32_t tabStepNumber = 1;
       double nextStopPoint = mTabulationStepSize + voi;
-
+      
       if (mTabulationStepSize == 0.0)
         nextStopPoint = mStopBvar;
-
+      
       while (voi < mStopBvar)
       {
         if (restart)
           break;
-
+        
         double bhl = mStopBvar;
         if (bhl - voi > mStepSizeMax)
           bhl = voi + mStepSizeMax;
@@ -869,6 +880,8 @@ CDA_DAESolverRun::SolveDAEProblem
         {
           // printf("Root hit at %g... restarting...\n",  voi);
           restart = true;
+          ivf.voi0 = voi;
+          IDAGetRootInfo(idamem, roots);
         }
 
         memcpy(ei.oldrates, rates, rateSize * sizeof(double));
@@ -919,6 +932,7 @@ CDA_DAESolverRun::SolveDAEProblem
   delete [] icinfo;
   delete [] params;
   delete [] ivf.hxtmp;
+  delete [] roots;
 
   if (storageSize != 0 && mObserver != NULL)
   {

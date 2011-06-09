@@ -26,7 +26,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
-#include "Utilities.hxx"
+#include "cellml-api-cxx-support.hpp"
 
 const wchar_t*
 TypeToString(iface::cellml_services::VariableEvaluationType vet)
@@ -55,9 +55,6 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
 void
 WriteCode(iface::cellml_services::CodeInformation* cci)
 {
-  // Scoped locale change.
-  CNumericLocale locobj;
-
   iface::cellml_services::ModelConstraintLevel mcl =
     cci->constraintLevel();
   if (mcl == iface::cellml_services::UNDERCONSTRAINED)

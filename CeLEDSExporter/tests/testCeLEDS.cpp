@@ -11,7 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
-#include "Utilities.hxx"
+#include "cellml-api-cxx-support.hpp"
 #include <iostream>
 
 int

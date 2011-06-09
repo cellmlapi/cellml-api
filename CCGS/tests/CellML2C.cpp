@@ -9,7 +9,7 @@
  *  [2] https://tracker.physiomeproject.org/show_bug.cgi?id=1514#c16
  *  [3] http://www.cellml.org/pipermail/cellml-tools-developers/2009-January/000140.html
  */
-#include "Utilities.hxx"
+#include "cellml-api-cxx-support.hpp"
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
@@ -56,9 +56,6 @@ TypeToString(iface::cellml_services::VariableEvaluationType vet)
 void
 WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
 {
-  // Scoped locale change.
-  CNumericLocale locobj;
-
   iface::cellml_services::ModelConstraintLevel mcl =
     cci->constraintLevel();
   if (mcl == iface::cellml_services::UNDERCONSTRAINED)
