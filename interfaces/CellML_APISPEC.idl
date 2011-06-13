@@ -4,7 +4,6 @@
 #include "xpcom.idl"
 #include "DOM_APISPEC.idl"
 #include "MathML_content_APISPEC.idl"
-#include "xpath.idl"
 
 /**
  * This module contains a description of the CellML Application Programming
