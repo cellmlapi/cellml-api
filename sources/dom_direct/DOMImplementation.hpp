@@ -149,6 +149,10 @@ public:
     }
   }
 
+#ifdef DEBUG_NODELEAK
+  void find_leaked();
+#endif
+
   wchar_t* nodeName() throw(std::exception&);
   wchar_t* nodeValue() throw(std::exception&);
   void nodeValue(const wchar_t* attr) throw(std::exception&);

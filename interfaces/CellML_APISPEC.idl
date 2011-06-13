@@ -2184,11 +2184,6 @@ module cellml_api
      * @return An absolute URL, if it is possible to produce one, otherwise a relative one.
      */
     wstring makeURLAbsolute(in wstring relTo, in wstring relURL);
-
-    /**
-     * The XPathEvaluator, or nil if XPath support is not available.
-     */
-    readonly attribute xpath::XPathEvaluator xpathEvaluator;
   };
 #pragma terminal-interface
 #pragma cross-module-argument

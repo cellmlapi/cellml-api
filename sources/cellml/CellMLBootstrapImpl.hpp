@@ -76,7 +76,6 @@ public:
     throw(std::exception&);
   wchar_t* serialiseNode(iface::dom::Node* aNode) throw(std::exception&);
   wchar_t* makeURLAbsolute(const wchar_t* aRelTo, const wchar_t* aRelURL) throw();
-  iface::xpath::XPathEvaluator* xpathEvaluator() throw();
 private:
   CellML_DOMImplementationBase* domimpl;
 };

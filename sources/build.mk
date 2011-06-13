@@ -1,12 +1,11 @@
 # The overall libcellml.la library...
 lib_LTLIBRARIES += libcellml.la
-noinst_LTLIBRARIES += libdomonly.la libdomdirectonly.la libmathmlonly.la libcellmlonly.la libxpathonly.la
+noinst_LTLIBRARIES += libdomonly.la libdomdirectonly.la libmathmlonly.la libcellmlonly.la
 libcellml_la_SOURCES = sources/Utilities.cpp
 libcellml_la_LIBADD = \
   libcellmlonly.la \
   libmathmlonly.la \
   libdomonly.la \
-  libxpathonly.la \
   libdomdirectonly.la -lxml2 $(STLLINK)
 libcellml_la_CXXFLAGS = -I$(top_srcdir) -I$(top_srcdir)/sources \
   -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
@@ -54,10 +53,3 @@ libcellmlonly_la_CXXFLAGS = \
   -I $(top_srcdir)/sources/dom -I $(top_srcdir)/sources/dom_direct \
   -I $(top_srcdir)/sources/mathml -I$(top_builddir)/interfaces -I$(top_srcdir)/sources/rdf \
   $(AM_CXXFLAGS)
-
-libxpathonly_la_SOURCES = \
-  sources/xpath/XPathImpl.cpp
-libxpathonly_la_CXXFLAGS = \
-  -I$(top_srcdir) -I$(top_srcdir)/sources -I$(top_srcdir)/sources/cellml \
-  -I $(top_srcdir)/sources/dom -I $(top_srcdir)/sources/xpath \
-  -I$(top_builddir)/interfaces $(AM_CXXFLAGS)
