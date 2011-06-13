@@ -6,7 +6,6 @@
 #define TeLICeMS_PUBLIC_PRE CDA_IMPORT_PRE
 #define TeLICeMS_PUBLIC_POST CDA_IMPORT_POST
 #endif
-#include "Utilities.hxx"
 #include "IfaceTeLICeMS.hxx"
 
 /**
