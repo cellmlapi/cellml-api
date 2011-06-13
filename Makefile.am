@@ -308,6 +308,16 @@ if ENABLE_SPROS_AND_PYTHON
 include $(top_srcdir)/SProS/python_build.mk
 endif
 
+include $(top_srcdir)/xpath/build.mk
+
+if ENABLE_JAVA
+include $(top_srcdir)/xpath/java_build.mk
+endif
+
+if ENABLE_PYTHON
+include $(top_srcdir)/xpath/python_build.mk
+endif
+
 CLEANFILES += $(top_builddir)/interfaces/*.cxx $(top_builddir)/interfaces/*.cpp $(top_builddir)/interfaces/*.hxx $(top_builddir)/interfaces/*.cc $(top_builddir)/interfaces/*.hh
 
 nonexistent-filename:

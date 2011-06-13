@@ -986,6 +986,22 @@ CDA_Node::searchForElementById(const wchar_t* elementId)
   return NULL;
 }
 
+#ifdef DEBUG_NODELEAK
+void
+CDA_Node::find_leaked()
+{
+  uint32_t sum = 0;
+  std::list<CDA_Node*>::const_iterator i(mNodeList.begin());
+  
+  for (; i != mNodeList.end(); i++)
+  {
+    sum += (*i)->_cda_refcount;
+    (*i)->find_leaked();
+  }
+  assert(sum == _cda_refcount);
+}
+#endif // DEBUG_NODELEAK
+
 iface::dom::Node*
 CDA_NodeList::item(uint32_t index)
   throw(std::exception&)

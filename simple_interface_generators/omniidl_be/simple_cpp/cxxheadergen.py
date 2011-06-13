@@ -1,10 +1,10 @@
 # -*- python -*-
 
-from omniidl import idlvisitor;
+from omniidl import idlvisitor, idlast;
 from omniidl import output;
 import os;
 
-import simplecxx;
+import simplecxx, identifier;
 
 class Walker(idlvisitor.AstVisitor):
     """Walks over the AST once and writes the header as it goes.
@@ -99,6 +99,9 @@ class Walker(idlvisitor.AstVisitor):
 	    inhs = ''
             needcomma = 0
             for ic in inh:
+                while isinstance(ic, idlast.Declarator):
+                    ic = ic.alias().aliasType().decl()
+                    identifier.AnnotateByRepoID(ic)
                 if needcomma:
                     inhs = inhs + ' , '
                 needcomma = 1

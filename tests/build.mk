@@ -29,7 +29,8 @@ tests_RunTestBin_LDADD=-L$(top_builddir) -lcellml -lcppunit -lxml2
 tests_RunTestBin_CXXFLAGS=\
   -Wall -I$(top_srcdir)/sources -I$(top_srcdir)/sources/dom \
   -I$(top_srcdir)/sources/mathml -I$(top_srcdir)/sources/cellml \
-  -I$(top_builddir)/interfaces -I$(top_srcdir)/tests $(AM_CXXFLAGS)
+  -I$(top_builddir)/interfaces -I$(top_srcdir)/tests \
+  $(AM_CXXFLAGS)
 
 if ENABLE_ANNOTOOLS
 tests_RunTestBin_SOURCES += \
@@ -85,3 +86,8 @@ tests_RunTestBin_SOURCES += \
 tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/SProS/sources
 tests_RunTestBin_LDADD += -lspros
 endif
+
+tests_RunTestBin_SOURCES += \
+	tests/XPathTest.cpp
+tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/xpath
+tests_RunTestBin_LDADD += -lxpath

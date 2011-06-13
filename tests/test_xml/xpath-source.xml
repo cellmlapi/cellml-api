@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<mydocument>
+  <test1>
+    <para>a1</para>
+    <somethingelse>a2</somethingelse>
+    <para>a3</para>
+  </test1>
+  <test2>
+    <a>b1</a>
+    <b>b2</b>
+    <c>b3</c>
+    <d>b4<a/></d>
+  </test2>
+  <test3 hello="world" foo="bar"/>
+  <test4>
+    <para>
+      <para>Hello</para>
+      Not this one!
+    </para>
+    <para>
+      <para>World</para>
+      Not this one either!
+    </para>
+  </test4>
+  <test5>This text shouldn't match.
+    <div>Hello<div>World<div id="test5inner">I won't match</div></div></div>
+  </test5>
+  <test6>This text shouldn't match
+    <div>Hello<div id="test6inner">World</div></div>
+  </test6>
+  <test7>
+    <div mark="test7">Hello<div>World</div></div>
+    <div mark="test7">This Is<div>A Test</div></div>
+  </test7>
+  <test8>
+    <chapter>
+      <something>
+        <para>Hello</para>
+      </something>
+      <something>
+        <para>World</para>
+      </something>
+    </chapter>
+    <chapter>
+      <para>Foo</para>
+    </chapter>
+  </test8>
+  <test9>
+    <entry><para>Good 1</para><para>Bad 1</para></entry>
+    <entry><para>Bad 2</para><para>Bad 3</para></entry>
+  </test9>
+  <test10>
+    <chapter>Test</chapter>
+    <chapter>Baz</chapter>
+    <test10inner/>
+    <chapter>Foo</chapter>
+    <chapter>Bar</chapter>
+  </test10>
+  <test11>
+    <chapter><section>1s1</section><section>1s2</section><section>1s3</section></chapter>
+    <chapter><section>2s1</section><section>2s2</section><section>2s3</section></chapter>
+    <chapter><section>3s1</section><section>3s2</section><section>3s3</section></chapter>
+    <chapter><section>4s1</section><section>4s2</section><section>4s3</section></chapter>
+    <chapter><section>5s1</section><section>5s2</section><section>5s3</section></chapter>
+    <chapter><section>6s1</section><section>6s2</section><section>6s3</section></chapter>
+  </test11>
+  <test12>
+    <para>Blah</para><para>Blah</para><para type="warning">Selected text</para><para>Blah</para><para>Blah</para>
+  </test12>
+  <test13>
+    <para>Blah</para>
+    <para type="warning">Blah</para><para type="warning">Blah</para>
+    <para type="warning">Blah</para><para>Blah</para>
+    <para type="warning">The sixth</para>
+    <para>Blah</para>
+    <para type="warning">Selected text</para>
+    <para type="warning">Blah</para>
+    <para>Blah</para>
+  </test13>
+  <test14>
+    <chapter><title>Preface</title></chapter>
+    <chapter><title>Introduction</title></chapter>
+    <chapter><title>XPath</title></chapter>
+  </test14>
+  <test15>
+    <chapter>Preface</chapter>
+    <chapter>Introduction</chapter>
+    <appendix>Early Appendix</appendix>
+    <chapter>XPath</chapter>
+  </test15>
+
+</mydocument>
