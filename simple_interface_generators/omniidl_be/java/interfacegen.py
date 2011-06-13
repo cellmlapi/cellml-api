@@ -1,5 +1,5 @@
 import os
-from omniidl import idlvisitor, output
+from omniidl import idlvisitor, output, idlast
 import jnutils
 import string
 
@@ -40,6 +40,8 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
         extends = 'extends pjm.XPCOMDerived'
         if len(inh) != 0:
             for inherit in inh:
+                if isinstance(inherit, idlast.Declarator) and inherit.alias():
+                    inherit = inherit.alias().aliasType().unalias().decl()                
                 if inherit.scopedName() == ['XPCOM', 'IObject']:
                     continue
                 extends = extends + ", " + jnutils.GetClassName(inherit)

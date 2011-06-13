@@ -7,6 +7,7 @@
 #include <string>
 #define yyFlexLexer TeLICeMFlexLexer
 #include "FlexLexer.h"
+#include "Utilities.hxx"
 
 #define MAGIC_NEWLINE 9999
 #define MAGIC_WHITESPACE 9998

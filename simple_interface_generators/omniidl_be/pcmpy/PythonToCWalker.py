@@ -73,6 +73,8 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         pass
 
     def recursivelyPopulateCPTRs(self, node):
+        if isinstance(node, idlast.Declarator) and node.alias():
+            node = node.alias().aliasType().unalias().decl()
         if node.corbacxxscoped == 'XPCOM::IObject':
             return
         self.out.out('{')
@@ -273,6 +275,9 @@ class PythonToCWalker(idlvisitor.AstVisitor):
             bases = []
             nextbase = 0
             for base in node.inherits():
+                if isinstance(base, idlast.Declarator) and base.alias():
+                    base = base.alias().aliasType().unalias().decl()
+                
                 if base.file() == node.file():
                     bases.append('&' + base.simplecscoped + 'Type')
                 else:

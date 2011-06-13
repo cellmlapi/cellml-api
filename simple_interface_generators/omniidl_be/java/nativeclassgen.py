@@ -1,5 +1,5 @@
 import os
-from omniidl import idlvisitor, output
+from omniidl import idlvisitor, output, idlast
 import jnutils
 import string
 
@@ -91,6 +91,9 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
         self.out = None
 
     def recurseAcceptInheritedContents(self, node):
+        if isinstance(node, idlast.Declarator) and node.alias():
+            node = node.alias().aliasType().unalias().decl()
+        
         self.out.out('private long nativePtr_' + string.join(node.scopedName(), '_') + ';')
         for i in node.contents():
             i.accept(self)

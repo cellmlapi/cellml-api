@@ -145,7 +145,13 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         if not isTerminal:
             virtual ='virtual '
 
-        inh = filter(lambda x: x.repoId() != REPOID_ISUPPORTS, node.inherits())
+        inh = []
+        for i in node.inherits():
+            if isinstance(i, idlast.Declarator) and i.alias():
+                i = i.alias().aliasType().unalias().decl()
+            inh.append(i)
+            
+        inh = filter(lambda x: x.repoId() != REPOID_ISUPPORTS, inh)
 
         classname = 'p2py::' + node.corbacxxscoped
         self.classname = classname

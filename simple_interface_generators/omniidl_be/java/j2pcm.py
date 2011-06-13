@@ -1,5 +1,5 @@
 import os
-from omniidl import idlvisitor, output
+from omniidl import idlvisitor, output, idlast
 import jnutils
 import string
 
@@ -193,6 +193,9 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cpp.out('{')
         self.cpp.inc_indent()
 
+        if isinstance(node, idlast.Declarator) and node.alias():
+            node = node.alias().aliasType().unalias().decl()
+
         fieldName = 'nativePtr_' + string.join(node.scopedName(), '_')
         self.cpp.out('jfieldID fid = env->GetFieldID(clazz, "' + fieldName + '", "J");')
         className = string.join(node.scopedName(), '::')
@@ -207,6 +210,9 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
                 self.recurseBuildInheritedFieldSetup(i)
         
     def recurseAcceptInheritedContents(self, node):
+        if isinstance(node, idlast.Declarator) and node.alias():
+            node = node.alias().aliasType().unalias().decl()
+        
         for i in node.contents():
             i.accept(self)
         for i in node.inherits():

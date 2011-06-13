@@ -1,5 +1,5 @@
 import os
-from omniidl import idlvisitor, output
+from omniidl import idlast, idlvisitor, output
 import jnutils
 import string
 
@@ -145,6 +145,9 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
                              virtual=virtual)
             else:
                 for c in inh:
+                    if isinstance(c, idlast.Declarator) and c.alias():
+                        c = c.alias().aliasType().unalias().decl()
+                    
                     isAmbiguous = 0
                     iclassname = jnutils.ScopedCppName(c)
                     target = 'ambiguous-inheritance(' + iclassname + ')'

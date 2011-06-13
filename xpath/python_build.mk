@@ -2,7 +2,7 @@ lib_LTLIBRARIES += \
 	libxpath_python_bridge.la \
 	python/xpath.la
 
-libxpath_python_bridge_la_LIBADD = $(ALLPYTHONLIBADD) libxpath_python_bridge.la
+libxpath_python_bridge_la_LIBADD = $(ALLPYTHONLIBADD) libcellml_python_bridge.la
 libxpath_python_bridge_la_LDFLAGS = $(ALLPYTHONLDFLAGS)
 libxpath_python_bridge_la_CXXFLAGS = $(ALLPYTHONCXXFLAGS)
 libxpath_python_bridge_la_SOURCES = \

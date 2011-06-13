@@ -8,13 +8,11 @@ libcellml_java_bridge_la_SOURCES += \
   $(top_builddir)/interfaces/p2jMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/p2jCellML_APISPEC.cpp \
   $(top_builddir)/interfaces/p2jCellML_events.cpp \
-  $(top_builddir)/interfaces/p2jxpath.cpp \
   $(top_builddir)/interfaces/j2pDOM_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pDOM_events.cpp \
   $(top_builddir)/interfaces/j2pMathML_content_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pCellML_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pCellML_events.cpp \
-  $(top_builddir)/interfaces/j2pxpath.cpp \
   $(top_builddir)/interfaces/p2jRDF_APISPEC.cpp \
   $(top_builddir)/interfaces/j2pRDF_APISPEC.cpp \
   $(top_srcdir)/sources/cellml/CellMLBootstrapJava.cpp
@@ -36,7 +34,7 @@ $(top_builddir)/interfaces/p2j%.cpp \
 $(top_builddir)/interfaces/p2j%.hxx \
 $(top_builddir)/interfaces/j2p%.cpp \
 $(top_builddir)/interfaces/j2p%.hxx: \
-$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx $(top_srcdir)/simple_interface_generators/omniidl_be/java/j2pcm.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/pcm2j.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/jnutils.py
+$(top_srcdir)/interfaces/%.idl $(top_srcdir)/interfaces/Iface%.hxx $(top_srcdir)/simple_interface_generators/omniidl_be/java/j2pcm.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/nativeclassgen.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/interfacegen.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/pcm2j.py $(top_srcdir)/simple_interface_generators/omniidl_be/java/jnutils.py
 	SAVEDIR=`pwd` && \
 	mkdir -p $(top_builddir)/interfaces && \
 	cd $(top_builddir)/interfaces && \
