@@ -1791,6 +1791,63 @@ CDA_SProSVariable::symbol(const wchar_t* aSymbol)
   mDomEl->setAttribute(L"symbol", aSymbol);
 }
 
+wchar_t*
+CDA_SProSVariable::taskReferenceID()
+  throw()
+{
+  return mDomEl->getAttribute(L"taskReference");
+}
+
+void
+CDA_SProSVariable::taskReferenceID(const wchar_t* aRefID)
+  throw()
+{
+  mDomEl->setAttribute(L"taskReference", aRefID);
+}
+
+iface::SProS::Task*
+CDA_SProSVariable::taskReference()
+  throw()
+{
+  if (mParent == NULL || mParent->mParent == NULL)
+    return NULL;
+
+  // Hierarchy can either be Variable -> ComputeChange -> Model -> SEDML or
+  //   Variable -> DataGenerator -> SEDML. The former is invalid, but we
+  // should make sure we don't crash on that case...
+  CDA_SProSSEDMLElement* sedml = static_cast<CDA_SProSSEDMLElement*>(mParent->mParent);
+  if (sedml == NULL)
+    return NULL;
+
+  RETURN_INTO_WSTRING(trid, taskReferenceID());
+
+  RETURN_INTO_OBJREF(ts, iface::SProS::TaskSet,
+                     static_cast<CDA_SProSSEDMLElement*>(mParent->mParent)->tasks());
+
+  return ts->getTaskByIdentifier(trid.c_str());
+}
+
+void
+CDA_SProSVariable::taskReference(iface::SProS::Task* aTask)
+  throw(std::exception&)
+{
+  if (mParent == NULL || mParent->mParent == NULL)
+    throw iface::SProS::SProSException();
+
+    // Hierarchy can either be Variable -> ComputeChange -> Model -> SEDML or
+  //   Variable -> DataGenerator -> SEDML. The former is invalid, but we
+  // should make sure we don't crash on that case...
+  CDA_SProSSEDMLElement* sedml = static_cast<CDA_SProSSEDMLElement*>(mParent->mParent);
+  if (sedml == NULL)
+    throw iface::SProS::SProSException();
+
+  if (CDA_objcmp(static_cast<CDA_SProSTask*>(aTask)->mParent, sedml))
+    throw iface::SProS::SProSException();
+
+  RETURN_INTO_WSTRING(tid, aTask->id());
+  taskReferenceID(tid.c_str());
+}
+
 SomeSProSSet(Variable, L"listOfVariables", L"variable");
 
 double

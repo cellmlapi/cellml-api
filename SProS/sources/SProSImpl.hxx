@@ -916,6 +916,10 @@ public:
   void target(const wchar_t* aTarget) throw();
   wchar_t* symbol() throw();
   void symbol(const wchar_t* aTarget) throw();
+  wchar_t* taskReferenceID() throw();
+  void taskReferenceID(const wchar_t* aTarget) throw();
+  iface::SProS::Task* taskReference() throw();
+  void taskReference(iface::SProS::Task* aTask) throw(std::exception&);
 };
 
 class CDA_SProSParameter

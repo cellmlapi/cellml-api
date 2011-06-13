@@ -767,6 +767,8 @@ module SProS
   {
     attribute wstring target;
     attribute wstring symbol;
+    attribute wstring taskReferenceID;
+    attribute Task taskReference;
   };
 
   /**
