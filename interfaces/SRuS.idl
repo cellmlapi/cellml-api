@@ -1,0 +1,204 @@
+#include "SProS.idl"
+#include "DOM_APISPEC.idl"
+
+/**
+ * The SRuS, or SED-ML Running Service, provides services for running SED-ML
+ * models.
+ */
+module SRuS
+{
+  interface TransformedModel;
+  interface TransformedModelSet;
+  interface GeneratedData;
+  interface GeneratedDataSet;
+  interface GeneratedDataMonitor;
+
+  exception SRuSException {};
+
+  /**
+   * This interface represents the SEDMLProcessor. A SEDMLProcessor holds a
+   * registry of modelling languages, but presents a consistent interface to
+   * the user regardless of the underlying languages being used.
+   * Future versions are likely to allow new modelling languages to be added
+   * to the registry by the user.
+   */
+  interface SEDMLProcessor
+    : XPCOM::IObject
+  {
+    /**
+     * Queries whether or not this SEDMLProcessor supports the specified
+     * modelling language. The URI aNSURI should be unique to the language,
+     * and for XML-based languages that use unique namespaces, will be the
+     * main XML namespace associated with the language.
+     */
+    boolean supportsModellingLanguage(in wstring aNSURI);
+
+    /**
+     * Takes a SED-ML model reference, and produces a transformed model in
+     * accordance with the instructions in the SED-ML model element.
+     */
+    TransformedModel buildOneModel(in SProS::Model aModel);
+
+    /**
+     * Produces a set of all transformed models from a SEDML Element.
+     */
+    TransformedModelSet buildAllModels(in SProS::SEDMLElement aElement);
+    
+    /**
+     * Runs all the tasks described in the SED-ML description, and applies the
+     * DataGenerators described to them to produce a set of generated data.
+     *
+     * Will optionally generates data asynchronously. Implementations which do
+     * not have the capability for asynchronous computation may simply invoke
+     * progress() and done() on the monitor when the computation is complete
+     * (or failure if there was an error), and then return from generateData.
+     * Implementations which support asynchronous computation should return
+     * from this function immediately, and start streaming results back to the
+     * caller via aMonitor.
+     */
+    void generateData(in TransformedModelSet aSet,
+                      in SProS::SEDMLElement aElement,
+                      in GeneratedDataMonitor aMonitor);
+  };
+
+  /**
+   * A TransformedModel is the outcome of processing a model in accordance with
+   * the instructions found in a SED-ML description.
+   */
+  interface TransformedModel
+    : XPCOM::IObject
+  {
+    /**
+     * xmlDocument describes the document as an XML DOM representation.
+     */
+    readonly attribute dom::Document xmlDocument;
+
+    /**
+     * modelDocument describes the document as a representation specific to
+     * the modelling language. Implementation of this attribute is optional,
+     * and if it is not implemented, the attribute should have value 'null'.
+     */
+    readonly attribute XPCOM::IObject modelDocument;
+
+    /**
+     * The SED-ML model this transformed model corresponds to.
+     */
+    readonly attribute SProS::Model sedmlModel;
+  };
+
+  /**
+   * A set of models which have been transformed according to the instructions
+   * in a SED-ML description.
+   */
+  interface TransformedModelSet
+    : XPCOM::IObject
+  {
+    /**
+     * Returns the number of transformed models in the set.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Retrieves a transformed model by the index. Valid indices are
+     * from 0 up to length-1.
+     */
+    TransformedModel item(in unsigned long idx) raises (SRuSException);
+
+    /**
+     * Retrieves a TransformedModel by the identifier on the SED-ML model
+     * element corresponding to the transformed model.
+     */
+    TransformedModel getItemByID(in wstring matchId);
+  };
+
+  /**
+   * GeneratedDataMonitor is a 'callback' interface implemented by the
+   * application to receive updates as more generated data becomes
+   * available.
+   */
+  interface GeneratedDataMonitor
+    : XPCOM::IObject
+  {
+    /**
+     * Called when new data points are available in the GeneratedData. Only new
+     * data points will be present in the generated data. An application wanting
+     * to keep all results needs to copy data from the GeneratedDataSet /
+     * GeneratedData structure before returning from progress(); after returning
+     * from progress(), it is not safe to make further references to the
+     * GeneratedDataSet even if a reference has been held.
+     */
+    void progress(in GeneratedDataSet aData);
+
+    /**
+     * Called in the event of a failure generating the results.
+     * @param aErrMsg describes the error that occurred.
+     */
+    void failure(in wstring aErrMsg);
+
+    /**
+     * Called after the computation has successfully completed.
+     */
+    void done();
+  };
+
+  /**
+   * GeneratedData describes the output of a single DataGenerator. Note that
+   * when this interface is obtained from calls to GeneratedDataMonitor,
+   * the data is not necessarily provided all at once, but instead, may be
+   * provided a few points at a time as results come in.
+   */
+  interface GeneratedData
+    : XPCOM::IObject
+  {
+    /**
+     * The SED-ML DataGenerator corresponding to this GeneratedData.
+     */
+    readonly attribute SProS::DataGenerator sedmlDataGenerator;
+
+    /**
+     * Retrieves the number of data points (for uniform time-course simulations,
+     * there will usually be one value for each output time-step).
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Retrieves a specific generated data point. Valid indices are from 0
+     * through to length-1.
+     */
+    double dataPoint(in unsigned long idx) raises(SRuSException);
+  };
+
+  /**
+   * Describes a set of outputs, generated by a set of DataGenerators. Note
+   * that when this interface is obtained from calls to GeneratedDataMonitor,
+   * the data is not necessarily provided all at once, but instead, may be
+   * provided a few points at a time as results come in.
+   */
+  interface GeneratedDataSet
+    : XPCOM::IObject
+  {
+    /**
+     * The number of GeneratedData objects in this set.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Retrieves a specific GeneratedData object, corresponding to a specific
+     * SED-ML DataGenerator.
+     */
+    GeneratedData item(in unsigned long idx);
+  };
+
+  /**
+   * The Bootstrap object provides a starting point from which implementations
+   * of all the other required interfaces can be obtained (directly or indirectly).
+   */
+  interface Bootstrap
+    : XPCOM::IObject
+  {
+    /**
+     * Creates a SED-ML processor with the default set of supported model formats.
+     */
+    SEDMLProcessor makeDefaultProcessor();
+  };
+};

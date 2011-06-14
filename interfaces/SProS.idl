@@ -1,5 +1,6 @@
 #include "DOM_APISPEC.idl"
-#include "CellML_APISPEC.idl"
+#include "MathML_content_APISPEC.idl"
+
 /**
  * The SProS, or SEDML Processing Service, provides services for parsing SEDML
  * descriptions, and retrieving all the associated information from it.
@@ -59,6 +60,9 @@ module SProS
   interface DataSet;
   interface DataSetSet;
   interface DataSetIterator;
+  interface MathList;
+  interface MathMLElementIterator;
+  typedef mathml_dom::MathMLElement MathMLElement;
 
   interface Bootstrap
     : XPCOM::IObject
@@ -551,10 +555,87 @@ module SProS
   };
 
   /**
+   * A container for MathML elements.
+   */
+  interface MathContainer : XPCOM::IObject
+  {
+    /**
+     * The set of all math defined here.
+     */
+    readonly attribute MathList math;
+
+    /**
+     * Add an element to this collection.
+     * @param x The element to add.
+     */
+    void addMath(in MathMLElement x);
+
+    /**
+     * Remove an element from this collection. If the element is not found,
+     * do nothing.
+     * @param x The element to remove.
+     */
+    void removeMath(in MathMLElement x);
+
+    /**
+     * Find an element in this collection, and if it is found, replace it
+     * with another element.
+     * @param x The element to find.
+     * @param y The element to replace x with.
+     * @raises CellMLException If y is not valid according to the constraints
+     *                         on this collection (check optional).
+     */
+    void replaceMath(in MathMLElement x, in MathMLElement y);
+
+    /**
+     * Remove all elements in this collection.
+     */
+    void clearMath();
+  };
+
+  /**
+   * An interface allowing MathMLElements to be iterated.
+   */
+  interface MathMLElementIterator : XPCOM::IObject
+  {
+    /**
+     * Fetches the next MathML element, and advances the iterator.
+     * @return The next MathML element, or nil if there are no more MathML
+     *         elements.
+     */
+    MathMLElement next();
+  };
+
+  /**
+   * A collection of math.
+   */
+  interface MathList : XPCOM::IObject
+  {
+    /**
+     * The length of the collection.
+     */
+    readonly attribute unsigned long length;
+
+    /**
+     * Tests for the existance of an element in the set.
+     * @param x The element to test for.
+     * @return true if the element is present, or false otherwise.
+     */
+    boolean contains(in MathMLElement x);
+
+    /**
+     * Returns a CellMLElementIterator that can be used to iterate through the
+     * elements. The iteration order is undefined.
+     */
+    MathMLElementIterator iterate();
+  };
+#pragma terminal-interface
+
+  /**
    * A SEDML DataGenerator.
    */
   interface DataGenerator
-    : NamedIdentifiedElement, cellml_api::MathContainer
+    : NamedIdentifiedElement, MathContainer
   {
     /**
      * The set of parameters for this DataGenerator.
@@ -706,7 +787,7 @@ module SProS
    * A SEDML ComputeChange style change.
    */
   interface ComputeChange
-    : Change, cellml_api::MathContainer
+    : Change, MathContainer
   {
     /**
      * All variables involved.
@@ -765,9 +846,26 @@ module SProS
   interface Variable
     : NamedIdentifiedElement
   {
+    /**
+     * The XPath expression describing the variable target.
+     */
     attribute wstring target;
+
+    /**
+     * The symbol for the variable.
+     */
     attribute wstring symbol;
+
+    /**
+     * A reference to the task (by ID) from which this variable is sourced
+     * (variables in DataGenerators only).
+     */
     attribute wstring taskReferenceID;
+
+    /**
+     * A reference to the task (as a task object) from which this variable is
+     * sourced (variables in DataGenerators only).
+     */
     attribute Task taskReference;
   };
 

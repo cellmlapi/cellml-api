@@ -1,3 +1,7 @@
+/*
+ * Note: This file is derived from the W3C version of the DOM specification;
+ *   it has been changed to make all interfaces derive from XPCOM::IObject.
+ */
 // File: dom.idl
 
 #ifndef _DOM_IDL_

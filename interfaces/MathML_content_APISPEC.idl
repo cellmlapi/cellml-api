@@ -1,4 +1,6 @@
-// This file has been modified to only support content MathML...
+// This file has been modified to only support content MathML, and to make
+// MathMLContainer derive from XPCOM::IObject
+
 // File: mathml-dom.idl
 #ifndef _MATHMLDOM_IDL_
 #define _MATHMLDOM_IDL_

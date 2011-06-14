@@ -2,7 +2,6 @@
 #include "SProSImpl.hxx"
 #include "SProSBootstrap.hpp"
 #include "DOMBootstrap.hxx"
-#include "CellMLBootstrap.hpp"
 #include <assert.h>
 #include <string>
 #include <algorithm>
@@ -27,45 +26,10 @@ CDA_SProSBootstrap::createEmptySEDML()
 }
 
 iface::SProS::SEDMLElement*
-CDA_SProSBootstrap::parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo)
-  throw()
-{
-  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
-  RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
-  RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
-  RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
-  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
-  return new CDA_SProSSEDMLElement(de);  
-}
-
-iface::SProS::SEDMLElement*
-CDA_SProSBootstrap::parseSEDMLFromText(const wchar_t* txt, const wchar_t*)
-  throw()
-{
-  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
-  RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
-  RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocumentFromText(txt));
-  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
-  return new CDA_SProSSEDMLElement(de);
-}
-
-iface::SProS::SEDMLElement*
 CDA_SProSBootstrap::makeSEDMLFromElement(iface::dom::Element* el)
   throw()
 {
   return new CDA_SProSSEDMLElement(el);
-}
-
-wchar_t*
-CDA_SProSBootstrap::sedmlToText(iface::SProS::SEDMLElement* el)
-  throw()
-{
-  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
-  CDA_SProSBase* sb = dynamic_cast<CDA_SProSBase*>(el);
-  if (sb == NULL)
-    return CDA_wcsdup(L"");
-
-  return cbs->serialiseNode(sb->mDomEl);
 }
 
 static CDA_SProSPrecomputedNodeList* allNodesFromNamedElements(iface::dom::Element* aEl, const wchar_t* aName)
@@ -613,8 +577,6 @@ CDA_SProSDOMIteratorBase::~CDA_SProSDOMIteratorBase()
 iface::dom::Element*
 CDA_SProSDOMIteratorBase::fetchNextElement()
 {
-  try
-  {
     if (mPrevElement == NULL)
     {
       // Search for the first element...
@@ -668,18 +630,11 @@ CDA_SProSDOMIteratorBase::fetchNextElement()
     
     mPrevElement->add_ref();
     return mPrevElement;
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::cellml_api::CellMLException();
-  }
 }
 
 iface::dom::Element*
 CDA_SProSDOMIteratorBase::fetchNextElement(const wchar_t* aWantEl)
 {
-  try
-  {
     if (mPrevElement == NULL)
     {
       // Search for the first element...
@@ -744,11 +699,6 @@ CDA_SProSDOMIteratorBase::fetchNextElement(const wchar_t* aWantEl)
 
     mPrevElement->add_ref();
     return mPrevElement;
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::cellml_api::CellMLException();
-  }
 }
 
 void
@@ -756,8 +706,6 @@ CDA_SProSDOMIteratorBase::IteratorChildrenModificationListener::
 handleEvent(iface::events::Event* evt)
   throw(std::exception&)
 {
-  try
-  {
     bool isRemoval = false, isInsertion = false;
     wchar_t* et = evt->type();
     if (!wcscmp(et, L"DOMNodeRemoved"))
@@ -946,11 +894,6 @@ handleEvent(iface::events::Event* evt)
                                      events::EventTarget);
       targ->addEventListener(L"DOMNodeRemoved", this, false);
     }
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::cellml_api::CellMLException();
-  }
 }
 
 
@@ -1524,7 +1467,7 @@ CDA_SProSTask::modelReference(iface::SProS::Model* aSim) throw()
   modelReferenceIdentifier(ident.c_str());
 }
 
-iface::cellml_api::MathList*
+iface::SProS::MathList*
 CDA_SProSMathContainer::math() throw(std::exception&)
 {
   try
@@ -1533,7 +1476,7 @@ CDA_SProSMathContainer::math() throw(std::exception&)
   }
   catch (iface::dom::DOMException& de)
   {
-    throw iface::cellml_api::CellMLException();
+    throw iface::SProS::SProSException();
   }
 }
 
@@ -1548,7 +1491,7 @@ CDA_SProSMathContainer::addMath(iface::mathml_dom::MathMLElement* aEl)
   }
   catch (iface::dom::DOMException& de)
   {
-    throw iface::cellml_api::CellMLException();
+    throw iface::SProS::SProSException();
   }
 }
 
@@ -1563,7 +1506,7 @@ CDA_SProSMathContainer::removeMath(iface::mathml_dom::MathMLElement* aEl)
   }
   catch (iface::dom::DOMException& de)
   {
-    throw iface::cellml_api::CellMLException();
+    throw iface::SProS::SProSException();
   }
 }
 
@@ -1577,9 +1520,9 @@ CDA_SProSMathContainer::replaceMath(iface::mathml_dom::MathMLElement* aEl1,
     iface::dom::Node* n = mDomEl->replaceChild(aEl2, aEl1);
     n->release_ref();
   }
-  catch (iface::dom::DOMException& de)
+  catch (iface::SProS::SProSException& de)
   {
-    throw iface::cellml_api::CellMLException();
+    throw iface::SProS::SProSException();
   }
 }
 
@@ -1617,7 +1560,7 @@ uint32_t
 CDA_SProSMathList::length()
   throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(it, iface::cellml_api::MathMLElementIterator, iterate());
+  RETURN_INTO_OBJREF(it, iface::SProS::MathMLElementIterator, iterate());
   uint32_t count = 0;
   while (true)
   {
@@ -1634,7 +1577,7 @@ bool
 CDA_SProSMathList::contains(iface::mathml_dom::MathMLElement* x)
   throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(it, iface::cellml_api::MathMLElementIterator, iterate());
+  RETURN_INTO_OBJREF(it, iface::SProS::MathMLElementIterator, iterate());
   while (true)
   {
     RETURN_INTO_OBJREF(y, iface::mathml_dom::MathMLElement, it->next());
@@ -1645,7 +1588,7 @@ CDA_SProSMathList::contains(iface::mathml_dom::MathMLElement* x)
   }
 }
 
-iface::cellml_api::MathMLElementIterator*
+iface::SProS::MathMLElementIterator*
 CDA_SProSMathList::iterate()
   throw(std::exception&)
 {
@@ -2093,4 +2036,42 @@ CDA_SProSDataSetSet::iterateDataSets()
 {
   findOrCreateListElement();
   return new CDA_SProSDataSetIterator(this);
+}
+
+#include "IfaceCellML_APISPEC.hxx"
+#include "CellMLBootstrap.hpp"
+
+iface::SProS::SEDMLElement*
+CDA_SProSBootstrap::parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo)
+  throw()
+{
+  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
+  RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
+  RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
+  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
+  return new CDA_SProSSEDMLElement(de);  
+}
+
+iface::SProS::SEDMLElement*
+CDA_SProSBootstrap::parseSEDMLFromText(const wchar_t* txt, const wchar_t*)
+  throw()
+{
+  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
+  RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocumentFromText(txt));
+  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
+  return new CDA_SProSSEDMLElement(de);
+}
+
+wchar_t*
+CDA_SProSBootstrap::sedmlToText(iface::SProS::SEDMLElement* el)
+  throw()
+{
+  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
+  CDA_SProSBase* sb = dynamic_cast<CDA_SProSBase*>(el);
+  if (sb == NULL)
+    return CDA_wcsdup(L"");
+
+  return cbs->serialiseNode(sb->mDomEl);
 }

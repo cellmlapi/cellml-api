@@ -529,12 +529,12 @@ public:
 };
 
 class CDA_SProSMathContainer
-  : public virtual iface::cellml_api::MathContainer,
+  : public virtual iface::SProS::MathContainer,
     public virtual CDA_SProSBase
 {
 public:
   CDA_SProSMathContainer() : CDA_SProSBase(NULL, NULL) {}
-  iface::cellml_api::MathList* math() throw(std::exception&);
+  iface::SProS::MathList* math() throw(std::exception&);
   void addMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
   void removeMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
   void replaceMath(iface::mathml_dom::MathMLElement* aEl1,
@@ -543,25 +543,25 @@ public:
 };
 
 class CDA_SProSMathList
-  : public iface::cellml_api::MathList
+  : public iface::SProS::MathList
 {
 public:
   CDA_SProSMathList(iface::dom::Element* aParentEl);
   virtual ~CDA_SProSMathList();
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_api::MathList);
+  CDA_IMPL_QI1(SProS::MathList);
   CDA_IMPL_ID;
 
   uint32_t length() throw(std::exception&);
   bool contains(iface::mathml_dom::MathMLElement* x) throw(std::exception&);
-  iface::cellml_api::MathMLElementIterator* iterate() throw(std::exception&);
+  iface::SProS::MathMLElementIterator* iterate() throw(std::exception&);
 
 private:
   iface::dom::Element* mParentEl;
 };
 
 class CDA_SProSMathIterator
-  : public iface::cellml_api::MathMLElementIterator,
+  : public iface::SProS::MathMLElementIterator,
     public CDA_SProSDOMIteratorBase
 {
 public:
@@ -575,7 +575,7 @@ public:
   }
 
   CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(cellml_api::MathMLElementIterator);
+  CDA_IMPL_QI1(SProS::MathMLElementIterator);
   CDA_IMPL_ID;
 
   iface::mathml_dom::MathMLElement* next() throw(std::exception&);
@@ -597,7 +597,7 @@ public:
   ~CDA_SProSDataGenerator() {}
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::DataGenerator,
-               cellml_api::MathContainer);
+               SProS::MathContainer);
 
   iface::SProS::ParameterSet* parameters() throw();
   iface::SProS::VariableSet* variables() throw();
@@ -814,7 +814,7 @@ public:
       mVariables(this), mParameters(this) {}
   ~CDA_SProSComputeChange() {}
 
-  CDA_IMPL_QI4(SProS::Base, SProS::Change, SProS::ComputeChange, cellml_api::MathContainer)
+  CDA_IMPL_QI4(SProS::Base, SProS::Change, SProS::ComputeChange, SProS::MathContainer)
 
   iface::SProS::VariableSet* variables() throw();
   iface::SProS::ParameterSet* parameters() throw();
