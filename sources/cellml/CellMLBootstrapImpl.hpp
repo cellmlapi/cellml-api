@@ -24,6 +24,9 @@ public:
   createFromDOM(const wchar_t* url,
                 iface::cellml_api::DOMURLLoader* loader)
     throw(std::exception&);
+  iface::cellml_api::Model*
+  createFromDOMDocument(iface::dom::Document* aModel)
+    throw(std::exception&);
   void asyncCreateFromDOM(const wchar_t* URL,
                           iface::cellml_api::DOMURLLoader* loader,
                           iface::cellml_api::ModelLoadedListener* listener)

@@ -275,23 +275,9 @@ CDA_ModelLoader::lastErrorMessage()
 }
 
 iface::cellml_api::Model*
-CDA_ModelLoader::createFromText(const wchar_t* xmlText)
+CDA_ModelLoader::createFromDOMDocument(iface::dom::Document* modelDoc)
   throw (std::exception&)
 {
-  ObjRef<iface::dom::Document> modelDoc;
-  try
-  {
-    modelDoc = already_AddRefd<iface::dom::Document>
-      (mURLLoader->loadDocumentFromText(xmlText));
-  }
-  catch (...)
-  {
-    wchar_t* str = mURLLoader->lastErrorMessage();
-    mLastError = str;
-    free(str);
-    throw iface::cellml_api::CellMLException();
-  }
-
   try
   {
     RETURN_INTO_OBJREF(modelEl, iface::dom::Element,
@@ -325,6 +311,27 @@ CDA_ModelLoader::createFromText(const wchar_t* xmlText)
     mLastError = L"badxml/0/0/Missing document element";
     throw iface::cellml_api::CellMLException();
   }
+}
+
+iface::cellml_api::Model*
+CDA_ModelLoader::createFromText(const wchar_t* xmlText)
+  throw (std::exception&)
+{
+  ObjRef<iface::dom::Document> modelDoc;
+  try
+  {
+    modelDoc = already_AddRefd<iface::dom::Document>
+      (mURLLoader->loadDocumentFromText(xmlText));
+  }
+  catch (...)
+  {
+    wchar_t* str = mURLLoader->lastErrorMessage();
+    mLastError = str;
+    free(str);
+    throw iface::cellml_api::CellMLException();
+  }
+
+  return createFromDOMDocument(modelDoc);
 }
 
 iface::cellml_api::Model*

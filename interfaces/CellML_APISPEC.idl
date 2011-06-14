@@ -2121,6 +2121,16 @@ module cellml_api
       raises(CellMLException);
 
     /**
+     * Creates a model around an existing DOM document.
+     * @param doc The DOM document.
+     * @return The model.
+     * @raises CellMLException if there is an error creating the model from
+     *            the DOM document.
+     */
+    Model createFromDOMDocument(in dom::Document doc)
+      raises(CellMLException);
+
+    /**
      * Loads the DOM for the model from the specified URL using the supplied
      * DOMURLLoader. If further URLs need to be loaded (for example, to satisfy
      * imports), the supplied loader will be used.
