@@ -9,7 +9,7 @@
 #define SEDML_NS L"http://www.biomodels.net/sed-ml"
 
 iface::SProS::Bootstrap*
-CreateSProSBootstrap()
+CreateSProSBootstrap() throw()
 {
   return new CDA_SProSBootstrap();
 }
