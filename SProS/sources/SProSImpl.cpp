@@ -1467,152 +1467,6 @@ CDA_SProSTask::modelReference(iface::SProS::Model* aSim) throw()
   modelReferenceIdentifier(ident.c_str());
 }
 
-iface::SProS::MathList*
-CDA_SProSMathContainer::math() throw(std::exception&)
-{
-  try
-  {
-    return new CDA_SProSMathList(mDomEl);
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::addMath(iface::mathml_dom::MathMLElement* aEl)
-  throw(std::exception&)
-{
-  try
-  {
-    iface::dom::Node* n = mDomEl->appendChild(aEl);
-    n->release_ref();
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::removeMath(iface::mathml_dom::MathMLElement* aEl)
-  throw(std::exception&)
-{
-  try
-  {
-    iface::dom::Node* n = mDomEl->removeChild(aEl);
-    n->release_ref();
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::replaceMath(iface::mathml_dom::MathMLElement* aEl1,
-                                    iface::mathml_dom::MathMLElement* aEl2)
-  throw(std::exception&)
-{
-  try
-  {
-    iface::dom::Node* n = mDomEl->replaceChild(aEl2, aEl1);
-    n->release_ref();
-  }
-  catch (iface::SProS::SProSException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::clearMath()
-  throw()
-{
-  ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
-                                  (mDomEl->childNodes()));
-  // Go through and find all math nodes...
-  uint32_t i, l = nl->length();
-  for (i = 0; i < l; i++)
-  {
-    ObjRef<iface::dom::Node> node
-      (already_AddRefd<iface::dom::Node>(nl->item(i)));
-    // See if it is a MathML element...
-    DECLARE_QUERY_INTERFACE_OBJREF(mme, node, mathml_dom::MathMLElement);
-    if (mme == NULL)
-      continue;
-    // It is a MathML element. Remove it...
-    removeMath(mme);
-  }
-}
-
-CDA_SProSMathList::CDA_SProSMathList(iface::dom::Element* aParentEl)
-  : _cda_refcount(1), mParentEl(aParentEl)
-{
-}
-
-CDA_SProSMathList::~CDA_SProSMathList()
-{
-}
-
-uint32_t
-CDA_SProSMathList::length()
-  throw(std::exception&)
-{
-  RETURN_INTO_OBJREF(it, iface::SProS::MathMLElementIterator, iterate());
-  uint32_t count = 0;
-  while (true)
-  {
-    RETURN_INTO_OBJREF(x, iface::mathml_dom::MathMLElement, it->next());
-    if (x == NULL)
-      break;
-    count++;
-  }
-
-  return count;
-}
-
-bool
-CDA_SProSMathList::contains(iface::mathml_dom::MathMLElement* x)
-  throw(std::exception&)
-{
-  RETURN_INTO_OBJREF(it, iface::SProS::MathMLElementIterator, iterate());
-  while (true)
-  {
-    RETURN_INTO_OBJREF(y, iface::mathml_dom::MathMLElement, it->next());
-    if (y == NULL)
-      return false;
-    if (!CDA_objcmp(x, y))
-      return true;
-  }
-}
-
-iface::SProS::MathMLElementIterator*
-CDA_SProSMathList::iterate()
-  throw(std::exception&)
-{
-  return new CDA_SProSMathIterator(mParentEl);
-}
-
-iface::mathml_dom::MathMLElement*
-CDA_SProSMathIterator::next()
-  throw(std::exception&)
-{
-  while (true)
-  {
-    RETURN_INTO_OBJREF(el, iface::dom::Element, fetchNextElement());
-    if (el == NULL)
-      return NULL;
-
-    DECLARE_QUERY_INTERFACE_OBJREF(mel, el, mathml_dom::MathMLElement);
-    if (mel == NULL)
-      continue;
-
-    return mel;
-  }
-}
-
 iface::SProS::ParameterSet*
 CDA_SProSDataGenerator::parameters() throw()
 {
@@ -1625,6 +1479,39 @@ CDA_SProSDataGenerator::variables() throw()
 {
   add_ref();
   return &mVariableSet;
+}
+
+iface::mathml_dom::MathMLMathElement*
+CDA_SProSDataGenerator::math() throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  for (; cn; cn = already_AddRefd<iface::dom::Node>(cn->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    if (el == NULL)
+      continue;
+    el->add_ref();
+    return el;
+  }
+  return NULL;
+}
+
+void
+CDA_SProSDataGenerator::math(iface::mathml_dom::MathMLMathElement* aMath) throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  while (cn)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    cn = already_AddRefd<iface::dom::Node>(cn->nextSibling());
+
+    if (el == NULL)
+      continue;
+
+    mDomEl->removeChild(el)->release_ref();
+  }
+
+  mDomEl->appendChild(aMath)->release_ref();
 }
 
 SomeSProSSet(DataGenerator, L"listOfDataGenerators", L"dataGenerator");
@@ -1686,6 +1573,39 @@ CDA_SProSComputeChange::parameters()
 {
   add_ref();
   return &mParameters;
+}
+
+iface::mathml_dom::MathMLMathElement*
+CDA_SProSComputeChange::math() throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  for (; cn; cn = already_AddRefd<iface::dom::Node>(cn->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    if (el == NULL)
+      continue;
+    el->add_ref();
+    return el;
+  }
+  return NULL;
+}
+
+void
+CDA_SProSComputeChange::math(iface::mathml_dom::MathMLMathElement* aMath) throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  while (cn)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    cn = already_AddRefd<iface::dom::Node>(cn->nextSibling());
+
+    if (el == NULL)
+      continue;
+
+    mDomEl->removeChild(el)->release_ref();
+  }
+
+  mDomEl->appendChild(aMath)->release_ref();
 }
 
 wchar_t*
@@ -2050,7 +1970,7 @@ CDA_SProSBootstrap::parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativ
   RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
   RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
   RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
-  return new CDA_SProSSEDMLElement(de);  
+  return new CDA_SProSSEDMLElement(de);
 }
 
 iface::SProS::SEDMLElement*

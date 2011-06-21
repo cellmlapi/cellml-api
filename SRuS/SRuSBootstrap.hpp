@@ -15,5 +15,5 @@
  */
 SRuS_PUBLIC_PRE
   iface::SRuS::Bootstrap*
-  CreateSRuSBootstrap(void)
+CreateSRuSBootstrap(void) throw()
 SRuS_PUBLIC_POST;

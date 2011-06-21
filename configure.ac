@@ -247,6 +247,16 @@ AC_ARG_ENABLE(spros,
 esac], [spros=false])
 AM_CONDITIONAL(ENABLE_SPROS, test x$spros = xtrue)
 
+AC_ARG_ENABLE(srus,
+[  --enable-srus     Enable the SED-ML Running Service (SRuS)],
+[case "${enableval}" in
+  no) srus=false ;;
+  *) srus=true
+     AC_DEFINE(ENABLE_SRUS, 1, [Is SRuS enabled?])
+  ;;
+esac], [srus=false])
+AM_CONDITIONAL(ENABLE_SRUS, test x$srus = xtrue)
+
 celedsexport=false
 if test x$ccgs = xtrue; then
   if test x$celeds = xtrue; then
@@ -312,6 +322,8 @@ celedsexportandxpcom=false
 cisandxpcom=false
 vacssandxpcom=false
 rdfandxpcom=false
+sprosandxpcom=false
+srusandxpcom=false
 
 annotoolsandjava=false
 cevasandjava=false
@@ -323,6 +335,8 @@ celedexportsandjava=false
 cisandjava=false
 vacssandjava=false
 rdfandjava=false
+sprosandjava=false
+srusandjava=false
 
 if test x$xpcom != xfalse; then
    if test x$annotools = xtrue; then
@@ -360,14 +374,21 @@ if test x$xpcom != xfalse; then
    if test x$vacss = xtrue; then
       vacssandxpcom=true
    fi
+
    if test x$rdf = xtrue; then
       rdfandxpcom=true
    fi
+
    if test x$telicems = xtrue; then
       telicemsandxpcom=true
    fi
+
    if test x$spros = xtrue; then
       sprosandxpcom=true
+   fi
+
+   if test x$srus = xtrue; then
+      srusandxpcom=true
    fi
 fi
 
@@ -407,6 +428,7 @@ AM_CONDITIONAL(ENABLE_VACSS_AND_XPCOM, test x$vacssandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_XPCOM, test x$rdfandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_TELICEMS_AND_XPCOM, test x$telicemsandxpcom = xtrue)
 AM_CONDITIONAL(ENABLE_SPROS_AND_XPCOM, test x$sprosandxpcom = xtrue)
+AM_CONDITIONAL(ENABLE_SRUS_AND_XPCOM, test x$srusandxpcom = xtrue)
 
 if test x$java != xfalse; then
    if test x$annotools = xtrue; then
@@ -456,6 +478,10 @@ if test x$java != xfalse; then
    if test x$spros = xtrue; then
       sprosandjava=true
    fi
+
+   if test x$srus = xtrue; then
+      srusandjava=true
+   fi
 fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_JAVA, test x$contextandjava = xtrue)
@@ -471,6 +497,7 @@ AM_CONDITIONAL(ENABLE_VACSS_AND_JAVA, test x$vacssandjava = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_JAVA, test x$rdfandjava = xtrue)
 AM_CONDITIONAL(ENABLE_TELICEMS_AND_JAVA, test x$telicemsandjava = xtrue)
 AM_CONDITIONAL(ENABLE_SPROS_AND_JAVA, test x$sprosandjava = xtrue)
+AM_CONDITIONAL(ENABLE_SRUS_AND_JAVA, test x$srusandjava = xtrue)
 
 if test x$python != xfalse; then
    if test x$annotools = xtrue; then
@@ -520,6 +547,10 @@ if test x$python != xfalse; then
    if test x$spros = xtrue; then
       sprosandpython=true
    fi
+
+   if test x$srus = xtrue; then
+      srusandpython=true
+   fi
 fi
 
 AM_CONDITIONAL(ENABLE_CONTEXT_AND_PYTHON, test x$contextandpython = xtrue)
@@ -535,6 +566,7 @@ AM_CONDITIONAL(ENABLE_VACSS_AND_PYTHON, test x$vacssandpython = xtrue)
 AM_CONDITIONAL(ENABLE_RDF_AND_PYTHON, test x$rdfandpython = xtrue)
 AM_CONDITIONAL(ENABLE_TELICEMS_AND_PYTHON, test x$telicemsandpython = xtrue)
 AM_CONDITIONAL(ENABLE_SPROS_AND_PYTHON, test x$sprosandpython = xtrue)
+AM_CONDITIONAL(ENABLE_SRUS_AND_PYTHON, test x$srusandpython = xtrue)
 
 AM_CONDITIONAL(ENABLE_EXAMPLES, test x$enable_examples = xtrue)
 

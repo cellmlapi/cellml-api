@@ -528,63 +528,9 @@ public:
   void modelReference(iface::SProS::Model* aModel) throw();
 };
 
-class CDA_SProSMathContainer
-  : public virtual iface::SProS::MathContainer,
-    public virtual CDA_SProSBase
-{
-public:
-  CDA_SProSMathContainer() : CDA_SProSBase(NULL, NULL) {}
-  iface::SProS::MathList* math() throw(std::exception&);
-  void addMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
-  void removeMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
-  void replaceMath(iface::mathml_dom::MathMLElement* aEl1,
-                   iface::mathml_dom::MathMLElement* aEl2) throw(std::exception&);
-  void clearMath() throw();
-};
-
-class CDA_SProSMathList
-  : public iface::SProS::MathList
-{
-public:
-  CDA_SProSMathList(iface::dom::Element* aParentEl);
-  virtual ~CDA_SProSMathList();
-  CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(SProS::MathList);
-  CDA_IMPL_ID;
-
-  uint32_t length() throw(std::exception&);
-  bool contains(iface::mathml_dom::MathMLElement* x) throw(std::exception&);
-  iface::SProS::MathMLElementIterator* iterate() throw(std::exception&);
-
-private:
-  iface::dom::Element* mParentEl;
-};
-
-class CDA_SProSMathIterator
-  : public iface::SProS::MathMLElementIterator,
-    public CDA_SProSDOMIteratorBase
-{
-public:
-  CDA_SProSMathIterator(iface::dom::Element* parentEl)
-    : CDA_SProSDOMIteratorBase(parentEl), _cda_refcount(1)
-  {
-  }
-
-  virtual ~CDA_SProSMathIterator()
-  {
-  }
-
-  CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(SProS::MathMLElementIterator);
-  CDA_IMPL_ID;
-
-  iface::mathml_dom::MathMLElement* next() throw(std::exception&);
-};
-
 class CDA_SProSDataGenerator
   : public iface::SProS::DataGenerator,
-    public CDA_SProSNamedIdentifiedElement,
-    public CDA_SProSMathContainer
+    public CDA_SProSNamedIdentifiedElement
 {
 public:
   CDA_SProSDataGenerator(CDA_SProSBase* aParent,
@@ -596,11 +542,12 @@ public:
   }
   ~CDA_SProSDataGenerator() {}
 
-  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::DataGenerator,
-               SProS::MathContainer);
+  CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::DataGenerator);
 
   iface::SProS::ParameterSet* parameters() throw();
   iface::SProS::VariableSet* variables() throw();
+  iface::mathml_dom::MathMLMathElement* math() throw();
+  void math(iface::mathml_dom::MathMLMathElement* aEl) throw();
 
 private:
   CDA_SProSParameterSet mParameterSet;
@@ -805,8 +752,7 @@ public:
 
 class CDA_SProSComputeChange
   : public iface::SProS::ComputeChange,
-    public CDA_SProSChange,
-    public CDA_SProSMathContainer
+    public CDA_SProSChange
 {
 public:
   CDA_SProSComputeChange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
@@ -814,11 +760,12 @@ public:
       mVariables(this), mParameters(this) {}
   ~CDA_SProSComputeChange() {}
 
-  CDA_IMPL_QI4(SProS::Base, SProS::Change, SProS::ComputeChange, SProS::MathContainer)
+  CDA_IMPL_QI3(SProS::Base, SProS::Change, SProS::ComputeChange)
 
   iface::SProS::VariableSet* variables() throw();
   iface::SProS::ParameterSet* parameters() throw();
-
+  iface::mathml_dom::MathMLMathElement* math() throw();
+  void math(iface::mathml_dom::MathMLMathElement*) throw();
 private:
   CDA_SProSVariableSet mVariables;
   CDA_SProSParameterSet mParameters;
