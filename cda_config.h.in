@@ -18,6 +18,9 @@
 /* Is SProS enabled? */
 #undef ENABLE_SPROS
 
+/* Is SRuS enabled? */
+#undef ENABLE_SRUS
+
 /* Is TeLiCeMs enabled? */
 #undef ENABLE_TELICEMS
 

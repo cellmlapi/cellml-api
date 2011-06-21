@@ -134,6 +134,10 @@ if ENABLE_SPROS
 include $(top_srcdir)/SProS/build.mk
 endif
 
+if ENABLE_SRUS
+include $(top_srcdir)/SRuS/build.mk
+endif
+
 if ENABLE_CONTEXT_AND_CORBA_AND_CCGS
 include $(top_srcdir)/CCGS/corba_build.mk
 endif
@@ -306,6 +310,18 @@ endif
 
 if ENABLE_SPROS_AND_PYTHON
 include $(top_srcdir)/SProS/python_build.mk
+endif
+
+if ENABLE_SRUS_AND_XPCOM
+include $(top_srcdir)/SRuS/xpcom_build.mk
+endif
+
+if ENABLE_SRUS_AND_JAVA
+include $(top_srcdir)/SRuS/java_build.mk
+endif
+
+if ENABLE_SRUS_AND_PYTHON
+include $(top_srcdir)/SRuS/python_build.mk
 endif
 
 include $(top_srcdir)/xpath/build.mk
