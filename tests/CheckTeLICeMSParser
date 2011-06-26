@@ -37,6 +37,25 @@ function runtest()
   rm -f $TEMPFILE
 }
 
+function runtestser()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $TELICEMSER $BASEDIR/test_xml/$name.xml | tr -d "\r"  >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/test_telicem/$name.tcm
+  if [[ $? -ne 0 ]]; then
+    FAIL=1
+  fi
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name generated correct output.
+  rm -f $TEMPFILE
+}
+
 TEMPFILE_TCM1=test_output_1.tcm
 TEMPFILE_CELLML1=test_output_1.cellml
 TEMPFILE_TCM2=test_output_2.tcm
@@ -80,6 +99,7 @@ function roundtrip()
 }
 
 runtest trivial
+runtestser Unary-Minus
 roundtrip modified_parabola
 roundtrip underconstrained_1
 roundtrip overconstrained_1

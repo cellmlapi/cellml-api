@@ -797,7 +797,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
 
         OperatorInformation::ProcessType pt = op->processType;
 
-        if (n == 1 && !wcscmp(L"-", op->telicemName))
+        if (n == 2 && !wcscmp(L"-", op->telicemName))
           pt = OperatorInformation::PREORDER;
 
         switch (pt)

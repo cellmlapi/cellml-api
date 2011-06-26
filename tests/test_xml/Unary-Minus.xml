@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<model name="m" xmlns="http://www.cellml.org/cellml/1.0#">
+   <component name="test">
+      <variable name="a" units="dimensionless"/>
+      <variable name="b" units="dimensionless" initial_value="1.0"/>
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+         <apply><eq/>
+            <ci>a</ci>
+            <apply><minus/>
+               <ci>b</ci>
+            </apply>
+         </apply>
+      </math>
+   </component>
+</model>
