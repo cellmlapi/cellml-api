@@ -17,7 +17,7 @@ public:
     : _cda_refcount(1) {}
 
   iface::SProS::SEDMLElement* createEmptySEDML() throw(std::exception&);
-  iface::SProS::SEDMLElement* parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo) throw();
+  iface::SProS::SEDMLElement* parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo) throw(std::exception&);
   iface::SProS::SEDMLElement* parseSEDMLFromText(const wchar_t* text, const wchar_t* baseURI) throw();
   iface::SProS::SEDMLElement* makeSEDMLFromElement(iface::dom::Element* el) throw();
   wchar_t* sedmlToText(iface::SProS::SEDMLElement* el) throw();
@@ -37,6 +37,7 @@ public:
   iface::dom::Element* domElement() throw();
   iface::dom::NodeList* notes() throw();
   iface::dom::NodeList* annotations() throw();
+  iface::SProS::Base* parent() throw();
 
   // Semi-private: for use within SProSImpl only.
   void reparent(CDA_SProSBase* aParent);

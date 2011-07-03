@@ -110,6 +110,11 @@ module SProS
      * The list of all annotations associated with this element.
      */
     readonly attribute dom::NodeList annotations;
+
+    /**
+     * The parent of this element, or null.
+     */
+    readonly attribute Base parent;
   };
 
   exception SProSException

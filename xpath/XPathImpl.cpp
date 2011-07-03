@@ -1955,10 +1955,9 @@ public:
   CDA_XPathResult* eval(CDA_XPathContext& aContext, CDA_XPathResult* aInput)
   {
     RETURN_INTO_OBJREF(doc, iface::dom::Document, aContext.mNode->ownerDocument());
-    RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
     aInput->cleanup();
     aInput->mType = iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE;
-    aInput->addNode(de);
+    aInput->addNode(doc);
 
     if (mPath == NULL)
     {

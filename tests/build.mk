@@ -91,3 +91,7 @@ tests_RunTestBin_SOURCES += \
 	tests/XPathTest.cpp
 tests_RunTestBin_CXXFLAGS += -I$(top_srcdir)/xpath
 tests_RunTestBin_LDADD += -lxpath
+
+if ENABLE_SRUS
+TESTS += tests/CheckSRuS
+endif

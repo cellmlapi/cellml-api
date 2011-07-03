@@ -1,0 +1,42 @@
+#!/bin/bash
+
+BINDIR=`pwd`
+BASEDIR=`dirname $0`
+DIFF="$BINDIR/tests/ndiff -t 0.0000001"
+RUNSEDML=$BINDIR/RunSEDML
+TEMPFILE=test_output
+
+if [[ ! -f "$RUNSEDML" ]]; then
+        echo RunSEDML not found. Not testing it.
+        exit 77
+fi
+
+if [[ -n $RUNNER ]]; then
+    RUNSEDML="$RUNNER $BINDIR/.libs/RunSEDML.exe"
+fi
+
+if [[ $(uname -o) == 'Cygwin' ]]; then
+  export LIBRARY_PATH=".libs;$LIBRARY_PATH"
+else
+  export LIBRARY_PATH=.libs:$LIBRARY_PATH
+fi
+
+function runtest()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $RUNSEDML $name.xml step_type AM_1_12 | tr -d "\r" >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name.csv
+  FAIL=$?
+
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: $name generated correct output.
+  rm -f $TEMPFILE
+}
+
+runtest sedMLleloup_gonze_goldbeter_1999_version01

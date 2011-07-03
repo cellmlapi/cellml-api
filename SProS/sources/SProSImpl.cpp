@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 
-#define SEDML_NS L"http://www.biomodels.net/sed-ml"
+#define SEDML_NS L"http://sed-ml.org/"
 
 iface::SProS::Bootstrap*
 CreateSProSBootstrap() throw()
@@ -165,6 +165,16 @@ iface::dom::NodeList*
 CDA_SProSBase::annotations() throw()
 {
   return allNodesFromNamedElements(mDomEl, L"annotations");
+}
+
+iface::SProS::Base*
+CDA_SProSBase::parent() throw()
+{
+  if (mParent == NULL)
+    return NULL;
+
+  mParent->add_ref();
+  return mParent;
 }
 
 CDA_SomeSet::CDA_SomeSet(CDA_SProSBase* aParent,
@@ -1963,14 +1973,21 @@ CDA_SProSDataSetSet::iterateDataSets()
 
 iface::SProS::SEDMLElement*
 CDA_SProSBootstrap::parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo)
-  throw()
+  throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
-  RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
-  RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
-  RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
-  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
-  return new CDA_SProSSEDMLElement(de);
+  try
+  {
+    RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
+    RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
+    RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
+    RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
+    return new CDA_SProSSEDMLElement(de);
+  }
+  catch (...)
+  {
+    throw iface::SProS::SProSException();
+  }
 }
 
 iface::SProS::SEDMLElement*
