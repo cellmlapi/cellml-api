@@ -21,3 +21,5 @@ include_HEADERS += \
   $(top_srcdir)/SRuS/SRuSBootstrap.hpp
 
 BUILT_SOURCES += $(top_builddir)/interfaces/IfaceSRuS.hxx
+
+include $(top_srcdir)/SRuS/tests/build.mk

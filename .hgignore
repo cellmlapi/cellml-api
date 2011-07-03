@@ -12,6 +12,7 @@ CustomGen
 Makefile
 Makefile.in
 RunCellML
+RunSEDML
 ValidateCellML
 aclocal.m4
 autom4te.cache

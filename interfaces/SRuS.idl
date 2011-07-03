@@ -133,7 +133,7 @@ module SRuS
      * Called in the event of a failure generating the results.
      * @param aErrMsg describes the error that occurred.
      */
-    void failure(in wstring aErrMsg);
+    void failure(in string aErrMsg);
 
     /**
      * Called after the computation has successfully completed.

@@ -1336,7 +1336,8 @@ private:
 
   bool isXMLAttributeURI(const std::wstring& aURI)
   {
-    return (aURI.substr(0, 36) == L"http://www.w3.org/XML/1998/namespace");
+    return (aURI.substr(0, 36) == L"http://www.w3.org/XML/1998/namespace") ||
+      (aURI.substr(0, 29) == L"http://www.w3.org/2000/xmlns/") || aURI == L"xmlns";
   }
 
   bool isRDFTerm(const std::wstring& aURI)
@@ -1608,7 +1609,9 @@ private:
       RETURN_INTO_OBJREF(n, iface::dom::Node, nnm->item(i));
       std::wstring atURI(getNodeURI(n));
       if (atURI != RDF_NS L"ID" &&
-          atURI.substr(0, 36) != L"http://www.w3.org/XML/1998/namespace")
+          atURI.substr(0, 36) != L"http://www.w3.org/XML/1998/namespace" &&
+          atURI.substr(0, 29) != L"http://www.w3.org/2000/xmlns/"
+          )
       {
         foundNonIDAttribute = true;
         break;

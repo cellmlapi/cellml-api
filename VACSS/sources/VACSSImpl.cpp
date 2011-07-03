@@ -1250,6 +1250,8 @@ ModelValidation::validateElementRepresentation
 
       break;
     }
+    if (ns == L"" && ln == L"xmlns")
+      continue;
 
     if (extraAtt && (*p) == NULL)
     {

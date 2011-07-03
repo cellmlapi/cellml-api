@@ -257,6 +257,13 @@ AC_ARG_ENABLE(srus,
 esac], [srus=false])
 AM_CONDITIONAL(ENABLE_SRUS, test x$srus = xtrue)
 
+if test x$spros = xfalse -a x$srus = xtrue; then
+   AC_MSG_ERROR(You must enable SProS and CIS if you want SRuS)
+fi
+if test x$cis = xfalse -a x$srus = xtrue; then
+   AC_MSG_ERROR(You must enable SProS and CIS if you want SRuS)
+fi
+
 celedsexport=false
 if test x$ccgs = xtrue; then
   if test x$celeds = xtrue; then

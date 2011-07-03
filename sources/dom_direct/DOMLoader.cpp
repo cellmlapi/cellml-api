@@ -268,6 +268,42 @@ WrapXML2Node
                                  (CDA_wcsdup(cattr->mNodeName.c_str())), cattr));
         el->insertBeforePrivate(cattr, NULL)->release_ref();
       }
+
+      xmlNs* nsd;
+      for (nsd = x2node->nsDef; nsd != NULL; nsd = nsd->next)
+      {
+        RETURN_INTO_OBJREF(cattr, CDA_Attr, new CDA_Attr(doc));
+
+        std::wstring nsURI, prefix, name;
+        if (nsd->prefix && strcmp((const char*)nsd->prefix, ""))
+        {
+          nsURI += "http://www.w3.org/2000/xmlns/";
+          prefix += L"xmlns";
+          name += (const char*)nsd->prefix;
+        }
+        else
+          name += L"xmlns";
+
+        cattr->mLocalName = name;
+        if (prefix != L"")
+          cattr->mNodeName = prefix + L":" + name;
+        else
+          cattr->mNodeName = name;
+        cattr->mNamespaceURI = nsURI;
+
+        cattr->mNodeValue += (const char*)nsd->href;
+
+        el->attributeMapNS.insert
+          (
+           std::pair<CDA_Element::QualifiedName, CDA_Attr*>
+           (CDA_Element::QualifiedName(CDA_wcsdup(nsURI.c_str()),
+                                       CDA_wcsdup(name.c_str())), cattr)
+          );
+        el->attributeMap.insert(std::pair<CDA_Element::LocalName, CDA_Attr*>
+                                (CDA_Element::LocalName
+                                 (CDA_wcsdup(cattr->mNodeName.c_str())), cattr));
+        el->insertBeforePrivate(cattr, NULL)->release_ref();
+      }
     }
     break;
   case XML_TEXT_NODE:
