@@ -159,6 +159,7 @@ public:
   wchar_t* essentialVariablesString() throw();
   wchar_t* stateInformationString() throw();
   uint32_t conditionVariableCount() throw();
+  uint32_t randomIndexCount() throw();
   wchar_t* rootInformationString() throw();
   iface::cellml_services::ComputationTargetIterator* iterateTargets()
     throw();
@@ -168,7 +169,7 @@ public:
   // CCGS implementation access only...
   std::wstring mErrorMessage;
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
-  uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount, mConditionVariableCount;
+  uint32_t mAlgebraicIndexCount, mRateIndexCount, mConstantIndexCount, mConditionVariableCount, mRandomIndexCount;
   std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr, mStateInformationStr,
                mRootInformationStr;
   std::vector<iface::dom::Element*> mFlaggedEquations;
@@ -261,6 +262,8 @@ public:
   void rateNamePattern(const wchar_t* aPattern) throw();
   wchar_t* voiPattern(void) throw();
   void voiPattern(const wchar_t* aPattern) throw();
+  wchar_t* randomPattern(void) throw();
+  void randomPattern(const wchar_t* aPattern) throw();
   uint32_t arrayOffset() throw();
   void arrayOffset(uint32_t offset) throw();
   wchar_t* assignPattern() throw();
@@ -319,9 +322,10 @@ public:
 
 private:
   std::wstring mConstantPattern, mStateVariableNamePattern,
-    mAlgebraicVariableNamePattern,
-    mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
-    mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
+    mAlgebraicVariableNamePattern, mRateNamePattern, mVOIPattern,
+    mRandomPattern,
+    mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
+    mTemporaryVariablePattern, mDeclareTemporaryPattern,
     mConditionalAssignmentPattern, mResidualPattern, mConstrainedRateStateInfoPattern,
     mUnconstrainedRateStateInfoPattern, mInfDelayedRatePattern, mInfDelayedStatePattern,
     mConditionVariablePattern;

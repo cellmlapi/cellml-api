@@ -176,6 +176,12 @@ CDA_CodeInformation::conditionVariableCount() throw()
   return mConditionVariableCount;
 }
 
+uint32_t
+CDA_CodeInformation::randomIndexCount() throw()
+{
+  return mRandomIndexCount;
+}
+
 wchar_t*
 CDA_CodeInformation::rootInformationString() throw()
 {
@@ -308,6 +314,7 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    mAlgebraicVariableNamePattern(L"ALGEBRAIC[%]"),
    mRateNamePattern(L"RATES[%]"),
    mVOIPattern(L"VOI"),
+   mRandomPattern(L"RANDOM[%]"),
    mAssignPattern(L"<LHS> = <RHS>;\r\n"),
    mSolvePattern
    (
@@ -485,6 +492,18 @@ void
 CDA_CodeGenerator::voiPattern(const wchar_t* aPattern) throw()
 {
   mVOIPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::randomPattern() throw()
+{
+  return CDA_wcsdup(mRandomPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::randomPattern(const wchar_t* aPattern) throw()
+{
+  mRandomPattern = aPattern;
 }
 
 uint32_t
@@ -775,7 +794,8 @@ CDA_CodeGenerator::makeCodeGenerationState(iface::cellml_api::Model* aSourceMode
       aSourceModel,
       mConstantPattern, mStateVariableNamePattern,
       mAlgebraicVariableNamePattern,
-      mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
+      mRateNamePattern, mVOIPattern, mRandomPattern,
+      mAssignPattern, mSolvePattern,
       mSolveNLSystemPattern, mTemporaryVariablePattern,
       mDeclareTemporaryPattern, mConditionalAssignmentPattern,
       mResidualPattern, mConstrainedRateStateInfoPattern,
@@ -987,7 +1007,8 @@ CDA_CustomGenerator::generateCode()
   std::wstring emp;
 
   CodeGenerationState cgs(mModel, emp, mStateVariableNamePattern, emp, emp, emp,
-                          mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
+                          mAssignPattern, emp,
+                          mSolvePattern, mSolveNLSystemPattern,
                           emp, emp, emp, emp, emp, emp, emp, emp, emp, false,
                           mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet, false);
   return cgs.GenerateCustomCode(mTargetSet, mRequestComputation, mKnown,

@@ -1808,26 +1808,75 @@ CodeGenerationState::CreateMathStatements()
                          mae, c);
           }
 
-          RETURN_INTO_WSTRING(opn, op->localName());
-          if (opn != L"eq")
-            ContextError(L"Unexpected MathML element; was expecting an eq",
-                         op, c);
-
-          
-          ptr_tag<Equation> eq(new Equation());
-          mms = eq;
-                  
-          if (mae->nArguments() != 3)
+          DECLARE_QUERY_INTERFACE_OBJREF(opcs, op, mathml_dom::MathMLCsymbolElement);
+          if (opcs != NULL)
           {
-            delete eq;
-            ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
-                         mae, c);
+            RETURN_INTO_WSTRING(csu, opcs->definitionURL());
+            if (csu != L"http://www.cellml.org/uncert1#uncertParWithDist")
+            {
+              ContextError(L"The only supported csymbol definitionURL in a toplevel apply ",
+                           L"is http://www.cellml.org/uncert1#uncertParWithDist",
+                           csu, c);
+            }
+
+            SampleFromDistribution* sfd = new SampleFromDistribution();
+            mms = sfd;
+            if (mae->nArguments() != 3)
+            {
+              delete eq;
+              ContextError(L"uncertParWithDist takes 2 arguments, the "
+                           L"uncertain parameter and the distribution.",
+                           mae, c);
+            }
+
+            RETURN_INTO_OBJREF(targArg, iface::dom::MathMLElement, mae->getArgument(2));
+            RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                               mTransform->transform(mCeVAS, mCUSES, mAnnoSet, targArg, c,
+                                                     NULL, NULL, 0));
+            RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                               mr->iterateInvolvedVariablesByDegree());
+            
+            while (true)
+            {
+              RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
+                                 dvi->nextDegreeVariable());
+              if (dv == NULL)
+                break;
+              
+              RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                                 dv->variable());
+    
+              std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+                ::iterator  mi = mTargetsBySource.find(cv);
+              if (mi != mTargetsBySource.end())
+              {
+                mOutTargets.push_back((*mi).second);
+              }
+            }
+            mDistrib = already_AddRefd<iface::dom::MathMLElement>(mae->getArgument(3));
           }
+          else
+          {
+            RETURN_INTO_WSTRING(opn, op->localName());
+            if (opn != L"eq")
+              ContextError(L"Unexpected MathML element; was expecting an eq",
+                           op, c);
+            
+            ptr_tag<Equation> eq(new Equation());
+            mms = eq;
+            
+            if (mae->nArguments() != 3)
+            {
+              delete eq;
+              ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
+                           mae, c);
+            }
           
-          eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
-            (mae->getArgument(2));
-          eq->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
-            (mae->getArgument(3));
+            eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+              (mae->getArgument(2));
+            eq->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+              (mae->getArgument(3));
+          }
         }
 
         SetupMathMLMathStatement(mms, mn, c);
@@ -1879,7 +1928,7 @@ CodeGenerationState::SetupMathMLMathStatement
   bvi = already_AddRefd<iface::cellml_api::CellMLVariableIterator>
     (mr->iterateLocallyBoundVariables());
   
-  while (true)\
+  while (true)
   {
     RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
                        bvi->nextVariable());
@@ -2687,6 +2736,16 @@ CodeGenerationState::FindSmallSystem
   return false;
 }
 
+uint32_t
+ComputeSystemSize(std::set<ptr_tag<MathStatement> >& aSystem)
+{
+  uint32_t totalDegF = 0;
+  for (std::set<ptr_tag<MathStatement> >::iterator i = aSystem.begin();
+       i != aSystem.end(); i++)
+    totalDefF += (*i)->degFreedom();
+  return totalDefF;
+}
+
 bool
 CodeGenerationState::RecursivelyTestSmallSystem
 (
@@ -2742,7 +2801,7 @@ CodeGenerationState::RecursivelyTestSmallSystem
           }
         }
       
-      uint32_t nEqns = aSystem.size(), nUnknowns = targets.size();
+      uint32_t nEqns = ComputeSystemSize(aSystem), nUnknowns = targets.size();
 
       // printf("In this case, nEqns = %u, nUnknowns = %u\n", nEqns, nUnknowns);
 

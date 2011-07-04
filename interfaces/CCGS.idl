@@ -188,6 +188,11 @@ module cellml_services
    readonly attribute unsigned long constantIndexCount;
 
    /**
+    * The number of variables which were assigned indices inthe random array.
+    */
+   readonly attribute unsigned long randomIndexCount;
+
+   /**
     * There are three types of code strings that can be obtained, each for a
     * different purpose. Note that as variables are computed, they are added
     * into 'Known variables'.
@@ -204,9 +209,9 @@ module cellml_services
     * |          |aren't state        |    or rate      |              |constants and     |
     * |          |variables but have  | except VOIs &   |              |values computed   |
     * |          |an initial_value    |  state variables|              |from them.        |
-    * |          |attribute, and any  |                 |              |                  |
-    * |          |variables & rates   |                 |              |                  |
-    * |          |which follow.       |                 |              |                  |
+    * |          |attribute, and any  |                 |              |Also sets up      |
+    * |          |variables & rates   |                 |              |samples of uncerta|
+    * |          |which follow.       |                 |              |in values.        |
     * +----------+--------------------+-----------------+--------------+------------------+
     * |  rates   |All rates which are |Any variable or  |Everything set|Efficiently       |
     * |          |not static.         |rate             |above, VOIs,  |computing rates   |
@@ -307,6 +312,12 @@ module cellml_services
     */
    attribute wstring voiPattern;
    
+   /**
+    * The pattern used to generate names for samples from random distributions.
+    * The % character is replaced with the array index.
+    */
+   attribute wstring randomPattern;
+
    /**
     * The offset at which array indices start. This is normally 0 for
     * languages like C and 1 for languages like MATLAB and FORTRAN.
