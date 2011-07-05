@@ -92,8 +92,9 @@ public:
   SampleFromDistribution() : MathMLMathStatement(MathStatement::SAMPLE_FROM_DIST) {}
   ~SampleFromDistribution() {}
 
-  std::list<ptr_tag<CDA_ComputationTarget> > mOutTargets;
-  ObjRef<iface::dom::MathMLElement> mDistrib;
+  std::set<ptr_tag<CDA_ComputationTarget> > mOutSet;
+  std::vector<ptr_tag<CDA_ComputationTarget> > mOutTargets;
+  ObjRef<iface::mathml_dom::MathMLElement> mDistrib;
 
   virtual uint32_t degFreedom() { return mOutTargets.size(); }
 };
@@ -346,6 +347,7 @@ public:
 
   void GenerateCodeForEquation(std::wstring& aCodeTo, Equation* aEq, ptr_tag<CDA_ComputationTarget> aComputedTarget,
                                bool aAssignmentOnly = false);
+  void GenerateCodeForSampleFromDist(std::wstring& aCodeTo, SampleFromDistribution* aSFD);
 
   void GenerateAssignmentMaLaESResult
   (
