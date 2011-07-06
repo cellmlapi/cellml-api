@@ -1,4 +1,4 @@
-package xpath_bootstrap;
+package cellml_bootstrap;
 
 public class XPathBootstrap
 {

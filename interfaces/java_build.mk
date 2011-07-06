@@ -217,7 +217,6 @@ $(cellml_jar_classes): $(cellml_jar_java)
 	javac -cp "$(top_builddir)/interfaces:$(top_srcdir)/simple_interface_generators/glue/java:$(top_srcdir)/java" \
 	-d $(top_builddir)/javacp $(cellml_jar_java)
 
-
 BUILT_SOURCES += \
   $(top_builddir)/interfaces/p2jDOM_APISPEC.cpp \
   $(top_builddir)/interfaces/p2jDOM_events.cpp \

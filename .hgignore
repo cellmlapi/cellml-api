@@ -1,4 +1,4 @@
-.*\.(la|lo|pyc|xpt|o)
+.*\.(la|a|so|lo|pyc|xpt|o)
 \.deps
 \.libs
 .*~
@@ -41,3 +41,7 @@ TeLICeMScanner.cpp
 TestTeLICeMParser$
 TestTeLICeMSerialiser$
 cellml-sdk.tar.bz2
+CMakeFiles
+cmake_install.cmake
+CMakeCache.txt
+javagen
