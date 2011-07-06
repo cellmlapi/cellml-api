@@ -2,6 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 SET(CMAKE_BACKWARDS_COMPATIBILITY 2.8)
 MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 
+INCLUDE(CTest)
+
 OPTION(ENABLE_CORBA "Generate a two-way bridge between the C++ implementation and CORBA, allowing all parts of the API to be accessed from CORBA. Note: this functionality is not widely tested; if you find a bug, we are only interested if you also provide a working patch to fix the problem")
 MARK_AS_ADVANCED(FORCE ENABLE_CORBA)
 OPTION(ENABLE_XPCOM "Generate XPIDL interfaces and a two-way bridge between the C++ implementation and XPCOM, allowing all parts of the API to be accessed from XPCOM. Note: this functionality is not widely tested; if you find a bug, we are only interested if you also provide a working patch to fix the problem")
@@ -63,9 +65,66 @@ ENDIF()
 
 INCLUDE(build/idl.cmake)
 INCLUDE(build/bootstraps.cmake)
+INCLUDE(build/test_init.cmake)
 
 # Now we do each module in turn (if enabled)
 INCLUDE(sources/core.cmake)
+
+IF(ENABLE_ANNOTOOLS)
+  INCLUDE(AnnoTools/annotools.cmake)
+ENDIF()
+
+IF(ENABLE_CCGS)
+  INCLUDE(CCGS/ccgs.cmake)
+ENDIF()
+
+IF (ENABLE_CELEDS)
+ENDIF()
+
+IF (ENABLE_CELEDS_EXPORTER)
+ENDIF()
+
+IF (ENABLE_CIS)
+ENDIF()
+
+IF (ENABLE_CUSES)
+  INCLUDE(CUSES/cuses.cmake)
+ENDIF()
+
+IF (ENABLE_CEVAS)
+  INCLUDE(CeVAS/cevas.cmake)
+ENDIF()
+
+IF (ENABLE_CONTEXT)
+ENDIF()
+
+IF (ENABLE_MALAES)
+  INCLUDE(MaLaES/malaes.cmake)
+ENDIF()
+
+IF (ENABLE_RDF)
+ENDIF()
+
+IF (ENABLE_SPROS)
+ENDIF()
+
+IF (ENABLE_SRUS)
+ENDIF()
+
+IF (ENABLE_TELICEMS)
+ENDIF()
+
+IF (ENABLE_VACSS)
+ENDIF()
+
+# Testing...
+FIND_LIBRARY(CPPUNIT cppunit)
+IF(CPPUNIT STREQUAL "CPPUNIT-NOTFOUND")
+  SET(HAS_CPPUNIT OFF)
+ELSE()
+  SET(HAS_CPPUNIT ON)
+ENDIF()
+INCLUDE(build/test.cmake)
 
 # Finally, do all the language specific bits...
 
@@ -90,3 +149,35 @@ ENDIF()
 IF (ENABLE_EXAMPLES)
   # To do: build and install examples.
 ENDIF()
+
+# Finally, compiler setup...
+INCLUDE(CheckIncludeFile)
+INCLUDE(CheckLibraryExists)
+INCLUDE(CheckTypeSize)
+INCLUDE(CheckCCompilerFlag)
+CHECK_TYPE_SIZE(wchar_t* SIZEOF_WCHAR_TP)
+CHECK_INCLUDE_FILE(inttypes.h HAVE_HEADER_INTTYPES_H)
+CHECK_INCLUDE_FILE(JavaVM/jni.h HAVE_JAVAVM_JNI_H)
+CHECK_INCLUDE_FILE(jni.h HAVE_JNI_H)
+CHECK_LIBRARY_EXISTS(gsl gsl_permutation_alloc "" HAVE_LIBGSL)
+CHECK_LIBRARY_EXISTS(gslcblas cblas_dtrmm "" HAVE_LIBGSLCBLAS)
+LIST(APPEND CMAKE_EXTRA_INCLUDE_FILES "inttypes.h")
+CHECK_TYPE_SIZE(int64_t SIZE_INT64_T)
+CHECK_TYPE_SIZE(uint64_t SIZE_UINT64_T)
+CHECK_TYPE_SIZE(int32_t SIZE_INT32_T)
+CHECK_TYPE_SIZE(uint32_t SIZE_UINT32_T)
+CHECK_TYPE_SIZE(int16_t SIZE_INT16_T)
+CHECK_TYPE_SIZE(uint16_t SIZE_UINT16_T)
+CHECK_C_COMPILER_FLAG("-fvisibility=hidden" HAVE_VISIBILITY_ATTRIBUTE)
+
+CHECK_C_COMPILER_FLAG("-Wl,--no-undefined" HAVE_NO_UNDEFINED)
+IF(HAVE_NO_UNDEFINED)
+  SET_PROPERTY(GLOBAL APPEND PROPERTY LINK_FLAGS "-Wl,--no-undefined")
+ENDIF()
+
+CHECK_C_COMPILER_FLAG("-Wl,--no-allow-shlib-undefined" HAVE_NO_ALLOW_SHLIB_UNDEFINED)
+IF(HAVE_NO_ALLOW_SHLIB_UNDEFINED)
+  SET_PROPERTY(GLOBAL APPEND PROPERTY LINK_FLAGS "-Wl,--no-allow-shlib-undefined")
+ENDIF()
+
+CONFIGURE_FILE(cda_config.h.in cda_config.h)

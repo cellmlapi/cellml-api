@@ -5,7 +5,7 @@
 
 #include <exception>
 
-#ifdef HAVE_INTTYPES_H
+#ifdef HAVE_HEADER_INTTYPES_H
 #include <inttypes.h>
 #else
 #ifdef _MSC_VER

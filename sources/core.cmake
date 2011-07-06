@@ -17,6 +17,7 @@ INCLUDE_DIRECTORIES(sources/cellml)
 INCLUDE_DIRECTORIES(sources/mathml)
 
 IF (ENABLE_RDF)
+  INCLUDE_DIRECTORIES(sources/rdf)
   SET(MAYBE_RDF_SOURCES sources/rdf/RDFImplementation.cpp)
 ELSE()
   SET(MAYBE_RDF_SOURCES)
@@ -35,3 +36,9 @@ ADD_LIBRARY(cellml
   )
 
 DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp")
+DECLARE_CPPUNIT_FILE(DOM)
+DECLARE_CPPUNIT_FILE(MathML)
+DECLARE_CPPUNIT_FILE(CellML)
+DECLARE_CPPUNIT_FILE(CellMLEvents)
+DECLARE_TEST_LIB(xml2)
+DECLARE_TEST_LIB(cellml)

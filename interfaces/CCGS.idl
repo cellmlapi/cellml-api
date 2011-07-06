@@ -10,490 +10,490 @@
  */
 module cellml_services
 {
- interface CustomGenerator;
+  interface CustomGenerator;
 
- enum VariableEvaluationType
- {
-   /**
-    * The target appears in the MathML as a bvar for a derivative,
-    * (i.e. is the variable of integration).
-    */
-   VARIABLE_OF_INTEGRATION,
+  enum VariableEvaluationType
+  {
+    /**
+     * The target appears in the MathML as a bvar for a derivative,
+     * (i.e. is the variable of integration).
+     */
+    VARIABLE_OF_INTEGRATION,
+    
+    /**
+     * The target has a specific, immediate value, taken from an
+     * initial_value attribute, or computed from other constants. It is
+     * possible for both derivatives and non-state variables to be constant.
+     */
+    CONSTANT,
+    
+    /**
+     * The target is a state variable, that is, it starts at an initial
+     * value and evolves according to rates defined in the model.
+     * Note that derivatives can be state variables too, for example if you
+     * define d^3x/dt3 = t (where t is the variable of integration),
+     * then d^3x/dt3 is COMPUTED, while d^2x/dt2, dx/dt, and x are
+     * of type STATE_VARIABLE.
+     */
+    STATE_VARIABLE,
+    
+    /**
+     * The target is not a state variable, but can be computed from constants,
+     * state variables, variable(s) of integration and other 'algebraic'
+     * variables.
+     */
+    ALGEBRAIC,
+    
+    /**
+     * No way to compute the variable has yet been determined. This can happen
+     * if the model is under-constrained or unsuitably constrained, and no
+     * constraint would allow the variable to be computed, or if the model is
+     * overconstrained and the algorithm stopped before it worked out how to
+     * compute this variable.
+     */
+    FLOATING,
+    
+    /**
+     * The variable is used only locally, for example as the bound variable of a
+     * definite integral.
+     */
+    LOCALLY_BOUND,
+    
+    /**
+     * IDA-type only: A variable which changes with time, but is not driven by a
+     * higher derivative. In non-IDA type code generation, this would be an
+     * algebraic variable which makes up part of a system of equations.
+     */
+    PSEUDOSTATE_VARIABLE
+  };
 
-   /**
-    * The target has a specific, immediate value, taken from an
-    * initial_value attribute, or computed from other constants. It is
-    * possible for both derivatives and non-state variables to be constant.
-    */
-   CONSTANT,
+  enum ModelConstraintLevel
+  {
+    /**
+     * The model is underconstrained. In this case, all code fragments will be
+     * empty strings. The set of targets which cannot be computed can be found
+     * because their VariableEvaluationType will be FLOATING. In order to make
+     * the model work, it is necessary to add equations or initial conditions
+     * which define some of these variables in terms of variables which can be
+     * computed.
+     */
+    UNDERCONSTRAINED,
+    
+    /**
+     * There were variables which couldn't be found, but there were also
+     * equations which could not be used. This normally means that there is
+     * a system of equations which would need to be solved. However, in some
+     * cases, adding more constraints may allow the model to get past the
+     * this and be solved.
+     */
+    UNSUITABLY_CONSTRAINED,
+    
+    /**
+     * The model is overconstrained. The code generator will stop at the point
+     * where a redundant equation was found. The redundant equation will be
+     * present in flaggedEquations. The evaluation type will show the variables
+     * that have already been assigned.
+     */
+    OVERCONSTRAINED,
+    
+    /**
+     * The model is correctly constrained. flaggedEquations contains all
+     * equations which are evaluated using the Newton-Raphson solver.
+     */
+    CORRECTLY_CONSTRAINED
+  };
 
-   /**
-    * The target is a state variable, that is, it starts at an initial
-    * value and evolves according to rates defined in the model.
-    * Note that derivatives can be state variables too, for example if you
-    * define d^3x/dt3 = t (where t is the variable of integration),
-    * then d^3x/dt3 is COMPUTED, while d^2x/dt2, dx/dt, and x are
-    * of type STATE_VARIABLE.
-    */
-   STATE_VARIABLE,
-
-   /**
-    * The target is not a state variable, but can be computed from constants,
-    * state variables, variable(s) of integration and other 'algebraic'
-    * variables.
-    */
-   ALGEBRAIC,
-
-   /**
-    * No way to compute the variable has yet been determined. This can happen
-    * if the model is under-constrained or unsuitably constrained, and no
-    * constraint would allow the variable to be computed, or if the model is
-    * overconstrained and the algorithm stopped before it worked out how to
-    * compute this variable.
-    */
-   FLOATING,
-
-   /**
-    * The variable is used only locally, for example as the bound variable of a
-    * definite integral.
-    */
-   LOCALLY_BOUND,
-
-   /**
-    * IDA-type only: A variable which changes with time, but is not driven by a
-    * higher derivative. In non-IDA type code generation, this would be an
-    * algebraic variable which makes up part of a system of equations.
-    */
-   PSEUDOSTATE_VARIABLE
- };
-
- enum ModelConstraintLevel
- {
-   /**
-    * The model is underconstrained. In this case, all code fragments will be
-    * empty strings. The set of targets which cannot be computed can be found
-    * because their VariableEvaluationType will be FLOATING. In order to make
-    * the model work, it is necessary to add equations or initial conditions
-    * which define some of these variables in terms of variables which can be
-    * computed.
-    */
-   UNDERCONSTRAINED,
-
-   /**
-    * There were variables which couldn't be found, but there were also
-    * equations which could not be used. This normally means that there is
-    * a system of equations which would need to be solved. However, in some
-    * cases, adding more constraints may allow the model to get past the
-    * this and be solved.
-    */
-   UNSUITABLY_CONSTRAINED,
-
-   /**
-    * The model is overconstrained. The code generator will stop at the point
-    * where a redundant equation was found. The redundant equation will be
-    * present in flaggedEquations. The evaluation type will show the variables
-    * that have already been assigned.
-    */
-   OVERCONSTRAINED,
-
-   /**
-    * The model is correctly constrained. flaggedEquations contains all
-    * equations which are evaluated using the Newton-Raphson solver.
-    */
-   CORRECTLY_CONSTRAINED
- };
-
- interface ComputationTarget
-   : XPCOM::IObject
- {
-   /**
-    * The variable associated with this computable. Note that there can be
-    * more than one computable for a single variable.
-    */
-   readonly attribute cellml_api::CellMLVariable variable;
-
-   /**
-    * The degree associated with the variable. This is zero if the value isn't
-    * a derivative, one for a first order derivative, two for a second order
-    * derivative, and so on.
-    */
-   readonly attribute unsigned long degree;
-
-   /**
-    * The type of variable.
-    */
-   readonly attribute VariableEvaluationType type;
-
-   /**
-    * The expression for the variable in the procedural language. This is
-    * taken from the expression or expression_d<derivative> annotations
-    * associated with the variable, which will usually have been expanded
-    * based on the patterns provided to the CodeGenerator.
-    */
-   readonly attribute wstring name;
-
-   /**
-    * Fetches the index assigned to this variable. Raises CellMLException if
-    * no index was assigned to the variable.
-    */
-   readonly attribute unsigned long assignedIndex;
- };
+  interface ComputationTarget
+    : XPCOM::IObject
+  {
+    /**
+     * The variable associated with this computable. Note that there can be
+     * more than one computable for a single variable.
+     */
+    readonly attribute cellml_api::CellMLVariable variable;
+    
+    /**
+     * The degree associated with the variable. This is zero if the value isn't
+     * a derivative, one for a first order derivative, two for a second order
+     * derivative, and so on.
+     */
+    readonly attribute unsigned long degree;
+    
+    /**
+     * The type of variable.
+     */
+    readonly attribute VariableEvaluationType type;
+    
+    /**
+     * The expression for the variable in the procedural language. This is
+     * taken from the expression or expression_d<derivative> annotations
+     * associated with the variable, which will usually have been expanded
+     * based on the patterns provided to the CodeGenerator.
+     */
+    readonly attribute wstring name;
+    
+    /**
+     * Fetches the index assigned to this variable. Raises CellMLException if
+     * no index was assigned to the variable.
+     */
+    readonly attribute unsigned long assignedIndex;
+  };
 #pragma terminal-interface
-
- interface ComputationTargetIterator
-   : XPCOM::IObject
- {
-   /**
-    * Fetches the next computation target.
-    */
-   ComputationTarget nextComputationTarget();
- };
+  
+  interface ComputationTargetIterator
+    : XPCOM::IObject
+  {
+    /**
+     * Fetches the next computation target.
+     */
+    ComputationTarget nextComputationTarget();
+  };
 #pragma terminal-interface
+  
+  interface CodeInformation
+    : XPCOM::IObject
+  {
+    /**
+     * The error message, in the event that something is wrong with the model.
+     * If this is set, code should not use further operations or attributes on
+     * this object.
+     */
+    readonly attribute wstring errorMessage;
+    
+    /**
+     * The constraint level, describing whether or not the model is correctly
+     * constrained. Note that improperly constrained models result in
+     * constraintLevel being set, rather than setting an errorMessage.
+     */
+    readonly attribute ModelConstraintLevel constraintLevel;
+    
+    /**
+     * The number of variables which were assigned indices in the algebraic
+     * variables array. This counts a single CellML variable multiple times if
+     * extra variables are inserted due to higher order derivatives.
+     */
+    readonly attribute unsigned long algebraicIndexCount;
+    
+    /**
+     * The number of variables which were assigned indices into the rates
+     * and state variables array. This counts a single CellML variable multiple
+     * times if extra rates are inserted due to higher order derivatives.
+     */
+    readonly attribute unsigned long rateIndexCount;
+    
+    /**
+     * The number of variables which were assigned indices into the constants
+     * array.
+     */
+    readonly attribute unsigned long constantIndexCount;
+    
+    /**
+     * There are three types of code strings that can be obtained, each for a
+     * different purpose. Note that as variables are computed, they are added
+     * into 'Known variables'.
+     * Definitions:
+     *   State variable: A variable of which the first or higher derivative
+     *     is taken.
+     *   VOI or Variable of Integration: A variable with respect to which the
+     *     model is being integrated.
+     * +----------+--------------------+-----------------+--------------+------------------+
+     * |  String  | Targeted Variables |Possibly computed|    Known     |     Purpose      |
+     * |          |                    |    variables    |  Variables   |                  |
+     * +----------+--------------------+-----------------+--------------+------------------+
+     * |initConsts|All variables which |   Any variable  |   None       |Setting up        |
+     * |          |aren't state        |    or rate      |              |constants and     |
+     * |          |variables but have  | except VOIs &   |              |values computed   |
+     * |          |an initial_value    |  state variables|              |from them.        |
+     * |          |attribute, and any  |                 |              |                  |
+     * |          |variables & rates   |                 |              |                  |
+     * |          |which follow.       |                 |              |                  |
+     * +----------+--------------------+-----------------+--------------+------------------+
+     * |  rates   |All rates which are |Any variable or  |Everything set|Efficiently       |
+     * |          |not static.         |rate             |above, VOIs,  |computing rates   |
+     * |          |                    |                 |& state       |for the ODE solver|
+     * |          |                    |                 |variables     |                  |
+     * +----------+--------------------+-----------------+--------------+------------------+
+     * |variables |All variables not   |Any variable     |Everything set|Computing the     |
+     * |          |computed above      |                 |above, VOIs,  |remaining         |
+     * |          |                    |                 |and state     |variables.        |
+     * |          |                    |                 |variables     |                  |
+     * +----------+--------------------+-----------------+--------------+------------------+
+     *
+     * Note that some rates also have corresponding higher order entries in the state
+     * variables array. These rates are copied from the state variables array into the
+     * rates array at the beginning of the rates string, and may be relied upon in the
+     * rates string.
+     * e.g.
+     *  INDEX     |    0   |     1     |     2    |
+     *  STATES    |    x   |   dx/dt   | d^2x/dt2 |
+     *  RATES     |  dx/dt | d^2x/dt2  | d^3x/dt3 |
+     * RATES[1] is copied from STATES[2], and RATES[0] is copied from STATES[1].
+     */
 
- interface CodeInformation
-   : XPCOM::IObject
- {
-   /**
-    * The error message, in the event that something is wrong with the model.
-    * If this is set, code should not use further operations or attributes on
-    * this object.
-    */
-   readonly attribute wstring errorMessage;
+    /**
+     * The initConsts string, as described in the table above.
+     */
+    readonly attribute wstring initConstsString;
 
-   /**
-    * The constraint level, describing whether or not the model is correctly
-    * constrained. Note that improperly constrained models result in
-    * constraintLevel being set, rather than setting an errorMessage.
-    */
-   readonly attribute ModelConstraintLevel constraintLevel;
+    /**
+     * The rates string, as described in the table above.
+     */
+    readonly attribute wstring ratesString;
 
-   /**
-    * The number of variables which were assigned indices in the algebraic
-    * variables array. This counts a single CellML variable multiple times if
-    * extra variables are inserted due to higher order derivatives.
-    */
-   readonly attribute unsigned long algebraicIndexCount;
+    /**
+     * The variables string, as described in the table above.
+     */
+    readonly attribute wstring variablesString;
 
-   /**
-    * The number of variables which were assigned indices into the rates
-    * and state variables array. This counts a single CellML variable multiple
-    * times if extra rates are inserted due to higher order derivatives.
-    */
-   readonly attribute unsigned long rateIndexCount;
+    /**
+     * A string containing any supplementary code which is needed to be used
+     * out-of-line by the above strings. Whether or not supplementary code
+     * is used, and exactly what it means depends on the MAL file used with
+     * MaLaES, and the options set on the CodeGenerator. Typically, for C, it
+     * is used to define extra functions that are passed as arguments to
+     * functions being called from expressions.
+     */
+    readonly attribute wstring functionsString;
 
-   /**
-    * The number of variables which were assigned indices into the constants
-    * array.
-    */
-   readonly attribute unsigned long constantIndexCount;
+    /**
+     * Iterates through all computation targets.
+     */
+    ComputationTargetIterator iterateTargets();
 
-   /**
-    * There are three types of code strings that can be obtained, each for a
-    * different purpose. Note that as variables are computed, they are added
-    * into 'Known variables'.
-    * Definitions:
-    *   State variable: A variable of which the first or higher derivative
-    *     is taken.
-    *   VOI or Variable of Integration: A variable with respect to which the
-    *     model is being integrated.
-    * +----------+--------------------+-----------------+--------------+------------------+
-    * |  String  | Targeted Variables |Possibly computed|    Known     |     Purpose      |
-    * |          |                    |    variables    |  Variables   |                  |
-    * +----------+--------------------+-----------------+--------------+------------------+
-    * |initConsts|All variables which |   Any variable  |   None       |Setting up        |
-    * |          |aren't state        |    or rate      |              |constants and     |
-    * |          |variables but have  | except VOIs &   |              |values computed   |
-    * |          |an initial_value    |  state variables|              |from them.        |
-    * |          |attribute, and any  |                 |              |                  |
-    * |          |variables & rates   |                 |              |                  |
-    * |          |which follow.       |                 |              |                  |
-    * +----------+--------------------+-----------------+--------------+------------------+
-    * |  rates   |All rates which are |Any variable or  |Everything set|Efficiently       |
-    * |          |not static.         |rate             |above, VOIs,  |computing rates   |
-    * |          |                    |                 |& state       |for the ODE solver|
-    * |          |                    |                 |variables     |                  |
-    * +----------+--------------------+-----------------+--------------+------------------+
-    * |variables |All variables not   |Any variable     |Everything set|Computing the     |
-    * |          |computed above      |                 |above, VOIs,  |remaining         |
-    * |          |                    |                 |and state     |variables.        |
-    * |          |                    |                 |variables     |                  |
-    * +----------+--------------------+-----------------+--------------+------------------+
-    *
-    * Note that some rates also have corresponding higher order entries in the state
-    * variables array. These rates are copied from the state variables array into the
-    * rates array at the beginning of the rates string, and may be relied upon in the
-    * rates string.
-    * e.g.
-    *  INDEX     |    0   |     1     |     2    |
-    *  STATES    |    x   |   dx/dt   | d^2x/dt2 |
-    *  RATES     |  dx/dt | d^2x/dt2  | d^3x/dt3 |
-    * RATES[1] is copied from STATES[2], and RATES[0] is copied from STATES[1].
-    */
-
-   /**
-    * The initConsts string, as described in the table above.
-    */
-   readonly attribute wstring initConstsString;
-
-   /**
-    * The rates string, as described in the table above.
-    */
-   readonly attribute wstring ratesString;
-
-   /**
-    * The variables string, as described in the table above.
-    */
-   readonly attribute wstring variablesString;
-
-   /**
-    * A string containing any supplementary code which is needed to be used
-    * out-of-line by the above strings. Whether or not supplementary code
-    * is used, and exactly what it means depends on the MAL file used with
-    * MaLaES, and the options set on the CodeGenerator. Typically, for C, it
-    * is used to define extra functions that are passed as arguments to
-    * functions being called from expressions.
-    */
-   readonly attribute wstring functionsString;
-
-   /**
-    * Iterates through all computation targets.
-    */
-   ComputationTargetIterator iterateTargets();
-
-   /**
-    * The list of flagged equations. Which equations are flagged depends on
-    * the outcome in constraintLevel. See the documentation on
-    * ModelConstraintLevel for more information.
-    */
-   readonly attribute mathml_dom::MathMLNodeList flaggedEquations;
- };
+    /**
+     * The list of flagged equations. Which equations are flagged depends on
+     * the outcome in constraintLevel. See the documentation on
+     * ModelConstraintLevel for more information.
+     */
+    readonly attribute mathml_dom::MathMLNodeList flaggedEquations;
+  };
 #pragma cross-module-argument
 
- interface CodeGenerator
-   : XPCOM::IObject
- {
-   /**
-    * The pattern used to generate constant names (if they are not already
-    * annotated). The % character is replaced with the array index.
-    * Default: CONSTANTS[%]
-    */
-   attribute wstring constantPattern;
+  interface CodeGenerator
+    : XPCOM::IObject
+  {
+    /**
+     * The pattern used to generate constant names (if they are not already
+     * annotated). The % character is replaced with the array index.
+     * Default: CONSTANTS[%]
+     */
+    attribute wstring constantPattern;
 
-   /**
-    * The pattern used to generate state variable names (if they are not already
-    * annotated). The % character is replaced with the array index.
-    * Default: STATES[%]
-    */
-   attribute wstring stateVariableNamePattern;
+    /**
+     * The pattern used to generate state variable names (if they are not already
+     * annotated). The % character is replaced with the array index.
+     * Default: STATES[%]
+     */
+    attribute wstring stateVariableNamePattern;
 
-   /**
-    * The pattern used to generate algebraic variable names (if they are not
-    * already annotated). The % character is replaced with the array index.
-    * Default: ALGEBRAIC[%]
-    */
-   attribute wstring algebraicVariableNamePattern;
+    /**
+     * The pattern used to generate algebraic variable names (if they are not
+     * already annotated). The % character is replaced with the array index.
+     * Default: ALGEBRAIC[%]
+     */
+    attribute wstring algebraicVariableNamePattern;
 
-   /**
-    * The pattern used to generate rate names (if they are not already
-    * annotated). The % character is replaced with the array index.
-    * Default: RATES[%]
-    */
-   attribute wstring rateNamePattern;
+    /**
+     * The pattern used to generate rate names (if they are not already
+     * annotated). The % character is replaced with the array index.
+     * Default: RATES[%]
+     */
+    attribute wstring rateNamePattern;
 
-   /**
-    * The pattern used to generate variable of integration names (if they are
-    * not already annotated). The % character is replaced with the array index.
-    * Default: VOI
-    */
-   attribute wstring voiPattern;
-   
-   /**
-    * The offset at which array indices start. This is normally 0 for
-    * languages like C and 1 for languages like MATLAB and FORTRAN.
-    * Default: 0
-    */
-   attribute unsigned long arrayOffset;
+    /**
+     * The pattern used to generate variable of integration names (if they are
+     * not already annotated). The % character is replaced with the array index.
+     * Default: VOI
+     */
+    attribute wstring voiPattern;
+    
+    /**
+     * The offset at which array indices start. This is normally 0 for
+     * languages like C and 1 for languages like MATLAB and FORTRAN.
+     * Default: 0
+     */
+    attribute unsigned long arrayOffset;
+    
+    /**
+     * The pattern which is used to set variables by assignment.
+     * <LHS> is replaced by the variable name.
+     * <RHS> is replaced by the expression for the right-hand side.
+     * Default: <LHS> = <RHS>;\r\n
+     */
+    attribute wstring assignPattern;
+    
+    /**
+     * The pattern which is used to compute variables which cannot be set by
+     * assignment.
+     * <LHS> is replaced by the expression for the first argument to the
+     *       equality.
+     * <RHS> is replaced by the expression for the second argument to the
+     *       equality.
+     * <SUP> causes the following text to go into the supplementary function
+     *       array instead of the main code list.
+     * <VAR> gives the name to the variable to compute.
+     * <ID> is replaced with a numeric ID unique to this equation.
+     * Default: NR_MINIMISE(minfunc_<ID>, CONSTANTS, VARIABLES, <VAR>);\r\n<SUP>void minfunc_<ID>(double* CONSTANTS, double* VARIABLES)\r\n{\r\nreturn fabs(<LHS>-<RHS>);\r\n}\r\n
+     */
+    attribute wstring solvePattern;
+    
+    /**
+     * The pattern which is used to solve a system of n equations in n unknowns.
+     * <EXPR> is replaced by the expression for the difference between the two sides
+     *        of the equality.
+     * <SUP> causes the following text to go into the supplementary function
+     *       array instead of the main code list.
+     * <VAR> gives the name to the variable to compute.
+     * <ID> is replaced with a numeric ID unique to this equation.
+     */
+    attribute wstring solveNLSystemPattern;
 
-   /**
-    * The pattern which is used to set variables by assignment.
-    * <LHS> is replaced by the variable name.
-    * <RHS> is replaced by the expression for the right-hand side.
-    * Default: <LHS> = <RHS>;\r\n
-    */
-   attribute wstring assignPattern;
+    /**
+     * The pattern which is used to determine the name of temporary variables
+     * when they are required for infinitesimally expressions. The % is replaced
+     * with a number unique to the temporary variable.
+     * Default: temp%
+     */
+    attribute wstring temporaryVariablePattern;
 
-   /**
-    * The pattern which is used to compute variables which cannot be set by
-    * assignment.
-    * <LHS> is replaced by the expression for the first argument to the
-    *       equality.
-    * <RHS> is replaced by the expression for the second argument to the
-    *       equality.
-    * <SUP> causes the following text to go into the supplementary function
-    *       array instead of the main code list.
-    * <VAR> gives the name to the variable to compute.
-    * <ID> is replaced with a numeric ID unique to this equation.
-    * Default: NR_MINIMISE(minfunc_<ID>, CONSTANTS, VARIABLES, <VAR>);\r\n<SUP>void minfunc_<ID>(double* CONSTANTS, double* VARIABLES)\r\n{\r\nreturn fabs(<LHS>-<RHS>);\r\n}\r\n
-    */
-   attribute wstring solvePattern;
+    /**
+     * The pattern used to declare that a temporary variable is in use.
+     * The % is replaced with the temporary variable name.
+     * Default: double %;
+     */
+    attribute wstring declareTemporaryPattern;
 
-   /**
-    * The pattern which is used to solve a system of n equations in n unknowns.
-    * <EXPR> is replaced by the expression for the difference between the two sides
-    *        of the equality.
-    * <SUP> causes the following text to go into the supplementary function
-    *       array instead of the main code list.
-    * <VAR> gives the name to the variable to compute.
-    * <ID> is replaced with a numeric ID unique to this equation.
-    */
-   attribute wstring solveNLSystemPattern;
+    /**
+     * The pattern used when a top-level piecewise statement is encountered.
+     * The generated output treats the first case specially, and this case has
+     * the condition and statement outside of <CASES>. The generated output for
+     * the remaining cases is produced by repeating the pattern between <CASES>
+     * and </CASES>.
+     * Default: if (<CONDITION>)\r\n{\r\n  <STATEMENT>\r\n}\r\n<CASES>else if (<CONDITION>)\r\n{\r\n  <STATEMENT>\r\n}\r\n</CASES>
+     */
+    attribute wstring conditionalAssignmentPattern;
 
-   /**
-    * The pattern which is used to determine the name of temporary variables
-    * when they are required for infinitesimally expressions. The % is replaced
-    * with a number unique to the temporary variable.
-    * Default: temp%
-    */
-   attribute wstring temporaryVariablePattern;
+    /**
+     * A MaLaES transform to use. If will be null if it has not been set, and
+     * no code has been generated from this generator. If generateCode is
+     * called but this is null, a new default MaLaESTransform will be created,
+     * with a MAL description suitable for use in C programs.
+     * Default: null
+     */
+    attribute cellml_services::MaLaESTransform transform;
 
-   /**
-    * The pattern used to declare that a temporary variable is in use.
-    * The % is replaced with the temporary variable name.
-    * Default: double %;
-    */
-   attribute wstring declareTemporaryPattern;
+    /**
+     * The CeVAS association to use. If this is null (the default) a new CeVAS
+     * will be requested every time you call generateCode. Be careful to use a
+     * CeVAS which corresponds to the exact model being passed in to
+     * generateCode. The model cannot be changed once the CeVAS is created,
+     * until the CeVAS is destroyed.
+     * Default: null
+     */
+    attribute cellml_services::CeVAS useCeVAS;
 
-   /**
-    * The pattern used when a top-level piecewise statement is encountered.
-    * The generated output treats the first case specially, and this case has
-    * the condition and statement outside of <CASES>. The generated output for
-    * the remaining cases is produced by repeating the pattern between <CASES>
-    * and </CASES>.
-    * Default: if (<CONDITION>)\r\n{\r\n  <STATEMENT>\r\n}\r\n<CASES>else if (<CONDITION>)\r\n{\r\n  <STATEMENT>\r\n}\r\n</CASES>
-    */
-   attribute wstring conditionalAssignmentPattern;
+    /**
+     * The CUSES object to use. If this is null (the default) a new CUSES
+     * will be requested every time you call generateCode. Be careful to use a
+     * CUSES which corresponds to the exact model being passed in to
+     * generateCode. The model cannot be changed once the CUSES is created,
+     * until the CUSES is destroyed.
+     * Default: null
+     */
+    attribute cellml_services::CUSES useCUSES;
 
-   /**
-    * A MaLaES transform to use. If will be null if it has not been set, and
-    * no code has been generated from this generator. If generateCode is
-    * called but this is null, a new default MaLaESTransform will be created,
-    * with a MAL description suitable for use in C programs.
-    * Default: null
-    */
-   attribute cellml_services::MaLaESTransform transform;
-
-   /**
-    * The CeVAS association to use. If this is null (the default) a new CeVAS
-    * will be requested every time you call generateCode. Be careful to use a
-    * CeVAS which corresponds to the exact model being passed in to
-    * generateCode. The model cannot be changed once the CeVAS is created,
-    * until the CeVAS is destroyed.
-    * Default: null
-    */
-   attribute cellml_services::CeVAS useCeVAS;
-
-   /**
-    * The CUSES object to use. If this is null (the default) a new CUSES
-    * will be requested every time you call generateCode. Be careful to use a
-    * CUSES which corresponds to the exact model being passed in to
-    * generateCode. The model cannot be changed once the CUSES is created,
-    * until the CUSES is destroyed.
-    * Default: null
-    */
-   attribute cellml_services::CUSES useCUSES;
-
-   /**
-    * The annotation set to use. If this is null (the default) a new AnnoSet
-    * will be requested every time you call generateCode.
-    */
-   attribute cellml_services::AnnotationSet useAnnoSet;
-
-   /**
-    * Generates a CodeInformation object for a model.
-    * @param sourceModel The model for which to generate the CodeInformation.
-    */
-   CodeInformation generateCode(in cellml_api::Model sourceModel);
-
-   /**
-    * Creates a CustomGenerator object for a model. Note that this picks
-    * up on the transform, CeVAS, CUSES, AnnoSet, stateVariableNamePattern,
-    * assignPattern, solvePattern, solveNLSystemPattern,
-    * and arrayOffset - everything else is specific to generateCode.
-    */
-   CustomGenerator createCustomGenerator(in cellml_api::Model sourceModel);
-
-   /**
-    * If false, any text entered shall be passed through the MaLaES sanitiser to
-    * strip out passthrough text. This prevents the generated code from containing
-    * untrusted code from an untrusted model (depending on the target language
-    * and the MaLaES definitions used).
-    *
-    * If true, no such sanitisation shall be performed, and it is possible to
-    * inject arbitrary code from the model into the generated code by using
-    * a MathML csymbol element like the following:
-    *    <mathml:csymbol
-    *       definitionURL="http://www.cellml.org/tools/api#passthrough">
-    *  code-to-inject</mathml:csymbol>
-    *
-    * Default: false
-    */
-   attribute boolean allowPassthrough;
- };
+    /**
+     * The annotation set to use. If this is null (the default) a new AnnoSet
+     * will be requested every time you call generateCode.
+     */
+    attribute cellml_services::AnnotationSet useAnnoSet;
+    
+    /**
+     * Generates a CodeInformation object for a model.
+     * @param sourceModel The model for which to generate the CodeInformation.
+     */
+    CodeInformation generateCode(in cellml_api::Model sourceModel);
+    
+    /**
+     * Creates a CustomGenerator object for a model. Note that this picks
+     * up on the transform, CeVAS, CUSES, AnnoSet, stateVariableNamePattern,
+     * assignPattern, solvePattern, solveNLSystemPattern,
+     * and arrayOffset - everything else is specific to generateCode.
+     */
+    CustomGenerator createCustomGenerator(in cellml_api::Model sourceModel);
+    
+    /**
+     * If false, any text entered shall be passed through the MaLaES sanitiser to
+     * strip out passthrough text. This prevents the generated code from containing
+     * untrusted code from an untrusted model (depending on the target language
+     * and the MaLaES definitions used).
+     *
+     * If true, no such sanitisation shall be performed, and it is possible to
+     * inject arbitrary code from the model into the generated code by using
+     * a MathML csymbol element like the following:
+     *    <mathml:csymbol
+     *       definitionURL="http://www.cellml.org/tools/api#passthrough">
+     *  code-to-inject</mathml:csymbol>
+     *
+     * Default: false
+     */
+    attribute boolean allowPassthrough;
+  };
 #pragma cross-module-argument
 
-interface CustomCodeInformation
-  : XPCOM::IObject
-{
-  /**
-   * The constraint level, describing whether or not the model is correctly
-   * constrained. Note that improperly constrained models result in
-   * constraintLevel being set, rather than setting an errorMessage.
-   * Note: Depending on how you are using the custom code generator, an
-   *       underconstrained result might be normal (especially if you are
-   *       generating code in phases, and don't expect to solve for everything
-   *       in one round).
-   */
-  readonly attribute ModelConstraintLevel constraintLevel;
-  
-  /**
-   * The number of variables which were assigned indices in the variables
-   * array. There can be multiple entries for the same CellML variable - at
-   * most one for each degree of integration.
-   */
-  readonly attribute unsigned long indexCount;
-  
-  /**
-   * Iterates through all computation targets. Several things to note:
-   *  * The objects retrieved are copied and changed from those fetched from
-   *    CustomGenerator - so they have different object IDs.
-   *  * The ComputationTarget type is overloaded for a different purpose to
-   *    those used in non-custom CodeGeneration. The type should be interpreted
-   *    as follows:
-   *      VARIABLE_OF_INTEGRATION => Target is independent (markAsKnown called).
-   *      STATE_VARIABLE => Target was requested, and is available.
-   *      PSEUDOSTATE_VARIABLE => Target was requested, but could not be
-   *                              computed from the independent variables + model.
-   *      LOCALLY_BOUND => Target is locally bound in expressions only.
-   *      ALGEBRAIC => Target is used as an intermediate.
-   *      FLOATING => Every other target (i.e. unused, not requested).
-   */
-  ComputationTargetIterator iterateTargets();
+  interface CustomCodeInformation
+    : XPCOM::IObject
+  {
+    /**
+     * The constraint level, describing whether or not the model is correctly
+     * constrained. Note that improperly constrained models result in
+     * constraintLevel being set, rather than setting an errorMessage.
+     * Note: Depending on how you are using the custom code generator, an
+     *       underconstrained result might be normal (especially if you are
+     *       generating code in phases, and don't expect to solve for everything
+     *       in one round).
+     */
+    readonly attribute ModelConstraintLevel constraintLevel;
+    
+    /**
+     * The number of variables which were assigned indices in the variables
+     * array. There can be multiple entries for the same CellML variable - at
+     * most one for each degree of integration.
+     */
+    readonly attribute unsigned long indexCount;
+    
+    /**
+     * Iterates through all computation targets. Several things to note:
+     *  * The objects retrieved are copied and changed from those fetched from
+     *    CustomGenerator - so they have different object IDs.
+     *  * The ComputationTarget type is overloaded for a different purpose to
+     *    those used in non-custom CodeGeneration. The type should be interpreted
+     *    as follows:
+     *      VARIABLE_OF_INTEGRATION => Target is independent (markAsKnown called).
+     *      STATE_VARIABLE => Target was requested, and is available.
+     *      PSEUDOSTATE_VARIABLE => Target was requested, but could not be
+     *                              computed from the independent variables + model.
+     *      LOCALLY_BOUND => Target is locally bound in expressions only.
+     *      ALGEBRAIC => Target is used as an intermediate.
+     *      FLOATING => Every other target (i.e. unused, not requested).
+     */
+    ComputationTargetIterator iterateTargets();
 
-  /**
-   * The actual generated code. It won't have any kind of wrapping around it
-   * such as function boilerplate - that is up to the user of the API.
-   */
-  readonly attribute wstring generatedCode;
+    /**
+     * The actual generated code. It won't have any kind of wrapping around it
+     * such as function boilerplate - that is up to the user of the API.
+     */
+    readonly attribute wstring generatedCode;
 
-   /**
-    * A string containing any supplementary code which is needed to be used
-    * out-of-line by the above string. Whether or not supplementary code
-    * is used, and exactly what it means depends on the MAL file used with
-    * MaLaES, and the options set on the CodeGenerator. Typically, for C, it
-    * is used to define extra functions that are passed as arguments to
-    * functions being called from expressions.
-    */
-   readonly attribute wstring functionsString;
+    /**
+     * A string containing any supplementary code which is needed to be used
+     * out-of-line by the above string. Whether or not supplementary code
+     * is used, and exactly what it means depends on the MAL file used with
+     * MaLaES, and the options set on the CodeGenerator. Typically, for C, it
+     * is used to define extra functions that are passed as arguments to
+     * functions being called from expressions.
+     */
+    readonly attribute wstring functionsString;
 };
 
 interface CustomGenerator
