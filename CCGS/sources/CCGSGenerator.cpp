@@ -2819,16 +2819,17 @@ CodeGenerationState::RecursivelyTestSmallSystem
 
   for (std::set<ptr_tag<MathStatement> >::iterator i(aEqIt); i != aUseMathStatements.end();)
   {
-    // We do this insert and erase thing rather than copy the set to save stack
-    // space.
-    std::set<ptr_tag<MathStatement> >::iterator sysEq(aSystem.insert(*i).first);
-    i++;
-
     if ((*i)->mType == MathStatement::SAMPLE_FROM_DIST)
     {
       if (aNeedToAdd > 0 || aSystem.size() > 0)
         continue;
     }
+
+    // We do this insert and erase thing rather than copy the set to save stack
+    // space.
+    std::set<ptr_tag<MathStatement> >::iterator sysEq(aSystem.insert(*i).first);
+    i++;
+
 
     if (aNeedToAdd > 0)
     {
@@ -3376,6 +3377,55 @@ CodeGenerationState::GenerateCodeForSystem
                             computedTarget);
 }
 
+static void
+SubstituteVariableForStringEverywhere(iface::mathml_dom::MathMLElement* aExpr,
+                                      const std::wstring& aCIName,
+                                      const std::wstring& aSubstTo)
+{
+  // See if aExpr is a CI element...
+  DECLARE_QUERY_INTERFACE_OBJREF(ciExpr, aExpr, mathml_dom::MathMLCiElement);
+  if (ciExpr != NULL)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, ciExpr->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(t, n, dom::Text);
+    RETURN_INTO_WSTRING(txt, t->data());
+    int i = 0, j = txt.length() - 1;
+    wchar_t c;
+    while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      return;
+    txt = txt.substr(i, j - i + 1);
+
+    if (txt == aCIName)
+    {
+      RETURN_INTO_OBJREF(pn, iface::dom::Node, ciExpr->parentNode());
+      RETURN_INTO_OBJREF(doc, iface::dom::Document, pn->ownerDocument());
+      RETURN_INTO_OBJREF(csymEl, iface::dom::Element,
+                         doc->createElementNS(MATHML_NS, L"csymbol"));
+      DECLARE_QUERY_INTERFACE_OBJREF(csym, csymEl, mathml_dom::MathMLCsymbolElement);
+      csym->definitionURL(L"http://www.cellml.org/tools/api#passthrough");
+      RETURN_INTO_OBJREF(t, iface::dom::Text, doc->createTextNode(aSubstTo.c_str()));
+      csym->appendChild(t)->release_ref();
+      pn->replaceChild(csym, ciExpr)->release_ref();
+    }
+
+    return;
+  }
+
+  for (ObjRef<iface::dom::Node> n(aExpr->firstChild()); n != NULL;
+       n = already_AddRefd<iface::dom::Node>(n->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(me, n, mathml_dom::MathMLElement);
+    if (me == NULL)
+      continue;
+
+    SubstituteVariableForStringEverywhere(me, aCIName, aSubstTo);
+  }
+}
+
 void
 CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, SampleFromDistribution* aSFD)
 {
@@ -3391,7 +3441,7 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
   RETURN_INTO_WSTRING(du, csop->definitionURL());
   if (du == L"http://www.cellml.org/uncert1#distFromDensity")
   {
-    std::wstring t = mSampleDensityFunctionTemplate;
+    std::wstring t = mSampleDensityFunctionPattern;
     wchar_t buf[30];
     any_swprintf(buf, 30, L"%u", mNextSolveId++);
 
@@ -3399,10 +3449,56 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
     while ((pos = t.find(L"<ID>", pos)) != std::wstring::npos)
       t.replace(pos, 4, buf);
     
-    #error TODO Finish this code.
+    if (mae->nArguments() != 2)
+      ContextError(L"distFromDensity descriptions should have exactly one argument, the probability density function.",
+                   mae, aSFD->mContext);
+    RETURN_INTO_OBJREF(pdf, iface::mathml_dom::MathMLElement, mae->getArgument(2));
+    DECLARE_QUERY_INTERFACE_OBJREF(pdfl, pdf, mathml_dom::MathMLLambdaElement);
+    if (pdfl == NULL)
+      ContextError(L"The distFromDensity operator only takes a lambda function", pdf, aSFD->mContext);
+    if (pdfl->nBoundVariables() != 1)
+      ContextError(L"The distFromDensity operator expects a lambda function with exactly one bound variable.", pdf, aSFD->mContext);
+    RETURN_INTO_OBJREF(bv, iface::mathml_dom::MathMLBvarElement, pdfl->getBoundVariable(1));
+    if (bv->nArguments() != 1)
+      ContextError(L"The distFromDensity operator expects a lambda function with exactly one bound variable.", bv, aSFD->mContext);
+    RETURN_INTO_OBJREF(bvcontents, iface::mathml_dom::MathMLElement, bv->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(bvci, bvcontents, mathml_dom::MathMLCiElement);
+    if (bvci == NULL)
+      ContextError(L"Expected a ci element inside the bvar element.", bv, aSFD->mContext);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, bvci->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+    RETURN_INTO_WSTRING(txt, tn->data());
+    int i = 0, j = txt.length() - 1;
+    wchar_t c;
+    while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      ContextError(L"CI element with only spaces inside.", bvci, aSFD->mContext);
+    txt = txt.substr(i, j - i + 1);
 
+    if (pdfl->nArguments() != 1)
+      ContextError(L"Expected lambda element to have one argument.", pdfl, aSFD->mContext);
+    RETURN_INTO_OBJREF(exprOrig, iface::mathml_dom::MathMLElement, pdfl->getArgument(1));
+    RETURN_INTO_OBJREF(exprN, iface::dom::Node, exprOrig->cloneNode(true));
+    DECLARE_QUERY_INTERFACE_OBJREF(expr, exprN, mathml_dom::MathMLElement);
+    SubstituteVariableForStringEverywhere(expr, txt, mBoundVariableName);
+
+    RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, expr,
+                                             aSFD->mContext, NULL,
+                                             NULL, 0));
+    for (uint32_t si = 0, sl = mr->supplementariesLength(); si < sl; si++)
+    {
+      RETURN_INTO_WSTRING(sup, mr->getSupplementary(si));
+      mCodeInfo->mFuncsStr += sup;
+    }
+    RETURN_INTO_WSTRING(exprStr, mr->expression());
+
+    pos = 0;
     while ((pos = t.find(L"<EXPR>", pos)) != std::wstring::npos)
-      t.replace(pos, 4, expr);
+      t.replace(pos, 6, exprStr);
 
     // Look for <SUP> and split there if we need to...
     std::wstring main, sup;
@@ -3415,7 +3511,11 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
       sup = t.substr(pos + 5);
     }
 
-    
+    if (sup != L"")
+      mCodeInfo->mFuncsStr += sup;
+
+    RETURN_INTO_WSTRING(lhs, aSFD->mOutTargets.front()->name());
+    AppendAssign(aCodeTo, lhs, main);
   }
   else if (du == L"http://www.cellml.org/uncert1#distFromRealisations")
   {
@@ -3427,12 +3527,12 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
       ContextError(L"Argument to distFromRealisations should be a vector.",
                    arg, aSFD->mContext);
 
-    std::wstring output = mSampleRealisationsTemplate;
+    std::wstring output = mSampleRealisationsPattern;
 
     wchar_t buf[30];
     any_swprintf(buf, 30, L"%u", vec->ncomponents());
     size_t pos = 0;
-    while ((pos = output.find(L"<numchoices>", pos)) != std::wstring::npos)
+    while ((pos = output.find(L"<numChoices>", pos)) != std::wstring::npos)
     {
       output.replace(pos, 12, buf);
       pos++;
@@ -3441,11 +3541,12 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
     size_t ecpos = output.find(L"<eachChoice>");
     if (ecpos != std::wstring::npos)
     {
-      size_t ecEndPos = output.find("</eachChoice>", ecpos + 12);
+      size_t ecEndPos = output.find(L"</eachChoice>", ecpos + 12);
       if (ecEndPos != std::wstring::npos)
       {
         std::wstring templ = output.substr(ecpos + 12, ecEndPos - ecpos - 12);
-        for (uint32_t i = 1, l = vec->ncomponents(); i < l; i++)
+        std::wstring allChoices;
+        for (uint32_t i = 1, l = vec->ncomponents(); i <= l; i++)
         {
           std::wstring subIn = templ, assignments;
           RETURN_INTO_OBJREF(ce, iface::mathml_dom::MathMLContentElement,
@@ -3494,8 +3595,10 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
           pos = 0;
           while ((pos = subIn.find(L"<choiceAssignments>", pos)) != std::wstring::npos)
             subIn.replace(pos, 19, assignments);
+
+          allChoices += subIn;
         }
-        output.replace(ecpos, ecEndPos - ecpos + 13, subIn);
+        output.replace(ecpos, ecEndPos - ecpos + 13, allChoices);
       }
     }
     aCodeTo += output;

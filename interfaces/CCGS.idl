@@ -188,11 +188,6 @@ module cellml_services
    readonly attribute unsigned long constantIndexCount;
 
    /**
-    * The number of variables which were assigned indices inthe random array.
-    */
-   readonly attribute unsigned long randomIndexCount;
-
-   /**
     * There are three types of code strings that can be obtained, each for a
     * different purpose. Note that as variables are computed, they are added
     * into 'Known variables'.
@@ -313,10 +308,35 @@ module cellml_services
    attribute wstring voiPattern;
    
    /**
-    * The pattern used to generate names for samples from random distributions.
-    * The % character is replaced with the array index.
+    * The pattern used to generate code for sampling from a density function.
+    * <SUP> can be used to split the code into a main and supplementary part.
+    * <EXPR> will be substituted for the expression for the probability density
+    *  function.
+    * <ID> will be substituted for a number which is unique for each instance
+    *  in which this pattern is used (within that substitution).
+    * Default: SampleUsingPDF(&pdf_<ID>, CONSTANTS, VARIABLES)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* VARIABLES)\r\n{\r\n  return (<EXPR>);\r\n}\r\n
     */
-   attribute wstring randomPattern;
+   attribute wstring sampleDensityFunctionPattern;
+
+   /**
+    * The pattern used to generate code for sampling using realisations.
+    * <numChoices> will be substituted for the number of realisations to choose
+    *  between.
+    * The code between <eachChoice>...</eachChoice> will be substituted for
+    *  each of the choices.
+    * In this region, <choiceNumber> gives the zero-based index of the choice,
+    *                 <choiceAssignments> gives the assignments that are
+    *                   required when the choice is selected.
+    * Default: switch (rand() % <numChoices>)\r\n{\n<eachChoice>case <choiceNumber>:\r\n<choiceAssignments>break;\r\n</eachChoice>}\r\n
+    */
+   attribute wstring sampleRealisationsPattern;
+
+   /**
+    * The name to use for the locally bound variable given to the probability
+    * density function in the generated code.
+    * Default: bvar
+    */
+   attribute wstring boundVariableName;
 
    /**
     * The offset at which array indices start. This is normally 0 for

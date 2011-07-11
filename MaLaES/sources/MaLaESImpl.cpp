@@ -1661,9 +1661,26 @@ CDAMaLaESTransform::RunTransformOnOperator
 
   if (apply == NULL)
   {
+    DECLARE_QUERY_INTERFACE_OBJREF(ve, aEl, mathml_dom::MathMLVectorElement);
+    if (ve != NULL)
+    {
+      for (uint32_t i = 1, l = ve->ncomponents(); i <= l; i++)
+        args.push_back(ve->getComponent(i));
+      ExecuteTransform(aResult, L"vector", args, bvars, noQualifiers);
+      return;
+    }
+
     DECLARE_QUERY_INTERFACE_OBJREF(pds, aEl, mathml_dom::MathMLPredefinedSymbol);
     if (pds == NULL)
-      throw MaLaESError(L"Only apply, cn, ci, constants, and piecewise are supported.");
+    {
+      DECLARE_QUERY_INTERFACE_OBJREF(mc, aEl, mathml_dom::MathMLContainer);
+      if (mc)
+        for (uint32_t i = 1, l = mc->nArguments(); i <= l; i++)
+          args.push_back(mc->getArgument(i));
+
+      ExecuteTransform(aResult, L"other", args, bvars, noQualifiers);
+      return;
+    }
     RETURN_INTO_WSTRING(sn, pds->symbolName());
     ExecuteTransform(aResult, sn, args, bvars, noQualifiers);
     return;
@@ -1776,6 +1793,18 @@ CDAMaLaESTransform::RunTransformOnOperator
   ExecuteTransform(aResult, opName, args, bvars, mq);
 }
 
+CDAMaLaESTransform::Operator* CDAMaLaESTransform::sDefaultOperator = NULL;
+
+void
+CDAMaLaESTransform::EnsureDefaultOperator()
+{
+  if (sDefaultOperator != NULL)
+    return;
+  CDAMaLaESTransform::commandlist p;
+  p.push_back(CDAMaLaESTransform::command(&CDAMaLaESResult::appendExprs, L""));
+  sDefaultOperator = new Operator(p, 0, 0, -1);
+}
+
 void
 CDAMaLaESTransform::ExecuteTransform
 (
@@ -1804,23 +1833,19 @@ CDAMaLaESTransform::ExecuteTransform
 
   // Look up the operator...
   std::map<std::wstring, Operator>::iterator omi = operMap.find(opName);
-  if (omi == operMap.end())
-  {
-    std::wstring msg = L"Language description has no rules to deal with "
-      L"MathML operator ";
-    msg += opName;
-    throw MaLaESError(msg);
-  }
+  EnsureDefaultOperator();
+  Operator* o = sDefaultOperator;
 
-  Operator& o = (*omi).second;
+  if (omi != operMap.end())
+    o = &(*omi).second;
 
-  if (o.maxarg != -1 && o.maxarg != (int)args.size())
+  if (o->maxarg != -1 && o->maxarg != (int)args.size())
   {
     std::wstring msg = L"Language description requires that MathML operator ";
     msg += opName;
     msg += L" has ";
     wchar_t buf[30];
-    any_swprintf(buf, 30, L"%u", o.maxarg);
+    any_swprintf(buf, 30, L"%u", o->maxarg);
     msg += buf;
     msg += L" arguments, but it actually has ";
     any_swprintf(buf, 30, L"%u", args.size());
@@ -1828,7 +1853,7 @@ CDAMaLaESTransform::ExecuteTransform
     throw MaLaESError(msg);
   }
 
-  bool needGroup = aResult->pushPrecedence(o.precOuter, o.precInner);
+  bool needGroup = aResult->pushPrecedence(o->precOuter, o->precInner);
 
   // Open group...
   if (needGroup)
@@ -1836,7 +1861,7 @@ CDAMaLaESTransform::ExecuteTransform
 
   // Now run the append program we compiled earlier...
   commandlist::iterator pri;
-  for (pri = o.program.begin(); pri != o.program.end(); pri++)
+  for (pri = o->program.begin(); pri != o->program.end(); pri++)
     (aResult->* ((*pri).first)) ((*pri).second, args, bvars, mq);
 
   // Close group...
