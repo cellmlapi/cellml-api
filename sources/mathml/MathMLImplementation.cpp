@@ -369,7 +369,8 @@ IsUpLimit(iface::dom::Node* n)
 static bool
 IsContentElement(iface::dom::Node* n)
 {
-  return (dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n) != NULL);
+  DECLARE_QUERY_INTERFACE_OBJREF(ce, n, mathml_dom::MathMLContentElement);
+  return (ce != NULL);
 }
 
 static bool
@@ -2491,7 +2492,9 @@ CDA_MathMLVectorElement::getComponent(uint32_t index)
                                   FILTER_CONTENT);
   if (index == 0)
     throw iface::dom::DOMException();
-  return dynamic_cast<iface::mathml_dom::MathMLContentElement*>(mfnl.item(index - 1));
+  RETURN_INTO_OBJREF(n, iface::dom::Node, mfnl.item(index - 1));
+  DECLARE_QUERY_INTERFACE(ret, n, mathml_dom::MathMLContentElement);
+  return ret;
 }
 
 iface::mathml_dom::MathMLContentElement*
