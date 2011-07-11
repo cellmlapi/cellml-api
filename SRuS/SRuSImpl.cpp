@@ -272,10 +272,11 @@ static void processSep(iface::dom::Node* n, double& v1, double& v2)
       RETURN_INTO_WSTRING(ln, el->localName());
       if (ln == L"sep")
       {
-        RETURN_INTO_WSTRING(ns, el->localName());
+        RETURN_INTO_WSTRING(ns, el->namespaceURI());
         if (ns == L"http://www.w3.org/1998/Math/MathML")
         {
           v1 = stringToNumber(value);
+          seenSep = true;
           value = L"";
         }
       }
