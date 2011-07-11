@@ -3415,7 +3415,7 @@ SubstituteVariableForStringEverywhere(iface::mathml_dom::MathMLElement* aExpr,
     return;
   }
 
-  for (ObjRef<iface::dom::Node> n(aExpr->firstChild()); n != NULL;
+  for (ObjRef<iface::dom::Node> n(already_AddRefd<iface::dom::Node>(aExpr->firstChild())); n != NULL;
        n = already_AddRefd<iface::dom::Node>(n->nextSibling()))
   {
     DECLARE_QUERY_INTERFACE_OBJREF(me, n, mathml_dom::MathMLElement);
