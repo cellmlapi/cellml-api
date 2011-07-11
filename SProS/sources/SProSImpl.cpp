@@ -750,7 +750,7 @@ handleEvent(iface::events::Event* evt)
 
       if (cmp1 && cmp2)
       {
-        printf("Warning: Unexpected event sent to handler.\n");
+        // printf("Warning: Unexpected event sent to handler.\n");
         return;
       }
 
@@ -869,10 +869,10 @@ handleEvent(iface::events::Event* evt)
         if (curE == mIterator->mNextElement)
           return;
 
-        if (curE == NULL)
-          printf("Something is wrong: we got from the previous node to the "
-                 "last node without passing the next node, but the next node "
-                 "is non-null!\n");
+        //if (curE == NULL)
+        //  printf("Something is wrong: we got from the previous node to the "
+        //         "last node without passing the next node, but the next node "
+        //         "is non-null!\n");
       }
       else
       {

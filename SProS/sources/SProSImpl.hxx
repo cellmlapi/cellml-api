@@ -2,6 +2,7 @@
 #include "Utilities.hxx"
 #include "IfaceSProS.hxx"
 #include "IfaceDOM_events.hxx"
+#include <string>
 #include <map>
 #include <vector>
 

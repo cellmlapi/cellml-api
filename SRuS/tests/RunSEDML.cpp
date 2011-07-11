@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <algorithm>
 
 #ifdef WIN32
 #include <windows.h>
@@ -160,7 +161,7 @@ public:
     uint32_t nMax = 0;
     for (i = mResults.begin(); i != mResults.end(); i++)
     {
-      nMax = std::max(nMax, (*i).second.size());
+      nMax = std::max(nMax, static_cast<uint32_t>((*i).second.size()));
       printf("%S,", (*i).first.c_str());
     }
     printf("\n");
