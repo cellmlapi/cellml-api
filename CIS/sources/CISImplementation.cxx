@@ -273,6 +273,11 @@ CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
     mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mMaxPointDensity(10000.0),
     mTabulationStepSize(0.0), mObserver(NULL), mCancelIntegration(false), mStrictTabulation(false)
 {
+#ifndef WIN32
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  srand(tv.tv_usec);
+#endif
 }
 
 CDA_CellMLIntegrationRun::~CDA_CellMLIntegrationRun()
@@ -626,6 +631,8 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
      << "extern double defint(double (*f)(double VOI,double *C,double *R,double *S,"
      << "double *A, int* pret), double VOI,double *C,double *R,double *S,double *A,double *V,"
      << "double lowV, double highV, int* pret);" << std::endl
+     << "extern double SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),"
+        "double* CONSTANTS, double* ALGEBRAIC);" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
     "(nmeas)*(npar) + (npar)*(npar))" << std::endl
      << "extern void do_levmar(void (*)(double *, double *, int, int, void*), "

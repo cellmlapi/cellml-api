@@ -272,7 +272,7 @@ class CDA_NodeList
 {
 public:
   CDA_NodeList(CDA_Node* parent)
-    : _cda_refcount(1), mParent(parent), hintSerial(0)
+    : _cda_refcount(1), mParent(parent), hintSerial(0), lenCacheSerial(0)
   {
     mParent->add_ref();
   }
@@ -294,8 +294,10 @@ public:
 
 private:
   cda_serial_t hintSerial;
+  cda_serial_t lenCacheSerial;
   std::list<CDA_Node*>::iterator hintIterator;
   uint32_t hintIndex;
+  uint32_t lenCache;
 };
 
 class CDA_NodeListDFSSearch

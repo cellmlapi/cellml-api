@@ -311,9 +311,10 @@ private:
                         std::vector<iface::mathml_dom::MathMLElement*>& args,
                         std::vector<iface::mathml_dom::MathMLBvarElement*>& bvars,
                         const MaLaESQualifiers& mq);
-
+  static void EnsureDefaultOperator();
   std::wstring mMessage, openGroup, closeGroup;
   bool mVariablesFromSource;
+  static Operator* sDefaultOperator;
 };
 
 class CDAMaLaESBootstrap
