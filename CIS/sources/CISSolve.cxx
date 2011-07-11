@@ -552,6 +552,38 @@ extern "C"
                                int* pret)
     CDA_EXPORT_POST;
 
+  CDA_EXPORT_PRE double SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
+                                       double* CONSTANTS, double* ALGEBRAIC) CDA_EXPORT_POST;
+
+}
+
+struct PDFInformation
+{
+  double (*pdf)(double bvar, double* constants, double* algebraic);
+  double* constants, * algebraic, uplimit;
+};
+
+int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data)
+{
+  struct PDFInformation* info = (struct PDFInformation*)data;
+  double tp1 = 1.0 + t;
+  // We transform the integral from a limit between -infinity and uplimit into
+  // one between -1 and 0...
+  double tprime = info->uplimit - t / tp1;
+
+  // The first rate is the integrand...
+  *N_VGetArrayPointer_Serial(ratesV) =
+    info->pdf(tprime, info->constants, info->algebraic) * (-1.0 / (tp1 * tp1));
+
+  return 0;
+}
+
+
+
+double
+SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
+               double* CONSTANTS, double* ALGEBRAIC)
+{
 }
 
 struct DefintInformation
