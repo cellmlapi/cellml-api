@@ -563,7 +563,7 @@ struct PDFInformation
   double* constants, * algebraic, uplimit;
 };
 
-int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data)
+static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data)
 {
   struct PDFInformation* info = (struct PDFInformation*)data;
   double tp1 = 1.0 + t;
@@ -573,17 +573,41 @@ int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data)
 
   // The first rate is the integrand...
   *N_VGetArrayPointer_Serial(ratesV) =
-    info->pdf(tprime, info->constants, info->algebraic) * (-1.0 / (tp1 * tp1));
+    info->pdf(tprime, info->constants, info->algebraic) * (1.0 / (tp1 * tp1));
 
   return 0;
 }
 
+static void minfuncForPDF(double *p, double *hx, int m, int n, void *adata)
+{
+  struct PDFInformation* info = (struct PDFInformation*)adata;
+  info->uplimit = *p;
 
+  void* cv = CVodeCreate(CV_BDF, CV_NEWTON);
+  *hx = 0;
+  N_Vector y = N_VMake_Serial(1, hx);
+  CVodeInit(cv, integrandForPDF, -1.0 + 1E-6, y);
+  CVodeSStolerances(cv, 1E-6, 1E-6);
+  CVodeSetUserData(cv, info);
+  CVDense(cv, 1);
+  double tret;
+  CVode(cv, 0, y, &tret, CV_NORMAL);
+  N_VDestroy_Serial(y);
+  CVodeFree(&cv);
+}
 
 double
 SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
                double* CONSTANTS, double* ALGEBRAIC)
 {
+  struct PDFInformation pdfi;
+  pdfi.constants = CONSTANTS;
+  pdfi.algebraic = ALGEBRAIC;
+  pdfi.pdf = pdf;
+  double p = 0.5;
+  double x = (rand() + 0.0) / RAND_MAX;
+  dlevmar_dif(minfuncForPDF, &p, &x, 1, 1, 10000, NULL, NULL, NULL, NULL, &pdfi);
+  return p;
 }
 
 struct DefintInformation
