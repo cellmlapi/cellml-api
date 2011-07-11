@@ -314,7 +314,7 @@ module cellml_services
     *  function.
     * <ID> will be substituted for a number which is unique for each instance
     *  in which this pattern is used (within that substitution).
-    * Default: SampleUsingPDF(&pdf_<ID>, CONSTANTS, VARIABLES)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* VARIABLES)\r\n{\r\n  return (<EXPR>);\r\n}\r\n
+    * Default: SampleUsingPDF(&pdf_<ID>, CONSTANTS, ALGEBRAIC)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\n  return (<EXPR>);\r\n}\r\n
     */
    attribute wstring sampleDensityFunctionPattern;
 
@@ -364,7 +364,7 @@ module cellml_services
     *       array instead of the main code list.
     * <VAR> gives the name to the variable to compute.
     * <ID> is replaced with a numeric ID unique to this equation.
-    * Default: NR_MINIMISE(minfunc_<ID>, CONSTANTS, VARIABLES, <VAR>);\r\n<SUP>void minfunc_<ID>(double* CONSTANTS, double* VARIABLES)\r\n{\r\nreturn fabs(<LHS>-<RHS>);\r\n}\r\n
+    * Default: rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);\r\n<SUP>void objfunc_<ID>(double *p, double *hx, int m, int n, void *adata)\r\n{\r\n  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n#define VOI rfi->aVOI\r\n#define CONSTANTS rfi->aCONSTANTS\r\n#define RATES rfi->aRATES\r\n#define STATES rfi->aSTATES\r\n#define ALGEBRAIC rfi->aALGEBRAIC\r\n#define pret rfi->aPRET\r\n  <VAR> = *p;\r\n  *hx = (<LHS>) - (<RHS>);\r\n#undef VOI\r\n#undef CONSTANTS\r\n#undef RATES\r\n#undef STATES\r\n#undef ALGEBRAIC\r\n#undef pret\r\n}\r\nvoid rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)\r\n{\r\n  static double val = <IV>;\r\n  double bp, work[LM_DIF_WORKSZ(1, 1)];\r\n  struct rootfind_info rfi;\r\n  rfi.aVOI = VOI;\r\n  rfi.aCONSTANTS = CONSTANTS;\r\n  rfi.aRATES = RATES;\r\n  rfi.aSTATES = STATES;\r\n  rfi.aALGEBRAIC = ALGEBRAIC;\r\n  rfi.aPRET = pret;\r\n  do_levmar(objfunc_<ID>, &val, &bp, work, pret, 1, &rfi);\r\n  <VAR> = val;\r\n}\r\n
     */
    attribute wstring solvePattern;
 
