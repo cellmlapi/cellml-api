@@ -308,7 +308,7 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    mAlgebraicVariableNamePattern(L"ALGEBRAIC[%]"),
    mRateNamePattern(L"RATES[%]"),
    mVOIPattern(L"VOI"),
-   mSampleDensityFunctionPattern(L"SampleUsingPDF(&pdf_<ID>, CONSTANTS, VARIABLES)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* VARIABLES)\r\n{\r\n  return (<EXPR>);\r\n}\r\n"),
+   mSampleDensityFunctionPattern(L"SampleUsingPDF(&pdf_<ID>, CONSTANTS, ALGEBRAIC)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\n  return (<EXPR>);\r\n}\r\n"),
    mSampleRealisationsPattern(L"switch (rand() % <numChoices>)\r\n{\n<eachChoice>case <choiceNumber>:\r\n<choiceAssignments>break;\r\n</eachChoice>}\r\n"),
    mBoundVariableName(L"bvar"),
    mAssignPattern(L"<LHS> = <RHS>;\r\n"),
