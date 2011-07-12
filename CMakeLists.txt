@@ -95,20 +95,20 @@ IF (ENABLE_CEVAS)
   INCLUDE(CeVAS/cevas.cmake)
 ENDIF()
 
-IF (ENABLE_CONTEXT)
-ENDIF()
+# Context is included with core when enabled.
 
 IF (ENABLE_MALAES)
   INCLUDE(MaLaES/malaes.cmake)
 ENDIF()
 
-IF (ENABLE_RDF)
-ENDIF()
+# RDF is included with core when enabled.
 
 IF (ENABLE_SPROS)
+  INCLUDE(SProS/spros.cmake)
 ENDIF()
 
 IF (ENABLE_SRUS)
+  INCLUDE(SRuS/srus.cmake)
 ENDIF()
 
 IF (ENABLE_TELICEMS)
