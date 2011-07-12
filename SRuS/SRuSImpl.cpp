@@ -1020,6 +1020,11 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
     RETURN_INTO_WSTRING(uri, aModel->source());
 
     RETURN_INTO_OBJREF(cb, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
+    RETURN_INTO_OBJREF(seb, iface::SProS::Base, aModel->parent());
+    DECLARE_QUERY_INTERFACE_OBJREF(se, seb, SProS::SEDMLElement);
+    RETURN_INTO_WSTRING(baseURL, se->originalURL());
+    RETURN_INTO_WSTRING(absURI, cb->makeURLAbsolute(baseURL.c_str(), uri.c_str()));
+    uri = absURI;
     ObjRef<iface::dom::Document> doc;
 
     // Check if it is an identifier for another model...
@@ -1833,17 +1838,26 @@ CDA_SRuSProcessor::generateData
     }
 
     double it = utc->initialTime(), ost = utc->outputStartTime(), oet = utc->outputEndTime();
-    // Run a simulation to bring the system to the start time...
-    RETURN_INTO_OBJREF(cast, CDA_SRuSContinueAtStartTime,
-                       new CDA_SRuSContinueAtStartTime(cir2, aMonitor, ci,
-                                                       variableInfoIdxByDataGeneratorId,
-                                                       dataGeneratorsById));
-    cir2->setResultRange(ost, oet, 0);
-    cir2->setTabulationStepControl((oet - ost) / utc->numberOfPoints(), true);
 
-    cir1->setResultRange(it, ost, 1);
-    cir1->setProgressObserver(cast);
-    cir1->start();
+    uint32_t nSamples = 1;
+    DECLARE_QUERY_INTERFACE_OBJREF(ssi, utc, SProS::SamplingSensitivityAnalysis);
+    if (ssi != NULL)
+      nSamples = ssi->numberOfSamples();
+
+    for (uint32_t sampleNo = 0; sampleNo < nSamples; sampleNo++)
+    {
+      // Run a simulation to bring the system to the start time...
+      RETURN_INTO_OBJREF(cast, CDA_SRuSContinueAtStartTime,
+                         new CDA_SRuSContinueAtStartTime(cir2, aMonitor, ci,
+                                                         variableInfoIdxByDataGeneratorId,
+                                                         dataGeneratorsById));
+      cir2->setResultRange(ost, oet, 0);
+      cir2->setTabulationStepControl((oet - ost) / utc->numberOfPoints(), true);
+      
+      cir1->setResultRange(it, ost, 1);
+      cir1->setProgressObserver(cast);
+      cir1->start();
+    }
   }
 }
 

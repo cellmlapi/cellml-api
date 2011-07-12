@@ -418,6 +418,7 @@ public:
 
   iface::SProS::Model* createModel() throw();
   iface::SProS::UniformTimeCourse* createUniformTimeCourse() throw();
+  iface::SProS::SamplingSensitivityAnalysis* createSamplingSensitivityAnalysis() throw();
   iface::SProS::Task* createTask() throw();
   iface::SProS::DataGenerator* createDataGenerator() throw();
   iface::SProS::Plot2D* createPlot2D() throw();
@@ -433,6 +434,8 @@ public:
   iface::SProS::Curve* createCurve() throw();
   iface::SProS::Surface* createSurface() throw();
   iface::SProS::DataSet* createDataSet() throw();
+  wchar_t* originalURL() throw();
+  void originalURL(const wchar_t* aURL) throw();
 
 private:
   CDA_SProSModelSet mModelSet;
@@ -440,6 +443,7 @@ private:
   CDA_SProSSimulationSet mSimulationSet;
   CDA_SProSDataGeneratorSet mDataGeneneratorSet;
   CDA_SProSOutputSet mOutputSet;
+  std::wstring mOriginalURL;
 };
 
 class CDA_SProSModel

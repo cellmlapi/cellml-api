@@ -475,6 +475,12 @@ makeuniformTimeCourse(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 }
 
 static CDA_SProSBase*
+makesamplingSensitivityAnalysis(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSSamplingSensitivityAnalysis(aParent, aEl);
+}
+
+static CDA_SProSBase*
 makevariable(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 {
   return new CDA_SProSVariable(aParent, aEl);
@@ -496,6 +502,7 @@ static BaseElementConstructors sBaseConstructors[] = {
   {L"plot3D", makeplot3D},
   {L"removeXML", makeremoveXML},
   {L"report", makereport},
+  {L"samplingSensitivityAnalysis", makesamplingSensitivityAnalysis},
   {L"sedML", makesedML},
   {L"surface", makesurface},
   {L"task", maketask},
@@ -1035,6 +1042,16 @@ CDA_SProSSEDMLElement::createUniformTimeCourse()
   return new CDA_SProSUniformTimeCourse(NULL, el);
 }
 
+iface::SProS::SamplingSensitivityAnalysis*
+CDA_SProSSEDMLElement::createSamplingSensitivityAnalysis()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"samplingSensitivityAnalysis"));
+
+  return new CDA_SProSSamplingSensitivityAnalysis(NULL, el);
+}
+
 iface::SProS::Task*
 CDA_SProSSEDMLElement::createTask()
   throw()
@@ -1183,6 +1200,19 @@ CDA_SProSSEDMLElement::createDataSet()
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"dataSet"));
 
   return new CDA_SProSDataSet(NULL, el);
+}
+
+wchar_t* CDA_SProSSEDMLElement::originalURL()
+  throw()
+{
+  return CDA_wcsdup(mOriginalURL.c_str());
+}
+
+void
+CDA_SProSSEDMLElement::originalURL(const wchar_t* aURL)
+  throw()
+{
+  mOriginalURL = aURL;
 }
 
 iface::SProS::NamedElementIterator*
@@ -1340,7 +1370,8 @@ CDA_SProSSimulation::algorithmKisaoID(const wchar_t* aID) throw()
   }
 }
 
-SomeSProSSet(Simulation, L"listOfSimulations", L"uniformTimeCourse");
+#define SimulationTypes L"uniformTimeCourse", L"samplingSensitivityAnalysis"
+SomeSProSSet(Simulation, L"listOfSimulations", SimulationTypes);
 
 double
 CDA_SProSUniformTimeCourseBase::initialTime()
@@ -1982,7 +2013,10 @@ CDA_SProSBootstrap::parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativ
     RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
     RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
     RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
-    return new CDA_SProSSEDMLElement(de);
+
+    CDA_SProSSEDMLElement* el = new CDA_SProSSEDMLElement(de);
+    el->originalURL(absu.c_str());
+    return el;
   }
   catch (...)
   {
