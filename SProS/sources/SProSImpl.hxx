@@ -481,16 +481,16 @@ public:
   void algorithmKisaoID(const wchar_t* aID) throw();
 };
 
-class CDA_SProSUniformTimeCourse
-  : public CDA_SProSSimulation, public iface::SProS::UniformTimeCourse
+class CDA_SProSUniformTimeCourseBase
+  : public CDA_SProSSimulation, public virtual iface::SProS::UniformTimeCourse
 {
 public:
-  CDA_SProSUniformTimeCourse(CDA_SProSBase* aParent,
-                             iface::dom::Element* aEl)
+  CDA_SProSUniformTimeCourseBase(CDA_SProSBase* aParent,
+                                 iface::dom::Element* aEl)
     : CDA_SProSBase(aParent, aEl), CDA_SProSSimulation(aParent, aEl)
   {
   }
-  ~CDA_SProSUniformTimeCourse() {}
+  ~CDA_SProSUniformTimeCourseBase() {}
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
                SProS::UniformTimeCourse);
@@ -503,6 +503,48 @@ public:
   void outputEndTime(double aValue) throw();
   void numberOfPoints(uint32_t aNumPoints) throw();
   uint32_t numberOfPoints() throw();
+};
+
+class CDA_SProSUniformTimeCourse
+  : public CDA_SProSUniformTimeCourseBase
+{
+public:
+  CDA_SProSUniformTimeCourse(CDA_SProSBase* aParent,
+                             iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSUniformTimeCourseBase(aParent, aEl)
+  {
+  }
+
+  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
+               SProS::UniformTimeCourse);
+};
+
+class CDA_SProSSamplingSensitivityAnalysis
+  : public iface::SProS::SamplingSensitivityAnalysis, public CDA_SProSUniformTimeCourseBase
+{
+public:
+  CDA_SProSSamplingSensitivityAnalysis(CDA_SProSBase* aParent,
+                                       iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSUniformTimeCourseBase(aParent, aEl)
+  {
+  }
+  ~CDA_SProSSamplingSensitivityAnalysis() {}
+
+  CDA_IMPL_QI6(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
+               SProS::UniformTimeCourse, SProS::SamplingSensitivityAnalysis);
+
+  uint32_t numberOfSamples() throw()
+  {
+    RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"numberOfSamples"));
+    return wcstoul(it.c_str(), NULL, 10);
+  };
+
+  void numberOfSamples(uint32_t aSamples) throw()
+  {
+    wchar_t buf[32];
+    any_swprintf(buf, sizeof(buf), L"%lu", aSamples);
+    mDomEl->setAttribute(L"numberOfSamples", buf);
+  }
 };
 
 class CDA_SProSTask

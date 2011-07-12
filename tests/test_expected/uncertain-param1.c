@@ -41,7 +41,7 @@
  * * * Variable index: 0
  * * * Variable storage: CONSTANTS[0]
  */
-double pdf_0(double bvar, double* CONSTANTS, double* VARIABLES)
+double pdf_0(double bvar, double* CONSTANTS, double* ALGEBRAIC)
 {
   return ( (1.00000/ pow(( 2.00000* 3.14159265358979*CONSTANTS[3]), 1.0 / 2))*(exp((- ((pow((bvar - CONSTANTS[4]), 2.00000))/( 2.00000*CONSTANTS[3]))))));
 }
@@ -4054,7 +4054,7 @@ break;
 }
 CONSTANTS[3] = 1.00000;
 CONSTANTS[4] = 0.00000;
-CONSTANTS[5] = SampleUsingPDF(&pdf_0, CONSTANTS, VARIABLES);
+CONSTANTS[5] = SampleUsingPDF(&pdf_0, CONSTANTS, ALGEBRAIC);
 CONSTANTS[6] = CONSTANTS[5];
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

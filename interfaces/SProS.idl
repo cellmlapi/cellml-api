@@ -501,6 +501,17 @@ module SProS
   };
 
   /**
+   * A SamplingSensitivityAnalysis.
+   * Note: This is a non-standard (experimental) extension, for sensitivity
+   * analyses to be performed by repeatedly running a UniformTimeCourse.
+   */
+  interface SamplingSensitivityAnalysis
+    : UniformTimeCourse
+  {
+    attribute unsigned long numberOfSamples;
+  };
+
+  /**
    * A SEDML task.
    */
   interface Task

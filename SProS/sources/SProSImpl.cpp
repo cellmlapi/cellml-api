@@ -1343,7 +1343,7 @@ CDA_SProSSimulation::algorithmKisaoID(const wchar_t* aID) throw()
 SomeSProSSet(Simulation, L"listOfSimulations", L"uniformTimeCourse");
 
 double
-CDA_SProSUniformTimeCourse::initialTime()
+CDA_SProSUniformTimeCourseBase::initialTime()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"initialTime"));
@@ -1351,7 +1351,7 @@ CDA_SProSUniformTimeCourse::initialTime()
 }
 
 void
-CDA_SProSUniformTimeCourse::initialTime(double aValue)
+CDA_SProSUniformTimeCourseBase::initialTime(double aValue)
   throw()
 {
   wchar_t buf[32];
@@ -1360,7 +1360,7 @@ CDA_SProSUniformTimeCourse::initialTime(double aValue)
 }
 
 double
-CDA_SProSUniformTimeCourse::outputStartTime()
+CDA_SProSUniformTimeCourseBase::outputStartTime()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"outputStartTime"));
@@ -1368,7 +1368,7 @@ CDA_SProSUniformTimeCourse::outputStartTime()
 }
 
 void
-CDA_SProSUniformTimeCourse::outputStartTime(double aValue)
+CDA_SProSUniformTimeCourseBase::outputStartTime(double aValue)
   throw()
 {
   wchar_t buf[32];
@@ -1377,7 +1377,7 @@ CDA_SProSUniformTimeCourse::outputStartTime(double aValue)
 }
 
 double
-CDA_SProSUniformTimeCourse::outputEndTime()
+CDA_SProSUniformTimeCourseBase::outputEndTime()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"outputEndTime"));
@@ -1385,7 +1385,7 @@ CDA_SProSUniformTimeCourse::outputEndTime()
 }
 
 void
-CDA_SProSUniformTimeCourse::outputEndTime(double aValue)
+CDA_SProSUniformTimeCourseBase::outputEndTime(double aValue)
   throw()
 {
   wchar_t buf[32];
@@ -1394,7 +1394,7 @@ CDA_SProSUniformTimeCourse::outputEndTime(double aValue)
 }
 
 void
-CDA_SProSUniformTimeCourse::numberOfPoints(uint32_t aNumPoints)
+CDA_SProSUniformTimeCourseBase::numberOfPoints(uint32_t aNumPoints)
   throw()
 {
   wchar_t buf[32];
@@ -1403,7 +1403,7 @@ CDA_SProSUniformTimeCourse::numberOfPoints(uint32_t aNumPoints)
 }
 
 uint32_t
-CDA_SProSUniformTimeCourse::numberOfPoints()
+CDA_SProSUniformTimeCourseBase::numberOfPoints()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"numberOfPoints"));
