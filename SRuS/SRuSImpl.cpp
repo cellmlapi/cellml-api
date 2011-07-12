@@ -1020,11 +1020,6 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
     RETURN_INTO_WSTRING(uri, aModel->source());
 
     RETURN_INTO_OBJREF(cb, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
-    RETURN_INTO_OBJREF(seb, iface::SProS::Base, aModel->parent());
-    DECLARE_QUERY_INTERFACE_OBJREF(se, seb, SProS::SEDMLElement);
-    RETURN_INTO_WSTRING(baseURL, se->originalURL());
-    RETURN_INTO_WSTRING(absURI, cb->makeURLAbsolute(baseURL.c_str(), uri.c_str()));
-    uri = absURI;
     ObjRef<iface::dom::Document> doc;
 
     // Check if it is an identifier for another model...
@@ -1043,6 +1038,12 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
     }
     if (doc == NULL)
     {
+      RETURN_INTO_OBJREF(seb, iface::SProS::Base, aModel->parent());
+      DECLARE_QUERY_INTERFACE_OBJREF(se, seb, SProS::SEDMLElement);
+      RETURN_INTO_WSTRING(baseURL, se->originalURL());
+      RETURN_INTO_WSTRING(absURI, cb->makeURLAbsolute(baseURL.c_str(), uri.c_str()));
+      uri = absURI;
+
       // Load it...
       RETURN_INTO_OBJREF(ml, iface::cellml_api::DOMURLLoader, cb->localURLLoader());
       doc = already_AddRefd<iface::dom::Document>(ml->loadDocument(uri.c_str()));
