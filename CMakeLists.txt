@@ -79,9 +79,11 @@ IF(ENABLE_CCGS)
 ENDIF()
 
 IF (ENABLE_CELEDS)
+  INCLUDE(CeLEDS/celeds.cmake)
 ENDIF()
 
 IF (ENABLE_CELEDS_EXPORTER)
+  INCLUDE(CeLEDSExporter/celeds_exporter.cmake)
 ENDIF()
 
 IF (ENABLE_CIS)
@@ -117,6 +119,7 @@ IF (ENABLE_TELICEMS)
 ENDIF()
 
 IF (ENABLE_VACSS)
+  INCLUDE(VACSS/vacss.cmake)
 ENDIF()
 
 # Testing...
