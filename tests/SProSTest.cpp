@@ -9,7 +9,7 @@
 #endif
 #endif
 
-#define SEDML_NS L"http://www.biomodels.net/sed-ml"
+#define SEDML_NS L"http://sed-ml.org/"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( SProSTest );
 

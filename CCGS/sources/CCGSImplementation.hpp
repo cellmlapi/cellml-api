@@ -261,6 +261,12 @@ public:
   void rateNamePattern(const wchar_t* aPattern) throw();
   wchar_t* voiPattern(void) throw();
   void voiPattern(const wchar_t* aPattern) throw();
+  wchar_t* sampleDensityFunctionPattern(void) throw();
+  void sampleDensityFunctionPattern(const wchar_t* aPattern) throw();
+  wchar_t* sampleRealisationsPattern(void) throw();
+  void sampleRealisationsPattern(const wchar_t* aPattern) throw();
+  wchar_t* boundVariableName(void) throw();
+  void boundVariableName(const wchar_t* aPattern) throw();
   uint32_t arrayOffset() throw();
   void arrayOffset(uint32_t offset) throw();
   wchar_t* assignPattern() throw();
@@ -319,9 +325,10 @@ public:
 
 private:
   std::wstring mConstantPattern, mStateVariableNamePattern,
-    mAlgebraicVariableNamePattern,
-    mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
-    mSolveNLSystemPattern, mTemporaryVariablePattern, mDeclareTemporaryPattern,
+    mAlgebraicVariableNamePattern, mRateNamePattern, mVOIPattern,
+    mSampleDensityFunctionPattern, mSampleRealisationsPattern, mBoundVariableName,
+    mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
+    mTemporaryVariablePattern, mDeclareTemporaryPattern,
     mConditionalAssignmentPattern, mResidualPattern, mConstrainedRateStateInfoPattern,
     mUnconstrainedRateStateInfoPattern, mInfDelayedRatePattern, mInfDelayedStatePattern,
     mConditionVariablePattern;

@@ -16,11 +16,14 @@ public:
       EQUATION,
       INEQUALITY,
       PIECEWISE,
-      UNCLASSIFIED_MATHML
+      SAMPLE_FROM_DIST,
+      UNCLASSIFIED_MATHML,
     } StatementType;
 
   MathStatement(StatementType aType) : mInvolvesDelays(false), mType(aType) {}
   virtual ~MathStatement() {}
+
+  virtual uint32_t degFreedom() { return 1; }
 
   ObjRef<iface::cellml_api::CellMLComponent> mContext;
   std::list<ptr_tag<CDA_ComputationTarget> > mTargets, mDelayedTargets;
@@ -83,6 +86,19 @@ public:
   std::list<std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> > > mPieces;
 };
 
+class SampleFromDistribution : public MathMLMathStatement
+{
+public:
+  SampleFromDistribution() : MathMLMathStatement(MathStatement::SAMPLE_FROM_DIST) {}
+  ~SampleFromDistribution() {}
+
+  std::set<ptr_tag<CDA_ComputationTarget> > mOutSet;
+  std::vector<ptr_tag<CDA_ComputationTarget> > mOutTargets;
+  ObjRef<iface::mathml_dom::MathMLElement> mDistrib;
+
+  virtual uint32_t degFreedom() { return mOutTargets.size(); }
+};
+
 /*
  * A system, which is built up of n >=1 equations, and computes n unknowns from
  * an arbitrary number of knowns.
@@ -122,6 +138,9 @@ public:
                       std::wstring& aAlgebraicVariableNamePattern,
                       std::wstring& aRateNamePattern,
                       std::wstring& aVOIPattern,
+                      std::wstring& aSampleDensityFunctionPattern,
+                      std::wstring& aSampleRealisationsPattern,
+                      std::wstring& aBoundVariableName,
                       std::wstring& aAssignPattern,
                       std::wstring& aSolvePattern,
                       std::wstring& aSolveNLSystemPattern,
@@ -146,6 +165,9 @@ public:
       mAlgebraicVariableNamePattern(aAlgebraicVariableNamePattern),
       mRateNamePattern(aRateNamePattern),
       mVOIPattern(aVOIPattern),
+      mSampleDensityFunctionPattern(aSampleDensityFunctionPattern),
+      mSampleRealisationsPattern(aSampleRealisationsPattern),
+      mBoundVariableName(aBoundVariableName),
       mAssignPattern(aAssignPattern),
       mSolvePattern(aSolvePattern),
       mSolveNLSystemPattern(aSolveNLSystemPattern),
@@ -329,6 +351,7 @@ public:
 
   void GenerateCodeForEquation(std::wstring& aCodeTo, Equation* aEq, ptr_tag<CDA_ComputationTarget> aComputedTarget,
                                bool aAssignmentOnly = false);
+  void GenerateCodeForSampleFromDist(std::wstring& aCodeTo, SampleFromDistribution* aSFD);
 
   void GenerateAssignmentMaLaESResult
   (
@@ -399,7 +422,9 @@ public:
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,
     & mAlgebraicVariableNamePattern, & mRateNamePattern,
-    & mVOIPattern, & mAssignPattern, & mSolvePattern,
+    & mVOIPattern, & mSampleDensityFunctionPattern,
+    & mSampleRealisationsPattern,  & mBoundVariableName,
+    & mAssignPattern, & mSolvePattern,
     & mSolveNLSystemPattern, & mTemporaryVariablePattern,
     & mDeclareTemporaryPattern, & mConditionalAssignmentPattern, & mResidualPattern,
     & mConstrainedRateStateInfoPattern, & mUnconstrainedRateStateInfoPattern,

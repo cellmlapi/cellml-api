@@ -1048,6 +1048,9 @@ uint32_t
 CDA_NodeList::length()
   throw(std::exception&)
 {
+  if (lenCacheSerial == gCDADOMChangeSerial)
+    return lenCache;
+
   std::list<CDA_Node*>::iterator i = mParent->mNodeList.begin();
   uint32_t length = 0;
   for (; i != mParent->mNodeList.end(); i++)
@@ -1059,6 +1062,8 @@ CDA_NodeList::length()
     length++;
   }
 
+  lenCacheSerial = gCDADOMChangeSerial;
+  lenCache = length;
   return length;
 }
 

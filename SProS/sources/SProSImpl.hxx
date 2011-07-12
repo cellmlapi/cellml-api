@@ -2,6 +2,7 @@
 #include "Utilities.hxx"
 #include "IfaceSProS.hxx"
 #include "IfaceDOM_events.hxx"
+#include <string>
 #include <map>
 #include <vector>
 
@@ -17,7 +18,7 @@ public:
     : _cda_refcount(1) {}
 
   iface::SProS::SEDMLElement* createEmptySEDML() throw(std::exception&);
-  iface::SProS::SEDMLElement* parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo) throw();
+  iface::SProS::SEDMLElement* parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo) throw(std::exception&);
   iface::SProS::SEDMLElement* parseSEDMLFromText(const wchar_t* text, const wchar_t* baseURI) throw();
   iface::SProS::SEDMLElement* makeSEDMLFromElement(iface::dom::Element* el) throw();
   wchar_t* sedmlToText(iface::SProS::SEDMLElement* el) throw();
@@ -37,6 +38,7 @@ public:
   iface::dom::Element* domElement() throw();
   iface::dom::NodeList* notes() throw();
   iface::dom::NodeList* annotations() throw();
+  iface::SProS::Base* parent() throw();
 
   // Semi-private: for use within SProSImpl only.
   void reparent(CDA_SProSBase* aParent);
@@ -416,6 +418,7 @@ public:
 
   iface::SProS::Model* createModel() throw();
   iface::SProS::UniformTimeCourse* createUniformTimeCourse() throw();
+  iface::SProS::SamplingSensitivityAnalysis* createSamplingSensitivityAnalysis() throw();
   iface::SProS::Task* createTask() throw();
   iface::SProS::DataGenerator* createDataGenerator() throw();
   iface::SProS::Plot2D* createPlot2D() throw();
@@ -431,6 +434,8 @@ public:
   iface::SProS::Curve* createCurve() throw();
   iface::SProS::Surface* createSurface() throw();
   iface::SProS::DataSet* createDataSet() throw();
+  wchar_t* originalURL() throw();
+  void originalURL(const wchar_t* aURL) throw();
 
 private:
   CDA_SProSModelSet mModelSet;
@@ -438,6 +443,7 @@ private:
   CDA_SProSSimulationSet mSimulationSet;
   CDA_SProSDataGeneratorSet mDataGeneneratorSet;
   CDA_SProSOutputSet mOutputSet;
+  std::wstring mOriginalURL;
 };
 
 class CDA_SProSModel
@@ -479,16 +485,16 @@ public:
   void algorithmKisaoID(const wchar_t* aID) throw();
 };
 
-class CDA_SProSUniformTimeCourse
-  : public CDA_SProSSimulation, public iface::SProS::UniformTimeCourse
+class CDA_SProSUniformTimeCourseBase
+  : public CDA_SProSSimulation, public virtual iface::SProS::UniformTimeCourse
 {
 public:
-  CDA_SProSUniformTimeCourse(CDA_SProSBase* aParent,
-                             iface::dom::Element* aEl)
+  CDA_SProSUniformTimeCourseBase(CDA_SProSBase* aParent,
+                                 iface::dom::Element* aEl)
     : CDA_SProSBase(aParent, aEl), CDA_SProSSimulation(aParent, aEl)
   {
   }
-  ~CDA_SProSUniformTimeCourse() {}
+  ~CDA_SProSUniformTimeCourseBase() {}
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
                SProS::UniformTimeCourse);
@@ -501,6 +507,48 @@ public:
   void outputEndTime(double aValue) throw();
   void numberOfPoints(uint32_t aNumPoints) throw();
   uint32_t numberOfPoints() throw();
+};
+
+class CDA_SProSUniformTimeCourse
+  : public CDA_SProSUniformTimeCourseBase
+{
+public:
+  CDA_SProSUniformTimeCourse(CDA_SProSBase* aParent,
+                             iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSUniformTimeCourseBase(aParent, aEl)
+  {
+  }
+
+  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
+               SProS::UniformTimeCourse);
+};
+
+class CDA_SProSSamplingSensitivityAnalysis
+  : public iface::SProS::SamplingSensitivityAnalysis, public CDA_SProSUniformTimeCourseBase
+{
+public:
+  CDA_SProSSamplingSensitivityAnalysis(CDA_SProSBase* aParent,
+                                       iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSUniformTimeCourseBase(aParent, aEl)
+  {
+  }
+  ~CDA_SProSSamplingSensitivityAnalysis() {}
+
+  CDA_IMPL_QI6(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
+               SProS::UniformTimeCourse, SProS::SamplingSensitivityAnalysis);
+
+  uint32_t numberOfSamples() throw()
+  {
+    RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"numberOfSamples"));
+    return wcstoul(it.c_str(), NULL, 10);
+  };
+
+  void numberOfSamples(uint32_t aSamples) throw()
+  {
+    wchar_t buf[32];
+    any_swprintf(buf, sizeof(buf), L"%lu", aSamples);
+    mDomEl->setAttribute(L"numberOfSamples", buf);
+  }
 };
 
 class CDA_SProSTask
@@ -528,63 +576,9 @@ public:
   void modelReference(iface::SProS::Model* aModel) throw();
 };
 
-class CDA_SProSMathContainer
-  : public virtual iface::SProS::MathContainer,
-    public virtual CDA_SProSBase
-{
-public:
-  CDA_SProSMathContainer() : CDA_SProSBase(NULL, NULL) {}
-  iface::SProS::MathList* math() throw(std::exception&);
-  void addMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
-  void removeMath(iface::mathml_dom::MathMLElement* aEl) throw(std::exception&);
-  void replaceMath(iface::mathml_dom::MathMLElement* aEl1,
-                   iface::mathml_dom::MathMLElement* aEl2) throw(std::exception&);
-  void clearMath() throw();
-};
-
-class CDA_SProSMathList
-  : public iface::SProS::MathList
-{
-public:
-  CDA_SProSMathList(iface::dom::Element* aParentEl);
-  virtual ~CDA_SProSMathList();
-  CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(SProS::MathList);
-  CDA_IMPL_ID;
-
-  uint32_t length() throw(std::exception&);
-  bool contains(iface::mathml_dom::MathMLElement* x) throw(std::exception&);
-  iface::SProS::MathMLElementIterator* iterate() throw(std::exception&);
-
-private:
-  iface::dom::Element* mParentEl;
-};
-
-class CDA_SProSMathIterator
-  : public iface::SProS::MathMLElementIterator,
-    public CDA_SProSDOMIteratorBase
-{
-public:
-  CDA_SProSMathIterator(iface::dom::Element* parentEl)
-    : CDA_SProSDOMIteratorBase(parentEl), _cda_refcount(1)
-  {
-  }
-
-  virtual ~CDA_SProSMathIterator()
-  {
-  }
-
-  CDA_IMPL_REFCOUNT;
-  CDA_IMPL_QI1(SProS::MathMLElementIterator);
-  CDA_IMPL_ID;
-
-  iface::mathml_dom::MathMLElement* next() throw(std::exception&);
-};
-
 class CDA_SProSDataGenerator
   : public iface::SProS::DataGenerator,
-    public CDA_SProSNamedIdentifiedElement,
-    public CDA_SProSMathContainer
+    public CDA_SProSNamedIdentifiedElement
 {
 public:
   CDA_SProSDataGenerator(CDA_SProSBase* aParent,
@@ -596,11 +590,12 @@ public:
   }
   ~CDA_SProSDataGenerator() {}
 
-  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::DataGenerator,
-               SProS::MathContainer);
+  CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::DataGenerator);
 
   iface::SProS::ParameterSet* parameters() throw();
   iface::SProS::VariableSet* variables() throw();
+  iface::mathml_dom::MathMLMathElement* math() throw();
+  void math(iface::mathml_dom::MathMLMathElement* aEl) throw();
 
 private:
   CDA_SProSParameterSet mParameterSet;
@@ -805,8 +800,7 @@ public:
 
 class CDA_SProSComputeChange
   : public iface::SProS::ComputeChange,
-    public CDA_SProSChange,
-    public CDA_SProSMathContainer
+    public CDA_SProSChange
 {
 public:
   CDA_SProSComputeChange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
@@ -814,11 +808,12 @@ public:
       mVariables(this), mParameters(this) {}
   ~CDA_SProSComputeChange() {}
 
-  CDA_IMPL_QI4(SProS::Base, SProS::Change, SProS::ComputeChange, SProS::MathContainer)
+  CDA_IMPL_QI3(SProS::Base, SProS::Change, SProS::ComputeChange)
 
   iface::SProS::VariableSet* variables() throw();
   iface::SProS::ParameterSet* parameters() throw();
-
+  iface::mathml_dom::MathMLMathElement* math() throw();
+  void math(iface::mathml_dom::MathMLMathElement*) throw();
 private:
   CDA_SProSVariableSet mVariables;
   CDA_SProSParameterSet mParameters;

@@ -17,6 +17,9 @@
 /* Is SProS enabled? */
 #cmakedefine ENABLE_SPROS
 
+/* Is SRuS enabled? */
+#undef ENABLE_SRUS
+
 /* Is TeLiCeMs enabled? */
 #cmakedefine ENABLE_TELICEMS
 

@@ -3280,14 +3280,27 @@ CellMLTest::testExtensionAttributeSet()
   CPPUNIT_ASSERT(attr2 != NULL);
   iface::dom::Attr* attr3 = eai->nextAttribute();
   CPPUNIT_ASSERT(attr3 != NULL);
+  // And three more because of the xmlns attributes.
+  iface::dom::Attr* attr4 = eai->nextAttribute();
+  CPPUNIT_ASSERT(attr4 != NULL);
+  iface::dom::Attr* attr5 = eai->nextAttribute();
+  CPPUNIT_ASSERT(attr5 != NULL);
+  iface::dom::Attr* attr6 = eai->nextAttribute();
+  CPPUNIT_ASSERT(attr6 != NULL);
+
   CPPUNIT_ASSERT(eai->nextAttribute() == NULL);
 
-  wchar_t * attr1ns = attr1->namespaceURI(), * attr2ns = attr2->namespaceURI(), * attr3ns = attr3->namespaceURI();
-  wchar_t * attr1ln = attr1->localName(), * attr2ln = attr2->localName(), * attr3ln = attr3->localName();
+  wchar_t * attr1ns = attr1->namespaceURI(), * attr2ns = attr2->namespaceURI(), * attr3ns = attr3->namespaceURI(),
+    * attr4ns = attr4->namespaceURI(), * attr5ns = attr5->namespaceURI(), * attr6ns = attr6->namespaceURI();
+  wchar_t * attr1ln = attr1->localName(), * attr2ln = attr2->localName(), * attr3ln = attr3->localName(),
+    * attr4ln = attr4->localName(), * attr5ln = attr5->localName(), * attr6ln = attr6->localName();
 
   attr1->release_ref();
   attr2->release_ref();
   attr3->release_ref();
+  attr4->release_ref();
+  attr5->release_ref();
+  attr6->release_ref();
 
   if (!wcscmp(attr2ns, L"http://example.org/thetest"))
   {
@@ -3317,20 +3330,35 @@ CellMLTest::testExtensionAttributeSet()
     attr2ln = tmp;
   }
 
+  // printf("%S %S %S %S %S %S %S %S %S %S %S %S\n", attr1ns, attr1ln,
+  //        attr2ns, attr2ln, attr3ns, attr3ln, attr4ns, attr4ln, attr5ns,
+  //        attr5ln, attr6ns, attr6ln);
   CPPUNIT_ASSERT(!wcscmp(attr1ns, L"http://example.org/thetest"));
   CPPUNIT_ASSERT(!wcscmp(attr1ln, L"atest"));
-  CPPUNIT_ASSERT(!wcscmp(attr2ns, L"http://example.org/mytest"));
-  CPPUNIT_ASSERT(!wcscmp(attr2ln, L"hello"));
-  CPPUNIT_ASSERT(!wcscmp(attr3ns, L"http://example.org/livetest"));
-  CPPUNIT_ASSERT(!wcscmp(attr3ln, L"shouldbe"));
+  CPPUNIT_ASSERT(!wcscmp(attr2ns, L"http://www.w3.org/2000/xmlns/"));
+  CPPUNIT_ASSERT(!wcscmp(attr2ln, L"cellml"));
+  CPPUNIT_ASSERT(!wcscmp(attr3ns, L"http://www.w3.org/2000/xmlns/"));
+  CPPUNIT_ASSERT(!wcscmp(attr3ln, L"cmeta"));
+  CPPUNIT_ASSERT(!wcscmp(attr4ns, L"http://example.org/mytest"));
+  CPPUNIT_ASSERT(!wcscmp(attr4ln, L"hello"));
+  CPPUNIT_ASSERT(!wcscmp(attr5ns, L"http://www.w3.org/2000/xmlns/"));
+  CPPUNIT_ASSERT(!wcscmp(attr5ln, L"mytest"));
+  CPPUNIT_ASSERT(!wcscmp(attr6ns, L"http://example.org/livetest"));
+  CPPUNIT_ASSERT(!wcscmp(attr6ln, L"shouldbe"));
 
   free(attr1ns);
   free(attr2ns);
   free(attr3ns);
+  free(attr4ns);
+  free(attr5ns);
+  free(attr6ns);
   free(attr1ln);
   free(attr2ln);
   free(attr3ln);
-
+  free(attr4ln);
+  free(attr5ln);
+  free(attr6ln);
+  
   eai->release_ref();
 }
 

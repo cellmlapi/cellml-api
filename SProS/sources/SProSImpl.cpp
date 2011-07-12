@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 
-#define SEDML_NS L"http://www.biomodels.net/sed-ml"
+#define SEDML_NS L"http://sed-ml.org/"
 
 iface::SProS::Bootstrap*
 CreateSProSBootstrap() throw()
@@ -165,6 +165,16 @@ iface::dom::NodeList*
 CDA_SProSBase::annotations() throw()
 {
   return allNodesFromNamedElements(mDomEl, L"annotations");
+}
+
+iface::SProS::Base*
+CDA_SProSBase::parent() throw()
+{
+  if (mParent == NULL)
+    return NULL;
+
+  mParent->add_ref();
+  return mParent;
 }
 
 CDA_SomeSet::CDA_SomeSet(CDA_SProSBase* aParent,
@@ -465,6 +475,12 @@ makeuniformTimeCourse(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 }
 
 static CDA_SProSBase*
+makesamplingSensitivityAnalysis(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSSamplingSensitivityAnalysis(aParent, aEl);
+}
+
+static CDA_SProSBase*
 makevariable(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 {
   return new CDA_SProSVariable(aParent, aEl);
@@ -486,6 +502,7 @@ static BaseElementConstructors sBaseConstructors[] = {
   {L"plot3D", makeplot3D},
   {L"removeXML", makeremoveXML},
   {L"report", makereport},
+  {L"samplingSensitivityAnalysis", makesamplingSensitivityAnalysis},
   {L"sedML", makesedML},
   {L"surface", makesurface},
   {L"task", maketask},
@@ -740,7 +757,7 @@ handleEvent(iface::events::Event* evt)
 
       if (cmp1 && cmp2)
       {
-        printf("Warning: Unexpected event sent to handler.\n");
+        // printf("Warning: Unexpected event sent to handler.\n");
         return;
       }
 
@@ -859,10 +876,10 @@ handleEvent(iface::events::Event* evt)
         if (curE == mIterator->mNextElement)
           return;
 
-        if (curE == NULL)
-          printf("Something is wrong: we got from the previous node to the "
-                 "last node without passing the next node, but the next node "
-                 "is non-null!\n");
+        //if (curE == NULL)
+        //  printf("Something is wrong: we got from the previous node to the "
+        //         "last node without passing the next node, but the next node "
+        //         "is non-null!\n");
       }
       else
       {
@@ -1025,6 +1042,16 @@ CDA_SProSSEDMLElement::createUniformTimeCourse()
   return new CDA_SProSUniformTimeCourse(NULL, el);
 }
 
+iface::SProS::SamplingSensitivityAnalysis*
+CDA_SProSSEDMLElement::createSamplingSensitivityAnalysis()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"samplingSensitivityAnalysis"));
+
+  return new CDA_SProSSamplingSensitivityAnalysis(NULL, el);
+}
+
 iface::SProS::Task*
 CDA_SProSSEDMLElement::createTask()
   throw()
@@ -1173,6 +1200,19 @@ CDA_SProSSEDMLElement::createDataSet()
   RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"dataSet"));
 
   return new CDA_SProSDataSet(NULL, el);
+}
+
+wchar_t* CDA_SProSSEDMLElement::originalURL()
+  throw()
+{
+  return CDA_wcsdup(mOriginalURL.c_str());
+}
+
+void
+CDA_SProSSEDMLElement::originalURL(const wchar_t* aURL)
+  throw()
+{
+  mOriginalURL = aURL;
 }
 
 iface::SProS::NamedElementIterator*
@@ -1330,10 +1370,11 @@ CDA_SProSSimulation::algorithmKisaoID(const wchar_t* aID) throw()
   }
 }
 
-SomeSProSSet(Simulation, L"listOfSimulations", L"uniformTimeCourse");
+#define SimulationTypes L"uniformTimeCourse", L"samplingSensitivityAnalysis"
+SomeSProSSet(Simulation, L"listOfSimulations", SimulationTypes);
 
 double
-CDA_SProSUniformTimeCourse::initialTime()
+CDA_SProSUniformTimeCourseBase::initialTime()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"initialTime"));
@@ -1341,7 +1382,7 @@ CDA_SProSUniformTimeCourse::initialTime()
 }
 
 void
-CDA_SProSUniformTimeCourse::initialTime(double aValue)
+CDA_SProSUniformTimeCourseBase::initialTime(double aValue)
   throw()
 {
   wchar_t buf[32];
@@ -1350,7 +1391,7 @@ CDA_SProSUniformTimeCourse::initialTime(double aValue)
 }
 
 double
-CDA_SProSUniformTimeCourse::outputStartTime()
+CDA_SProSUniformTimeCourseBase::outputStartTime()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"outputStartTime"));
@@ -1358,7 +1399,7 @@ CDA_SProSUniformTimeCourse::outputStartTime()
 }
 
 void
-CDA_SProSUniformTimeCourse::outputStartTime(double aValue)
+CDA_SProSUniformTimeCourseBase::outputStartTime(double aValue)
   throw()
 {
   wchar_t buf[32];
@@ -1367,7 +1408,7 @@ CDA_SProSUniformTimeCourse::outputStartTime(double aValue)
 }
 
 double
-CDA_SProSUniformTimeCourse::outputEndTime()
+CDA_SProSUniformTimeCourseBase::outputEndTime()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"outputEndTime"));
@@ -1375,7 +1416,7 @@ CDA_SProSUniformTimeCourse::outputEndTime()
 }
 
 void
-CDA_SProSUniformTimeCourse::outputEndTime(double aValue)
+CDA_SProSUniformTimeCourseBase::outputEndTime(double aValue)
   throw()
 {
   wchar_t buf[32];
@@ -1384,7 +1425,7 @@ CDA_SProSUniformTimeCourse::outputEndTime(double aValue)
 }
 
 void
-CDA_SProSUniformTimeCourse::numberOfPoints(uint32_t aNumPoints)
+CDA_SProSUniformTimeCourseBase::numberOfPoints(uint32_t aNumPoints)
   throw()
 {
   wchar_t buf[32];
@@ -1393,7 +1434,7 @@ CDA_SProSUniformTimeCourse::numberOfPoints(uint32_t aNumPoints)
 }
 
 uint32_t
-CDA_SProSUniformTimeCourse::numberOfPoints()
+CDA_SProSUniformTimeCourseBase::numberOfPoints()
   throw()
 {
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"numberOfPoints"));
@@ -1467,152 +1508,6 @@ CDA_SProSTask::modelReference(iface::SProS::Model* aSim) throw()
   modelReferenceIdentifier(ident.c_str());
 }
 
-iface::SProS::MathList*
-CDA_SProSMathContainer::math() throw(std::exception&)
-{
-  try
-  {
-    return new CDA_SProSMathList(mDomEl);
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::addMath(iface::mathml_dom::MathMLElement* aEl)
-  throw(std::exception&)
-{
-  try
-  {
-    iface::dom::Node* n = mDomEl->appendChild(aEl);
-    n->release_ref();
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::removeMath(iface::mathml_dom::MathMLElement* aEl)
-  throw(std::exception&)
-{
-  try
-  {
-    iface::dom::Node* n = mDomEl->removeChild(aEl);
-    n->release_ref();
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::replaceMath(iface::mathml_dom::MathMLElement* aEl1,
-                                    iface::mathml_dom::MathMLElement* aEl2)
-  throw(std::exception&)
-{
-  try
-  {
-    iface::dom::Node* n = mDomEl->replaceChild(aEl2, aEl1);
-    n->release_ref();
-  }
-  catch (iface::SProS::SProSException& de)
-  {
-    throw iface::SProS::SProSException();
-  }
-}
-
-void
-CDA_SProSMathContainer::clearMath()
-  throw()
-{
-  ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
-                                  (mDomEl->childNodes()));
-  // Go through and find all math nodes...
-  uint32_t i, l = nl->length();
-  for (i = 0; i < l; i++)
-  {
-    ObjRef<iface::dom::Node> node
-      (already_AddRefd<iface::dom::Node>(nl->item(i)));
-    // See if it is a MathML element...
-    DECLARE_QUERY_INTERFACE_OBJREF(mme, node, mathml_dom::MathMLElement);
-    if (mme == NULL)
-      continue;
-    // It is a MathML element. Remove it...
-    removeMath(mme);
-  }
-}
-
-CDA_SProSMathList::CDA_SProSMathList(iface::dom::Element* aParentEl)
-  : _cda_refcount(1), mParentEl(aParentEl)
-{
-}
-
-CDA_SProSMathList::~CDA_SProSMathList()
-{
-}
-
-uint32_t
-CDA_SProSMathList::length()
-  throw(std::exception&)
-{
-  RETURN_INTO_OBJREF(it, iface::SProS::MathMLElementIterator, iterate());
-  uint32_t count = 0;
-  while (true)
-  {
-    RETURN_INTO_OBJREF(x, iface::mathml_dom::MathMLElement, it->next());
-    if (x == NULL)
-      break;
-    count++;
-  }
-
-  return count;
-}
-
-bool
-CDA_SProSMathList::contains(iface::mathml_dom::MathMLElement* x)
-  throw(std::exception&)
-{
-  RETURN_INTO_OBJREF(it, iface::SProS::MathMLElementIterator, iterate());
-  while (true)
-  {
-    RETURN_INTO_OBJREF(y, iface::mathml_dom::MathMLElement, it->next());
-    if (y == NULL)
-      return false;
-    if (!CDA_objcmp(x, y))
-      return true;
-  }
-}
-
-iface::SProS::MathMLElementIterator*
-CDA_SProSMathList::iterate()
-  throw(std::exception&)
-{
-  return new CDA_SProSMathIterator(mParentEl);
-}
-
-iface::mathml_dom::MathMLElement*
-CDA_SProSMathIterator::next()
-  throw(std::exception&)
-{
-  while (true)
-  {
-    RETURN_INTO_OBJREF(el, iface::dom::Element, fetchNextElement());
-    if (el == NULL)
-      return NULL;
-
-    DECLARE_QUERY_INTERFACE_OBJREF(mel, el, mathml_dom::MathMLElement);
-    if (mel == NULL)
-      continue;
-
-    return mel;
-  }
-}
-
 iface::SProS::ParameterSet*
 CDA_SProSDataGenerator::parameters() throw()
 {
@@ -1625,6 +1520,39 @@ CDA_SProSDataGenerator::variables() throw()
 {
   add_ref();
   return &mVariableSet;
+}
+
+iface::mathml_dom::MathMLMathElement*
+CDA_SProSDataGenerator::math() throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  for (; cn; cn = already_AddRefd<iface::dom::Node>(cn->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    if (el == NULL)
+      continue;
+    el->add_ref();
+    return el;
+  }
+  return NULL;
+}
+
+void
+CDA_SProSDataGenerator::math(iface::mathml_dom::MathMLMathElement* aMath) throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  while (cn)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    cn = already_AddRefd<iface::dom::Node>(cn->nextSibling());
+
+    if (el == NULL)
+      continue;
+
+    mDomEl->removeChild(el)->release_ref();
+  }
+
+  mDomEl->appendChild(aMath)->release_ref();
 }
 
 SomeSProSSet(DataGenerator, L"listOfDataGenerators", L"dataGenerator");
@@ -1686,6 +1614,39 @@ CDA_SProSComputeChange::parameters()
 {
   add_ref();
   return &mParameters;
+}
+
+iface::mathml_dom::MathMLMathElement*
+CDA_SProSComputeChange::math() throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  for (; cn; cn = already_AddRefd<iface::dom::Node>(cn->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    if (el == NULL)
+      continue;
+    el->add_ref();
+    return el;
+  }
+  return NULL;
+}
+
+void
+CDA_SProSComputeChange::math(iface::mathml_dom::MathMLMathElement* aMath) throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  while (cn)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    cn = already_AddRefd<iface::dom::Node>(cn->nextSibling());
+
+    if (el == NULL)
+      continue;
+
+    mDomEl->removeChild(el)->release_ref();
+  }
+
+  mDomEl->appendChild(aMath)->release_ref();
 }
 
 wchar_t*
@@ -2043,14 +2004,24 @@ CDA_SProSDataSetSet::iterateDataSets()
 
 iface::SProS::SEDMLElement*
 CDA_SProSBootstrap::parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo)
-  throw()
+  throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
-  RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
-  RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
-  RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
-  RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
-  return new CDA_SProSSEDMLElement(de);  
+  try
+  {
+    RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
+    RETURN_INTO_OBJREF(dul, iface::cellml_api::DOMURLLoader, cbs->localURLLoader());
+    RETURN_INTO_WSTRING(absu, cbs->makeURLAbsolute(relativeTo, uri));
+    RETURN_INTO_OBJREF(doc, iface::dom::Document, dul->loadDocument(absu.c_str()));
+    RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
+
+    CDA_SProSSEDMLElement* el = new CDA_SProSSEDMLElement(de);
+    el->originalURL(absu.c_str());
+    return el;
+  }
+  catch (...)
+  {
+    throw iface::SProS::SProSException();
+  }
 }
 
 iface::SProS::SEDMLElement*

@@ -102,5 +102,6 @@ runtest reset_rule
 runtest definite_integral
 runtest TestParameterIVAmbiguity
 runtest IVComputation
+runtest uncertain-param1
 
 exit 0

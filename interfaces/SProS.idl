@@ -60,9 +60,7 @@ module SProS
   interface DataSet;
   interface DataSetSet;
   interface DataSetIterator;
-  interface MathList;
-  interface MathMLElementIterator;
-  typedef mathml_dom::MathMLElement MathMLElement;
+  interface SamplingSensitivityAnalysis;
 
   interface Bootstrap
     : XPCOM::IObject
@@ -113,6 +111,11 @@ module SProS
      * The list of all annotations associated with this element.
      */
     readonly attribute dom::NodeList annotations;
+
+    /**
+     * The parent of this element, or null.
+     */
+    readonly attribute Base parent;
   };
 
   exception SProSException
@@ -211,6 +214,12 @@ module SProS
     UniformTimeCourse createUniformTimeCourse();
 
     /**
+     * Creates a new SamplingSensitivityAnalysis. It is created with no parent
+     * and must be explicitly added.
+     */
+    SamplingSensitivityAnalysis createSamplingSensitivityAnalysis();
+
+    /**
      * Creates a new Task. It is created with no parent and must be
      * explicitly added.
      */
@@ -299,6 +308,11 @@ module SProS
      * explicitly added.
      */
     DataSet createDataSet();
+
+    /**
+     * The original URL the document was loaded from, if known.
+     */
+    attribute wstring originalURL;
   };
 
   /**
@@ -499,6 +513,17 @@ module SProS
   };
 
   /**
+   * A SamplingSensitivityAnalysis.
+   * Note: This is a non-standard (experimental) extension, for sensitivity
+   * analyses to be performed by repeatedly running a UniformTimeCourse.
+   */
+  interface SamplingSensitivityAnalysis
+    : UniformTimeCourse
+  {
+    attribute unsigned long numberOfSamples;
+  };
+
+  /**
    * A SEDML task.
    */
   interface Task
@@ -555,87 +580,10 @@ module SProS
   };
 
   /**
-   * A container for MathML elements.
-   */
-  interface MathContainer : XPCOM::IObject
-  {
-    /**
-     * The set of all math defined here.
-     */
-    readonly attribute MathList math;
-
-    /**
-     * Add an element to this collection.
-     * @param x The element to add.
-     */
-    void addMath(in MathMLElement x);
-
-    /**
-     * Remove an element from this collection. If the element is not found,
-     * do nothing.
-     * @param x The element to remove.
-     */
-    void removeMath(in MathMLElement x);
-
-    /**
-     * Find an element in this collection, and if it is found, replace it
-     * with another element.
-     * @param x The element to find.
-     * @param y The element to replace x with.
-     * @raises CellMLException If y is not valid according to the constraints
-     *                         on this collection (check optional).
-     */
-    void replaceMath(in MathMLElement x, in MathMLElement y);
-
-    /**
-     * Remove all elements in this collection.
-     */
-    void clearMath();
-  };
-
-  /**
-   * An interface allowing MathMLElements to be iterated.
-   */
-  interface MathMLElementIterator : XPCOM::IObject
-  {
-    /**
-     * Fetches the next MathML element, and advances the iterator.
-     * @return The next MathML element, or nil if there are no more MathML
-     *         elements.
-     */
-    MathMLElement next();
-  };
-
-  /**
-   * A collection of math.
-   */
-  interface MathList : XPCOM::IObject
-  {
-    /**
-     * The length of the collection.
-     */
-    readonly attribute unsigned long length;
-
-    /**
-     * Tests for the existance of an element in the set.
-     * @param x The element to test for.
-     * @return true if the element is present, or false otherwise.
-     */
-    boolean contains(in MathMLElement x);
-
-    /**
-     * Returns a CellMLElementIterator that can be used to iterate through the
-     * elements. The iteration order is undefined.
-     */
-    MathMLElementIterator iterate();
-  };
-#pragma terminal-interface
-
-  /**
    * A SEDML DataGenerator.
    */
   interface DataGenerator
-    : NamedIdentifiedElement, MathContainer
+    : NamedIdentifiedElement
   {
     /**
      * The set of parameters for this DataGenerator.
@@ -646,6 +594,11 @@ module SProS
      * The set of variables for this DataGenerator.
      */
     readonly attribute VariableSet variables;
+
+    /**
+     * The mathematical expression for this DataGenerator.
+     */
+    attribute mathml_dom::MathMLMathElement math;
   };
 
   /**
@@ -787,7 +740,7 @@ module SProS
    * A SEDML ComputeChange style change.
    */
   interface ComputeChange
-    : Change, MathContainer
+    : Change
   {
     /**
      * All variables involved.
@@ -798,6 +751,11 @@ module SProS
      * All parameters involved.
      */
     readonly attribute ParameterSet parameters;
+
+    /**
+     * The mathematical expression.
+     */
+    attribute mathml_dom::MathMLMathElement math;
   };
 
   /**

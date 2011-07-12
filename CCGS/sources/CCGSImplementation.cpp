@@ -308,6 +308,9 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    mAlgebraicVariableNamePattern(L"ALGEBRAIC[%]"),
    mRateNamePattern(L"RATES[%]"),
    mVOIPattern(L"VOI"),
+   mSampleDensityFunctionPattern(L"SampleUsingPDF(&pdf_<ID>, CONSTANTS, ALGEBRAIC)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\n  return (<EXPR>);\r\n}\r\n"),
+   mSampleRealisationsPattern(L"switch (rand() % <numChoices>)\r\n{\n<eachChoice>case <choiceNumber>:\r\n<choiceAssignments>break;\r\n</eachChoice>}\r\n"),
+   mBoundVariableName(L"bvar"),
    mAssignPattern(L"<LHS> = <RHS>;\r\n"),
    mSolvePattern
    (
@@ -485,6 +488,42 @@ void
 CDA_CodeGenerator::voiPattern(const wchar_t* aPattern) throw()
 {
   mVOIPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::sampleDensityFunctionPattern() throw()
+{
+  return CDA_wcsdup(mSampleDensityFunctionPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::sampleDensityFunctionPattern(const wchar_t* aPattern) throw()
+{
+  mSampleDensityFunctionPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::sampleRealisationsPattern() throw()
+{
+  return CDA_wcsdup(mSampleRealisationsPattern.c_str());
+}
+
+void
+CDA_CodeGenerator::sampleRealisationsPattern(const wchar_t* aPattern) throw()
+{
+  mSampleRealisationsPattern = aPattern;
+}
+
+wchar_t*
+CDA_CodeGenerator::boundVariableName() throw()
+{
+  return CDA_wcsdup(mBoundVariableName.c_str());
+}
+
+void
+CDA_CodeGenerator::boundVariableName(const wchar_t* aPattern) throw()
+{
+  mBoundVariableName = aPattern;
 }
 
 uint32_t
@@ -775,7 +814,9 @@ CDA_CodeGenerator::makeCodeGenerationState(iface::cellml_api::Model* aSourceMode
       aSourceModel,
       mConstantPattern, mStateVariableNamePattern,
       mAlgebraicVariableNamePattern,
-      mRateNamePattern, mVOIPattern, mAssignPattern, mSolvePattern,
+      mRateNamePattern, mVOIPattern, mSampleDensityFunctionPattern,
+      mSampleRealisationsPattern, mBoundVariableName,
+      mAssignPattern, mSolvePattern,
       mSolveNLSystemPattern, mTemporaryVariablePattern,
       mDeclareTemporaryPattern, mConditionalAssignmentPattern,
       mResidualPattern, mConstrainedRateStateInfoPattern,
@@ -987,7 +1028,8 @@ CDA_CustomGenerator::generateCode()
   std::wstring emp;
 
   CodeGenerationState cgs(mModel, emp, mStateVariableNamePattern, emp, emp, emp,
-                          mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
+                          emp, emp, emp, mAssignPattern,
+                          mSolvePattern, mSolveNLSystemPattern,
                           emp, emp, emp, emp, emp, emp, emp, emp, emp, false,
                           mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet, false);
   return cgs.GenerateCustomCode(mTargetSet, mRequestComputation, mKnown,

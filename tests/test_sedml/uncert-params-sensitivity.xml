@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sedML  level="1" version="1" xmlns="http://sed-ml.org/" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:cellml="http://www.cellml.org/cellml/1.1#" xmlns:cmeta="http://www.cellml.org/metadata/1.1#">
+  <listOfSimulations>
+    <samplingSensitivityAnalysis id="simulation1" numberOfSamples="1000"
+     initialTime="0" outputStartTime="0" outputEndTime="180" numberOfPoints="2" >
+      <algorithm kisaoID="KISAO:0000019"/>
+    </samplingSensitivityAnalysis>
+  </listOfSimulations>
+  <listOfModels>
+    <model id="model1" name="Uncertain Parameters" language="urn:sedml:language:cellml" source="../test_xml/uncertain-param1.xml"/>
+  </listOfModels>
+  <listOfTasks>
+    <task id="task1" name="Main task" modelReference="model1" simulationReference="simulation1"/>
+  </listOfTasks>
+  <listOfDataGenerators>
+    <dataGenerator id="r1" name="Random Variable 1">
+      <listOfVariables>
+        <variable id="r1var" taskReference="task1" target="/cellml:model/cellml:component[@name='main']/variable[@name='r1']" />
+      </listOfVariables>
+      <math:math><math:ci>r1</math:ci></math:math>
+    </dataGenerator>
+    <dataGenerator id="r2" name="Random Variable 2">
+      <listOfVariables>
+        <variable id="r2var" taskReference="task1" target="/cellml:model/cellml:component[@name='main']/cellml:variable[@name='r2']" />
+      </listOfVariables>
+      <math:math><math:ci>r2</math:ci></math:math>
+    </dataGenerator>
+  </listOfDataGenerators>
+</sedML>

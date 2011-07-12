@@ -5,6 +5,7 @@
 #define CELLML_PUBLIC_PRE CDA_IMPORT_PRE
 #define CELLML_PUBLIC_POST CDA_IMPORT_POST
 #endif
+#include "IfaceCellML_APISPEC.hxx"
 
 CELLML_PUBLIC_PRE iface::cellml_api::CellMLBootstrap* CreateCellMLBootstrap()
   CELLML_PUBLIC_POST;

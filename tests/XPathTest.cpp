@@ -255,8 +255,8 @@ XPathTest::testBasicXPath()
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     CPPUNIT_ASSERT(r->iterateNext() == NULL);
-    RETURN_INTO_WSTRING(o1n, o1->nodeName());
-    CPPUNIT_ASSERT(o1n == L"mydocument");
+    DECLARE_QUERY_INTERFACE_OBJREF(o1d, o1, dom::Document);
+    CPPUNIT_ASSERT(o1d != NULL);
   }
 
   {

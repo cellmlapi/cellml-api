@@ -254,8 +254,8 @@ CodeGenerationState::MapExternalTargetsToInternal
   std::map<iface::cellml_services::ComputationTarget*,
            ptr_tag<CDA_ComputationTarget> > oldTargetToNewTarget;
   for (
-       std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::iterator i =
-         aExTargetSet.begin();
+       std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>::
+         iterator i = aExTargetSet.begin();
        i != aExTargetSet.end();
        i++
       )
@@ -1808,26 +1808,95 @@ CodeGenerationState::CreateMathStatements()
                          mae, c);
           }
 
-          RETURN_INTO_WSTRING(opn, op->localName());
-          if (opn != L"eq")
-            ContextError(L"Unexpected MathML element; was expecting an eq",
-                         op, c);
-
-          
-          ptr_tag<Equation> eq(new Equation());
-          mms = eq;
-                  
-          if (mae->nArguments() != 3)
+          DECLARE_QUERY_INTERFACE_OBJREF(opcs, op, mathml_dom::MathMLCsymbolElement);
+          if (opcs != NULL)
           {
-            delete eq;
-            ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
-                         mae, c);
+            RETURN_INTO_WSTRING(csu, opcs->definitionURL());
+            if (csu != L"http://www.cellml.org/uncert1#uncertParWithDist")
+            {
+              ContextError(L"The only supported csymbol definitionURL in a toplevel apply "
+                           L"is http://www.cellml.org/uncert1#uncertParWithDist",
+                           op, c);
+            }
+
+            SampleFromDistribution* sfd = new SampleFromDistribution();
+            mms = sfd;
+            if (mae->nArguments() != 3)
+            {
+              delete sfd;
+              ContextError(L"uncertParWithDist takes 2 arguments, the "
+                           L"uncertain parameter and the distribution.",
+                           mae, c);
+            }
+
+            RETURN_INTO_OBJREF(targArg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
+            DECLARE_QUERY_INTERFACE_OBJREF(ve, targArg, mathml_dom::MathMLVectorElement);
+            if (ve != NULL)
+            {
+              for (uint32_t i = 1, l = ve->ncomponents(); i <= l; i++)
+              {
+                RETURN_INTO_OBJREF(vec, iface::mathml_dom::MathMLContentElement,
+                                   ve->getComponent(i));
+                DECLARE_QUERY_INTERFACE_OBJREF(veci, vec, mathml_dom::MathMLCiElement);
+                if (veci == NULL)
+                  ContextError(L"Only ci elements in vectors are supported on LHS of sample from distribution.", vec, c);
+              }
+            }
+            else
+            {
+              DECLARE_QUERY_INTERFACE_OBJREF(ci, targArg, mathml_dom::MathMLCiElement);
+              if (ci == NULL)
+                ContextError(L"Only ci elements and vectors are supported on LHS of sample from distribution.", targArg, c);
+            }
+
+            RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                               mTransform->transform(mCeVAS, mCUSES, mAnnoSet, targArg, c,
+                                                     NULL, NULL, 0));
+            RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
+                               mr->iterateInvolvedVariablesByDegree());
+            
+            while (true)
+            {
+              RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
+                                 dvi->nextDegreeVariable());
+              if (dv == NULL)
+                break;
+              
+              RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
+                                 dv->variable());
+    
+              std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
+                ::iterator  mi = mTargetsBySource.find(cv);
+              if (mi != mTargetsBySource.end())
+              {
+                sfd->mOutTargets.push_back((*mi).second);
+                sfd->mOutSet.insert((*mi).second);
+              }
+            }
+            sfd->mDistrib = already_AddRefd<iface::mathml_dom::MathMLElement>(mae->getArgument(3));
           }
+          else
+          {
+            RETURN_INTO_WSTRING(opn, op->localName());
+            if (opn != L"eq")
+              ContextError(L"Unexpected MathML element; was expecting an eq",
+                           op, c);
+            
+            ptr_tag<Equation> eq(new Equation());
+            mms = eq;
+            
+            if (mae->nArguments() != 3)
+            {
+              delete eq;
+              ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
+                           mae, c);
+            }
           
-          eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
-            (mae->getArgument(2));
-          eq->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
-            (mae->getArgument(3));
+            eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+              (mae->getArgument(2));
+            eq->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
+              (mae->getArgument(3));
+          }
         }
 
         SetupMathMLMathStatement(mms, mn, c);
@@ -1879,7 +1948,7 @@ CodeGenerationState::SetupMathMLMathStatement
   bvi = already_AddRefd<iface::cellml_api::CellMLVariableIterator>
     (mr->iterateLocallyBoundVariables());
   
-  while (true)\
+  while (true)
   {
     RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
                        bvi->nextVariable());
@@ -2387,6 +2456,41 @@ CodeGenerationState::DecomposeIntoAssignments
       j++;
       MathStatement* ms = *i;
 
+      if (ms->mType == MathStatement::SAMPLE_FROM_DIST)
+      {
+        SampleFromDistribution* sfd = static_cast<SampleFromDistribution*>(ms);
+        std::set<ptr_tag<MathStatement> > mss;
+        mss.insert(*i);
+
+        std::set<ptr_tag<CDA_ComputationTarget> > knowns, unknowns;
+        for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator k =
+               sfd->mTargets.begin(); k != sfd->mTargets.end(); k++)
+        {
+          if (sfd->mOutSet.count(*k) == 0)
+          {
+            if (aCandidates.count(*k) == 0)
+              continue;
+            knowns.insert(*k);
+          }
+          else
+          {
+            if (aUnwanted.count(*k))
+              continue;
+            start.insert(*k);
+            aCandidates.erase(*k);
+            unknowns.insert(*k);
+          }
+        }
+
+        System* sys = new System(mss, knowns, unknowns);
+        mSystems.push_back(sys);
+        aSystems.push_back(sys);
+        
+        mUnusedMathStatements.erase(i);
+        progress = true;        
+        continue;
+      }
+
       // XXX Do we want to handle top-level piecewise functions that have no
       // unknown rates in any form here too? These are not encouraged, but
       // they are probably valid.
@@ -2687,6 +2791,16 @@ CodeGenerationState::FindSmallSystem
   return false;
 }
 
+uint32_t
+ComputeSystemSize(std::set<ptr_tag<MathStatement> >& aSystem)
+{
+  uint32_t totalDegF = 0;
+  for (std::set<ptr_tag<MathStatement> >::iterator i = aSystem.begin();
+       i != aSystem.end(); i++)
+    totalDegF += (*i)->degFreedom();
+  return totalDegF;
+}
+
 bool
 CodeGenerationState::RecursivelyTestSmallSystem
 (
@@ -2705,10 +2819,17 @@ CodeGenerationState::RecursivelyTestSmallSystem
 
   for (std::set<ptr_tag<MathStatement> >::iterator i(aEqIt); i != aUseMathStatements.end();)
   {
+    if ((*i)->mType == MathStatement::SAMPLE_FROM_DIST)
+    {
+      if (aNeedToAdd > 0 || aSystem.size() > 0)
+        continue;
+    }
+
     // We do this insert and erase thing rather than copy the set to save stack
     // space.
     std::set<ptr_tag<MathStatement> >::iterator sysEq(aSystem.insert(*i).first);
     i++;
+
 
     if (aNeedToAdd > 0)
     {
@@ -2742,7 +2863,7 @@ CodeGenerationState::RecursivelyTestSmallSystem
           }
         }
       
-      uint32_t nEqns = aSystem.size(), nUnknowns = targets.size();
+      uint32_t nEqns = ComputeSystemSize(aSystem), nUnknowns = targets.size();
 
       // printf("In this case, nEqns = %u, nUnknowns = %u\n", nEqns, nUnknowns);
 
@@ -2798,7 +2919,7 @@ CodeGenerationState::FindBigSystem
 {
   // There is absolutely no point in doing this if the system is improperly
   // constrained...
-  if (aUseMathStatements.size() != aUseVars.size())
+  if (ComputeSystemSize(aUseMathStatements) != aUseVars.size())
     return true;
 
   bool didWork;
@@ -2878,6 +2999,12 @@ CodeGenerationState::RecursivelyTestBigSystem
 
   for (std::set<ptr_tag<MathStatement> >::iterator i(aEqIt); i != aUseMathStatements.end();)
   {
+    if ((*i)->mType == MathStatement::INITIAL_ASSIGNMENT || (*i)->mType == MathStatement::SAMPLE_FROM_DIST)
+    {
+      i++;
+      continue;
+    }
+
     // We do this insert and erase thing rather than copy the set to save stack
     // space.
     std::set<ptr_tag<MathStatement> >::iterator sysEq(aNonSystem.insert(*i).first);
@@ -3243,11 +3370,242 @@ CodeGenerationState::GenerateCodeForSystem
     }
     GenerateCasesIntoTemplate(aCodeTo, cases);
   }
+  else if (ms->mType == MathStatement::SAMPLE_FROM_DIST)
+    GenerateCodeForSampleFromDist(aCodeTo, static_cast<SampleFromDistribution*>(ms));
   else if (ms->mType == MathStatement::EQUATION)
     GenerateCodeForEquation(aCodeTo, static_cast<Equation*>(ms),
                             computedTarget);
 }
 
+static void
+SubstituteVariableForStringEverywhere(iface::mathml_dom::MathMLElement* aExpr,
+                                      const std::wstring& aCIName,
+                                      const std::wstring& aSubstTo)
+{
+  // See if aExpr is a CI element...
+  DECLARE_QUERY_INTERFACE_OBJREF(ciExpr, aExpr, mathml_dom::MathMLCiElement);
+  if (ciExpr != NULL)
+  {
+    RETURN_INTO_OBJREF(n, iface::dom::Node, ciExpr->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(t, n, dom::Text);
+    RETURN_INTO_WSTRING(txt, t->data());
+    int i = 0, j = txt.length() - 1;
+    wchar_t c;
+    while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      return;
+    txt = txt.substr(i, j - i + 1);
+
+    if (txt == aCIName)
+    {
+      RETURN_INTO_OBJREF(pn, iface::dom::Node, ciExpr->parentNode());
+      RETURN_INTO_OBJREF(doc, iface::dom::Document, pn->ownerDocument());
+      RETURN_INTO_OBJREF(csymEl, iface::dom::Element,
+                         doc->createElementNS(MATHML_NS, L"csymbol"));
+      DECLARE_QUERY_INTERFACE_OBJREF(csym, csymEl, mathml_dom::MathMLCsymbolElement);
+      csym->definitionURL(L"http://www.cellml.org/tools/api#passthrough");
+      RETURN_INTO_OBJREF(t, iface::dom::Text, doc->createTextNode(aSubstTo.c_str()));
+      csym->appendChild(t)->release_ref();
+      pn->replaceChild(csym, ciExpr)->release_ref();
+    }
+
+    return;
+  }
+
+  for (ObjRef<iface::dom::Node> n(already_AddRefd<iface::dom::Node>(aExpr->firstChild())); n != NULL;
+       n = already_AddRefd<iface::dom::Node>(n->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(me, n, mathml_dom::MathMLElement);
+    if (me == NULL)
+      continue;
+
+    SubstituteVariableForStringEverywhere(me, aCIName, aSubstTo);
+  }
+}
+
+void
+CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, SampleFromDistribution* aSFD)
+{
+  DECLARE_QUERY_INTERFACE_OBJREF(mae, aSFD->mDistrib, mathml_dom::MathMLApplyElement);
+  if (mae == NULL)
+    ContextError(L"Expected a distribution description in this context; distributions should always be described using an apply element.",
+                 aSFD->mDistrib, aSFD->mContext);
+  RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement, mae->_cxx_operator());
+  DECLARE_QUERY_INTERFACE_OBJREF(csop, op, mathml_dom::MathMLCsymbolElement);
+  if (csop == NULL)
+    ContextError(L"Expected a csymbol describing the type of distribution.",
+                 op, aSFD->mContext);
+  RETURN_INTO_WSTRING(du, csop->definitionURL());
+  if (du == L"http://www.cellml.org/uncert1#distFromDensity")
+  {
+    std::wstring t = mSampleDensityFunctionPattern;
+    wchar_t buf[30];
+    any_swprintf(buf, 30, L"%u", mNextSolveId++);
+
+    size_t pos = 0;
+    while ((pos = t.find(L"<ID>", pos)) != std::wstring::npos)
+      t.replace(pos, 4, buf);
+    
+    if (mae->nArguments() != 2)
+      ContextError(L"distFromDensity descriptions should have exactly one argument, the probability density function.",
+                   mae, aSFD->mContext);
+    RETURN_INTO_OBJREF(pdf, iface::mathml_dom::MathMLElement, mae->getArgument(2));
+    DECLARE_QUERY_INTERFACE_OBJREF(pdfl, pdf, mathml_dom::MathMLLambdaElement);
+    if (pdfl == NULL)
+      ContextError(L"The distFromDensity operator only takes a lambda function", pdf, aSFD->mContext);
+    if (pdfl->nBoundVariables() != 1)
+      ContextError(L"The distFromDensity operator expects a lambda function with exactly one bound variable.", pdf, aSFD->mContext);
+    RETURN_INTO_OBJREF(bv, iface::mathml_dom::MathMLBvarElement, pdfl->getBoundVariable(1));
+    if (bv->nArguments() != 1)
+      ContextError(L"The distFromDensity operator expects a lambda function with exactly one bound variable.", bv, aSFD->mContext);
+    RETURN_INTO_OBJREF(bvcontents, iface::mathml_dom::MathMLElement, bv->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(bvci, bvcontents, mathml_dom::MathMLCiElement);
+    if (bvci == NULL)
+      ContextError(L"Expected a ci element inside the bvar element.", bv, aSFD->mContext);
+    RETURN_INTO_OBJREF(n, iface::dom::Node, bvci->getArgument(1));
+    DECLARE_QUERY_INTERFACE_OBJREF(tn, n, dom::Text);
+    RETURN_INTO_WSTRING(txt, tn->data());
+    int i = 0, j = txt.length() - 1;
+    wchar_t c;
+    while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      i++;
+    while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+      j--;
+    if (j < i)
+      ContextError(L"CI element with only spaces inside.", bvci, aSFD->mContext);
+    txt = txt.substr(i, j - i + 1);
+
+    if (pdfl->nArguments() != 1)
+      ContextError(L"Expected lambda element to have one argument.", pdfl, aSFD->mContext);
+    RETURN_INTO_OBJREF(exprOrig, iface::mathml_dom::MathMLElement, pdfl->getArgument(1));
+    RETURN_INTO_OBJREF(exprN, iface::dom::Node, exprOrig->cloneNode(true));
+    DECLARE_QUERY_INTERFACE_OBJREF(expr, exprN, mathml_dom::MathMLElement);
+    SubstituteVariableForStringEverywhere(expr, txt, mBoundVariableName);
+
+    RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, expr,
+                                             aSFD->mContext, NULL,
+                                             NULL, 0));
+    for (uint32_t si = 0, sl = mr->supplementariesLength(); si < sl; si++)
+    {
+      RETURN_INTO_WSTRING(sup, mr->getSupplementary(si));
+      mCodeInfo->mFuncsStr += sup;
+    }
+    RETURN_INTO_WSTRING(exprStr, mr->expression());
+
+    pos = 0;
+    while ((pos = t.find(L"<EXPR>", pos)) != std::wstring::npos)
+      t.replace(pos, 6, exprStr);
+
+    // Look for <SUP> and split there if we need to...
+    std::wstring main, sup;
+    pos = t.find(L"<SUP>");
+    if (pos == std::wstring::npos)
+      main = t;
+    else
+    {
+      main = t.substr(0, pos);
+      sup = t.substr(pos + 5);
+    }
+
+    if (sup != L"")
+      mCodeInfo->mFuncsStr += sup;
+
+    RETURN_INTO_WSTRING(lhs, aSFD->mOutTargets.front()->name());
+    AppendAssign(aCodeTo, lhs, main);
+  }
+  else if (du == L"http://www.cellml.org/uncert1#distFromRealisations")
+  {
+    if (mae->nArguments() != 2)
+      ContextError(L"distFromRealisations should only have one argument - the vector of realisations.", mae, aSFD->mContext);
+    RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
+    DECLARE_QUERY_INTERFACE_OBJREF(vec, arg, mathml_dom::MathMLVectorElement);
+    if (vec == NULL)
+      ContextError(L"Argument to distFromRealisations should be a vector.",
+                   arg, aSFD->mContext);
+
+    std::wstring output = mSampleRealisationsPattern;
+
+    wchar_t buf[30];
+    any_swprintf(buf, 30, L"%u", vec->ncomponents());
+    size_t pos = 0;
+    while ((pos = output.find(L"<numChoices>", pos)) != std::wstring::npos)
+    {
+      output.replace(pos, 12, buf);
+      pos++;
+    }
+
+    size_t ecpos = output.find(L"<eachChoice>");
+    if (ecpos != std::wstring::npos)
+    {
+      size_t ecEndPos = output.find(L"</eachChoice>", ecpos + 12);
+      if (ecEndPos != std::wstring::npos)
+      {
+        std::wstring templ = output.substr(ecpos + 12, ecEndPos - ecpos - 12);
+        std::wstring allChoices;
+        for (uint32_t i = 1, l = vec->ncomponents(); i <= l; i++)
+        {
+          std::wstring subIn = templ, assignments;
+          RETURN_INTO_OBJREF(ce, iface::mathml_dom::MathMLContentElement,
+                             vec->getComponent(i));
+          DECLARE_QUERY_INTERFACE_OBJREF(ivec, ce, mathml_dom::MathMLVectorElement);
+          if (ivec != NULL)
+          {
+            if (ivec->ncomponents() != aSFD->mOutTargets.size())
+              ContextError(L"Realisations of a distribution must be either a vector of constants or contants", ce, aSFD->mContext);
+            std::vector<ptr_tag<CDA_ComputationTarget> >::iterator k;
+            uint32_t j = 1;
+            for (j = 1, k = aSFD->mOutTargets.begin(); k != aSFD->mOutTargets.end();
+                 k++, j++)
+            {
+              RETURN_INTO_OBJREF(mel, iface::mathml_dom::MathMLContentElement,
+                                 ivec->getComponent(j));
+              RETURN_INTO_OBJREF(localVar, iface::cellml_api::CellMLVariable,
+                                 GetVariableInComponent(aSFD->mContext,
+                                                        (*k)->mVariable));
+              RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                                 mTransform->transform(mCeVAS, mCUSES, mAnnoSet, mel,
+                                                       aSFD->mContext, localVar,
+                                                       NULL, 0));
+              GenerateAssignmentMaLaESResult(assignments, *k, mr);
+            }
+          }
+          else if (aSFD->mOutTargets.size() != 1)
+            ContextError(L"Realisations of a distribution that generates more than one output must be a vector", ce, aSFD->mContext);
+          else
+          {
+            ptr_tag<CDA_ComputationTarget> ct = *aSFD->mOutTargets.begin();
+            RETURN_INTO_OBJREF(localVar, iface::cellml_api::CellMLVariable,
+                               GetVariableInComponent(aSFD->mContext,
+                                                      ct->mVariable));
+            RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
+                               mTransform->transform(mCeVAS, mCUSES, mAnnoSet, ce,
+                                                     aSFD->mContext, localVar,
+                                                     NULL, 0));
+            GenerateAssignmentMaLaESResult(assignments, ct, mr);
+          }
+
+          any_swprintf(buf, 30, L"%u", i - 1);
+          pos = 0;
+          while ((pos = subIn.find(L"<choiceNumber>", pos)) != std::wstring::npos)
+            subIn.replace(pos, 14, buf);
+          pos = 0;
+          while ((pos = subIn.find(L"<choiceAssignments>", pos)) != std::wstring::npos)
+            subIn.replace(pos, 19, assignments);
+
+          allChoices += subIn;
+        }
+        output.replace(ecpos, ecEndPos - ecpos + 13, allChoices);
+      }
+    }
+    aCodeTo += output;
+  }
+  else
+    ContextError(L"The only supported ways to specify distributions for uncertain parameters are distFromDensity and distFromRealisations", csop, aSFD->mContext);
+}
 
 void
 CodeGenerationState::GenerateCodeForEquation
@@ -3563,9 +3921,9 @@ CodeGenerationState::GenerateSolveCode
   }
    // Scoped locale change.
   CNumericLocale locobj;
-   wchar_t id[20];
+  wchar_t id[20];
   any_swprintf(id, 20, L"%u", mNextSolveId++);
-   RETURN_INTO_WSTRING(vname, aComputedTarget->name());
+  RETURN_INTO_WSTRING(vname, aComputedTarget->name());
 
   wchar_t iv[30] = { L'0', L'.', L'1', L'\0' };
   std::map<ptr_tag<CDA_ComputationTarget>, double>::iterator ivIt
