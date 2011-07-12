@@ -1,7 +1,9 @@
-.*\.(la|lo|pyc|xpt|o)
+.*\.(la|a|so|lo|pyc|xpt|o)
 \.deps
 \.libs
 .*~
+.*\.gen\.cpp
+.*\.gen\.hpp
 libtool
 stamp-h1
 testCeLEDS
@@ -42,3 +44,10 @@ TeLICeMScanner.cpp
 TestTeLICeMParser$
 TestTeLICeMSerialiser$
 cellml-sdk.tar.bz2
+CMakeFiles
+cmake_install.cmake
+CMakeCache.txt
+javagen
+DartConfiguration.tcl
+Testing/Temporary
+CTestTestfile

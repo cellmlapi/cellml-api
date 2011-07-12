@@ -1,0 +1,7 @@
+IF (BUILD_TESTING)
+  IF (HAS_CPPUNIT)
+    ADD_EXECUTABLE(tests/RunTestBin tests/TestOutput.cpp ${CPPUNIT_SOURCES})
+    TARGET_LINK_LIBRARIES(tests/RunTestBin cppunit ${CMAKE_DL_LIBS} ${TEST_LIBS})
+    ADD_TEST(RunTestBin tests/RunTestBin)
+  ENDIF()
+ENDIF()

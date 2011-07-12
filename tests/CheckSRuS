@@ -16,9 +16,9 @@ if [[ -n $RUNNER ]]; then
 fi
 
 if [[ $(uname -o) == 'Cygwin' ]]; then
-  export LIBRARY_PATH=".libs;$LIBRARY_PATH"
+  export LIBRARY_PATH=".;$LIBRARY_PATH"
 else
-  export LIBRARY_PATH=.libs:$LIBRARY_PATH
+  export LIBRARY_PATH=.:$LIBRARY_PATH
 fi
 
 function runtest()
