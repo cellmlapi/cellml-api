@@ -4,6 +4,8 @@ MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 
 INCLUDE(CTest)
 
+OPTION(ENABLE_EVERYTHING "Turn on all optional features, except the commonly problematic ones (XPCOM, CORBA, and GSL integrators).")
+
 OPTION(ENABLE_CORBA "Generate a two-way bridge between the C++ implementation and CORBA, allowing all parts of the API to be accessed from CORBA. Note: this functionality is not widely tested; if you find a bug, we are only interested if you also provide a working patch to fix the problem")
 MARK_AS_ADVANCED(FORCE ENABLE_CORBA)
 OPTION(ENABLE_XPCOM "Generate XPIDL interfaces and a two-way bridge between the C++ implementation and XPCOM, allowing all parts of the API to be accessed from XPCOM. Note: this functionality is not widely tested; if you find a bug, we are only interested if you also provide a working patch to fix the problem")
@@ -36,6 +38,14 @@ OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 # Option Dependencies...
 # These must be ordered so modules come before their dependencies.
+IF (ENABLE_EVERYTHING)
+  SET(ENABLE_CELEDS_EXPORTER ON)
+  SET(ENABLE_SRUS ON)
+  SET(ENABLE_VACSS ON)
+  SET(ENABLE_TELICEMS ON)
+  SET(ENABLE_JAVA_BUILD ON)
+  SET(ENABLE_PYTHON ON)
+ENDIF()
 IF (ENABLE_CELEDS_EXPORTER)
   SET(ENABLE_CELEDS ON)
   SET(ENABLE_CCGS ON)
