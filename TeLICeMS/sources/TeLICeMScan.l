@@ -2,7 +2,7 @@
 #define YY_NO_UNISTD_H
 #include <iostream>
 #define IN_LEXER
-#include "TeLICeMParse.tab.hh"
+#include "TeLICeMParse.gen.hpp"
 }
 
 %option c++
