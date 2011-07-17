@@ -1,5 +1,7 @@
 SET(CXX_IFACE_HEADER_LIST)
-FOREACH(idlfile ${IDL_LIST})
+SET(IDL_LIST_CXX ${IDL_LIST})
+LIST(APPEND IDL_LIST_CXX xpcom)
+FOREACH(idlfile ${IDL_LIST_CXX})
   SET(idlpath "interfaces/${idlfile}.idl")
   SET(headerpath "interfaces/Iface${idlfile}.hxx")
 
