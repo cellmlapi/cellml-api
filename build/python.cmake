@@ -19,7 +19,7 @@ FOREACH(extension ${EXTENSION_LIST})
     SET(p2pyhpath "interfaces/P2Py${idlfile}.hxx")
     SET(py2ppath "interfaces/Py2P${idlfile}.cxx")
 
-    ADD_CUSTOM_COMMAND(OUTPUT ${p2pypath} OUTPUTS ${py2ppath} ${p2pyhpath} 
+    ADD_CUSTOM_COMMAND(OUTPUT ${p2pypath} ${py2ppath} ${p2pyhpath} 
       COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Iinterfaces -p../simple_interface_generators/omniidl_be ../${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
               simple_interface_generators/omniidl_be/pcmpy/__init__.py
