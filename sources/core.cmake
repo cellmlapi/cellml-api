@@ -60,5 +60,11 @@ IF(ENABLE_CONTEXT)
   DECLARE_CPPUNIT_FILE(CellMLContext)
 ENDIF()
 
+INCLUDE(FindLibXml2)
+IF (CHECK_BUILD AND NOT LIBXML2_FOUND)
+  MESSAGE(FATAL_ERROR "libxml2 libraries / includes were not found. To override the pre-build checks and manually fix any problems, pass -DCHECK_BUILD:BOOL=OFF to CMake.")
+ENDIF()
+INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR})
+
 DECLARE_TEST_LIB(xml2)
 DECLARE_TEST_LIB(cellml)
