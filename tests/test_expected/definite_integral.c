@@ -37,7 +37,7 @@
  * * * Variable index: 0
  * * * Variable storage: VOI
  */
- double func1(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret) { return ( (1.00000/ pow(( 2.00000* 3.14159265358979*(pow(CONSTANTS[1], 2.00000))), 1.0 / 2))*(exp(( (-0.500000/(pow(CONSTANTS[1], 2.00000)))*(pow((ALGEBRAIC[0] - CONSTANTS[0]), 2.00000)))))); }
+ double func1(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret) { return  1.00000/ pow( 2.00000* 3.14159265358979*pow(CONSTANTS[1], 2.00000), 1.0 / 2)*exp( -0.500000/pow(CONSTANTS[1], 2.00000)*pow(ALGEBRAIC[0] - CONSTANTS[0], 2.00000)); }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
 CONSTANTS[0] = 1.7;
@@ -48,7 +48,7 @@ CONSTANTS[3] = CONSTANTS[2];
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
-ALGEBRAIC[1] = 1.00000 - (defint(func1, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &ALGEBRAIC[0], ( 2.00000*CONSTANTS[0] - STATES[0]), STATES[0], pret));
+ALGEBRAIC[1] = 1.00000 - defint(func1, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &ALGEBRAIC[0],  2.00000*CONSTANTS[0] - STATES[0], STATES[0], pret);
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {

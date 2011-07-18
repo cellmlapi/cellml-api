@@ -66,7 +66,7 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
 CONSTANTS[0] = 3;
-CONSTANTS[1] = (CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ? ( sin(CONSTANTS[0])) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000);
+CONSTANTS[1] = (CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ?  sin(CONSTANTS[0]) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000);
 STATES[0] = CONSTANTS[0];
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

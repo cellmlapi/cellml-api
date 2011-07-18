@@ -310,7 +310,8 @@ private:
                         const std::wstring& aOpName,
                         std::vector<iface::mathml_dom::MathMLElement*>& args,
                         std::vector<iface::mathml_dom::MathMLBvarElement*>& bvars,
-                        const MaLaESQualifiers& mq);
+                        const MaLaESQualifiers& mq, bool aDoOpen = true,
+                        bool aDoClose = true);
   static void EnsureDefaultOperator();
   std::wstring mMessage, openGroup, closeGroup;
   bool mVariablesFromSource;

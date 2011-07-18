@@ -32,12 +32,12 @@
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
 main_offset = 3;
-main_z = (main_offset>1.00000&&main_offset<=3.00000 ? ( sin(main_offset)) : main_offset>3.00000 ? 3.00000 : 1.00000);
+main_z = (main_offset>1.00000&&main_offset<=3.00000 ?  sin(main_offset) : main_offset>3.00000 ? 3.00000 : 1.00000);
 main_y = main_offset;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
-main_x = (pow(main_time, 2.00000))+main_offset;
+main_x = pow(main_time, 2.00000)+main_offset;
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {

@@ -19,7 +19,7 @@ void
 computeRates(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
 rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);
-RATES[0] =  (4.00000/7.00000)*( 2.00000*(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1]);
+RATES[0] =  4.00000/7.00000*( 2.00000*pow(ALGEBRAIC[0], 3.00000)+ALGEBRAIC[1]);
 }
 void
 computeVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -37,8 +37,8 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 #define pret rfi->aPRET
   ALGEBRAIC[0] = p[0];
   ALGEBRAIC[1] = p[1];
-  hx[0] =  2.00000*( -1.00000*STATES[0]+(pow(ALGEBRAIC[0], 3.00000))+ALGEBRAIC[1]) - 0.00000;
-  hx[1] =  3.00000*((pow(ALGEBRAIC[0], 3.00000))+ -1.00000*( 3.00000*ALGEBRAIC[1])) - 0.00000;
+  hx[0] =  2.00000*( -1.00000*STATES[0]+pow(ALGEBRAIC[0], 3.00000)+ALGEBRAIC[1]) - 0.00000;
+  hx[1] =  3.00000*(pow(ALGEBRAIC[0], 3.00000)+ -1.00000* 3.00000*ALGEBRAIC[1]) - 0.00000;
 #undef VOI
 #undef CONSTANTS
 #undef RATES

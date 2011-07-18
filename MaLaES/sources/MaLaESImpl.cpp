@@ -35,7 +35,7 @@ CDAMaLaESResult::CDAMaLaESResult
     mAnnos(aAnnos), mLastUnique(0), boundVariable(false), infdelayed(false), degree(0),
     mVariablesFromSource(aVariablesFromSource), mInvolvesExternalCode(false)
 {
-  mPrec.push_back(std::pair<uint32_t, bool>(0, true));
+  mPrec.push_back(std::pair<uint32_t, bool>(0, false));
 
   QUERY_INTERFACE(mContext, aContext, cellml_api::CellMLComponent);
   ObjRef<iface::cellml_api::CellMLElement> el(aContext);
@@ -472,7 +472,7 @@ CDAMaLaESResult::endConversionMode()
 bool
 CDAMaLaESResult::pushPrecedence(uint32_t outer, uint32_t inner)
 {
-  bool eqNeed = (outer > static_cast<uint32_t>(mPrec.back().second));
+  bool eqNeed = mPrec.back().second && outer != 0;
   if (!eqNeed)
     mPrec.back().second = true;
   bool ret;
@@ -1128,8 +1128,8 @@ CDAMaLaESTransform::AddOperator
     p += 6;
     if (*p == L'H')
     {
-      precOuter = 0;
-      precInner = 1000;
+      precOuter = 1000;
+      precInner = 0;
       p++;
     }
     else
@@ -1606,6 +1606,7 @@ CDAMaLaESTransform::RunTransformOnOperator
   {
     uint32_t i;
     std::wstring sn = L"piecewise_first_case";
+    bool doOpen = true;
     for (i = 1; ; i++)
     {
       RETURN_INTO_OBJREF(pwc, iface::mathml_dom::MathMLCaseElement,
@@ -1616,9 +1617,12 @@ CDAMaLaESTransform::RunTransformOnOperator
       CleanupVector<iface::mathml_dom::MathMLElement*> tmpargs;
       tmpargs.push_back(pwc->caseCondition());
       tmpargs.push_back(pwc->caseValue());
-      ExecuteTransform(aResult, sn, tmpargs, bvars, noQualifiers);
+      ExecuteTransform(aResult, sn, tmpargs, bvars, noQualifiers, doOpen, false);
       if (i == 1)
+      {
         sn = L"piecewise_extra_case";
+        doOpen = false;
+      }
     }
 
     ObjRef<iface::mathml_dom::MathMLContentElement> pwo;
@@ -1629,7 +1633,7 @@ CDAMaLaESTransform::RunTransformOnOperator
     catch (...)
     {
       std::wstring sn = L"piecewise_no_otherwise";
-      ExecuteTransform(aResult, sn, args, bvars, noQualifiers);
+      ExecuteTransform(aResult, sn, args, bvars, noQualifiers, false, true);
     }
 
 
@@ -1639,7 +1643,7 @@ CDAMaLaESTransform::RunTransformOnOperator
       pwo->add_ref();
 
       std::wstring sn = L"piecewise_otherwise";
-      ExecuteTransform(aResult, sn, args, bvars, noQualifiers);
+      ExecuteTransform(aResult, sn, args, bvars, noQualifiers, false, true);
     }
 
     return;
@@ -1812,7 +1816,8 @@ CDAMaLaESTransform::ExecuteTransform
  const std::wstring& aOpName,
  std::vector<iface::mathml_dom::MathMLElement*>& args,
  std::vector<iface::mathml_dom::MathMLBvarElement*>& bvars,
- const MaLaESQualifiers& mq
+ const MaLaESQualifiers& mq,
+ bool aDoOpen, bool aDoClose
 )
 {
   // Scoped locale change.
@@ -1856,7 +1861,7 @@ CDAMaLaESTransform::ExecuteTransform
   bool needGroup = aResult->pushPrecedence(o->precOuter, o->precInner);
 
   // Open group...
-  if (needGroup)
+  if (needGroup && aDoOpen)
     aResult->appendString(openGroup, args, bvars, mq);
 
   // Now run the append program we compiled earlier...
@@ -1865,7 +1870,7 @@ CDAMaLaESTransform::ExecuteTransform
     (aResult->* ((*pri).first)) ((*pri).second, args, bvars, mq);
 
   // Close group...
-  if (needGroup)
+  if (needGroup && aDoClose)
     aResult->appendString(closeGroup, args, bvars, mq);
   aResult->popPrecedence();
 }

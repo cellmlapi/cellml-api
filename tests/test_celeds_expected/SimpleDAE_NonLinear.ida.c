@@ -23,9 +23,9 @@ void
 computeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, double* STATES,
                  double* OLDSTATES, double* ALGEBRAIC, double* CONDVARS)
 {
-resid[0] = RATES[0] -  (4.00000/7.00000)*( 2.00000*(pow(STATES[1], 3.00000))+STATES[2]);
-resid[1] =  2.00000*( -1.00000*STATES[0]+(pow(STATES[1], 3.00000))+STATES[2]) - 0.00000;
-resid[2] =  3.00000*((pow(STATES[1], 3.00000))+ -1.00000*( 3.00000*STATES[2])) - 0.00000;
+resid[0] = RATES[0] -  4.00000/7.00000*( 2.00000*pow(STATES[1], 3.00000)+STATES[2]);
+resid[1] =  2.00000*( -1.00000*STATES[0]+pow(STATES[1], 3.00000)+STATES[2]) - 0.00000;
+resid[2] =  3.00000*(pow(STATES[1], 3.00000)+ -1.00000* 3.00000*STATES[2]) - 0.00000;
 }
 void
 computeVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
