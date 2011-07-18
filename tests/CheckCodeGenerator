@@ -16,7 +16,7 @@ if [[ -n $RUNNER ]]; then
 fi
 CELLML2C="$TESTS_ENVIRONMENT $CELLML2C"
 
-grep -q "s,@ENABLE_RDF_TRUE@,|#_!!_#|#,g" $BINDIR/config.status
+grep -q "#define ENABLE_RDF" $BINDIR/cda_config.h
 RDF_ENABLED=$?
 
 function runtest()
