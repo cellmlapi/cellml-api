@@ -2,7 +2,6 @@ INCLUDE(FindJNI)
 INCLUDE(FindJava)
 INCLUDE_DIRECTORIES(simple_interface_generators/glue/java ${JNI_INCLUDE_DIRS})
 
-SET(java_bridge_files)
 
 IF (CHECK_BUILD AND NOT JNI_FOUND)
   MESSAGE(FATAL_ERROR "Java Native Interface libraries / includes were not found, but you have enabled Java support. To override the pre-build checks and manually fix any problems, pass -DCHECK_BUILD:BOOL=OFF to CMake.")
@@ -17,6 +16,8 @@ LIST(APPEND ALL_JAVA_FILES "simple_interface_generators/glue/java/pjm/Reference.
 LIST(APPEND ALL_JAVACLASS_FILES "javacp/pjm/Reference.class")
 
 FOREACH(extension ${EXTENSION_LIST})
+  SET(java_bridge_files)
+
   FOREACH(idlname ${IDL_LIST_${extension}})
     SET(THESE_JAVA_FILES)
     FOREACH(iface ${${idlname}_INTERFACES})
@@ -36,6 +37,11 @@ FOREACH(extension ${EXTENSION_LIST})
 
     SET(idlpath "interfaces/${idlname}.idl")
 
+    SET(dofirst)
+    FOREACH(idldep ${IDL_DEPS_${extension}})
+      LIST(APPEND dofirst "interfaces/p2j${idldep}.hxx")
+    ENDFOREACH(idldep)
+
     ADD_CUSTOM_COMMAND(OUTPUT ${THESE_JAVA_FILES} interfaces/p2j${idlname}.cpp interfaces/p2j${idlname}.hxx interfaces/j2p${idlname}.cpp interfaces/j2p${idlname}.hxx 
       COMMAND ${OMNIIDL} -bjava -Iinterfaces -p../simple_interface_generators/omniidl_be ../${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
@@ -45,9 +51,12 @@ FOREACH(extension ${EXTENSION_LIST})
       simple_interface_generators/omniidl_be/java/jnutils.py
       simple_interface_generators/omniidl_be/java/nativeclassgen.py
       simple_interface_generators/omniidl_be/java/pcm2j.py
+      ${dofirst}
       WORKING_DIRECTORY interfaces VERBATIM)
     LIST(APPEND java_bridge_files interfaces/p2j${idlname}.cpp interfaces/j2p${idlname}.cpp)
   ENDFOREACH(idlname)
+
+  ADD_LIBRARY(${extension}_java_bridge MODULE ${java_bridge_files})
 ENDFOREACH(extension)
 
 FOREACH(bootstrap ${BOOTSTRAP_LIST})
@@ -71,5 +80,3 @@ ADD_CUSTOM_COMMAND(OUTPUT ${ALL_JAVACLASS_FILES}
 ADD_CUSTOM_COMMAND(OUTPUT cellml.jar COMMAND ${Java_JAR_EXECUTABLE} cf cellml.jar -C javacp .
   DEPENDS ${ALL_JAVACLASS_FILES} VERBATIM)
 ADD_CUSTOM_TARGET(JAVA_BUILD ALL DEPENDS cellml.jar)
-
-ADD_LIBRARY(cellml_java_bridge MODULE ${java_bridge_files})
