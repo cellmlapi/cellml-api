@@ -7,6 +7,6 @@ INCLUDE_DIRECTORIES(CeLEDS/sources)
 
 ADD_LIBRARY(celeds
   CeLEDS/sources/CeLEDSImpl.cpp)
+INSTALL(TARGETS celeds DESTINATION lib)
 
-DECLARE_BOOTSTRAP("CeLEDSBootstrap" "CeLEDS" "CeLEDSBootstrap" "cellml_services" "createCeLEDSBootstrap" "CreateCeLEDSBootstrap" "CeLEDSBootstrap.hpp")
-
+DECLARE_BOOTSTRAP("CeLEDSBootstrap" "CeLEDS" "CeLEDSBootstrap" "cellml_services" "createCeLEDSBootstrap" "CreateCeLEDSBootstrap" "CeLEDSBootstrap.hpp" "CeLEDS/sources")

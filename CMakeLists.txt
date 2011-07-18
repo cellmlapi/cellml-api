@@ -141,7 +141,7 @@ ELSE()
 ENDIF()
 INCLUDE(build/test.cmake)
 
-# Finally, do all the language specific bits...
+# Do all the language specific bits...
 
 INCLUDE(build/cxx.cmake)
 

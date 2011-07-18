@@ -54,9 +54,11 @@ FOREACH(extension ${EXTENSION_LIST})
       ${dofirst}
       WORKING_DIRECTORY interfaces VERBATIM)
     LIST(APPEND java_bridge_files interfaces/p2j${idlname}.cpp interfaces/j2p${idlname}.cpp)
+    INSTALL(FILES interfaces/p2j${idlname}.hxx interfaces/j2p${idlname}.hxx DESTINATION include)
   ENDFOREACH(idlname)
 
   ADD_LIBRARY(${extension}_java_bridge MODULE ${java_bridge_files})
+  INSTALL(TARGETS ${extension}_java_bridge DESTINATION lib)
 ENDFOREACH(extension)
 
 FOREACH(bootstrap ${BOOTSTRAP_LIST})
@@ -80,3 +82,4 @@ ADD_CUSTOM_COMMAND(OUTPUT ${ALL_JAVACLASS_FILES}
 ADD_CUSTOM_COMMAND(OUTPUT cellml.jar COMMAND ${Java_JAR_EXECUTABLE} cf cellml.jar -C javacp .
   DEPENDS ${ALL_JAVACLASS_FILES} VERBATIM)
 ADD_CUSTOM_TARGET(JAVA_BUILD ALL DEPENDS cellml.jar)
+INSTALL(FILES cellml.jar DESTINATION lib)

@@ -10,8 +10,9 @@ INCLUDE_DIRECTORIES(CCGS/sources)
 ADD_LIBRARY(ccgs
   CCGS/sources/CCGSImplementation.cpp
   CCGS/sources/CCGSGenerator.cpp)
+INSTALL(TARGETS ccgs DESTINATION lib)
 
-DECLARE_BOOTSTRAP("CCGSBootstrap" "CCGS" "CodeGeneratorBootstrap" "cellml_services" "createCodeGeneratorBootstrap" "CreateCodeGeneratorBootstrap" "CCGSBootstrap.hpp")
+DECLARE_BOOTSTRAP("CCGSBootstrap" "CCGS" "CodeGeneratorBootstrap" "cellml_services" "createCodeGeneratorBootstrap" "CreateCodeGeneratorBootstrap" "CCGSBootstrap.hpp" "CCGS/sources")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(CellML2C CCGS/tests/CellML2C.cpp)

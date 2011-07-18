@@ -1,6 +1,6 @@
 SET(BOOTSTRAP_LIST)
 
-MACRO(DECLARE_BOOTSTRAP name idl iface ifacemodule bootstrapmethod methodcxx header)
+MACRO(DECLARE_BOOTSTRAP name idl iface ifacemodule bootstrapmethod methodcxx header headerpath)
   LIST(APPEND BOOTSTRAP_LIST ${name})
   LIST(APPEND BOOTSTRAP_${name}_IDL ${idl})
   LIST(APPEND BOOTSTRAP_${name}_IFACE ${iface})
@@ -8,4 +8,5 @@ MACRO(DECLARE_BOOTSTRAP name idl iface ifacemodule bootstrapmethod methodcxx hea
   LIST(APPEND BOOTSTRAP_${name}_METHOD ${bootstrapmethod})
   LIST(APPEND BOOTSTRAP_${name}_METHODCXX ${methodcxx})
   LIST(APPEND BOOTSTRAP_${name}_HEADER ${header})
+  LIST(APPEND BOOTSTRAP_${name}_HEADERPATH ${headerpath})
 ENDMACRO(DECLARE_BOOTSTRAP)

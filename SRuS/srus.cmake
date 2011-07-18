@@ -11,10 +11,12 @@ INCLUDE_DIRECTORIES(SRuS)
 INCLUDE_DIRECTORIES(xpath)
 
 ADD_LIBRARY(xpath xpath/XPathImpl.cpp)
+INSTALL(TARGETS xpath DESTINATION lib)
 ADD_LIBRARY(srus SRuS/SRuSImpl.cpp)
 TARGET_LINK_LIBRARIES(srus xpath cis)
+INSTALL(TARGETS srus DESTINATION lib)
 
-DECLARE_BOOTSTRAP("SRuSBootstrap" "SRuS" "Bootstrap" "SRuS" "createSRuSBootstrap" "CreateSRuSBootstrap" "SRuSBootstrap.hpp")
+DECLARE_BOOTSTRAP("SRuSBootstrap" "SRuS" "Bootstrap" "SRuS" "createSRuSBootstrap" "CreateSRuSBootstrap" "SRuSBootstrap.hpp" "SRuS")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(RunSEDML SRuS/tests/RunSEDML.cpp)

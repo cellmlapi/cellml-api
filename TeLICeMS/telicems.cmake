@@ -14,8 +14,9 @@ ADD_LIBRARY(telicems
   TeLICeMS/sources/TeLICeMSImpl.cpp
   TeLICeMScanner.cpp
   TeLICeMParse.gen.cpp)
+INSTALL(TARGETS telicems DESTINATION lib)
 
-DECLARE_BOOTSTRAP("TeLICeMSService" "TeLICeMS" "TeLICeMService" "cellml_services" "createTeLICeMService" "CreateTeLICeMService" "TeLICeMService.hpp")
+DECLARE_BOOTSTRAP("TeLICeMSService" "TeLICeMS" "TeLICeMService" "cellml_services" "createTeLICeMService" "CreateTeLICeMService" "TeLICeMService.hpp" "TeLICeMS/sources")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(TestTeLICeMParser TeLICeMS/tests/TestTeLICeMParser.cpp)

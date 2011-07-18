@@ -45,6 +45,7 @@ ADD_LIBRARY(cis
   CIS/sources/levmar/lm.c
   CIS/sources/levmar/misc.c
   )
+INSTALL(TARGETS cis DESTINATION lib)
 
 IF(ENABLE_GSL_INTEGRATORS)
   SET(MAYBEGSL gsl gslcblas)
@@ -64,7 +65,7 @@ ENDIF()
 
 TARGET_LINK_LIBRARIES(cis ccgs malaes cuses cevas cellml ${MAYBEGSL} ${THREADLIBRARY})
 
-DECLARE_BOOTSTRAP("CISBootstrap" "CIS" "CellMLIntegrationService" "cellml_services" "createIntegrationService" "CreateIntegrationService" "CISBootstrap.hpp")
+DECLARE_BOOTSTRAP("CISBootstrap" "CIS" "CellMLIntegrationService" "cellml_services" "createIntegrationService" "CreateIntegrationService" "CISBootstrap.hpp" "CIS/sources")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(RunCellML CIS/tests/RunCellML.cpp)
