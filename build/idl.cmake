@@ -8,6 +8,7 @@ MACRO(DECLARE_EXTENSION name)
   ENDIF()
   SET(CURRENT_EXTENSION ${name})
   SET(IDL_LIST_${CURRENT_EXTENSION})
+  SET(IDL_DEPS_${CURRENT_EXTENSION})
   LIST(APPEND EXTENSION_LIST ${name})
 ENDMACRO(DECLARE_EXTENSION)
 
@@ -29,6 +30,10 @@ MACRO(DECLARE_IDL name)
   STRING(REGEX MATCHALL "[\r\n]+  enum[ \t\r\n]+([A-Z|a-z|0-9|_]+)[ \t\r\n]*[:{]" ${name}_ENUMS ${IDLSOURCE})
   STRING(REGEX REPLACE "[\r\n]+  enum[ \t\r\n]+([A-Z|a-z|0-9|_]+)[ \t\r\n]*[:{]" "\\1;" "${name}_ENUMS" "${${name}_ENUMS}")
 ENDMACRO(DECLARE_IDL)
+
+MACRO(DECLARE_IDL_DEPENDENCY name)
+  LIST(APPEND IDL_DEPS_${CURRENT_EXTENSION} ${name})
+ENDMACRO(DECLARE_IDL_DEPENDENCY)
 
 FIND_PROGRAM(OMNIIDL omniidl DOC "The path to the omniidl program (note: omniidl is part of omniORB: http://omniorb.sourceforge.net/)")
 

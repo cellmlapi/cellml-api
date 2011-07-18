@@ -18,6 +18,10 @@ FOREACH(extension ${EXTENSION_LIST})
     SET(p2pypath "interfaces/P2Py${idlfile}.cxx")
     SET(p2pyhpath "interfaces/P2Py${idlfile}.hxx")
     SET(py2ppath "interfaces/Py2P${idlfile}.cxx")
+    SET(dofirst)
+    FOREACH(idldep ${IDL_DEPS_${extension}})
+      LIST(APPEND dofirst "interfaces/P2Py${idldep}.hxx")
+    ENDFOREACH(idldep)
 
     ADD_CUSTOM_COMMAND(OUTPUT ${p2pypath} ${py2ppath} ${p2pyhpath} 
       COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Iinterfaces -p../simple_interface_generators/omniidl_be ../${idlpath}
@@ -27,6 +31,7 @@ FOREACH(extension ${EXTENSION_LIST})
               simple_interface_generators/omniidl_be/pcmpy/PythonToCWalker.py
               simple_interface_generators/omniidl_be/pcmpy/identifier.py
               simple_interface_generators/omniidl_be/pcmpy/typeinfo.py
+              ${dofirst}
       WORKING_DIRECTORY interfaces VERBATIM)
 
     LIST(APPEND P2PYTHON_BRIDGE_LIST ${p2pypath})
