@@ -1738,7 +1738,8 @@ CDA_Element::shallowCloneNode(CDA_Document* aDoc)
   {
     RETURN_INTO_OBJREF(n, CDA_Node, (*i).second->shallowCloneNode(aDoc));
     CDA_Attr* at = static_cast<CDA_Attr*>(n.getPointer());
-    assert(ca->setAttributeNodeNS(at) == NULL);
+    iface::dom::Attr* atTmp = ca->setAttributeNodeNS(at);
+    assert(atTmp == NULL);
   }
 
   return ca;
