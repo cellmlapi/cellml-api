@@ -179,7 +179,7 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
   free(str);
 
   str = mr->expression();
-  CPPUNIT_ASSERT(!wcscmp(str, L"first_derivative_of_glcC*0.00100000==1000.00*(1000.00*(delta_Glc_C_rxn1*0.00100000)+delta_Glc_C_rxn2)"));
+  CPPUNIT_ASSERT(!wcscmp(str, L"first_derivative_of_glcC*0.00100000==1000.00*(1000.00*delta_Glc_C_rxn1*0.00100000+delta_Glc_C_rxn2)"));
   free(str);
 
   uint32_t l = mr->supplementariesLength();
