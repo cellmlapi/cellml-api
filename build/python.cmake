@@ -11,7 +11,7 @@ FOREACH(bootstrap ${BOOTSTRAP_LIST})
 ENDFOREACH(bootstrap)
 
 ADD_LIBRARY(PythonSupport simple_interface_generators/glue/python/python_support.cxx)
-TARGET_LINK_LIBRARIES(PythonSupport python)
+TARGET_LINK_LIBRARIES(PythonSupport ${PYTHON_LIBRARIES})
 INSTALL(TARGETS PythonSupport DESTINATION lib)
 
 FOREACH(extension ${EXTENSION_LIST})
