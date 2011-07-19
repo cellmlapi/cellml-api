@@ -1,5 +1,6 @@
 DECLARE_EXTENSION(telicems)
 DECLARE_IDL(TeLICeMS)
+DECLARE_IDL_DEPENDENCY(CellML_APISPEC)
 DECLARE_EXTENSION_END(telicems)
 
 INCLUDE_DIRECTORIES(TeLICeMS/sources)
@@ -14,9 +15,10 @@ ADD_LIBRARY(telicems
   TeLICeMS/sources/TeLICeMSImpl.cpp
   TeLICeMScanner.cpp
   TeLICeMParse.gen.cpp)
+TARGET_LINK_LIBRARIES(telicems cellml)
 INSTALL(TARGETS telicems DESTINATION lib)
 
-DECLARE_BOOTSTRAP("TeLICeMSService" "TeLICeMS" "TeLICeMService" "cellml_services" "createTeLICeMService" "CreateTeLICeMService" "TeLICeMService.hpp" "TeLICeMS/sources")
+DECLARE_BOOTSTRAP("TeLICeMSService" "TeLICeMS" "TeLICeMService" "cellml_services" "createTeLICeMService" "CreateTeLICeMService" "TeLICeMService.hpp" "TeLICeMS/sources" "telicems")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(TestTeLICeMParser TeLICeMS/tests/TestTeLICeMParser.cpp)

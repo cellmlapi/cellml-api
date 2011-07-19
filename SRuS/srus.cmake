@@ -1,5 +1,7 @@
 DECLARE_EXTENSION(xpath)
 DECLARE_IDL(xpath)
+DECLARE_IDL_DEPENDENCY(MathML_content_APISPEC)
+DECLARE_IDL_DEPENDENCY(SProS)
 DECLARE_EXTENSION_END(xpath)
 DECLARE_EXTENSION(srus)
 DECLARE_IDL(SRuS)
@@ -16,7 +18,7 @@ ADD_LIBRARY(srus SRuS/SRuSImpl.cpp)
 TARGET_LINK_LIBRARIES(srus xpath cis)
 INSTALL(TARGETS srus DESTINATION lib)
 
-DECLARE_BOOTSTRAP("SRuSBootstrap" "SRuS" "Bootstrap" "SRuS" "createSRuSBootstrap" "CreateSRuSBootstrap" "SRuSBootstrap.hpp" "SRuS")
+DECLARE_BOOTSTRAP("SRuSBootstrap" "SRuS" "Bootstrap" "SRuS" "createSRuSBootstrap" "CreateSRuSBootstrap" "SRuSBootstrap.hpp" "SRuS" "srus")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(RunSEDML SRuS/tests/RunSEDML.cpp)

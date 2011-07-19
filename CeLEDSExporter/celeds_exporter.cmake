@@ -8,9 +8,10 @@ INCLUDE_DIRECTORIES(CeLEDSExporter/sources)
 
 ADD_LIBRARY(celedsexporter
   CeLEDSExporter/sources/CeLEDSExporterImpl.cpp)
+TARGET_LINK_LIBRARIES(celedsexporter celeds ccgs)
 INSTALL(TARGETS celedsexporter DESTINATION lib)
 
-DECLARE_BOOTSTRAP("CeLEDSExporterBootstrap" "CeLEDSExporter" "CeLEDSExporterBootstrap" "cellml_services" "createCeLEDSExporterBootstrap" "CreateCeLEDSExporterBootstrap" "CeLEDSExporterBootstrap.hpp" "CeLEDSExporter/sources")
+DECLARE_BOOTSTRAP("CeLEDSExporterBootstrap" "CeLEDSExporter" "CeLEDSExporterBootstrap" "cellml_services" "createCeLEDSExporterBootstrap" "CreateCeLEDSExporterBootstrap" "CeLEDSExporterBootstrap.hpp" "CeLEDSExporter/sources" "celeds_exporter")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(testCeLEDS CeLEDSExporter/tests/testCeLEDS.cpp)

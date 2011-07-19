@@ -51,7 +51,7 @@ void PyBridge_Set_Output(PyObject* aList, const char *aFormat, ...)
 
 void PyBridge_VaSet_Output(PyObject* aList, const char* aFormat, va_list aArgs)
 {
-  PyObject* ob = Py_VaBuildValue(aFormat, aArgs);
+  PyObject* ob = Py_VaBuildValue(const_cast<char*>(aFormat), aArgs);
   // -1: Not a list. 0: Empty list.
   if (PyList_Size(aList) > 0)
     // Steals a reference to ob...

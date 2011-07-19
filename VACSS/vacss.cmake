@@ -7,9 +7,10 @@ INCLUDE_DIRECTORIES(VACSS/sources)
 
 ADD_LIBRARY(vacss
   VACSS/sources/VACSSImpl.cpp)
+TARGET_LINK_LIBRARIES(vacss cuses cellml)
 INSTALL(TARGETS vacss DESTINATION lib)
 
-DECLARE_BOOTSTRAP("VACSSBootstrap" "VACSS" "VACSService" "cellml_services" "createVACSService" "CreateVACSService" "VACSSBootstrap.hpp" "VACSS/sources")
+DECLARE_BOOTSTRAP("VACSSBootstrap" "VACSS" "VACSService" "cellml_services" "createVACSService" "CreateVACSService" "VACSSBootstrap.hpp" "VACSS/sources" "vacss")
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(ValidateCellML VACSS/tests/ValidateCellML.cpp)

@@ -45,9 +45,10 @@ ADD_LIBRARY(cellml
     ${MAYBE_RDF_SOURCES}
     ${MAYBE_CONTEXT_SOURCES}
   )
+TARGET_LINK_LIBRARIES(cellml xml2)
 INSTALL(TARGETS cellml DESTINATION lib)
 
-DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp" "sources/cellml")
+DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp" "sources/cellml" "cellml")
 DECLARE_CPPUNIT_FILE(DOM)
 DECLARE_CPPUNIT_FILE(MathML)
 DECLARE_CPPUNIT_FILE(CellML)

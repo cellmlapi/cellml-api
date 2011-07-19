@@ -9,7 +9,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
-#include <cmath>
+#include <math.h>
 #include <assert.h>
 
 template<typename C> class XPCOMContainerRAII

@@ -17,7 +17,9 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             basename = basename[:-4]
 
         self.hxx = output.Stream(open('j2p' + basename + '.hxx', 'w'))
-        self.cpp = output.Stream(open('j2p' + basename + '.cpp', 'w'))
+        self.cppMod = output.Stream(open('j2p' + basename + 'Mod.cpp', 'w'))
+        self.cppSup = output.Stream(open('j2p' + basename + 'Sup.cpp', 'w'))
+
         gbasename = '';
         for i in basename:
             if (i >= 'A' and i <= 'Z') or (i >= 'a' and i <= 'z'):
@@ -31,11 +33,16 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.hxx.out('#include "pick-jni.h"')
         self.hxx.out('#include "j2psupport.hxx"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
-        self.cpp.out('#include <exception>')
-        self.cpp.out('#include "cda_compiler_support.h"')
-        self.cpp.out('#include "j2p' + basename + '.hxx"')
-        self.cpp.out('#include "p2j' + basename + '.hxx"')
-        self.cpp.out('#include <Utilities.hxx>')
+        self.cppMod.out('#include <exception>')
+        self.cppMod.out('#include "cda_compiler_support.h"')
+        self.cppMod.out('#include "j2p' + basename + '.hxx"')
+        self.cppMod.out('#include "p2j' + basename + '.hxx"')
+        self.cppMod.out('#include <Utilities.hxx>')
+        self.cppSup.out('#include <exception>')
+        self.cppSup.out('#include "cda_compiler_support.h"')
+        self.cppSup.out('#include "j2p' + basename + '.hxx"')
+        self.cppSup.out('#include "p2j' + basename + '.hxx"')
+        self.cppSup.out('#include <Utilities.hxx>')
         for n in node.declarations():
             if n.mainFile():
                 n.accept(self)
@@ -90,98 +97,98 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         cxxclass = 'iface::' + scopedn
         self.cxxclass = cxxclass
         self.hxx.out('JWRAP_PUBLIC_PRE jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj) JWRAP_PUBLIC_POST;')
-        self.cpp.out('jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj)')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out("if (obj == NULL)")
-        self.cpp.inc_indent()
-        self.cpp.out('return NULL;')
-        self.cpp.dec_indent()
+        self.cppSup.out('jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj)')
+        self.cppSup.out('{')
+        self.cppSup.inc_indent()
+        self.cppSup.out("if (obj == NULL)")
+        self.cppSup.inc_indent()
+        self.cppSup.out('return NULL;')
+        self.cppSup.dec_indent()
         # If it is a p2j object, unwrap it...
-        self.cpp.out('p2j::' + scopedn + ' * wrap = dynamic_cast<p2j::' + scopedn + '*>(obj);')
-        self.cpp.out('if (wrap != NULL)')
-        self.cpp.inc_indent()
-        self.cpp.out('return env->NewLocalRef(wrap->unwrap());')
-        self.cpp.dec_indent()
+        self.cppSup.out('p2j::' + scopedn + ' * wrap = dynamic_cast<p2j::' + scopedn + '*>(obj);')
+        self.cppSup.out('if (wrap != NULL)')
+        self.cppSup.inc_indent()
+        self.cppSup.out('return env->NewLocalRef(wrap->unwrap());')
+        self.cppSup.dec_indent()
         
         # It is a non-Java C++ object, so make a Java wrapper for it...
         
-        self.cpp.out('jclass clazz = env->FindClass("pjm2pcm/' + classsig + '");')
-        self.cpp.out('jobject wrapper = env->AllocObject(clazz);')
-        self.cpp.out('jfieldID fid = env->GetFieldID(clazz, "nativePtr", "J");')
-        self.cpp.out('obj->add_ref();')
-        self.cpp.out('jlong field = reinterpret_cast<int64_t>(obj);')
-        self.cpp.out('env->SetLongField(wrapper, fid, field);')
+        self.cppSup.out('jclass clazz = env->FindClass("pjm2pcm/' + classsig + '");')
+        self.cppSup.out('jobject wrapper = env->AllocObject(clazz);')
+        self.cppSup.out('jfieldID fid = env->GetFieldID(clazz, "nativePtr", "J");')
+        self.cppSup.out('obj->add_ref();')
+        self.cppSup.out('jlong field = reinterpret_cast<int64_t>(obj);')
+        self.cppSup.out('env->SetLongField(wrapper, fid, field);')
 
-        self.cpp.out('fid = env->GetFieldID(clazz, "nativePtr_xpcom_iobject", "J");')
-        self.cpp.out('field = reinterpret_cast<int64_t>(static_cast<iface::XPCOM::IObject*>(obj));')
-        self.cpp.out('env->SetLongField(wrapper, fid, field);')
+        self.cppSup.out('fid = env->GetFieldID(clazz, "nativePtr_xpcom_iobject", "J");')
+        self.cppSup.out('field = reinterpret_cast<int64_t>(static_cast<iface::XPCOM::IObject*>(obj));')
+        self.cppSup.out('env->SetLongField(wrapper, fid, field);')
 
         self.recurseBuildInheritedFieldSetup(node)
 
-        self.cpp.out('return wrapper;')
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+        self.cppSup.out('return wrapper;')
+        self.cppSup.dec_indent()
+        self.cppSup.out('}')
 
         # Write a finalizer...
         self.pushManglePart('finalize')
         self.calculateMangled()
-        self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE void ' + self.mangled +
-                     '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('void ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out('jclass thisclazz = env->GetObjectClass(thisptr);')
-        self.cpp.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cpp.out('reinterpret_cast<' + self.cxxclass +
-                     '*>(env->GetLongField(thisptr, fid))->release_ref();')
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+        self.cppMod.out('extern "C" { JWRAP_PUBLIC_PRE void ' + self.mangled +
+                   	'(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
+        self.cppMod.out('void ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
+        self.cppMod.out('jclass thisclazz = env->GetObjectClass(thisptr);')
+        self.cppMod.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
+        self.cppMod.out('reinterpret_cast<' + self.cxxclass +
+                        '*>(env->GetLongField(thisptr, fid))->release_ref();')
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
         self.popManglePart()
 
         self.pushManglePart('nqueryInterface')
         self.calculateMangled()
-        self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE jobject ' + self.mangled +
-                     '(JNIEnv* env, jclass* clazz, jlong fromptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('jobject ' + self.mangled + '(JNIEnv* env, jclass* clazz, jlong fromptr)')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out('iface::XPCOM::IObject * obj = reinterpret_cast<iface::XPCOM::IObject*>' +
-                     '(fromptr);')
-        self.cpp.out('if (obj == NULL) { env->ExceptionClear(); return NULL; }')
-        self.cpp.out('DECLARE_QUERY_INTERFACE_OBJREF(qiobj, obj, ' + scopedn + ');')
+        self.cppMod.out('extern "C" { JWRAP_PUBLIC_PRE jobject ' + self.mangled +
+                       '(JNIEnv* env, jclass* clazz, jlong fromptr) JWRAP_PUBLIC_POST; }')
+        self.cppMod.out('jobject ' + self.mangled + '(JNIEnv* env, jclass* clazz, jlong fromptr)')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
+        self.cppMod.out('iface::XPCOM::IObject * obj = reinterpret_cast<iface::XPCOM::IObject*>' +
+                        '(fromptr);')
+        self.cppMod.out('if (obj == NULL) { env->ExceptionClear(); return NULL; }')
+        self.cppMod.out('DECLARE_QUERY_INTERFACE_OBJREF(qiobj, obj, ' + scopedn + ');')
         # If qiobj is null, it doesn't implement the requested interface...
-        self.cpp.out('if (qiobj == NULL) return NULL;')
-        self.cpp.out('jobject objj = ' + constructor + '(env, qiobj);')
-        self.cpp.out('return objj;')
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+        self.cppMod.out('if (qiobj == NULL) return NULL;')
+        self.cppMod.out('jobject objj = ' + constructor + '(env, qiobj);')
+        self.cppMod.out('return objj;')
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
         self.popManglePart()
 
         self.pushManglePart('hashCode')
         self.calculateMangled()
-        self.cpp.out('extern "C" { JWRAP_PUBLIC_PRE jint ' + self.mangled +
-                     '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
-        self.cpp.out('jint ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out('jclass thisclazz = env->GetObjectClass(thisptr);')
-        self.cpp.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cpp.out('char* oid1 = reinterpret_cast<' + self.cxxclass +
-                     '*>(env->GetLongField(thisptr, fid))->objid();')
-        self.cpp.out('jint hash = 0;')
-        self.cpp.out('size_t l = strlen(oid1);');
-        self.cpp.out('for (uint32_t i = 0; i < l; i++)')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out('uint32_t n = (i * 13) % 32;')
-        self.cpp.out('hash ^= (oid1[i] << n) | (oid1[i] >> (32 - n));')
-        self.cpp.dec_indent()
-        self.cpp.out('}')
-        self.cpp.out('free(oid1);')
-        self.cpp.out('return hash;')
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+        self.cppMod.out('extern "C" { JWRAP_PUBLIC_PRE jint ' + self.mangled +
+                        '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
+        self.cppMod.out('jint ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
+        self.cppMod.out('jclass thisclazz = env->GetObjectClass(thisptr);')
+        self.cppMod.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
+        self.cppMod.out('char* oid1 = reinterpret_cast<' + self.cxxclass +
+                        '*>(env->GetLongField(thisptr, fid))->objid();')
+        self.cppMod.out('jint hash = 0;')
+        self.cppMod.out('size_t l = strlen(oid1);');
+        self.cppMod.out('for (uint32_t i = 0; i < l; i++)')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
+        self.cppMod.out('uint32_t n = (i * 13) % 32;')
+        self.cppMod.out('hash ^= (oid1[i] << n) | (oid1[i] >> (32 - n));')
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
+        self.cppMod.out('free(oid1);')
+        self.cppMod.out('return hash;')
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
         self.popManglePart()
 
         self.recurseAcceptInheritedContents(node)
@@ -190,21 +197,21 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.popManglePart()
 
     def recurseBuildInheritedFieldSetup(self, node):
-        self.cpp.out('{')
-        self.cpp.inc_indent()
+        self.cppSup.out('{')
+        self.cppSup.inc_indent()
 
         if isinstance(node, idlast.Declarator) and node.alias():
             node = node.alias().aliasType().unalias().decl()
 
         fieldName = 'nativePtr_' + string.join(node.scopedName(), '_')
-        self.cpp.out('jfieldID fid = env->GetFieldID(clazz, "' + fieldName + '", "J");')
+        self.cppSup.out('jfieldID fid = env->GetFieldID(clazz, "' + fieldName + '", "J");')
         className = string.join(node.scopedName(), '::')
-        self.cpp.out('field = reinterpret_cast<int64_t>' +\
-                     '(static_cast<iface::' + className + '*>(obj));')
-        self.cpp.out('env->SetLongField(wrapper, fid, field);')
+        self.cppSup.out('field = reinterpret_cast<int64_t>' +\
+                        '(static_cast<iface::' + className + '*>(obj));')
+        self.cppSup.out('env->SetLongField(wrapper, fid, field);')
         
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+        self.cppSup.dec_indent()
+        self.cppSup.out('}')
         for i in node.inherits():
             if i.scopedName() != ['XPCOM', 'IObject']:
                 self.recurseBuildInheritedFieldSetup(i)
@@ -263,15 +270,15 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         
         self.hxx.out('extern "C" { JWRAP_PUBLIC_PRE ' + rtypeName + ' ' + name +
                      '(' + paramString + ') JWRAP_PUBLIC_POST; };')
-        self.cpp.out(rtypeName + ' ' + name + '(' + paramString + ')')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
+        self.cppMod.out(rtypeName + ' ' + name + '(' + paramString + ')')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
 
         if (rtype != None and rtypeName != 'void'):
             needRet = 1
-            self.cpp.out(rtype.pcmType(jnutils.Type.DERIVE) + ' _pcm_ret;')
+            self.cppMod.out(rtype.pcmType(jnutils.Type.DERIVE) + ' _pcm_ret;')
             if rtype.needLength():
-                self.cpp.out('uint32_t _length__pcm_ret;')
+                self.cppMod.out('uint32_t _length__pcm_ret;')
         else:
             needRet = 0
 
@@ -284,15 +291,15 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             if ti.needLength():
                 if pcmParams != '':
                     pcmParams = pcmParams + ', '
-                self.cpp.out('uint32_t _length__pcm_' + pname + ';')
+                self.cppMod.out('uint32_t _length__pcm_' + pname + ';')
                 pcmParams = pcmParams + indirect + '_length__pcm_' + pname
             if pcmParams != '':
                 pcmParams = pcmParams + ', '
-            self.cpp.out(ti.pcmType(jnutils.Type.DERIVE) + ' _pcm_' + pname + ';')
+            self.cppMod.out(ti.pcmType(jnutils.Type.DERIVE) + ' _pcm_' + pname + ';')
             pcmParams = pcmParams + indirect + '_pcm_' + pname
             if dirn == jnutils.Type.OUT:
                 continue
-            self.cpp.out(ti.convertToPCM(pname, '_pcm_' + pname, dirn != jnutils.Type.IN))
+            self.cppMod.out(ti.convertToPCM(pname, '_pcm_' + pname, dirn != jnutils.Type.IN))
 
         if needRet and rtype.needLength():
             if pcmParams != '':
@@ -300,14 +307,14 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             pcmParams = pcmParams + '&_length__pcm_ret';
 
         # Next, we need to extract the 'this' pointer...
-        self.cpp.out(self.cxxclass + '* pcm_this;')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out('jclass thisclazz = env->GetObjectClass(thisptr);')
-        self.cpp.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cpp.out('pcm_this = reinterpret_cast<' + self.cxxclass + '*>(env->GetLongField(thisptr, fid));')
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+        self.cppMod.out(self.cxxclass + '* pcm_this;')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
+        self.cppMod.out('jclass thisclazz = env->GetObjectClass(thisptr);')
+        self.cppMod.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
+        self.cppMod.out('pcm_this = reinterpret_cast<' + self.cxxclass + '*>(env->GetLongField(thisptr, fid));')
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
         
         # Make the call to the PCM interface...
         if needRet:
@@ -315,49 +322,49 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         else:
             retsave = ''
 
-        self.cpp.out('try')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
+        self.cppMod.out('try')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
         
-        self.cpp.out(retsave + 'pcm_this->' + pcmName + '(' + pcmParams + ');')
+        self.cppMod.out(retsave + 'pcm_this->' + pcmName + '(' + pcmParams + ');')
 
-        self.cpp.dec_indent()
-        self.cpp.out('}')
-        self.cpp.out ('catch (...)')
-        self.cpp.out('{')
-        self.cpp.inc_indent()
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
+        self.cppMod.out ('catch (...)')
+        self.cppMod.out('{')
+        self.cppMod.inc_indent()
         # Clean up parameters...
         for (pname, ti, dirn) in params:
-            self.cpp.out(ti.pcmDestroy('_pcm_' + pname))
+            self.cppMod.out(ti.pcmDestroy('_pcm_' + pname))
         # Raise an exception...
-        self.cpp.out('jclass eclazz = env->FindClass("java/lang/RuntimeException");')
-        self.cpp.out('env->ThrowNew(eclazz, "Native code threw exception");');
+        self.cppMod.out('jclass eclazz = env->FindClass("java/lang/RuntimeException");')
+        self.cppMod.out('env->ThrowNew(eclazz, "Native code threw exception");');
         if needRet:
-            self.cpp.out('return NULL;');
+            self.cppMod.out('return NULL;');
         else:
-            self.cpp.out('return;');        
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+            self.cppMod.out('return;');        
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
 
         # Convert out / inout parameters to JNI...
         for (pname, ti, dirn) in params:
             if dirn == jnutils.Type.IN:
                 continue
-            self.cpp.out(ti.convertToJNI(pname, '_pcm_' + pname, indirectOut = 1))
+            self.cppMod.out(ti.convertToJNI(pname, '_pcm_' + pname, indirectOut = 1))
 
         if needRet:
-            self.cpp.out(rtypeName + ' _jni_ret;')
-            self.cpp.out(rtype.convertToJNI('_jni_ret', '_pcm_ret'))
+            self.cppMod.out(rtypeName + ' _jni_ret;')
+            self.cppMod.out(rtype.convertToJNI('_jni_ret', '_pcm_ret'))
         
         # Clean up parameters...
         for (pname, ti, dirn) in params:
-            self.cpp.out(ti.pcmDestroy('_pcm_' + pname))
+            self.cppMod.out(ti.pcmDestroy('_pcm_' + pname))
         if needRet:
-            self.cpp.out(rtype.pcmDestroy('_pcm_ret'))
-            self.cpp.out('return _jni_ret;')
+            self.cppMod.out(rtype.pcmDestroy('_pcm_ret'))
+            self.cppMod.out('return _jni_ret;')
 
-        self.cpp.dec_indent()
-        self.cpp.out('}')
+        self.cppMod.dec_indent()
+        self.cppMod.out('}')
     
 def run(tree):
     iv = NativeStubVisitor()
