@@ -13,6 +13,11 @@ P2PyFactory::createByIface(const char* aIface, PyObject* aObj)
 
 std::map<std::string, P2PyFactory*> P2PyFactory::sLookup;
 
+P2PyFactory::P2PyFactory(const char* aIfaceName)
+{
+  sLookup.insert(std::pair<std::string, P2PyFactory*>(aIfaceName, this));
+}
+
 char*
 p2py::XPCOM::IObject::objid()
   throw(std::exception&)

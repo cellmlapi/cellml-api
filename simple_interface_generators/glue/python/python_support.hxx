@@ -132,11 +132,7 @@ PUBLIC_PYTHONSUPPORT_PRE void PyBridge_Set_Output(PyObject* aList, const char *a
 PUBLIC_PYTHONSUPPORT_PRE class PUBLIC_PYTHONSUPPORT_POST P2PyFactory
 {
 public:
-  P2PyFactory(const char* aIfaceName)
-  {
-    sLookup.insert(std::pair<std::string, P2PyFactory*>(aIfaceName, this));
-  }
-
+  PUBLIC_PYTHONSUPPORT_PRE P2PyFactory(const char* aIfaceName) PUBLIC_PYTHONSUPPORT_POST;
   virtual void* create(PyObject* aObj) = 0;
   static void* createByIface(const char* aIface, PyObject* aObj);
 
