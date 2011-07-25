@@ -55,11 +55,21 @@
 
 #define SIZE_INT64_T ${SIZE_INT64_T}
 #if ! (SIZE_INT64_T + 0)
+#undef int64_t
+#ifdef WIN32
+typedef signed __int64 int64_t;
+#else
 typedef signed long long int64_t;
+#endif
 #endif
 #define SIZE_UINT64_T ${SIZE_UINT64_T}
 #if ! (SIZE_UINT64_T + 0)
+#undef uint64_t
+#ifdef WIN32
+typedef unsigned __int64 uint64_t;
+#else
 typedef unsigned long long uint64_t;
+#endif
 #endif
 #define SIZE_INT32_T ${SIZE_INT32_T}
 #if ! (SIZE_INT32_T + 0)
