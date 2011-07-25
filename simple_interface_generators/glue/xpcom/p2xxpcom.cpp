@@ -1,3 +1,4 @@
+#define IN_MODULE_XPCOMSupport
 #include "p2xxpcom.hxx"
 #include "P2XFactory.hxx"
 #include <stdio.h>
