@@ -4,6 +4,7 @@
 #include "IfaceDOM_events.hxx"
 #include "XPathBootstrap.hpp"
 #include <list>
+#include <iterator>
 #include <vector>
 #include <string>
 #include <set>
@@ -11,6 +12,11 @@
 #include <algorithm>
 #include <math.h>
 #include <assert.h>
+
+#ifdef _MSC_VER
+#define finite _finite
+#define isnan _isnan
+#endif
 
 template<typename C> class XPCOMContainerRAII
 {
@@ -129,7 +135,7 @@ static double stringToNumber(const std::wstring& aNumberStr)
   while (*p == L' ' || *p == '\n' || *p == '\t' || *p == '\r')
     p++;
   if (*p == 0)
-    return nan(NULL);
+    return std::numeric_limits<double>::quiet_NaN();
 
   const wchar_t* endptr;
   double number = wcstod(p, (wchar_t**)&endptr);
@@ -137,7 +143,7 @@ static double stringToNumber(const std::wstring& aNumberStr)
     endptr++;
 
   if (*p != 0)
-    number = nan(NULL);
+    number = std::numeric_limits<double>::quiet_NaN();
 
   return number;
 }
@@ -1322,6 +1328,11 @@ static void splitWST(const std::wstring& aStr, std::list<std::wstring>& aAddTo)
     aAddTo.push_back(cur);
 }
 
+static double inline myround(double x)
+{
+  return (static_cast<int>(x >= 0 ? (x + 0.5) : (x - 0.5)));
+}
+
 class CDA_XPathFunctionCallExpr
   : public CDA_XPathExpr
 {
@@ -1700,7 +1711,7 @@ public:
           throw iface::xpath::XPathException();
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
-        arg->mNumber = round(arg->mNumber);
+        arg->mNumber = myround(arg->mNumber);
         arg->add_ref();
         return arg;
       }
@@ -1772,7 +1783,7 @@ public:
 
         CDA_XPathResult* offsetr = *i++;
         offsetr->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
-        uint32_t offset = round(offsetr->mNumber);
+        uint32_t offset = myround(offsetr->mNumber);
         
         uint32_t length;
         if (args.size() == 2)
@@ -1780,7 +1791,7 @@ public:
         else
         {
           CDA_XPathResult* lengthr = *i++;
-          length = round(lengthr->mNumber);
+          length = myround(lengthr->mNumber);
         }
 
         try
