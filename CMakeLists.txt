@@ -194,10 +194,11 @@ ENDIF()
 INCLUDE(CheckCSourceRuns)
 # The standard CheckCSourceCompiles, except actually run it to pick up linker problems.
 MACRO (CHECK_LINKER_FLAG _FLAG _RESULT)
-   SET(SAFE_CMAKE_REQUIRED_DEFINITIONS "${CMAKE_REQUIRED_DEFINITIONS}")
-   SET(CMAKE_REQUIRED_DEFINITIONS "${_FLAG}")
+   SET(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+   SET(CMAKE_REQUIRED_FLAGS "${_FLAG}")
    CHECK_C_SOURCE_RUNS("int main(void) { return 0; }" ${_RESULT}
      # Some compilers do not fail with a bad flag
+     FAIL_REGEX "unknown .*flag"                            # Darwin
      FAIL_REGEX "unrecognized .*option"                     # GNU
      FAIL_REGEX "ignoring unknown option"                   # MSVC
      FAIL_REGEX "warning D9002"                             # MSVC, any lang
@@ -205,7 +206,7 @@ MACRO (CHECK_LINKER_FLAG _FLAG _RESULT)
      FAIL_REGEX "[Ww]arning: [Oo]ption"                     # SunPro
      FAIL_REGEX "command option .* is not recognized"       # XL
      )
-   SET (CMAKE_REQUIRED_DEFINITIONS "${SAFE_CMAKE_REQUIRED_DEFINITIONS}")
+   SET (CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
 ENDMACRO (CHECK_LINKER_FLAG)
 
 CHECK_LINKER_FLAG("-Wl,--no-undefined" HAVE_NO_UNDEFINED)
