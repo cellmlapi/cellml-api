@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <cmath>
+#include <math.h>
 #include <set>
 
 class CDA_SRuSProcessor
