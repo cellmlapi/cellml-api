@@ -75,9 +75,11 @@ FOREACH(bootstrap ${BOOTSTRAP_LIST})
   LIST(APPEND ALL_JAVACLASS_FILES javacp/cellml_bootstrap/${bootstrap}.class)
 ENDFOREACH(bootstrap)
 
+LIST(APPEND cellml_java_bridge_files simple_interface_generators/glue/java/p2jxpcom.cpp)
+
 FOREACH(extension ${EXTENSION_LIST})
   ADD_LIBRARY(java_${extension} MODULE ${java_${extension}_lib_files})
-  ADD_LIBRARY(${extension}_java_bridge ${${extension}_java_bridge_files} simple_interface_generators/glue/java/p2jxpcom.cpp)
+  ADD_LIBRARY(${extension}_java_bridge ${${extension}_java_bridge_files})
   INSTALL(TARGETS java_${extension} DESTINATION lib)
   INSTALL(TARGETS ${extension}_java_bridge DESTINATION lib)
   SET(deplibs)
