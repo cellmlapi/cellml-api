@@ -17,6 +17,7 @@
 #endif
 
 #ifdef _MSC_VER
+#undef WIN32
 #define WIN32
 #undef __STDC__
 #endif
