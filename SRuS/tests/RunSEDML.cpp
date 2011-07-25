@@ -10,6 +10,7 @@
 
 #ifdef WIN32
 #include <windows.h>
+#define sleep Sleep
 #else
 #include <pthread.h>
 #endif
@@ -161,6 +162,7 @@ public:
     uint32_t nMax = 0;
     for (i = mResults.begin(); i != mResults.end(); i++)
     {
+#undef max
       nMax = std::max(nMax, static_cast<uint32_t>((*i).second.size()));
       printf("%S,", (*i).first.c_str());
     }
@@ -179,7 +181,7 @@ public:
     }
   }
 
-  int tasksFinished;
+  uint32_t tasksFinished;
 
 private:
   std::map<std::wstring, std::vector<double> > mResults;
