@@ -193,7 +193,7 @@ ENDIF()
 
 CHECK_C_COMPILER_FLAG("-Wl,--no-allow-shlib-undefined" HAVE_NO_ALLOW_SHLIB_UNDEFINED)
 IF(HAVE_NO_ALLOW_SHLIB_UNDEFINED)
-  LIST(APPEND CMAKE_EXE_LINKER_FLAGS "-Wl,--no-allow-shlib-undefined")
+  SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-allow-shlib-undefined ${CMAKE_EXE_LINKER_FLAGS}")
 ENDIF()
 
 IF(MSVC)
