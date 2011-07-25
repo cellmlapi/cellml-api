@@ -191,20 +191,36 @@ IF(HAVE_NO_UNDEFINED)
   ADD_DEFINITIONS("-fvisibility=hidden")
 ENDIF()
 
-CHECK_C_COMPILER_FLAG("-Wl,--no-undefined" HAVE_NO_UNDEFINED)
+INCLUDE(CheckCSourceRuns)
+# The standard CheckCSourceCompiles, except actually run it to pick up linker problems.
+MACRO (CHECK_LINKER_FLAG _FLAG _RESULT)
+   SET(SAFE_CMAKE_REQUIRED_DEFINITIONS "${CMAKE_REQUIRED_DEFINITIONS}")
+   SET(CMAKE_REQUIRED_DEFINITIONS "${_FLAG}")
+   CHECK_C_SOURCE_RUNS("int main(void) { return 0; }" ${_RESULT}
+     # Some compilers do not fail with a bad flag
+     FAIL_REGEX "unrecognized .*option"                     # GNU
+     FAIL_REGEX "ignoring unknown option"                   # MSVC
+     FAIL_REGEX "warning D9002"                             # MSVC, any lang
+     FAIL_REGEX "[Uu]nknown option"                         # HP
+     FAIL_REGEX "[Ww]arning: [Oo]ption"                     # SunPro
+     FAIL_REGEX "command option .* is not recognized"       # XL
+     )
+   SET (CMAKE_REQUIRED_DEFINITIONS "${SAFE_CMAKE_REQUIRED_DEFINITIONS}")
+ENDMACRO (CHECK_LINKER_FLAG)
+
+CHECK_LINKER_FLAG("-Wl,--no-undefined" HAVE_NO_UNDEFINED)
 IF(HAVE_NO_UNDEFINED)
   SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-undefined ${CMAKE_EXE_LINKER_FLAGS}")
   SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined ${CMAKE_SHARED_LINKER_FLAGS}")
   SET(CMAKE_MODULE_LINKER_FLAGS "-Wl,--no-undefined ${CMAKE_MODULE_LINKER_FLAGS}")
 ENDIF()
 
-CHECK_C_COMPILER_FLAG("-Wl,--allow-shlib-undefined" HAVE_ALLOW_SHLIB_UNDEFINED)
+CHECK_LINKER_FLAG("-Wl,--allow-shlib-undefined" HAVE_ALLOW_SHLIB_UNDEFINED)
 IF(HAVE_ALLOW_SHLIB_UNDEFINED)
   SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-shlib-undefined ${CMAKE_EXE_LINKER_FLAGS}")
   SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,--allow-shlib-undefined ${CMAKE_SHARED_LINKER_FLAGS}")
   SET(CMAKE_MODULE_LINKER_FLAGS "-Wl,--allow-shlib-undefined ${CMAKE_MODULE_LINKER_FLAGS}")
 ENDIF()
-
 
 IF(MSVC)
   ADD_DEFINITIONS("/wd:4290 /wd:4091 /wd:4250")
