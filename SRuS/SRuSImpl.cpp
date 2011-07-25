@@ -448,72 +448,84 @@ public:
             throw iface::SRuS::SRuSException();
           return acos(args[0]);
         }
+#ifndef _MSC_VER
         else if (opln == L"arccosh")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return acosh(args[0]);
         }
+#endif
         else if (opln == L"arccot")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return atan(1.0 / args[0]);
         }
+#ifndef _MSC_VER
         else if (opln == L"arccoth")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return atanh(1.0 / args[0]);
         }
+#endif
         else if (opln == L"arccsc")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return asin(1.0 / args[0]);
         }
+#ifndef _MSC_VER
         else if (opln == L"arccsch")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return asinh(1.0 / args[0]);
         }
+#endif
         else if (opln == L"arcsec")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return acos(1.0 / args[0]);
         }
+#ifndef _MSC_VER
         else if (opln == L"arcsech")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return acosh(1.0 / args[0]);
         }
+#endif
         else if (opln == L"arcsin")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return asin(args[0]);
         }
+#ifndef _MSC_VER
         else if (opln == L"arcsinh")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return asinh(args[0]);
         }
+#endif
         else if (opln == L"arctan")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return atan(args[0]);
         }
+#ifndef _MSC_VER
         else if (opln == L"arctanh")
         {
           if (args.size() != 1)
             throw iface::SRuS::SRuSException();
           return atanh(args[0]);
         }
+#endif
         else
           throw iface::SRuS::SRuSException();
 
@@ -907,7 +919,7 @@ public:
     else if (sn == L"infinity")
       return std::numeric_limits<double>::infinity();
     else if (sn == L"exponentiale")
-      return exp(1);
+      return exp(1.0);
 
     throw iface::SRuS::SRuSException(); // no such predefined symbol
   }
