@@ -77,3 +77,11 @@ typedef short int16_t;
 #if ! (SIZE_UINT16_T + 0)
 typedef unsigned short uint16_t;
 #endif
+#define SIZE_INT8_T ${SIZE_INT8_T}
+#if ! (SIZE_INT8_T + 0)
+typedef signed char int8_t;
+#endif
+#define SIZE_UINT8_T ${SIZE_UINT8_T}
+#if ! (SIZE_UINT8_T + 0)
+typedef unsigned char uint8_t;
+#endif
