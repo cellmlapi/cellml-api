@@ -7,7 +7,7 @@ INCLUDE_DIRECTORIES(CUSES/sources)
 
 ADD_LIBRARY(cuses
   CUSES/sources/CUSESImpl.cpp)
-TARGET_LINK_LIBRARIES(cuses annotools)
+TARGET_LINK_LIBRARIES(cuses annotools cellml ${CMAKE_DL_LIBS})
 INSTALL(TARGETS cuses DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CUSESBootstrap" "CUSES" "CUSESBootstrap" "cellml_services" "createCUSESBootstrap" "CreateCUSESBootstrap" "CUSESBootstrap.hpp" "CUSES/sources" "cuses")

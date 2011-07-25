@@ -8,6 +8,7 @@ INCLUDE_DIRECTORIES(CeVAS/sources)
 ADD_LIBRARY(cevas
   CeVAS/sources/CeVASImpl.cpp)
 INSTALL(TARGETS cevas DESTINATION lib)
+TARGET_LINK_LIBRARIES(cevas cellml ${CMAKE_DL_LIBS})
 
 DECLARE_BOOTSTRAP("CeVASBootstrap" "CeVAS" "CeVASBootstrap" "cellml_services" "createCeVASBootstrap" "CreateCeVASBootstrap" "CeVASBootstrap.hpp" "CeVAS/sources" "cevas")
 

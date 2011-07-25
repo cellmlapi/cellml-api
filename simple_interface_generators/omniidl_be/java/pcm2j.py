@@ -52,7 +52,8 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.hxx.out(
             "// This output is automatically generated. Do not edit.")
         self.modname = string.upper(gbasename)
-        guardname='P2J__' + self.modname + '__INCLUDED'
+        self.defname = 'P2J__' + self.modname
+        guardname= self.defname + '__INCLUDED'
         self.hxx.out('#ifndef ' + guardname)
         self.hxx.out("#define " + guardname)
         self.hxx.out('#include <exception>')
@@ -65,6 +66,15 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.cpp.out('#include "j2p' + basename + '.hxx"')
         self.cpp.out('#include "p2j' + basename + '.hxx"')
         self.cpp.out('#include <Utilities.hxx>')
+
+        self.hxx.out('#ifdef MODULE_CONTAINS_' + self.defname)
+        self.hxx.out('#define PUBLIC_' + self.defname + '_PRE CDA_EXPORT_PRE')
+        self.hxx.out('#define PUBLIC_' + self.defname + '_POST CDA_EXPORT_POST')
+        self.hxx.out('#else')
+        self.hxx.out('#define PUBLIC_' + self.defname + '_PRE CDA_IMPORT_PRE')
+        self.hxx.out('#define PUBLIC_' + self.defname + '_POST CDA_IMPORT_POST')
+        self.hxx.out('#endif')
+        
         for n in node.declarations():
             if n.mainFile():
                 self.contextNamespaces = ['p2j']
@@ -109,7 +119,8 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
     def visitInterface(self, node):
         if not self.visitingOther:
             self.syncNamespaces()
-            self.hxx.out('class ' + jnutils.CppName(node.identifier()))
+            self.hxx.out('PUBLIC_%s_PRE class PUBLIC_%s_POST %s' %
+                         (self.defname, self.defname, jnutils.CppName(node.identifier())))
 
         isTerminal = 0
         everyModule = 0

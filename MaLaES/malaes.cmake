@@ -10,6 +10,7 @@ INCLUDE_DIRECTORIES(MaLaES/sources)
 ADD_LIBRARY(malaes
   MaLaES/sources/MaLaESImpl.cpp)
 INSTALL(TARGETS malaes DESTINATION lib)
+TARGET_LINK_LIBRARIES(malaes ${CMAKE_DL_LIBS})
 
 DECLARE_BOOTSTRAP("MaLaESBootstrap" "MaLaES" "MaLaESBootstrap" "cellml_services" "createMaLaESBootstrap" "CreateMaLaESBootstrap" "MaLaESBootstrap.hpp" "MaLaES/sources" "malaes")
 

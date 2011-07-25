@@ -63,7 +63,7 @@ IF(NOT PTHREADS STREQUAL "PTHREADS-NOTFOUND")
   LIST(APPEND THREADLIBRARY pthreads)
 ENDIF()
 
-TARGET_LINK_LIBRARIES(cis ccgs malaes cuses cevas cellml ${MAYBEGSL} ${THREADLIBRARY})
+TARGET_LINK_LIBRARIES(cis ccgs malaes cuses cevas cellml ${MAYBEGSL} ${THREADLIBRARY} ${CMAKE_DL_LIBS})
 
 DECLARE_BOOTSTRAP("CISBootstrap" "CIS" "CellMLIntegrationService" "cellml_services" "createIntegrationService" "CreateIntegrationService" "CISBootstrap.hpp" "CIS/sources" "cis")
 

@@ -15,7 +15,7 @@ ADD_LIBRARY(telicems
   TeLICeMS/sources/TeLICeMSImpl.cpp
   TeLICeMScanner.cpp
   TeLICeMParse.gen.cpp)
-TARGET_LINK_LIBRARIES(telicems cellml)
+TARGET_LINK_LIBRARIES(telicems cellml ${CMAKE_DL_LIBS})
 INSTALL(TARGETS telicems DESTINATION lib)
 
 DECLARE_BOOTSTRAP("TeLICeMSService" "TeLICeMS" "TeLICeMService" "cellml_services" "createTeLICeMService" "CreateTeLICeMService" "TeLICeMService.hpp" "TeLICeMS/sources" "telicems")

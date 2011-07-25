@@ -15,7 +15,7 @@ INCLUDE_DIRECTORIES(xpath)
 ADD_LIBRARY(xpath xpath/XPathImpl.cpp)
 INSTALL(TARGETS xpath DESTINATION lib)
 ADD_LIBRARY(srus SRuS/SRuSImpl.cpp)
-TARGET_LINK_LIBRARIES(srus xpath cis)
+TARGET_LINK_LIBRARIES(srus xpath cis ${CMAKE_DL_LIBS})
 INSTALL(TARGETS srus DESTINATION lib)
 
 DECLARE_BOOTSTRAP("SRuSBootstrap" "SRuS" "Bootstrap" "SRuS" "createSRuSBootstrap" "CreateSRuSBootstrap" "SRuSBootstrap.hpp" "SRuS" "srus")

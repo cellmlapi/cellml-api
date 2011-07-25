@@ -45,7 +45,7 @@ ADD_LIBRARY(cellml
     ${MAYBE_RDF_SOURCES}
     ${MAYBE_CONTEXT_SOURCES}
   )
-TARGET_LINK_LIBRARIES(cellml xml2)
+TARGET_LINK_LIBRARIES(cellml xml2 ${CMAKE_DL_LIBS})
 INSTALL(TARGETS cellml DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp" "sources/cellml" "cellml")

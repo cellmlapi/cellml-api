@@ -8,7 +8,7 @@ INCLUDE_DIRECTORIES(CeLEDS/sources)
 
 ADD_LIBRARY(celeds
   CeLEDS/sources/CeLEDSImpl.cpp)
-TARGET_LINK_LIBRARIES(celeds cellml malaes)
+TARGET_LINK_LIBRARIES(celeds cellml malaes ${CMAKE_DL_LIBS})
 INSTALL(TARGETS celeds DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CeLEDSBootstrap" "CeLEDS" "CeLEDSBootstrap" "cellml_services" "createCeLEDSBootstrap" "CreateCeLEDSBootstrap" "CeLEDSBootstrap.hpp" "CeLEDS/sources" "celeds")
