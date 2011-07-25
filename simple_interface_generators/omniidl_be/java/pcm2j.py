@@ -45,13 +45,9 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
             basename = basename[:-4]
         self.hxx = output.Stream(open('p2j' + basename + '.hxx', 'w'))
         self.cpp = output.Stream(open('p2j' + basename + '.cpp', 'w'))
-        gbasename = '';
-        for i in basename:
-            if (i >= 'A' and i <= 'Z') or (i >= 'a' and i <= 'z'):
-                gbasename = gbasename + i
         self.hxx.out(
             "// This output is automatically generated. Do not edit.")
-        self.modname = string.upper(gbasename)
+        self.modname = basename
         self.defname = 'P2J__' + self.modname
         guardname= self.defname + '__INCLUDED'
         self.hxx.out('#ifndef ' + guardname)

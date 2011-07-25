@@ -20,19 +20,35 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppMod = output.Stream(open('j2p' + basename + 'Mod.cpp', 'w'))
         self.cppSup = output.Stream(open('j2p' + basename + 'Sup.cpp', 'w'))
 
-        gbasename = '';
-        for i in basename:
-            if (i >= 'A' and i <= 'Z') or (i >= 'a' and i <= 'z'):
-                gbasename = gbasename + i
         self.hxx.out(
             "// This output is automatically generated. Do not edit.")
-        self.modname = string.upper(gbasename)
-        guardname='J2P__' + self.modname + '__INCLUDED'
+        self.modname = basename
+        self.defname='J2P__' + self.modname
+        guardname=self.defname + '__INCLUDED'
         self.hxx.out('#ifndef ' + guardname)
         self.hxx.out("#define " + guardname)
         self.hxx.out('#include "pick-jni.h"')
         self.hxx.out('#include "j2psupport.hxx"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
+        self.hxx.out('#undef PUBLIC_JAVAMOD_PRE')
+        self.hxx.out('#undef PUBLIC_JAVAMOD_POST')
+        self.hxx.out('#ifdef IN_MODULE_%s' % self.defname)
+        self.hxx.out('#define PUBLIC_JAVAMOD_PRE CDA_EXPORT_PRE')
+        self.hxx.out('#define PUBLIC_JAVAMOD_POST CDA_EXPORT_POST')
+        self.hxx.out('#else')
+        self.hxx.out('#define PUBLIC_JAVAMOD_PRE CDA_IMPORT_PRE')
+        self.hxx.out('#define PUBLIC_JAVAMOD_POST CDA_IMPORT_POST')
+        self.hxx.out('#endif')
+        self.hxx.out('#undef PUBLIC_JAVALIB_PRE')
+        self.hxx.out('#undef PUBLIC_JAVALIB_POST')
+        self.hxx.out('#ifdef IN_LIBRARY_%s' % self.defname)
+        self.hxx.out('#define PUBLIC_JAVALIB_PRE CDA_EXPORT_PRE')
+        self.hxx.out('#define PUBLIC_JAVALIB_POST CDA_EXPORT_POST')
+        self.hxx.out('#else')
+        self.hxx.out('#define PUBLIC_JAVALIB_PRE CDA_IMPORT_PRE')
+        self.hxx.out('#define PUBLIC_JAVALIB_POST CDA_IMPORT_POST')
+        self.hxx.out('#endif')
+
         self.cppMod.out('#include <exception>')
         self.cppMod.out('#include "cda_compiler_support.h"')
         self.cppMod.out('#include "j2p' + basename + '.hxx"')
@@ -96,7 +112,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         scopedn = jnutils.ScopedCppName(node)
         cxxclass = 'iface::' + scopedn
         self.cxxclass = cxxclass
-        self.hxx.out('JWRAP_PUBLIC_PRE jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj) JWRAP_PUBLIC_POST;')
+        self.hxx.out('PUBLIC_JAVALIB_PRE jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj) PUBLIC_JAVALIB_POST;')
         self.cppSup.out('jobject ' + constructor + '(JNIEnv* env, ' + cxxclass + '* obj)')
         self.cppSup.out('{')
         self.cppSup.inc_indent()
@@ -133,8 +149,8 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         # Write a finalizer...
         self.pushManglePart('finalize')
         self.calculateMangled()
-        self.cppMod.out('extern "C" { JWRAP_PUBLIC_PRE void ' + self.mangled +
-                   	'(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
+        self.hxx.out('extern "C" { PUBLIC_JAVAMOD_PRE void ' + self.mangled +
+                     '(JNIEnv* env, jobject thisptr) PUBLIC_JAVAMOD_POST; }')
         self.cppMod.out('void ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
         self.cppMod.out('{')
         self.cppMod.inc_indent()
@@ -148,8 +164,8 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
 
         self.pushManglePart('nqueryInterface')
         self.calculateMangled()
-        self.cppMod.out('extern "C" { JWRAP_PUBLIC_PRE jobject ' + self.mangled +
-                       '(JNIEnv* env, jclass* clazz, jlong fromptr) JWRAP_PUBLIC_POST; }')
+        self.hxx.out('extern "C" { PUBLIC_JAVAMOD_PRE jobject ' + self.mangled +
+                       '(JNIEnv* env, jclass* clazz, jlong fromptr) PUBLIC_JAVAMOD_POST; }')
         self.cppMod.out('jobject ' + self.mangled + '(JNIEnv* env, jclass* clazz, jlong fromptr)')
         self.cppMod.out('{')
         self.cppMod.inc_indent()
@@ -167,8 +183,8 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
 
         self.pushManglePart('hashCode')
         self.calculateMangled()
-        self.cppMod.out('extern "C" { JWRAP_PUBLIC_PRE jint ' + self.mangled +
-                        '(JNIEnv* env, jobject thisptr) JWRAP_PUBLIC_POST; }')
+        self.hxx.out('extern "C" { PUBLIC_JAVAMOD_PRE jint ' + self.mangled +
+                        '(JNIEnv* env, jobject thisptr) PUBLIC_JAVAMOD_POST; }')
         self.cppMod.out('jint ' + self.mangled + '(JNIEnv* env, jobject thisptr)')
         self.cppMod.out('{')
         self.cppMod.inc_indent()
@@ -268,8 +284,8 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             tiName = ti.jniType(dirn)
             paramString = paramString + ', ' + tiName + ' ' + pname
         
-        self.hxx.out('extern "C" { JWRAP_PUBLIC_PRE ' + rtypeName + ' ' + name +
-                     '(' + paramString + ') JWRAP_PUBLIC_POST; };')
+        self.hxx.out('extern "C" { PUBLIC_JAVAMOD_PRE ' + rtypeName + ' ' + name +
+                     '(' + paramString + ') PUBLIC_JAVAMOD_POST; };')
         self.cppMod.out(rtypeName + ' ' + name + '(' + paramString + ')')
         self.cppMod.out('{')
         self.cppMod.inc_indent()
