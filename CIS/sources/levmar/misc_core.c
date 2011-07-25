@@ -573,7 +573,7 @@ LM_REAL fact;
 #ifdef _MSC_VER
 #pragma message("LAPACK not available, LU will be used for matrix inversion when computing the covariance; this might be unstable at times")
 #else
-#warning LAPACK not available, LU will be used for matrix inversion when computing the covariance; this might be unstable at times
+   // #warning LAPACK not available, LU will be used for matrix inversion when computing the covariance; this might be unstable at times
 #endif // _MSC_VER
 
    rnk=LEVMAR_LUINVERSE(JtJ, C, m);
