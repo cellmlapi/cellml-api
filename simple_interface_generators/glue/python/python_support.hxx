@@ -178,10 +178,10 @@ public:
     return mObject;
   }
 
-  void* query_interface(const char* id)
-    throw(std::exception&);
+  PUBLIC_PYTHONSUPPORT_PRE void* query_interface(const char* id)
+    throw(std::exception&) PUBLIC_PYTHONSUPPORT_POST;
 
-  char* objid() throw(std::exception&);
+  PUBLIC_PYTHONSUPPORT_PRE char* objid() throw(std::exception&) PUBLIC_PYTHONSUPPORT_POST;
 
 protected:
   PyObject* mObject;
