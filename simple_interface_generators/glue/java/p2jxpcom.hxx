@@ -26,15 +26,15 @@ namespace p2j
     public:
       CDA_IMPL_REFCOUNT;
 
-      IObject() {}
-      IObject(JNIEnv* aEnv, jobject aObject);
-      ~IObject();
+      PUBLIC_JAVA_PRE IObject() PUBLIC_JAVA_POST {}
+      PUBLIC_JAVA_PRE IObject(JNIEnv* aEnv, jobject aObject) PUBLIC_JAVA_POST;
+      PUBLIC_JAVA_PRE ~IObject() PUBLIC_JAVA_POST;
 
-      char* objid() throw();
+      PUBLIC_JAVA_PRE char* objid() throw() PUBLIC_JAVA_POST;
 
-      void* query_interface(const char*) throw();
+      PUBLIC_JAVA_PRE void* query_interface(const char*) throw() PUBLIC_JAVA_POST;
 
-      jobject unwrap() { return mObject; }
+      PUBLIC_JAVA_PRE jobject unwrap() PUBLIC_JAVA_POST { return mObject; }
 
     protected:
       JNIEnv* env;
