@@ -69,13 +69,7 @@ public:
     return (*i).second;
   }
 
-  static void registerP2JFactory(P2JFactory* f)
-  {
-    if (mMap == NULL)
-      mMap = new std::map<std::string, P2JFactory*>();
-
-    mMap->insert(std::pair<std::string, P2JFactory*>(f->pcmInterfaceClass(), f));
-  }
+  PUBLIC_JAVA_PRE static void registerP2JFactory(P2JFactory* f) PUBLIC_JAVA_POST;
 
   const char* pcmInterfaceClass()
   {

@@ -75,3 +75,12 @@ wrap_XPCOM_IObject(JNIEnv* aEnv, iface::XPCOM::IObject* aObj)
 
   return aEnv->NewLocalRef(pio->unwrap());
 }
+
+void
+P2JFactory::registerP2JFactory(P2JFactory* f)
+{
+  if (mMap == NULL)
+    mMap = new std::map<std::string, P2JFactory*>();
+  
+  mMap->insert(std::pair<std::string, P2JFactory*>(f->pcmInterfaceClass(), f));
+}
