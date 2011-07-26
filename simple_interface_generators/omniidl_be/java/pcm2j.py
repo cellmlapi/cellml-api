@@ -272,7 +272,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         paramstr = paramstr + ')'
 
         if not self.visitingOther:
-            self.hxx.out(rtypeName + ' ' + name + paramstr + ' throw(std::exception&);')
+            self.hxx.out('PUBLIC_' + self.defname + '_PRE ' + rtypeName + ' ' + name + paramstr + ' throw(std::exception&) ' + 'PUBLIC_' + self.defname + '_POST;')
         self.cpp.out(rtypeName + ' ' + self.classname + '::' + name + paramstr)
         self.cpp.out('  throw(std::exception&)')
         self.cpp.out('{')
