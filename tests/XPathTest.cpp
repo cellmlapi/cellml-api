@@ -16,7 +16,7 @@ XPathTest::setUp()
 {
   mBootstrap = CreateCellMLBootstrap();
   mLocalURLLoader = mBootstrap->localURLLoader();
-  mTestDoc = mLocalURLLoader->loadDocument(BASE_DIRECTORY "xpath-source.xml");
+  mTestDoc = mLocalURLLoader->loadDocument(BASE_DIRECTORY L"xpath-source.xml");
   mXPEval = CreateXPathEvaluator();
   mXPResolv = mXPEval->createNSResolver(mTestDoc);
 }
