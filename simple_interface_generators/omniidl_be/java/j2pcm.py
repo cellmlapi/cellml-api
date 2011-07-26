@@ -30,6 +30,36 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.hxx.out('#include "pick-jni.h"')
         self.hxx.out('#include "j2psupport.hxx"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
+
+        self.cppMod.out('#include <exception>')
+        self.cppMod.out('#include "cda_compiler_support.h"')
+        self.cppMod.out('#include "j2p' + basename + '.hxx"')
+        self.cppMod.out('#include "p2j' + basename + '.hxx"')
+        self.cppMod.out('#include <Utilities.hxx>')
+        self.cppSup.out('#include <exception>')
+        self.cppSup.out('#include "cda_compiler_support.h"')
+        self.cppSup.out('#include "j2p' + basename + '.hxx"')
+        self.cppSup.out('#include "p2j' + basename + '.hxx"')
+        self.cppSup.out('#include <Utilities.hxx>')
+        for n in node.declarations():
+            if n.mainFile():
+                pass
+            else:
+                filename = n.file()
+                pos = string.rfind(filename, '/')
+                if pos != -1:
+                    filename = filename[pos + 1:]
+
+                if not filename in self._included:
+                    self._included.append(filename)
+
+                    if filename[-4:] == ".idl":
+                        filename = filename[0:-4] + ".hxx"
+
+                    if filename != "xpcom.idl":
+                        self.hxx.out('#include "j2p@filename@"',
+                                      filename=filename)
+
         self.hxx.out('#undef PUBLIC_JAVAMOD_PRE')
         self.hxx.out('#undef PUBLIC_JAVAMOD_POST')
         self.hxx.out('#ifdef IN_MODULE_%s' % self.defname)
@@ -49,34 +79,9 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.hxx.out('#define PUBLIC_JAVALIB_POST CDA_IMPORT_POST')
         self.hxx.out('#endif')
 
-        self.cppMod.out('#include <exception>')
-        self.cppMod.out('#include "cda_compiler_support.h"')
-        self.cppMod.out('#include "j2p' + basename + '.hxx"')
-        self.cppMod.out('#include "p2j' + basename + '.hxx"')
-        self.cppMod.out('#include <Utilities.hxx>')
-        self.cppSup.out('#include <exception>')
-        self.cppSup.out('#include "cda_compiler_support.h"')
-        self.cppSup.out('#include "j2p' + basename + '.hxx"')
-        self.cppSup.out('#include "p2j' + basename + '.hxx"')
-        self.cppSup.out('#include <Utilities.hxx>')
         for n in node.declarations():
             if n.mainFile():
                 n.accept(self)
-            else:
-                filename = n.file()
-                pos = string.rfind(filename, '/')
-                if pos != -1:
-                    filename = filename[pos + 1:]
-
-                if not filename in self._included:
-                    self._included.append(filename)
-
-                    if filename[-4:] == ".idl":
-                        filename = filename[0:-4] + ".hxx"
-
-                    if filename != "xpcom.idl":
-                        self.hxx.out('#include "j2p@filename@"',
-                                      filename=filename)
         self.hxx.out('#endif // not ' + guardname)
     
     def pushManglePart(self, name):
