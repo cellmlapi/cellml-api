@@ -173,7 +173,10 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
             self.hxx.out('public:')
             self.hxx.inc_indent()
             self.hxx.out(jnutils.CppName(node.identifier()) + '() {}')
-            self.hxx.out(jnutils.CppName(node.identifier()) + '(JNIEnv* aEnv, jobject aObject);')
+            self.hxx.out('PUBLIC_@defname@_PRE @classname@(JNIEnv* aEnv, ' +
+                         'jobject aObject) PUBLIC_@defname@_POST;',
+                         classname=jnutils.CppName(node.identifier()),
+                         defname=self.defname)
 
         self.cpp.out(classname + '::' + jnutils.CppName(node.identifier()) + '(JNIEnv* aEnv, jobject aObject)')
         self.cpp.out('{')
