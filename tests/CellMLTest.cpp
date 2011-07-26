@@ -1938,9 +1938,9 @@ CellMLTest::testUnits()
   iface::cellml_api::UnitIterator* uni = uns->iterateUnits();
   iface::cellml_api::Unit* un = uni->nextUnit();
   
-  CPPUNIT_ASSERT_EQUAL(-3, un->prefix());
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-3), un->prefix());
   un->prefix(-2);
-  CPPUNIT_ASSERT_EQUAL(-2, un->prefix());
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-2), un->prefix());
 
   uni->release_ref();
   uns->release_ref();
@@ -1997,10 +1997,10 @@ CellMLTest::testUnit()
 //      * converting to a DOM view.
 //      */
 //     attribute long prefix;
-  CPPUNIT_ASSERT_EQUAL(-3, un1->prefix());
-  CPPUNIT_ASSERT_EQUAL(-3, un2->prefix());
-  CPPUNIT_ASSERT_EQUAL(0, un31->prefix());
-  CPPUNIT_ASSERT_EQUAL(0, un32->prefix());
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-3), un1->prefix());
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-3), un2->prefix());
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(0), un31->prefix());
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(0), un32->prefix());
   
 //     /**
 //      * The value of the multiplier attribute in the unit element.
@@ -3170,10 +3170,10 @@ CellMLTest::testExtensionElementList()
 //      *         element is not found.
 //      */
 //     long getIndexOf(in ExtensionElement x);
-  CPPUNIT_ASSERT_EQUAL(3, eel->getIndexOf(el));
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(3), eel->getIndexOf(el));
   iface::dom::Node* notinlist = el->parentNode();
   DECLARE_QUERY_INTERFACE_REPLACE(elnotinlist, notinlist, dom::Element);
-  CPPUNIT_ASSERT_EQUAL(-1, eel->getIndexOf(elnotinlist));
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-1), eel->getIndexOf(elnotinlist));
 //     /**
 //      * Tests for the existance of an element in the set.
 //      * @param x The element to test for.
