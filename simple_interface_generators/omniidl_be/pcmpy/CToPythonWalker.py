@@ -116,7 +116,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
 
     def visitForward(self, node):
         if not self.visitingOther:
-            self.syncNamespaces()            
+            self.syncNamespaces()
             self.hxx.out('class @classname@;', classname=node.simplename)
 
     def visitInterface(self, node):
@@ -182,7 +182,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             self.hxx.out('public:')
             self.hxx.inc_indent()
             self.hxx.out('%s() {}' % node.simplename)
-            self.hxx.out('%s(PyObject *aObject);' % node.simplename)
+            self.hxx.out('PUBLIC_%s_PRE %s(PyObject *aObject) PUBLIC_%s_POST;' % (self.modname, node.simplename, self.modname))
         
         self.cpp.out('@classname@::@constrname@(PyObject* aObject)',
                      classname=classname, constrname=node.simplename)
@@ -199,19 +199,29 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         if not self.visitingOther:
             self.hxx.dec_indent()
             self.hxx.out('};')
-            self.hxx.out('class %sFactory' % node.simplename)
-            self.hxx.out('  : public ::P2PyFactory')
-            self.hxx.out('{')
-            self.hxx.out('public:')
-            self.hxx.inc_indent()
-            self.hxx.out('%sFactory() : ::P2PyFactory("%s") {};' % (node.simplename, node.corbacxxscoped))
-            self.hxx.out('virtual ~%sFactory() {};' % (node.simplename))
-            self.hxx.out("void* create(PyObject* aObj) {\n" +\
-                         "  return reinterpret_cast<void*>(static_cast< ::iface::%s*>(new ::p2py::%s(aObj)));\n" %\
-                         (node.corbacxxscoped, node.corbacxxscoped) +\
-                         '}')
-            self.hxx.dec_indent()
-            self.hxx.out('};')
+
+            for ns in self.contextNamespaces:
+                self.cpp.out('namespace %s' % ns)
+                self.cpp.out('{')
+                self.cpp.inc_indent()
+            self.cpp.out('class %sFactory' % node.simplename)
+            self.cpp.out('  : public ::P2PyFactory')
+            self.cpp.out('{')
+            self.cpp.out('public:')
+            self.cpp.inc_indent()
+            self.cpp.out('%sFactory() : ::P2PyFactory("%s") {};' % (node.simplename, node.corbacxxscoped))
+            self.cpp.out('virtual ~%sFactory() {};' % (node.simplename))
+            self.cpp.out("void* create(PyObject* aObj)")
+            self.cpp.out("{")
+            self.cpp.inc_indent()
+            self.cpp.out('return reinterpret_cast<void*>(static_cast< ::iface::%s*>(new ::p2py::%s(aObj)));' % (node.corbacxxscoped, node.corbacxxscoped))
+            self.cpp.dec_indent()
+            self.cpp.out("}")
+            self.cpp.dec_indent()
+            self.cpp.out('};')
+            for ns in self.contextNamespaces:
+                self.cpp.inc_indent()
+                self.cpp.out('};')
             self.cpp.out('static ::p2py::%sFactory s%sFactory;' % (node.corbacxxscoped, node.simplecscoped))
             
     def visitTypedef(self, node):
@@ -252,8 +262,8 @@ class CToPythonWalker(idlvisitor.AstVisitor):
                 paramsigs.append('uint32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
         paramsig = string.join(paramsigs, ', ')
-        self.hxx.out('@rettype@ @cxxName@(@paramsig@) throw(std::exception&);',
-                     rettype=rettype, cxxName=cxxName, paramsig=paramsig)
+        self.hxx.out('PUBLIC_@modname@_PRE @rettype@ @cxxName@(@paramsig@) throw(std::exception&) PUBLIC_@modname@_POST;',
+                     rettype=rettype, cxxName=cxxName, paramsig=paramsig, modname=self.modname)
         self.cpp.out('@rettype@ @classname@::@cxxName@(@paramsig@)',
                      rettype=rettype, classname=self.classname, cxxName=cxxName, paramsig=paramsig)
         self.cpp.out('  throw(std::exception&)')
