@@ -69,13 +69,13 @@ DOMTest::testCreateDocumentType()
   CPPUNIT_ASSERT(nnm);
   int32_t l;
   CPPUNIT_ASSERT_NO_THROW(l = nnm->length());
-  CPPUNIT_ASSERT_EQUAL(0, l);
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(0), l);
   nnm->release_ref();
 
   CPPUNIT_ASSERT_NO_THROW(nnm = dt->notations());
   CPPUNIT_ASSERT(nnm);
   CPPUNIT_ASSERT_NO_THROW(l = nnm->length());
-  CPPUNIT_ASSERT_EQUAL(0, l);
+  CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(0), l);
   nnm->release_ref();
 
   // XXX Can we test internalSubset at all?
