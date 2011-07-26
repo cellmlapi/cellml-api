@@ -331,7 +331,7 @@ public:
          i++)
       (*i).second->release_ref();
 
-    CPPUNIT_ASSERT_EQUAL(0, mErrorCount);
+    CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(0), mErrorCount);
   }
 private:
   std::string
