@@ -136,12 +136,6 @@ IF (ENABLE_VACSS)
 ENDIF()
 
 # Run the tests...
-FIND_LIBRARY(CPPUNIT cppunit)
-IF(CPPUNIT STREQUAL "CPPUNIT-NOTFOUND")
-  SET(HAS_CPPUNIT OFF)
-ELSE()
-  SET(HAS_CPPUNIT ON)
-ENDIF()
 INCLUDE(build/test.cmake)
 
 # Do all the language specific bits...
