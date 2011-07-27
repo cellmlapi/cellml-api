@@ -86,7 +86,11 @@ ADD_LIBRARY(cellml
     extdep/libxml/xpath.c
     extdep/libxml/xpointer.c
   )
-TARGET_LINK_LIBRARIES(cellml xml2 ${CMAKE_DL_LIBS})
+SET(NETWORK_LIBS)
+IF(WIN32)
+LIST(APPEND NETWORK_LIBS ws2_32)
+ENDIF()
+TARGET_LINK_LIBRARIES(cellml xml2 ${CMAKE_DL_LIBS} ${NETWORK_LIBS})
 INSTALL(TARGETS cellml DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp" "sources/cellml" "cellml")
