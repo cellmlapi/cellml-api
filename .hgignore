@@ -27,7 +27,7 @@ interfaces/(x2p|p2x).*\.(cpp|hxx)
 interfaces/I.*\.(idl|h)
 simple_interface_generators/glue/xpcom/IWrappedPCM.h
 .dirstamp
-tests/RunTestBin
+RunTestBin
 docs/api/html
 javacp
 libltdl
