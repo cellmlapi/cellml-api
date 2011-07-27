@@ -3,7 +3,7 @@ def model m as
     var a : dimensionless;
     var b : dimensionless { init: 1.0 };
     def math as
-      a = (-(b));
+      a = -b;
     enddef;
   enddef;
 enddef;

@@ -791,14 +791,15 @@
 %token T_DIFF "d("
 %token T_PARTIALDIFF "del("
 
+%left '=' T_EQEQ T_NEQ
 %left T_NOT
-%left T_OR
 %left T_AND
+%left T_OR
+%left T_GE T_LE '<' '>'
 %left '+' '-'
-%left '*' '/'
-%left '=' T_EQEQ T_NEQ T_GE T_LE '<' '>'
-%left T_DIFF T_PARTIALDIFF
-
+%left '*' '/' T_DIFF T_PARIALDIFF
+%left T_IDENTIFIER
+%left '(' ')' '{' '}'
 %%
 
 valid: model {
@@ -1117,7 +1118,12 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
                      DoInorderExpression($2.string(), $1, $4, aParseTarget,
                                          $3.propertyMap()));
   $$.math(m);
-} | math_expr comparative_op math_attrs math_expr %prec T_EQEQ {
+} | math_expr comparative_op_lowerprec math_attrs math_expr %prec T_EQEQ {
+  RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
+                     DoInorderExpression($2.string(), $1, $4, aParseTarget,
+                                         $3.propertyMap()));
+  $$.math(m);
+} | math_expr comparative_op_higherprec math_attrs math_expr %prec T_GE {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression($2.string(), $1, $4, aParseTarget,
                                          $3.propertyMap()));
@@ -1167,10 +1173,10 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
 
 additive_op: '+' { $$.string("plus"); } | '-' { $$.string("minus"); };
 multiplicative_op: '*' { $$.string("times"); } | '/' { $$.string("divide"); };
-comparative_op: '=' { $$.string("eq"); } |
-            T_EQEQ { $$.string("eq"); } | T_NEQ { $$.string("neq"); } |
-            '<' { $$.string("lt"); } | '>' { $$.string("gt"); } |
-            T_GE { $$.string("geq");} | T_LE { $$.string("leq"); };
+comparative_op_lowerprec: '=' { $$.string("eq"); } |
+            T_EQEQ { $$.string("eq"); } | T_NEQ { $$.string("neq"); }
+comparative_op_higherprec: '<' { $$.string("lt"); } | '>' { $$.string("gt"); } |
+                          T_GE { $$.string("geq");} | T_LE { $$.string("leq"); };
 
 unary_op: '-' { $$.string("minus"); } | T_NOT { $$.string("not"); };
 

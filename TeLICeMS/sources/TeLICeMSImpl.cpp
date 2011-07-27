@@ -438,109 +438,112 @@ struct OperatorInformation
   const wchar_t* mathmlName, * telicemName;
   uint32_t expressionPrec, argPrec;
   enum ProcessType {
-    PREORDER, SIMPLE_INORDER, DERIVATIVE_LIKE
+    PREORDER, BARE_PREORDER, SIMPLE_INORDER, DERIVATIVE_LIKE
   } processType;
 } operInfo[] = {
-  {L"abs",              L"abs",              9, 0, OperatorInformation::PREORDER},
-  {L"and",              L"and",              2, 2, OperatorInformation::SIMPLE_INORDER},
-  {L"approx",           L"approx",           9, 0, OperatorInformation::PREORDER},
-  {L"arccos",           L"arccos",           9, 0, OperatorInformation::PREORDER},
-  {L"arccosh",          L"arccosh",          9, 0, OperatorInformation::PREORDER},
-  {L"arccot",           L"arccot",           9, 0, OperatorInformation::PREORDER},
-  {L"arccoth",          L"arccoth",          9, 0, OperatorInformation::PREORDER},
-  {L"arccsc",           L"arccsc",           9, 0, OperatorInformation::PREORDER},
-  {L"arccsch",          L"arccsch",          9, 0, OperatorInformation::PREORDER},
-  {L"arcsec",           L"arcsec",           9, 0, OperatorInformation::PREORDER},
-  {L"arcsech",          L"arcsech",          9, 0, OperatorInformation::PREORDER},
-  {L"arcsin",           L"arcsin",           9, 0, OperatorInformation::PREORDER},
-  {L"arcsinh",          L"arcsinh",          9, 0, OperatorInformation::PREORDER},
-  {L"arctan",           L"arctan",           9, 0, OperatorInformation::PREORDER},
-  {L"arctanh",          L"arctanh",          9, 0, OperatorInformation::PREORDER},
-  {L"arg",              L"arg",              9, 0, OperatorInformation::PREORDER},
-  {L"card",             L"card",             9, 0, OperatorInformation::PREORDER},
-  {L"cartesianproduct", L"cartesianproduct", 9, 0, OperatorInformation::PREORDER},
-  {L"ceiling",          L"ceiling",          9, 0, OperatorInformation::PREORDER},
-  {L"conjugate",        L"conjugate",        9, 0, OperatorInformation::PREORDER},
-  {L"cos",              L"cos",              9, 0, OperatorInformation::PREORDER},
-  {L"cosh",             L"cosh",             9, 0, OperatorInformation::PREORDER},
-  {L"cot",              L"cot", 9, 0, OperatorInformation::PREORDER},
-  {L"coth",             L"coth", 9, 0, OperatorInformation::PREORDER},
-  {L"csc",              L"csc", 9, 0, OperatorInformation::PREORDER},
-  {L"csch",             L"csch", 9, 0, OperatorInformation::PREORDER},
-  {L"curl",             L"curl",             9, 0, OperatorInformation::PREORDER},
-  {L"determinant",      L"determinant", 9, 0, OperatorInformation::PREORDER},
-  {L"diff",             L"d", 6, 0, OperatorInformation::DERIVATIVE_LIKE},
-  {L"divergence",       L"divergence", 10, 0, OperatorInformation::PREORDER},
-  {L"divide",           L"/", 4, 4, OperatorInformation::SIMPLE_INORDER},
-  {L"eq",               L"=", 5, 5, OperatorInformation::SIMPLE_INORDER},
-  {L"equivalent",       L"equivalent", 10, 0, OperatorInformation::PREORDER},
-  {L"exists",           L"exists", 10, 0, OperatorInformation::PREORDER},
-  {L"exp",              L"exp", 10, 0, OperatorInformation::PREORDER},
-  {L"factorial",        L"factorial", 10, 0, OperatorInformation::PREORDER},
-  {L"factorof",         L"factorof", 10, 0, OperatorInformation::PREORDER},
-  {L"floor",            L"floor", 10, 0, OperatorInformation::PREORDER},
-  {L"forall",           L"forall", 10, 0, OperatorInformation::PREORDER},
-  {L"gcd",              L"gcd", 10, 0, OperatorInformation::PREORDER},
-  {L"geq",              L"geq", 10, 0, OperatorInformation::PREORDER},
-  {L"grad",             L"grad", 10, 0, OperatorInformation::PREORDER},
-  {L"gt",               L">", 5, 5, OperatorInformation::SIMPLE_INORDER},
-  {L"imaginary",        L"imaginary", 10, 0, OperatorInformation::PREORDER},
-  {L"implies",          L"implies", 10, 0, OperatorInformation::PREORDER},
-  {L"in",               L"in", 10, 0, OperatorInformation::PREORDER},
-  {L"int",              L"int", 10, 0, OperatorInformation::PREORDER},
-  {L"intersect",        L"intersect", 10, 0, OperatorInformation::PREORDER},
-  {L"laplacian",        L"laplacian", 10, 0, OperatorInformation::PREORDER},
-  {L"lcm",              L"lcm", 10, 0, OperatorInformation::PREORDER},
-  {L"leq",              L"<=", 5, 5, OperatorInformation::SIMPLE_INORDER},
-  {L"list",             L"list", 10, 0, OperatorInformation::PREORDER},
-  {L"ln",               L"ln", 10, 0, OperatorInformation::PREORDER},
-  {L"log",              L"log", 10, 0, OperatorInformation::PREORDER},
-  {L"lowlimit",         L"lowlimit", 10, 0, OperatorInformation::PREORDER},
-  {L"lt",               L"<", 5, 5, OperatorInformation::SIMPLE_INORDER},
-  {L"max",              L"max", 10, 0, OperatorInformation::PREORDER},
-  {L"mean",             L"mean", 10, 0, OperatorInformation::PREORDER},
-  {L"median",           L"median", 10, 0, OperatorInformation::PREORDER},
-  {L"min",              L"min", 10, 0, OperatorInformation::PREORDER},
-  {L"minus",            L"-", 3, 3, OperatorInformation::SIMPLE_INORDER},
-  {L"mode",             L"mode", 10, 0, OperatorInformation::PREORDER},
-  {L"moment",           L"moment", 10, 0, OperatorInformation::PREORDER},
-  {L"neq",              L"!=", 5, 5, OperatorInformation::SIMPLE_INORDER},
-  {L"not",              L"not", 10, 0, OperatorInformation::PREORDER},
-  {L"notin",            L"notin", 10, 0, OperatorInformation::PREORDER},
-  {L"notprsubset",      L"notprsubset", 10, 0, OperatorInformation::PREORDER},
-  {L"notsubset",        L"notsubset", 10, 0, OperatorInformation::PREORDER},
-  {L"or",               L"or", 1, 1, OperatorInformation::SIMPLE_INORDER},
-  {L"outerproduct",     L"outerproduct", 10, 0, OperatorInformation::PREORDER},
-  {L"partialdiff",      L"partialdiff", 10, 0, OperatorInformation::DERIVATIVE_LIKE},
-  {L"plus",             L"+", 3, 3, OperatorInformation::SIMPLE_INORDER},
-  {L"power",            L"power", 10, 0, OperatorInformation::PREORDER},
-  {L"product",          L"product", 10, 0, OperatorInformation::PREORDER},
-  {L"prsubset",         L"prsubset", 10, 0, OperatorInformation::PREORDER},
-  {L"quotient",         L"quotient", 10, 0, OperatorInformation::PREORDER},
-  {L"real",             L"real", 10, 0, OperatorInformation::PREORDER},
-  {L"rem",              L"rem", 10, 0, OperatorInformation::PREORDER},
-  {L"root",             L"root", 10, 0, OperatorInformation::PREORDER},
-  {L"scalarproduct",    L"scalarproduct", 10, 0, OperatorInformation::PREORDER},
-  {L"sdev",             L"sdev", 10, 0, OperatorInformation::PREORDER},
-  {L"sec",              L"sec", 10, 0, OperatorInformation::PREORDER},
-  {L"sech",             L"sech", 10, 0, OperatorInformation::PREORDER},
-  {L"selector",         L"selector", 10, 0, OperatorInformation::PREORDER},
-  {L"set",              L"set", 10, 0, OperatorInformation::PREORDER},
-  {L"setdiff",          L"setdiff", 10, 0, OperatorInformation::PREORDER},
-  {L"sin",              L"sin", 10, 0, OperatorInformation::PREORDER},
-  {L"sinh",             L"sinh", 10, 0, OperatorInformation::PREORDER},
-  {L"subset",           L"subset", 10, 0, OperatorInformation::PREORDER},
-  {L"sum",              L"sum", 10, 0, OperatorInformation::PREORDER},
-  {L"tan",              L"tan", 10, 0, OperatorInformation::PREORDER},
-  {L"tanh",             L"tanh", 10, 0, OperatorInformation::PREORDER},
-  {L"times",            L"*", 4, 4, OperatorInformation::SIMPLE_INORDER},
-  {L"transpose",        L"transpose", 10, 0, OperatorInformation::PREORDER},
-  {L"union",            L"union", 10, 0, OperatorInformation::PREORDER},
-  {L"uplimit",          L"uplimit", 10, 0, OperatorInformation::PREORDER},
-  {L"variance",         L"variance", 10, 0, OperatorInformation::PREORDER},
-  {L"vectorproduct",    L"vectorproduct", 10, 0, OperatorInformation::PREORDER},
-  {L"xor",              L"xor", 10, 0, OperatorInformation::PREORDER}
+  {L"abs",              L"abs",               0, 10, OperatorInformation::PREORDER},
+  {L"and",              L"and",               8,  8, OperatorInformation::SIMPLE_INORDER},
+  {L"approx",           L"approx",            0, 10, OperatorInformation::PREORDER},
+  {L"arccos",           L"arccos",            0, 10, OperatorInformation::PREORDER},
+  {L"arccosh",          L"arccosh",           0, 10, OperatorInformation::PREORDER},
+  {L"arccot",           L"arccot",            0, 10, OperatorInformation::PREORDER},
+  {L"arccoth",          L"arccoth",           0, 10, OperatorInformation::PREORDER},
+  {L"arccsc",           L"arccsc",            0, 10, OperatorInformation::PREORDER},
+  {L"arccsch",          L"arccsch",           0, 10, OperatorInformation::PREORDER},
+  {L"arcsec",           L"arcsec",            0, 10, OperatorInformation::PREORDER},
+  {L"arcsech",          L"arcsech",           0, 10, OperatorInformation::PREORDER},
+  {L"arcsin",           L"arcsin",            0, 10, OperatorInformation::PREORDER},
+  {L"arcsinh",          L"arcsinh",           0, 10, OperatorInformation::PREORDER},
+  {L"arctan",           L"arctan",            0, 10, OperatorInformation::PREORDER},
+  {L"arctanh",          L"arctanh",           0, 10, OperatorInformation::PREORDER},
+  {L"arg",              L"arg",               0, 10, OperatorInformation::PREORDER},
+  {L"card",             L"card",              0, 10, OperatorInformation::PREORDER},
+  {L"cartesianproduct", L"cartesianproduct",  0, 10, OperatorInformation::PREORDER},
+  {L"ceiling",          L"ceiling",           0, 10, OperatorInformation::PREORDER},
+  {L"conjugate",        L"conjugate",         0, 10, OperatorInformation::PREORDER},
+  {L"cos",              L"cos",               0, 10, OperatorInformation::PREORDER},
+  {L"cosh",             L"cosh",              0, 10, OperatorInformation::PREORDER},
+  {L"cot",              L"cot",               0, 10, OperatorInformation::PREORDER},
+  {L"coth",             L"coth",              0, 10, OperatorInformation::PREORDER},
+  {L"csc",              L"csc",               0, 10, OperatorInformation::PREORDER},
+  {L"csch",             L"csch",              0, 10, OperatorInformation::PREORDER},
+  {L"curl",             L"curl",              0, 10, OperatorInformation::PREORDER},
+  {L"determinant",      L"determinant",       0, 10, OperatorInformation::PREORDER},
+  {L"diff",             L"d",                 1,  0, OperatorInformation::DERIVATIVE_LIKE},
+  {L"divergence",       L"divergence",        0, 10, OperatorInformation::PREORDER},
+  {L"divide",           L"/",                 4,  4, OperatorInformation::SIMPLE_INORDER},
+  {L"eq",               L"=",                 9,  9, OperatorInformation::SIMPLE_INORDER},
+  {L"equivalent",       L"equivalent",        0, 10, OperatorInformation::PREORDER},
+  {L"exists",           L"exists",            0, 10, OperatorInformation::PREORDER},
+  {L"exp",              L"exp",               0, 10, OperatorInformation::PREORDER},
+  {L"factorial",        L"factorial",         0, 10, OperatorInformation::PREORDER},
+  {L"factorof",         L"factorof",          0, 10, OperatorInformation::PREORDER},
+  {L"floor",            L"floor",             0, 10, OperatorInformation::PREORDER},
+  {L"forall",           L"forall",            0, 10, OperatorInformation::PREORDER},
+  {L"gcd",              L"gcd",               0, 10, OperatorInformation::PREORDER},
+  {L"geq",              L"geq",               0, 10, OperatorInformation::PREORDER},
+  {L"grad",             L"grad",              0, 10, OperatorInformation::PREORDER},
+  {L"gt",               L">",                 6,  6, OperatorInformation::SIMPLE_INORDER},
+  {L"imaginary",        L"imaginary",         0, 10, OperatorInformation::PREORDER},
+  {L"implies",          L"implies",           0, 10, OperatorInformation::PREORDER},
+  {L"in",               L"in",                0, 10, OperatorInformation::PREORDER},
+  {L"int",              L"int",               0, 10, OperatorInformation::PREORDER},
+  {L"intersect",        L"intersect",         0, 10, OperatorInformation::PREORDER},
+  {L"laplacian",        L"laplacian",         0, 10, OperatorInformation::PREORDER},
+  {L"lcm",              L"lcm",               0, 10, OperatorInformation::PREORDER},
+  {L"leq",              L"<=",                6,  6, OperatorInformation::SIMPLE_INORDER},
+  {L"list",             L"list",              0, 10, OperatorInformation::PREORDER},
+  {L"ln",               L"ln",                0, 10, OperatorInformation::PREORDER},
+  {L"log",              L"log",               0, 10, OperatorInformation::PREORDER},
+  {L"lowlimit",         L"lowlimit",          0, 10, OperatorInformation::PREORDER},
+  {L"lt",               L"<",                 6,  6, OperatorInformation::SIMPLE_INORDER},
+  {L"max",              L"max",               0, 10, OperatorInformation::PREORDER},
+  {L"mean",             L"mean",              0, 10, OperatorInformation::PREORDER},
+  {L"median",           L"median",            0, 10, OperatorInformation::PREORDER},
+  {L"min",              L"min",               0, 10, OperatorInformation::PREORDER},
+  {L"minus",            L"-",                 5,  5, OperatorInformation::SIMPLE_INORDER},
+  {L"mode",             L"mode",              0, 10, OperatorInformation::PREORDER},
+  {L"moment",           L"moment",            0, 10, OperatorInformation::PREORDER},
+  {L"neq",              L"!=",                9,  9, OperatorInformation::SIMPLE_INORDER},
+  {L"not",              L"not",               0, 10, OperatorInformation::PREORDER},
+  {L"notin",            L"notin",             0, 10, OperatorInformation::PREORDER},
+  {L"notprsubset",      L"notprsubset",       0, 10, OperatorInformation::PREORDER},
+  {L"notsubset",        L"notsubset",         0, 10, OperatorInformation::PREORDER},
+  {L"or",               L"or",                7,  7, OperatorInformation::SIMPLE_INORDER},
+  {L"outerproduct",     L"outerproduct",      0, 10, OperatorInformation::PREORDER},
+  {L"partialdiff",      L"partialdiff",       0, 10, OperatorInformation::DERIVATIVE_LIKE},
+  {L"plus",             L"+",                 5,  5, OperatorInformation::SIMPLE_INORDER},
+  {L"power",            L"power",             0, 10, OperatorInformation::PREORDER},
+  {L"product",          L"product",           0, 10, OperatorInformation::PREORDER},
+  {L"prsubset",         L"prsubset",          0, 10, OperatorInformation::PREORDER},
+  {L"quotient",         L"quotient",          0, 10, OperatorInformation::PREORDER},
+  {L"real",             L"real",              0, 10, OperatorInformation::PREORDER},
+  {L"rem",              L"rem",               0, 10, OperatorInformation::PREORDER},
+  {L"root",             L"root",              0, 10, OperatorInformation::PREORDER},
+  {L"scalarproduct",    L"scalarproduct",     0, 10, OperatorInformation::PREORDER},
+  {L"sdev",             L"sdev",              0, 10, OperatorInformation::PREORDER},
+  {L"sec",              L"sec",               0, 10, OperatorInformation::PREORDER},
+  {L"sech",             L"sech",              0, 10, OperatorInformation::PREORDER},
+  {L"selector",         L"selector",          0, 10, OperatorInformation::PREORDER},
+  {L"set",              L"set",               0, 10, OperatorInformation::PREORDER},
+  {L"setdiff",          L"setdiff",           0, 10, OperatorInformation::PREORDER},
+  {L"sin",              L"sin",               0, 10, OperatorInformation::PREORDER},
+  {L"sinh",             L"sinh",              0, 10, OperatorInformation::PREORDER},
+  {L"subset",           L"subset",            0, 10, OperatorInformation::PREORDER},
+  {L"sum",              L"sum",               0, 10, OperatorInformation::PREORDER},
+  {L"tan",              L"tan",               0, 10, OperatorInformation::PREORDER},
+  {L"tanh",             L"tanh",              0, 10, OperatorInformation::PREORDER},
+  {L"times",            L"*",                 4,  4, OperatorInformation::SIMPLE_INORDER},
+  {L"transpose",        L"transpose",         0, 10, OperatorInformation::PREORDER},
+  {L"union",            L"union",             0, 10, OperatorInformation::PREORDER},
+  {L"uplimit",          L"uplimit",           0, 10, OperatorInformation::PREORDER},
+  {L"variance",         L"variance",          0, 10, OperatorInformation::PREORDER},
+  {L"vectorproduct",    L"vectorproduct",     0, 10, OperatorInformation::PREORDER},
+  {L"xor",              L"xor",               0, 10, OperatorInformation::PREORDER}
 };
+
+static const OperatorInformation unaryMinus =
+  {L"minus",            L"-",                 3,  3, OperatorInformation::BARE_PREORDER};
 
 OperatorInformation*
 LookupOperatorByMathMLName(const wchar_t* aOpName)
@@ -691,15 +694,15 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
             AddContentElementAttributes(caseEl, cattrs);
             txt += ShowAttributes(cattrs);
             
-            txt += ShowMathExpression(newIndent, caseCond, 0) + L" then " +
-                   ShowMathExpression(newIndent, caseValue, 0) + L"\n";
+            txt += ShowMathExpression(newIndent, caseCond, 100) + L" then " +
+                   ShowMathExpression(newIndent, caseValue, 100) + L"\n";
           }
           try
           {
             RETURN_INTO_OBJREF(owmce, iface::mathml_dom::MathMLContentElement, mpe->otherwise());
             // TODO: get attributes off parent ('otherwise' element itself)?
             if (owmce != NULL)
-              txt += newIndent + L"else " + ShowMathExpression(newIndent, owmce, 0) + L"\n";
+              txt += newIndent + L"else " + ShowMathExpression(newIndent, owmce, 100) + L"\n";
           } catch (...) {}
           txt += aIndent + L")";
         }
@@ -772,13 +775,17 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
     {
       RETURN_INTO_WSTRING(sName, pds->symbolName());
       // Look up the symbol...
-      OperatorInformation* op = LookupOperatorByMathMLName(sName.c_str());
+      const OperatorInformation* op = LookupOperatorByMathMLName(sName.c_str());
       if (op == NULL)
       {
         txt += L"apply-unknown-operator";
       }
       else
       {
+        uint32_t n = mae->nArguments();
+        if (n == 2 && !wcscmp(L"-", op->telicemName))
+          op = &unaryMinus;
+
         std::map<std::wstring, std::wstring> attrs;
         RETURN_INTO_WSTRING(du, pds->definitionURL());
         if (du != L"")
@@ -790,23 +797,20 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
         AddContentElementAttributes(mae, attrs);
         std::wstring attrStr = ShowAttributes(attrs);
 
-        if (op->expressionPrec < aBracketPrec)
+        if (op->expressionPrec >= aBracketPrec)
           txt += L"(";
 
-        uint32_t n = mae->nArguments();
-
         OperatorInformation::ProcessType pt = op->processType;
-
-        if (n == 2 && !wcscmp(L"-", op->telicemName))
-          pt = OperatorInformation::PREORDER;
 
         switch (pt)
         {
         case OperatorInformation::PREORDER:
+        case OperatorInformation::BARE_PREORDER:
           {
             txt += op->telicemName;
             txt += attrStr;
-            txt += L"(";
+            if (pt == OperatorInformation::PREORDER)
+              txt += L"(";
             for (uint32_t i = 2; i <= n; i++)
             {
               RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(i));
@@ -815,7 +819,8 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
               if (i != n)
                 txt += L", ";
             }
-            txt += L")";
+            if (pt == OperatorInformation::PREORDER)
+              txt += L")";
           }
           break;
 
@@ -846,7 +851,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
           break;
         }
 
-        if (op->expressionPrec < aBracketPrec)
+        if (op->expressionPrec >= aBracketPrec)
           txt += L")";
       }
     }
@@ -869,7 +874,7 @@ ShowMathElementWithDef(const std::wstring& indent,
     RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                        aMaths->getArgument(i));
     DECLARE_QUERY_INTERFACE_OBJREF(mce, arg, mathml_dom::MathMLContentElement);
-    txt += newIndent + ShowMathExpression(newIndent, mce, 0) + L";\n";
+    txt += newIndent + ShowMathExpression(newIndent, mce, 100) + L";\n";
   }
 
   txt += indent + L"enddef;\n";
@@ -1206,7 +1211,7 @@ wchar_t*
 CDA_TeLICeMService::showMaths(iface::mathml_dom::MathMLContentElement* aMaths)
   throw()
 {
-  std::wstring txt = ShowMathExpression(L"", aMaths, 0);
+  std::wstring txt = ShowMathExpression(L"", aMaths, 100);
   return CDA_wcsdup(txt.c_str());
 }
 
