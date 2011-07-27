@@ -263,3 +263,7 @@
 #if defined(HAVE_PTHREADS_H) && !defined(LIBXML_THREAD_ENABLED)
 #define LIBXML_THREAD_ENABLED
 #endif
+
+#if defined(NEED_SOCKETS) && defined(WIN32)
+#include <wsockcompat.h>
+#endif
