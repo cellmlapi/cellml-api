@@ -5,9 +5,8 @@
 #include "DOMImplementation.hpp"
 #include <stdexcept>
 
-#if defined(_WIN32) && !defined(_MSC_VER)
 #define LIBXML_STATIC
-#endif
+#include <libxml/rename-libxml.h>
 #include <libxml/tree.h>
 
 struct CDA_utf8_data_t
@@ -352,8 +351,12 @@ WrapXML2Node
     break;
 
   case XML_DOCUMENT_NODE:
+#ifdef XML_DOCB_DOCUMENT_NODE
   case XML_DOCB_DOCUMENT_NODE:
+#endif
+#ifdef XML_HTML_DOCUMENT_NODE
   case XML_HTML_DOCUMENT_NODE:
+#endif
     {
       // We need to decide what type of document before we add the children to
       // it(e.g. for MathML support), so do a preliminary scan...

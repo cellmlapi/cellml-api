@@ -18,6 +18,8 @@ INCLUDE_DIRECTORIES(sources/dom)
 INCLUDE_DIRECTORIES(sources/dom_direct)
 INCLUDE_DIRECTORIES(sources/cellml)
 INCLUDE_DIRECTORIES(sources/mathml)
+INCLUDE_DIRECTORIES(extdep/libxml)
+INCLUDE_DIRECTORIES(extdep/libxml/include)
 
 IF (ENABLE_RDF)
   INCLUDE_DIRECTORIES(sources/rdf)
@@ -44,6 +46,45 @@ ADD_LIBRARY(cellml
     sources/mathml/MathMLImplementation.cpp
     ${MAYBE_RDF_SOURCES}
     ${MAYBE_CONTEXT_SOURCES}
+    extdep/libxml/catalog.c
+    extdep/libxml/chvalid.c
+    extdep/libxml/debugXML.c
+    extdep/libxml/dict.c
+    extdep/libxml/encoding.c
+    extdep/libxml/entities.c
+    extdep/libxml/error.c
+    extdep/libxml/globals.c
+    extdep/libxml/hash.c
+    extdep/libxml/HTMLparser.c
+    extdep/libxml/HTMLtree.c
+    extdep/libxml/legacy.c
+    extdep/libxml/list.c
+    extdep/libxml/nanoftp.c
+    extdep/libxml/nanohttp.c
+    extdep/libxml/parser.c
+    extdep/libxml/parserInternals.c
+    extdep/libxml/pattern.c
+    extdep/libxml/SAX2.c
+    extdep/libxml/SAX.c
+    extdep/libxml/schematron.c
+    extdep/libxml/threads.c
+    extdep/libxml/tree.c
+    extdep/libxml/uri.c
+    extdep/libxml/valid.c
+    extdep/libxml/xinclude.c
+    extdep/libxml/xlink.c
+    extdep/libxml/xmlIO.c
+    extdep/libxml/xmlmemory.c
+    extdep/libxml/xmlreader.c
+    extdep/libxml/xmlregexp.c
+    extdep/libxml/xmlsave.c
+    extdep/libxml/xmlschemas.c
+    extdep/libxml/xmlschemastypes.c
+    extdep/libxml/xmlstring.c
+    extdep/libxml/xmlunicode.c
+    extdep/libxml/xmlwriter.c
+    extdep/libxml/xpath.c
+    extdep/libxml/xpointer.c
   )
 TARGET_LINK_LIBRARIES(cellml xml2 ${CMAKE_DL_LIBS})
 INSTALL(TARGETS cellml DESTINATION lib)
