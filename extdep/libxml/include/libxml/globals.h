@@ -198,6 +198,9 @@ XMLPUBFUN xmlParserInputBufferCreateFilenameFunc XMLCALL
  *    - xmlFree
  */
 
+#undef LIBXML_THREAD_ENABLED
+#undef LIBXML_THREAD_ALLOC_ENABLED
+
 #ifdef LIBXML_THREAD_ALLOC_ENABLED
 #ifdef LIBXML_THREAD_ENABLED
 XMLPUBFUN  xmlMallocFunc * XMLCALL __xmlMalloc(void);

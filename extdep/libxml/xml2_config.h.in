@@ -125,7 +125,7 @@
 #cmakedefine HAVE_PRINTF
 
 /* Define if <pthread.h> is there */
-#cmakedefine HAVE_PTHREAD_H
+#undef HAVE_PTHREAD_H
 
 /* Define to 1 if you have the <resolv.h> header file. */
 #cmakedefine HAVE_RESOLV_H

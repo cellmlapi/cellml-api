@@ -52,3 +52,4 @@ DartConfiguration.tcl
 Testing/Temporary
 CTestTestfile
 install_manifest.txt
+extdep/libxml/xml2_config.h
