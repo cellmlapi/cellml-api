@@ -80,6 +80,8 @@ INCLUDE(build/idl.cmake)
 INCLUDE(build/bootstraps.cmake)
 INCLUDE(build/test_init.cmake)
 
+FIND_PROGRAM(BASH bash)
+
 # Now we do each module in turn (if enabled)
 INCLUDE(sources/core.cmake)
 
@@ -351,3 +353,5 @@ ENDIF()
 
 CONFIGURE_FILE(cda_config.h.in cda_config.h)
 CONFIGURE_FILE(extdep/libxml/xml2_config.h.in extdep/libxml/xml2_config.h)
+
+INCLUDE(build/packing.cmake)

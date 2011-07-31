@@ -16,7 +16,7 @@ DECLARE_BOOTSTRAP("CeLEDSExporterBootstrap" "CeLEDSExporter" "CeLEDSExporterBoot
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(testCeLEDS CeLEDSExporter/tests/testCeLEDS.cpp)
   TARGET_LINK_LIBRARIES(testCeLEDS cellml xml2 cuses vacss annotools celeds celedsexporter malaes ccgs cevas)
-  ADD_TEST(CheckCeLEDS tests/CheckCeLEDS)
+  ADD_TEST(CheckCeLEDS ${BASH} tests/CheckCeLEDS)
   DECLARE_TEST_LIB(celeds)
   DECLARE_TEST_LIB(celedsexporter)
 ENDIF()
