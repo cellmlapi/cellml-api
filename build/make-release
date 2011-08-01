@@ -1,0 +1,56 @@
+#!/bin/bash
+
+VERSION_MAJOR=$1
+VERSION_MINOR=$2
+BINDIR=$3
+RELEASE=$(date +%Y%m%d)
+
+UNAME=$(uname -a)
+case $UNAME in
+    *x86_64*Linux)
+        SYSTEM=linux-x86_64
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Linux.tar.bz2
+        ;;
+    *i686*Linux)
+        SYSTEM=linux-x86
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Linux.tar.bz2
+        ;;
+    *i686*Cygwin)
+        SYSTEM=win32
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32.exe
+        ;;
+    *Darwin*)
+        SYSTEM=mac
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Mac.dmg
+        ;;
+    default)
+        echo "Fatal error - Cannot identify system to make release for from uname output ($UNAME)"
+        exit 1
+        ;;
+esac
+
+sftp a1kmm,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly <<END
+mkdir $VERSION_MAJOR.$VERSION_MINOR
+cd $VERSION_MAJOR.$VERSION_MINOR
+mkdir $RELEASE
+cd $RELEASE
+mkdir src
+mkdir linux-x86
+mkdir linux-x86_64
+mkdir win32
+mkdir mac
+END
+
+# As a side effect of the linux-x86 build, release the source code...
+if [[ $SYSTEM == linux-x86 ]];
+then
+    cd /tmp
+    rm -fr package-src
+    mkdir package-src
+    cd package-src
+    hg clone ssh://buildbot@bioeng1038//people/amil082/hgmirror/cellml-api cellml-api-$VERSION_MAJOR.$VERSION_MINOR
+    tar -cjf cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-api-$VERSION_MAJOR.$VERSION_MINOR
+    scp cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 a1kmm,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
+fi
+
+scp $BINDIR/$BINARY a1kmm,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY
