@@ -29,6 +29,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #cmakedefine HAVE_HEADER_INTTYPES_H
 
+/* Define to 1 if you have the <sys/types.h> header file. */
+#cmakedefine HAVE_SYS_TYPES_H
+
 /* Define to 1 if you have the <JavaVM/jni.h> header file. */
 #cmakedefine HAVE_JAVAVM_JNI_H
 
