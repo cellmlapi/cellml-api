@@ -110,7 +110,17 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #else
     "-nodefaultlibs "
 #ifdef __MACH__
-    "-arch i386 -L. -L./../Resources/lib -L./../Resources/components -Llib -lcellml -lannotools -lcuses -lmalaes -lcevas -lcis -lccgs "
+    "-arch "
+#ifdef __amd64__
+    "x86_64"
+#else
+#ifdef __i386__
+    "i386"
+#else
+    "ppc"
+#endif
+#endif
+    " -L. -L./../Resources/lib -L./../Resources/components -Llib -lcellml -lannotools -lcuses -lmalaes -lcevas -lcis -lccgs "
 #else
     "-Llib -lcis "
 #endif
