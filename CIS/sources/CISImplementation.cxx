@@ -128,6 +128,8 @@ CompileSource(std::string& destDir, std::string& sourceFile,
   cmd += " ";
   cmd += sourceFile;
 #ifdef WIN32
+  // Need this at the end for the import library to work in all cases.
+  cmd += " -lcis";
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
