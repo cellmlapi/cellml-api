@@ -42,5 +42,5 @@ IF (BUILD_TESTING)
 
   ADD_EXECUTABLE(RunTestBin tests/TestOutput.cpp ${CPPUNIT_SOURCES})
   TARGET_LINK_LIBRARIES(RunTestBin cppunit-cellml ${CMAKE_DL_LIBS} ${TEST_LIBS})
-  ADD_TEST(RunTestBin ${BASH} RunTestBin)
+  ADD_TEST(RunTestBin RunTestBin)
 ENDIF()
