@@ -4,20 +4,7 @@
 #include "cda_config.h"
 
 #include <exception>
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_HEADER_INTTYPES_H
-#include <inttypes.h>
-#else
-#ifdef _MSC_VER
-#undef int64_t
-#undef uint64_t
-#define int64_t signed __int64
-#define uint64_t unsigned __int64
-#endif
-#endif
+#include <stdint.h>
 
 #ifdef _MSC_VER
 #undef WIN32
