@@ -9,6 +9,10 @@
 #include <cxxabi.h>
 #endif
 
+#if CPPUNIT_HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
 
 CPPUNIT_NS_BEGIN
 
