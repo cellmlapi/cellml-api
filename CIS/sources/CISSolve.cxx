@@ -16,7 +16,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multiroots.h>
 #endif
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <time.h>
 #endif
 
