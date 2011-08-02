@@ -56,6 +56,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             if (i >= 'A' and i <= 'Z') or (i >= 'a' and i <= 'z'):
                 gbasename = gbasename + i
 
+        self.filebase = node.filebase
         self.modname = string.upper(gbasename)
 
         guardname='P2Py__' + self.modname + '__INCLUDED'
@@ -66,10 +67,9 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         self.hxx.out('#include "Utilities.hxx"')
         self.hxx.out('#include "Iface' + node.filebase + '.hxx"')
         self.hxx.out('#include "python_support.hxx"')
-        self.cpp.out('#define MODULE_CONTAINS_' + self.modname)
         self.cpp.out('#include "P2Py' + node.filebase + '.hxx"')
 
-        self.hxx.out('#ifdef MODULE_CONTAINS_' + self.modname)
+        self.hxx.out('#ifdef IN_PYTHON_LIB_' + self.filebase)
         self.hxx.out('#define PUBLIC_' + self.modname + '_PRE CDA_EXPORT_PRE')
         self.hxx.out('#define PUBLIC_' + self.modname + '_POST CDA_EXPORT_POST')
         self.hxx.out('#else')
