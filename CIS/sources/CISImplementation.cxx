@@ -48,7 +48,7 @@ attempt_make_tempdir(const char* parentDir)
         , 0700
 #endif
        ) == 0)
-      return strdup(fn.c_str());
+      return CDA_strdup(fn.c_str());
     // If the error is EEXIST, we can try again with another name. If not, we
     // should fail.
     if (errno != EEXIST)
@@ -147,7 +147,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     si.cb = sizeof(si);
     ZeroMemory( &pi, sizeof(pi) );
 
-    char *commandstring = strdup(cmd.c_str());
+    char *commandstring = CDA_strdup(cmd.c_str());
 
     // Start the child process. 
     if( !CreateProcess( NULL,   // No module name (use command line)

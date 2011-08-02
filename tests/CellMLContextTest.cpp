@@ -116,7 +116,7 @@ public:
     return NULL;
   }
 
-  char* objid() throw() { return strdup("TheTestModelMonitor"); }
+  char* objid() throw() { return CDA_strdup("TheTestModelMonitor"); }
 
   void
   modelRenamed(iface::cellml_context::ModelNode* renamedNode,

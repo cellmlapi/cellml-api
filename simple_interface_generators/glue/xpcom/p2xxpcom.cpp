@@ -61,7 +61,7 @@ p2x::XPCOM::IObject::objid()
 #endif
   char buf[15];
   sprintf(buf, "xpcom:%08X", p);
-  return strdup(buf);
+  return CDA_strdup(buf);
 }
 
 namespace p2x

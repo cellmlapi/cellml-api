@@ -99,7 +99,7 @@ public:
 
   void add_ref() throw() {}
   void release_ref() throw() {}
-  char* objid() throw() { return strdup("RunSEDMLMonitor"); }
+  char* objid() throw() { return CDA_strdup("RunSEDMLMonitor"); }
   void* query_interface(const char* aInterface) throw()
   {
     if (!strcmp(aInterface, "xpcom::IObject") ||

@@ -93,6 +93,15 @@ CDA_wcsdup(const wchar_t* str)
   return xstr;
 }
 
+HEADER_INLINE char*
+CDA_strdup(const char* str)
+{
+  size_t l = (strlen(str) + 1);
+  char* xstr = reinterpret_cast<char*>(malloc(l));
+  memcpy(xstr, str, l);
+  return xstr;
+}
+
 /* 
    The following license applies to the original Mersenne Twister code. My
    modifications are Copyright (C) 2006, and are under the same license as the

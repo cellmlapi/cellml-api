@@ -169,12 +169,12 @@ class String(Type):
         if copyOut:
             if hasOut:
                 return "char* _retpcm = PyString_AsString(%s);\n" % (pyargName) +\
-                       "return strdup(_retpcm ? _retpcm : \"\");"
+                       "return CDA_strdup(_retpcm ? _retpcm : \"\");"
             return "{\nchar* _tmp = PyString_AsString(%s);\n" % (pyargName) +\
-                   "*%s = strdup(_retpcm ? _tmp : \"\"); \n}" % (pcmName)
+                   "*%s = CDA_strdup(_retpcm ? _tmp : \"\"); \n}" % (pcmName)
         if hasIn and not hasOut:
             return "char* %s = PyString_AsString(%s);\n" % (pcmName, pyargName) +\
-                   "%s = strdup(%s ? %s : \"\");\n" % (pcmName, pcmName, pcmName) +\
+                   "%s = CDA_strdup(%s ? %s : \"\");\n" % (pcmName, pcmName, pcmName) +\
                    "PyAutoFree<char> %s_release(%s);" % (pcmName, pcmName)
         elif hasOut and not hasIn:
             return "char* %s;\nPyOutputPtrFree<char> %s_release(&%s);" % (pcmName, pcmName, pcmName)
@@ -183,7 +183,7 @@ class String(Type):
                    "{\n" +\
                    "  PyObject* stmp = PyList_GetItem(%s, 0);\n" % pyargName +\
                    "  %s = stmp ? PyString_AsString(stmp) : \"\";\n" % pcmName +\
-                   "  %s = strdup(%s ? %s : \"\");\n" % (pcmName, pcmName, pcmName) +\
+                   "  %s = CDA_strdup(%s ? %s : \"\");\n" % (pcmName, pcmName, pcmName) +\
                    "}\n" +\
                    "PyAutoFree<char> %s_release(%s);" % (pcmName, pcmName)
 

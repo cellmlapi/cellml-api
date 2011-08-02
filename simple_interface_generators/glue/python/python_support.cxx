@@ -18,23 +18,15 @@ P2PyFactory::P2PyFactory(const char* aIfaceName)
   sLookup.insert(std::pair<std::string, P2PyFactory*>(aIfaceName, this));
 }
 
-static char* my_strdup(const char* aInput)
-{
-  size_t l = strlen(aInput);
-  char* n = reinterpret_cast<char*>(malloc(l + 1));
-  memcpy(n, aInput, l+1);
-  return n;
-}
-
 char*
 p2py::XPCOM::IObject::objid()
   throw(std::exception&)
 {
   PyObject* ret = PyObject_CallMethod(mObject, const_cast<char*>("objid"), const_cast<char*>(""));
   if (ret == NULL)
-    return my_strdup("");
+    return CDA_strdup("");
   char* str = PyString_AsString(ret);
-  return my_strdup(str ? str : "");
+  return CDA_strdup(str ? str : "");
 }
 
 void*
