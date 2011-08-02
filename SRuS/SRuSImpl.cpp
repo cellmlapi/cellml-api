@@ -1175,7 +1175,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
                                         iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE, NULL));
         RETURN_INTO_OBJREF(n, iface::dom::Node, xr->singleNodeValue());
         wchar_t vstr[30];
-        swprintf(vstr, 30, L"%f", v);
+        any_swprintf(vstr, 30, L"%f", v);
         n->nodeValue(vstr);
       }
     }

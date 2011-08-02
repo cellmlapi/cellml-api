@@ -3,9 +3,6 @@
 
 #include "cda_config.h"
 
-#include <exception>
-#include <stdint.h>
-
 #ifdef _MSC_VER
 #undef WIN32
 #define WIN32
@@ -15,6 +12,13 @@
 #undef WIN32
 #define WIN32
 #endif
+
+#ifdef WIN32
+#define __STRICT_ANSI__
+#endif
+
+#include <exception>
+#include <stdint.h>
 
 #ifdef WIN32
 #define any_swprintf _snwprintf
