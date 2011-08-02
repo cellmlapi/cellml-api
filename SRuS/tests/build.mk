@@ -12,7 +12,7 @@ RunSEDML_LDADD=\
   $(top_builddir)/libcellml.la \
   $(top_builddir)/libccgs.la \
   $(top_builddir)/libspros.la \
-  $(top_builddir)/libsrus.la -lxml2
+  $(top_builddir)/libsrus.la
 RunSEDML_LDFLAGS=-O0
 RunSEDML_CXXFLAGS=-I$(top_srcdir)/sources \
   -I$(top_srcdir)/SProS/sources -I$(top_srcdir)/SRuS -I$(top_builddir)/interfaces

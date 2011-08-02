@@ -19,7 +19,7 @@ DECLARE_BOOTSTRAP("CCGSBootstrap" "CCGS" "CodeGeneratorBootstrap" "cellml_servic
 
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(CellML2C CCGS/tests/CellML2C.cpp)
-  TARGET_LINK_LIBRARIES(CellML2C cellml ccgs xml2 cuses cevas malaes annotools)
+  TARGET_LINK_LIBRARIES(CellML2C cellml ccgs cuses cevas malaes annotools)
   ADD_TEST(CheckCodeGenerator ${BASH} tests/CheckCodeGenerator)
   DECLARE_TEST_LIB(ccgs)
 ENDIF()
