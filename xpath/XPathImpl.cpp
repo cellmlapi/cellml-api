@@ -1,4 +1,5 @@
 #define IN_XPATH_MODULE
+#define MODULE_CONTAINS_xpath
 #include "Utilities.hxx"
 #include "Ifacexpath.hxx"
 #include "IfaceDOM_events.hxx"
