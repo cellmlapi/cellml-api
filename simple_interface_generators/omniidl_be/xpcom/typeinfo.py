@@ -261,7 +261,7 @@ class String(Type):
         return 'free(' + name + ');'
     
     def ConvertXPCOMToPCM(self, source, dest):
-        return dest + ' = CDA_strdup(' + source +\
+        return dest + ' = strdup(' + source +\
                '.BeginReading());'
 
     def ConvertPCMToXPCOM(self, source, dest):

@@ -93,7 +93,7 @@ public:
   char* objid()
     throw (std::exception&)
   {
-    return CDA_strdup("singletonTestProgressObserver");
+    return strdup("singletonTestProgressObserver");
   }
 
   void* query_interface(const char* iface)

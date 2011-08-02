@@ -13,10 +13,6 @@
 #define WIN32
 #endif
 
-#ifdef WIN32
-#define __STRICT_ANSI__
-#endif
-
 #include <exception>
 #include <stdint.h>
 

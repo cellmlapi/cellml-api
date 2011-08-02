@@ -612,7 +612,7 @@ public:
   char* objid()
     throw(std::exception&)
   {
-    return CDA_strdup("4d77f9ec-22b6-4329-a427-76e52de494da");
+    return strdup("4d77f9ec-22b6-4329-a427-76e52de494da");
   }
 
   void*

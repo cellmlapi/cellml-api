@@ -24,9 +24,9 @@ p2py::XPCOM::IObject::objid()
 {
   PyObject* ret = PyObject_CallMethod(mObject, const_cast<char*>("objid"), const_cast<char*>(""));
   if (ret == NULL)
-    return CDA_strdup("");
+    return strdup("");
   char* str = PyString_AsString(ret);
-  return CDA_strdup(str ? str : "");
+  return strdup(str ? str : "");
 }
 
 void*
