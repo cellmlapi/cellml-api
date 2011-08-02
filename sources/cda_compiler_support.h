@@ -11,6 +11,10 @@
 #define WIN32
 #undef __STDC__
 #endif
+#ifdef _WIN32
+#undef WIN32
+#define WIN32
+#endif
 
 #ifdef WIN32
 #define any_swprintf _snwprintf
