@@ -57,6 +57,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.hxx.out('#include "pick-jni.h"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
         self.hxx.out('#include "p2jxpcom.hxx"')
+        self.cpp.out('#define MODULE_CONTAINS_' + self.defname)
         self.cpp.out('#include <exception>')
         self.cpp.out('#include "cda_compiler_support.h"')
         self.cpp.out('#include "j2p' + basename + '.hxx"')

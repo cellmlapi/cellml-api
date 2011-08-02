@@ -34,7 +34,7 @@ namespace p2j
 
       PUBLIC_JAVA_PRE void* query_interface(const char*) throw() PUBLIC_JAVA_POST;
 
-      PUBLIC_JAVA_PRE jobject unwrap() PUBLIC_JAVA_POST { return mObject; }
+      jobject unwrap() { return mObject; }
 
     protected:
       JNIEnv* env;
