@@ -1,5 +1,7 @@
 #define MODULE_CONTAINS_xpcom
 #define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_MODULE_CONTAINS_MathMLcontentAPISPEC
+#define MODULE_CONTAINS_DOMevents
 #define IN_DOMWRITER_MODULE
 #include "Utilities.hxx"
 #include <string>

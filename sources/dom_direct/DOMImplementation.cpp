@@ -1,4 +1,7 @@
 #define MODULE_CONTAINS_xpcom
+#define MODULE_CONTAINS_DOMAPISPEC
+#define MODULE_CONTAINS_MathMLcontentAPISPEC
+#define MODULE_CONTAINS_DOMevents
 #include <algorithm>
 #include "cda_compiler_support.h"
 #include "DOMImplementation.hpp"
