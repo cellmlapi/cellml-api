@@ -1,3 +1,4 @@
+#define MODULE_CONTAINS_SRuS
 #include "SRuSBootstrap.hpp"
 #include "Utilities.hxx"
 #include "IfaceCIS.hxx"
