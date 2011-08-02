@@ -17,7 +17,11 @@ case $UNAME in
         ;;
     *i686*Cygwin)
         SYSTEM=win32
-        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32.exe
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
+        ;;
+    *Msys*)
+        SYSTEM=win32
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
         ;;
     *Darwin*)
         SYSTEM=mac
