@@ -21,7 +21,7 @@ P2PyFactory::P2PyFactory(const char* aIfaceName)
 static char* my_strdup(const char* aInput)
 {
   size_t l = strlen(aInput);
-  char* n = malloc(l + 1);
+  char* n = reinterpret_cast<char*>(malloc(l + 1));
   memcpy(n, aInput, l+1);
   return n;
 }
