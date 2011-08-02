@@ -26,7 +26,7 @@ namespace p2j
     public:
       CDA_IMPL_REFCOUNT;
 
-      PUBLIC_JAVA_PRE IObject() PUBLIC_JAVA_POST {}
+      IObject() {}
       PUBLIC_JAVA_PRE IObject(JNIEnv* aEnv, jobject aObject) PUBLIC_JAVA_POST;
       PUBLIC_JAVA_PRE ~IObject() PUBLIC_JAVA_POST;
 
