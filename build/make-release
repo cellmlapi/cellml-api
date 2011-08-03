@@ -32,7 +32,7 @@ case $UNAME in
     *Msys*)
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
-        BINFULL=/$(/bin/cygpath "$BINDIR/$BINARY")
+        BINFULL=$(/bin/cygpath "$BINDIR/$BINARY")
         SCP=/bin/scp.exe
         SFTP=/bin/sftp.exe
         ;;
