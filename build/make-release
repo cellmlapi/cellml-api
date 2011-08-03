@@ -26,7 +26,7 @@ case $UNAME in
     *Msys*)
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
-        BINFULL=$(/c/cygwin/bin/cygpath "$BINFULL")
+        BINFULL=/$(/c/cygwin/bin/cygpath "$BINFULL")
         SCP=/c/cygwin/bin/scp.exe
         SFTP=/c/cygwin/bin/sftp.exe
         ;;
@@ -65,5 +65,5 @@ then
     $SCP cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
 fi
 
-echo $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
-$SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
+echo $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net://home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
+$SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net://home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
