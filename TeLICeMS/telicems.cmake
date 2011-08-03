@@ -8,13 +8,13 @@ INCLUDE_DIRECTORIES(TeLICeMS/sources)
 INCLUDE(FindBISON)
 INCLUDE(FindFLEX)
 
-BISON_TARGET(TeLICeMParse TeLICeMS/sources/TeLICeMParse.yy TeLICeMParse.gen.cpp)
-FLEX_TARGET(TeLICeMScan TeLICeMS/sources/TeLICeMScan.l TeLICeMScanner.cpp)
+BISON_TARGET(TeLICeMParse TeLICeMS/sources/TeLICeMParse.yy ${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp)
+FLEX_TARGET(TeLICeMScan TeLICeMS/sources/TeLICeMScan.l ${CMAKE_BINARY_DIR}/TeLICeMScanner.cpp)
 
 ADD_LIBRARY(telicems
   TeLICeMS/sources/TeLICeMSImpl.cpp
-  TeLICeMScanner.cpp
-  TeLICeMParse.gen.cpp)
+  ${CMAKE_BINARY_DIR}/TeLICeMScanner.cpp
+  ${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp)
 TARGET_LINK_LIBRARIES(telicems cellml ${CMAKE_DL_LIBS})
 INSTALL(TARGETS telicems DESTINATION lib)
 

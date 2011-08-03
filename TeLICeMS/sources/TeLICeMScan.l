@@ -10,7 +10,6 @@
 %option prefix="TeLICeM"
 %option yyclass="TeLICeMStateScan"
 %option noyylineno
-%option outfile="TeLICeMScanner.cpp"
 %x stringsc
 
 %{
