@@ -33,6 +33,7 @@ case $UNAME in
         ;;
 esac
 
+echo sftp cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly
 sftp cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly <<END
 mkdir $VERSION_MAJOR.$VERSION_MINOR
 cd $VERSION_MAJOR.$VERSION_MINOR
@@ -57,4 +58,5 @@ then
     scp cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
 fi
 
+echo scp "$BINDIR/$BINARY" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
 scp "$BINDIR/$BINARY" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
