@@ -6,27 +6,28 @@ BINDIR=$3
 RELEASE=$(date +%Y%m%d)
 SCP="scp"
 SFTP="sftp"
-BINFULL="$BINDIR/$BINARY"
 
 UNAME=$(uname -a)
 case $UNAME in
     *x86_64*Linux)
         SYSTEM=linux-x86_64
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Linux.tar.bz2
+        BINFULL="$BINDIR/$BINARY"
         ;;
     *i686*Linux)
         SYSTEM=linux-x86
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Linux.tar.bz2
+        BINFULL="$BINDIR/$BINARY"
         ;;
     *i686*Cygwin)
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
-        BINFULL=$(cygpath "$BINFULL")
+        BINFULL=$(cygpath "$BINDIR/$BINARY")
         ;;
     *Msys*)
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
-        BINFULL=/$(/c/cygwin/bin/cygpath "$BINFULL")
+        BINFULL=/$(/c/cygwin/bin/cygpath "$BINDIR/$BINARY")
         SCP=/c/cygwin/bin/scp.exe
         SFTP=/c/cygwin/bin/sftp.exe
         ;;
