@@ -57,4 +57,4 @@ then
     scp cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
 fi
 
-scp $BINDIR/$BINARY cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY
+scp "$BINDIR/$BINARY" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
