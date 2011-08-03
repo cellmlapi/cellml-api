@@ -4,6 +4,9 @@ VERSION_MAJOR=$1
 VERSION_MINOR=$2
 BINDIR=$3
 RELEASE=$(date +%Y%m%d)
+SCP="scp"
+SFTP="sftp"
+BINFULL="$BINDIR/$BINARY"
 
 UNAME=$(uname -a)
 case $UNAME in
@@ -18,10 +21,14 @@ case $UNAME in
     *i686*Cygwin)
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
+        BINFULL=$(cygpath "$BINFULL")
         ;;
     *Msys*)
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
+        BINFULL=$(cygpath "$BINFULL")
+        SCP=/c/cygwin/bin/scp.exe
+        SFTP=/c/cygwin/bin/sftp.exe
         ;;
     *Darwin*)
         SYSTEM=mac
@@ -58,5 +65,5 @@ then
     scp cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
 fi
 
-echo scp "$BINDIR/$BINARY" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
-scp "$BINDIR/$BINARY" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
+echo scp "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
+scp "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
