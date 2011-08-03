@@ -9,10 +9,10 @@ ENDIF()
 SET(ALL_JAVA_FILES)
 SET(ALL_JAVACLASS_FILES)
 
-LIST(APPEND ALL_JAVA_FILES "simple_interface_generators/glue/java/pjm/XPCOMDerived.java")
-LIST(APPEND ALL_JAVACLASS_FILES "javacp/pjm/XPCOMDerived.class")
-LIST(APPEND ALL_JAVA_FILES "simple_interface_generators/glue/java/pjm/Reference.java")
-LIST(APPEND ALL_JAVACLASS_FILES "javacp/pjm/Reference.class")
+LIST(APPEND ALL_JAVA_FILES "${CMAKE_SOURCE_DIR}/simple_interface_generators/glue/java/pjm/XPCOMDerived.java")
+LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/pjm/XPCOMDerived.class")
+LIST(APPEND ALL_JAVA_FILES "${CMAKE_SOURCE_DIR}/simple_interface_generators/glue/java/pjm/Reference.java")
+LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/pjm/Reference.class")
 
 FOREACH(extension ${EXTENSION_LIST})
   SET(${extension}_java_bridge_files)
@@ -26,16 +26,16 @@ FOREACH(extension ${EXTENSION_LIST})
     FOREACH(iface ${${idlname}_INTERFACES})
       LIST(APPEND ALL_JAVA_FILES interfaces/${${idlname}_NAMESPACE}/${iface}.java)
       LIST(APPEND THESE_JAVA_FILES interfaces/${${idlname}_NAMESPACE}/${iface}.java)
-      LIST(APPEND ALL_JAVACLASS_FILES javacp/${${idlname}_NAMESPACE}/${iface}.class)
+      LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/${${idlname}_NAMESPACE}/${iface}.class")
 
       LIST(APPEND ALL_JAVA_FILES interfaces/pjm2pcm/${${idlname}_NAMESPACE}/${iface}.java)
       LIST(APPEND THESE_JAVA_FILES interfaces/pjm2pcm/${${idlname}_NAMESPACE}/${iface}.java)
-      LIST(APPEND ALL_JAVACLASS_FILES javacp/pjm2pcm/${${idlname}_NAMESPACE}/${iface}.class)
+      LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/pjm2pcm/${${idlname}_NAMESPACE}/${iface}.class")
     ENDFOREACH(iface)
     FOREACH(enum ${${idlname}_ENUMS})
       LIST(APPEND ALL_JAVA_FILES interfaces/${${idlname}_NAMESPACE}/${enum}.java)
       LIST(APPEND THESE_JAVA_FILES interfaces/${${idlname}_NAMESPACE}/${enum}.java)
-      LIST(APPEND ALL_JAVACLASS_FILES javacp/${${idlname}_NAMESPACE}/${enum}.class)
+      LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/${${idlname}_NAMESPACE}/${enum}.class")
     ENDFOREACH(enum)
 
     SET(idlpath "interfaces/${idlname}.idl")
@@ -47,7 +47,7 @@ FOREACH(extension ${EXTENSION_LIST})
 
     ADD_CUSTOM_COMMAND(OUTPUT ${THESE_JAVA_FILES} interfaces/p2j${idlname}.cpp interfaces/p2j${idlname}.hxx
 	interfaces/j2p${idlname}Mod.cpp interfaces/j2p${idlname}Sup.cpp interfaces/j2p${idlname}.hxx 
-      COMMAND ${OMNIIDL} -bjava -Iinterfaces -p../simple_interface_generators/omniidl_be ../${idlpath}
+      COMMAND ${OMNIIDL} -bjava -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${CMAKE_SOURCE_DIR}/${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
       simple_interface_generators/omniidl_be/java/__init__.py
       simple_interface_generators/omniidl_be/java/interfacegen.py
@@ -67,17 +67,17 @@ FOREACH(extension ${EXTENSION_LIST})
 ENDFOREACH(extension)
 
 FOREACH(bootstrap ${BOOTSTRAP_LIST})
-  IF(NOT EXISTS "javagen/cellml_bootstrap/${bootstrap}.java")
-    FILE(MAKE_DIRECTORY javagen/cellml_bootstrap)
-    FILE(WRITE "javagen/cellml_bootstrap/${bootstrap}.java" "package cellml_bootstrap;\npublic class ${bootstrap}\n{\n  public static native ${BOOTSTRAP_${bootstrap}_IFACEMODULE}.${BOOTSTRAP_${bootstrap}_IFACE} ${BOOTSTRAP_${bootstrap}_METHOD}();\n};\n")
+  IF(NOT EXISTS "${CMAKE_BINARY_DIR}/javagen/cellml_bootstrap/${bootstrap}.java")
+    FILE(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/javagen/cellml_bootstrap")
+    FILE(WRITE "${CMAKE_BINARY_DIR}/javagen/cellml_bootstrap/${bootstrap}.java" "package cellml_bootstrap;\npublic class ${bootstrap}\n{\n  public static native ${BOOTSTRAP_${bootstrap}_IFACEMODULE}.${BOOTSTRAP_${bootstrap}_IFACE} ${BOOTSTRAP_${bootstrap}_METHOD}();\n};\n")
   ENDIF()
-  IF(NOT EXISTS "javagen/${bootstrap}Java.cpp")
-    FILE(WRITE "javagen/${bootstrap}Java.cpp" "#include <exception>\n#include \"pick-jni.h\"\n#include \"j2p${BOOTSTRAP_${bootstrap}_IDL}.hxx\"\n#include \"${BOOTSTRAP_${bootstrap}_HEADER}\"\nextern \"C\" { JWRAP_PUBLIC_PRE jobject Java_cellml_1bootstrap_${IFACE_JESCAPE}_${BOOTSTRAP_${bootstrap}_METHOD}(JNIEnv* env, jclass clazz) JWRAP_PUBLIC_POST; }\n\njobject\nJava_cellml_1bootstrap_${IFACE_JESCAPE}_${BOOTSTRAP_${bootstrap}_METHOD}(JNIEnv* env, jclass clazz)\n{\n  RETURN_INTO_OBJREF(b, iface::${BOOTSTRAP_${bootstrap}_IFACEMODULE}::${BOOTSTRAP_${bootstrap}_IFACE}, ${BOOTSTRAP_${bootstrap}_METHODCXX}());\n  return wrap_${BOOTSTRAP_${bootstrap}_IFACEMODULE}_${BOOTSTRAP_${bootstrap}_IFACE}(env, b);\n}\n")
+  IF(NOT EXISTS "${CMAKE_BINARY_DIR}/javagen/${bootstrap}Java.cpp")
+    FILE(WRITE "${CMAKE_BINARY_DIR}/javagen/${bootstrap}Java.cpp" "#include <exception>\n#include \"pick-jni.h\"\n#include \"j2p${BOOTSTRAP_${bootstrap}_IDL}.hxx\"\n#include \"${BOOTSTRAP_${bootstrap}_HEADER}\"\nextern \"C\" { JWRAP_PUBLIC_PRE jobject Java_cellml_1bootstrap_${IFACE_JESCAPE}_${BOOTSTRAP_${bootstrap}_METHOD}(JNIEnv* env, jclass clazz) JWRAP_PUBLIC_POST; }\n\njobject\nJava_cellml_1bootstrap_${IFACE_JESCAPE}_${BOOTSTRAP_${bootstrap}_METHOD}(JNIEnv* env, jclass clazz)\n{\n  RETURN_INTO_OBJREF(b, iface::${BOOTSTRAP_${bootstrap}_IFACEMODULE}::${BOOTSTRAP_${bootstrap}_IFACE}, ${BOOTSTRAP_${bootstrap}_METHODCXX}());\n  return wrap_${BOOTSTRAP_${bootstrap}_IFACEMODULE}_${BOOTSTRAP_${bootstrap}_IFACE}(env, b);\n}\n")
     SET(bslib "BOOTSTRAP_${name}_LIBASSOC ${libassoc}")
-    LIST(APPEND java_${bslib}_lib_files javagen/${bootstrap}Java.cpp)
+    LIST(APPEND java_${bslib}_lib_files "${CMAKE_BINARY_DIR}/javagen/${bootstrap}Java.cpp")
   ENDIF()
-  LIST(APPEND ALL_JAVA_FILES_NODEPEND javagen/cellml_bootstrap/${bootstrap}.java)
-  LIST(APPEND ALL_JAVACLASS_FILES javacp/cellml_bootstrap/${bootstrap}.class)
+  LIST(APPEND ALL_JAVA_FILES_NODEPEND "${CMAKE_BINARY_DIR}/javagen/cellml_bootstrap/${bootstrap}.java")
+  LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/cellml_bootstrap/${bootstrap}.class")
 ENDFOREACH(bootstrap)
 
 LIST(APPEND cellml_java_bridge_files simple_interface_generators/glue/java/p2jxpcom.cpp)
@@ -98,12 +98,12 @@ FOREACH(extension ${EXTENSION_LIST})
   TARGET_LINK_LIBRARIES(java_${extension} ${deplibs} ${extension}_java_bridge cellml ${extension})
 ENDFOREACH(extension)
 
-FILE(MAKE_DIRECTORY javacp)
+FILE(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/javacp")
 ADD_CUSTOM_COMMAND(OUTPUT ${ALL_JAVACLASS_FILES}
-  COMMAND ${Java_JAVAC_EXECUTABLE} ${ALL_JAVA_FILES} ${ALL_JAVA_FILES_NODEPEND} -d javacp
+  COMMAND ${Java_JAVAC_EXECUTABLE} ${ALL_JAVA_FILES} ${ALL_JAVA_FILES_NODEPEND} -d "${CMAKE_BINARY_DIR}/javacp"
   DEPENDS ${ALL_JAVA_FILES})
 
-ADD_CUSTOM_COMMAND(OUTPUT cellml.jar COMMAND ${Java_JAR_EXECUTABLE} cf cellml.jar -C javacp .
+ADD_CUSTOM_COMMAND(OUTPUT cellml.jar COMMAND ${Java_JAR_EXECUTABLE} cf cellml.jar -C "${CMAKE_BINARY_DIR}/javacp" .
   DEPENDS ${ALL_JAVACLASS_FILES} VERBATIM)
 ADD_CUSTOM_TARGET(JAVA_BUILD ALL DEPENDS cellml.jar)
 INSTALL(FILES cellml.jar DESTINATION lib)

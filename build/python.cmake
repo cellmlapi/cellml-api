@@ -47,7 +47,7 @@ FOREACH(extension ${EXTENSION_LIST})
     ENDFOREACH(idldep)
 
     ADD_CUSTOM_COMMAND(OUTPUT ${p2pypath} ${py2ppath} ${p2pyhpath} 
-      COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Iinterfaces -p../simple_interface_generators/omniidl_be ../${idlpath}
+      COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${CMAKE_SOURCE_DIR}/${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
               simple_interface_generators/omniidl_be/pcmpy/__init__.py
               simple_interface_generators/omniidl_be/pcmpy/CToPythonWalker.py

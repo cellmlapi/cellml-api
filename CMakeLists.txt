@@ -363,5 +363,6 @@ ENDIF()
 
 CONFIGURE_FILE(cda_config.h.in cda_config.h)
 CONFIGURE_FILE(extdep/libxml/xml2_config.h.in extdep/libxml/xml2_config.h)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/extdep/libxml/)
 
 INCLUDE(build/packing.cmake)
