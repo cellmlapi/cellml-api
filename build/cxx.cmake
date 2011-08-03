@@ -4,7 +4,7 @@ LIST(APPEND IDL_LIST_CXX xpcom)
 FOREACH(idlfile ${IDL_LIST_CXX})
   SET(idlpath "interfaces/${idlfile}.idl")
   SET(headerpath "interfaces/Iface${idlfile}.hxx")
-
+  FILE(MAKE_DIRECTORY interfaces)
   ADD_CUSTOM_COMMAND(OUTPUT ${headerpath}
                      COMMAND ${OMNIIDL} -bsimple_cpp -Iinterfaces -p../simple_interface_generators/omniidl_be ../${idlpath}
                      MAIN_DEPENDENCY ${idlpath}
