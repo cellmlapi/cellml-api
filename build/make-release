@@ -40,8 +40,8 @@ case $UNAME in
         ;;
 esac
 
-echo sftp cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly
-sftp cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly <<END
+echo $SFTP cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly
+$SFTP cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly <<END
 mkdir $VERSION_MAJOR.$VERSION_MINOR
 cd $VERSION_MAJOR.$VERSION_MINOR
 mkdir $RELEASE
@@ -62,8 +62,8 @@ then
     cd package-src
     hg clone ssh://buildbot@bioeng1038//people/amil082/hgmirror/cellml-api cellml-api-$VERSION_MAJOR.$VERSION_MINOR
     tar -cjf cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-api-$VERSION_MAJOR.$VERSION_MINOR
-    scp cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
+    $SCP cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
 fi
 
-echo scp "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
-scp "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
+echo $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
+$SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
