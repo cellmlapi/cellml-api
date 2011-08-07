@@ -39,6 +39,7 @@ case $UNAME in
     *Darwin*)
         SYSTEM=mac
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Mac.dmg
+        BINFULL="$BINDIR/$BINARY"
         ;;
     default)
         echo "Fatal error - Cannot identify system to make release for from uname output ($UNAME)"
