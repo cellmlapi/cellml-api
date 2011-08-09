@@ -657,7 +657,7 @@
       double mant = aValue / pow(10.0, expn);
       cn->type(L"e-notation");
       {
-        any_swprintf(buf, 40, L"%10g", mant);
+        any_swprintf(buf, 40, L"%.10g", mant);
         RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
         cn->insertArgument(tn, 1)->release_ref();
       }
@@ -668,7 +668,7 @@
     }
     else
     {
-      any_swprintf(buf, 40, L"%10g", aValue);
+      any_swprintf(buf, 40, L"%.10g", aValue);
       RETURN_INTO_OBJREF(tn, iface::dom::Text, doc->createTextNode(buf));
       cn->insertArgument(tn, 1)->release_ref();
     }
@@ -753,7 +753,7 @@
 %token T_ENDROLE "endrole"
 %token T_ENDVAR "endvar"
 %token T_EXPO "expo"
-%token T_NUMBER "any number"
+%token T_NONNEGNUMBER "non-negative number"
 %token T_FOR "for"
 %token T_GROUP "group"
 %token T_IDENTIFIER "any identifier"
@@ -792,13 +792,13 @@
 %token T_PARTIALDIFF "del("
 
 %left '=' T_EQEQ T_NEQ
-%left T_NOT
 %left T_AND
 %left T_OR
 %left T_GE T_LE '<' '>'
 %left '+' '-'
 %left '*' '/' T_DIFF T_PARIALDIFF
 %left T_IDENTIFIER
+%left T_NOT
 %left '(' ')' '{' '}'
 %%
 
@@ -948,21 +948,23 @@ unititemattributes: '{'  unitattributelist '}' |
 unitattributelist: unitattributelist ',' unitattributeitem |
                    unitattributeitem { $$ = $-1; };
 
-siPrefixOrNumber: T_SIPREFIX { $$.number($1.siPrefix()); } | T_NUMBER;
+anynumber: T_NONNEGNUMBER | '-' T_NONNEGNUMBER { $$.number(-$2.number()); };
+
+siPrefixOrNumber: T_SIPREFIX { $$.number($1.siPrefix()); } | anynumber;
 
 unitattributeitem: T_PREF ':' siPrefixOrNumber {
   // Set the prefix for the unit item
   DECLARE_QUERY_INTERFACE_OBJREF(unit, $-1.element(), cellml_api::Unit);
   unit->prefix($3.number());
-} | T_EXPO ':' T_NUMBER {
+} | T_EXPO ':' anynumber {
   // Set the exponent for the unit item
   DECLARE_QUERY_INTERFACE_OBJREF(unit, $-1.element(), cellml_api::Unit);
   unit->exponent($3.number());
-} | T_MULT ':' T_NUMBER {
+} | T_MULT ':' anynumber {
   // Set the multiplier for the unit item
   DECLARE_QUERY_INTERFACE_OBJREF(unit, $-1.element(), cellml_api::Unit);
   unit->multiplier($3.number());
-} | T_OFF ':' T_NUMBER {
+} | T_OFF ':' anynumber {
   // Set the offset for the unit item
   DECLARE_QUERY_INTERFACE_OBJREF(unit, $-1.element(), cellml_api::Unit);
   unit->offset($3.number());
@@ -1035,7 +1037,7 @@ varparamitem: T_INIT ':' varparamiteminitval {
   cv->privateInterface($3.variableInterfaceType());
 };
 
-varparamiteminitval: T_NUMBER {
+varparamiteminitval: anynumber {
   char buf[30];
   any_snprintf(buf, sizeof(buf), "%g", $1.number());
   $$.string(buf);
@@ -1085,7 +1087,7 @@ math_attr: math_attr_id ':' math_attr_value {
 math_attr_id: T_IDENTIFIER | T_QUOTED | T_BASE { $$.string("base"); } |
               T_TYPE { $$.string("type"); } | T_UNIT { $$.string("units"); };
 
-math_attr_value: T_QUOTED | T_IDENTIFIER | T_NUMBER {
+math_attr_value: T_QUOTED | T_IDENTIFIER | anynumber {
     char buf[30];
     any_snprintf(buf, sizeof(buf), "%g", $1.number());
     $$.string(buf);
@@ -1138,7 +1140,7 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
                      DoInorderExpression("or", $1, $4, aParseTarget,
                                          $3.propertyMap()));
   $$.math(m);
-} | T_NUMBER math_attrs {
+} | T_NONNEGNUMBER math_attrs {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      MakeConstant($1.number(), aParseTarget, $2.propertyMap()));
   $$.math(m);
@@ -1148,10 +1150,28 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
                                           $2.propertyMap(), aParseTarget));
   $$.math(m);
 } | unary_op math_attrs math_expr %prec T_NOT {
-  RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
-                     MakePredefinedWrapElement($1.string(), $3.math(), $2.propertyMap(),
-                                               aParseTarget));
-  $$.math(m);
+  bool success = false;
+  if ($1.string() == "minus")
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(cn, $3.math(), mathml_dom::MathMLCnElement);
+    if (cn != NULL)
+    {
+      RETURN_INTO_OBJREF(ma1, iface::dom::Node, cn->getArgument(1));
+      DECLARE_QUERY_INTERFACE_OBJREF(t, ma1, dom::Text);
+      RETURN_INTO_WSTRING(td, t->data());
+      td = L"-" + td;
+      t->data(td.c_str());
+      $$ = $3;
+      success = true;
+    }
+  }
+  if (!success)
+  {
+    RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
+                       MakePredefinedWrapElement($1.string(), $3.math(), $2.propertyMap(),
+                                                 aParseTarget));
+    $$.math(m);
+  }
 } | '+' math_expr %prec T_NOT {
   /* Alan Garny's version introduced unary '+' and had it create a MathML
    * apply 'plus' with only one argument. At the very least, that won't do
@@ -1293,7 +1313,7 @@ role_attribute_item: T_DIR ':' T_DIRECTIONTYPE {
   std::wstring deltaVariableName($3.widestring());
   DECLARE_QUERY_INTERFACE_OBJREF(role, $-1.element(), cellml_api::Role);
   role->deltaVariableName(deltaVariableName.c_str());
-} | T_STOICHIO ':' T_NUMBER {
+} | T_STOICHIO ':' anynumber {
   DECLARE_QUERY_INTERFACE_OBJREF(role, $-1.element(), cellml_api::Role);
   // Set the sotichiometry of the role
   role->stoichiometry($3.number());

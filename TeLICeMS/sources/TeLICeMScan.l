@@ -288,9 +288,9 @@ with return T_WITH;
   return T_IDENTIFIER;
 }
 
-(\-)?[0-9]+(\.[0-9]*)?((E|e)(\-|\+)?[0-9]+)? {
+[0-9]+(\.[0-9]*)?((E|e)(\-|\+)?[0-9]+)? {
   mLValue->number(strtod(YYText(), NULL));
-  return T_NUMBER;
+  return T_NONNEGNUMBER;
 }
 
 . return YYText()[0];

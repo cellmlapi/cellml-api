@@ -14,7 +14,7 @@ FLEX_TARGET(TeLICeMScan TeLICeMS/sources/TeLICeMScan.l ${CMAKE_BINARY_DIR}/TeLIC
 ADD_LIBRARY(telicems
   TeLICeMS/sources/TeLICeMSImpl.cpp
   ${CMAKE_BINARY_DIR}/TeLICeMScanner.cpp
-  ${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp)
+  ${CMAKE_BINARY_DIR}/TeLICeMParse.genf.cpp)
 TARGET_LINK_LIBRARIES(telicems cellml ${CMAKE_DL_LIBS})
 INSTALL(TARGETS telicems DESTINATION lib)
 
@@ -27,3 +27,8 @@ IF (BUILD_TESTING)
   TARGET_LINK_LIBRARIES(TestTeLICeMSerialiser cellml telicems)
   ADD_TEST(CheckTeLICeMSParser ${BASH} tests/CheckTeLICeMSParser)
 ENDIF()
+
+
+ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/TeLICeMParse.genf.cpp
+                   COMMAND ${BASH} "${CMAKE_SOURCE_DIR}/TeLICeMS/FixBison" "${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp" "${CMAKE_BINARY_DIR}/TeLICeMParse.genf.cpp"
+                   DEPENDS ${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp)

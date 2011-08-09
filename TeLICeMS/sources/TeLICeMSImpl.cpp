@@ -121,7 +121,8 @@ IsBuiltin(const std::wstring& aStr)
       {L"else", L"endcomp", L"enddef", L"endrole", L"endvar", L"expo", NULL},
       {L"for", NULL}, {L"group", NULL}, {NULL},
       {L"import", L"incl", L"init", NULL}, {NULL}, {NULL}, {NULL},
-      {L"map", L"math", L"model", L"mult", NULL}, {L"name", L"namespace", L"not", NULL},
+      {L"map", L"math", L"minus", L"model", L"mult", NULL},
+      {L"name", L"namespace", L"not", NULL},
       {L"off", L"or", NULL}, {L"piecewise", L"pref", L"priv", L"pub", NULL},
       {NULL}, {L"react", L"role", NULL}, {L"stoichio", NULL},
       {L"then", L"type", NULL}, {L"unit", NULL}, {L"var", L"vars", NULL},
@@ -545,6 +546,9 @@ struct OperatorInformation
 static const OperatorInformation unaryMinus =
   {L"minus",            L"-",                 3,  3, OperatorInformation::BARE_PREORDER};
 
+static const OperatorInformation unaryMinusConst =
+  {L"minus",            L"minus",             0,  10, OperatorInformation::PREORDER};
+
 OperatorInformation*
 LookupOperatorByMathMLName(const wchar_t* aOpName)
 {
@@ -784,7 +788,15 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
       {
         uint32_t n = mae->nArguments();
         if (n == 2 && !wcscmp(L"-", op->telicemName))
-          op = &unaryMinus;
+        {
+          // See if it is a constant argument...
+          RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
+          DECLARE_QUERY_INTERFACE_OBJREF(argCN, arg, mathml_dom::MathMLCnElement);
+          if (argCN == NULL)
+            op = &unaryMinus;
+          else
+            op = &unaryMinusConst;
+        }
 
         std::map<std::wstring, std::wstring> attrs;
         RETURN_INTO_WSTRING(du, pds->definitionURL());
@@ -1237,7 +1249,8 @@ TeLICeMStateScan::newRow()
 void
 TeLICeMStateScan::lexerError(const char* m)
 {
-  mTarget->mResult->addMessage(convertStringToWString(m));
+  std::wstring msg(convertStringToWString(m));
+  mTarget->mResult->addMessage(msg);
   wchar_t buf[80];
   any_swprintf(buf, 80, L"at line %d, column %d", mTarget->mRow, mTarget->mColumn);
   mTarget->mResult->addMessage(buf);

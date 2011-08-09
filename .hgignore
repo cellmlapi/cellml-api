@@ -56,3 +56,5 @@ extdep/libxml/xml2_config.h
 CPackConfig.cmake
 CPackSourceConfig.cmake
 _CPack_Packages
+TeLICeMParse.genf.cpp
+test_celeds_output
