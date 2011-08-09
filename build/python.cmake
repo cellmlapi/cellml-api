@@ -36,10 +36,10 @@ FOREACH(extension ${EXTENSION_LIST})
   FOREACH(idlfile ${IDL_LIST_${extension}})
     LIST(APPEND ${extension}_python_defines_module IN_PYTHON_MODULE_${idlfile})
     LIST(APPEND ${extension}_python_defines_lib IN_PYTHON_LIB_${idlfile})
-    SET(idlpath "interfaces/${idlfile}.idl")
-    SET(p2pypath "interfaces/P2Py${idlfile}.cxx")
-    SET(p2pyhpath "interfaces/P2Py${idlfile}.hxx")
-    SET(py2ppath "interfaces/Py2P${idlfile}.cxx")
+    SET(idlpath "${CMAKE_SOURCE_DIR}/interfaces/${idlfile}.idl")
+    SET(p2pypath "${CMAKE_BINARY_DIR}/interfaces/P2Py${idlfile}.cxx")
+    SET(p2pyhpath "${CMAKE_BINARY_DIR}/interfaces/P2Py${idlfile}.hxx")
+    SET(py2ppath "${CMAKE_BINARY_DIR}/interfaces/Py2P${idlfile}.cxx")
     SET(dofirst)
     FOREACH(idldep ${IDL_DEPS_${extension}})
       LIST(APPEND dofirst "interfaces/P2Py${idldep}.hxx")
@@ -47,7 +47,7 @@ FOREACH(extension ${EXTENSION_LIST})
     ENDFOREACH(idldep)
 
     ADD_CUSTOM_COMMAND(OUTPUT ${p2pypath} ${py2ppath} ${p2pyhpath} 
-      COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${CMAKE_SOURCE_DIR}/${idlpath}
+      COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
               simple_interface_generators/omniidl_be/pcmpy/__init__.py
               simple_interface_generators/omniidl_be/pcmpy/CToPythonWalker.py

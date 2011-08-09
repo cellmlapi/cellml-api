@@ -62,7 +62,7 @@ FOREACH(extension ${EXTENSION_LIST})
     LIST(APPEND ${extension}_java_defines_lib MODULE_CONTAINS_P2J__${idlname})
     LIST(APPEND ${extension}_java_defines_lib IN_LIBRARY_J2P__${idlname})
     LIST(APPEND ${extension}_java_defines_module IN_MODULE_J2P__${idlname})
-    INSTALL(FILES interfaces/p2j${idlname}.hxx interfaces/j2p${idlname}.hxx DESTINATION include)
+    INSTALL(FILES ${CMAKE_BINARY_DIR}/interfaces/p2j${idlname}.hxx ${CMAKE_BINARY_DIR}/interfaces/j2p${idlname}.hxx DESTINATION include)
   ENDFOREACH(idlname)
 ENDFOREACH(extension)
 
@@ -103,7 +103,7 @@ ADD_CUSTOM_COMMAND(OUTPUT ${ALL_JAVACLASS_FILES}
   COMMAND ${Java_JAVAC_EXECUTABLE} ${ALL_JAVA_FILES} ${ALL_JAVA_FILES_NODEPEND} -d "${CMAKE_BINARY_DIR}/javacp"
   DEPENDS ${ALL_JAVA_FILES})
 
-ADD_CUSTOM_COMMAND(OUTPUT cellml.jar COMMAND ${Java_JAR_EXECUTABLE} cf cellml.jar -C "${CMAKE_BINARY_DIR}/javacp" .
+ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/cellml.jar COMMAND ${Java_JAR_EXECUTABLE} cf ${CMAKE_BINARY_DIR}/cellml.jar -C "${CMAKE_BINARY_DIR}/javacp" .
   DEPENDS ${ALL_JAVACLASS_FILES} VERBATIM)
 ADD_CUSTOM_TARGET(JAVA_BUILD ALL DEPENDS cellml.jar)
-INSTALL(FILES cellml.jar DESTINATION lib)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/cellml.jar DESTINATION lib)

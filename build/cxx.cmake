@@ -4,10 +4,10 @@ LIST(APPEND IDL_LIST_CXX xpcom)
 FILE(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/interfaces")
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/interfaces)
 FOREACH(idlfile ${IDL_LIST_CXX})
-  SET(idlpath "interfaces/${idlfile}.idl")
-  SET(headerpath "interfaces/Iface${idlfile}.hxx")
+  SET(idlpath "${CMAKE_SOURCE_DIR}/interfaces/${idlfile}.idl")
+  SET(headerpath "${CMAKE_BINARY_DIR}/interfaces/Iface${idlfile}.hxx")
   ADD_CUSTOM_COMMAND(OUTPUT ${headerpath}
-                     COMMAND ${OMNIIDL} -bsimple_cpp -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${CMAKE_SOURCE_DIR}/${idlpath}
+                     COMMAND ${OMNIIDL} -bsimple_cpp -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${idlpath}
                      MAIN_DEPENDENCY ${idlpath}
                      DEPENDS simple_interface_generators/omniidl_be/simple_cpp/cxxheadergen.py
                              simple_interface_generators/omniidl_be/simple_cpp/__init__.py
