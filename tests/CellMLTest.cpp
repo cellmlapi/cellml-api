@@ -1802,6 +1802,11 @@ CellMLTest::testCellMLComponent()
   CPPUNIT_ASSERT_EQUAL(27, (int)conns->length());
   conns->release_ref();
 
+  RETURN_INTO_OBJREF(ttac, iface::cellml_api::CellMLComponentSet, mTenTusscher->allComponents());
+  RETURN_INTO_OBJREF(mpc, iface::cellml_api::CellMLComponent, ttac->getComponent(L"membrane_potential"));
+  RETURN_INTO_OBJREF(mpccs, iface::cellml_api::ConnectionSet, mpc->connections());
+  CPPUNIT_ASSERT(mpccs != NULL);
+
 //     /**
 //      * The component which, in the encapsulation hierarchy defined in this
 //      * model, encapsulates this component. When this component is
