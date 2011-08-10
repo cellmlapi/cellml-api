@@ -75,5 +75,6 @@ runtest reset_rule C c
 runtest SimpleDAE_NonLinear C_IDA ida.c
 runtest reset_rule C_IDA ida.c
 runtest StateModel C_IDA ida.c
+runtest StateModel MATLAB matlab
 
 exit 0

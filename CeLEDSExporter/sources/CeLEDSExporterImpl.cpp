@@ -559,7 +559,7 @@ CDA_CodeExporter::transferCommonCodeAttributes
   TRANSFER_ATTRIBUTE(L"conditionalAssignmentPattern", conditionalAssignmentPattern);
 
   {
-    RETURN_INTO_WSTRING(pattern, mLangDict->getValue(L"arrayOffset"));
+    RETURN_INTO_WSTRING(pattern, mCCGSLangDict->getValue(L"arrayOffset"));
     // convert string to integer
     uint32_t offset = 0;
     std::wistringstream strm(pattern);
@@ -569,7 +569,7 @@ CDA_CodeExporter::transferCommonCodeAttributes
   }
 
   {
-    RETURN_INTO_WSTRING(pattern, mLangDict->getValue(L"allowPassthrough"));
+    RETURN_INTO_WSTRING(pattern, mCCGSLangDict->getValue(L"allowPassthrough"));
     if (!pattern.empty())
       cg->allowPassthrough(pattern == L"true");
   }
