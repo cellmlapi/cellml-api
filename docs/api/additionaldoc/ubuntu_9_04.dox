@@ -1,5 +1,5 @@
 /*!
-\page ubuntu_9_04 Build process for ubuntu 9.04
+\page ubuntu_9_04 Build process for Ubuntu Linux 9.04 and later
 
 \section Install_steps Installation steps 
 
@@ -10,40 +10,25 @@ hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api/cellml-api
 \subsection step2 Step 2: Install external packages
 
 Required Linux packages
-- automake         A tool for generating GNU Standards-compliant Makefiles
-- g++              The GNU C++ compiler
-- libcppunit-dev   Unit Testing Library for C++ (note: only required for testing the CellML DOM API)
-- libgsl0-dev      GNU Scientific Library (GSL) – development package
-- libtool          Generic library support script
-- libxml2-dev      Development files for the GNOME XML library
-- omniidl4         omniORB idl to C++ and Python compiler
-- subversion       Advanced version control system
-- java             Only required if you want the Java binding to the CellML DOM API
+- cmake - A tool for generating GNU Standards-compliant Makefiles
+- g++ - The GNU C++ compiler
+- libgsl0-dev - GNU Scientific Library (GSL) – development package (only required if you want to use GSL integrators).
+- omniidl4 - omniORB idl to C++ and Python compiler
+- openjdk-6-jdk - Required if you want the Java binding to the CellML DOM API
 
 Install the packages:
 
 sudo apt-get install <package-name>
 
-
 \subsection step3 Step 3: Build the CellML DOM API from its source code
 
 cd cellml-api/
-
-aclocal && autoconf && automake
-
-./configure --enable-context --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds
-
+ccmake . # While in ccmake, select the options you want to enable. Press 'c' and then 'g'.
 make
-
-Note #1: if the examples are required (e.g. CellML2C, RunCellML and ValidateCellML), then add "--enable-examples=yes" to the "configure" command line. NOTE: THIS OPTION SHOULD WORK, BUT FOR SOME REASON IS NOT RECOGNISED UNDER UBUNTU 9.04.
-
-Note #2: if you want the Java binding to the CellML DOM API, then use: 
-./configure --enable-context=no --enable-annotools --enable-cuses --enable-cevas --enable-malaes --enable-ccgs --enable-cis --enable-vacss --enable-rdf --enable-celeds --enable-java CPPFLAGS="-I/usr/local/share/jdk1.6.0_14/include -I/usr/local/share/jdk1.6.0_14/include/linux"
-
 
 \subsection step4 Step 4: Test the CellML API
 
-make check
+make test
 
 \subsection step5 Step 5: Install the CellML API
 
@@ -54,5 +39,8 @@ sudo make install
 javac -cp /<pathToCellMLJARFile>/cellml-api/cellml.jar <pathToYourJavaProgram>/<ClassName>.java 
 
 java -Djava.library.path=/usr/local/lib:/<pathToCellMLAPIFolder>/cellml-api -cp .:/<pathToCellMLJARFile>/cellml-api/cellml.jar:/usr/local/lib/ <pathToYourJavaProgram>/<ClassName>
+
+Depending on your linker set up, you may need to add /usr/local/lib to your LD_LIBRARY_PATH environment variable:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 */
