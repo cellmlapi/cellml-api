@@ -640,15 +640,19 @@ module cellml_api
     /**
      * Add an element to this collection.
      * @param x The element to add.
+     * @raises CellMLException if the element cannot be added to this MathContainer.
      */
-    void addMath(in MathMLElement x);
+    void addMath(in MathMLElement x) raises(CellMLException);
 
     /**
      * Remove an element from this collection. If the element is not found,
      * do nothing.
      * @param x The element to remove.
+     * @raises CellMLException if the type of element is such that removing the
+     *                         element from the DOM is not permissible. This exception
+     *                         is not raised merely because x is not in the MathContainer.
      */
-    void removeMath(in MathMLElement x);
+    void removeMath(in MathMLElement x) raises(CellMLException);
 
     /**
      * Find an element in this collection, and if it is found, replace it

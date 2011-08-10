@@ -420,7 +420,7 @@ public:
   void replaceMath(iface::mathml_dom::MathMLElement* x,
                    iface::mathml_dom::MathMLElement* y)
     throw(std::exception&);
-  void clearMath() throw(std::exception&);
+  void clearMath() throw();
 };
 
 class CDA_CellMLComponentGroupMixin

@@ -2229,7 +2229,8 @@ CDA_MathContainer::removeMath
   try
   {
     iface::dom::Node* n = datastore->removeChild(x);
-    n->release_ref();
+    if (n)
+      n->release_ref();
   }
   catch (iface::dom::DOMException& de)
   {
@@ -2258,29 +2259,22 @@ CDA_MathContainer::replaceMath
 
 void
 CDA_MathContainer::clearMath()
-  throw(std::exception&)
+  throw()
 {
-  try
+  ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
+                                  (datastore->childNodes()));
+  // Go through and find all math nodes...
+  uint32_t i, l = nl->length();
+  for (i = 0; i < l; i++)
   {
-    ObjRef<iface::dom::NodeList> nl(already_AddRefd<iface::dom::NodeList>
-                                    (datastore->childNodes()));
-    // Go through and find all math nodes...
-    uint32_t i, l = nl->length();
-    for (i = 0; i < l; i++)
-    {
-      ObjRef<iface::dom::Node> node
-        (already_AddRefd<iface::dom::Node>(nl->item(i)));
-      // See if it is a MathML element...
-      DECLARE_QUERY_INTERFACE_OBJREF(mme, node, mathml_dom::MathMLElement);
-      if (mme == NULL)
-        continue;
-      // It is a MathML element. Remove it...
-      removeMath(mme);
-    }
-  }
-  catch (iface::dom::DOMException& de)
-  {
-    throw iface::cellml_api::CellMLException();
+    ObjRef<iface::dom::Node> node
+      (already_AddRefd<iface::dom::Node>(nl->item(i)));
+    // See if it is a MathML element...
+    DECLARE_QUERY_INTERFACE_OBJREF(mme, node, mathml_dom::MathMLElement);
+    if (mme == NULL)
+      continue;
+    // It is a MathML element. Remove it...
+    removeMath(mme);
   }
 }
 
