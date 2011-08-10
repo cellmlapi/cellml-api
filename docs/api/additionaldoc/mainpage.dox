@@ -9,9 +9,9 @@ The CellML API comes with a complete, Free / Open Source implementation, and thi
 
 \section gettingstarted Getting started
   - \subpage getting_started
-
   - \subpage ubuntu_9_04
 
 \section tutorials Tutorials on accessing the API
+  - \subpage cplusplus_basics
   - \subpage java_tutorial
 */

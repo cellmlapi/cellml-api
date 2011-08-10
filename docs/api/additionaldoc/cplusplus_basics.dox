@@ -1,0 +1,14 @@
+/*!
+\page cplusplus_basics The basics of using the CellML API from C++
+
+\section cplusplus_demo A basic C++ program using the API
+
+\include MyExample.cpp
+
+This can be compiled and run on a *nix system as follows (where $CELLML_SDK is the path to the SDK directory or your install prefix):
+\verbatim
+export CELLML_SDK=path/to/cellml-sdk
+g++ -I$CELLML_SDK/include -L$CELLML_SDK/lib -lcellml ./MyTest.cpp -o MyTest
+LD_LIBRARY_PATH=$CELLML_SDK/lib ./MyTest
+\endverbatim
+ */
