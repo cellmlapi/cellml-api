@@ -2822,7 +2822,10 @@ CodeGenerationState::RecursivelyTestSmallSystem
     if ((*i)->mType == MathStatement::SAMPLE_FROM_DIST)
     {
       if (aNeedToAdd > 0 || aSystem.size() > 0)
+      {
+        i++;
         continue;
+      }
     }
 
     // We do this insert and erase thing rather than copy the set to save stack
