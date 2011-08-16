@@ -83,7 +83,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('PyObject_SetAttrString(aSelf, "_iobject_%s_cptr", cptr_obj);' % node.simplecscoped)
         self.out.out('Py_DECREF(cptr_obj);')
         self.out.dec_indent()
-        self.out.out('}')        
+        self.out.out('}')
         for inh in node.inherits():
             self.recursivelyPopulateCPTRs(inh)
 
