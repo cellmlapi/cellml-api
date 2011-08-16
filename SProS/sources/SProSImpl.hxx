@@ -546,7 +546,7 @@ public:
   void numberOfSamples(uint32_t aSamples) throw()
   {
     wchar_t buf[32];
-    any_swprintf(buf, sizeof(buf), L"%lu", aSamples);
+    any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%lu", aSamples);
     mDomEl->setAttribute(L"numberOfSamples", buf);
   }
 };

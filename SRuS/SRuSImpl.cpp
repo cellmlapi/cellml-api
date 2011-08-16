@@ -1579,7 +1579,7 @@ public:
 
       if (ct->type() == iface::cellml_services::STATE_VARIABLE)
         mRun->setOverride(iface::cellml_services::STATE_VARIABLE,
-                          1 + ct->assignedIndex(), mRow[1 + ct->assignedIndex()]);
+                          ct->assignedIndex(), mRow[1 + ct->assignedIndex()]);
     }
     mRun->start();
   }
@@ -1718,52 +1718,22 @@ CDA_SRuSProcessor::generateData
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, tm->xmlDocument());
 
-    ObjRef<iface::cellml_services::CellMLIntegrationRun> cir1, cir2;
     ObjRef<iface::cellml_services::CodeInformation> ci;
 
-    // Now we need to look at the KISAO term...
-    // XXX this is not a proper KISAO term, but a placeholder until KISAO adds one for IDA.
     if (ksid == L"https://computation.llnl.gov/casc/sundials/documentation/ida_guide/") //IDA
     {
       RETURN_INTO_OBJREF(cmDAE, iface::cellml_services::DAESolverCompiledModel,
                          is->compileModelDAE(m));
       ci = already_AddRefd<iface::cellml_services::CodeInformation>(cmDAE->codeInformation());
-      cir1 = already_AddRefd<iface::cellml_services::DAESolverRun>(is->createDAEIntegrationRun(cmDAE));
-      cir2 = already_AddRefd<iface::cellml_services::DAESolverRun>(is->createDAEIntegrationRun(cmDAE));
     }
     else
     {
       RETURN_INTO_OBJREF(cmODE, iface::cellml_services::ODESolverCompiledModel,
                          is->compileModelODE(m));
-      iface::cellml_services::ODESolverRun* ciro1 = is->createODEIntegrationRun(cmODE);
-      iface::cellml_services::ODESolverRun* ciro2 = is->createODEIntegrationRun(cmODE);
-      ci = already_AddRefd<iface::cellml_services::CodeInformation>(cmODE->codeInformation());
-      cir1 = already_AddRefd<iface::cellml_services::ODESolverRun>(ciro1);
-      cir2 = already_AddRefd<iface::cellml_services::ODESolverRun>(ciro2);
 
-      if (ksid == L"KISAO:0000019") // CVODE
-      {
-        ciro1->stepType(iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE);
-        ciro2->stepType(iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE);
-      }
-      else if (ksid == L"KISAO:0000032")
-      {
-        ciro1->stepType(iface::cellml_services::RUNGE_KUTTA_4);
-        ciro2->stepType(iface::cellml_services::RUNGE_KUTTA_4);
-      }
-      else if (ksid == L"KISAO:0000086")
-      {
-        ciro1->stepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5);
-        ciro2->stepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5);
-      }
-      else if (ksid == L"KISAO:0000030")
-      {
-        ciro1->stepType(iface::cellml_services::GEAR_1);
-        ciro2->stepType(iface::cellml_services::GEAR_1);
-      }
-      else // it's a term we don't handle.
-        throw iface::SRuS::SRuSException();
+      ci = already_AddRefd<iface::cellml_services::CodeInformation>(cmODE->codeInformation());
     }
+
 
     std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > > variableInfoIdxByDataGeneratorId;
     // For each DataGenerator...
@@ -1860,6 +1830,52 @@ CDA_SRuSProcessor::generateData
 
     for (uint32_t sampleNo = 0; sampleNo < nSamples; sampleNo++)
     {
+      ObjRef<iface::cellml_services::CellMLIntegrationRun> cir1, cir2;
+
+    // Now we need to look at the KISAO term...
+    // XXX this is not a proper KISAO term, but a placeholder until KISAO adds one for IDA.
+      if (ksid == L"https://computation.llnl.gov/casc/sundials/documentation/ida_guide/") //IDA
+      {
+        RETURN_INTO_OBJREF(cmDAE, iface::cellml_services::DAESolverCompiledModel,
+                           is->compileModelDAE(m));
+        ci = already_AddRefd<iface::cellml_services::CodeInformation>(cmDAE->codeInformation());
+        cir1 = already_AddRefd<iface::cellml_services::DAESolverRun>(is->createDAEIntegrationRun(cmDAE));
+        cir2 = already_AddRefd<iface::cellml_services::DAESolverRun>(is->createDAEIntegrationRun(cmDAE));
+      }
+      else
+      {
+        RETURN_INTO_OBJREF(cmODE, iface::cellml_services::ODESolverCompiledModel,
+                           is->compileModelODE(m));
+        iface::cellml_services::ODESolverRun* ciro1 = is->createODEIntegrationRun(cmODE);
+        iface::cellml_services::ODESolverRun* ciro2 = is->createODEIntegrationRun(cmODE);
+        ci = already_AddRefd<iface::cellml_services::CodeInformation>(cmODE->codeInformation());
+        cir1 = already_AddRefd<iface::cellml_services::ODESolverRun>(ciro1);
+        cir2 = already_AddRefd<iface::cellml_services::ODESolverRun>(ciro2);
+        
+        if (ksid == L"KISAO:0000019") // CVODE
+        {
+          ciro1->stepType(iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE);
+          ciro2->stepType(iface::cellml_services::BDF_IMPLICIT_1_5_SOLVE);
+        }
+        else if (ksid == L"KISAO:0000032")
+        {
+          ciro1->stepType(iface::cellml_services::RUNGE_KUTTA_4);
+          ciro2->stepType(iface::cellml_services::RUNGE_KUTTA_4);
+        }
+        else if (ksid == L"KISAO:0000086")
+        {
+          ciro1->stepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5);
+          ciro2->stepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5);
+        }
+        else if (ksid == L"KISAO:0000030")
+        {
+          ciro1->stepType(iface::cellml_services::GEAR_1);
+          ciro2->stepType(iface::cellml_services::GEAR_1);
+        }
+        else // it's a term we don't handle.
+          throw iface::SRuS::SRuSException();
+      }
+
       // Run a simulation to bring the system to the start time...
       RETURN_INTO_OBJREF(cast, CDA_SRuSContinueAtStartTime,
                          new CDA_SRuSContinueAtStartTime(cir2, aMonitor, ci,

@@ -234,7 +234,12 @@ main(int argc, char** argv)
     RETURN_INTO_OBJREF(t, iface::SProS::Task, ti->nextTask());
     if (t == NULL)
       break;
-    taskCount++;
+    RETURN_INTO_OBJREF(s, iface::SProS::Simulation, t->simulationReference());
+    DECLARE_QUERY_INTERFACE_OBJREF(ssi, s, SProS::SamplingSensitivityAnalysis);
+    if (ssi == NULL)
+      taskCount++;
+    else
+      taskCount += ssi->numberOfSamples();
   }
   if (taskCount == 0)
   {
