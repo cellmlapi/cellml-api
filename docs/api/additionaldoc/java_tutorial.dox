@@ -1,5 +1,5 @@
 /*!
-\page java_tutorial Working with CellML models using java
+\page java_tutorial Working with CellML models using Java
 
 \section java_bridge Loading cellml_java_bridge library 
 
