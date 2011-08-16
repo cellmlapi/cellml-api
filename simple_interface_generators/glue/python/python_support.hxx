@@ -10,6 +10,7 @@
 #endif
 
 #include "cda_compiler_support.h"
+#undef HAVE_SYS_TYPES_H // Prevent warning when it is redefined by Python.
 #include <cstdlib>
 #include <exception>
 #include <map>

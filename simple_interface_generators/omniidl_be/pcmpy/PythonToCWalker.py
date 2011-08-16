@@ -27,11 +27,11 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         for n in node.declarations():
             n.accept(self)
 
-        self.out.out('CDA_EXPORT_PRE PyMODINIT_FUNC\ninit' + self.module + "(void) CDA_EXPORT_POST;")
-        self.out.out("PyMODINIT_FUNC\ninit" + self.module + "(void)\n{")
+        self.out.out('extern "C" { CDA_EXPORT_PRE void\ninit' + self.modulename + "(void) CDA_EXPORT_POST; }")
+        self.out.out("PyMODINIT_FUNC\ninit" + self.modulename + "(void)\n{")
         self.out.inc_indent()
 
-        self.out.out("PyObject* mod = Py_InitModule(\"%s\", NULL);" % (self.module))
+        self.out.out("PyObject* mod = Py_InitModule(\"%s\", NULL);" % (self.modulename))
         for n in node.declarations():
             if n.mainFile() and isinstance(n, idlast.Module):
                 for n2 in n.definitions():
@@ -218,7 +218,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out("static PyTypeObject " + node.simplecscoped + "Type = {")
         self.out.inc_indent()
         self.out.out("PyVarObject_HEAD_INIT(&PyType_Type, 0)")
-        self.out.out('"' + self.module + '.' + node.identifier() +
+        self.out.out('"' + self.moduledir + '.' + self.modulename + '.' + node.identifier() +
                      '\",/* tp_name */')
         self.out.out('sizeof(PyPCMObject),/* tp_size */')
         self.out.out('0,/* tp_itemsize */')
@@ -288,7 +288,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
                     filebase, extension = os.path.splitext(filename)
                     self.out.out('{')
                     self.out.inc_indent()
-                    self.out.out('PyObject* %sMod = PyImport_ImportModule("%s");' % (bn, filebase))
+                    self.out.out('PyObject* %sMod = PyImport_ImportModule("%s.%s");' % (bn, self.moduledir, filebase))
                     self.out.out('if (%sMod == NULL) return;' % bn)
                     self.out.out('%s = PyObject_GetAttrString(%sMod, "%s");' % (bn, bn, base.identifier()))
                     self.out.out('Py_DECREF(%sMod);' % bn)
@@ -311,10 +311,10 @@ class PythonToCWalker(idlvisitor.AstVisitor):
             self.out.out('{')
             self.out.inc_indent()
 
-            directory, filename = os.path.split(nodeContext.file())
-            filebase, extension = os.path.splitext(filename)
+            # directory, filename = os.path.split(nodeContext.file())
+            # filebase, extension = os.path.splitext(filename)
             
-            self.out.out('PyObject* raiseMod = PyImport_ImportModule("%s");' % filebase)
+            self.out.out('PyObject* raiseMod = PyImport_ImportModule("%s.%s");' % (self.moduledir, self.modulename))
             self.out.out('ScopedPyObjectReference raiseMod_release(raiseMod);')
             self.out.out('if (raiseMod != NULL)')
             self.out.out('{')
@@ -358,7 +358,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.inc_indent()
         self.out.out("PyObject_HEAD_INIT(NULL)")
         self.out.out("0,/* ob_size */")
-        self.out.out('"' + self.module + '.' + node.identifier() +
+        self.out.out('"' + self.moduledir + '.' + self.modulename + '.' + node.identifier() +
                      '\",/* tp_name */')
         self.out.out('0,/* tp_basicsize */')
         self.out.out('0,/* tp_itemsize */')
@@ -448,7 +448,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         pyargformat = ''
         pyarglist = ''
         for (p, i) in map(None, params, range(0, len(params))):
-            ti = typeinfo.GetTypeInformation(p.paramType())
+            ti = typeinfo.GetTypeInformation(p.paramType(), self)
             pyparam = "pyparam%u" % i
             self.out.out(ti.makePyArgStorage(pyparam, p.is_in(), p.is_out()))
             pyarglist = pyarglist + ', &' + pyparam
@@ -473,13 +473,13 @@ class PythonToCWalker(idlvisitor.AstVisitor):
             if p.is_out():
                 pcmarglist = pcmarglist + '&'
             pcmarglist = pcmarglist + 'pcmparam%u' % i
-            self.out.out(typeinfo.GetTypeInformation(p.paramType()).makePCMFromPyarg("pcmparam%u" % i, "pyparam%u" % i,\
+            self.out.out(typeinfo.GetTypeInformation(p.paramType(), self).makePCMFromPyarg("pcmparam%u" % i, "pyparam%u" % i,\
                                                                                      p.is_in(), p.is_out()))
 
         retPrefix = ''
         retExtra = ''
         if returns.kind() != idltype.tk_void:
-            rti = typeinfo.GetTypeInformation(returns)
+            rti = typeinfo.GetTypeInformation(returns, self)
             if rti.has_length:
                 self.out.out('uint32_t _length__ret_pcm;')
                 retExtra = ', &_length__ret_pcm'
@@ -493,11 +493,11 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         for (p, i) in map(None, params, range(0, len(params))):
             if not p.is_out():
                 continue
-            self.out.out(typeinfo.GetTypeInformation(p.paramType()).makePyArgFromPCM("pyparam%u" % i, "pcmparam%u" % i, 0, 0, 1))
+            self.out.out(typeinfo.GetTypeInformation(p.paramType(), self).makePyArgFromPCM("pyparam%u" % i, "pcmparam%u" % i, 0, 0, 1))
 
         if returns.kind() != idltype.tk_void:
             # And generate the return...
-            self.out.out(typeinfo.GetTypeInformation(returns).makePyArgFromPCM("_ret", "_ret_pcm", 0, 1, 1))
+            self.out.out(typeinfo.GetTypeInformation(returns, self).makePyArgFromPCM("_ret", "_ret_pcm", 0, 1, 1))
         else:
             self.out.out('Py_RETURN_NONE;')
 

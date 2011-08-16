@@ -21,6 +21,15 @@ ADD_LIBRARY(PythonSupport simple_interface_generators/glue/python/python_support
 TARGET_LINK_LIBRARIES(PythonSupport ${PYTHON_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBUTIL} cellml)
 INSTALL(TARGETS PythonSupport DESTINATION lib)
 
+ADD_LIBRARY(python_xpcom MODULE simple_interface_generators/glue/python/xpcom.cxx)
+TARGET_LINK_LIBRARIES(python_xpcom ${PYTHON_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBUTIL} cellml)
+SET_PROPERTY(TARGET python_xpcom PROPERTY PREFIX "")
+SET_PROPERTY(TARGET python_xpcom PROPERTY LIBRARY_OUTPUT_NAME xpcom)
+SET_PROPERTY(TARGET python_xpcom PROPERTY LIBRARY_OUTPUT_DIRECTORY python/cellml_api)
+INSTALL(TARGETS python_xpcom DESTINATION lib/python/cellml_api)
+
+INSTALL(FILES ${CMAKE_SOURCE_DIR}/python/cellml_api/__init__.py DESTINATION lib/python/cellml_api)
+
 FOREACH(extension ${EXTENSION_LIST})
   FOREACH(idlname ${IDL_LIST_${extension}})
     SET(${idlname}_EXTENSION ${extension})
@@ -29,12 +38,9 @@ ENDFOREACH(extension)
 
 FOREACH(extension ${EXTENSION_LIST})
   SET(P2PYTHON_BRIDGE_LIST)
-  SET(PYTHON2P_BRIDGE_LIST)
   SET(deplibs)
-  SET(${extension}_python_defines_module)
   SET(${extension}_python_defines_lib)
   FOREACH(idlfile ${IDL_LIST_${extension}})
-    LIST(APPEND ${extension}_python_defines_module IN_PYTHON_MODULE_${idlfile})
     LIST(APPEND ${extension}_python_defines_lib IN_PYTHON_LIB_${idlfile})
     SET(idlpath "${CMAKE_SOURCE_DIR}/interfaces/${idlfile}.idl")
     SET(p2pypath "${CMAKE_BINARY_DIR}/interfaces/P2Py${idlfile}.cxx")
@@ -47,7 +53,7 @@ FOREACH(extension ${EXTENSION_LIST})
     ENDFOREACH(idldep)
 
     ADD_CUSTOM_COMMAND(OUTPUT ${p2pypath} ${py2ppath} ${p2pyhpath} 
-      COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${idlpath}
+      COMMAND ${OMNIIDL} -bpcmpy ${PYOMNIOPTS} -Wbinclude${BOOTSTRAP_${extension}_IFACE}=${BOOTSTRAP_${extension}_HEADER} -Wbbootstrap${BOOTSTRAP_${extension}_IFACE}=${BOOTSTRAP_${extension}_METHODCXX} -Wbmoduledir=cellml_api -Wbmodulename=${idlfile} -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
               simple_interface_generators/omniidl_be/pcmpy/__init__.py
               simple_interface_generators/omniidl_be/pcmpy/CToPythonWalker.py
@@ -58,17 +64,18 @@ FOREACH(extension ${EXTENSION_LIST})
       WORKING_DIRECTORY interfaces VERBATIM)
     INSTALL(FILES ${p2pyhpath} DESTINATION include)
 
+    ADD_LIBRARY(python_${idlfile} MODULE ${py2ppath})
+    SET_PROPERTY(TARGET python_${idlfile} PROPERTY COMPILE_DEFINITIONS IN_PYTHON_MODULE_${idlfile})
+    TARGET_LINK_LIBRARIES(python_${idlfile} PythonSupport ${deplibs} ${PYTHON_LIBRARIES} ${extension} ${extension}_python_bridge)
+    SET_PROPERTY(TARGET python_${idlfile} PROPERTY PREFIX "")
+    SET_PROPERTY(TARGET python_${idlfile} PROPERTY LIBRARY_OUTPUT_NAME ${idlfile})
+    SET_PROPERTY(TARGET python_${idlfile} PROPERTY LIBRARY_OUTPUT_DIRECTORY python/cellml_api)
+    INSTALL(TARGETS python_${idlfile} DESTINATION lib/python/cellml_api)
+
     LIST(APPEND P2PYTHON_BRIDGE_LIST ${p2pypath})
-    LIST(APPEND PYTHON2P_BRIDGE_LIST ${py2ppath})
   ENDFOREACH(idlfile)
   ADD_LIBRARY(${extension}_python_bridge ${P2PYTHON_BRIDGE_LIST})
   SET_PROPERTY(TARGET ${extension}_python_bridge PROPERTY COMPILE_DEFINITIONS ${${extension}_python_defines_lib})
   TARGET_LINK_LIBRARIES(${extension}_python_bridge PythonSupport ${deplibs} ${PYTHON_LIBRARIES} ${extension})
   INSTALL(TARGETS ${extension}_python_bridge DESTINATION lib)
-  ADD_LIBRARY(python_${extension} MODULE ${PYTHON2P_BRIDGE_LIST})
-  SET_PROPERTY(TARGET python_${extension} PROPERTY COMPILE_DEFINITIONS ${${extension}_python_defines_module})
-  TARGET_LINK_LIBRARIES(python_${extension} PythonSupport ${deplibs} ${PYTHON_LIBRARIES} ${extension} ${extension}_python_bridge)
-  SET_PROPERTY(TARGET python_${extension} PROPERTY LIBRARY_OUTPUT_NAME ${extension})
-  SET_PROPERTY(TARGET python_${extension} PROPERTY LIBRARY_OUTPUT_DIRECTORY python)
-  INSTALL(TARGETS python_${extension} DESTINATION lib/python)
 ENDFOREACH(extension)

@@ -1,0 +1,34 @@
+/*!
+\page python_tutorial Working with CellML models using Python
+
+\section python_interp_setup Setting up your interpreter
+
+After obtaining the CellML SDK, you need to set the PYTHONPATH environment variable to include the python subdirectory of the CellML SDK.
+
+For example, on Linux (bash shell), if you have installed the CellML SDK in /usr/share/cellml-sdk, you could type the following:
+\code
+export PYTHONPATH=/usr/share/cellml-sdk/python:$PYTHONPATH
+python
+\endcode
+
+\section python_mapping Understanding the API from a Python perspective
+
+In the CellML API version of Python, all modules are in the cellml_api top-level module. Inside this module, there is a module for each IDL file (for example, there is a module called CellML_APISPEC, containing most of the core API). The classes you use to work with the API are in turn defined inside these modules.
+
+Where the IDL documents show an attribute, you can read the attribute using a Python method called get&lt;AttributeName&gt;, where &lt;AttributeName&gt; is the attribute name in the documentation. If the attribute is not marked as readonly, there is also a corresponding attribute setter called set&lt;AttributeName&gt; available.
+
+In the Python bindings, each class type has an __init__ function. This is used for two purposes. Firstly, it is used to retrieve bindings for another interface supported by the object you currently have an interface to (the so-called query_interface operation). For example, if you have an instance of the cellml_api.XPCOM.IObject class in a variable x, and you know the underlying API object also supports the CellML_APISPEC.Model interface, you can call cellml_api.CellML_APISPEC.Model(x) to construct a binding to that interface. If the interface is not, in fact, supported by the object, then an exception will be raised instead.
+
+The other use of the __init__ function only applies to a few special interfaces, specifically those that are intended to be 'bootstraps'. The CellML API works by letting you run operations and fetch attributes on interfaces, but at some point, you need to get the initial interface to use. Bootstraps provide this initial access into the CellML API. In Python, to obtain a bootstrap interface (such as cellml_api.CellML_APISPEC.CellMLBootstrap), you simply call cellml_api.CellML_APISPEC.CellMLBootstrap()
+
+For example, to create an empty model, set its name, and serialise it out, you can do
+\code 
+import cellml_api.CellML_APISPEC
+
+cb = cellml_api.CellML_APISPEC.CellMLBootstrap()
+m = cb.createModel("1.1")
+m.setname('mymodel')
+print m.getserialisedText()
+\endcode
+
+*/

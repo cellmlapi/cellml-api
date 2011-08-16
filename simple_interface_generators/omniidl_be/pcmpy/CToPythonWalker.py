@@ -220,7 +220,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             self.cpp.dec_indent()
             self.cpp.out('};')
             for ns in self.contextNamespaces:
-                self.cpp.inc_indent()
+                self.cpp.dec_indent()
                 self.cpp.out('};')
             self.cpp.out('static ::p2py::%sFactory s%sFactory;' % (node.corbacxxscoped, node.simplecscoped))
             
@@ -249,7 +249,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         if returns.kind() == idltype.tk_void:
             rettype = 'void'
         else:
-            rettype = typeinfo.GetTypeInformation(returns).pcmType(isRet=1)
+            rettype = typeinfo.GetTypeInformation(returns, self).pcmType(isRet=1)
 
         paramsigs = []
         i = 0
@@ -257,7 +257,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             p.pcmname = 'param%u' % i
             p.pyname = 'pyparam%u' % i
             i = i + 1
-            p.ti = typeinfo.GetTypeInformation(p.paramType())
+            p.ti = typeinfo.GetTypeInformation(p.paramType(), self)
             if p.ti.has_length:
                 paramsigs.append('uint32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
@@ -274,7 +274,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         callParams = ['']
         # Set up parameters for call to Python...
         for p in params:
-            ti = typeinfo.GetTypeInformation(p.paramType())
+            ti = typeinfo.GetTypeInformation(p.paramType(), self)
             if p.is_out():
                 pt = 'O'
             else:
@@ -326,7 +326,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
                 self.cpp.out(p.ti.makePCMFromPyarg(p.pcmname, p.pyname, 0, 0, 1))
 
         if returns.kind() != idltype.tk_void:
-            self.cpp.out(typeinfo.GetTypeInformation(returns).makePCMFromPyarg('', '_pyret', 0, 1, 1))
+            self.cpp.out(typeinfo.GetTypeInformation(returns, self).makePCMFromPyarg('', '_pyret', 0, 1, 1))
         
         self.cpp.dec_indent()
         self.cpp.out('}')

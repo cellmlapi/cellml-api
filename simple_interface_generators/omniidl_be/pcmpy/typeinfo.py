@@ -2,7 +2,7 @@ from omniidl import idltype
 import string
 import os.path
 
-def GetTypeInformation(type):
+def GetTypeInformation(type, context):
     type = type.unalias()
     if isinstance(type, idltype.Base):
         return Base(type)
@@ -11,16 +11,16 @@ def GetTypeInformation(type):
     elif isinstance(type, idltype.WString):
         return WString(type)
     elif isinstance(type, idltype.Sequence):
-        return Sequence(type)
+        return Sequence(type, context)
     elif isinstance(type, idltype.Declared):
         if type.kind() == idltype.tk_struct:
-            return Struct(type)
+            return Struct(type, context)
         elif type.kind() == idltype.tk_objref:
-            return Objref(type)
+            return Objref(type, context)
         elif type.kind() == idltype.tk_enum:
             return Enum(type)
         else:
-            return Declared(type)
+            return Declared(type, context)
 
 class Type:
     arg_prefix=''
@@ -293,8 +293,8 @@ class Sequence(Type):
     pyarg_c_type = 'PyObject*'
     has_length = 1
     
-    def __init__(self, type):
-        self.superti = GetTypeInformation(type.seqType())
+    def __init__(self, type, context):
+        self.superti = GetTypeInformation(type.seqType(), context)
         self.type_pcm = self.superti.type_pcm + '*'
 
     def makePyArgFromPCM(self, pyargName, pcmName, hasIn, hasOut, copyOut=0):
@@ -383,25 +383,26 @@ class Sequence(Type):
                    "}"
 
 class Declared(Type):
-    def __init__(self, type):
+    def __init__(self, type, context):
         pass
 
 class Struct(Declared):
-    def __init__(self, type):
+    def __init__(self, type, context):
         raise "Sequence type encountered - but we don't support sequence types."
 
 class Objref(Declared):
     format_pyarg = 'O'
     pyarg_c_type = 'PyObject*'
 
-    def __init__(self, type):
+    def __init__(self, type, context):
+        self.context = context
         self.type_pcm = type.decl().simplecxxscoped + '*'
         self.base_type_pcm = type.decl().simplecxxscoped
         self.iface_flat = type.decl().simplecscoped
         self.scopedname = type.decl().corbacxxscoped
         directory, filename = os.path.split(type.decl().file())
         filebase, extension = os.path.splitext(filename)
-        self.getType = "PyObject* typeMod = PyImport_ImportModule(\"%s\");\n" % filebase +\
+        self.getType = "PyObject* typeMod = PyImport_ImportModule(\"%s.%s\");\n" % (self.context.moduledir, filebase) +\
                        "PyObject* type = typeMod ? PyObject_GetAttrString(typeMod, \"%s\") : NULL;\n"\
                          % type.decl().identifier() +\
                        'if (typeMod) Py_DECREF(typeMod);'
@@ -486,7 +487,7 @@ class Objref(Declared):
                    "    Py_DECREF(cptr);\n" +\
                    "  }\n" +\
                    "}\n" +\
-                   "ObjRef<%s> %s_release(already_AddRefd<%s>(%s));" % (self.type_pcm, pcmName, self.type_pcm, pcmName)
+                   "ObjRef<%s> %s_release = already_AddRefd<%s>(%s);" % (self.base_type_pcm, pcmName, self.base_type_pcm, pcmName)
         elif hasOut and not hasIn:
             return "%s %s;\nPyOutputIObjectRelease<%s> %s_release(&%s);" % (self.type_pcm, pcmName, self.base_type_pcm, pcmName, pcmName)
         else:
@@ -513,7 +514,7 @@ class Objref(Declared):
                    "    Py_DECREF(stmp);\n" +\
                    "  }\n" +\
                    "}\n" +\
-                   "ObjRef<%s> %s_release(already_AddRefd<%s>(*%s));" % (self.type_pcm, pcmName, self.type_pcm, pcmName)
+                   "ObjRef<%s> %s_release = already_AddRefd<%s>(*%s);" % (self.type_pcm, pcmName, self.type_pcm, pcmName)
 
 # Not actually a base type, but we mixin Base since it has all aspects in common.
 class Enum(Declared, Base):
