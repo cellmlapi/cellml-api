@@ -97,6 +97,7 @@ public:
     mMathMath = NULL;
     mElement = NULL;
     mMathList.clear();
+    mIndirect = false;
   }
 
   void
@@ -327,7 +328,7 @@ public:
     return mElement;
   }
 
-  bool mOverrideBuiltin;
+  bool mOverrideBuiltin, mIndirect;
 private:
   enum {
     NullType,

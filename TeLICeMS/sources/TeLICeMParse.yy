@@ -799,6 +799,7 @@
 %left '*' '/' T_DIFF T_PARIALDIFF
 %left T_IDENTIFIER
 %left T_NOT
+%right VT_UNARY
 %left '(' ')' '{' '}'
 %%
 
@@ -1110,6 +1111,7 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
   }
 } | '(' math_expr ')' {
   $$ = $2;
+  $$.mIndirect = true;
 } | math_expr additive_op math_attrs math_expr %prec '+' {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression($2.string(), $1, $4, aParseTarget,
@@ -1149,20 +1151,25 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
                      MakePiecewiseElement($4.mathList(), $5.math(),
                                           $2.propertyMap(), aParseTarget));
   $$.math(m);
-} | unary_op math_attrs math_expr %prec T_NOT {
+} | unary_op math_attrs math_expr %prec VT_UNARY {
   bool success = false;
-  if ($1.string() == "minus")
+  if (!$3.mIndirect)
   {
-    DECLARE_QUERY_INTERFACE_OBJREF(cn, $3.math(), mathml_dom::MathMLCnElement);
-    if (cn != NULL)
+    bool isMinus = $1.string() == "minus", isPlus = $1.string() == "plus";
+    if (isMinus || isPlus)
     {
-      RETURN_INTO_OBJREF(ma1, iface::dom::Node, cn->getArgument(1));
-      DECLARE_QUERY_INTERFACE_OBJREF(t, ma1, dom::Text);
-      RETURN_INTO_WSTRING(td, t->data());
-      td = L"-" + td;
-      t->data(td.c_str());
-      $$ = $3;
-      success = true;
+      DECLARE_QUERY_INTERFACE_OBJREF(cn, $3.math(), mathml_dom::MathMLCnElement);
+      if (cn != NULL)
+      {
+        RETURN_INTO_OBJREF(ma1, iface::dom::Node, cn->getArgument(1));
+        DECLARE_QUERY_INTERFACE_OBJREF(t, ma1, dom::Text);
+        RETURN_INTO_WSTRING(td, t->data());
+        if (isMinus)
+          td = L"-" + td;
+        t->data(td.c_str());
+        $$ = $3;
+        success = true;
+      }
     }
   }
   if (!success)
@@ -1172,13 +1179,6 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
                                                  aParseTarget));
     $$.math(m);
   }
-} | '+' math_expr %prec T_NOT {
-  /* Alan Garny's version introduced unary '+' and had it create a MathML
-   * apply 'plus' with only one argument. At the very least, that won't do
-   * anything useful, so simplify and simply treat unary + as a no-op for
-   * compatibility.
-   */
-  $$ = $2;
 } | T_DIFF math_expr ')' '/' T_DIFF math_expr math_possible_degree ')' math_attrs {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoDerivative(L"diff", $2.math(), $6.math(), $7.math(),
@@ -1198,7 +1198,7 @@ comparative_op_lowerprec: '=' { $$.string("eq"); } |
 comparative_op_higherprec: '<' { $$.string("lt"); } | '>' { $$.string("gt"); } |
                           T_GE { $$.string("geq");} | T_LE { $$.string("leq"); };
 
-unary_op: '-' { $$.string("minus"); } | T_NOT { $$.string("not"); };
+unary_op: '-' { $$.string("minus"); } | T_NOT { $$.string("not"); } | '+' { $$.string("plus"); };
 
 math_maybefunction_args: '(' math_function_arg_list ')' {
   $$ = $2;

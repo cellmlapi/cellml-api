@@ -543,11 +543,16 @@ struct OperatorInformation
   {L"xor",              L"xor",               0, 10, OperatorInformation::PREORDER}
 };
 
+static const OperatorInformation unaryPlus =
+  {L"plus",             L"+",                 3,  3, OperatorInformation::BARE_PREORDER};
+static const OperatorInformation unaryPlusConst =
+  {L"plus",             L"+",                 0,  10, OperatorInformation::PREORDER};
+
 static const OperatorInformation unaryMinus =
   {L"minus",            L"-",                 3,  3, OperatorInformation::BARE_PREORDER};
 
 static const OperatorInformation unaryMinusConst =
-  {L"minus",            L"minus",             0,  10, OperatorInformation::PREORDER};
+  {L"minus",            L"-",                 0,  10, OperatorInformation::PREORDER};
 
 OperatorInformation*
 LookupOperatorByMathMLName(const wchar_t* aOpName)
@@ -796,6 +801,16 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
             op = &unaryMinus;
           else
             op = &unaryMinusConst;
+        }
+        else if (n == 2 && !wcscmp(L"+", op->telicemName))
+        {
+          // See if it is a constant argument...
+          RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
+          DECLARE_QUERY_INTERFACE_OBJREF(argCN, arg, mathml_dom::MathMLCnElement);
+          if (argCN == NULL)
+            op = &unaryPlus;
+          else
+            op = &unaryPlusConst;
         }
 
         std::map<std::wstring, std::wstring> attrs;
