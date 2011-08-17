@@ -80,7 +80,6 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         for n in node.declarations():
             if n.mainFile():
                 self.contextNamespaces = ['p2py']
-                self.visitingOther = 0
                 n.accept(self)
             else:
                 filename = n.file()
@@ -102,8 +101,6 @@ class CToPythonWalker(idlvisitor.AstVisitor):
                                       filename=filename)
 
                     self.contextNamespaces = ['p2py']
-                    self.visitingOther = 1
-                    n.accept(self)
         self.leaveNamespaces()
         self.hxx.out('#endif // not ' + guardname)
 
@@ -115,29 +112,19 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         self.contextNamespaces.pop()
 
     def visitForward(self, node):
-        if not self.visitingOther:
-            self.syncNamespaces()
-            self.hxx.out('class @classname@;', classname=node.simplename)
+        self.syncNamespaces()
+        self.hxx.out('class @classname@;', classname=node.simplename)
 
     def visitInterface(self, node):
-        if not self.visitingOther:
-            self.syncNamespaces()
-            self.hxx.out('PUBLIC_@modname@_PRE class PUBLIC_@modname@_POST @classname@',
-                         modname=self.modname, classname=node.simplename)
+        self.syncNamespaces()
+        self.hxx.out('PUBLIC_@modname@_PRE class PUBLIC_@modname@_POST @classname@',
+                     modname=self.modname, classname=node.simplename)
 
         isTerminal = 0
-        everyModule = 0
         # See if this is a terminal interface...
         for p in node.pragmas():
             if p.text() == "terminal-interface":
                 isTerminal = 1
-            if p.text() == "every-module":
-                everyModule = 1
-
-        if self.visitingOther:
-            # Look for the pragma...
-            if everyModule == 0:
-                return
 
         self.iface = node
 
@@ -155,34 +142,33 @@ class CToPythonWalker(idlvisitor.AstVisitor):
 
         classname = 'p2py::' + node.corbacxxscoped
         self.classname = classname
-        if not self.visitingOther:
-            self.hxx.out('    : public @virtual@::@scopedname@',
-                         virtual=virtual, scopedname=node.simplecxxscoped)
+        self.hxx.out('    : public @virtual@::@scopedname@',
+                     virtual=virtual, scopedname=node.simplecxxscoped)
             
-            if len(inh) == 0:
-                self.hxx.out('    , public @virtual@::p2py::XPCOM::IObject',
-                             virtual=virtual)
-            else:
-                for c in inh:
-                    isAmbiguous = 0
-                    iclassname = c.corbacxxscoped
-                    target = 'ambiguous-inheritance(' + iclassname + ')'
-                    for p in node.pragmas():
-                        if p.text() == target:
-                            isAmbiguous = 1
-                            break
+        if len(inh) == 0:
+            self.hxx.out('    , public @virtual@::p2py::XPCOM::IObject',
+                         virtual=virtual)
+        else:
+            for c in inh:
+                isAmbiguous = 0
+                iclassname = c.corbacxxscoped
+                target = 'ambiguous-inheritance(' + iclassname + ')'
+                for p in node.pragmas():
+                    if p.text() == target:
+                        isAmbiguous = 1
+                        break
                     if isAmbiguous:
                         virtual = 'virtual '
                     else:
                         virtual = ''
-                    self.hxx.out('    , public @virtual@::p2py::@classname@',
-                                 virtual=virtual, classname=iclassname)
+                self.hxx.out('    , public @virtual@::p2py::@classname@',
+                             virtual=virtual, classname=iclassname)
 
-            self.hxx.out('{')
-            self.hxx.out('public:')
-            self.hxx.inc_indent()
-            self.hxx.out('%s() {}' % node.simplename)
-            self.hxx.out('PUBLIC_%s_PRE %s(PyObject *aObject) PUBLIC_%s_POST;' % (self.modname, node.simplename, self.modname))
+        self.hxx.out('{')
+        self.hxx.out('public:')
+        self.hxx.inc_indent()
+        self.hxx.out('%s() {}' % node.simplename)
+        self.hxx.out('PUBLIC_%s_PRE %s(PyObject *aObject) PUBLIC_%s_POST;' % (self.modname, node.simplename, self.modname))
         
         self.cpp.out('@classname@::@constrname@(PyObject* aObject)',
                      classname=classname, constrname=node.simplename)
@@ -196,33 +182,32 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         for n in node.contents():
             n.accept(self)
 
-        if not self.visitingOther:
-            self.hxx.dec_indent()
-            self.hxx.out('};')
+        self.hxx.dec_indent()
+        self.hxx.out('};')
 
-            for ns in self.contextNamespaces:
-                self.cpp.out('namespace %s' % ns)
-                self.cpp.out('{')
-                self.cpp.inc_indent()
-            self.cpp.out('class %sFactory' % node.simplename)
-            self.cpp.out('  : public ::P2PyFactory')
+        for ns in self.contextNamespaces:
+            self.cpp.out('namespace %s' % ns)
             self.cpp.out('{')
-            self.cpp.out('public:')
             self.cpp.inc_indent()
-            self.cpp.out('%sFactory() : ::P2PyFactory("%s") {};' % (node.simplename, node.corbacxxscoped))
-            self.cpp.out('virtual ~%sFactory() {};' % (node.simplename))
-            self.cpp.out("void* create(PyObject* aObj)")
-            self.cpp.out("{")
-            self.cpp.inc_indent()
-            self.cpp.out('return reinterpret_cast<void*>(static_cast< ::iface::%s*>(new ::p2py::%s(aObj)));' % (node.corbacxxscoped, node.corbacxxscoped))
-            self.cpp.dec_indent()
-            self.cpp.out("}")
+        self.cpp.out('class %sFactory' % node.simplename)
+        self.cpp.out('  : public ::P2PyFactory')
+        self.cpp.out('{')
+        self.cpp.out('public:')
+        self.cpp.inc_indent()
+        self.cpp.out('%sFactory() : ::P2PyFactory("%s") {};' % (node.simplename, node.corbacxxscoped))
+        self.cpp.out('virtual ~%sFactory() {};' % (node.simplename))
+        self.cpp.out("void* create(PyObject* aObj)")
+        self.cpp.out("{")
+        self.cpp.inc_indent()
+        self.cpp.out('return reinterpret_cast<void*>(static_cast< ::iface::%s*>(new ::p2py::%s(aObj)));' % (node.corbacxxscoped, node.corbacxxscoped))
+        self.cpp.dec_indent()
+        self.cpp.out("}")
+        self.cpp.dec_indent()
+        self.cpp.out('};')
+        for ns in self.contextNamespaces:
             self.cpp.dec_indent()
             self.cpp.out('};')
-            for ns in self.contextNamespaces:
-                self.cpp.dec_indent()
-                self.cpp.out('};')
-            self.cpp.out('static ::p2py::%sFactory s%sFactory;' % (node.corbacxxscoped, node.simplecscoped))
+        self.cpp.out('static ::p2py::%sFactory s%sFactory;' % (node.corbacxxscoped, node.simplecscoped))
             
     def visitTypedef(self, node):
         pass
