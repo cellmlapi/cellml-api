@@ -9,7 +9,7 @@
 #define CELLML_1_0_NS L"http://www.cellml.org/cellml/1.0#"
 #define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
 #define INFDELAY L"http://www.cellml.org/cellml/infinitesimal-delay"
-#define PASSTHROUGH L"http://www.cellml.org/tools/api#passthrough"
+#define PASSTHROUGH_URL L"http://www.cellml.org/tools/api#passthrough"
 
 static const MaLaESQualifiers noQualifiers = {NULL, NULL, NULL, NULL};
 
@@ -1654,7 +1654,7 @@ CDAMaLaESTransform::RunTransformOnOperator
   {
     RETURN_INTO_WSTRING(opName, csymTop->definitionURL());
 
-    if (opName == PASSTHROUGH)
+    if (opName == PASSTHROUGH_URL)
     {
       aResult->appendPassthrough(csymTop);
       return;
@@ -1941,7 +1941,7 @@ DoSanitiseElem(iface::dom::Element* aEl)
   {
     RETURN_INTO_WSTRING(ns, aEl->namespaceURI());
     RETURN_INTO_WSTRING(defURI, aEl->getAttributeNS(L"", L"definitionURL"));
-    if (ns == MATHML_NS && defURI == PASSTHROUGH)
+    if (ns == MATHML_NS && defURI == PASSTHROUGH_URL)
       aEl->setAttributeNS(L"", L"definitionURL", L"http://www.cellml.org/tools/api#disabled-passthrough");
   }
 

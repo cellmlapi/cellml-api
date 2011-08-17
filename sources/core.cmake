@@ -19,7 +19,7 @@ INCLUDE_DIRECTORIES(sources/dom_direct)
 INCLUDE_DIRECTORIES(sources/cellml)
 INCLUDE_DIRECTORIES(sources/mathml)
 INCLUDE_DIRECTORIES(extdep/libxml)
-INCLUDE_DIRECTORIES(extdep/libxml/include)
+INCLUDE_DIRECTORIES(SYSTEM extdep/libxml/include)
 
 IF (ENABLE_RDF)
   INCLUDE_DIRECTORIES(sources/rdf)

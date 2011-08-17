@@ -77,9 +77,8 @@ static PyTypeObject xpcom_IObjectType = {
   0,/* tp_del */
 };
 
-CDA_EXPORT_PRE PyMODINIT_FUNC
-initxpcom(void) CDA_EXPORT_POST;
-PyMODINIT_FUNC
+extern "C" { CDA_EXPORT_PRE void initxpcom(void) CDA_EXPORT_POST; }
+void
 initxpcom(void)
 {
   PyObject* xpcomMod = Py_InitModule("xpcom", NULL);

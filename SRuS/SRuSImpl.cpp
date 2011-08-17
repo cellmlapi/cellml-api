@@ -30,7 +30,7 @@ public:
 
   bool supportsModellingLanguage(const wchar_t* aLang) throw();
   iface::SRuS::TransformedModel* buildOneModel(iface::SProS::Model* aModel)
-    throw();
+    throw(std::exception&);
   iface::SRuS::TransformedModelSet* buildAllModels
     (iface::SProS::SEDMLElement* aElement) throw();
   void generateData(iface::SRuS::TransformedModelSet* aSet,
@@ -1016,7 +1016,7 @@ private:
 
 iface::SRuS::TransformedModel*
 CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
-  throw()
+  throw(std::exception&)
 {
   try
   {

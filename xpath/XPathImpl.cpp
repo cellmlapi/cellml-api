@@ -1785,7 +1785,7 @@ public:
 
         CDA_XPathResult* offsetr = *i++;
         offsetr->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
-        uint32_t offset = myround(offsetr->mNumber);
+        uint32_t offset = static_cast<uint32_t>(myround(offsetr->mNumber));
         
         uint32_t length;
         if (args.size() == 2)
@@ -1793,7 +1793,7 @@ public:
         else
         {
           CDA_XPathResult* lengthr = *i++;
-          length = myround(lengthr->mNumber);
+          length = static_cast<uint32_t>(myround(lengthr->mNumber));
         }
 
         try

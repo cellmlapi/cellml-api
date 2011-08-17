@@ -956,7 +956,7 @@ siPrefixOrNumber: T_SIPREFIX { $$.number($1.siPrefix()); } | anynumber;
 unitattributeitem: T_PREF ':' siPrefixOrNumber {
   // Set the prefix for the unit item
   DECLARE_QUERY_INTERFACE_OBJREF(unit, $-1.element(), cellml_api::Unit);
-  unit->prefix($3.number());
+  unit->prefix(static_cast<int32_t>($3.number()));
 } | T_EXPO ':' anynumber {
   // Set the exponent for the unit item
   DECLARE_QUERY_INTERFACE_OBJREF(unit, $-1.element(), cellml_api::Unit);

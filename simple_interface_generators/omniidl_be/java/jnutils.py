@@ -66,7 +66,7 @@ class Type:
     def readJNIReference(self, code, jniname):
         return "{\n" +\
                "  jclass tmpclazz = env->FindClass(\"pjm/reference\");\n" +\
-               "  jmethodID tmpgetref = env->GetMethodID(clazz, \"get\", \"()Ljava/lang/Object;\");\n" +\
+               "  jmethodID tmpgetref = env->GetMethodID(tmpclazz, \"get\", \"()Ljava/lang/Object;\");\n" +\
                "  jobject tmpobj = env->CallObjectMethod(" + jniname + ", tmpgetref);\n" +\
                code +\
                "}\n"

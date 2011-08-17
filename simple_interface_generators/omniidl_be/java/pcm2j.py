@@ -57,7 +57,9 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.hxx.out('#include "pick-jni.h"')
         self.hxx.out('#include "Iface' + basename + '.hxx"')
         self.hxx.out('#include "p2jxpcom.hxx"')
+        self.cpp.out('#ifndef MODULE_CONTAINS_' + self.defname)
         self.cpp.out('#define MODULE_CONTAINS_' + self.defname)
+        self.cpp.out('#endif')
         self.cpp.out('#include <exception>')
         self.cpp.out('#include "cda_compiler_support.h"')
         self.cpp.out('#include "j2p' + basename + '.hxx"')
@@ -288,11 +290,12 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         # Set up storage for all parameters as the JNI type...
         jniParams = ''
         for (pname, ti, dirn) in params:
-            self.cpp.out(ti.jniType(jnutils.Type.RETURN) + ' _jni_' + pname + ';')
+            self.cpp.out(ti.jniType(dirn) + ' _jni_' + pname + ';')
             jniParams = jniParams + ', _jni_' + pname
             if dirn == jnutils.Type.OUT:
                 continue
-            self.cpp.out(ti.convertToJNI('_jni_' + pname, pname, dirn != jnutils.Type.IN))
+            self.cpp.out(ti.convertToJNI('_jni_' + pname, pname, dirn != jnutils.Type.IN,
+                                         dirn != jnutils.Type.IN))
 
         # Find the Java class...
         self.cpp.out('jclass thisclazz = env->FindClass(\"' + self.javaclass + '\");')
@@ -321,7 +324,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         for (pname, ti, dirn) in params:
             if dirn == jnutils.Type.IN:
                 continue
-            self.cpp.out(ti.convertToPCM('_jni_' + pname, pname, indirectOut = 1))
+            self.cpp.out(ti.convertToPCM('_jni_' + pname, pname, indirectIn = 1, indirectOut = 1))
 
         if needRet:
             self.cpp.out(rtypeName + ' _pcm_ret;')

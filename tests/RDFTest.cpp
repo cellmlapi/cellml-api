@@ -341,7 +341,7 @@ private:
 
     if (aStr[0] == '<')
     {
-      uint32_t eos = aStr.find('>');
+      size_t eos = aStr.find('>');
       if (eos == std::string::npos)
       {
         std::cout << "Unterminated URI reference" << std::endl;
@@ -421,7 +421,7 @@ private:
         }
 
         pos++;
-        uint32_t eos = aStr.find('>', pos);
+        size_t eos = aStr.find('>', pos);
         if (eos == std::string::npos)
         {
           std::cout << "Unterminated typed literal datatype." << std::endl;
