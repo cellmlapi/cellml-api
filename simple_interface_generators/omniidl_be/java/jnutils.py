@@ -78,7 +78,7 @@ class Type:
 
     def readJNIReference(self, code, jniname):
         return "{\n" +\
-               "  jclass tmpclazz = env->FindClass(\"pjm/reference\");\n" +\
+               "  jclass tmpclazz = env->FindClass(\"pjm/Reference\");\n" +\
                "  jmethodID tmpgetref = env->GetMethodID(tmpclazz, \"get\", \"()Ljava/lang/Object;\");\n" +\
                "  jobject tmpobj = env->CallObjectMethod(" + jniname + ", tmpgetref);\n" +\
                code +\
@@ -86,7 +86,7 @@ class Type:
 
     def writeJNIReference(self, code, jniname):
         return "{\n" +\
-               "  jclass tmpclazz = env->FindClass(\"pjm/reference\");\n" +\
+               "  jclass tmpclazz = env->FindClass(\"pjm/Reference\");\n" +\
                "  jmethodID tmpsetref = env->GetMethodID(tmpclazz, \"set\", \"(Ljava/lang/Object;)V\");\n" +\
                "  jobject tmpobj;\n" +\
                code +\
