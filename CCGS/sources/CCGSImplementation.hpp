@@ -238,7 +238,7 @@ private:
   uint32_t mArrayOffset;
 };
 
-struct CodeGenerationState;
+class CodeGenerationState;
 
 class CDA_CodeGenerator
   : public iface::cellml_services::IDACodeGenerator
