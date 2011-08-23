@@ -77,7 +77,6 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         for n in node.declarations():
             if n.mainFile():
                 self.contextNamespaces = ['p2j']
-                self.visitingOther = 0
                 n.accept(self)
             else:
                 filename = n.file()
@@ -99,8 +98,6 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
                                       filename=filename)
 
                     self.contextNamespaces = ['p2j']
-                    self.visitingOther = 1
-                    n.accept(self)
         self.leaveNamespaces()
         self.hxx.out('#endif // not ' + guardname)
 
@@ -112,28 +109,18 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
 
     def visitForward(self, node):
         self.syncNamespaces()
-        if not self.visitingOther:
-            self.hxx.out('class ' + jnutils.CppName(node.identifier()) + ';')
+        self.hxx.out('class ' + jnutils.CppName(node.identifier()) + ';')
 
     def visitInterface(self, node):
-        if not self.visitingOther:
-            self.syncNamespaces()
-            self.hxx.out('PUBLIC_%s_PRE class PUBLIC_%s_POST %s' %
-                         (self.defname, self.defname, jnutils.CppName(node.identifier())))
+        self.syncNamespaces()
+        self.hxx.out('PUBLIC_%s_PRE class PUBLIC_%s_POST %s' %
+                     (self.defname, self.defname, jnutils.CppName(node.identifier())))
 
         isTerminal = 0
-        everyModule = 0
         # See if this is a terminal interface...
         for p in node.pragmas():
             if p.text() == "terminal-interface":
                 isTerminal = 1
-            if p.text() == "every-module":
-                everyModule = 1
-
-        if self.visitingOther:
-            # Look for the pragma...
-            if everyModule == 0:
-                return
 
         virtual = ''
         if not isTerminal:
@@ -146,40 +133,39 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.classname = classname
         self.javaclass = string.join(node.scopedName(), '/')
 
-        if not self.visitingOther:
-            self.hxx.out('    : public @virtual@::iface::@scopedname@',
-                         virtual=virtual, scopedname=scopedname)
+        self.hxx.out('    : public @virtual@::iface::@scopedname@',
+                     virtual=virtual, scopedname=scopedname)
             
-            if len(inh) == 0:
-                self.hxx.out('    , public @virtual@::p2j::XPCOM::IObject',
-                             virtual=virtual)
-            else:
-                for c in inh:
-                    if isinstance(c, idlast.Declarator) and c.alias():
-                        c = c.alias().aliasType().unalias().decl()
+        if len(inh) == 0:
+            self.hxx.out('    , public @virtual@::p2j::XPCOM::IObject',
+                         virtual=virtual)
+        else:
+            for c in inh:
+                if isinstance(c, idlast.Declarator) and c.alias():
+                    c = c.alias().aliasType().unalias().decl()
                     
-                    isAmbiguous = 0
-                    iclassname = jnutils.ScopedCppName(c)
-                    target = 'ambiguous-inheritance(' + iclassname + ')'
-                    for p in node.pragmas():
-                        if p.text() == target:
-                            isAmbiguous = 1
-                            break
-                    if isAmbiguous:
-                        virtual = 'virtual '
-                    else:
-                        virtual = ''
-                    self.hxx.out('    , public @virtual@::p2j::@classname@',
-                                 virtual=virtual, classname=iclassname)
+                isAmbiguous = 0
+                iclassname = jnutils.ScopedCppName(c)
+                target = 'ambiguous-inheritance(' + iclassname + ')'
+                for p in node.pragmas():
+                    if p.text() == target:
+                        isAmbiguous = 1
+                        break
+                if isAmbiguous:
+                    virtual = 'virtual '
+                else:
+                    virtual = ''
+                self.hxx.out('    , public @virtual@::p2j::@classname@',
+                             virtual=virtual, classname=iclassname)
 
-            self.hxx.out('{')
-            self.hxx.out('public:')
-            self.hxx.inc_indent()
-            self.hxx.out(jnutils.CppName(node.identifier()) + '() {}')
-            self.hxx.out('PUBLIC_@defname@_PRE @classname@(JNIEnv* aEnv, ' +
-                         'jobject aObject) PUBLIC_@defname@_POST;',
-                         classname=jnutils.CppName(node.identifier()),
-                         defname=self.defname)
+        self.hxx.out('{')
+        self.hxx.out('public:')
+        self.hxx.inc_indent()
+        self.hxx.out(jnutils.CppName(node.identifier()) + '() {}')
+        self.hxx.out('PUBLIC_@defname@_PRE @classname@(JNIEnv* aEnv, ' +
+                     'jobject aObject) PUBLIC_@defname@_POST;',
+                     classname=jnutils.CppName(node.identifier()),
+                     defname=self.defname)
 
         self.cpp.out(classname + '::' + jnutils.CppName(node.identifier()) + '(JNIEnv* aEnv, jobject aObject)')
         self.cpp.out('{')
@@ -192,25 +178,24 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         for n in node.contents():
             n.accept(self)
 
-        if not self.visitingOther:
-            self.hxx.dec_indent()
-            self.hxx.out('};')
+        self.hxx.dec_indent()
+        self.hxx.out('};')
 
-            fname = jnutils.CppName(string.join(node.scopedName(), '_')) + 'Factory'
-            self.cpp.out('class ' + fname)
-            self.cpp.out('  : public P2JFactory')
-            self.cpp.out('{')
-            self.cpp.out('public:')
-            self.cpp.inc_indent()
-            self.cpp.out(fname + '() : ::P2JFactory("' +\
-                         scopedname + '", "' + self.javaclass +\
-                         '") {}')
-            self.cpp.out('void* create(JNIEnv* env, jobject obj) { return reinterpret_cast<void*>(' +\
-                         'static_cast< ::iface::' + scopedname + '*>(new ' +\
-                         classname + '(env, obj))); }')
-            self.cpp.dec_indent()
-            self.cpp.out('};')
-            self.cpp.out(fname + ' s' + fname + ';');
+        fname = jnutils.CppName(string.join(node.scopedName(), '_')) + 'Factory'
+        self.cpp.out('class ' + fname)
+        self.cpp.out('  : public P2JFactory')
+        self.cpp.out('{')
+        self.cpp.out('public:')
+        self.cpp.inc_indent()
+        self.cpp.out(fname + '() : ::P2JFactory("' +\
+                     scopedname + '", "' + self.javaclass +\
+                     '") {}')
+        self.cpp.out('void* create(JNIEnv* env, jobject obj) { return reinterpret_cast<void*>(' +\
+                     'static_cast< ::iface::' + scopedname + '*>(new ' +\
+                     classname + '(env, obj))); }')
+        self.cpp.dec_indent()
+        self.cpp.out('};')
+        self.cpp.out(fname + ' s' + fname + ';');
 
     def visitOperation(self, node):
         rti = jnutils.GetTypeInformation(node.returnType().unalias())
@@ -274,8 +259,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         
         paramstr = paramstr + ')'
 
-        if not self.visitingOther:
-            self.hxx.out('PUBLIC_' + self.defname + '_PRE ' + rtypeName + ' ' + name + paramstr + ' throw(std::exception&) ' + 'PUBLIC_' + self.defname + '_POST;')
+        self.hxx.out('PUBLIC_' + self.defname + '_PRE ' + rtypeName + ' ' + name + paramstr + ' throw(std::exception&) ' + 'PUBLIC_' + self.defname + '_POST;')
         self.cpp.out(rtypeName + ' ' + self.classname + '::' + name + paramstr)
         self.cpp.out('  throw(std::exception&)')
         self.cpp.out('{')
