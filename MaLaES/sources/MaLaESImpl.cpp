@@ -1897,7 +1897,7 @@ DoSanitiseString(const std::wstring& aInput, bool aWhiteOk)
   std::wstring out;
   for (std::wstring::const_iterator i = aInput.begin(); i != aInput.end(); i++)
   {
-    char c = *i;
+    char c = static_cast<char>(*i);
     if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') || c == '_')
       out += c;

@@ -43,6 +43,19 @@ class Type:
                 Type.DERIVE: 'jobject'
                }[direction]
 
+    def jniStorage(self, dirn, name):
+        td = self.jniType(dirn) + ' ' + name
+        needAssign = dirn != Type.IN
+        if dirn == Type.IN:
+            return td + ';'
+        else:
+            # Create the Reference object...
+            makeReference = "  jclass tmpclazz = env->FindClass(\"pjm/Reference\");\n" +\
+                            "  jmethodID initmethod = env->GetMethodID(tmpclazz, \"" +\
+                            "<init>\", \"()V\");\n" +\
+                            "  " + name + " = env->NewObject(tmpclazz, initmethod);\n"
+            return td + ';\n  {\n' + makeReference + '  }'
+
     def javaSig(self, direction):
         return {Type.IN: self.java_sig,
                 Type.OUT: 'Lpjm/Reference;',

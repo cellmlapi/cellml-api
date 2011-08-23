@@ -290,7 +290,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         # Set up storage for all parameters as the JNI type...
         jniParams = ''
         for (pname, ti, dirn) in params:
-            self.cpp.out(ti.jniType(dirn) + ' _jni_' + pname + ';')
+            self.cpp.out(ti.jniStorage(dirn, ' _jni_' + pname))
             jniParams = jniParams + ', _jni_' + pname
             if dirn == jnutils.Type.OUT:
                 continue
