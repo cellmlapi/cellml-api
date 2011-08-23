@@ -105,32 +105,45 @@ class Type:
         
 BASE_MAP = {
     idltype.tk_void: {'wrapper_class': 'invalid!', 'java_type': 'void', 'jni_type': 'void',
-                      'pcm_type': 'void', 'java_sig': 'V', 'call_type': 'Void'},
+                      'pcm_type': 'void', 'java_sig': 'V', 'call_type': 'Void',
+                      'failure_return': 'NULL'},
     idltype.tk_short: {'wrapper_class': 'Short', 'java_type': 'short', 'jni_type': 'jshort',
-                       'pcm_type': 'int16_t', 'java_sig': 'S', 'call_type': 'Short'},
+                       'pcm_type': 'int16_t', 'java_sig': 'S', 'call_type': 'Short',
+                       'failure_return': '0'},
     idltype.tk_long: {'wrapper_class': 'Integer', 'java_type': 'int', 'jni_type': 'jint',
-                      'pcm_type': 'int32_t', 'java_sig': 'I', 'call_type': 'Int'},
+                      'pcm_type': 'int32_t', 'java_sig': 'I', 'call_type': 'Int',
+                      'failure_return': '0'},
     # We have to go up one size for unsigned numbers, unfortunately.
     idltype.tk_ushort: {'wrapper_class': 'Integer', 'java_type': 'int', 'jni_type': 'jint',
-                        'pcm_type': 'uint16_t', 'java_sig': 'I', 'call_type': 'Int'},
+                        'pcm_type': 'uint16_t', 'java_sig': 'I', 'call_type': 'Int',
+                        'failure_return': '0'},
     idltype.tk_ulong: {'wrapper_class': 'Long', 'java_type': 'long', 'jni_type': 'jlong',
-                       'pcm_type': 'uint32_t', 'java_sig': 'J', 'call_type': 'Long'},
+                       'pcm_type': 'uint32_t', 'java_sig': 'J', 'call_type': 'Long',
+                       'failure_return': '0'},
     idltype.tk_float: {'wrapper_class': 'Float', 'java_type': 'float', 'jni_type': 'jfloat',
-                       'pcm_type': 'float', 'java_sig': 'F', 'call_type': 'Float'},
+                       'pcm_type': 'float', 'java_sig': 'F', 'call_type': 'Float',
+                       'failure_return': '0.0'},
     idltype.tk_double: {'wrapper_class': 'Double', 'java_type': 'double', 'jni_type': 'jdouble',
-                        'pcm_type': 'double', 'java_sig': 'D', 'call_type': 'Double'},
+                        'pcm_type': 'double', 'java_sig': 'D', 'call_type': 'Double',
+                        'failure_return': '0.0'},
     idltype.tk_boolean: {'wrapper_class': 'Boolean', 'java_type': 'boolean', 'jni_type': 'jboolean',
-                         'pcm_type': 'bool', 'java_sig': 'Z', 'call_type': 'Boolean'},
+                         'pcm_type': 'bool', 'java_sig': 'Z', 'call_type': 'Boolean',
+                         'failure_return': 'false'},
     idltype.tk_char: {'wrapper_class': 'Character', 'java_type': 'char', 'jni_type': 'jchar',
-                      'pcm_type': 'char', 'java_sig': 'C', 'call_type': 'Char'},
+                      'pcm_type': 'char', 'java_sig': 'C', 'call_type': 'Char',
+                      'failure_return': '0'},
     idltype.tk_wchar: {'wrapper_class': 'Character', 'java_type': 'char', 'jni_type': 'jchar',
-                       'pcm_type': 'wchar_t', 'java_sig': 'C', 'call_type': 'Char'},
+                       'pcm_type': 'wchar_t', 'java_sig': 'C', 'call_type': 'Char',
+                       'failure_return': '0'},
     idltype.tk_octet: {'wrapper_class': 'Byte', 'java_type': 'byte', 'jni_type': 'jbyte',
-                       'pcm_type': 'uint8_t', 'java_sig': 'B', 'call_type': 'Byte'},
+                       'pcm_type': 'uint8_t', 'java_sig': 'B', 'call_type': 'Byte',
+                       'failure_return': '0'},
     idltype.tk_longlong: {'wrapper_class': 'Long', 'java_type': 'long', 'jni_type': 'jlong',
-                          'pcm_type': 'int64_t', 'java_sig': 'J', 'call_type': 'Long'},
+                          'pcm_type': 'int64_t', 'java_sig': 'J', 'call_type': 'Long',
+                          'failure_return': '0'},
     idltype.tk_ulonglong: {'wrapper_class': 'Long', 'java_type': 'long', 'jni_type': 'jlong',
-                           'pcm_type': 'uint64_t', 'java_sig': 'J', 'call_type': 'Long'}
+                           'pcm_type': 'uint64_t', 'java_sig': 'J', 'call_type': 'Long',
+                           'failure_return': '0'}
 }
 
 class Base(Type):
@@ -231,6 +244,7 @@ class Base(Type):
 class String(Type):
     def __init__(self, type):
         self.java_type = 'String'
+        self.failure_return = 'NULL';
 
     def jniType(self, direction):
         return {Type.IN: 'jstring',
@@ -308,6 +322,7 @@ class String(Type):
 class WString(String):
     def __init__(self, type):
         String.__init__(self, type)
+        self.failure_return = 'NULL';
 
     def jniType(self, direction):
         return {Type.IN: 'jstring',
@@ -389,6 +404,7 @@ class Sequence(Type):
         self.derive_name = self.seqType.javaType(Type.DERIVE)
         self.java_type = 'java.util.Vector<' + self.derive_name + '>'
         self.java_sig = 'Ljava/util/Vector;'
+        self.failure_return = 'NULL';
 
     def pcmType(self, direction):
         deriv = self.seqType.pcmType(Type.DERIVE)
@@ -481,7 +497,7 @@ class Declared(Type):
         else:
             self.java_type = GetClassName(type)
             self.java_sig = 'L' + string.join(type.scopedName(), '/') + ';'
-            
+        self.failure_return = 'NULL';            
         self.cpp_type = 'iface::' + ScopedCppName(type.decl(), skipLast)
 
     def pcmType(self, direction):

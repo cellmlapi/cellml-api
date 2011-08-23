@@ -361,7 +361,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppMod.out('jclass eclazz = env->FindClass("java/lang/RuntimeException");')
         self.cppMod.out('env->ThrowNew(eclazz, "Native code threw exception");');
         if needRet:
-            self.cppMod.out('return NULL;');
+            self.cppMod.out('return ' + rtype.failure_return + ';');
         else:
             self.cppMod.out('return;');        
         self.cppMod.dec_indent()
