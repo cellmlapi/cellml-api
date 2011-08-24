@@ -33,7 +33,7 @@ public class CellMLJavaTest{
 
 	public CellMLJavaTest(){
 		System.out.println("CellMLJavaTest launched. Loading library...");
-		System.loadLibrary("cellml_java_bridge");
+		System.loadLibrary("java_cellml");
 		cb = cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap();	
 
 	}

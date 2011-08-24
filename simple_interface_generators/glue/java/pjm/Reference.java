@@ -9,7 +9,7 @@ public class Reference<T>
     /**
      * Sets up a reference with null as the initial referent.
      */
-    Reference()
+    public Reference()
     {
         mObject = null;
     }
@@ -18,7 +18,7 @@ public class Reference<T>
      * Sets up a reference with aObject as the initial referent.
      * @param aObject The initial referent.
      */
-    Reference(T aObject)
+    public Reference(T aObject)
     {
         mObject = aObject;
     }

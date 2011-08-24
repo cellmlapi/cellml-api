@@ -30,6 +30,7 @@ simple_interface_generators/glue/xpcom/IWrappedPCM.h
 RunTestBin
 docs/api/html
 javacp
+javatestcp
 libltdl
 interfaces.*\.(java|cpp|hxx)
 examples/.metadata

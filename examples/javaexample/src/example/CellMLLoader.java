@@ -6,7 +6,7 @@ public class CellMLLoader {
 	private CellMLBootstrap bootstrap;
 	
 	public CellMLLoader(){
-		System.loadLibrary("cellml_java_bridge");
+		System.loadLibrary("java_cellml");
 		bootstrap =  cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap();	
 	}
 	
