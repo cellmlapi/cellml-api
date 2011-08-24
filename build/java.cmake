@@ -88,7 +88,7 @@ FOREACH(extension ${EXTENSION_LIST})
   IF (WIN32) # Otherwise the filename is wrong on MingW.
     SET_PROPERTY(TARGET java_${extension} PROPERTY OUTPUT_NAME "java_${extension}")
   ELSEIF (APPLE)
-    SET_PROPERTY(TARGET java_${extension} PROPERTIES PREFIX "lib" SUFFIX ".jnilib")
+    SET_TARGET_PROPERTIES(java_${extension} PROPERTIES PREFIX "lib" SUFFIX ".jnilib")
   ENDIF ()
   SET_PROPERTY(TARGET java_${extension} PROPERTY COMPILE_DEFINITIONS ${${extension}_java_defines_module})
   ADD_LIBRARY(${extension}_java_bridge ${${extension}_java_bridge_files})
