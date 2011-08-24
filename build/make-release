@@ -28,11 +28,15 @@ case $UNAME in
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
         BINFULL=$(cygpath "$BINDIR/$BINARY")
+        BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.zip
+        BINFULL2=$(cygpath "$BINDIR/$BINARY2")
         ;;
     *Msys*)
         SYSTEM=win32
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
         BINFULL=$(/bin/cygpath "$BINDIR/$BINARY")
+        BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.zip
+        BINFULL2=$(cygpath "$BINDIR/$BINARY2")
         SCP=/bin/scp.exe
         SFTP=/bin/sftp.exe
         ;;
@@ -74,3 +78,8 @@ fi
 
 echo $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
 $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
+
+if [[ $SYSTEM == win32 ]];
+then
+    $SCP "$BINFULL2" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY2"
+fi
