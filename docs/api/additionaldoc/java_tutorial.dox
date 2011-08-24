@@ -1,9 +1,9 @@
 /*!
 \page java_tutorial Working with CellML models using Java
 
-\section java_bridge Loading cellml_java_bridge library 
+\section java_bridge Loading java_cellml library 
 
-Here we create a class to load the cellml_java_bridge library.
+Here we create a class to load the java_cellml library.
 
 \code 
 
@@ -13,7 +13,7 @@ public class CellMLLoader {
 	private CellMLBootstrap bootstrap;
 	
 	public CellMLLoader(){
-		System.loadLibrary("cellml_java_bridge");
+		System.loadLibrary("java_cellml");
 		bootstrap =  cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap();	
 	}
 	
