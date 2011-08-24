@@ -85,6 +85,9 @@ LIST(APPEND cellml_java_bridge_files simple_interface_generators/glue/java/p2jxp
 LIST(APPEND cellml_java_defines_lib IN_MODULE_JavaSupport)
 FOREACH(extension ${EXTENSION_LIST})
   ADD_LIBRARY(java_${extension} MODULE ${java_${extension}_lib_files})
+  IF (WIN32) # Otherwise the filename is wrong on MingW.
+    SET_PROPERTY(TARGET java_${extension} PROPERTY OUTPUT_NAME "java_${extension}")
+  ENDIF (WIN32)
   SET_PROPERTY(TARGET java_${extension} PROPERTY COMPILE_DEFINITIONS ${${extension}_java_defines_module})
   ADD_LIBRARY(${extension}_java_bridge ${${extension}_java_bridge_files})
   SET_PROPERTY(TARGET ${extension}_java_bridge PROPERTY COMPILE_DEFINITIONS ${${extension}_java_defines_lib})
