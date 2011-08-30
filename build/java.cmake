@@ -86,7 +86,7 @@ LIST(APPEND cellml_java_defines_lib IN_MODULE_JavaSupport)
 FOREACH(extension ${EXTENSION_LIST})
   ADD_LIBRARY(java_${extension} MODULE ${java_${extension}_lib_files})
   IF (WIN32) # Otherwise the filename is wrong on MingW.
-    SET_PROPERTY(TARGET java_${extension} PROPERTY OUTPUT_NAME "java_${extension}")
+    SET_TARGET_PROPERTIES(java_${extension} PROPERTIES PREFIX "" SUFFIX ".dll" OUTPUT_NAME "java_${extension}")
   ELSEIF (APPLE)
     SET_TARGET_PROPERTIES(java_${extension} PROPERTIES PREFIX "lib" SUFFIX ".jnilib")
   ENDIF ()
