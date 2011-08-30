@@ -99,6 +99,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
                      'Init(PyObject* aSelf, PyObject* aArgs, PyObject* aKwds)')
         self.out.out('{')
         self.out.inc_indent()
+        self.out.out('PyErr_Clear();')
         self.out.out('PyObject* iobject;')
         self.out.out('%s * tobj = NULL;' % node.simplecxxscoped)
         self.out.out('if (!PyArg_ParseTuple(aArgs, "O", &iobject))')
@@ -202,6 +203,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('static void ' + node.simplecscoped + 'Del(PyObject* aSelf)')
         self.out.out('{')
         self.out.inc_indent()
+        self.out.out('PyErr_Clear();')
         self.out.out('PyObject* cptr = PyObject_GetAttrString(aSelf, "_iobject_cptr");')
         self.out.out('if (cptr)')
         self.out.out('{')
@@ -288,7 +290,8 @@ class PythonToCWalker(idlvisitor.AstVisitor):
                     filebase, extension = os.path.splitext(filename)
                     self.out.out('{')
                     self.out.inc_indent()
-                    self.out.out('PyObject* %sMod = PyImport_ImportModule("%s.%s");' % (bn, self.moduledir, filebase))
+                    self.out.out('PyObject* %sMod = PyImport_ImportModule("%s.%s");' %
+                                 (bn, self.moduledir, filebase))
                     self.out.out('if (%sMod == NULL) return;' % bn)
                     self.out.out('%s = PyObject_GetAttrString(%sMod, "%s");' % (bn, bn, base.identifier()))
                     self.out.out('Py_DECREF(%sMod);' % bn)
@@ -419,6 +422,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('%s(PyObject *aSelf, PyObject *aArgs, PyObject *kwds)' % methName)
         self.out.out('{')
         self.out.inc_indent()
+        self.out.out('PyErr_Clear();')
         self.out.out('try')
         self.out.out('{')
         self.out.inc_indent()
@@ -455,9 +459,9 @@ class PythonToCWalker(idlvisitor.AstVisitor):
             if not p.is_out():
                 pyargformat = pyargformat + ti.format_pyarg
             else:
-                pyargformat = pyargformat + '(' + ti.format_pyarg + ')'
+                pyargformat = pyargformat + 'O'
         if pyargformat != '':
-            self.out.out('PyArg_ParseTuple(aArgs, \"%s\"%s);' % (pyargformat, pyarglist))
+            self.out.out('if (!PyArg_ParseTuple(aArgs, \"%s\"%s)) return NULL;' % (pyargformat, pyarglist))
 
         # Build all parameters, copying for in & in/out parameters...
         pcmarglist = ''

@@ -12,6 +12,7 @@ def run(tree, args):
 
     bootstrapSpecials = []
     specialIncludes = []
+    idlToExtMap = {}
     moduledir = ''
     modulename = ''
 

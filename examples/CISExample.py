@@ -1,5 +1,5 @@
-import CellML_APISPEC
-import CIS
+from cellml_api import CellML_APISPEC
+from cellml_api import CIS
 import time
 
 canQuit = False

@@ -402,7 +402,8 @@ class Objref(Declared):
         self.scopedname = type.decl().corbacxxscoped
         directory, filename = os.path.split(type.decl().file())
         filebase, extension = os.path.splitext(filename)
-        self.getType = "PyObject* typeMod = PyImport_ImportModule(\"%s.%s\");\n" % (self.context.moduledir, filebase) +\
+        self.getType = "PyObject* typeMod = PyImport_ImportModule(\"%s.%s\");\n" % \
+                       (self.context.moduledir, filebase) +\
                        "PyObject* type = typeMod ? PyObject_GetAttrString(typeMod, \"%s\") : NULL;\n"\
                          % type.decl().identifier() +\
                        'if (typeMod) Py_DECREF(typeMod);'
