@@ -1,4 +1,5 @@
 #!/bin/bash
 
+export PATH="${CMAKE_BINARY_DIR}${PATHSEP}$PATH"
 export PYTHONPATH="${CMAKE_BINARY_DIR}/python${PATHSEP}$PYTHONPATH"
 ${PYTHON_EXECUTABLE} tests/python/Example.py
