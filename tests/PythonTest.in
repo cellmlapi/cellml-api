@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export PYTHONPATH="${CMAKE_BUILD_DIR}/python${PATHSEP}$PYTHONPATH"
+${PYTHON_EXECUTABLE} tests/python/Example.py
