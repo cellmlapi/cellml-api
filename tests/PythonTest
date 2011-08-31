@@ -4,6 +4,8 @@ CMAKE_BINARY_DIR=$1
 PATHSEP=$2
 PYTHON_EXECUTABLE=$3
 
-export PATH="${CMAKE_BINARY_DIR}${PATHSEP}$PATH"
+# Note: With Cygwin bash, always use : even on Windows, so don't subst PATHSEP on PATH
+export PATH="${CMAKE_BINARY_DIR}:$PATH"
+
 export PYTHONPATH="${CMAKE_BINARY_DIR}/python${PATHSEP}$PYTHONPATH"
 ${PYTHON_EXECUTABLE} tests/python/Example.py
