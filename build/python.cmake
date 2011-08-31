@@ -24,6 +24,11 @@ INSTALL(TARGETS PythonSupport DESTINATION lib)
 ADD_LIBRARY(python_xpcom MODULE simple_interface_generators/glue/python/xpcom.cxx)
 TARGET_LINK_LIBRARIES(python_xpcom ${PYTHON_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBUTIL} cellml)
 SET_PROPERTY(TARGET python_xpcom PROPERTY PREFIX "")
+
+IF (WIN32)
+  SET_TARGET_PROPERTIES(python_xpcom PROPERTIES PREFIX "" SUFFIX ".pyd")
+ENDIF()
+
 SET_PROPERTY(TARGET python_xpcom PROPERTY LIBRARY_OUTPUT_NAME xpcom)
 SET_PROPERTY(TARGET python_xpcom PROPERTY LIBRARY_OUTPUT_DIRECTORY python/cellml_api)
 INSTALL(TARGETS python_xpcom DESTINATION lib/python/cellml_api)
@@ -73,6 +78,11 @@ FOREACH(extension ${EXTENSION_LIST})
     SET_PROPERTY(TARGET python_${idlfile} PROPERTY PREFIX "")
     SET_PROPERTY(TARGET python_${idlfile} PROPERTY LIBRARY_OUTPUT_NAME ${idlfile})
     SET_PROPERTY(TARGET python_${idlfile} PROPERTY LIBRARY_OUTPUT_DIRECTORY python/cellml_api)
+
+    IF (WIN32)
+      SET_PROPERTY(TARGET python_${idlfile} PROPERTY SUFFIX ".pyd")
+    ENDIF()
+
     INSTALL(TARGETS python_${idlfile} DESTINATION lib/python/cellml_api)
 
     LIST(APPEND P2PYTHON_BRIDGE_LIST ${p2pypath})
