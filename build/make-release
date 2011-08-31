@@ -36,7 +36,7 @@ case $UNAME in
         BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
         BINFULL=$(/bin/cygpath "$BINDIR/$BINARY")
         BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.zip
-        BINFULL2=$(cygpath "$BINDIR/$BINARY2")
+        BINFULL2=$(/bin/cygpath "$BINDIR/$BINARY2")
         SCP=/bin/scp.exe
         SFTP=/bin/sftp.exe
         ;;
