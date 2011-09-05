@@ -22,7 +22,7 @@ class CDA_SRuSProcessor
 {
 public:
   CDA_SRuSProcessor()
-    : _cda_refcount(1), mRecursionDepth(0) {}
+    : mRecursionDepth(0) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::SEDMLProcessor);
@@ -169,7 +169,7 @@ class CDA_SRuSTransformedModel
 {
 public:
   CDA_SRuSTransformedModel(iface::dom::Document* aDoc, iface::SProS::Model* aModel)
-    : _cda_refcount(1), mDocument(aDoc), mSEDMLModel(aModel) {}
+    : mDocument(aDoc), mSEDMLModel(aModel) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::TransformedModel);
@@ -1194,7 +1194,7 @@ class CDA_SRuSTransformedModelSet
 {
 public:
   CDA_SRuSTransformedModelSet()
-    : _cda_refcount(1), mTransformedRAII(mTransformed) {}
+    : mTransformedRAII(mTransformed) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::TransformedModelSet);
@@ -1271,7 +1271,7 @@ class CDA_SRuSGeneratedData
 {
 public:
   CDA_SRuSGeneratedData(iface::SProS::DataGenerator* aDG)
-    : _cda_refcount(1), mDataGenerator(aDG) {}
+    : mDataGenerator(aDG) {}
   
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::GeneratedData);
@@ -1305,7 +1305,7 @@ class CDA_SRuSGeneratedDataSet
 {
 public:
   CDA_SRuSGeneratedDataSet()
-    : _cda_refcount(1), mDataRAII(mData) {}
+    : mDataRAII(mData) {}
   
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::GeneratedDataSet);
@@ -1338,12 +1338,13 @@ class CDA_SRuSResultBridge
   : public iface::cellml_services::IntegrationProgressObserver
 {
 public:
-  CDA_SRuSResultBridge(iface::SRuS::GeneratedDataMonitor* aMonitor,
+  CDA_SRuSResultBridge(iface::cellml_services::CellMLIntegrationRun* aRun,
+                       iface::SRuS::GeneratedDataMonitor* aMonitor,
                        iface::cellml_services::CodeInformation* aCodeInfo,
                        const std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >&
                        aVarInfoByDataGeneratorId,
                        const std::map<std::wstring, iface::SProS::DataGenerator*>& aDataGeneratorsById)
-    : _cda_refcount(1), mMonitor(aMonitor), mCodeInfo(aCodeInfo),
+    : mRun(aRun), mMonitor(aMonitor), mCodeInfo(aCodeInfo),
       mAggregateMode(0), mVarInfoByDataGeneratorId(aVarInfoByDataGeneratorId),
       mConstants(NULL), mDataGeneratorsById(aDataGeneratorsById),
       mDataGeneratorsByIdRAII(mDataGeneratorsById), mTotalN(0)
@@ -1376,49 +1377,63 @@ public:
   void done()
     throw(std::exception&)
   {
-    if (mAggregateMode == 1)
+    try
     {
-      RETURN_INTO_OBJREF(gds, CDA_SRuSGeneratedDataSet, new CDA_SRuSGeneratedDataSet());
-      for (std::map<std::wstring, std::map<std::wstring, std::vector<double> > >::iterator i =
-             mAggregateData.begin(); i != mAggregateData.end(); i++)
+      if (mAggregateMode == 1)
       {
-        iface::SProS::DataGenerator* dg = mDataGeneratorsById[(*i).first];
-        RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLMathElement, dg->math());
-
-        SEDMLMathEvaluatorWithAggregate smea((*i).second);
-        // Set parameters too...
-        RETURN_INTO_OBJREF(ps, iface::SProS::ParameterSet, dg->parameters());
-        RETURN_INTO_OBJREF(pi, iface::SProS::ParameterIterator, ps->iterateParameters());
-        while (true)
+        RETURN_INTO_OBJREF(gds, CDA_SRuSGeneratedDataSet, new CDA_SRuSGeneratedDataSet());
+        for (std::map<std::wstring, std::map<std::wstring, std::vector<double> > >::iterator i =
+               mAggregateData.begin(); i != mAggregateData.end(); i++)
         {
-          RETURN_INTO_OBJREF(p, iface::SProS::Parameter, pi->nextParameter());
-          if (p == NULL)
-            break;
-
-          RETURN_INTO_WSTRING(pid, p->id());
-          smea.setVariable(pid, p->value());
+          iface::SProS::DataGenerator* dg = mDataGeneratorsById[(*i).first];
+          RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLMathElement, dg->math());
+          
+          SEDMLMathEvaluatorWithAggregate smea((*i).second);
+          // Set parameters too...
+          RETURN_INTO_OBJREF(ps, iface::SProS::ParameterSet, dg->parameters());
+          RETURN_INTO_OBJREF(pi, iface::SProS::ParameterIterator, ps->iterateParameters());
+          while (true)
+          {
+            RETURN_INTO_OBJREF(p, iface::SProS::Parameter, pi->nextParameter());
+            if (p == NULL)
+              break;
+            
+            RETURN_INTO_WSTRING(pid, p->id());
+            smea.setVariable(pid, p->value());
+          }
+          
+          RETURN_INTO_OBJREF(gd, CDA_SRuSGeneratedData, new CDA_SRuSGeneratedData(dg));
+          for (uint32_t j = 0; j < mTotalN; j++)
+          {
+            for (std::map<std::wstring, std::vector<double> >::iterator vi = (*i).second.begin();
+                 vi != (*i).second.end(); vi++)
+              smea.setVariable((*vi).first, (*vi).second[j]);
+            gd->mData.push_back(smea.eval(m));
+          }
+          
+          gd->add_ref();
+          gds->mData.push_back(gd);
         }
-
-        RETURN_INTO_OBJREF(gd, CDA_SRuSGeneratedData, new CDA_SRuSGeneratedData(dg));
-        for (uint32_t j = 0; j < mTotalN; j++)
-        {
-          for (std::map<std::wstring, std::vector<double> >::iterator vi = (*i).second.begin();
-               vi != (*i).second.end(); vi++)
-            smea.setVariable((*vi).first, (*vi).second[j]);
-          gd->mData.push_back(smea.eval(m));
-        }
-
-        gd->add_ref();
-        gds->mData.push_back(gd);
       }
+      mMonitor->done();
     }
-    mMonitor->done();
+    catch (...) {}
+
+    mRun = NULL;
   }
 
   void failed(const char* aErrorMessage)
     throw(std::exception&)
   {
-    mMonitor->failure(aErrorMessage);
+    try
+    {
+      mMonitor->failure(aErrorMessage);
+    }
+    catch (...)
+    {
+    }
+
+    mRun = NULL;
   }
 
   void results(uint32_t nState, double* state)
@@ -1494,6 +1509,7 @@ public:
   }
 
 private:
+  ObjRef<iface::cellml_services::CellMLIntegrationRun> mRun;
   ObjRef<iface::SRuS::GeneratedDataMonitor> mMonitor;
   ObjRef<iface::cellml_services::CodeInformation> mCodeInfo;
   // 0: Unknown. 1: Need aggregate. -1: Don't need aggregate.
@@ -1518,7 +1534,7 @@ public:
                                 aVarInfoByDataGeneratorId,
                               std::map<std::wstring, iface::SProS::DataGenerator*>& aDataGeneratorsById
                              )
-    : _cda_refcount(1), mRun(aRun), mMonitor(aMonitor), mCodeInfo(aCodeInfo),
+    : mRun(aRun), mMonitor(aMonitor), mCodeInfo(aCodeInfo),
       mVarInfoByDataGeneratorId(aVarInfoByDataGeneratorId),
       mDataGeneratorsById(aDataGeneratorsById),
       mDataGeneratorsByIdRAII(mDataGeneratorsById)
@@ -1566,7 +1582,7 @@ public:
   {
     // Start the main run...
     RETURN_INTO_OBJREF(rb, CDA_SRuSResultBridge,
-                       new CDA_SRuSResultBridge(mMonitor, mCodeInfo, mVarInfoByDataGeneratorId, mDataGeneratorsById));
+                       new CDA_SRuSResultBridge(mRun, mMonitor, mCodeInfo, mVarInfoByDataGeneratorId, mDataGeneratorsById));
     mRun->setProgressObserver(rb);
     // Time, States, Rates, Algebraic
     RETURN_INTO_OBJREF(cti, iface::cellml_services::ComputationTargetIterator,
@@ -1896,7 +1912,7 @@ class CDA_SRuSBootstrap
 {
 public:
   CDA_SRuSBootstrap()
-    : _cda_refcount(1) {}
+  {}
 
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::Bootstrap);

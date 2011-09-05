@@ -16,9 +16,9 @@
     <math xmlns="http://www.w3.org/1998/Math/MathML" id="eq1">
       <apply id="r1V"><eq/><ci>r1Variance</ci><cn cellml:units="dimensionless">1</cn></apply>
       <apply id="r1M"><eq/><ci>r1Mean</ci><cn cellml:units="dimensionless">0</cn></apply>
-      <apply id="r1Dist"><csymbol definitionURL="http://www.cellml.org/uncert1#uncertParWithDist"/>
+      <apply id="r1Dist"><csymbol definitionURL="http://www.cellml.org/uncertainty-1#uncertainParameterWithDistribution"/>
         <ci>r1</ci>
-        <apply><csymbol definitionURL="http://www.cellml.org/uncert1#distFromDensity"/>
+        <apply><csymbol definitionURL="http://www.cellml.org/uncertainty-1#distributionFromDensity"/>
           <lambda>
             <bvar><ci>x</ci></bvar>
             <apply><times/>
@@ -55,9 +55,9 @@
         <apply><diff/><ci>val</ci><bvar><ci>time</ci></bvar></apply>
         <ci>r1</ci>
       </apply>
-      <apply id="r2r3dist"><csymbol definitionURL="http://www.cellml.org/uncert1#uncertParWithDist"/>
+      <apply id="r2r3dist"><csymbol definitionURL="http://www.cellml.org/uncertainty-1#uncertainParameterWithDistribution"/>
         <vector><ci>r2</ci><ci>r3</ci></vector>
-        <apply><csymbol definitionURL="http://www.cellml.org/uncert1#distFromRealisations"/>
+        <apply><csymbol definitionURL="http://www.cellml.org/uncertainty-1#distributionFromRealisations"/>
           <vector>
             <!-- 
                  require('MASS')

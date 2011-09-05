@@ -10,7 +10,7 @@
 
 CDAUserBaseUnit::CDAUserBaseUnit(iface::cellml_api::Units* aBaseUnits)
   throw()
-  : _cda_refcount(1), mBaseUnits(aBaseUnits)
+  : mBaseUnits(aBaseUnits)
 {
 }
 
@@ -67,7 +67,7 @@ CDABaseUnitInstance::CDABaseUnitInstance
  double aExponent
 )
   throw()
-  : _cda_refcount(1), mBaseUnit(aBaseUnit), mPrefix(aPrefix), mOffset(aOffset),
+  : mBaseUnit(aBaseUnit), mPrefix(aPrefix), mOffset(aOffset),
     mExponent(aExponent)
 {
 }
@@ -108,7 +108,7 @@ CDABaseUnitInstance::exponent()
 
 CDACanonicalUnitRepresentation::CDACanonicalUnitRepresentation(bool aStrict)
   throw()
-  : _cda_refcount(1), mStrict(aStrict), mCarry(1.0)
+  : mStrict(aStrict), mCarry(1.0)
 {
 }
 
@@ -503,7 +503,7 @@ private:
 
 CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
   throw()
-  : _cda_refcount(1), mStrict(aStrict)
+  : mStrict(aStrict)
 {
   PopulateBuiltinUnits();
 

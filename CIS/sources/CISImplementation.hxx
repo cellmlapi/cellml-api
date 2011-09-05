@@ -1,6 +1,5 @@
 #include "IfaceCCGS.hxx"
 #include "IfaceCIS.hxx"
-#include "ThreadWrapper.hxx"
 #include <string>
 #include "cda_compiler_support.h"
 
@@ -216,9 +215,8 @@ class CDA_CellMLIntegrationService
 {
 public:
   CDA_CellMLIntegrationService()
-    : _cda_refcount(1)
 #ifdef ENABLE_CONTEXT
-  , mUnload(NULL)
+    : mUnload(NULL)
 #endif
   {
   }

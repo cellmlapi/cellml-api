@@ -34,7 +34,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::ComputationTarget);
 
-  CDA_ComputationTarget() : self(this), _cda_refcount(1), mDegree(0), mAssignedIndex(0),
+  CDA_ComputationTarget() : self(this), mDegree(0), mAssignedIndex(0),
                             mIsReset(false),
                             mEvaluationType(iface::cellml_services::FLOATING),
                             mInfDelayedAssignedIndex(-1)
@@ -121,7 +121,7 @@ public:
   CDA_ComputationTargetIterator
   (
    CDA_TargetSet* aOwner
-  ) : _cda_refcount(1), mTargets(aOwner->mTargets),
+  ) : mTargets(aOwner->mTargets),
       mOwner(aOwner) {
     mTargetsIt = mTargets.begin();
   };
@@ -144,7 +144,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(cellml_services::CodeInformation, cellml_services::IDACodeInformation);
 
-  CDA_CodeInformation() : _cda_refcount(1) {};
+  CDA_CodeInformation() {};
   ~CDA_CodeInformation();
 
   wchar_t* errorMessage() throw();
@@ -357,9 +357,9 @@ public:
   CDA_IMPL_QI1(cellml_services::CodeGeneratorBootstrap);
 #endif
 
-  CDA_CodeGeneratorBootstrap() : _cda_refcount(1)
+  CDA_CodeGeneratorBootstrap()
 #ifdef ENABLE_CONTEXT
-                               , mUnload(NULL)
+    : mUnload(NULL)
 #endif
   {}
   ~CDA_CodeGeneratorBootstrap() {}

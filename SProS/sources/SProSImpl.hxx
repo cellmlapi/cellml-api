@@ -14,8 +14,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SProS::Bootstrap);
 
-  CDA_SProSBootstrap()
-    : _cda_refcount(1) {}
+  CDA_SProSBootstrap() {}
 
   iface::SProS::SEDMLElement* createEmptySEDML() throw(std::exception&);
   iface::SProS::SEDMLElement* parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo) throw(std::exception&);
@@ -48,7 +47,7 @@ public:
   CDA_SProSBase* mParent;
   ObjRef<iface::dom::Element> mDomEl;
 private:
-  uint32_t _cda_refcount;
+  CDA_RefCount _cda_refcount;
 };
 
 class CDA_SomeSet
@@ -852,7 +851,7 @@ class CDA_SProSPrecomputedNodeList
   : public iface::dom::NodeList
 {
 public:
-  CDA_SProSPrecomputedNodeList() : _cda_refcount(1) {};
+  CDA_SProSPrecomputedNodeList() {};
   ~CDA_SProSPrecomputedNodeList();
 
   CDA_IMPL_ID;

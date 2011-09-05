@@ -230,7 +230,7 @@ CDA_CellMLCompiledModel::CDA_CellMLCompiledModel
  iface::cellml_services::CodeInformation* aCCI,
  std::string& aDirname
 )
-  : _cda_refcount(1), mModule(aModule), mModel(aModel), mCCI(aCCI),
+  : mModule(aModule), mModel(aModel), mCCI(aCCI),
     mDirname(aDirname)
 {
   mModel->add_ref();
@@ -279,8 +279,7 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
 CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
 (
 )
-  : _cda_refcount(1),
-    mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
+  : mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
     mEpsAbs(1E-6), mEpsRel(1E-6), mScalVar(1.0), mScalRate(0.0),
     mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mMaxPointDensity(10000.0),
     mTabulationStepSize(0.0), mObserver(NULL), mCancelIntegration(false), mStrictTabulation(false)

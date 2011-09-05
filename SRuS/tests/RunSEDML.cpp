@@ -250,7 +250,15 @@ main(int argc, char** argv)
   Monitor monitor;
   RETURN_INTO_OBJREF(tms, iface::SRuS::TransformedModelSet,
                      sp->buildAllModels(sedml));
-  sp->generateData(tms, sedml, &monitor);
+  try
+  {
+    sp->generateData(tms, sedml, &monitor);
+  }
+  catch (...)
+  {
+    printf("Failure processing the model; exception was raised.\n");
+    exit(1);
+  }
   while (monitor.tasksFinished < taskCount)
     sleep(1);
   monitor.printResults();

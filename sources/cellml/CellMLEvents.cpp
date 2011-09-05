@@ -119,7 +119,7 @@ class CDA_CellMLMutationEvent
 {
 public:
   CDA_CellMLMutationEvent()
-    : _cda_refcount(1), mCurrentTarget(NULL), mTarget(NULL),
+    : mCurrentTarget(NULL), mTarget(NULL),
       mRelatedElement(NULL), mEventPhase(iface::events::Event::AT_TARGET),
       mAttrChange(iface::cellml_events::MutationEvent::MODIFICATION),
       mPropagationStopped(false), mDefaultPrevented(false)
@@ -399,7 +399,7 @@ CDA_CellMLElementEventAdaptor::CDA_CellMLElementEventAdaptor
 (
  CDA_CellMLElement* aParent, iface::events::EventListener* aCellMLListener
 )
-  : _cda_refcount(1), mParent(aParent), mCellMLListener(aCellMLListener)
+  : mParent(aParent), mCellMLListener(aCellMLListener)
 {
   memset(mDOMCount, 0, sizeof(mDOMCount));
   memset(mGotEvent, 0, sizeof(mGotEvent));

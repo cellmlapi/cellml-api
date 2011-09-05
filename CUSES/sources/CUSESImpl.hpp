@@ -174,7 +174,7 @@ private:
     CDA_IMPL_REFCOUNT;
     CDA_IMPL_QI0;
     
-    UnitDependencies() : _cda_refcount(1), seen(false), done(false) {}
+    UnitDependencies() : seen(false), done(false) {}
     
     ~UnitDependencies()
     {
@@ -213,7 +213,6 @@ public:
   CDA_IMPL_QI1(cellml_services::CUSESBootstrap);
 
   CDACUSESBootstrap()
-    : _cda_refcount(1)
   {
   }
 

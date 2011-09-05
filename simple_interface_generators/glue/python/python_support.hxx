@@ -150,7 +150,7 @@ PUBLIC_PYTHONSUPPORT_PRE class PUBLIC_PYTHONSUPPORT_POST IObject
 {
 public:
   IObject()
-    : _cda_refcount(1), mObject(NULL)
+    : mObject(NULL)
   {
   }
 

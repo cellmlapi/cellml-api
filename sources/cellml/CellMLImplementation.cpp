@@ -80,7 +80,7 @@ public:
 CDAGlobalChangeListener gCDAChangeListener;
 
 CDA_RDFXMLDOMRepresentation::CDA_RDFXMLDOMRepresentation(CDA_Model* aModel)
-  : _cda_refcount(1), mModel(aModel)
+  : mModel(aModel)
 {
 }
 
@@ -163,7 +163,7 @@ CDA_RDFXMLStringRepresentation::CDA_RDFXMLStringRepresentation
 (
  CDA_Model* aModel
 )
-  : _cda_refcount(1), mModel(aModel)
+  : mModel(aModel)
 {
 }
 
@@ -250,7 +250,7 @@ CDA_RDFXMLStringRepresentation::serialisedData(const wchar_t* attr)
 
 #ifdef ENABLE_RDF
 CDA_RDFAPIRepresentation::CDA_RDFAPIRepresentation(CDA_Model* aModel)
-  : _cda_refcount(1), mModel(aModel)
+  : mModel(aModel)
 {
 }
 
@@ -342,7 +342,7 @@ CDA_RDFAPIRepresentation::source(iface::rdf_api::DataSource* aSource)
 
 CDA_URI::CDA_URI(iface::dom::Element* aDatastore, const wchar_t* aNamespace, const wchar_t* aLocalname,
                  const wchar_t* aQualifiedName)
-  : _cda_refcount(1), mDatastore(aDatastore), mNamespace(aNamespace), mLocalname(aLocalname),
+  : mDatastore(aDatastore), mNamespace(aNamespace), mLocalname(aLocalname),
     mQualifiedName(aQualifiedName)
 {
 }
@@ -370,7 +370,7 @@ CDA_CellMLElement::CDA_CellMLElement
  iface::XPCOM::IObject* parent,
  iface::dom::Element* idata
 )
-  : mParent(parent), datastore(idata), _cda_refcount(1),
+  : mParent(parent), datastore(idata),
     children(NULL)
 {
   if (parent != NULL)
@@ -637,8 +637,8 @@ CDA_CellMLElement::addElement(iface::cellml_api::CellMLElement* x)
     // Adopt the node...
     el->mParent = this;
     // We adopted the node, so we also take on its references...
-    uint32_t i;
-    for (i = 0; i < el->_cda_refcount; i++)
+    uint32_t i, rc = el->_cda_refcount;
+    for (i = 0; i < rc; i++)
       add_ref();
 
     // TODO: Perhaps we should also check the datastore ownerDocument matches?
@@ -694,11 +694,9 @@ CDA_CellMLElement::removeElement(iface::cellml_api::CellMLElement* x)
 void
 CDA_CellMLElement::removeLinkFromHereToParent()
 {
-  uint32_t i;
-  for (i = 0; i < _cda_refcount; i++)
+  uint32_t i, rc = _cda_refcount;
+  for (i = 0; i < rc; i++)
     mParent->release_ref();
-
-  
   
   if (_cda_refcount == 0)
     delete this;
@@ -743,17 +741,18 @@ CDA_CellMLElement::replaceElement(iface::cellml_api::CellMLElement* x,
 
     // The old node is now orphaned...
     elOld->mParent = NULL;
-    uint32_t i;
+    uint32_t i, rc = elOld->_cda_refcount;
     // We don't need to be kept around for its references any more.
-    for (i = 0; i < elOld->_cda_refcount; i++)
+    for (i = 0; i < rc; i++)
       release_ref();
 
-    if (elOld->_cda_refcount == 0)
+    if (rc == 0)
       delete elOld;
 
     // The new node now belongs to us...
     elNew->mParent = this;
-    for (i = 0; i < elNew->_cda_refcount; i++)
+    rc = elNew->_cda_refcount;
+    for (i = 0; i < rc; i++)
       add_ref();
   }
   catch (iface::dom::DOMException& e)
@@ -922,7 +921,7 @@ CDA_CellMLElement::extensionAttributes()
 }
 
 CDA_ExtensionAttributeSet::CDA_ExtensionAttributeSet(iface::dom::Element* aDataStore)
-  : _cda_refcount(1), mDataStore(aDataStore)
+  : mDataStore(aDataStore)
 {
 }
 
@@ -934,8 +933,7 @@ CDA_ExtensionAttributeSet::iterate()
 }
 
 CDA_ExtensionAttributeIterator::CDA_ExtensionAttributeIterator(iface::dom::Element* aDataStore)
-  : _cda_refcount(1),
-    mNodeMap(already_AddRefd<iface::dom::NamedNodeMap>(aDataStore->attributes())),
+  : mNodeMap(already_AddRefd<iface::dom::NamedNodeMap>(aDataStore->attributes())),
     mPrevIndex(-1), mDone(false), eventListener(this)
 {
 }
@@ -1663,7 +1661,7 @@ public:
   (
    iface::cellml_api::ImportInstantiationListener* aListener
   )
-    : _cda_refcount(1), mListener(aListener)
+    : mListener(aListener)
   {
     mListener->add_ref();
   }
@@ -1694,7 +1692,7 @@ public:
    CDA_Model_AsyncInstantiate_CommonState* aModel,
    iface::cellml_api::CellMLImport* aImport
   )
-    : _cda_refcount(1), mModel(aModel), mImport(aImport)
+    : mModel(aModel), mImport(aImport)
   {
     mModel->add_ref();
     mImport->add_ref();
@@ -3776,7 +3774,7 @@ public:
    iface::cellml_api::DOMURLLoader* aLoader,
    std::wstring& aURL
   )
-    : _cda_refcount(1), mImport(aImport), mListener(aListener),
+    : mImport(aImport), mListener(aListener),
       mLoader(aLoader), mURL(aURL)
   {
     mImport->add_ref();
@@ -6901,7 +6899,7 @@ CDA_CellMLElementIterator::CDA_CellMLElementIterator
  CDA_CellMLElementSet* ownerSet
 )
   : CDA_DOMElementIteratorBase(parentElement),
-    _cda_refcount(1), parentSet(ownerSet)
+    parentSet(ownerSet)
 {
   parentSet->add_ref();
 }
@@ -7085,7 +7083,6 @@ CDA_MathMLElementIterator::next()
 }
 
 CDA_ExtensionElementList::CDA_ExtensionElementList(iface::dom::Element* el)
-  : _cda_refcount(1)
 {
   nl = el->childNodes();
 }
@@ -7200,7 +7197,7 @@ CDA_ExtensionElementList::getAt(uint32_t index)
 }
 
 CDA_MathList::CDA_MathList(iface::dom::Element* aParentEl)
-  : _cda_refcount(1), mParentEl(aParentEl)
+  : mParentEl(aParentEl)
 {
   mParentEl->add_ref();
 }
@@ -7254,12 +7251,12 @@ CDA_CellMLElementSet::CDA_CellMLElementSet
  CDA_CellMLElement* parent,
  iface::dom::Element* parentEl
 )
-  : mParent(parent), mElement(parentEl),
-    // Note: The reference count starts at zero, because an Element is
-    // permanently part of an Element, and so needs no refcount when it is
-    // constructed.
-    _cda_refcount(0)
+  : mParent(parent), mElement(parentEl)
 {
+  // Note: The reference count starts at zero, because an Element is
+  // permanently part of an Element, and so needs no refcount when it is
+  // constructed.
+  --_cda_refcount;
 }
 
 CDA_CellMLElementSet::~CDA_CellMLElementSet()

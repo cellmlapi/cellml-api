@@ -22,12 +22,10 @@ static const wchar_t* MATCHING_CELLML_NS = L"http://www.cellml.org/cellml/";
 #define XLINK_NS L"http://www.w3.org/1999/xlink"
 
 CDA_VACSService::CDA_VACSService()
-  : _cda_refcount(1)
 {
 }
 
 CDA_CellMLValidityErrorSet::CDA_CellMLValidityErrorSet()
-  : _cda_refcount(1)
 {
 }
 
@@ -124,8 +122,7 @@ CDA_CellMLValidityError::CDA_CellMLValidityError
  bool aIsWarning,
  iface::cellml_services::CellMLValidityError* aSupplement
 ) throw()
-  : CDA_CellMLValidityErrorBase(aDescription, aIsWarning, aSupplement),
-    _cda_refcount(1)
+  : CDA_CellMLValidityErrorBase(aDescription, aIsWarning, aSupplement)
 {
 }
 
@@ -138,7 +135,6 @@ CDA_CellMLRepresentationValidityError::CDA_CellMLRepresentationValidityError
  iface::cellml_services::CellMLValidityError* aSupplement
 ) throw()
   : CDA_CellMLValidityErrorBase(aDescription, aIsWarning, aSupplement),
-    _cda_refcount(1),
     mNode(aNode), mErrorNodalOffset(errorNodalOffset)
 {
 }
@@ -168,7 +164,6 @@ CDA_CellMLSemanticValidityError::CDA_CellMLSemanticValidityError
  iface::cellml_services::CellMLValidityError* aSupplement
 ) throw()
   : CDA_CellMLValidityErrorBase(aDescription, aIsWarning, aSupplement),
-    _cda_refcount(1),
     mElement(aElement)
 {
 }

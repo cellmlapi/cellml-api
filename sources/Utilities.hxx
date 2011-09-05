@@ -2,6 +2,7 @@
 #define _UTILITIES_HXX
 
 #include "cda_compiler_support.h"
+#include "ThreadWrapper.hxx"
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
@@ -360,6 +361,45 @@ private:
   char mIDString[20];
 };
 
+class CDA_RefCount
+{
+public:
+  CDA_RefCount()
+    : mRefcount(1)
+  {
+  }
+
+  operator uint32_t()
+  {
+    CDALock l(mMutex);
+    return mRefcount;
+  }
+
+  CDA_RefCount& operator=(const uint32_t& aValue)
+  {
+    CDALock l(mMutex);
+    mRefcount = aValue;
+    return *this;
+  }
+
+  void operator++()
+  {
+    CDALock l(mMutex);
+    mRefcount++;
+  }
+
+  bool operator--()
+  {
+    CDALock l(mMutex);
+    mRefcount--;
+    return (mRefcount != 0);
+  }
+
+private:
+  CDAMutex mMutex;
+  uint32_t mRefcount;
+};
+
 #define CDA_IMPL_ID \
   private: \
     CDA_ID _cda_id; \
@@ -372,18 +412,17 @@ private:
 
 #define CDA_IMPL_REFCOUNT \
   private: \
-    uint32_t _cda_refcount; \
+    CDA_RefCount _cda_refcount; \
   public: \
     void add_ref() \
       throw() \
     { \
-      _cda_refcount++; \
+      ++_cda_refcount; \
     } \
     void release_ref() \
       throw() \
     { \
-      _cda_refcount--; \
-      if (_cda_refcount == 0) \
+      if (!--_cda_refcount) \
         delete this; \
     }
 

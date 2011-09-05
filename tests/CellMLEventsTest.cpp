@@ -39,7 +39,7 @@ class TestEventHandler
 {
 public:
   TestEventHandler()
-    : _cda_refcount(1), mEventCount(0), mLastEvent(NULL)
+    : mEventCount(0), mLastEvent(NULL)
   {
   }
 

@@ -116,7 +116,7 @@ public:
 
   CDACeVASBootstrap()
     throw()
-    : _cda_refcount(1) {}
+  {}
 
   ~CDACeVASBootstrap() throw() {}
 

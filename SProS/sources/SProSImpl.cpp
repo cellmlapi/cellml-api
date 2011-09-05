@@ -97,7 +97,7 @@ CDA_SProSPrecomputedNodeList::length() throw()
 }
 
 CDA_SProSBase::CDA_SProSBase(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-  : mParent(NULL), mDomEl(aEl), _cda_refcount(1)
+  : mParent(NULL), mDomEl(aEl)
 {
   assert(mDomEl != NULL);
   reparent(aParent);
@@ -110,7 +110,7 @@ CDA_SProSBase::~CDA_SProSBase()
 void
 CDA_SProSBase::add_ref() throw()
 {
-  _cda_refcount++;
+  ++_cda_refcount;
   if (mParent != NULL)
     mParent->add_ref();
 }
@@ -123,8 +123,7 @@ CDA_SProSBase::release_ref() throw()
   if (mParent != NULL)
     mParent->release_ref();
 
-  _cda_refcount--;
-  if (_cda_refcount == 0 && mParent == NULL)
+  if ((!--_cda_refcount) && mParent == NULL)
     delete this;
 }
 
@@ -136,15 +135,16 @@ CDA_SProSBase::reparent(CDA_SProSBase* aParent)
   if (mParent == aParent)
     return;
 
+  uint32_t rc = _cda_refcount;
   if (mParent != NULL)
-    for (i = 0; i < _cda_refcount; i++)
+    for (i = 0; i < rc; i++)
       mParent->release_ref();
   mParent = aParent;
   if (mParent != NULL)
-    for (i = 0; i < _cda_refcount; i++)
+    for (i = 0; i < rc; i++)
       mParent->add_ref();
 
-  if (mParent == NULL && _cda_refcount == 0)
+  if (mParent == NULL && rc == 0)
     delete this;
 }
 
@@ -915,7 +915,7 @@ handleEvent(iface::events::Event* evt)
 
 
 CDA_SProSIteratorBase::CDA_SProSIteratorBase(CDA_SomeSet* aSet)
-  : CDA_SProSDOMIteratorBase(aSet->mListElement), _cda_refcount(1), mSet(aSet)
+  : CDA_SProSDOMIteratorBase(aSet->mListElement), mSet(aSet)
 {
 }
 

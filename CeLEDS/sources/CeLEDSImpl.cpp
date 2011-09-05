@@ -14,7 +14,7 @@ getTextContents(iface::dom::Node* inNode)
 
 CDA_LanguageDictionary::CDA_LanguageDictionary(const wchar_t* nameSpace, iface::dom::Element *DictionaryXML)
   throw ()
-  : _cda_refcount(1), mNameSpace(nameSpace), mDictionaryXML(DictionaryXML)
+  : mNameSpace(nameSpace), mDictionaryXML(DictionaryXML)
 {
 }
 
@@ -73,7 +73,7 @@ getTextContents(iface::dom::Node* inNode)
 
 CDA_DictionaryGenerator::CDA_DictionaryGenerator(iface::dom::Document* LangXML)
   throw()
-  : _cda_refcount(1), mLangXML(LangXML)
+  : mLangXML(LangXML)
 {
 }
 

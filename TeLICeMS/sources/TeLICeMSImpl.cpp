@@ -11,8 +11,7 @@ class CDA_TeLICeMService
   : public iface::cellml_services::TeLICeMService
 {
 public:
-  CDA_TeLICeMService()
-    : _cda_refcount(1) {}
+  CDA_TeLICeMService() {}
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;

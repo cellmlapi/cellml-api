@@ -138,8 +138,7 @@ CDA_DOMImplementation::createDocument(const wchar_t* namespaceURI,
 }
 
 CDA_Node::CDA_Node(CDA_Document* aDocument)
-  : mParent(NULL), mDocumentIsAncestor(false), mDocument(aDocument),
-    _cda_refcount(1)
+  : mParent(NULL), mDocumentIsAncestor(false), mDocument(aDocument)
 {
   if (mDocument)
     mDocument->add_ref();
@@ -474,8 +473,8 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
 
   newChild->mParent = this;
   newChild->mPositionInParent = mNodeList.insert(posit, newChild);
-  uint32_t i;
-  for (i = 0; i < newChild->_cda_refcount; i++)
+  uint32_t i, rc = newChild->_cda_refcount;
+  for (i = 0; i < rc; i++)
     add_ref();
 
   CDA_DOM_SomethingChanged();
@@ -573,8 +572,8 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
 
   mNodeList.erase(posit);
   oldChild->mParent = NULL;
-  uint32_t i;
-  for (i = 0; i < oldChild->_cda_refcount; i++)
+  uint32_t i, rc = oldChild->_cda_refcount;
+  for (i = 0; i < rc; i++)
     release_ref();
 
   if (mDocumentIsAncestor)
@@ -1208,7 +1207,7 @@ CDA_NodeListDFSSearch::length()
 }
 
 CDA_NamedNodeMap::CDA_NamedNodeMap(CDA_Element* aElement)
-  : _cda_refcount(1), mElement(aElement), hintSerial(0)
+  : mElement(aElement), hintSerial(0)
 {
   mElement->add_ref();
 }
@@ -1397,7 +1396,7 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
 
 CDA_NamedNodeMapDT::CDA_NamedNodeMapDT(CDA_DocumentType* aDocType,
                                        uint16_t aType)
-  : _cda_refcount(1), mDocType(aDocType), mType(aType)
+  : mDocType(aDocType), mType(aType)
 {
   mDocType->add_ref();
 }

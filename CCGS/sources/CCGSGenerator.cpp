@@ -1812,10 +1812,10 @@ CodeGenerationState::CreateMathStatements()
           if (opcs != NULL)
           {
             RETURN_INTO_WSTRING(csu, opcs->definitionURL());
-            if (csu != L"http://www.cellml.org/uncert1#uncertParWithDist")
+            if (csu != L"http://www.cellml.org/uncertainty-1#uncertainParameterWithDistribution")
             {
               ContextError(L"The only supported csymbol definitionURL in a toplevel apply "
-                           L"is http://www.cellml.org/uncert1#uncertParWithDist",
+                           L"is http://www.cellml.org/uncertainty-1#uncertainParameterWithDistribution",
                            op, c);
             }
 
@@ -1824,7 +1824,7 @@ CodeGenerationState::CreateMathStatements()
             if (mae->nArguments() != 3)
             {
               delete sfd;
-              ContextError(L"uncertParWithDist takes 2 arguments, the "
+              ContextError(L"uncertainParameterWithDistribution takes 2 arguments, the "
                            L"uncertain parameter and the distribution.",
                            mae, c);
             }
@@ -3442,7 +3442,7 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
     ContextError(L"Expected a csymbol describing the type of distribution.",
                  op, aSFD->mContext);
   RETURN_INTO_WSTRING(du, csop->definitionURL());
-  if (du == L"http://www.cellml.org/uncert1#distFromDensity")
+  if (du == L"http://www.cellml.org/uncertainty-1#distributionFromDensity")
   {
     std::wstring t = mSampleDensityFunctionPattern;
     wchar_t buf[30];
@@ -3453,17 +3453,17 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
       t.replace(pos, 4, buf);
     
     if (mae->nArguments() != 2)
-      ContextError(L"distFromDensity descriptions should have exactly one argument, the probability density function.",
+      ContextError(L"distributionFromDensity descriptions should have exactly one argument, the probability density function.",
                    mae, aSFD->mContext);
     RETURN_INTO_OBJREF(pdf, iface::mathml_dom::MathMLElement, mae->getArgument(2));
     DECLARE_QUERY_INTERFACE_OBJREF(pdfl, pdf, mathml_dom::MathMLLambdaElement);
     if (pdfl == NULL)
-      ContextError(L"The distFromDensity operator only takes a lambda function", pdf, aSFD->mContext);
+      ContextError(L"The distributionFromDensity operator only takes a lambda function", pdf, aSFD->mContext);
     if (pdfl->nBoundVariables() != 1)
-      ContextError(L"The distFromDensity operator expects a lambda function with exactly one bound variable.", pdf, aSFD->mContext);
+      ContextError(L"The distributionFromDensity operator expects a lambda function with exactly one bound variable.", pdf, aSFD->mContext);
     RETURN_INTO_OBJREF(bv, iface::mathml_dom::MathMLBvarElement, pdfl->getBoundVariable(1));
     if (bv->nArguments() != 1)
-      ContextError(L"The distFromDensity operator expects a lambda function with exactly one bound variable.", bv, aSFD->mContext);
+      ContextError(L"The distributionFromDensity operator expects a lambda function with exactly one bound variable.", bv, aSFD->mContext);
     RETURN_INTO_OBJREF(bvcontents, iface::mathml_dom::MathMLElement, bv->getArgument(1));
     DECLARE_QUERY_INTERFACE_OBJREF(bvci, bvcontents, mathml_dom::MathMLCiElement);
     if (bvci == NULL)
@@ -3520,14 +3520,14 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
     RETURN_INTO_WSTRING(lhs, aSFD->mOutTargets.front()->name());
     AppendAssign(aCodeTo, lhs, main);
   }
-  else if (du == L"http://www.cellml.org/uncert1#distFromRealisations")
+  else if (du == L"http://www.cellml.org/uncertainty-1#distributionFromRealisations")
   {
     if (mae->nArguments() != 2)
-      ContextError(L"distFromRealisations should only have one argument - the vector of realisations.", mae, aSFD->mContext);
+      ContextError(L"distributionFromRealisations should only have one argument - the vector of realisations.", mae, aSFD->mContext);
     RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
     DECLARE_QUERY_INTERFACE_OBJREF(vec, arg, mathml_dom::MathMLVectorElement);
     if (vec == NULL)
-      ContextError(L"Argument to distFromRealisations should be a vector.",
+      ContextError(L"Argument to distributionFromRealisations should be a vector.",
                    arg, aSFD->mContext);
 
     std::wstring output = mSampleRealisationsPattern;
@@ -3607,7 +3607,7 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
     aCodeTo += output;
   }
   else
-    ContextError(L"The only supported ways to specify distributions for uncertain parameters are distFromDensity and distFromRealisations", csop, aSFD->mContext);
+    ContextError(L"The only supported ways to specify distributions for uncertain parameters are distributionFromDensity and distributionFromRealisations", csop, aSFD->mContext);
 }
 
 void

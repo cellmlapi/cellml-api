@@ -69,7 +69,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::CeLEDSBootstrap);
 
-  CDA_CeLEDSBootstrap() : _cda_refcount(1), mLoadError(L"") {};
+  CDA_CeLEDSBootstrap() : mLoadError(L"") {};
   ~CDA_CeLEDSBootstrap() {};
 
   iface::cellml_services::DictionaryGenerator* createDictGenerator(const wchar_t* URL)

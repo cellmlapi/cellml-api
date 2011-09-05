@@ -4,7 +4,7 @@
 #include "p2jxpcom.hxx"
 
 p2j::XPCOM::IObject::IObject(JNIEnv* aEnv, jobject aObject)
-  : env(aEnv), mObject(env->NewGlobalRef(aObject)), _cda_refcount(1)
+  : env(aEnv), mObject(env->NewGlobalRef(aObject))
 {
 }
 

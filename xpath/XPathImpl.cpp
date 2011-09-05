@@ -44,7 +44,7 @@ class CDA_XPathEvaluator
   : public iface::xpath::XPathEvaluator
 {
 public:
-  CDA_XPathEvaluator() : _cda_refcount(1) {}
+  CDA_XPathEvaluator() {}
   ~CDA_XPathEvaluator() {}
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -154,7 +154,7 @@ class CDA_XPathResult
   : public iface::xpath::XPathResult
 {
 public:
-  CDA_XPathResult(bool aIsInternal = true) : _cda_refcount(1), mIsInternal(aIsInternal),
+  CDA_XPathResult(bool aIsInternal = true) : mIsInternal(aIsInternal),
                                              mIsInvalid(false), mELI(this) {}
   ~CDA_XPathResult() { cleanup(); }
   CDA_IMPL_REFCOUNT;
@@ -479,13 +479,13 @@ class CDA_XPathContext
 public:
   CDA_XPathContext(iface::dom::Node* aNode, uint32_t aPos, uint32_t aSize,
                    std::map<std::wstring, std::wstring>& aNS)
-    : _cda_refcount(1), mNode(aNode), mContextSize(aSize), mContextPos(aPos),
+    : mNode(aNode), mContextSize(aSize), mContextPos(aPos),
       mNamespaceMap(aNS)
   {
   }
 
   CDA_XPathContext(iface::dom::Node* aNode, uint32_t aPos, uint32_t aSize)
-    : _cda_refcount(1), mNode(aNode), mContextSize(aSize), mContextPos(aPos)
+    : mNode(aNode), mContextSize(aSize), mContextPos(aPos)
   {
   }
   
@@ -541,7 +541,7 @@ class CDA_XPathOrExpr
   : public CDA_XPathExpr
 {
 public:
-  CDA_XPathOrExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2) : _cda_refcount(1), mExpr1(e1), mExpr2(e2) {};
+  CDA_XPathOrExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2) : mExpr1(e1), mExpr2(e2) {};
 
   CDA_XPathResult* eval(CDA_XPathContext& aCtx)
   {
@@ -569,7 +569,7 @@ class CDA_XPathAndExpr
 {
 public:
   CDA_XPathAndExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : _cda_refcount(1), mExpr1(e1), mExpr2(e2) {}
+    : mExpr1(e1), mExpr2(e2) {}
 
   CDA_XPathResult* eval(CDA_XPathContext& aCtx)
   {
@@ -785,7 +785,7 @@ class CDA_XPathEqualityExpr
 {
 public:
   CDA_XPathEqualityExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : CDA_XPathComparisonExpr(e1, e2), _cda_refcount(1) {};
+    : CDA_XPathComparisonExpr(e1, e2) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -816,7 +816,7 @@ class CDA_XPathNotEqualExpr
 {
 public:
   CDA_XPathNotEqualExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : CDA_XPathComparisonExpr(mExpr1, mExpr2), _cda_refcount(1) {};
+    : CDA_XPathComparisonExpr(mExpr1, mExpr2) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -845,7 +845,7 @@ class CDA_XPathLessThanExpr
 {
 public:
   CDA_XPathLessThanExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : CDA_XPathOrderExpr(e1, e2), _cda_refcount(1) {};
+    : CDA_XPathOrderExpr(e1, e2) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -869,7 +869,7 @@ class CDA_XPathLessEqualExpr
 {
 public:
   CDA_XPathLessEqualExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : CDA_XPathOrderExpr(e1, e2), _cda_refcount(1) {};
+    : CDA_XPathOrderExpr(e1, e2) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -893,7 +893,7 @@ class CDA_XPathGreaterThanExpr
 {
 public:
   CDA_XPathGreaterThanExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : CDA_XPathOrderExpr(e1, e2), _cda_refcount(1) {};
+    : CDA_XPathOrderExpr(e1, e2) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -917,7 +917,7 @@ class CDA_XPathGreaterEqualExpr
 {
 public:
   CDA_XPathGreaterEqualExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : CDA_XPathOrderExpr(e1, e2), _cda_refcount(1) {};
+    : CDA_XPathOrderExpr(e1, e2) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -941,7 +941,7 @@ class CDA_XPathPlusExpr
 {
 public:
   CDA_XPathPlusExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : _cda_refcount(1), mExpr1(e1), mExpr2(e2)
+    : mExpr1(e1), mExpr2(e2)
   {}
 
   CDA_IMPL_ID;
@@ -970,7 +970,7 @@ class CDA_XPathMinusExpr
 {
 public:
   CDA_XPathMinusExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : _cda_refcount(1), mExpr1(e1), mExpr2(e2) {}
+    : mExpr1(e1), mExpr2(e2) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -998,7 +998,7 @@ class CDA_XPathTimesExpr
 {
 public:
   CDA_XPathTimesExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : _cda_refcount(1), mExpr1(e1), mExpr2(e2) {}
+    : mExpr1(e1), mExpr2(e2) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -1026,7 +1026,7 @@ class CDA_XPathDivExpr
 {
 public:
   CDA_XPathDivExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : _cda_refcount(1), mExpr1(e1), mExpr2(e2) {}
+    : mExpr1(e1), mExpr2(e2) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -1054,7 +1054,7 @@ class CDA_XPathModExpr
 {
 public:
   CDA_XPathModExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
-    : _cda_refcount(1), mExpr1(e1), mExpr2(e2) {}
+    : mExpr1(e1), mExpr2(e2) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -1083,7 +1083,7 @@ class CDA_XPathUnaryMinusExpr
 {
 public:
   CDA_XPathUnaryMinusExpr(CDA_XPathExpr* e)
-    : _cda_refcount(1), mExpr(e) {};
+    : mExpr(e) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -1109,7 +1109,7 @@ class CDA_XPathUnionExpr
 {
 public:
   CDA_XPathUnionExpr(CDA_XPathExpr* e, CDA_XPathExpr* e2)
-    : _cda_refcount(1), mExpr1(e), mExpr2(e)
+    : mExpr1(e), mExpr2(e)
   {
   }
 
@@ -1156,7 +1156,7 @@ class CDA_XPathUseLocationExpr
   : public CDA_XPathExpr
 {
 public:
-  CDA_XPathUseLocationExpr(CDA_XPathPath* p) : _cda_refcount(1), mPath(p) {};
+  CDA_XPathUseLocationExpr(CDA_XPathPath* p) : mPath(p) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -1179,7 +1179,7 @@ class CDA_XPathApplyFilterExpr
   : public CDA_XPathExpr
 {
 public:
-  CDA_XPathApplyFilterExpr(CDA_XPathExpr* e, CDA_XPathPath* p) : _cda_refcount(1), mExpr(e), mPath(p) {};
+  CDA_XPathApplyFilterExpr(CDA_XPathExpr* e, CDA_XPathPath* p) : mExpr(e), mPath(p) {};
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -1204,7 +1204,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
   CDA_XPathApplyPredicateExpr(CDA_XPathExpr* ex, CDA_XPathExpr* pred) :
-    _cda_refcount(1), mExpr(ex), mPred(pred) {};
+    mExpr(ex), mPred(pred) {};
 
   CDA_XPathResult* eval(CDA_XPathContext& aContext)
   {
@@ -1242,7 +1242,7 @@ class CDA_XPathVariableReferenceExpr
 {
 public:
   CDA_XPathVariableReferenceExpr(const std::wstring& aNamespace, const std::wstring& aReference)
-    : _cda_refcount(1) {};
+  {};
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
@@ -1263,7 +1263,7 @@ class CDA_XPathLiteralExpr
   : public CDA_XPathExpr
 {
 public:
-  CDA_XPathLiteralExpr(const wchar_t* aLit) : _cda_refcount(1), mLit(aLit) {};
+  CDA_XPathLiteralExpr(const wchar_t* aLit) : mLit(aLit) {};
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
@@ -1285,7 +1285,7 @@ class CDA_XPathNumberExpr
   : public CDA_XPathExpr
 {
 public:
-  CDA_XPathNumberExpr(double aNum) : _cda_refcount(1), mNum(aNum) {};
+  CDA_XPathNumberExpr(double aNum) : mNum(aNum) {};
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
@@ -1341,7 +1341,7 @@ class CDA_XPathFunctionCallExpr
 public:
   // Note: aArgs goes away after the call - must copy and add_ref()...
   CDA_XPathFunctionCallExpr(const std::wstring& aNSURI, const std::wstring& aName, const std::list<CDA_XPathExpr*>& aArgs)
-    : _cda_refcount(1), mNSURI(aNSURI), mName(aName), mArgs(aArgs.begin(), aArgs.end()) {}
+    : mNSURI(aNSURI), mName(aName), mArgs(aArgs.begin(), aArgs.end()) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -1960,7 +1960,7 @@ class CDA_XPathRoot
 {
 public:
   // Indicates aPath is absolute (relative to root rather than context).
-  CDA_XPathRoot(CDA_XPathPath* aPath) : _cda_refcount(1), mPath(aPath)  {};
+  CDA_XPathRoot(CDA_XPathPath* aPath) : mPath(aPath)  {};
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI0;
@@ -1990,7 +1990,7 @@ class CDA_XPathApplyPredicatePath
 {
 public:
   CDA_XPathApplyPredicatePath(CDA_XPathPath* aPath, CDA_XPathExpr* aExpr, CDA_XPathAxis aAxis)
-    : _cda_refcount(1), mPath(aPath), mExpr(aExpr)
+    : mPath(aPath), mExpr(aExpr)
   {
     if (aAxis == CDA_XPathAxisAncestor || aAxis == CDA_XPathAxisAncestorOrSelf ||
         aAxis == CDA_XPathAxisPreceding || aAxis == CDA_XPathAxisPrecedingSibling)
@@ -2048,7 +2048,7 @@ class CDA_XPathApplyStepPath
 {
 public:
   CDA_XPathApplyStepPath(CDA_XPathPath* aPath, CDA_XPathAxis aAxis, CDA_XPathNodeTest* aTest)
-    : _cda_refcount(1), mPath(aPath), mAxis(aAxis), mTest(aTest) {};
+    : mPath(aPath), mAxis(aAxis), mTest(aTest) {};
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
@@ -2475,7 +2475,7 @@ class CDA_XPathNameTest
 {
 public:
   CDA_XPathNameTest(const std::wstring& aNamespaceMatch, const std::wstring& aLocalnameMatch)
-    : _cda_refcount(1), mNamespaceMatch(aNamespaceMatch), mLocalnameMatch(aLocalnameMatch) {};
+    : mNamespaceMatch(aNamespaceMatch), mLocalnameMatch(aLocalnameMatch) {};
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
   CDA_IMPL_QI0;
@@ -2504,7 +2504,7 @@ class CDA_XPathNodeTypeTest
 {
 public:
   CDA_XPathNodeTypeTest(CDA_XPathNodeType aNodeType)
-    : _cda_refcount(1), mNodeType(aNodeType) {}
+    : mNodeType(aNodeType) {}
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
   CDA_IMPL_QI0;
@@ -2535,7 +2535,7 @@ class CDA_XPathProcessingInstructionTest
 {
 public:
   CDA_XPathProcessingInstructionTest(const std::wstring& aLiteralMatch)
-    : _cda_refcount(1), mLiteralMatch(aLiteralMatch) {}
+    : mLiteralMatch(aLiteralMatch) {}
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
   CDA_IMPL_QI0;
@@ -2573,7 +2573,7 @@ class CDA_XPathStep
 {
 public:
   CDA_XPathStep(CDA_XPathAxis aAxis, CDA_XPathNodeTest* aTest)
-    : _cda_refcount(1), mAxis(aAxis), mTest(aTest), mPredicatesRAII(mPredicates) {}
+    : mAxis(aAxis), mTest(aTest), mPredicatesRAII(mPredicates) {}
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
@@ -3669,7 +3669,7 @@ class CDA_XPathNSResolver
 {
 public:
   CDA_XPathNSResolver(iface::dom::Node* aNode)
-    : _cda_refcount(1), mNode(aNode)
+    : mNode(aNode)
   {
   }
 

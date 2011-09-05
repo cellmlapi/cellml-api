@@ -502,7 +502,7 @@ public:
 
   CDA_MathMLFilteredNodeList(iface::dom::Node* parent,
                              int ifilterType)
-    : _cda_refcount(1), filterType(ifilterType)
+    : filterType(ifilterType)
   {
     children = parent->childNodes();
   }

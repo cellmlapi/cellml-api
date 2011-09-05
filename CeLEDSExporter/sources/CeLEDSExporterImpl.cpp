@@ -19,7 +19,7 @@ template <class X> std::wstring toStr(X in)
 
 CDA_CodeExporter::CDA_CodeExporter(iface::cellml_services::DictionaryGenerator* langDictGen)
   throw()
-  : _cda_refcount(1), mLangDictGen(langDictGen), mRangeStart(0.0), mRangeEnd(10.0),
+  : mLangDictGen(langDictGen), mRangeStart(0.0), mRangeEnd(10.0),
     mAbsTol(1E-6), mRelTol(1E-6), mMaxStep(1.0)
 {
   mLangDict = already_AddRefd<iface::cellml_services::LanguageDictionary>

@@ -31,7 +31,7 @@ CDAMaLaESResult::CDAMaLaESResult
  iface::cellml_api::CellMLElement* aContext,
  bool aVariablesFromSource
 )
-  : _cda_refcount(1), mTransform(aTransform), mCeVAS(aCeVAS), mCUSES(aCUSES),
+  : mTransform(aTransform), mCeVAS(aCeVAS), mCUSES(aCUSES),
     mAnnos(aAnnos), mLastUnique(0), boundVariable(false), infdelayed(false), degree(0),
     mVariablesFromSource(aVariablesFromSource), mInvolvesExternalCode(false)
 {
@@ -140,7 +140,7 @@ public:
    CDAMaLaESResult* aResult,
    std::set<iface::cellml_api::CellMLVariable*,XPCOMComparator>& aVars
   )
-    : _cda_refcount(1), mResult(aResult), mVars(aVars)
+    : mResult(aResult), mVars(aVars)
   {
     mIt = mVars.begin();
   }
@@ -186,7 +186,7 @@ public:
   CDAMaLaESDegreeVariable(uint32_t aDeg, bool aWasInfinitesimallyDelayed,
                           bool aWasUndelayed,
                           iface::cellml_api::CellMLVariable* aVar)
-    : _cda_refcount(1), mDeg(aDeg), mWasInfinitesimallyDelayed(aWasInfinitesimallyDelayed),
+    : mDeg(aDeg), mWasInfinitesimallyDelayed(aWasInfinitesimallyDelayed),
       mWasUndelayed(aWasUndelayed), mVar(aVar)
   {
   }
@@ -235,7 +235,7 @@ public:
    CDAMaLaESResult* aResult,
    std::vector<DegreeVariableInformation>& aVars
   )
-    : _cda_refcount(1), mResult(aResult), mVars(aVars)
+    : mResult(aResult), mVars(aVars)
   {
     mIt = mVars.begin();
   }
@@ -920,7 +920,7 @@ CDAMaLaESResult::getDiffDegree(iface::cellml_api::CellMLVariable* aVar)
 }
 
 CDAMaLaESTransform::CDAMaLaESTransform(const wchar_t* aSpec)
-  : _cda_refcount(1), mVariablesFromSource(true)
+  : mVariablesFromSource(true)
 {
   stringpairlist tags;
   GetTagsForSpec(aSpec, tags);
@@ -1876,7 +1876,6 @@ CDAMaLaESTransform::ExecuteTransform
 }
 
 CDAMaLaESBootstrap::CDAMaLaESBootstrap()
-  : _cda_refcount(1)
 {
 }
 

@@ -225,7 +225,6 @@ CDA_CodeInformation::iterateTargets() throw()
 }
 
 CDA_CustomCodeInformation::CDA_CustomCodeInformation()
-  : _cda_refcount(1)
 {
 }
 
@@ -271,7 +270,7 @@ public:
 
   CDA_FlaggedEquationsNodeList(CDA_CodeInformation* aCodeInfo,
                                std::vector<iface::dom::Element*>& aVector)
-    : _cda_refcount(1), mCodeInfo(aCodeInfo), mVector(aVector) {};
+    : mCodeInfo(aCodeInfo), mVector(aVector) {};
   ~CDA_FlaggedEquationsNodeList() {};
   
   uint32_t length() throw()
@@ -302,8 +301,7 @@ CDA_CodeInformation::flaggedEquations() throw()
 }
 
 CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
- : _cda_refcount(1),
-   mConstantPattern(L"CONSTANTS[%]"),
+ : mConstantPattern(L"CONSTANTS[%]"),
    mStateVariableNamePattern(L"STATES[%]"),
    mAlgebraicVariableNamePattern(L"ALGEBRAIC[%]"),
    mRateNamePattern(L"RATES[%]"),
@@ -961,7 +959,7 @@ CDA_CustomGenerator::CDA_CustomGenerator
  std::wstring& aSolveNLSystemPattern,
  uint32_t aArrayOffset
 )
-  : _cda_refcount(1), mModel(aModel),
+  : mModel(aModel),
     mTransform(aTransform), mCeVAS(aCeVAS), mCUSES(aCUSES), mAnnoSet(aAnnoSet),
     mStateVariableNamePattern(aStateVariableNamePattern), mAssignPattern(aAssignPattern),
     mSolvePattern(aSolvePattern), mSolveNLSystemPattern(aSolveNLSystemPattern),

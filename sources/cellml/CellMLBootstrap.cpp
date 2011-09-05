@@ -19,7 +19,7 @@
 #define CELLML_1_1_NS L"http://www.cellml.org/cellml/1.1#"
 
 CDA_CellMLBootstrap::CDA_CellMLBootstrap()
-  : _cda_refcount(1), domimpl(CreateDOMImplementation())
+  : domimpl(CreateDOMImplementation())
 {
 }
 
@@ -193,7 +193,7 @@ CDA_CellMLBootstrap::makeURLAbsolute
 }
 
 CDA_DOMURLLoader::CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl)
-  : _cda_refcount(1), mDOMImpl(aDOMImpl)
+  : mDOMImpl(aDOMImpl)
 {
   mDOMImpl->add_ref();
 }
@@ -244,7 +244,7 @@ CDA_DOMURLLoader::lastErrorMessage()
 }
 
 CDA_ModelLoader::CDA_ModelLoader(iface::cellml_api::DOMURLLoader* aURLLoader)
-  : _cda_refcount(1), mURLLoader(aURLLoader)
+  : mURLLoader(aURLLoader)
 {
   mURLLoader->add_ref();
 }
@@ -405,7 +405,7 @@ public:
    CDA_ModelLoader* aModelLoader,
    iface::cellml_api::ModelLoadedListener* aListener
   )
-    : _cda_refcount(1), mLoader(aLoader), mModelLoader(aModelLoader),
+    : mLoader(aLoader), mModelLoader(aModelLoader),
       mListener(aListener)
   {
     mLoader->add_ref();

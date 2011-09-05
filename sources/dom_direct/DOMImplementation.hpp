@@ -48,7 +48,7 @@ class CDA_DOMImplementation
     public iface::mathml_dom::MathMLDOMImplementation
 {
 public:
-  CDA_DOMImplementation() : _cda_refcount(1) {}
+  CDA_DOMImplementation() {}
 
   static CDA_DOMImplementation* sDOMImplementation;
 
@@ -107,7 +107,7 @@ public:
     printf("%s: add_ref(), previous refcount was %u\n",
            typeid(*this).name(), _cda_refcount);
 #endif
-    _cda_refcount++;
+    ++_cda_refcount;
     
     if (mParent != NULL)
       mParent->add_ref();
@@ -127,10 +127,10 @@ public:
     printf("%s: release_ref(), previous refcount was %u\n",
            typeid(*this).name(), _cda_refcount);
 #endif
-    _cda_refcount--;
+    bool hitZero = !--_cda_refcount;
     if (mParent == NULL)
     {
-      if (_cda_refcount == 0)
+      if (hitZero)
       {
 #ifdef DEBUG_REFCOUNT
         printf("Destroying object.\n");
@@ -264,7 +264,7 @@ private:
 public:
   std::multimap<eventid, iface::events::EventListener*>
     mListeners;
-  uint32_t _cda_refcount;
+  CDA_RefCount _cda_refcount;
 };
 
 class CDA_NodeList
@@ -272,7 +272,7 @@ class CDA_NodeList
 {
 public:
   CDA_NodeList(CDA_Node* parent)
-    : _cda_refcount(1), mParent(parent), hintSerial(0), lenCacheSerial(0)
+    : mParent(parent), hintSerial(0), lenCacheSerial(0)
   {
     mParent->add_ref();
   }
@@ -308,7 +308,7 @@ public:
   (
    CDA_Node* parent, const std::wstring& aNameFilter
   )
-    : _cda_refcount(1), mParent(parent), mNameFilter(aNameFilter),
+    : mParent(parent), mNameFilter(aNameFilter),
       mFilterType(LEVEL_1_NAME_FILTER)
   {
     mParent->add_ref();
@@ -319,7 +319,7 @@ public:
    CDA_Node* parent, const std::wstring& aNamespaceFilter,
    const std::wstring& aLocalnameFilter
    )
-    : _cda_refcount(1), mParent(parent), mNamespaceFilter(aNamespaceFilter),
+    : mParent(parent), mNamespaceFilter(aNamespaceFilter),
       mNameFilter(aLocalnameFilter),
       mFilterType(LEVEL_2_NAME_FILTER)
   {
@@ -352,7 +352,7 @@ class CDA_EmptyNamedNodeMap
   : public iface::dom::NamedNodeMap
 {
 public:
-  CDA_EmptyNamedNodeMap() : _cda_refcount(1) {};
+  CDA_EmptyNamedNodeMap() {};
   ~CDA_EmptyNamedNodeMap() {}
 
   CDA_IMPL_QI1(dom::NamedNodeMap);
@@ -896,8 +896,7 @@ class CDA_MutationEvent
 {
 public:
   CDA_MutationEvent()
-    : _cda_refcount(1),
-      mCancelable(false), mBubbles(true), mCanceled(false),
+    : mCancelable(false), mBubbles(true), mCanceled(false),
       mPropagationStopped(false),
       mPhase(iface::events::Event::CAPTURING_PHASE),
       mAttrChange(iface::events::MutationEvent::MODIFICATION)

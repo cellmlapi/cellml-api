@@ -13,7 +13,7 @@
 #define RDF_NS L"http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
 CDA_DataSource::CDA_DataSource()
-  : _cda_refcount(1), mTripleSet(new CDA_AllTriplesSet(this))
+  : mTripleSet(new CDA_AllTriplesSet(this))
 {
 }
 
@@ -894,7 +894,7 @@ CDA_TypedLiteral::datatypeURI()
 
 CDA_Triple::CDA_Triple(CDA_DataSource* aDataSource, CDA_Resource* aSubject,
                        CDA_Resource* aPredicate, CDA_RDFNode* aObject)
-  : _cda_refcount(1), mDataSource(aDataSource), mSubject(aSubject),
+  : mDataSource(aDataSource), mSubject(aSubject),
     mPredicate(aPredicate), mObject(aObject)
 {
 }
@@ -941,7 +941,7 @@ CDA_AllTriplesEnumerator::CDA_AllTriplesEnumerator
  const std::set<CDA_AllTriplesSet::RealTriple>::iterator& aPosition,
  const std::set<CDA_AllTriplesSet::RealTriple>::iterator& aEnd
 )
-  : _cda_refcount(1), mSet(aSet), mDataSource(aDataSource),
+  : mSet(aSet), mDataSource(aDataSource),
     mPosition(aPosition), mEnd(aEnd)
 {
 }
@@ -1050,7 +1050,7 @@ CDA_FilteringTripleSet::CDA_FilteringTripleSet
  CDA_Resource* aPredicateFilter,
  CDA_RDFNode* aObjectFilter
 )
-  : _cda_refcount(1), mMasterSource(aMasterSource),
+  : mMasterSource(aMasterSource),
     mSubjectFilter(aSubjectFilter), mPredicateFilter(aPredicateFilter),
     mObjectFilter(aObjectFilter)
 {
@@ -1075,7 +1075,7 @@ CDA_FilteringTripleEnumerator::CDA_FilteringTripleEnumerator
  iface::rdf_api::TripleEnumerator* aMasterEnum, CDA_Resource* aSubjectFilter,
  CDA_Resource* aPredicateFilter, CDA_RDFNode* aObjectFilter
 )
-  : _cda_refcount(1), mMasterEnum(aMasterEnum), mSubjectFilter(aSubjectFilter),
+  : mMasterEnum(aMasterEnum), mSubjectFilter(aSubjectFilter),
     mPredicateFilter(aPredicateFilter), mObjectFilter(aObjectFilter)
 {
 }
@@ -1119,7 +1119,6 @@ CDA_FilteringTripleEnumerator::getNextTriple()
 }
 
 CDA_RDFBootstrap::CDA_RDFBootstrap()
-  : _cda_refcount(1)
 {
 }
 

@@ -85,7 +85,6 @@ public:
   CDA_IMPL_QI1(cellml_services::AnnotationToolService)
 
   CDAAnnotationToolServiceImpl() throw()
-    : _cda_refcount(1)
   {
   }
 

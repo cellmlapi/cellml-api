@@ -5,7 +5,7 @@
 
 CDAStringAnnotationImpl::CDAStringAnnotationImpl(const wchar_t* aValue)
   throw()
-  : _cda_refcount(1), mString(aValue)
+  : mString(aValue)
 {
 }
 
@@ -25,7 +25,7 @@ CDAStringAnnotationImpl::value()
 
 CDAObjectAnnotationImpl::CDAObjectAnnotationImpl(iface::XPCOM::IObject* aValue)
   throw()
-  : _cda_refcount(1), mObject(aValue)
+  : mObject(aValue)
 {
 }
 
@@ -46,7 +46,6 @@ CDAObjectAnnotationImpl::value()
 
 CDAAnnotationSetImpl::CDAAnnotationSetImpl()
   throw()
-  : _cda_refcount(1)
 {
   mPrefixURI = L"http://www.cellml.org/tools/annotools/set";
   size_t i;

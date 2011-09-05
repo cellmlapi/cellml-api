@@ -16,7 +16,7 @@ class CDA_TeLICeMResultBase
   : public virtual iface::cellml_services::TeLICeMResult
 {
 public:
-  CDA_TeLICeMResultBase() : _cda_refcount(1) {}
+  CDA_TeLICeMResultBase() {}
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
 

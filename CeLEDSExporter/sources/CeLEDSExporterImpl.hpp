@@ -99,7 +99,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::CeLEDSExporterBootstrap);
 
-  CDA_CeLEDSExporterBootstrap() : _cda_refcount(1) {};
+  CDA_CeLEDSExporterBootstrap() {};
   ~CDA_CeLEDSExporterBootstrap() {};
 
   iface::cellml_services::DictionaryGenerator* createDictGenerator(const wchar_t* URL)

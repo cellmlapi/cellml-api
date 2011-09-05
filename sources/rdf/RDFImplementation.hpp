@@ -121,7 +121,7 @@ class CDA_NodeIteratorContainer
 public:
   CDA_NodeIteratorContainer(CDA_DataSource* aDataSource,
                             CDA_Resource* aResource)
-    : _cda_refcount(1), mNextIndex(1), mDataSource(aDataSource), mResource(aResource)
+    : mNextIndex(1), mDataSource(aDataSource), mResource(aResource)
   {
   }
 
@@ -146,8 +146,7 @@ class CDA_Container
 public:
   CDA_Container(CDA_DataSource* aDataSource,
                 CDA_Resource* aCorrespondingResource)
-    : _cda_refcount(1),
-      mDataSource(aDataSource), mCorrespondingResource(aCorrespondingResource)
+    : mDataSource(aDataSource), mCorrespondingResource(aCorrespondingResource)
   {}
   ~CDA_Container() {};
 
@@ -183,7 +182,7 @@ class CDA_NodeIteratorMergedContainer
 public:
   CDA_NodeIteratorMergedContainer(iface::rdf_api::NodeIterator * it1,
                                   iface::rdf_api::NodeIterator * it2)
-    : _cda_refcount(1), mIterator1(it1), mIterator2(it2), mIterator1Done(false)
+    : mIterator1(it1), mIterator2(it2), mIterator1Done(false)
   {
   }
 
@@ -205,7 +204,7 @@ class CDA_MergedContainer
 public:
   CDA_MergedContainer(iface::rdf_api::Container* aC1,
                       iface::rdf_api::Container* aC2)
-    : _cda_refcount(1), mContainer1(aC1), mContainer2(aC2) {}
+    : mContainer1(aC1), mContainer2(aC2) {}
   ~CDA_MergedContainer() {};
 
   CDA_IMPL_QI1(rdf_api::Container);

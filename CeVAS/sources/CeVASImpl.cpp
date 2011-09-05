@@ -300,7 +300,7 @@ CDAConnectedVariableSet::CDAConnectedVariableSet
  iface::cellml_api::CellMLVariable* aSource
 )
   throw()
-  : _cda_refcount(1), mSource(aSource)
+  : mSource(aSource)
 {
 }
 
@@ -423,7 +423,6 @@ public:
 
 CDACeVAS::CDACeVAS(iface::cellml_api::Model* aModel)
   throw()
-  : _cda_refcount(1)
 {
   try
   {
@@ -638,7 +637,7 @@ public:
   CDARelevantComponentIterator(CDACeVAS* aListOwner,
                                std::list<iface::cellml_api::
                                         CellMLComponent*>& aList)
-    : _cda_refcount(1), mListOwner(aListOwner), mRelevantComponents(aList)
+    : mListOwner(aListOwner), mRelevantComponents(aList)
   {
     mIt = mRelevantComponents.begin();
   }
