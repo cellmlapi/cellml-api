@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <iterator>
 #include <cmath>
+#include <limits>
 
 /* The code special cases this to match the CellML namespace
  * corresponding to the appropriate CellML version...
