@@ -517,6 +517,11 @@ private:
                          const std::wstring& aType);
   bool checkComponentRelevant(iface::cellml_api::CellMLComponent* aComp);
 
+  std::wstring stringValueOf(iface::dom::Node* n);
+  double stringToNumber(iface::dom::Node* aContext, const std::wstring& aNumberStr);
+  void processSep(iface::dom::Node* n, double& v1, double& v2);
+  double evalConstant(iface::mathml_dom::MathMLCnElement* mcne);
+
   ObjRef<iface::cellml_services::CUSES> mStrictCUSES;
   ObjRef<iface::cellml_services::CanonicalUnitRepresentation> mBooleanUnits,
     mDimensionlessUnits;

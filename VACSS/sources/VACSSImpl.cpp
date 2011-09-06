@@ -8,6 +8,7 @@
 #include <set>
 #include <assert.h>
 #include <iterator>
+#include <cmath>
 
 /* The code special cases this to match the CellML namespace
  * corresponding to the appropriate CellML version...
@@ -2836,6 +2837,128 @@ private:
   T& mContainer;
   typedef typename T::iterator iterator;
 };
+
+std::wstring
+ModelValidation::stringValueOf(iface::dom::Node* n)
+{
+  uint16_t nt = n->nodeType();
+  if (nt != iface::dom::Node::ELEMENT_NODE &&
+      nt != iface::dom::Node::DOCUMENT_NODE)
+  {
+    RETURN_INTO_WSTRING(s, n->nodeValue());
+    return s;
+  }
+
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, n->firstChild());
+  std::wstring value;
+  while (cn)
+  {
+    value += stringValueOf(cn);
+    cn = cn->nextSibling();
+  }
+
+  return value;
+}
+
+double
+ModelValidation::stringToNumber(iface::dom::Node* aContext, const std::wstring& aNumberStr)
+{
+  const wchar_t* p = aNumberStr.c_str();
+  while (*p == L' ' || *p == '\n' || *p == '\t' || *p == '\r')
+    p++;
+  if (*p == 0)
+  {
+    REPR_ERROR(L"No numeric string in constant", aContext);
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  const wchar_t* endptr;
+  double number = wcstod(p, (wchar_t**)&endptr);
+  while (*endptr == L' ' || *endptr == L'\n' || *endptr == L'\t' || *endptr == L'\r')
+    endptr++;
+
+  if (*p != 0)
+  {
+    REPR_ERROR(L"Invalid numeric string in constant", aContext);
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  return number;
+}
+
+void
+ModelValidation::processSep(iface::dom::Node* n, double& v1, double& v2)
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, n->firstChild());
+  std::wstring value;
+  bool seenSep = false;
+  while (cn)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, dom::Element);
+    if (el != NULL)
+    {
+      RETURN_INTO_WSTRING(ln, el->localName());
+      if (ln == L"sep")
+      {
+        RETURN_INTO_WSTRING(ns, el->namespaceURI());
+        if (ns == L"http://www.w3.org/1998/Math/MathML")
+        {
+          v1 = stringToNumber(el, value);
+          seenSep = true;
+          value = L"";
+        }
+      }
+    }
+    else
+      value += stringValueOf(cn);
+
+    cn = cn->nextSibling();
+  }
+
+  if (!seenSep)
+  {
+    REPR_ERROR(L"Expected a <sep/> element in constant, but none found.", n);
+    v2 = std::numeric_limits<double>::quiet_NaN();
+  }
+  
+  v2 = stringToNumber(n, value);
+}
+
+
+double
+ModelValidation::evalConstant(iface::mathml_dom::MathMLCnElement* mcne)
+{
+  RETURN_INTO_WSTRING(b, mcne->base());
+  if (b != L"" && b != L"10")
+  {
+    REPR_WARNING(L"Units could not be fully checked because constants in bases other than 10 are not supported.", mcne);
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  
+  RETURN_INTO_WSTRING(t, mcne->type());
+  if (t == L"integer" || t == L"real")
+  {
+    std::wstring n = stringValueOf(mcne);
+    return stringToNumber(mcne, n);
+  }
+  else if (t == L"e-notation")
+  {
+    double s1, s2;
+    processSep(mcne, s1, s2);
+    return s1 * pow(10.0, s2);
+  }
+  else if (t == L"rational")
+  {
+    double s1, s2;
+    processSep(mcne, s1, s2);
+    return s1 / s2;
+  }
+  else
+  {
+    REPR_WARNING(L"Cannot get constant value need to check mathematics because constant type is unrecognised", mcne);
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+}
 
 bool
 ModelValidation::findConstantValue
