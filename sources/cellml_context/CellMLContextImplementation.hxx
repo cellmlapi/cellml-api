@@ -67,7 +67,7 @@ class CDA_TypeAnnotationManager
   : public iface::cellml_context::CellMLTypeAnnotationManager
 {
 public:
-  CDA_TypeAnnotationManager() : _cda_refcount(1) {}
+  CDA_TypeAnnotationManager() {}
   ~CDA_TypeAnnotationManager();
 
   CDA_IMPL_REFCOUNT;
@@ -179,7 +179,7 @@ private:
   CDA_ModelList* mDerivedModels;
   bool mIsFrozen;
   std::list<iface::cellml_context::ModelNodeMonitor*> mModelMonitors;
-  uint32_t _cda_refcount;
+  CDA_RefCount _cda_refcount;
   bool mModelDirty;
 
   void installModelEventListener(iface::cellml_api::Model* aModel);
@@ -235,7 +235,7 @@ public: // within CellMLContextImplementation only...
   std::list<iface::cellml_context::ModelListMonitor*> mListMonitors;
 
 private:
-  uint32_t _cda_refcount;
+  CDA_RefCount _cda_refcount;
 };
 
 class CDA_CellMLContext

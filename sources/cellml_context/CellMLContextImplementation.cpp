@@ -59,7 +59,7 @@ CDA_CellMLModuleIterator::CDA_CellMLModuleIterator
  CDA_ModuleManager* aMM,
  std::list<iface::cellml_context::CellMLModule*>& aList
 )
-  : _cda_refcount(1), mMM(aMM), mList(aList)
+  : mMM(aMM), mList(aList)
 {
   mMM->add_ref();
   mCurrent = mList.begin();
@@ -92,7 +92,7 @@ CDA_ModelNodeIterator::CDA_ModelNodeIterator
  CDA_ModelList* aML,
  std::list<CDA_ModelNode*>& aList
 )
-  : _cda_refcount(1), mML(aML), mList(aList)
+  : mML(aML), mList(aList)
 {
   mML->add_ref();
   mCurrent = mList.begin();
@@ -118,7 +118,6 @@ CDA_ModelNodeIterator::nextModelNode()
 }
 
 CDA_ModuleManager::CDA_ModuleManager()
-  : _cda_refcount(1)
 {
 }
 
@@ -326,7 +325,7 @@ CDA_ModuleManager::iterateModules()
 }
 
 CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
-  : _cda_refcount(1), mIsFrozen(false), mParentList(NULL),
+  : mIsFrozen(false), mParentList(NULL),
     mModelDirty(false)
 {
   // Scoped locale change.
@@ -374,7 +373,7 @@ void
 CDA_ModelNode::add_ref()
   throw()
 {
-  _cda_refcount++;
+  ++_cda_refcount;
   if (mParentList)
     mParentList->add_ref();
 }
@@ -383,7 +382,7 @@ void
 CDA_ModelNode::release_ref()
   throw()
 {
-  _cda_refcount--;
+  --_cda_refcount;
   if (mParentList)
     mParentList->release_ref();
   else if (_cda_refcount == 0)
@@ -846,7 +845,7 @@ CDA_ModelNode::parentList()
 }
 
 CDA_ModelList::CDA_ModelList()
-  : _cda_refcount(1), mParentNode(NULL)
+  : mParentNode(NULL)
 {
 }
 
@@ -867,7 +866,7 @@ void
 CDA_ModelList::add_ref()
   throw()
 {
-  _cda_refcount++;
+  ++_cda_refcount;
   if (mParentNode)
     mParentNode->add_ref();
 }
@@ -876,7 +875,7 @@ void
 CDA_ModelList::release_ref()
   throw()
 {
-  _cda_refcount--;
+  --_cda_refcount;
   if (mParentNode)
     mParentNode->release_ref();
   else if (_cda_refcount == 0)
@@ -1084,7 +1083,6 @@ CDA_ModelNode::handleEvent(iface::events::Event* aEvent)
 }
 
 CDA_CellMLContext::CDA_CellMLContext()
-  : _cda_refcount(1)
 {
   mModuleManager = new CDA_ModuleManager();
   mTypeAnnotationManager = new CDA_TypeAnnotationManager();
