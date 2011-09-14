@@ -1,11 +1,22 @@
 /*!
-\page ubuntu_9_04 Build process for Ubuntu Linux 9.04 and later
+\page ubuntu_9_04 Building from source on Ubuntu Linux
+
+<em>Please note: The CellML API provides binary SDK packages, so you don't need to build from source to use the CellML API on Windows, Linux, or Mac OS X.</em>
 
 \section Install_steps Installation steps 
+\subsection step1 Step 1: Obtain the CellML API source repository using Mercurial
 
-\subsection step1 Step 1: Download the current development branch via Mercurial
-
+\verbatim
 hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api/cellml-api
+\endverbatim
+
+\subsection step1a Optional Step 1a: Switch to a tagged stable release
+
+In the below example, we switch to the 1.10 branch. You don't need to do this if you want the latest version, rather than a stable release.
+
+\verbatim
+hg checkout 1.10
+\endverbatim
 
 \subsection step2 Step 2: Install external packages
 
@@ -18,29 +29,40 @@ Required Linux packages
 
 Install the packages:
 
+\verbatim
 sudo apt-get install <package-name>
+\endverbatim
 
 \subsection step3 Step 3: Build the CellML DOM API from its source code
 
+\verbatim
 cd cellml-api/
 ccmake . # While in ccmake, select the options you want to enable. Press 'c' and then 'g'.
 make
+\endverbatim
 
 \subsection step4 Step 4: Test the CellML API
 
+\verbatim
 make test
+\endverbatim
 
 \subsection step5 Step 5: Install the CellML API
 
+\verbatim
 sudo make install
+\endverbatim
 
 \subsection step6 Step 6: Compiling and running Java code
 
+\verbatim
 javac -cp /<pathToCellMLJARFile>/cellml-api/cellml.jar <pathToYourJavaProgram>/<ClassName>.java 
-
 java -Djava.library.path=/usr/local/lib:/<pathToCellMLAPIFolder>/cellml-api -cp .:/<pathToCellMLJARFile>/cellml-api/cellml.jar:/usr/local/lib/ <pathToYourJavaProgram>/<ClassName>
+\endverbatim
 
 Depending on your linker set up, you may need to add /usr/local/lib to your LD_LIBRARY_PATH environment variable:
+\verbatim
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+\endverbatim
 
 */

@@ -1,17 +1,41 @@
 /*!
 \page getting_started Getting Started with the API Implementation (read this first)
 
-\section stable_and_hg Stable releases and Mercurial versions
+\section stable_and_hg Obtaining the CellML API
 
-API releases can be downloaded from <a href="http://www.cellml.org/tools/downloads/cellml_api/releases/">here</a> under 'Stable Releases'. You can download both source code and SDK binaries.
+Summary of how to obtain the API Implementation:
+<table>
+  <tr>
+    <td>&nbsp;</td>
+    <th>Stable</th>
+    <th>Bleeding Edge</th>
+  </tr>
+  <tr>
+    <th>Using Binary SDK</th>
+    <td><a href="http://www.cellml.org/tools/downloads/cellml_api/releases/">Release page</a> under 'Stable Releases'.</td>
+    <td><a href="https://sourceforge.net/projects/cellml-api/files/CellML-API-Nightly/">Nightly builds</a></td>
+  </tr>
+  <tr>
+    <th>From source</th>
+    <td>hg clone http://cellml-api.hg.sourceforge.net/hgroot/cellml-api/cellml-api/; cd cellml-api; hg checkout 1.10</td>
+    <td>hg clone http://cellml-api.hg.sourceforge.net/hgroot/cellml-api/cellml-api/</td>
+  </tr>
+</table>
 
-Another option is to use the latest bleeding edge version of the API. You can obtain this from Mercurial:
-  hg clone http://cellml-api.hg.sourceforge.net/hgroot/cellml-api/cellml-api/
-You can keep this up-to-date with new changes, by changing into the cellml-api directory and running:
+If you check out the source code, you can keep up-to-date with new changes, by changing into the cellml-api directory and running:
+\verbatim
   hg pull -u
+\endverbatim
+
 Note that bleeding edge versions may have problems which stop them from compiling or working correctly. You can check the status of the compilation and automated tests on different platforms <a href="http://autotest.bioeng.auckland.ac.nz/cellml-build/waterfall">here</a>.
 
-Binaries (SDK packages) for Linux (x86 and AMD64), Windows (32 bit MSVC10 and MingW), and Mac OS X (PowerPC, x86, and x86_64 universal binaries) are built every night (at 11 PM New Zealand time) on days where there have been changes to source code. Nightly builds can be found <a href="https://sourceforge.net/projects/cellml-api/files/CellML-API-Nightly/">here</a> under the version of the API currently being worked towards. Note: old nightlies are not guaranteed to be hosted forever, so please do not publish links to specific binaries; instead either host the binary elsewhere, or link to a stable release.
+Binaries (SDK packages) for Linux (x86 and AMD64), Windows (32 bit Microsoft Visual C++ 2010 and MinGW), and Mac OS X (PowerPC, x86, and x86_64 universal binaries) are built every night (at 11 PM New Zealand time) on days where there have been changes to source code. Nightly builds can be found <a href="https://sourceforge.net/projects/cellml-api/files/CellML-API-Nightly/">here</a> under the version of the API currently being worked towards. Note: old nightlies are not guaranteed to be hosted forever, so please do not publish links to specific binaries; instead either host the binary elsewhere, or link to a stable release.
 
-The SDK is packaged in a way that is specific to the platform you are on; tar.bz2 for Linux platforms, .dmg on Mac OS X, and a self-extracting executable on Windows.
+The SDK is packaged in a way that is specific to the platform you are on; tar.bz2 for Linux platforms, .dmg on Mac OS X, and a choice of a self-extracting executable or a zip file on Windows.
+
+\section Using a binary SDK
+Once you have extracted the SDK, you need to set up your build environment to work with the SDK by following these steps:
+
+- On Windows, you need to make sure you have the appropriate C++ standard library in your path (even if you only plan to use the CellML SDK from Java or Python). If you downloaded the MSVC 2010 version of the SDK, you can do this by installing the <a href="http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=5555">MSVC Redistributable from Microsoft</a>. If you downloaded the MinGW version of the SDK, you need to put the directory containing the libstdc++-6.dll library in your path (this file comes with MinGW).
+
  */

@@ -8,6 +8,7 @@ The CellML Application Programming Interface (CellML API) provides an interface 
 The CellML API comes with a complete, Free / Open Source implementation, and this implementation can be used by programs from C++, Java, and Python.
 
 \section gettingstarted Getting started
+  - \subpage why_use_api
   - \subpage getting_started
   - \subpage ubuntu_9_04
 
@@ -15,4 +16,7 @@ The CellML API comes with a complete, Free / Open Source implementation, and thi
   - \subpage cplusplus_basics
   - \subpage java_tutorial
   - \subpage python_tutorial
+
+\section other Miscellaneous information
+  - \subpage citing_api
 */

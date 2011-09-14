@@ -1,0 +1,6 @@
+/*!
+\page why_use_api Why use the CellML API?
+Providing CellML support for your application means that saved models will be able to be used with a wide range of software, and can be shared with other groups also using CellML compliant software, and in addition, your users will be able to work with models they receive from other groups.
+
+The CellML API provides a core API for manipulating CellML, and a number of services designed to make supporting CellML easier. Not all CellML applications will benefit from the API, but CellML can be difficult to process correctly, and so for many applications, using the API will mean that a wider range of models can be supported using less effort.
+*/
