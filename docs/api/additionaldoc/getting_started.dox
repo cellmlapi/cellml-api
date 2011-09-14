@@ -33,7 +33,7 @@ Binaries (SDK packages) for Linux (x86 and AMD64), Windows (32 bit Microsoft Vis
 
 The SDK is packaged in a way that is specific to the platform you are on; tar.bz2 for Linux platforms, .dmg on Mac OS X, and a choice of a self-extracting executable or a zip file on Windows.
 
-\section Using a binary SDK
+\section using_bin_sdk Using a binary SDK
 Once you have extracted the SDK, you need to set up your build environment to work with the SDK by following these steps:
 
 - On Windows, you need to make sure you have the appropriate C++ standard library in your path (even if you only plan to use the CellML SDK from Java or Python). If you downloaded the MSVC 2010 version of the SDK, you can do this by installing the <a href="http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=5555">MSVC Redistributable from Microsoft</a>. If you downloaded the MinGW version of the SDK, you need to put the directory containing the libstdc++-6.dll library in your path (this file comes with MinGW).
