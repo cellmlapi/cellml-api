@@ -105,6 +105,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         self.out.out('if (!PyArg_ParseTuple(aArgs, "O", &iobject))')
         self.out.out('{')
         self.out.inc_indent()
+        self.out.out('PyErr_Clear();')
         # See if this is a bootstrap special...
         bootstrapped = 0
         for [name, bootstrap] in self.bootstrapSpecials:
