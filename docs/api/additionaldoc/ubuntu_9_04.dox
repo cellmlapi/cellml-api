@@ -1,7 +1,7 @@
 /*!
 \page ubuntu_9_04 Building from source on Ubuntu Linux
 
-<em>Please note: The CellML API provides binary SDK packages, so you don't need to build from source to use the CellML API on Windows, Linux, or Mac OS X.</em>
+<em>Please note: The CellML API provides binary SDK packages, so you don't need to build from source to use the CellML API on Windows, Linux, or Mac OS X. See the page about \ref getting_started "Getting Started" for more information.</em>
 
 \section Install_steps Installation steps 
 \subsection step1 Step 1: Obtain the CellML API source repository using Mercurial
