@@ -132,10 +132,34 @@ public class IterateElementTest {
 
 \endcode
 
+To compile and run this code on Linux (with /path/to/sdk/ changed to the appropriate path):
+<pre>
+  export CLASSPATH=/path/to/sdk/lib/cellml.jar:.:$CLASSPATH
+  export LD_LIBRARY_PATH=/path/to/sdk/lib:$LD_LIBRARY_PATH
+  javac IterateElementTest.java
+  java -Djava.library.path=/path/to/sdk/lib IterateElementTest
+</pre>
+
+On Windows (with c:/path/to/sdk/ changed to the appropriate path):
+<pre>
+  set CLASSPATH=c:/path/to/sdk/lib/cellml.jar;.;%CLASSPATH%
+  set PATH=c:/path/to/sdk/lib;%PATH%
+  javac IterateElementTest.java
+  java -Djava.library.path=c:/path/to/sdk/lib IterateElementTest
+</pre>
+
+On Mac OS X:
+<pre>
+  export CLASSPATH=/path/to/sdk/lib/cellml.jar:.:$CLASSPATH
+  export DYLD_LIBRARY_PATH=/path/to/sdk/lib:$LD_LIBRARY_PATH
+  javac IterateElementTest.java
+  java -Djava.library.path=/path/to/sdk/lib IterateElementTest
+</pre>
+
+
 \section write_cellml Writing CellML models to files
 
 Here we create a class with a method that we could call to write CellML models to files.
-
 
 \code 
 

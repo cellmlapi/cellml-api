@@ -57,4 +57,6 @@ Once you have extracted the SDK, you need to set up your build environment to wo
       export CLASSPATH=/path/to/sdk/lib/cellml.jar:$CLASSPATH
     Windows (at cmd.exe):
       set CLASSPATH=c:/path/to/sdk/lib/cellml.jar;%CLASSPATH%
-- When running Java programs, you need to set the java.library.path command to include the CellML SDK lib directory. One way to do this is to pass an option to java like this: -Djava.library.path=/path/to/sdk/lib
+- When running Java programs, you need to set the java.library.path property to include the CellML SDK lib directory. One way to do this is to pass an option to java like this: -Djava.library.path=/path/to/sdk/lib
+- When running Python programs, you need to set the PYTHON_PATH environment variable to point to the Python subdirectory of the SDK lib directory:
+      export PYTHON_PATH=/path/to/sdk/lib/python:$PYTHON_PATH
