@@ -1,0 +1,22 @@
+/*!
+\page citing_api Citing the CellML API
+
+If you use the CellML API to produce something which you publish, please cite the following paper about the CellML API:
+
+Miller, A. K. et al. (2010). An overview of the CellML API and its implementation. BMC Bioinformatics 11(178). doi:10.1186/1471-2105-11-178
+
+This is an open access paper - you can read it online <a href="http://www.biomedcentral.com/1471-2105/11/178">here</a>.
+
+The citation in BibTeX is given below:
+\verbatim
+@article{cellmlapi2010,
+  title={{An overview of the CellML API and its implementation}},
+  author={Miller, A. K. and Marsh, J. and Reeve, A. and Garny, A. and Britten, R. and Halstead, M. and Cooper, J. and Nickerson, D. P. and Nielsen, P. F.},
+  journal={{BMC Bioinformatics}},
+  volume={11},
+  number={178},
+  year={2010},
+  publisher={{BioMed Central Ltd}}
+}
+\endverbatim
+*/
