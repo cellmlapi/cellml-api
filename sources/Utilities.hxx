@@ -436,6 +436,13 @@ private:
         return static_cast<iface::XPCOM::IObject*>(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 1; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*))); \
+      *ret = strdup("xpcom::IObject"); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI1(c1) \
@@ -453,6 +460,14 @@ private:
         return static_cast< iface::c1* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 2; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 2)); \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI2(c1, c2) \
@@ -475,6 +490,15 @@ private:
         return static_cast< iface::c2* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 3; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 3)); \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      ret[2] = strdup(#c2); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI3(c1, c2, c3) \
@@ -502,6 +526,16 @@ private:
         return static_cast< iface::c3* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 4; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 4)); \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      ret[2] = strdup(#c2); \
+      ret[3] = strdup(#c3); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI4(c1, c2, c3, c4) \
@@ -534,6 +568,17 @@ private:
         return static_cast< iface::c4* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw()\
+    { \
+      *len = 5; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 5));      \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      ret[2] = strdup(#c2); \
+      ret[3] = strdup(#c3); \
+      ret[4] = strdup(#c4); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI5(c1, c2, c3, c4, c5) \
@@ -571,6 +616,18 @@ private:
         return static_cast< iface::c5* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 6; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 6));      \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      ret[2] = strdup(#c2); \
+      ret[3] = strdup(#c3); \
+      ret[4] = strdup(#c4); \
+      ret[5] = strdup(#c5); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI6(c1, c2, c3, c4, c5, c6) \
@@ -613,6 +670,19 @@ private:
         return static_cast< iface::c6* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 7; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 7)); \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      ret[2] = strdup(#c2); \
+      ret[3] = strdup(#c3); \
+      ret[4] = strdup(#c4); \
+      ret[5] = strdup(#c5); \
+      ret[6] = strdup(#c6); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI7(c1, c2, c3, c4, c5, c6, c7) \
@@ -660,6 +730,20 @@ private:
         return static_cast< iface::c7* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 8; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 8)); \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      ret[2] = strdup(#c2); \
+      ret[3] = strdup(#c3); \
+      ret[4] = strdup(#c4); \
+      ret[5] = strdup(#c5); \
+      ret[6] = strdup(#c6); \
+      ret[7] = strdup(#c7); \
+      return ret; \
     }
 
 #define CDA_IMPL_QI8(c1, c2, c3, c4, c5, c6, c7, c8) \
@@ -712,6 +796,21 @@ private:
         return static_cast< iface::c8* >(this); \
       } \
       return NULL; \
+    } \
+    char** supported_interfaces(uint32_t* len) throw() \
+    { \
+      *len = 9; \
+      char** ret = static_cast<char**>(malloc(sizeof(char*) * 9)); \
+      *ret = strdup("xpcom::IObject"); \
+      ret[1] = strdup(#c1); \
+      ret[2] = strdup(#c2); \
+      ret[3] = strdup(#c3); \
+      ret[4] = strdup(#c4); \
+      ret[5] = strdup(#c5); \
+      ret[6] = strdup(#c6); \
+      ret[7] = strdup(#c7); \
+      ret[8] = strdup(#c8); \
+      return ret; \
     }
 
 template<class T>

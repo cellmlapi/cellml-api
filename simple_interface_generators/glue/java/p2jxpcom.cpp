@@ -51,6 +51,19 @@ p2j::XPCOM::IObject::query_interface(const char* name) throw()
   return f->create(env, mObject);
 }
 
+char**
+p2j::XPCOM::IObject::supported_interfaces(uint32_t* len) throw()
+{
+  // We could use reflection and get more information from Java, but there is
+  // not currently a strong use case for this much complexity. So just return
+  // the xpcom::IObject and ...
+  *len = 2;
+  char** ret = static_cast<char**>(malloc(sizeof(char*) * 2));
+  ret[0] = strdup("xpcom::IObject");
+  ret[1] = strdup("...");
+  return ret;
+}
+
 jstring
 ConvertWcharStringToJString(JNIEnv* env, const wchar_t* aString)
 {

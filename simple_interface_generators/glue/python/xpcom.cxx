@@ -25,6 +25,7 @@ get_xpcom_IObject_objid(PyObject* aSelf, PyObject* aArgs, PyObject* aKwds)
 
 static PyMethodDef xpcom_IObjectMethods[] = {
   {"objid",(PyCFunction)get_xpcom_IObject_objid,METH_VARARGS,NULL},
+  {"supported_interfaces",(PyCFunction)get_xpcom_IObject_objid,METH_VARARGS,NULL},
   {NULL, NULL, 0, NULL}
 };
 static PyTypeObject xpcom_IObjectType = {

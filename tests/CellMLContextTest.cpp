@@ -109,11 +109,23 @@ public:
 
   void* query_interface(const char* id) throw()
   {
+    if (!strcmp(id, "xpcom::IObject"))
+      return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
     if (!strcmp(id, "cellml_context::ModelNodeMonitor"))
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
     if (!strcmp(id, "cellml_context::ModelListMonitor"))
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelListMonitor*>(this));
     return NULL;
+  }
+
+  char** supported_interfaces(uint32_t* len) throw()
+  {
+    *len = 3;
+    char** ret = static_cast<char**>(malloc(sizeof(char*) * 3));
+    ret[0] = strdup("xpcom::IObject");
+    ret[1] = strdup("cellml_context::ModelNodeMonitor");
+    ret[2] = strdup("cellml_context::ModelListMonitor");
+    return ret;
   }
 
   char* objid() throw() { return strdup("TheTestModelMonitor"); }

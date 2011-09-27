@@ -2,7 +2,7 @@
  * This IDL has been substantially modified from the original version by Andrew
  * Miller <ak.miller@auckland.ac.nz> for the Bioengineering Institute at the
  *  University of Auckland. These modifications are:
- *   Copyright (C) 2004-2006 by The Bioengineering Institute at the University
+ *   Copyright (C) 2004-2011 by The Bioengineering Institute at the University
  *   of Auckland.
  * Original author's copyright:
  *   Copyright (C) 2001,  Christof Meerwald <cmeerw@web.de>
@@ -49,6 +49,8 @@ module XPCOM
    * compiler and platform.
    */
   typedef wstring utf8wstring;
+
+  typedef sequence<utf8string> interface_list;
 
   /**
    * The object is the top-level object, from which anything which needs to
@@ -100,6 +102,11 @@ module XPCOM
      * if needed). The id must never change once set.
      */
     readonly attribute string objid;
+
+    /**
+     * Fetches all supported interfaces.
+     */
+    readonly attribute interface_list supported_interfaces;
   };
 #pragma flat_name CORBA_IObject
 #pragma ID IObject "DCE:00000000-0000-0000-c000-000000000046:1"

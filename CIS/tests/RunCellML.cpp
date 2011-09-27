@@ -108,6 +108,15 @@ public:
     return NULL;
   }
 
+  char** supported_interfaces(uint32_t* len) throw()
+  {
+    *len = 2;
+    char** ret = static_cast<char**>(malloc(sizeof(char*) * 2));
+    ret[0] = strdup("xpcom::IObject");
+    ret[1] = strdup("cellml_services::IntegrationProgressObserver");
+    return ret;
+  }
+
   void computedConstants(uint32_t length, double* values)
     throw (std::exception&)
   {

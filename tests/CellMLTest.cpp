@@ -625,6 +625,15 @@ public:
       return static_cast<iface::cellml_api::UserData*>(this);
     return NULL;
   }
+
+  char** supported_interfaces(uint32_t* len) throw()
+  {
+    *len = 2;
+    char** ret = static_cast<char**>(malloc(sizeof(char*) * 2));
+    ret[0] = strdup("xpcom::IObject");
+    ret[1] = strdup("cellml_api::UserData");
+    return ret;
+  }
 private:
   int refcount;
 };

@@ -33,6 +33,7 @@ namespace p2j
       PUBLIC_JAVA_PRE char* objid() throw() PUBLIC_JAVA_POST;
 
       PUBLIC_JAVA_PRE void* query_interface(const char*) throw() PUBLIC_JAVA_POST;
+      PUBLIC_JAVA_PRE char** supported_interfaces(uint32_t*) throw() PUBLIC_JAVA_POST;
 
       jobject unwrap() { return mObject; }
 

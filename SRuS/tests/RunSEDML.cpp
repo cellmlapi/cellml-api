@@ -108,6 +108,14 @@ public:
     else
       return NULL;
   }
+  char** supported_interfaces(uint32_t* len) throw()
+  {
+    *len = 2;
+    char** ret = static_cast<char**>(malloc(sizeof(char*) * 2));
+    ret[0] = strdup("xpcom::IObject");
+    ret[1] = strdup("SRuS::GeneratedDataMonitor");
+    return ret;
+  }
 
   void progress(iface::SRuS::GeneratedDataSet* aData) throw()
   {

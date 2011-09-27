@@ -128,6 +128,8 @@ private:
 
 PUBLIC_PYTHONSUPPORT_PRE void PyBridge_VaSet_Output(PyObject* aList, const char* aFormat, va_list aArgs) PUBLIC_PYTHONSUPPORT_POST;
 
+PUBLIC_PYTHONSUPPORT_PRE PyObject* PyBridge_AutoQI_GetAttr(PyObject* obj, PyObject* name) PUBLIC_PYTHONSUPPORT_POST;
+
 PUBLIC_PYTHONSUPPORT_PRE void PyBridge_Set_Output(PyObject* aList, const char *aFormat, ...) PUBLIC_PYTHONSUPPORT_POST;
 
 PUBLIC_PYTHONSUPPORT_PRE class PUBLIC_PYTHONSUPPORT_POST P2PyFactory
@@ -177,6 +179,9 @@ public:
 
   PUBLIC_PYTHONSUPPORT_PRE void* query_interface(const char* id)
     throw(std::exception&) PUBLIC_PYTHONSUPPORT_POST;
+
+  PUBLIC_PYTHONSUPPORT_PRE char** supported_interfaces(uint32_t* len)
+    throw() PUBLIC_PYTHONSUPPORT_POST;
 
   PUBLIC_PYTHONSUPPORT_PRE char* objid() throw(std::exception&) PUBLIC_PYTHONSUPPORT_POST;
 
