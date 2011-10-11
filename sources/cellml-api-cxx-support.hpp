@@ -54,32 +54,6 @@ CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
 }
 
 template<class T>
-class already_AddRefd
-{
-public:
-  already_AddRefd(T* aPtr)
-    : mPtr(aPtr)
-  {
-  }
-
-  ~already_AddRefd()
-  {
-  }
-
-  operator T*() const
-  {
-    return mPtr;
-  }
-
-  T* getPointer() const
-  {
-    return mPtr;
-  }
-private:
-  T* mPtr;
-};
-
-template<class T>
 class ObjRef
 {
 public:

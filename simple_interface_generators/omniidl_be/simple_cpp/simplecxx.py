@@ -9,7 +9,7 @@ def shouldWarnIfUnused(type):
         return ' WARN_IF_RETURN_UNUSED'
     return ''
 
-def typeToSimpleCXX(type, extrapointer=0, is_const=0):
+def typeToSimpleCXX(type, extrapointer=0, is_const=0, is_ret=0):
     extrastar = '*'*extrapointer;
 
     type = type.unalias()
@@ -49,7 +49,10 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0):
     elif tk == idltype.tk_Principal:
         raise 'Principal is not supported'
     elif tk == idltype.tk_objref or tk == idltype.tk_struct:
-        return type.decl().simplecxxscoped + '*' + extrastar
+        if is_ret:
+            return 'already_AddRefd<' + type.decl().simplecxxscoped + '>'
+        else:
+            return type.decl().simplecxxscoped + '*' + extrastar
     elif tk == idltype.tk_array:
         return ckw + type.decl().simplecxxscoped + '*' + extrastar
     elif tk == idltype.tk_sequence:
@@ -79,7 +82,11 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0):
     elif tk == idltype.tk_wstring:
         if is_const:
             ckw = 'const '
-        return ckw + 'wchar_t*' + extrastar
+        if is_ret:
+            r = 'std::wstring'
+        else:
+            r = 'std::wstring&'
+        return ckw + r + extrastar
     elif tk == idltype.tk_fixed:
         raise 'Fixed precision is not supported.'
     elif tk == idltype.tk_value:

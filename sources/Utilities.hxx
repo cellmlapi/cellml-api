@@ -814,32 +814,6 @@ private:
     }
 
 template<class T>
-class already_AddRefd
-{
-public:
-  already_AddRefd(T* aPtr)
-    : mPtr(aPtr)
-  {
-  }
-
-  ~already_AddRefd()
-  {
-  }
-
-  operator T*() const
-  {
-    return mPtr;
-  }
-
-  T* getPointer() const
-  {
-    return mPtr;
-  }
-private:
-  T* mPtr;
-};
-
-template<class T>
 class ObjRef
 {
 public:

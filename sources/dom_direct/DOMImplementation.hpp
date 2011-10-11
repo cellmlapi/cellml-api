@@ -61,13 +61,15 @@ public:
   bool hasFeature(const wchar_t* feature, const wchar_t* version)
     throw(std::exception&);
 
-  iface::dom::DocumentType* createDocumentType(const wchar_t* qualifiedName,
-                                               const wchar_t* publicId,
-                                               const wchar_t* systemId)
+  already_AddRefd<iface::dom::DocumentType>
+  createDocumentType(const wchar_t* qualifiedName,
+                     const wchar_t* publicId,
+                     const wchar_t* systemId)
     throw(std::exception&);
-  iface::dom::Document* createDocument(const wchar_t* namespaceURI,
-                                       const wchar_t* qualifiedName,
-                                       iface::dom::DocumentType* doctype)
+  already_AddRefd<iface::dom::Document>
+  createDocument(const wchar_t* namespaceURI,
+                 const wchar_t* qualifiedName,
+                 iface::dom::DocumentType* doctype)
     throw(std::exception&);
 
   // A non-standard function used by the bootstrap code to load documents...
@@ -79,7 +81,7 @@ public:
                                              std::wstring& aErrorMessage)
     throw(std::exception&);
 
-  iface::mathml_dom::MathMLDocument* createMathMLDocument()
+  already_AddRefd<iface::mathml_dom::MathMLDocument> createMathMLDocument()
     throw(std::exception&);
 
   void ProcessXMLError(std::wstring& aErrorMessage,
@@ -153,36 +155,36 @@ public:
   void find_leaked();
 #endif
 
-  wchar_t* nodeName() throw(std::exception&);
-  wchar_t* nodeValue() throw(std::exception&);
-  void nodeValue(const wchar_t* attr) throw(std::exception&);
-  iface::dom::Node* parentNode() throw(std::exception&);
-  iface::dom::NodeList* childNodes() throw(std::exception&);
-  iface::dom::Node* firstChild() throw(std::exception&);
-  iface::dom::Node* lastChild() throw(std::exception&);
-  iface::dom::Node* previousSibling() throw(std::exception&);
-  iface::dom::Node* nextSibling() throw(std::exception&);
-  iface::dom::NamedNodeMap* attributes() throw(std::exception&);
-  iface::dom::Document* ownerDocument() throw(std::exception&);
-  iface::dom::Node* insertBefore(iface::dom::Node* newChild,
-                                 iface::dom::Node* refChild)
+  std::wstring nodeName() throw(std::exception&);
+  std::wstring nodeValue() throw(std::exception&);
+  void nodeValue(const std::wstring& attr) throw(std::exception&);
+  already_AddRefd<iface::dom::Node> parentNode() throw(std::exception&);
+  already_AddRefd<iface::dom::NodeList> childNodes() throw(std::exception&);
+  already_AddRefd<iface::dom::Node> firstChild() throw(std::exception&);
+  already_AddRefd<iface::dom::Node> lastChild() throw(std::exception&);
+  already_AddRefd<iface::dom::Node> previousSibling() throw(std::exception&);
+  already_AddRefd<iface::dom::Node> nextSibling() throw(std::exception&);
+  already_AddRefd<iface::dom::NamedNodeMap> attributes() throw(std::exception&);
+  already_AddRefd<iface::dom::Document> ownerDocument() throw(std::exception&);
+  already_AddRefd<iface::dom::Node> insertBefore(iface::dom::Node* newChild,
+                                                 iface::dom::Node* refChild)
     throw(std::exception&);
-  iface::dom::Node* insertBeforePrivate(CDA_Node* newChild,
-                                        CDA_Node* refChild)
+  already_AddRefd<iface::dom::Node> insertBeforePrivate(CDA_Node* newChild,
+                                                        CDA_Node* refChild)
     throw(std::exception&);
-  iface::dom::Node* replaceChild(iface::dom::Node* newChild,
-                                 iface::dom::Node* oldChild)
+  already_AddRefd<iface::dom::Node> replaceChild(iface::dom::Node* newChild,
+                                                 iface::dom::Node* oldChild)
     throw(std::exception&);
-  iface::dom::Node* removeChild(iface::dom::Node* oldChild)
+  already_AddRefd<iface::dom::Node> removeChild(iface::dom::Node* oldChild)
     throw(std::exception&);
-  iface::dom::Node* removeChildPrivate(CDA_Node* oldChild)
+  already_AddRefd<iface::dom::Node> removeChildPrivate(CDA_Node* oldChild)
     throw(std::exception&);
-  iface::dom::Node* appendChild(iface::dom::Node* newChild)
+  already_AddRefd<iface::dom::Node> appendChild(iface::dom::Node* newChild)
     throw(std::exception&);
   bool hasChildNodes() throw(std::exception&);
-  virtual CDA_Node* shallowCloneNode(CDA_Document* aDoc) throw(std::exception&) = 0;
-  iface::dom::Node* cloneNode(bool deep) throw(std::exception&);
-  CDA_Node* cloneNodePrivate(CDA_Document* aDoc, bool deep) throw(std::exception&);
+  virtual already_AddRefd<CDA_Node> shallowCloneNode(CDA_Document* aDoc) throw(std::exception&) = 0;
+  already_AddRefd<iface::dom::Node> cloneNode(bool deep) throw(std::exception&);
+  already_AddRefd<CDA_Node> cloneNodePrivate(CDA_Document* aDoc, bool deep) throw(std::exception&);
   void normalize() throw(std::exception&);
   bool isSupported(const wchar_t* feature, const wchar_t* version)
     throw(std::exception&);
@@ -287,7 +289,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
-  iface::dom::Node* item(uint32_t index) throw(std::exception&);
+  already_AddRefd<iface::dom::Node> item(uint32_t index) throw(std::exception&);
   uint32_t length() throw(std::exception&);
 
   CDA_Node* mParent;
@@ -336,7 +338,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
-  iface::dom::Node* item(uint32_t index) throw(std::exception&);
+  already_AddRefd<iface::dom::Node> item(uint32_t index) throw(std::exception&);
   uint32_t length() throw(std::exception&);
 
   CDA_Node* mParent;
@@ -359,13 +361,13 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT
 
-  iface::dom::Node* getNamedItem(const wchar_t* name)
+  already_AddRefd<iface::dom::Node> getNamedItem(const std::wstring& name)
     throw(std::exception&)
   {
     return NULL;
   }
 
-  iface::dom::Node* setNamedItem(iface::dom::Node* arg)
+  already_AddRefd<iface::dom::Node> setNamedItem(iface::dom::Node* arg)
     throw(std::exception&)
   {
     throw iface::dom::DOMException();

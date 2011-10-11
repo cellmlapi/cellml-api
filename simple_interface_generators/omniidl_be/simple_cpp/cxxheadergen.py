@@ -111,6 +111,7 @@ class Walker(idlvisitor.AstVisitor):
         self.cxxheader.out('public:')
         self.cxxheader.inc_indent()
         # Write a pure virtual destructor...
+        self.cxxheader.out('static const char* const INTERFACE_NAME = "' + node.simplecxxscoped + '";')
         self.cxxheader.out('virtual ~' + node.simplename + '() {}')
         for n in node.contents():
             n.accept(self)
@@ -232,7 +233,7 @@ class Walker(idlvisitor.AstVisitor):
         self.cxxheader.out('} ' + node.simplename + ';')
     
     def visitAttribute(self, node):
-        typename = simplecxx.typeToSimpleCXX(node.attrType())
+        typename = simplecxx.typeToSimpleCXX(node.attrType(), is_ret=1)
         typenameC = simplecxx.typeToSimpleCXX(node.attrType(), is_const=1)
         possibleWarnUnused = simplecxx.shouldWarnIfUnused(node.attrType());
         if simplecxx.doesTypeNeedLength(node.attrType()):
@@ -252,7 +253,7 @@ class Walker(idlvisitor.AstVisitor):
                                    ') throw(std::exception&) = 0;')
     
     def visitOperation(self, node):
-        rtype = simplecxx.typeToSimpleCXX(node.returnType())
+        rtype = simplecxx.typeToSimpleCXX(node.returnType(), is_ret=True)
         if node.simplename == 'query_interface':
             rtype = 'void*'
         call = 'virtual ' + rtype

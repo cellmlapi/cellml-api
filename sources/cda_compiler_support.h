@@ -2,6 +2,33 @@
 #define compiler_support_h
 
 #include "cda_config.h"
+#include <string>
+
+template<class T>
+class already_AddRefd
+{
+public:
+  already_AddRefd(T* aPtr)
+    : mPtr(aPtr)
+  {
+  }
+
+  ~already_AddRefd()
+  {
+  }
+
+  operator T*() const
+  {
+    return mPtr;
+  }
+
+  T* getPointer() const
+  {
+    return mPtr;
+  }
+private:
+  T* mPtr;
+};
 
 #ifdef _MSC_VER
 #undef WIN32
