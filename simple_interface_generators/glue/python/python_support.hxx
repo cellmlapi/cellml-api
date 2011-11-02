@@ -36,6 +36,7 @@
 #include <pythonrun.h>
 #include <ceval.h>
 #include <string>
+#include <stddef.h>
 #include "Utilities.hxx"
 
 #ifndef Py_TYPE
@@ -137,7 +138,7 @@ PUBLIC_PYTHONSUPPORT_PRE class PUBLIC_PYTHONSUPPORT_POST P2PyFactory
 public:
   PUBLIC_PYTHONSUPPORT_PRE P2PyFactory(const char* aIfaceName) PUBLIC_PYTHONSUPPORT_POST;
   virtual void* create(PyObject* aObj) = 0;
-  static void* createByIface(const char* aIface, PyObject* aObj);
+  static void* createByIface(const std::string& aIface, PyObject* aObj);
 
 private:
   static std::map<std::string, P2PyFactory*> sLookup;
@@ -177,13 +178,13 @@ public:
     return mObject;
   }
 
-  PUBLIC_PYTHONSUPPORT_PRE void* query_interface(const char* id)
+  PUBLIC_PYTHONSUPPORT_PRE void* query_interface(const std::string& id)
     throw(std::exception&) PUBLIC_PYTHONSUPPORT_POST;
 
-  PUBLIC_PYTHONSUPPORT_PRE char** supported_interfaces(uint32_t* len)
+  PUBLIC_PYTHONSUPPORT_PRE std::vector<std::string> supported_interfaces()
     throw() PUBLIC_PYTHONSUPPORT_POST;
 
-  PUBLIC_PYTHONSUPPORT_PRE char* objid() throw(std::exception&) PUBLIC_PYTHONSUPPORT_POST;
+  PUBLIC_PYTHONSUPPORT_PRE std::string objid() throw(std::exception&) PUBLIC_PYTHONSUPPORT_POST;
 
 protected:
   PyObject* mObject;

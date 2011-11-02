@@ -234,7 +234,7 @@ class CToPythonWalker(idlvisitor.AstVisitor):
         if returns.kind() == idltype.tk_void:
             rettype = 'void'
         else:
-            rettype = typeinfo.GetTypeInformation(returns, self).pcmType(isRet=1)
+            rettype = typeinfo.GetTypeInformation(returns, self).pcmType(isRet=2)
 
         paramsigs = []
         i = 0
@@ -243,8 +243,6 @@ class CToPythonWalker(idlvisitor.AstVisitor):
             p.pyname = 'pyparam%u' % i
             i = i + 1
             p.ti = typeinfo.GetTypeInformation(p.paramType(), self)
-            if p.ti.has_length:
-                paramsigs.append('uint32_t _length_' + p.pcmname)
             paramsigs.append(p.ti.pcmType(isOut=p.is_out()) + ' ' + p.pcmname)
         paramsig = string.join(paramsigs, ', ')
         self.hxx.out('PUBLIC_@modname@_PRE @rettype@ @cxxName@(@paramsig@) throw(std::exception&) PUBLIC_@modname@_POST;',

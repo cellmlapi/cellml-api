@@ -16,11 +16,8 @@ get_xpcom_IObject_objid(PyObject* aSelf, PyObject* aArgs, PyObject* aKwds)
     return NULL;
   }
   iface::XPCOM::IObject * native = reinterpret_cast<iface::XPCOM::IObject*>(PyCObject_AsVoidPtr(cobj));
-  char* ret = native->objid();
-  PyObject* pyret = PyString_FromString(ret);
-  free(ret);
-
-  return pyret;
+  std::string ret = native->objid();
+  return PyString_FromString(ret.c_str());
 }
 
 static PyMethodDef xpcom_IObjectMethods[] = {

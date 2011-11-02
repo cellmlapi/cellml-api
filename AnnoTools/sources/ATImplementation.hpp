@@ -16,12 +16,12 @@ class CDAStringAnnotationImpl
 public:
   CDA_IMPL_ID
   CDA_IMPL_REFCOUNT
-  CDA_IMPL_QI2(cellml_services::StringAnnotation, cellml_api::UserData)
+  CDA_IMPL_QI2(cellml_services::StringAnnotation, cellml_api::UserData);
 
-  CDAStringAnnotationImpl(const wchar_t* aValue) throw();
+  CDAStringAnnotationImpl(const std::wstring& aValue) throw();
 
-  void value(const wchar_t* aValue) throw(std::exception&);
-  wchar_t* value() throw(std::exception&);
+  void value(const std::wstring& aValue) throw(std::exception&);
+  std::wstring value() throw(std::exception&);
 
 private:
   std::wstring mString;
@@ -38,7 +38,7 @@ public:
   CDAObjectAnnotationImpl(iface::XPCOM::IObject* aValue) throw();
 
   void value(iface::XPCOM::IObject* aValue) throw(std::exception&);
-  iface::XPCOM::IObject* value() throw(std::exception&);
+  already_AddRefd<iface::XPCOM::IObject> value() throw(std::exception&);
 
 private:
   ObjRef<iface::XPCOM::IObject> mObject;
@@ -55,20 +55,20 @@ public:
   CDAAnnotationSetImpl() throw();
   ~CDAAnnotationSetImpl() throw();
 
-  wchar_t* prefixURI() throw(std::exception&);
+  std::wstring prefixURI() throw(std::exception&);
   void setStringAnnotation(iface::cellml_api::CellMLElement* aElement,
-                           const wchar_t* aKey,
-                           const wchar_t* aValue)
+                           const std::wstring& aKey,
+                           const std::wstring& aValue)
      throw(std::exception&);
-  wchar_t* getStringAnnotation(iface::cellml_api::CellMLElement* aElement,
-                               const wchar_t* aKey)
+  std::wstring getStringAnnotation(iface::cellml_api::CellMLElement* aElement,
+				   const std::wstring& aKey)
      throw(std::exception&);
   void setObjectAnnotation(iface::cellml_api::CellMLElement* aElement,
-                           const wchar_t* aKey,
+                           const std::wstring& aKey,
                            iface::XPCOM::IObject* aValue)
      throw(std::exception&);
-  iface::XPCOM::IObject* getObjectAnnotation(iface::cellml_api::CellMLElement* aElement,
-                                             const wchar_t* aKey)
+  already_AddRefd<iface::XPCOM::IObject> getObjectAnnotation(iface::cellml_api::CellMLElement* aElement,
+							     const std::wstring& aKey)
      throw(std::exception&);
 private:
   std::wstring mPrefixURI;
@@ -88,7 +88,7 @@ public:
   {
   }
 
-  iface::cellml_services::AnnotationSet* createAnnotationSet()
+  already_AddRefd<iface::cellml_services::AnnotationSet> createAnnotationSet()
     throw(std::exception&)
   {
     return new CDAAnnotationSetImpl();

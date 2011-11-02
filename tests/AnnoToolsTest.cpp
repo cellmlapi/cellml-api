@@ -48,12 +48,10 @@ AnnoToolsTest::testAnnotationToolService()
 void
 AnnoToolsTest::testAnnotationSet()
 {
-  wchar_t* str = mAS->prefixURI();
-  CPPUNIT_ASSERT(str);
+  std::wstring str = mAS->prefixURI();
 #define PREFIX L"http://www.cellml.org/tools/annotools/set"
-  CPPUNIT_ASSERT(!wcsncmp(str, PREFIX, sizeof(PREFIX)/sizeof(PREFIX[0]) - 1));
+  CPPUNIT_ASSERT(!wcsncmp(str.c_str(), PREFIX, sizeof(PREFIX)/sizeof(PREFIX[0]) - 1));
 #undef PREFIX
-  free(str);
 }
 
 void
@@ -70,17 +68,13 @@ AnnoToolsTest::testObjectAnnotation()
   iface::XPCOM::IObject* oa = mAS->getObjectAnnotation(m, L"theloader");
 
   CPPUNIT_ASSERT(oa);
-  char* o1 = oa->objid();
-  char* o2 = ml->objid();
-  CPPUNIT_ASSERT(!strcmp(o1, o2));
-  free(o1);
-  free(o2);
+  std::string o1 = oa->objid();
+  std::string o2 = ml->objid();
+  CPPUNIT_ASSERT(o1 == o2);
 
   oa->release_ref();
 
-  wchar_t* str = mAS->prefixURI();
-  std::wstring fstr = str;
-  free(str);
+  std::wstring fstr = mAS->prefixURI();
   fstr += L"theloader";
 
   oa = m->getUserData(fstr.c_str());
@@ -107,13 +101,10 @@ AnnoToolsTest::testStringAnnotation()
   
   CPPUNIT_ASSERT_NO_THROW(mAS->setStringAnnotation(m, L"thestring", L"hello"));
 
-  wchar_t* anno = mAS->getStringAnnotation(m, L"thestring");
-  CPPUNIT_ASSERT(!wcscmp(anno, L"hello"));
-  free(anno);
+  std::wstring anno = mAS->getStringAnnotation(m, L"thestring");
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"hello"), anno);
 
-  wchar_t* str = mAS->prefixURI();
-  std::wstring fstr = str;
-  free(str);
+  std::wstring fstr = mAS->prefixURI();
   fstr += L"thestring";
 
   iface::cellml_api::UserData* oa = m->getUserData(fstr.c_str());

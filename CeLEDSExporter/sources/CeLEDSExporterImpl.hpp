@@ -21,14 +21,14 @@ public:
   CDA_CodeExporter(iface::cellml_services::DictionaryGenerator *langDictGen) throw();
   ~CDA_CodeExporter() {};
 
-  wchar_t* generateCode(iface::cellml_api::Model* model)
+  std::wstring generateCode(iface::cellml_api::Model* model)
     throw(std::exception&);
 
 private:
   // get CCGS code generator, setting patterns using the XML language definition file
-  iface::cellml_services::CodeGenerator* getExplicitCodeGenerator() 
+  already_AddRefd<iface::cellml_services::CodeGenerator> getExplicitCodeGenerator() 
     throw(std::exception&);
-  iface::cellml_services::IDACodeGenerator* getImplicitCodeGenerator() 
+  already_AddRefd<iface::cellml_services::IDACodeGenerator> getImplicitCodeGenerator() 
     throw(std::exception&);
   void transferCommonCodeAttributes(iface::cellml_services::CodeGenerator* aCG);
   int generateCodeCommonHeader(std::wstring&,
@@ -42,20 +42,20 @@ private:
 
   // get a section of code from dictionary, replacing 
   // occurances of solver parameters where required
-  std::wstring getCodeSection(const wchar_t* name)
+  std::wstring getCodeSection(const std::wstring& name)
     throw(std::exception&);
 
   // Get algebraic variable calculations from rate calculation section
   // for calculating all algebraic variables at once
-  std::wstring getAlgebraic(const wchar_t* ratesCalc, const wchar_t* algebraicNamePattern)
+  std::wstring getAlgebraic(const std::wstring& ratesCalc, const std::wstring& algebraicNamePattern)
     throw(std::exception&);
 
   // replace a parameter in a string with it's value, eg replace <MAXSTEP> with 0.1
-  void replaceParameter(std::wstring &code, const wchar_t* parameter, double value)
+  void replaceParameter(std::wstring &code, const std::wstring& parameter, double value)
     throw(std::exception&);
 
   // return definitions of extra functions required
-  std::wstring defineExtraFunctions(const std::wstring output)
+  std::wstring defineExtraFunctions(const std::wstring& output)
     throw(std::exception&);
 
   std::wstring listVariablesByState(iface::cellml_services::CodeInformation *cci, int definedFilter)
@@ -80,12 +80,12 @@ private:
   ObjRef<iface::cellml_services::DictionaryGenerator> mLangDictGen;
   ObjRef<iface::cellml_services::LanguageDictionary> mLangDict, mCCGSLangDict;
   double mRangeStart, mRangeEnd, mAbsTol, mRelTol, mMaxStep;
-  wchar_t*
+  std::wstring
   getTextContents(iface::dom::Node* inNode)
     throw(std::exception&);
 
-  wchar_t* generateCodeExplicit(iface::cellml_api::Model* aModel);
-  wchar_t* generateCodeImplicit(iface::cellml_api::Model* aModel);
+  std::wstring generateCodeExplicit(iface::cellml_api::Model* aModel);
+  std::wstring generateCodeImplicit(iface::cellml_api::Model* aModel);
 
   typedef enum { CODESTYLE_EXPLICIT, CODESTYLE_IMPLICIT } codestyle_t;
   codestyle_t mCodeStyle;
@@ -102,19 +102,19 @@ public:
   CDA_CeLEDSExporterBootstrap() {};
   ~CDA_CeLEDSExporterBootstrap() {};
 
-  iface::cellml_services::DictionaryGenerator* createDictGenerator(const wchar_t* URL)
+  already_AddRefd<iface::cellml_services::DictionaryGenerator> createDictGenerator(const std::wstring& URL)
     throw(std::exception&);
 
-  iface::cellml_services::DictionaryGenerator* createDictGeneratorFromText(const wchar_t* XMLText)
+  already_AddRefd<iface::cellml_services::DictionaryGenerator> createDictGeneratorFromText(const std::wstring& XMLText)
     throw(std::exception&);
 
-  iface::cellml_services::CodeExporter* createExporter(const wchar_t* URL)
+  already_AddRefd<iface::cellml_services::CodeExporter> createExporter(const std::wstring& URL)
     throw(std::exception&);
 
-  iface::cellml_services::CodeExporter* createExporterFromText(const wchar_t* XMLText)
+  already_AddRefd<iface::cellml_services::CodeExporter> createExporterFromText(const std::wstring& XMLText)
     throw(std::exception&);
 
-  wchar_t* loadError() throw();
+  std::wstring loadError() throw();
 
 private:
   std::wstring mLoadError;

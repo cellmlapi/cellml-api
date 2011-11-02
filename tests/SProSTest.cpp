@@ -42,7 +42,7 @@ SProSTest::testSProSBootstrap()
   CPPUNIT_ASSERT(es);
   RETURN_INTO_OBJREF(ms, iface::SProS::ModelSet, es->models());
   RETURN_INTO_OBJREF(msi, iface::SProS::BaseIterator, ms->iterateElements());
-  CPPUNIT_ASSERT(NULL == msi->nextElement());
+  CPPUNIT_ASSERT(NULL == msi->nextElement().getPointer());
 
 // 
 //     /**
@@ -69,7 +69,7 @@ SProSTest::testSProSBootstrap()
   es = already_AddRefd<iface::SProS::SEDMLElement>(sb->parseSEDMLFromText(TRIVIAL_SEDML, L""));
   ms = already_AddRefd<iface::SProS::ModelSet>(es->models());
   msi = already_AddRefd<iface::SProS::BaseIterator>(ms->iterateElements());
-  CPPUNIT_ASSERT(NULL == msi->nextElement());
+  CPPUNIT_ASSERT(NULL == msi->nextElement().getPointer());
 
 // 
 //     /**
@@ -94,7 +94,7 @@ SProSTest::testSProSBootstrap()
   es = already_AddRefd<iface::SProS::SEDMLElement>(sb->makeSEDMLFromElement(de));
   ms = already_AddRefd<iface::SProS::ModelSet>(es->models());
   msi = already_AddRefd<iface::SProS::BaseIterator>(ms->iterateElements());
-  CPPUNIT_ASSERT(NULL == msi->nextElement());
+  CPPUNIT_ASSERT(NULL == msi->nextElement().getPointer());
 //   };
 }
 // 
@@ -600,7 +600,7 @@ SProSTest::testSProSNamedElementSet()
 
   nei->nextNamedElement()->release_ref();
   nei->nextNamedElement()->release_ref();
-  CPPUNIT_ASSERT(nei->nextNamedElement() == NULL);
+  CPPUNIT_ASSERT(nei->nextNamedElement().getPointer() == NULL);
 //   };
 }
 
@@ -935,7 +935,7 @@ SProSTest::testSProSTaskSet()
 //     Task nextTask();
   RETURN_INTO_OBJREF(t2, iface::SProS::Task, ti->nextTask());
   CPPUNIT_ASSERT(!CDA_objcmp(t1, t2));
-  CPPUNIT_ASSERT(ti->nextTask() == NULL);
+  CPPUNIT_ASSERT(ti->nextTask().getPointer() == NULL);
 
 //   };
 // 
@@ -963,7 +963,7 @@ SProSTest::testSProSTaskSet()
   CPPUNIT_ASSERT(sri2 == L"simulation1");  
 
   t1->simulationReferenceIdentifier(L"simulation2");
-  CPPUNIT_ASSERT(!t1->simulationReference());
+  CPPUNIT_ASSERT(!t1->simulationReference().getPointer());
   t1->simulationReference(sr);
   RETURN_INTO_WSTRING(sri3, t1->simulationReferenceIdentifier());
   CPPUNIT_ASSERT(sri3 == L"simulation1");
@@ -987,7 +987,7 @@ SProSTest::testSProSTaskSet()
   CPPUNIT_ASSERT(mri2 == L"model1");
 
   t1->modelReferenceIdentifier(L"model2");
-  CPPUNIT_ASSERT(!t1->modelReference());
+  CPPUNIT_ASSERT(!t1->modelReference().getPointer());
   t1->modelReference(mr);
   RETURN_INTO_WSTRING(mri3, t1->modelReferenceIdentifier());
   CPPUNIT_ASSERT(mri3 == L"model1");

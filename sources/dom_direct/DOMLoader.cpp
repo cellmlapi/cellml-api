@@ -1232,12 +1232,12 @@ static void CDA_XMLStructuredHandler
 iface::dom::Document*
 CDA_DOMImplementation::loadDocument
 (
- const wchar_t* aURL,
+ const std::wstring& aURL,
  std::wstring& aErrorMessage
 )
   throw(std::exception&)
 {
-  char* URL = CDA_wchar_to_UTF8(aURL);
+  char* URL = CDA_wchar_to_UTF8(aURL.c_str());
   char* protRestrict = getenv("CELLML_RESTRICT_PROTOCOL");
   if (protRestrict != NULL)
   {
@@ -1306,12 +1306,12 @@ CDA_DOMImplementation::loadDocument
 iface::dom::Document*
 CDA_DOMImplementation::loadDocumentFromText
 (
- const wchar_t* aText,
+ const std::wstring& aText,
  std::wstring& aErrorMessage
 )
   throw(std::exception&)
 {
-  char* text = CDA_wchar_to_UTF8(aText);
+  char* text = CDA_wchar_to_UTF8(aText.c_str());
 
   CDA_PartialLoad pl = { this, aErrorMessage };
   xmlParserCtxtPtr ctxt =

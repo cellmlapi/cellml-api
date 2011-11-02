@@ -47,22 +47,19 @@ void
 DOMTest::testCreateDocumentType()
 {
   CPPUNIT_ASSERT(dt);
-  wchar_t* n = NULL;
+  std::wstring n;
 
   // Check the name...
   CPPUNIT_ASSERT_NO_THROW(n = dt->name());
-  CPPUNIT_ASSERT_EQUAL(0, wcscmp(n, L"foo"));
-  free(n);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foo"), n);
 
   // Next check the publicId...
   CPPUNIT_ASSERT_NO_THROW(n = dt->publicId());
-  CPPUNIT_ASSERT_EQUAL(0, wcscmp(n, L"bar"));
-  free(n);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"bar"), n);
 
   // Next check the systemId...
   CPPUNIT_ASSERT_NO_THROW(n = dt->systemId());
-  CPPUNIT_ASSERT_EQUAL(0, wcscmp(n, L"baz"));
-  free(n);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"baz"), n);
 
   iface::dom::NamedNodeMap* nnm = NULL;
   CPPUNIT_ASSERT_NO_THROW(nnm = dt->entities());
@@ -103,11 +100,9 @@ DOMTest::testCreateDocument()
   CPPUNIT_ASSERT_EQUAL((int32_t)iface::dom::Node::ELEMENT_NODE, nt);
 
   // Check the document element is in the right namespace...
-  wchar_t* nsURI = NULL;
+  std::wstring nsURI;
   CPPUNIT_ASSERT_NO_THROW(nsURI = de->namespaceURI());
-  CPPUNIT_ASSERT(nsURI);
-  CPPUNIT_ASSERT_EQUAL(0, wcscmp(nsURI, L"http://www.physiome.org/testsuite/1"));
-  free(nsURI);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.physiome.org/testsuite/1"), nsURI);
 
   // Check that the parent of the document element is the document...
   iface::dom::Node* pn;
@@ -132,10 +127,9 @@ DOMTest::testCloneNode()
   CPPUNIT_ASSERT_NO_THROW(de = doc->documentElement());
   CPPUNIT_ASSERT(de);
 
-  wchar_t* ln = de->localName();
+  std::wstring ln = de->localName();
   de->release_ref();
-  CPPUNIT_ASSERT_EQUAL(0, wcscmp(ln, L"tests"));
-  free(ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"tests"), ln);
 
   iface::dom::Node* cn = NULL;
   CPPUNIT_ASSERT_NO_THROW(cn = doc->cloneNode(true));
@@ -148,8 +142,7 @@ DOMTest::testCloneNode()
 
   ln = de->localName();
   de->release_ref();
-  CPPUNIT_ASSERT_EQUAL(0, wcscmp(ln, L"tests"));
-  free(ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"tests"), ln);
 
   doc2->release_ref();
 }
@@ -307,13 +300,11 @@ DOMTest::testLoadDocument()
 
   iface::dom::Element* de = d->documentElement();
 
-  wchar_t* str = de->localName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foo"));
-  free(str);
+  std::wstring str = de->localName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foo"), str);
 
   str = de->namespaceURI();
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.example.org/bar/"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/bar/"), str);
 
   iface::dom::Element* e2 = d->createElementNS(L"http://www.example.org/baz",
                                                L"mybaz");
@@ -347,9 +338,8 @@ DOMTest::testGetElementByTagName()
   CPPUNIT_ASSERT_EQUAL(1, (int)nl->length());
   iface::dom::Node* n = nl->item(0);
   CPPUNIT_ASSERT(n);
-  wchar_t* ln = n->nodeName();
-  CPPUNIT_ASSERT(!wcscmp(ln, L"bar"));
-  free(ln);
+  std::wstring ln = n->nodeName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"bar"), ln);
   n->release_ref();
   nl->release_ref();
 
@@ -357,16 +347,14 @@ DOMTest::testGetElementByTagName()
   CPPUNIT_ASSERT_EQUAL(2, (int)nl->length());
   n = nl->item(0);
   CPPUNIT_ASSERT(n);
-  wchar_t* nu = n->namespaceURI();
-  CPPUNIT_ASSERT(!wcscmp(nu, L"http://www.example.org/test/"));
-  free(nu);
+  std::wstring nu = n->namespaceURI();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/test/"), nu);
   n->release_ref();
 
   n = nl->item(1);
   CPPUNIT_ASSERT(n);
   nu = n->namespaceURI();
-  CPPUNIT_ASSERT(!wcscmp(nu, L"http://www.example.org/bar/"));
-  free(nu);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/bar/"), nu);
   n->release_ref();
 
   nl->release_ref();
@@ -384,8 +372,7 @@ DOMTest::testGetElementByTagName()
   n = nl->item(0);
   CPPUNIT_ASSERT(n);
   ln = n->nodeName();
-  CPPUNIT_ASSERT(!wcscmp(ln, L"bar"));
-  free(ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"bar"), ln);
   n->release_ref();
   nl->release_ref();
 
@@ -394,8 +381,7 @@ DOMTest::testGetElementByTagName()
   n = nl->item(0);
   CPPUNIT_ASSERT(n);
   nu = n->namespaceURI();
-  CPPUNIT_ASSERT(!wcscmp(nu, L"http://www.example.org/test/"));
-  free(nu);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/test/"), nu);
   n->release_ref();
 
   nl->release_ref();

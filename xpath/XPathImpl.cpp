@@ -50,20 +50,20 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathEvaluator);
 
-  iface::xpath::XPathExpression* createExpression(const wchar_t* aExpression,
-                                                  iface::xpath::XPathNSResolver* aResolver)
+  already_AddRefd<iface::xpath::XPathExpression> createExpression(const std::wstring& aExpression,
+								  iface::xpath::XPathNSResolver* aResolver)
     throw(std::exception&);
-  iface::xpath::XPathNSResolver* createNSResolver(iface::dom::Node* aNodeResolver)
+  already_AddRefd<iface::xpath::XPathNSResolver> createNSResolver(iface::dom::Node* aNodeResolver)
     throw();
-  iface::xpath::XPathResult* evaluate(const wchar_t* aExpression,
-                                      iface::dom::Node* aContextNode,
-                                      iface::xpath::XPathNSResolver* aResolver,
-                                      uint16_t aType,
-                                      iface::xpath::XPathResult* aResult)
+  already_AddRefd<iface::xpath::XPathResult> evaluate(const std::wstring& aExpression,
+						      iface::dom::Node* aContextNode,
+						      iface::xpath::XPathNSResolver* aResolver,
+						      uint16_t aType,
+						      iface::xpath::XPathResult* aResult)
     throw(std::exception&);
 };
 
-iface::xpath::XPathEvaluator* CreateXPathEvaluator()
+already_AddRefd<iface::xpath::XPathEvaluator> CreateXPathEvaluator()
 {
   return new CDA_XPathEvaluator();
 }
@@ -183,7 +183,7 @@ public:
 
   uint16_t resultType() throw() { return mType; }
 
-  iface::dom::Node*
+  already_AddRefd<iface::dom::Node>
   singleNodeValue() throw(std::exception&)
   {
     if (iface::xpath::XPathResult::ANY_UNORDERED_NODE_TYPE != mType &&
@@ -207,13 +207,13 @@ public:
      return mNodes.size();
   }
 
-  wchar_t* stringValue() throw(std::exception&)
+  std::wstring stringValue() throw(std::exception&)
   {
     ensureType(iface::xpath::XPathResult::STRING_TYPE);
-    return CDA_wcsdup(mString.c_str());
+    return mString;
   }
 
-  iface::dom::Node* iterateNext() throw(std::exception&)
+  already_AddRefd<iface::dom::Node> iterateNext() throw(std::exception&)
   {
     if (mType != iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE &&
         mType != iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE)
@@ -229,7 +229,7 @@ public:
     return n;
   }
 
-  iface::dom::Node* snapshotItem(uint32_t aIndex) throw(std::exception&)
+  already_AddRefd<iface::dom::Node> snapshotItem(uint32_t aIndex) throw(std::exception&)
   {
     if (!mIsInternal && mType != iface::xpath::XPathResult::UNORDERED_NODE_SNAPSHOT_TYPE &&
         mType != iface::xpath::XPathResult::ORDERED_NODE_SNAPSHOT_TYPE)
@@ -504,7 +504,7 @@ class CDA_XPathExpr
 public:
   CDA_XPathExpr() {};
 
-  iface::xpath::XPathResult* evaluate(iface::dom::Node* aN, uint16_t aCoerceTo, iface::xpath::XPathResult* aR)
+  already_AddRefd<iface::xpath::XPathResult> evaluate(iface::dom::Node* aN, uint16_t aCoerceTo, iface::xpath::XPathResult* aR)
     throw(std::exception&)
   {
     CDA_XPathContext ctx(aN, 1, 1);
@@ -513,10 +513,10 @@ public:
     r->makeExternal();
 
     r->add_ref();
-    return r;
+    return r.getPointer();
   }
 
-  virtual CDA_XPathResult* eval(CDA_XPathContext& aCtx) = 0;
+  virtual already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aCtx) = 0;
 };
 
 class CDA_XPathPath
@@ -525,7 +525,7 @@ class CDA_XPathPath
 public:
   CDA_XPathPath() {}
 
-  virtual CDA_XPathResult* eval(CDA_XPathContext& aCtx, CDA_XPathResult* aStarting) = 0;
+  virtual already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aCtx, CDA_XPathResult* aStarting) = 0;
 };
 
 class CDA_XPathNodeTest
@@ -543,7 +543,7 @@ class CDA_XPathOrExpr
 public:
   CDA_XPathOrExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2) : mExpr1(e1), mExpr2(e2) {};
 
-  CDA_XPathResult* eval(CDA_XPathContext& aCtx)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aCtx)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aCtx));
     RETURN_INTO_OBJREF(r2, CDA_XPathResult, mExpr2->eval(aCtx));
@@ -553,7 +553,7 @@ public:
     r1->mBoolean = r1->mBoolean || r2->mBoolean;
 
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
   CDA_IMPL_ID;
@@ -571,7 +571,7 @@ public:
   CDA_XPathAndExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
     : mExpr1(e1), mExpr2(e2) {}
 
-  CDA_XPathResult* eval(CDA_XPathContext& aCtx)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aCtx)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aCtx));
     RETURN_INTO_OBJREF(r2, CDA_XPathResult, mExpr2->eval(aCtx));
@@ -581,7 +581,7 @@ public:
     r1->mBoolean = r1->mBoolean && r2->mBoolean;
 
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
   CDA_IMPL_ID;
@@ -599,7 +599,7 @@ public:
   CDA_XPathComparisonExpr(CDA_XPathExpr* e1, CDA_XPathExpr* e2)
     : mExpr1(e1), mExpr2(e2) {};
 
-  CDA_XPathResult* eval(CDA_XPathContext& aCtx)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aCtx)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aCtx));
     RETURN_INTO_OBJREF(r2, CDA_XPathResult, mExpr2->eval(aCtx));
@@ -610,7 +610,7 @@ public:
     r1->mBoolean = result;
 
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
   bool compareRaw(CDA_XPathResult* e1, CDA_XPathResult* e2)
@@ -948,7 +948,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult*
+  already_AddRefd<CDA_XPathResult>
   eval(CDA_XPathContext& aCtx)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aCtx));
@@ -958,7 +958,7 @@ public:
 
     r1->mNumber = r1->mNumber + r2->mNumber;
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
 private:
@@ -976,7 +976,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult*
+  already_AddRefd<CDA_XPathResult>
   eval(CDA_XPathContext& aCtx)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aCtx));
@@ -986,7 +986,7 @@ public:
 
     r1->mNumber = r1->mNumber - r2->mNumber;
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
 private:
@@ -1004,7 +1004,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult*
+  already_AddRefd<CDA_XPathResult>
   eval(CDA_XPathContext& aCtx)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aCtx));
@@ -1014,7 +1014,7 @@ public:
 
     r1->mNumber = r1->mNumber * r2->mNumber;
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
 private:
@@ -1032,7 +1032,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult*
+  already_AddRefd<CDA_XPathResult>
   eval(CDA_XPathContext& aContext)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aContext));
@@ -1042,7 +1042,7 @@ public:
 
     r1->mNumber = r1->mNumber / r2->mNumber;
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
 private:
@@ -1060,7 +1060,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult*
+  already_AddRefd<CDA_XPathResult>
   eval(CDA_XPathContext& aContext)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aContext));
@@ -1071,7 +1071,7 @@ public:
     // Truncating remainder (per the spec).
     r1->mNumber = r1->mNumber - floor(r1->mNumber / r2->mNumber) * r2->mNumber;
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
 private:
@@ -1089,7 +1089,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult*
+  already_AddRefd<CDA_XPathResult>
   eval(CDA_XPathContext& aContext)
   {
     RETURN_INTO_OBJREF(r, CDA_XPathResult, mExpr->eval(aContext));
@@ -1097,7 +1097,7 @@ public:
 
     r->mNumber = -r->mNumber;
     r->add_ref();
-    return r;
+    return r.getPointer();
   }
   
 private:
@@ -1117,7 +1117,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     RETURN_INTO_OBJREF(r1, CDA_XPathResult, mExpr1->eval(aContext));
     RETURN_INTO_OBJREF(r2, CDA_XPathResult, mExpr2->eval(aContext));
@@ -1145,7 +1145,7 @@ public:
     }
 
     r1->add_ref();
-    return r1;
+    return r1.getPointer();
   }
 
 private:
@@ -1162,7 +1162,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     // Make a set using the node...
     RETURN_INTO_OBJREF(r, CDA_XPathResult, new CDA_XPathResult());
@@ -1185,7 +1185,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     RETURN_INTO_OBJREF(r, CDA_XPathResult, mExpr->eval(aContext));
     return mPath->eval(aContext, r);
@@ -1206,7 +1206,7 @@ public:
   CDA_XPathApplyPredicateExpr(CDA_XPathExpr* ex, CDA_XPathExpr* pred) :
     mExpr(ex), mPred(pred) {};
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     RETURN_INTO_OBJREF(r, CDA_XPathResult, mExpr->eval(aContext));
     uint16_t t = r->mType;
@@ -1230,7 +1230,7 @@ public:
     }
     
     rn->add_ref();
-    return rn;
+    return rn.getPointer();
   }
 
 private:
@@ -1247,7 +1247,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     // XXX this is host language independent, but this is a host language independent
     //     API, so we need to provide a way to set variable values.
@@ -1263,12 +1263,12 @@ class CDA_XPathLiteralExpr
   : public CDA_XPathExpr
 {
 public:
-  CDA_XPathLiteralExpr(const wchar_t* aLit) : mLit(aLit) {};
+  CDA_XPathLiteralExpr(const std::wstring& aLit) : mLit(aLit) {};
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     CDA_XPathResult* r = new CDA_XPathResult();
     r->mType = iface::xpath::XPathResult::STRING_TYPE;
@@ -1290,7 +1290,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     CDA_XPathResult* r = new CDA_XPathResult();
     r->mType = iface::xpath::XPathResult::NUMBER_TYPE;
@@ -1347,7 +1347,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(xpath::XPathExpression);
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext)
   {
     std::list<CDA_XPathResult*> args;
     XPCOMContainerRAII<std::list<CDA_XPathResult*> > argsRAII(args);
@@ -1508,9 +1508,7 @@ public:
           DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
           if (el != NULL)
           {
-            wchar_t* lw = el->getAttributeNS(L"http://www.w3.org/XML/1998/namespace", L"lang");
-            l = lw;
-            free(lw);
+            l = el->getAttributeNS(L"http://www.w3.org/XML/1998/namespace", L"lang");
             if (l != L"")
               break;
           }
@@ -1563,9 +1561,7 @@ public:
 
         CDA_XPathResult* r = new CDA_XPathResult();
         r->mType = iface::xpath::XPathResult::NUMBER_TYPE;
-        wchar_t* v = n->localName();
-        r->mString = v;
-        free(v);
+        r->mString = n->localName();
         return r;
       }
       break;
@@ -1593,9 +1589,7 @@ public:
 
         CDA_XPathResult* r = new CDA_XPathResult();
         r->mType = iface::xpath::XPathResult::NUMBER_TYPE;
-        wchar_t* v = n->nodeName();
-        r->mString = v;
-        free(v);
+        r->mString = n->nodeName();
         return r;
       }
       else if (mName == L"namespace-uri")
@@ -1620,9 +1614,7 @@ public:
 
         CDA_XPathResult* r = new CDA_XPathResult();
         r->mType = iface::xpath::XPathResult::NUMBER_TYPE;
-        wchar_t* v = n->namespaceURI();
-        r->mString = v;
-        free(v);
+        r->mString = n->namespaceURI();
         return r;
       }
       else if (mName == L"normalize-space")
@@ -1692,7 +1684,7 @@ public:
         
         r->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
         r->add_ref();
-        return r;
+        return r.getPointer();
       }
       break;
 
@@ -1752,7 +1744,7 @@ public:
         
         r->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
         r->add_ref();
-        return r;
+        return r.getPointer();
       }
       else if (mName == L"string-length")
       {
@@ -1965,7 +1957,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI0;
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext, CDA_XPathResult* aInput)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext, CDA_XPathResult* aInput)
   {
     RETURN_INTO_OBJREF(doc, iface::dom::Document, aContext.mNode->ownerDocument());
     aInput->cleanup();
@@ -2003,7 +1995,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI0;
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext, CDA_XPathResult* aInput)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext, CDA_XPathResult* aInput)
   {
     CDA_XPathContext ctx(NULL, mReverse ? aInput->mNodes.size() + 1 : 0,
                          aInput->mNodes.size());
@@ -2031,7 +2023,7 @@ public:
     if (mPath == NULL)
     {
       output->add_ref();
-      return output;
+      return output.getPointer();
     }
     else
       return mPath->eval(aContext, output);
@@ -2054,7 +2046,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI0;
 
-  CDA_XPathResult* eval(CDA_XPathContext& aContext, CDA_XPathResult* aInput)
+  already_AddRefd<CDA_XPathResult> eval(CDA_XPathContext& aContext, CDA_XPathResult* aInput)
   {
     std::set<iface::dom::Node*> seen;
     RETURN_INTO_OBJREF(r, CDA_XPathResult, new CDA_XPathResult());
@@ -2453,7 +2445,7 @@ public:
     if (mPath == NULL)
     {
       r->add_ref();
-      return r;
+      return r.getPointer();
     }
     else
       return mPath->eval(aContext, r);
@@ -2584,7 +2576,7 @@ public:
   std::list<CDA_XPathExpr*> mPredicates;
   XPCOMContainerRAII<std::list<CDA_XPathExpr*> > mPredicatesRAII;
 
-  CDA_XPathPath* makePath(CDA_XPathPath* aInner)
+  already_AddRefd<CDA_XPathPath> makePath(CDA_XPathPath* aInner)
   {
     ObjRef<CDA_XPathPath> inner(aInner);
     std::list<CDA_XPathExpr*>::iterator ei = mPredicates.end();
@@ -2612,7 +2604,7 @@ public:
 
   // We use recursive-descent parsing since using tools like Bison is difficult for
   // potentially UCS4 encoded data.
-  CDA_XPathExpr* parse()
+  already_AddRefd<CDA_XPathExpr> parse()
   {
     std::list<CDA_XPathExpr*> mExprs;
     XPCOMContainerRAII<std::list<CDA_XPathExpr*> > xcrpath(mExprs);
@@ -2632,7 +2624,7 @@ public:
           back = already_AddRefd<CDA_XPathExpr>(new CDA_XPathOrExpr(n, back));
         }
         back->add_ref();
-        return back;
+        return back.getPointer();
       }
       else
         mExprs.push_back(ex);
@@ -2645,7 +2637,7 @@ private:
   std::wstring::const_iterator mParseIt;
   ObjRef<iface::xpath::XPathNSResolver> mResolver;
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseAndExpr()
   {
     std::list<CDA_XPathExpr*> mExprs;
@@ -2666,7 +2658,7 @@ private:
           back = already_AddRefd<CDA_XPathExpr>(new CDA_XPathAndExpr(n, back));
         }
         back->add_ref();
-        return back;
+        return back.getPointer();
       }
       else
         mExprs.push_back(ex);
@@ -2674,7 +2666,7 @@ private:
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseEqualityExpr()
   {
     std::list<std::pair<CDA_XPathExpr*, const char*> > mExprs;
@@ -2704,13 +2696,13 @@ private:
             back = already_AddRefd<CDA_XPathExpr>(new CDA_XPathNotEqualExpr(n, back));
         }
         back->add_ref();
-        return back;
+        return back.getPointer();
       }
       consumeName(); // either = or !=
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseRelationalExpr()
   {
     std::list<std::pair<CDA_XPathExpr*, const char*> > mExprs;
@@ -2748,13 +2740,13 @@ private:
             back = already_AddRefd<CDA_XPathExpr>(new CDA_XPathGreaterEqualExpr(n, back));
         }
         back->add_ref();
-        return back;
+        return back.getPointer();
       }
       consumeName(); // <, >, <=, or >=
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseAdditiveExpr()
   {
     std::list<std::pair<CDA_XPathExpr*, const char*> > mExprs;
@@ -2784,13 +2776,13 @@ private:
             back = already_AddRefd<CDA_XPathExpr>(new CDA_XPathMinusExpr(n, back));
         }
         back->add_ref();
-        return back;
+        return back.getPointer();
       }
       consumeName(); // + or -
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseMultiplicativeExpr()
   {
     std::list<std::pair<CDA_XPathExpr*, const char*> > mExprs;
@@ -2824,13 +2816,13 @@ private:
             back = already_AddRefd<CDA_XPathExpr>(new CDA_XPathModExpr(n, back));
         }
         back->add_ref();
-        return back;
+        return back.getPointer();
       }
       consumeName(); // *, div, or mod
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseUnaryExpr()
   {
     bool unaryMinus = false;
@@ -2851,7 +2843,7 @@ private:
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseUnionExpr()
   {
     std::list<CDA_XPathExpr*> mExprs;
@@ -2872,7 +2864,7 @@ private:
           back = already_AddRefd<CDA_XPathExpr>(new CDA_XPathUnionExpr(n, back));
         }
         back->add_ref();
-        return back;
+        return back.getPointer();
       }
       else
         mExprs.push_back(ex);
@@ -2880,7 +2872,7 @@ private:
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parsePathExpr()
   {
     {
@@ -2905,7 +2897,7 @@ private:
     else
     {
       fex->add_ref();
-      return fex;
+      return fex.getPointer();
     }
     consumeName();
 
@@ -2922,7 +2914,7 @@ private:
     return new CDA_XPathApplyFilterExpr(fex, asp);
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parseFilterExpr()
   {
     RETURN_INTO_OBJREF(pe, CDA_XPathExpr, parsePrimaryExpr());
@@ -2934,7 +2926,7 @@ private:
       if (!expectName(L"["))
       {
         pe->add_ref();
-        return pe;
+        return pe.getPointer();
       }
       consumeName();
 
@@ -2949,7 +2941,7 @@ private:
     }
   }
 
-  CDA_XPathExpr*
+  already_AddRefd<CDA_XPathExpr>
   parsePrimaryExpr()
   {
     RETURN_INTO_WSTRING(n, peekName());
@@ -2960,24 +2952,24 @@ private:
       if (expr == NULL || !expectName(L")"))
         return NULL;
       expr->add_ref();
-      return expr;
+      return expr.getPointer();
     }
     else  if (n == L"$")
     {
       consumeName();
       std::wstring nsURI;
-      RETURN_INTO_WSTRING(localName, parseQName(nsURI));
+      bool success = false;
+      RETURN_INTO_WSTRING(localName, parseQName(nsURI, success));
+      if (!success)
+        return NULL;
       return new CDA_XPathVariableReferenceExpr(nsURI, localName);
     }
 
     {
-      wchar_t* lit = parseLiteral();
-      if (lit != NULL)
-      {
-        CDA_XPathLiteralExpr* xle = new CDA_XPathLiteralExpr(lit);
-        free(lit);
-        return xle;
-      }
+      bool success = false;
+      std::wstring lit(parseLiteral(success));
+      if (success)
+        return new CDA_XPathLiteralExpr(lit);
     }
 
     {
@@ -2988,11 +2980,10 @@ private:
     }
 
     std::wstring nsURI;
-    wchar_t* funcNameS = parseFunctionName(nsURI);
-    if (funcNameS == NULL)
+    bool success = false;
+    std::wstring funcName = parseFunctionName(nsURI, success);
+    if (!success)
       return NULL;
-    std::wstring funcName(funcNameS);
-    free(funcNameS);
 
     if (!expectName(L"("))
       return NULL;
@@ -3022,7 +3013,7 @@ private:
     return new CDA_XPathFunctionCallExpr(nsURI, funcName, exprs);
   }
 
-  CDA_XPathPath*
+  already_AddRefd<CDA_XPathPath>
   parseLocationPath()
   {
     RETURN_INTO_WSTRING(n, peekName());
@@ -3051,7 +3042,7 @@ private:
     return parseRelativeLocationPath();
   }
 
-  CDA_XPathPath*
+  already_AddRefd<CDA_XPathPath>
   parseRelativeLocationPath()
   {
     std::list<CDA_XPathStep*> steps;
@@ -3090,7 +3081,7 @@ private:
 
         if (innerPath)
           innerPath->add_ref();
-        return innerPath;
+        return innerPath.getPointer();
       }
     }
   }
@@ -3212,7 +3203,7 @@ private:
     }
   }
 
-  CDA_XPathStep*
+  already_AddRefd<CDA_XPathStep>
   parseStep()
   {
     RETURN_INTO_WSTRING(n, peekName());
@@ -3243,7 +3234,7 @@ private:
         if (!expectName(L"["))
         {
           step->add_ref();
-          return step;
+          return step.getPointer();
         }
 
         RETURN_INTO_OBJREF(expr, CDA_XPathExpr, parse());
@@ -3259,7 +3250,7 @@ private:
     }
   }
 
-  CDA_XPathNodeTest*
+  already_AddRefd<CDA_XPathNodeTest>
   parseNodeTest()
   {
     // NameTest, NodeType, or processing-instruction(literal)
@@ -3269,15 +3260,13 @@ private:
       consumeName();
       if (!expectName(L"("))
         return NULL;
-      wchar_t * l = parseLiteral();
+      bool success = false;
+      std::wstring l = parseLiteral(success);
       CDA_XPathNodeTest* ret;
-      if (l == NULL)
+      if (!success)
         ret = new CDA_XPathNodeTypeTest(CDA_XPathNodeProcessingInstruction);
       else
-      {
         ret = new CDA_XPathProcessingInstructionTest(l);
-        free(l);
-      }
 
       if (!expectName(L")"))
         return NULL;
@@ -3330,18 +3319,17 @@ private:
     return false;
   }
 
-  CDA_XPathNameTest*
+  already_AddRefd<CDA_XPathNameTest>
   parseNameTest()
   {
-    wchar_t* p = parseNCName();
-    if (p == NULL)
+    bool success = false;
+    std::wstring ns = parseNCName(success);
+    if (!success)
     {
       if (!expectName(L"*"))
         return NULL;
       return new CDA_XPathNameTest(L"*", L"*");
     }
-    std::wstring ns = p;
-    free(p);
 
     if (!expectName(L":"))
     {
@@ -3351,12 +3339,11 @@ private:
       return new CDA_XPathNameTest(L"*", ns);
     }
 
-    wchar_t* r = mResolver->lookupNamespaceURI(ns.c_str());
-    ns = r;
-    free(r);
+    ns = mResolver->lookupNamespaceURI(ns);
 
-    p = parseNCName();
-    if (p == NULL)
+    success = false;
+    std::wstring p = parseNCName(success);
+    if (!success)
     {
       if (!expectName(L"*"))
         return NULL;
@@ -3369,7 +3356,6 @@ private:
     }
 
     CDA_XPathNameTest* nt = new CDA_XPathNameTest(ns, p);
-    free(p);
 
     RETURN_INTO_WSTRING(pn, peekName());
     if (pn == L"(")
@@ -3443,13 +3429,13 @@ private:
     return tParseIt - mParseIt;
   }
 
-  wchar_t*
+  std::wstring
   peekName()
   {
     consumeWhitespace();
 
     std::wstring ret(mParseIt, mParseIt + nameLength());
-    return CDA_wcsdup(ret.c_str());
+    return ret;
   }
 
   void
@@ -3473,14 +3459,17 @@ private:
     return false;
   }
 
-  wchar_t*
-  parseNCName()
+  std::wstring
+  parseNCName(bool& aSuccess)
   {
     consumeWhitespace();
 
     std::wstring::const_iterator tParseIt = mParseIt;
     if (tParseIt == mParseStr.end())
-      return NULL;
+    {
+      aSuccess = false;
+      return L"";
+    }
 
     // NameStartChar - ':'
     wchar_t c = *tParseIt;
@@ -3491,7 +3480,10 @@ private:
           (c >= 0x2070 && c <= 0x218F) || (c >= 0x2C00 && c <= 0x2FEF) ||
           (c >= 0x3001 && c <= 0xD7FF) || (c >= 0xF900 && c <= 0xFDCF) ||
           (c >= 0xFDF0 && c != 0xFFFE && c != 0xFFFF)))
-      return NULL;
+    {
+      aSuccess = false;
+      return L"";
+    }
     tParseIt++;
 
     while (true)
@@ -3500,7 +3492,7 @@ private:
       {
         std::wstring s(mParseIt, tParseIt);
         mParseIt = tParseIt;
-        return CDA_wcsdup(s.c_str());
+        return s;
       }
       wchar_t c = *tParseIt;
       if (!((c >= L'A' && c <= L'Z') || (c == L'_') || (c == L'-') || (c == L'.') ||
@@ -3515,7 +3507,7 @@ private:
       {
         std::wstring s(mParseIt, tParseIt);
         mParseIt = tParseIt;
-        return CDA_wcsdup(s.c_str());
+        return s;
       }
       tParseIt++;
     }
@@ -3527,12 +3519,12 @@ private:
     mParseIt -= aStr.length();
   }
 
-  wchar_t*
-  parseQName(std::wstring& aNSURI)
+  std::wstring
+  parseQName(std::wstring& aNSURI, bool& aSuccess)
   {
-    wchar_t* fst = parseNCName();
-    if (fst == NULL)
-      return NULL;
+    std::wstring fst = parseNCName(aSuccess);
+    if (!aSuccess)
+      return fst;
 
     consumeWhitespace();
 
@@ -3545,34 +3537,36 @@ private:
     consumeWhitespace();
 
     mParseIt++;
-    std::wstring res(fst);
-    free(fst);
 
-    fst = parseNCName();
-    if (fst == NULL)
+    std::wstring snd = parseNCName(aSuccess);
+    if (!aSuccess)
     {
       mParseIt--;
       aNSURI = L"";
-      return CDA_wcsdup(res.c_str());
+      return fst;
     }
 
-    wchar_t* r = mResolver->lookupNamespaceURI(res.c_str());
-    aNSURI.assign(r);
-    free(r);
-    return fst;
+    aNSURI = mResolver->lookupNamespaceURI(fst);
+    return snd;
   }
 
-  wchar_t*
-  parseLiteral()
+  std::wstring
+  parseLiteral(bool& aSuccess)
   {
     consumeWhitespace();
 
     if (mParseIt == mParseStr.end())
-      return NULL;
+    {
+      aSuccess = false;
+      return L"";
+    }
 
     wchar_t e = *mParseIt;
     if (e != L'\'' && e != L'"')
-      return NULL;
+    {
+      aSuccess = false;
+      return L"";
+    }
 
     std::wstring::const_iterator tParseIt = mParseIt;
     tParseIt++;
@@ -3585,14 +3579,16 @@ private:
         mParseIt = tParseIt;
         mParseIt++;
 
-        return CDA_wcsdup(res.c_str());
+        aSuccess = true;
+        return res;
       }
 
       tParseIt++;
     }
 
     // Unterminated string...
-    return NULL;
+    aSuccess = false;
+    return L"";
   }
 
   double parseNumber(bool& aSuccess)
@@ -3636,8 +3632,8 @@ private:
     return value;
   }
 
-  wchar_t*
-  parseFunctionName(std::wstring& aNSURI)
+  std::wstring
+  parseFunctionName(std::wstring& aNSURI, bool& aSuccess)
   {
     std::wstring::const_iterator tParseIt;
     CDA_XPathNodeType nt;
@@ -3645,10 +3641,11 @@ private:
     if (v)
     {
       mParseIt = tParseIt;
-      return NULL;
+      aSuccess = false;
+      return L"";
     }
     
-    return parseQName(aNSURI);
+    return parseQName(aNSURI, aSuccess);
   }
 
   void consumeWhitespace()
@@ -3673,11 +3670,11 @@ public:
   {
   }
 
-  wchar_t*
-  lookupNamespaceURI(const wchar_t* aPrefix)
+  std::wstring
+  lookupNamespaceURI(const std::wstring& aPrefix)
     throw()
   {
-    bool isEmpty = !wcscmp(aPrefix, L"");
+    bool isEmpty = aPrefix == L"";
 
     RETURN_INTO_OBJREF(n, iface::dom::Node, mNode->parentNode());
     for (; n; n = already_AddRefd<iface::dom::Node>(n->parentNode()))
@@ -3689,9 +3686,9 @@ public:
       RETURN_INTO_WSTRING(ns, el->getAttributeNS(isEmpty ? L"" : L"http://www.w3.org/2000/xmlns/",
                                                 isEmpty ? L"xmlns" : aPrefix));
       if (ns != L"")
-        return CDA_wcsdup(ns.c_str());
+        return ns;
     }
-    return CDA_wcsdup(L"");
+    return L"";
   }
 
   CDA_IMPL_ID;
@@ -3702,16 +3699,16 @@ private:
   ObjRef<iface::dom::Node> mNode;
 };
 
-iface::xpath::XPathExpression*
+already_AddRefd<iface::xpath::XPathExpression>
 CDA_XPathEvaluator::createExpression
-(const wchar_t* aExpression, iface::xpath::XPathNSResolver* aResolver)
+(const std::wstring& aExpression, iface::xpath::XPathNSResolver* aResolver)
   throw(std::exception&)
 {
   CDA_XPathParserContext pc(aExpression, aResolver);
   return pc.parse();
 }
 
-iface::xpath::XPathNSResolver*
+already_AddRefd<iface::xpath::XPathNSResolver>
 CDA_XPathEvaluator::createNSResolver
 (
  iface::dom::Node* aNode
@@ -3721,9 +3718,9 @@ CDA_XPathEvaluator::createNSResolver
   return new CDA_XPathNSResolver(aNode);
 }
 
-iface::xpath::XPathResult*
+already_AddRefd<iface::xpath::XPathResult>
 CDA_XPathEvaluator::evaluate(
- const wchar_t* aExpr, iface::dom::Node* aContext,
+ const std::wstring& aExpr, iface::dom::Node* aContext,
  iface::xpath::XPathNSResolver* aResolver,
  uint16_t aType, iface::xpath::XPathResult* aResult)
   throw(std::exception&)

@@ -2,7 +2,10 @@
 #define compiler_support_h
 
 #include "cda_config.h"
+#include <cstdlib>
 #include <string>
+#include <vector>
+#include <iostream>
 
 template<class T>
 class already_AddRefd
@@ -13,11 +16,23 @@ public:
   {
   }
 
+  template<typename R>
+  already_AddRefd(already_AddRefd<R> aPtr)
+    : mPtr(aPtr)
+  {
+  }
+
   ~already_AddRefd()
   {
   }
 
-  operator T*() const
+  template<typename R>
+  operator R*() const
+  {
+    return mPtr;
+  }
+
+  T* operator-> () const
   {
     return mPtr;
   }
@@ -29,6 +44,17 @@ public:
 private:
   T* mPtr;
 };
+
+static void
+operator<<(std::ostream& data, const std::wstring& str)
+{
+  size_t n = wcstombs(NULL, str.c_str(), 0);
+  char* buf = new char[n + 1];
+  wcstombs(buf, str.c_str(), n + 1);
+  data << buf;
+  free(buf);
+}
+
 
 #ifdef _MSC_VER
 #undef WIN32

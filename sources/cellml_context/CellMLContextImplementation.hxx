@@ -21,7 +21,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_context::CellMLModuleIterator)
 
-  iface::cellml_context::CellMLModule* nextModule()
+  already_AddRefd<iface::cellml_context::CellMLModule> nextModule()
     throw(std::exception&);
 
   void invalidate(std::list<iface::cellml_context::CellMLModule*>::iterator&
@@ -50,7 +50,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_context::ModelNodeIterator)
 
-  iface::cellml_context::ModelNode* nextModelNode()
+  already_AddRefd<iface::cellml_context::ModelNode> nextModelNode()
     throw(std::exception&);
 
   void invalidate(std::list<CDA_ModelNode*>::iterator&
@@ -74,10 +74,10 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_context::CellMLTypeAnnotationManager);
 
-  void setUserData(const wchar_t* type, const wchar_t* key,
+  void setUserData(const std::wstring& type, const std::wstring& key,
                    iface::XPCOM::IObject* data)
     throw(std::exception&);
-  iface::XPCOM::IObject* getUserData(const wchar_t* type, const wchar_t* key)
+  already_AddRefd<iface::XPCOM::IObject> getUserData(const std::wstring& type, const std::wstring& key)
     throw(std::exception&);
 
 private:
@@ -100,18 +100,18 @@ public:
     throw(std::exception&);
   void deregisterModule(iface::cellml_context::CellMLModule* aModule)
     throw(std::exception&);
-  iface::cellml_context::CellMLModule* findModuleByName
-  (const wchar_t* moduleName, const wchar_t* moduleVersion)
+  already_AddRefd<iface::cellml_context::CellMLModule> findModuleByName
+  (const std::wstring& moduleName, const std::wstring& moduleVersion)
     throw(std::exception&);
-  void requestModuleByName(const wchar_t* moduleName,
-                           const wchar_t* moduleVersion)
+  void requestModuleByName(const std::wstring& moduleName,
+                           const std::wstring& moduleVersion)
     throw(std::exception&);
   void addMonitor(iface::cellml_context::CellMLModuleMonitor* aModuleMonitor)
     throw(std::exception&);
   void removeMonitor(iface::cellml_context::CellMLModuleMonitor*
                      aModuleMonitor)
     throw(std::exception&);
-  iface::cellml_context::CellMLModuleIterator* iterateModules()
+  already_AddRefd<iface::cellml_context::CellMLModuleIterator> iterateModules()
     throw(std::exception&);
 
   std::list<CDA_CellMLModuleIterator*>::iterator registerIterator(CDA_CellMLModuleIterator* aIt)
@@ -143,26 +143,26 @@ public:
   CDA_IMPL_QI1(cellml_context::ModelNode);
   CDA_IMPL_ID;
 
-  void name(const wchar_t* name) throw(std::exception&);
-  wchar_t* name() throw(std::exception&);
-  iface::cellml_context::ModelNode* getLatestDerivative()
+  void name(const std::wstring& name) throw(std::exception&);
+  std::wstring name() throw(std::exception&);
+  already_AddRefd<iface::cellml_context::ModelNode> getLatestDerivative()
     throw(std::exception&);
-  iface::cellml_context::ModelNode* getWritable() throw(std::exception&);
+  already_AddRefd<iface::cellml_context::ModelNode> getWritable() throw(std::exception&);
   bool isFrozen() throw(std::exception&);
   void isFrozen(bool) throw(std::exception&);
   uint32_t modificationTimestamp() throw(std::exception&);
   void stampModifiedNow() throw(std::exception&);
-  iface::cellml_api::Model* model() throw(std::exception&);
+  already_AddRefd<iface::cellml_api::Model> model() throw(std::exception&);
   void model(iface::cellml_api::Model* aModel) throw (std::exception&);
   void flushChanges() throw(std::exception&);
-  iface::XPCOM::IObject* owner() throw(std::exception&);
+  already_AddRefd<iface::XPCOM::IObject> owner() throw(std::exception&);
   void owner(iface::XPCOM::IObject* aOwner) throw(std::exception&);
-  iface::cellml_context::ModelList* derivedModels() throw(std::exception&);
+  already_AddRefd<iface::cellml_context::ModelList> derivedModels() throw(std::exception&);
   void addModelMonitor(iface::cellml_context::ModelNodeMonitor* monitor)
     throw(std::exception&);
   void removeModelMonitor(iface::cellml_context::ModelNodeMonitor* monitor)
     throw(std::exception&);
-  iface::cellml_context::ModelList* parentList()
+  already_AddRefd<iface::cellml_context::ModelList> parentList()
     throw(std::exception&);
 
   void setParentList(CDA_ModelList* aParentList);
@@ -210,15 +210,15 @@ public:
     throw(std::exception&);
   void removeListMonitor(iface::cellml_context::ModelListMonitor* monitor)
     throw(std::exception&);
-  iface::cellml_context::ModelNode* makeNode(iface::cellml_api::Model* mod)
+  already_AddRefd<iface::cellml_context::ModelNode> makeNode(iface::cellml_api::Model* mod)
     throw(std::exception&);
   void addModel(iface::cellml_context::ModelNode* node)
     throw(std::exception&);
   void removeModel(iface::cellml_context::ModelNode* node)
     throw(std::exception&);
-  iface::cellml_context::ModelNodeIterator* iterateModelNodes()
+  already_AddRefd<iface::cellml_context::ModelNodeIterator> iterateModelNodes()
     throw(std::exception&);
-  iface::cellml_context::ModelNode* parentNode()
+  already_AddRefd<iface::cellml_context::ModelNode> parentNode()
     throw(std::exception&);
   std::list<CDA_ModelNodeIterator*>::iterator registerIterator(CDA_ModelNodeIterator* aIt)
     { mIterators.push_back(aIt); return --mIterators.end(); }
@@ -249,7 +249,7 @@ public:
   CDA_IMPL_QI1(cellml_context::CellMLContext);
   CDA_IMPL_ID;
 
-  iface::cellml_context::CellMLModuleManager*
+  already_AddRefd<iface::cellml_context::CellMLModuleManager>
   moduleManager()
     throw(std::exception&)
   {
@@ -257,7 +257,7 @@ public:
     return mModuleManager;
   }
 
-  iface::cellml_context::CellMLTypeAnnotationManager*
+  already_AddRefd<iface::cellml_context::CellMLTypeAnnotationManager>
   typeAnnotationManager()
     throw(std::exception&)
   {
@@ -265,7 +265,7 @@ public:
     return mTypeAnnotationManager;
   }
 
-  iface::cellml_api::CellMLBootstrap*
+  already_AddRefd<iface::cellml_api::CellMLBootstrap>
   cellmlBootstrap()
     throw(std::exception&)
   {
@@ -273,7 +273,7 @@ public:
     return mCellMLBootstrap;
   }
 
-  iface::cellml_context::ModelList*
+  already_AddRefd<iface::cellml_context::ModelList>
   loadedModels()
     throw(std::exception&)
   {

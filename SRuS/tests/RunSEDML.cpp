@@ -99,21 +99,20 @@ public:
 
   void add_ref() throw() {}
   void release_ref() throw() {}
-  char* objid() throw() { return strdup("RunSEDMLMonitor"); }
-  void* query_interface(const char* aInterface) throw()
+  std::string objid() throw() { return "RunSEDMLMonitor"; }
+  void* query_interface(const std::string& aInterface) throw()
   {
-    if (!strcmp(aInterface, "xpcom::IObject") ||
-        !strcmp(aInterface, "SRuS::GeneratedDataMonitor"))
+    if (aInterface == "xpcom::IObject" ||
+        aInterface == "SRuS::GeneratedDataMonitor")
       return static_cast<iface::XPCOM::IObject*>(this);
     else
       return NULL;
   }
-  char** supported_interfaces(uint32_t* len) throw()
+  std::vector<std::string> supported_interfaces() throw()
   {
-    *len = 2;
-    char** ret = static_cast<char**>(malloc(sizeof(char*) * 2));
-    ret[0] = strdup("xpcom::IObject");
-    ret[1] = strdup("SRuS::GeneratedDataMonitor");
+    std::vector<std::string> ret;
+    ret.push_back("xpcom::IObject");
+    ret.push_back("SRuS::GeneratedDataMonitor");
     return ret;
   }
 
@@ -152,9 +151,9 @@ public:
     }
   }
 
-  void failure(const char* aMsg) throw()
+  void failure(const std::string& aMsg) throw()
   {
-    printf("Task Failure: %s\n", aMsg);
+    printf("Task Failure: %s\n", aMsg.c_str());
     tasksFinished++;
   }
 

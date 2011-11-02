@@ -72,9 +72,8 @@ CeVASTest::testCeVASCore()
 //     * should not be called.
 //     */
 //    readonly attribute wstring modelError;
-  wchar_t* str = c->modelError();
-  CPPUNIT_ASSERT(!wcscmp(str, L""));
-  free(str);
+  std::wstring str = c->modelError();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
 
 //
 //    /**
@@ -167,11 +166,10 @@ CeVASTest::testCeVASCore()
 //    readonly attribute cellml_api::CellMLVariable sourceVariable;
   iface::cellml_api::CellMLVariable* cv2 = cvs1->sourceVariable();
   str = cv2->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Cai"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Cai"), str);
+
   str = cv2->componentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"calcium_dynamics"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"calcium_dynamics"), str);
   cv2->release_ref();
 
 //
@@ -191,10 +189,8 @@ CeVASTest::testCeVASCore()
   {
     iface::cellml_api::CellMLVariable* v = cvs1->getVariable(i);
     str = v->name();
-    wchar_t* str2 = v->componentName();
+    std::wstring str2 = v->componentName();
     std::pair<std::wstring,std::wstring> p(str, str2);
-    free(str);
-    free(str2);
 
     CPPUNIT_ASSERT_EQUAL(0, (int)sv.count(p));
     sv.insert(p);

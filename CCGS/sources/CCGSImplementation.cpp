@@ -10,11 +10,11 @@
 #include "CUSESBootstrap.hpp"
 #include "cda_compiler_support.h"
 
-iface::cellml_api::CellMLVariable*
+already_AddRefd<iface::cellml_api::CellMLVariable>
 CDA_ComputationTarget::variable() throw()
 {
   mVariable->add_ref();
-  return mVariable;
+  return mVariable.getPointer();
 }
 
 uint32_t
@@ -29,7 +29,7 @@ CDA_ComputationTarget::type() throw()
   return mEvaluationType;
 }
 
-wchar_t*
+std::wstring
 CDA_ComputationTarget::name() throw()
 {
   const wchar_t* annoname;
@@ -56,7 +56,7 @@ CDA_ComputationTarget::assignedIndex() throw()
 }
 
 void
-CDA_ComputationTarget::setDelayedName(const wchar_t* aSetTo)
+CDA_ComputationTarget::setDelayedName(const std::wstring& aSetTo)
   throw()
 {
   // Scoped locale change.
@@ -78,10 +78,10 @@ CDA_ComputationTarget::setDelayedName(const wchar_t* aSetTo)
     dannoname = dbuf;
   }
 
-  if (aSetTo == NULL)
+  if (aSetTo == L"")
   {
     RETURN_INTO_WSTRING(n, mAnnoSet->getStringAnnotation(mVariable, annoname));
-    mAnnoSet->setStringAnnotation(mVariable, dannoname, n.c_str());
+    mAnnoSet->setStringAnnotation(mVariable, dannoname, n);
   }
   else
     mAnnoSet->setStringAnnotation(mVariable, dannoname, aSetTo);
@@ -91,7 +91,7 @@ void
 CDA_ComputationTarget::setNameAndIndex
 (
  uint32_t aIndex,
- const wchar_t* aName
+ const std::wstring& aName
 )
   throw()
 {
@@ -113,7 +113,7 @@ CDA_ComputationTarget::setNameAndIndex
   mAnnoSet->setStringAnnotation(mVariable, annoname, aName);
 }
 
-iface::cellml_services::ComputationTarget*
+already_AddRefd<iface::cellml_services::ComputationTarget>
 CDA_ComputationTargetIterator::nextComputationTarget() throw()
 {
   if (mTargetsIt == mTargets.end())
@@ -123,7 +123,7 @@ CDA_ComputationTargetIterator::nextComputationTarget() throw()
   mTargetsIt++;
   
   t->add_ref();
-  return t;
+  return static_cast<iface::cellml_services::ComputationTarget*>(t);
 }
 
 CDA_TargetSet::~CDA_TargetSet()
@@ -140,7 +140,7 @@ CDA_CodeInformation::~CDA_CodeInformation()
     (*fei)->release_ref();
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::errorMessage() throw()
 {
   return CDA_wcsdup(mErrorMessage.c_str());
@@ -176,49 +176,49 @@ CDA_CodeInformation::conditionVariableCount() throw()
   return mConditionVariableCount;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::rootInformationString() throw()
 {
-  return CDA_wcsdup(mRootInformationStr.c_str());
+  return mRootInformationStr;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::initConstsString() throw()
 {
-  return CDA_wcsdup(mInitConstsStr.c_str());
+  return mInitConstsStr;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::ratesString() throw()
 {
-  return CDA_wcsdup(mRatesStr.c_str());
+  return mRatesStr;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::variablesString() throw()
 {
-  return CDA_wcsdup(mVarsStr.c_str());
+  return mVarsStr;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::functionsString() throw()
 {
-  return CDA_wcsdup(mFuncsStr.c_str());
+  return mFuncsStr;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::essentialVariablesString() throw()
 {
-  return CDA_wcsdup(mEssentialVarsStr.c_str());
+  return mEssentialVarsStr;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeInformation::stateInformationString() throw()
 {
-  return CDA_wcsdup(mStateInformationStr.c_str());
+  return mStateInformationStr;
 }
 
-iface::cellml_services::ComputationTargetIterator*
+already_AddRefd<iface::cellml_services::ComputationTargetIterator>
 CDA_CodeInformation::iterateTargets() throw()
 {
   return new CDA_ComputationTargetIterator(this);
@@ -242,22 +242,22 @@ CDA_CustomCodeInformation::indexCount()
   return mIndexCount;
 }
 
-iface::cellml_services::ComputationTargetIterator*
+already_AddRefd<iface::cellml_services::ComputationTargetIterator>
 CDA_CustomCodeInformation::iterateTargets() throw()
 {
   return new CDA_ComputationTargetIterator(this);
 }
 
-wchar_t*
+std::wstring
 CDA_CustomCodeInformation::generatedCode() throw()
 {
-  return CDA_wcsdup(mGeneratedCode.c_str());
+  return mGeneratedCode;
 }
 
-wchar_t*
+std::wstring
 CDA_CustomCodeInformation::functionsString() throw()
 {
-  return CDA_wcsdup(mFunctionsString.c_str());
+  return mFunctionsString;
 }
 
 class CDA_FlaggedEquationsNodeList
@@ -278,7 +278,7 @@ public:
     return mVector.size();
   }
 
-  iface::dom::Element* item(uint32_t idx)
+  already_AddRefd<iface::dom::Node> item(uint32_t idx)
     throw(std::exception&)
   {
     if (idx >= mVector.size())
@@ -294,7 +294,7 @@ private:
   std::vector<iface::dom::Element*>& mVector;
 };
 
-iface::mathml_dom::MathMLNodeList*
+already_AddRefd<iface::mathml_dom::MathMLNodeList>
 CDA_CodeInformation::flaggedEquations() throw()
 {
   return new CDA_FlaggedEquationsNodeList(this, mFlaggedEquations);
@@ -428,98 +428,98 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
 {
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::constantPattern() throw()
 {
-  return CDA_wcsdup(mConstantPattern.c_str());
+  return mConstantPattern;
 }
 
 void
-CDA_CodeGenerator::constantPattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::constantPattern(const std::wstring& aPattern) throw()
 {
   mConstantPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::stateVariableNamePattern() throw()
 {
-  return CDA_wcsdup(mStateVariableNamePattern.c_str());
+  return mStateVariableNamePattern;
 }
 
 void
-CDA_CodeGenerator::stateVariableNamePattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::stateVariableNamePattern(const std::wstring& aPattern) throw()
 {
   mStateVariableNamePattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::algebraicVariableNamePattern() throw()
 {
-  return CDA_wcsdup(mAlgebraicVariableNamePattern.c_str());
+  return mAlgebraicVariableNamePattern;
 }
 
 void
-CDA_CodeGenerator::algebraicVariableNamePattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::algebraicVariableNamePattern(const std::wstring& aPattern) throw()
 {
   mAlgebraicVariableNamePattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::rateNamePattern() throw()
 {
-  return CDA_wcsdup(mRateNamePattern.c_str());
+  return mRateNamePattern;
 }
 
 void
-CDA_CodeGenerator::rateNamePattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::rateNamePattern(const std::wstring& aPattern) throw()
 {
   mRateNamePattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::voiPattern() throw()
 {
-  return CDA_wcsdup(mVOIPattern.c_str());
+  return mVOIPattern;
 }
 
 void
-CDA_CodeGenerator::voiPattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::voiPattern(const std::wstring& aPattern) throw()
 {
   mVOIPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::sampleDensityFunctionPattern() throw()
 {
-  return CDA_wcsdup(mSampleDensityFunctionPattern.c_str());
+  return mSampleDensityFunctionPattern;
 }
 
 void
-CDA_CodeGenerator::sampleDensityFunctionPattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::sampleDensityFunctionPattern(const std::wstring& aPattern) throw()
 {
   mSampleDensityFunctionPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::sampleRealisationsPattern() throw()
 {
-  return CDA_wcsdup(mSampleRealisationsPattern.c_str());
+  return mSampleRealisationsPattern;
 }
 
 void
-CDA_CodeGenerator::sampleRealisationsPattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::sampleRealisationsPattern(const std::wstring& aPattern) throw()
 {
   mSampleRealisationsPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::boundVariableName() throw()
 {
-  return CDA_wcsdup(mBoundVariableName.c_str());
+  return mBoundVariableName;
 }
 
 void
-CDA_CodeGenerator::boundVariableName(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::boundVariableName(const std::wstring& aPattern) throw()
 {
   mBoundVariableName = aPattern;
 }
@@ -536,162 +536,162 @@ CDA_CodeGenerator::arrayOffset(uint32_t offset) throw()
   mArrayOffset = offset;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::assignPattern() throw()
 {
-  return CDA_wcsdup(mAssignPattern.c_str());
+  return mAssignPattern;
 }
 
 void
-CDA_CodeGenerator::assignPattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::assignPattern(const std::wstring& aPattern) throw()
 {
   mAssignPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::solvePattern() throw()
 {
-  return CDA_wcsdup(mSolvePattern.c_str());
+  return mSolvePattern;
 }
 
 void
-CDA_CodeGenerator::solvePattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::solvePattern(const std::wstring& aPattern) throw()
 {
   mSolvePattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::solveNLSystemPattern() throw()
 {
-  return CDA_wcsdup(mSolveNLSystemPattern.c_str());
+  return mSolveNLSystemPattern;
 }
 
 void
-CDA_CodeGenerator::solveNLSystemPattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::solveNLSystemPattern(const std::wstring& aPattern) throw()
 {
   mSolveNLSystemPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::temporaryVariablePattern()
   throw()
 {
-  return CDA_wcsdup(mTemporaryVariablePattern.c_str());
+  return mTemporaryVariablePattern;
 }
 
 void
-CDA_CodeGenerator::temporaryVariablePattern(const wchar_t* aPattern)
+CDA_CodeGenerator::temporaryVariablePattern(const std::wstring& aPattern)
   throw()
 {
   mTemporaryVariablePattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::declareTemporaryPattern()
   throw()
 {
-  return CDA_wcsdup(mDeclareTemporaryPattern.c_str());
+  return mDeclareTemporaryPattern;
 }
 
 void
-CDA_CodeGenerator::declareTemporaryPattern(const wchar_t* aPattern)
+CDA_CodeGenerator::declareTemporaryPattern(const std::wstring& aPattern)
   throw()
 {
   mDeclareTemporaryPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::conditionalAssignmentPattern()
   throw()
 {
-  return CDA_wcsdup(mConditionalAssignmentPattern.c_str());
+  return mConditionalAssignmentPattern;
 }
 
 void
-CDA_CodeGenerator::conditionalAssignmentPattern(const wchar_t* aPattern)
+CDA_CodeGenerator::conditionalAssignmentPattern(const std::wstring& aPattern)
   throw()
 {
   mConditionalAssignmentPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::residualPattern()
   throw()
 {
-  return CDA_wcsdup(mResidualPattern.c_str());
+  return mResidualPattern;
 }
 
 void
-CDA_CodeGenerator::residualPattern(const wchar_t* aPattern)
+CDA_CodeGenerator::residualPattern(const std::wstring& aPattern)
   throw()
 {
   mResidualPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::constrainedRateStateInfoPattern()
   throw()
 {
-  return CDA_wcsdup(mConstrainedRateStateInfoPattern.c_str());
+  return mConstrainedRateStateInfoPattern;
 }
 
 void
-CDA_CodeGenerator::constrainedRateStateInfoPattern(const wchar_t* aPattern)
+CDA_CodeGenerator::constrainedRateStateInfoPattern(const std::wstring& aPattern)
   throw()
 {
   mConstrainedRateStateInfoPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::unconstrainedRateStateInfoPattern()
   throw()
 {
-  return CDA_wcsdup(mUnconstrainedRateStateInfoPattern.c_str());
+  return mUnconstrainedRateStateInfoPattern;
 }
 
 void
-CDA_CodeGenerator::unconstrainedRateStateInfoPattern(const wchar_t* aPattern)
+CDA_CodeGenerator::unconstrainedRateStateInfoPattern(const std::wstring& aPattern)
   throw()
 {
   mUnconstrainedRateStateInfoPattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::infDelayedRatePattern() throw()
 {
-  return CDA_wcsdup(mInfDelayedRatePattern.c_str());
+  return mInfDelayedRatePattern;
 }
 
 void
-CDA_CodeGenerator::infDelayedRatePattern(const wchar_t* aPattern)
+CDA_CodeGenerator::infDelayedRatePattern(const std::wstring& aPattern)
   throw()
 {
   mInfDelayedRatePattern = aPattern;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::infDelayedStatePattern()
   throw()
 {
-  return CDA_wcsdup(mInfDelayedStatePattern.c_str());
+  return mInfDelayedStatePattern;
 }
 
 void
-CDA_CodeGenerator::infDelayedStatePattern(const wchar_t* aPattern)
+CDA_CodeGenerator::infDelayedStatePattern(const std::wstring& aPattern)
   throw()
 {
   mInfDelayedStatePattern = aPattern;
 }
 
 
-wchar_t*
+std::wstring
 CDA_CodeGenerator::conditionVariablePattern() throw()
 {
-  return CDA_wcsdup(mConditionVariablePattern.c_str());
+  return mConditionVariablePattern;
 }
 
 void
-CDA_CodeGenerator::conditionVariablePattern(const wchar_t* aPattern) throw()
+CDA_CodeGenerator::conditionVariablePattern(const std::wstring& aPattern) throw()
 {
   mConditionVariablePattern = aPattern;
 }
@@ -708,13 +708,13 @@ CDA_CodeGenerator::trackPiecewiseConditions(bool aTrack) throw()
   mTrackPiecewiseConditions = aTrack;
 }
 
-iface::cellml_services::MaLaESTransform*
+already_AddRefd<iface::cellml_services::MaLaESTransform>
 CDA_CodeGenerator::transform() throw()
 {
   if (mTransform != NULL)
     mTransform->add_ref();
 
-  return mTransform;
+  return mTransform.getPointer();
 }
 
 void
@@ -724,12 +724,12 @@ CDA_CodeGenerator::transform(iface::cellml_services::MaLaESTransform* aTransform
   mTransform = aTransform;
 }
 
-iface::cellml_services::CeVAS*
+already_AddRefd<iface::cellml_services::CeVAS>
 CDA_CodeGenerator::useCeVAS() throw()
 {
   if (mCeVAS != NULL)
     mCeVAS->add_ref();
-  return mCeVAS;
+  return mCeVAS.getPointer();
 }
 
 void
@@ -739,12 +739,12 @@ CDA_CodeGenerator::useCeVAS(iface::cellml_services::CeVAS* aCeVAS)
   mCeVAS = aCeVAS;
 }
 
-iface::cellml_services::CUSES*
+already_AddRefd<iface::cellml_services::CUSES>
 CDA_CodeGenerator::useCUSES() throw()
 {
   if (mCUSES != NULL)
     mCUSES->add_ref();
-  return mCUSES;
+  return mCUSES.getPointer();
 }
 
 void
@@ -754,12 +754,12 @@ CDA_CodeGenerator::useCUSES(iface::cellml_services::CUSES* aCUSES)
   mCUSES = aCUSES;
 }
 
-iface::cellml_services::AnnotationSet*
+already_AddRefd<iface::cellml_services::AnnotationSet>
 CDA_CodeGenerator::useAnnoSet() throw()
 {
   if (mAnnoSet != NULL)
     mAnnoSet->add_ref();
-  return mAnnoSet;
+  return mAnnoSet.getPointer();
 }
 
 void
@@ -769,15 +769,15 @@ CDA_CodeGenerator::useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet)
   mAnnoSet = aAnnoSet;
 }
 
-static iface::cellml_services::IDACodeInformation*
-CDA_ErrorCodeInformation(const wchar_t* aMessage)
+static already_AddRefd<iface::cellml_services::IDACodeInformation>
+CDA_ErrorCodeInformation(const std::wstring& aMessage)
 {
   CDA_CodeInformation* ci = new CDA_CodeInformation();
   ci->mErrorMessage = aMessage;
   return ci;
 }
 
-iface::cellml_services::CustomGenerator*
+already_AddRefd<iface::cellml_services::CustomGenerator>
 CDA_CodeGenerator::createCustomGenerator(iface::cellml_api::Model* aSourceModel)
   throw(std::exception&)
 {
@@ -788,7 +788,7 @@ CDA_CodeGenerator::createCustomGenerator(iface::cellml_api::Model* aSourceModel)
  * GenerateIDACode to avoid the need to QueryInterface in the case where we
  * are generating IDA code.
  */
-iface::cellml_services::IDACodeInformation*
+already_AddRefd<iface::cellml_services::IDACodeInformation>
 CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
  throw()
 {
@@ -973,7 +973,7 @@ CDA_CustomGenerator::indexTargets()
   mTargetSet.insert(mTargets.begin(), mTargets.end());
 }
 
-iface::cellml_services::ComputationTargetIterator*
+already_AddRefd<iface::cellml_services::ComputationTargetIterator>
 CDA_CustomGenerator::iterateTargets()
   throw()
 {
@@ -1019,7 +1019,7 @@ CDA_CustomGenerator::markAsUnwanted(iface::cellml_services::ComputationTarget* a
   mUnwanted.insert(*i);
 }
 
-iface::cellml_services::CustomCodeInformation*
+already_AddRefd<iface::cellml_services::CustomCodeInformation>
 CDA_CustomGenerator::generateCode()
   throw(std::exception&)
 {
@@ -1046,7 +1046,7 @@ CDA_CodeGenerator::allowPassthrough(bool aAllowPassthrough) throw()
   mAllowPassthrough = aAllowPassthrough;
 }
 
-iface::cellml_services::CodeGeneratorBootstrap*
+already_AddRefd<iface::cellml_services::CodeGeneratorBootstrap>
 CreateCodeGeneratorBootstrap(void)
 {
   return new CDA_CodeGeneratorBootstrap();

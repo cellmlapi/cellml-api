@@ -269,47 +269,8 @@ HEADER_INLINE int
 CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
   throw()
 {
-  char* s1, *s2;
-  try
-  {
-    s1 = o1->objid();
-  }
-  catch (...)
-  {
-    s1 = NULL;
-  }
-  try
-  {
-    s2 = o2->objid();
-  }
-  catch (...)
-  {
-    s2 = NULL;
-  }
-
-  int cmp;
-  if (s1 && s2)
-  {
-    cmp = strcmp(s1, s2);
-  }
-  // if we have a dead object, we can't compare them so easily, so we just
-  // follow a basic rule. This can break ordering relationships, but once
-  // they are dead, it is the best we can do.
-  else if (!s1 && !s2)
-    // Dead objects are automatically identical.
-    cmp = 0;
-  else if (!s1)
-    // First is dead, second is alive, so treat as -1...
-    cmp = -1;
-  else
-    cmp = 1;
-
-  if (s1)
-    free(s1);
-  if (s2)
-    free(s2);
-
-  return cmp;
+  std::string s1(o1->objid()), s2(o2->objid());
+  return strcmp(s1.c_str(), s2.c_str());
 }
 
 class CDA_ID
@@ -351,11 +312,9 @@ public:
 
   }
 
-  char* cloneID()
+  std::string cloneID() const
   {
-    char* ret = (char*)malloc(20);
-    memcpy(ret, mIDString, 20);
-    return ret;
+    return mIDString;
   }
 private:
   char mIDString[20];
@@ -404,7 +363,7 @@ private:
   private: \
     CDA_ID _cda_id; \
   public: \
-    char* objid() \
+  std::string objid() \
       throw() \
     { \
       return _cda_id.cloneID(); \
@@ -427,390 +386,381 @@ private:
     }
 
 #define CDA_IMPL_QI0 \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 1; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*))); \
-      *ret = strdup("xpcom::IObject"); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      return v; \
     }
 
 #define CDA_IMPL_QI1(c1) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 2; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 2)); \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      return v; \
     }
 
 #define CDA_IMPL_QI2(c1, c2) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
-      else if (!strcmp(id, #c2)) \
+      else if (id == #c2) \
       { \
         add_ref(); \
         return static_cast< iface::c2* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 3; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 3)); \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      ret[2] = strdup(#c2); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      v.push_back(#c2); \
+      return v; \
     }
 
 #define CDA_IMPL_QI3(c1, c2, c3) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
-      else if (!strcmp(id, #c2)) \
+      else if (id == #c2) \
       { \
         add_ref(); \
         return static_cast< iface::c2* >(this); \
       } \
-      else if (!strcmp(id, #c3)) \
+      else if (id == #c3) \
       { \
         add_ref(); \
         return static_cast< iface::c3* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 4; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 4)); \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      ret[2] = strdup(#c2); \
-      ret[3] = strdup(#c3); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      v.push_back(#c2); \
+      v.push_back(#c3); \
+      return v; \
     }
 
 #define CDA_IMPL_QI4(c1, c2, c3, c4) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
-      else if (!strcmp(id, #c2)) \
+      else if (id == #c2) \
       { \
         add_ref(); \
         return static_cast< iface::c2* >(this); \
       } \
-      else if (!strcmp(id, #c3)) \
+      else if (id == #c3) \
       { \
         add_ref(); \
         return static_cast< iface::c3* >(this); \
       } \
-      else if (!strcmp(id, #c4)) \
+      else if (id == #c4) \
       { \
         add_ref(); \
         return static_cast< iface::c4* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw()\
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 5; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 5));      \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      ret[2] = strdup(#c2); \
-      ret[3] = strdup(#c3); \
-      ret[4] = strdup(#c4); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      v.push_back(#c2); \
+      v.push_back(#c3); \
+      v.push_back(#c4); \
+      return v; \
     }
 
 #define CDA_IMPL_QI5(c1, c2, c3, c4, c5) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
-      else if (!strcmp(id, #c2)) \
+      else if (id == #c2) \
       { \
         add_ref(); \
         return static_cast< iface::c2* >(this); \
       } \
-      else if (!strcmp(id, #c3)) \
+      else if (id == #c3) \
       { \
         add_ref(); \
         return static_cast< iface::c3* >(this); \
       } \
-      else if (!strcmp(id, #c4)) \
+      else if (id == #c4) \
       { \
         add_ref(); \
         return static_cast< iface::c4* >(this); \
       } \
-      else if (!strcmp(id, #c5)) \
+      else if (id == #c5) \
       { \
         add_ref(); \
         return static_cast< iface::c5* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 6; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 6));      \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      ret[2] = strdup(#c2); \
-      ret[3] = strdup(#c3); \
-      ret[4] = strdup(#c4); \
-      ret[5] = strdup(#c5); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      v.push_back(#c2); \
+      v.push_back(#c3); \
+      v.push_back(#c4); \
+      v.push_back(#c5); \
+      return v; \
     }
 
 #define CDA_IMPL_QI6(c1, c2, c3, c4, c5, c6) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
-      else if (!strcmp(id, #c2)) \
+      else if (id == #c2) \
       { \
         add_ref(); \
         return static_cast< iface::c2* >(this); \
       } \
-      else if (!strcmp(id, #c3)) \
+      else if (id == #c3) \
       { \
         add_ref(); \
         return static_cast< iface::c3* >(this); \
       } \
-      else if (!strcmp(id, #c4)) \
+      else if (id == #c4) \
       { \
         add_ref(); \
         return static_cast< iface::c4* >(this); \
       } \
-      else if (!strcmp(id, #c5)) \
+      else if (id == #c5) \
       { \
         add_ref(); \
         return static_cast< iface::c5* >(this); \
       } \
-      else if (!strcmp(id, #c6)) \
+      else if (id == #c6) \
       { \
         add_ref(); \
         return static_cast< iface::c6* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 7; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 7)); \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      ret[2] = strdup(#c2); \
-      ret[3] = strdup(#c3); \
-      ret[4] = strdup(#c4); \
-      ret[5] = strdup(#c5); \
-      ret[6] = strdup(#c6); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      v.push_back(#c2); \
+      v.push_back(#c3); \
+      v.push_back(#c4); \
+      v.push_back(#c5); \
+      v.push_back(#c6); \
+      return v; \
     }
 
 #define CDA_IMPL_QI7(c1, c2, c3, c4, c5, c6, c7) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
-      else if (!strcmp(id, #c2)) \
+      else if (id == #c2) \
       { \
         add_ref(); \
         return static_cast< iface::c2* >(this); \
       } \
-      else if (!strcmp(id, #c3)) \
+      else if (id == #c3) \
       { \
         add_ref(); \
         return static_cast< iface::c3* >(this); \
       } \
-      else if (!strcmp(id, #c4)) \
+      else if (id == #c4) \
       { \
         add_ref(); \
         return static_cast< iface::c4* >(this); \
       } \
-      else if (!strcmp(id, #c5)) \
+      else if (id == #c5) \
       { \
         add_ref(); \
         return static_cast< iface::c5* >(this); \
       } \
-      else if (!strcmp(id, #c6)) \
+      else if (id == #c6) \
       { \
         add_ref(); \
         return static_cast< iface::c6* >(this); \
       } \
-      else if (!strcmp(id, #c7)) \
+      else if (id == #c7) \
       { \
         add_ref(); \
         return static_cast< iface::c7* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 8; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 8)); \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      ret[2] = strdup(#c2); \
-      ret[3] = strdup(#c3); \
-      ret[4] = strdup(#c4); \
-      ret[5] = strdup(#c5); \
-      ret[6] = strdup(#c6); \
-      ret[7] = strdup(#c7); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      v.push_back(#c2); \
+      v.push_back(#c3); \
+      v.push_back(#c4); \
+      v.push_back(#c5); \
+      v.push_back(#c6); \
+      v.push_back(#c7); \
+      return v; \
     }
 
 #define CDA_IMPL_QI8(c1, c2, c3, c4, c5, c6, c7, c8) \
-    void* query_interface(const char* id) \
+    void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (!strcmp(id, "xpcom::IObject")) \
+      if (id == "xpcom::IObject") \
       { \
         add_ref(); \
-        return static_cast< iface::XPCOM::IObject* >(this); \
+        return static_cast<iface::XPCOM::IObject*>(this); \
       } \
-      else if (!strcmp(id, #c1)) \
+      else if (id == #c1) \
       { \
         add_ref(); \
         return static_cast< iface::c1* >(this); \
       } \
-      else if (!strcmp(id, #c2)) \
+      else if (id == #c2) \
       { \
         add_ref(); \
         return static_cast< iface::c2* >(this); \
       } \
-      else if (!strcmp(id, #c3)) \
+      else if (id == #c3) \
       { \
         add_ref(); \
         return static_cast< iface::c3* >(this); \
       } \
-      else if (!strcmp(id, #c4)) \
+      else if (id == #c4) \
       { \
         add_ref(); \
         return static_cast< iface::c4* >(this); \
       } \
-      else if (!strcmp(id, #c5)) \
+      else if (id == #c5) \
       { \
         add_ref(); \
         return static_cast< iface::c5* >(this); \
       } \
-      else if (!strcmp(id, #c6)) \
+      else if (id == #c6) \
       { \
         add_ref(); \
         return static_cast< iface::c6* >(this); \
       } \
-      else if (!strcmp(id, #c7)) \
+      else if (id == #c7) \
       { \
         add_ref(); \
         return static_cast< iface::c7* >(this); \
       } \
-      else if (!strcmp(id, #c8)) \
+      else if (id == #c8) \
       { \
         add_ref(); \
         return static_cast< iface::c8* >(this); \
       } \
       return NULL; \
     } \
-    char** supported_interfaces(uint32_t* len) throw() \
+    std::vector<std::string> supported_interfaces() throw() \
     { \
-      *len = 9; \
-      char** ret = static_cast<char**>(malloc(sizeof(char*) * 9)); \
-      *ret = strdup("xpcom::IObject"); \
-      ret[1] = strdup(#c1); \
-      ret[2] = strdup(#c2); \
-      ret[3] = strdup(#c3); \
-      ret[4] = strdup(#c4); \
-      ret[5] = strdup(#c5); \
-      ret[6] = strdup(#c6); \
-      ret[7] = strdup(#c7); \
-      ret[8] = strdup(#c8); \
-      return ret; \
+      std::vector<std::string> v; \
+      v.push_back("xpcom::IObject"); \
+      v.push_back(#c1); \
+      v.push_back(#c2); \
+      v.push_back(#c3); \
+      v.push_back(#c4); \
+      v.push_back(#c5); \
+      v.push_back(#c6); \
+      v.push_back(#c7); \
+      v.push_back(#c8); \
+      return v; \
     }
 
 template<class T>
@@ -936,59 +886,8 @@ operator!=(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
   return (lhs.getPointer() != rhs.getPointer());
 }
 
-class thinstring
-{
-public:
-  thinstring(wchar_t* aData)
-    : mData(aData)
-  {
-  }
-
-  ~thinstring()
-  {
-    if (CDA_LIKELY(mData != NULL))
-      free(mData);
-  }
-
-  wchar_t* takeOwnership()
-  {
-    wchar_t* ret = mData;
-    mData = NULL;
-    return ret;
-  }
-
-  bool
-  operator==(const wchar_t* aCmpWith)
-  {
-    // Mainly for the both NULL case...
-    if (CDA_UNLIKELY(aCmpWith == mData))
-      return true;
-    if (CDA_UNLIKELY(mData == NULL || aCmpWith == NULL))
-      return false;
-    return !wcscmp(mData, aCmpWith);
-  }
-
-  operator const wchar_t*() const
-  {
-    return mData;
-  }
-
-  const wchar_t* getPointer() const
-  {
-    return mData;
-  }
-
-private:
-  wchar_t* mData;
-};
-
 #define RETURN_INTO_WSTRING(lhs, rhs) \
-  wchar_t* tmp_##lhs = rhs; \
-  std::wstring lhs(tmp_##lhs); \
-  free(tmp_##lhs);
-
-#define RETURN_INTO_THINSTRING(lhs, rhs) \
-  thinstring lhs(rhs);
+  std::wstring lhs(rhs);
 
 #define RETURN_INTO_OBJREF(lhs, type, rhs) \
   ObjRef<type> lhs \
@@ -1009,7 +908,7 @@ private:
     ( \
       dynamic_cast<type*> \
       ( \
-        rhs \
+        rhs.getPointer()				\
       ) \
     )\
   )
@@ -1021,7 +920,7 @@ private:
     ( \
       unsafe_dynamic_cast<type*> \
       ( \
-        rhs \
+         rhs.getPointer()				\
       ).get() \
     )\
   )

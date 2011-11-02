@@ -309,7 +309,7 @@ CDAConnectedVariableSet::~CDAConnectedVariableSet()
 {
 }
 
-iface::cellml_api::CellMLVariable*
+already_AddRefd<iface::cellml_api::CellMLVariable>
 CDAConnectedVariableSet::sourceVariable()
   throw(std::exception&)
 {
@@ -325,7 +325,7 @@ CDAConnectedVariableSet::length()
   return mVariables.size();
 }
 
-iface::cellml_api::CellMLVariable*
+already_AddRefd<iface::cellml_api::CellMLVariable>
 CDAConnectedVariableSet::getVariable(uint32_t aIndex)
   throw(std::exception&)
 {
@@ -618,11 +618,11 @@ CDACeVAS::ComputeConnectedVariables
   }
 }
 
-wchar_t*
+std::wstring
 CDACeVAS::modelError()
   throw()
 {
-  return CDA_wcsdup(mErrorDescription.c_str());
+  return mErrorDescription;
 }
 
 class CDARelevantComponentIterator
@@ -642,7 +642,7 @@ public:
     mIt = mRelevantComponents.begin();
   }
 
-  iface::cellml_api::CellMLComponent*
+  already_AddRefd<iface::cellml_api::CellMLComponent>
   nextComponent()
     throw(std::exception&)
   {
@@ -656,7 +656,7 @@ public:
     return c;
   }
 
-  iface::cellml_api::CellMLElement*
+  already_AddRefd<iface::cellml_api::CellMLElement>
   next()
     throw(std::exception&)
   {
@@ -669,14 +669,14 @@ private:
   std::list<iface::cellml_api::CellMLComponent*>::iterator mIt;
 };
 
-iface::cellml_api::CellMLComponentIterator*
+already_AddRefd<iface::cellml_api::CellMLComponentIterator>
 CDACeVAS::iterateRelevantComponents()
   throw(std::exception&)
 {
   return new CDARelevantComponentIterator(this, mRelevantComponents);
 }
 
-iface::cellml_services::ConnectedVariableSet*
+already_AddRefd<iface::cellml_services::ConnectedVariableSet>
 CDACeVAS::findVariableSet
 (
  iface::cellml_api::CellMLVariable* aVariable
@@ -700,7 +700,7 @@ CDACeVAS::length()
   return mSetList.size();
 }
 
-iface::cellml_services::ConnectedVariableSet*
+already_AddRefd<iface::cellml_services::ConnectedVariableSet>
 CDACeVAS::getVariableSet(uint32_t aIndex)
   throw(std::exception&)
 {
@@ -711,7 +711,7 @@ CDACeVAS::getVariableSet(uint32_t aIndex)
   return cvs;
 }
 
-iface::cellml_services::CeVASBootstrap*
+already_AddRefd<iface::cellml_services::CeVASBootstrap>
 CreateCeVASBootstrap(void)
 {
   return new CDACeVASBootstrap();

@@ -3,24 +3,24 @@
 #include "ATImplementation.hpp"
 #include "AnnoToolsBootstrap.hpp"
 
-CDAStringAnnotationImpl::CDAStringAnnotationImpl(const wchar_t* aValue)
+CDAStringAnnotationImpl::CDAStringAnnotationImpl(const std::wstring& aValue)
   throw()
   : mString(aValue)
 {
 }
 
 void
-CDAStringAnnotationImpl::value(const wchar_t* aValue)
+CDAStringAnnotationImpl::value(const std::wstring& aValue)
   throw(std::exception&)
 {
   mString = aValue;
 }
 
-wchar_t*
+std::wstring
 CDAStringAnnotationImpl::value()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mString.c_str());
+  return mString;
 }
 
 CDAObjectAnnotationImpl::CDAObjectAnnotationImpl(iface::XPCOM::IObject* aValue)
@@ -36,12 +36,12 @@ CDAObjectAnnotationImpl::value(iface::XPCOM::IObject* aValue)
   mObject = aValue;
 }
 
-iface::XPCOM::IObject*
+already_AddRefd<iface::XPCOM::IObject>
 CDAObjectAnnotationImpl::value()
   throw(std::exception&)
 {
   mObject->add_ref();
-  return mObject;
+  return mObject.getPointer();
 }
 
 CDAAnnotationSetImpl::CDAAnnotationSetImpl()
@@ -81,18 +81,18 @@ CDAAnnotationSetImpl::~CDAAnnotationSetImpl()
   }
 }
 
-wchar_t*
+std::wstring
 CDAAnnotationSetImpl::prefixURI()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mPrefixURI.c_str());
+  return mPrefixURI;
 }
 
-wchar_t*
+std::wstring
 CDAAnnotationSetImpl::getStringAnnotation
 (
  iface::cellml_api::CellMLElement* aElement,
- const wchar_t* aKey
+ const std::wstring& aKey
 )
   throw(std::exception&)
 {
@@ -106,13 +106,13 @@ CDAAnnotationSetImpl::getStringAnnotation
     DECLARE_QUERY_INTERFACE_OBJREF(sa, ud, cellml_services::StringAnnotation);
     
     if (sa == NULL)
-      return CDA_wcsdup(L"");
+      return L"";
     
     return sa->value();
   }
   catch (...)
   {
-    return CDA_wcsdup(L"");
+    return L"";
   }
 }
 
@@ -120,8 +120,8 @@ void
 CDAAnnotationSetImpl::setStringAnnotation
 (
  iface::cellml_api::CellMLElement* aElement,
- const wchar_t* aKey,
- const wchar_t* aValue
+ const std::wstring& aKey,
+ const std::wstring& aValue
 )
   throw(std::exception&)
 {
@@ -137,11 +137,11 @@ CDAAnnotationSetImpl::setStringAnnotation
   aElement->setUserData(key.c_str(), anno);
 }
 
-iface::XPCOM::IObject*
+already_AddRefd<iface::XPCOM::IObject>
 CDAAnnotationSetImpl::getObjectAnnotation
 (
  iface::cellml_api::CellMLElement* aElement,
- const wchar_t* aKey
+ const std::wstring& aKey
 )
   throw(std::exception&)
 {
@@ -169,7 +169,7 @@ void
 CDAAnnotationSetImpl::setObjectAnnotation
 (
  iface::cellml_api::CellMLElement* aElement,
- const wchar_t* aKey,
+ const std::wstring& aKey,
  iface::XPCOM::IObject* aValue
 )
   throw(std::exception&)
@@ -194,7 +194,7 @@ CDAAnnotationSetImpl::setObjectAnnotation
   aElement->setUserData(key.c_str(), anno);
 }
 
-iface::cellml_services::AnnotationToolService*
+already_AddRefd<iface::cellml_services::AnnotationToolService>
 CreateAnnotationToolService(void)
 {
   return new CDAAnnotationToolServiceImpl();

@@ -41,17 +41,17 @@ public:
   {};
   ~CDA_ComputationTarget() {};
 
-  iface::cellml_api::CellMLVariable* variable() throw();
+  already_AddRefd<iface::cellml_api::CellMLVariable> variable() throw();
   uint32_t degree() throw();
   iface::cellml_services::VariableEvaluationType type() throw();
-  wchar_t* name() throw();
+  std::wstring name() throw();
   uint32_t assignedIndex() throw();
 
   ptr_tag<CDA_ComputationTarget>& getSelf() { return self; }
 
   // CCGS implementation access only...
-  void setNameAndIndex(uint32_t aIndex, const wchar_t* aName) throw();
-  void setDelayedName(const wchar_t* aSetTo) throw();
+  void setNameAndIndex(uint32_t aIndex, const std::wstring& aName) throw();
+  void setDelayedName(const std::wstring& aSetTo) throw();
   ObjRef<iface::cellml_api::CellMLVariable> mVariable;
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
   uint32_t mDegree, mAssignedIndex;
@@ -127,7 +127,7 @@ public:
   };
   ~CDA_ComputationTargetIterator() {};
 
-  iface::cellml_services::ComputationTarget* nextComputationTarget() throw();
+  already_AddRefd<iface::cellml_services::ComputationTarget> nextComputationTarget() throw();
 
 private:
   // These will not go away before mOwner, so we don't ref them.
@@ -147,22 +147,22 @@ public:
   CDA_CodeInformation() {};
   ~CDA_CodeInformation();
 
-  wchar_t* errorMessage() throw();
+  std::wstring errorMessage() throw();
   iface::cellml_services::ModelConstraintLevel constraintLevel() throw();
   uint32_t algebraicIndexCount() throw();
   uint32_t rateIndexCount() throw();
   uint32_t constantIndexCount() throw();
-  wchar_t* initConstsString() throw();
-  wchar_t* ratesString() throw();
-  wchar_t* variablesString() throw();
-  wchar_t* functionsString() throw();
-  wchar_t* essentialVariablesString() throw();
-  wchar_t* stateInformationString() throw();
+  std::wstring initConstsString() throw();
+  std::wstring ratesString() throw();
+  std::wstring variablesString() throw();
+  std::wstring functionsString() throw();
+  std::wstring essentialVariablesString() throw();
+  std::wstring stateInformationString() throw();
   uint32_t conditionVariableCount() throw();
-  wchar_t* rootInformationString() throw();
-  iface::cellml_services::ComputationTargetIterator* iterateTargets()
+  std::wstring rootInformationString() throw();
+  already_AddRefd<iface::cellml_services::ComputationTargetIterator> iterateTargets()
     throw();
-  iface::mathml_dom::MathMLNodeList* flaggedEquations()
+  already_AddRefd<iface::mathml_dom::MathMLNodeList> flaggedEquations()
     throw();
 
   // CCGS implementation access only...
@@ -186,9 +186,9 @@ public:
 
   iface::cellml_services::ModelConstraintLevel constraintLevel() throw();
   uint32_t indexCount() throw();
-  iface::cellml_services::ComputationTargetIterator* iterateTargets() throw();
-  wchar_t* generatedCode() throw();
-  wchar_t* functionsString() throw();
+  already_AddRefd<iface::cellml_services::ComputationTargetIterator> iterateTargets() throw();
+  std::wstring generatedCode() throw();
+  std::wstring functionsString() throw();
 
   iface::cellml_services::ModelConstraintLevel mConstraintLevel;
   uint32_t mIndexCount;
@@ -217,11 +217,11 @@ public:
                       uint32_t aArrayOffset
                      );
 
-  iface::cellml_services::ComputationTargetIterator* iterateTargets() throw();
+  already_AddRefd<iface::cellml_services::ComputationTargetIterator> iterateTargets() throw();
   void requestComputation(iface::cellml_services::ComputationTarget* aTarget) throw(std::exception&);
   void markAsKnown(iface::cellml_services::ComputationTarget* aTarget) throw(std::exception&);
   void markAsUnwanted(iface::cellml_services::ComputationTarget* aTarget) throw(std::exception&);
-  iface::cellml_services::CustomCodeInformation* generateCode() throw(std::exception&);
+  already_AddRefd<iface::cellml_services::CustomCodeInformation> generateCode() throw(std::exception&);
 
   void indexTargets();
 
@@ -251,73 +251,73 @@ public:
   CDA_CodeGenerator(bool aIDAStyle);
   ~CDA_CodeGenerator() {};
 
-  wchar_t* constantPattern() throw();
-  void constantPattern(const wchar_t* aPattern) throw();
-  wchar_t* stateVariableNamePattern() throw();
-  void stateVariableNamePattern(const wchar_t* aPattern) throw();
-  wchar_t* algebraicVariableNamePattern() throw();
-  void algebraicVariableNamePattern(const wchar_t* aPattern) throw();
-  wchar_t* rateNamePattern() throw();
-  void rateNamePattern(const wchar_t* aPattern) throw();
-  wchar_t* voiPattern(void) throw();
-  void voiPattern(const wchar_t* aPattern) throw();
-  wchar_t* sampleDensityFunctionPattern(void) throw();
-  void sampleDensityFunctionPattern(const wchar_t* aPattern) throw();
-  wchar_t* sampleRealisationsPattern(void) throw();
-  void sampleRealisationsPattern(const wchar_t* aPattern) throw();
-  wchar_t* boundVariableName(void) throw();
-  void boundVariableName(const wchar_t* aPattern) throw();
+  std::wstring constantPattern() throw();
+  void constantPattern(const std::wstring& aPattern) throw();
+  std::wstring stateVariableNamePattern() throw();
+  void stateVariableNamePattern(const std::wstring& aPattern) throw();
+  std::wstring algebraicVariableNamePattern() throw();
+  void algebraicVariableNamePattern(const std::wstring& aPattern) throw();
+  std::wstring rateNamePattern() throw();
+  void rateNamePattern(const std::wstring& aPattern) throw();
+  std::wstring voiPattern(void) throw();
+  void voiPattern(const std::wstring& aPattern) throw();
+  std::wstring sampleDensityFunctionPattern(void) throw();
+  void sampleDensityFunctionPattern(const std::wstring& aPattern) throw();
+  std::wstring sampleRealisationsPattern(void) throw();
+  void sampleRealisationsPattern(const std::wstring& aPattern) throw();
+  std::wstring boundVariableName(void) throw();
+  void boundVariableName(const std::wstring& aPattern) throw();
   uint32_t arrayOffset() throw();
   void arrayOffset(uint32_t offset) throw();
-  wchar_t* assignPattern() throw();
-  void assignPattern(const wchar_t* aPattern) throw();
-  wchar_t* solvePattern() throw();
-  void solvePattern(const wchar_t* aPattern) throw();
-  wchar_t* solveNLSystemPattern() throw();
-  void solveNLSystemPattern(const wchar_t* aPattern) throw();
-  wchar_t* temporaryVariablePattern() throw();
-  void temporaryVariablePattern(const wchar_t* aPattern) throw();
-  wchar_t* declareTemporaryPattern() throw();
-  void declareTemporaryPattern(const wchar_t* aPattern) throw();
-  wchar_t* conditionalAssignmentPattern() throw();
-  void conditionalAssignmentPattern(const wchar_t* aPattern) throw();
-  wchar_t* residualPattern() throw();
-  void residualPattern(const wchar_t* aPattern) throw();
-  wchar_t* constrainedRateStateInfoPattern() throw();
-  void constrainedRateStateInfoPattern(const wchar_t* aPattern) throw();
-  wchar_t* unconstrainedRateStateInfoPattern() throw();
-  void unconstrainedRateStateInfoPattern(const wchar_t* aPattern) throw();
-  wchar_t* infDelayedRatePattern() throw();
-  void infDelayedRatePattern(const wchar_t* aPattern) throw();
-  wchar_t* infDelayedStatePattern() throw();
-  void infDelayedStatePattern(const wchar_t* aPattern) throw();
-  wchar_t* conditionVariablePattern() throw();
-  void conditionVariablePattern(const wchar_t* aPattern) throw();
+  std::wstring assignPattern() throw();
+  void assignPattern(const std::wstring& aPattern) throw();
+  std::wstring solvePattern() throw();
+  void solvePattern(const std::wstring& aPattern) throw();
+  std::wstring solveNLSystemPattern() throw();
+  void solveNLSystemPattern(const std::wstring& aPattern) throw();
+  std::wstring temporaryVariablePattern() throw();
+  void temporaryVariablePattern(const std::wstring& aPattern) throw();
+  std::wstring declareTemporaryPattern() throw();
+  void declareTemporaryPattern(const std::wstring& aPattern) throw();
+  std::wstring conditionalAssignmentPattern() throw();
+  void conditionalAssignmentPattern(const std::wstring& aPattern) throw();
+  std::wstring residualPattern() throw();
+  void residualPattern(const std::wstring& aPattern) throw();
+  std::wstring constrainedRateStateInfoPattern() throw();
+  void constrainedRateStateInfoPattern(const std::wstring& aPattern) throw();
+  std::wstring unconstrainedRateStateInfoPattern() throw();
+  void unconstrainedRateStateInfoPattern(const std::wstring& aPattern) throw();
+  std::wstring infDelayedRatePattern() throw();
+  void infDelayedRatePattern(const std::wstring& aPattern) throw();
+  std::wstring infDelayedStatePattern() throw();
+  void infDelayedStatePattern(const std::wstring& aPattern) throw();
+  std::wstring conditionVariablePattern() throw();
+  void conditionVariablePattern(const std::wstring& aPattern) throw();
   bool trackPiecewiseConditions() throw();
   void trackPiecewiseConditions(bool aTrack) throw();
 
-  iface::cellml_services::MaLaESTransform* transform() throw();
+  already_AddRefd<iface::cellml_services::MaLaESTransform> transform() throw();
   void transform(iface::cellml_services::MaLaESTransform* aTransform)
      throw();
-  iface::cellml_services::CeVAS* useCeVAS()
+  already_AddRefd<iface::cellml_services::CeVAS> useCeVAS()
      throw();
   void useCeVAS(iface::cellml_services::CeVAS* aCeVAS)
      throw();
-  iface::cellml_services::CUSES* useCUSES() throw();
+  already_AddRefd<iface::cellml_services::CUSES> useCUSES() throw();
   void useCUSES(iface::cellml_services::CUSES* aCUSES) throw();
-  iface::cellml_services::AnnotationSet* useAnnoSet() throw();
+  already_AddRefd<iface::cellml_services::AnnotationSet> useAnnoSet() throw();
   void useAnnoSet(iface::cellml_services::AnnotationSet* aAnnoSet) throw();
 
-  iface::cellml_services::CodeInformation* generateCode
+  already_AddRefd<iface::cellml_services::CodeInformation> generateCode
     (iface::cellml_api::Model* aSourceModel) throw()
   {
     return generateIDACode(aSourceModel);
   }
 
-  iface::cellml_services::CustomGenerator* createCustomGenerator(iface::cellml_api::Model* aSourceModel)
+  already_AddRefd<iface::cellml_services::CustomGenerator> createCustomGenerator(iface::cellml_api::Model* aSourceModel)
     throw(std::exception&);
 
-  iface::cellml_services::IDACodeInformation* generateIDACode
+  already_AddRefd<iface::cellml_services::IDACodeInformation> generateIDACode
     (iface::cellml_api::Model* aSourceModel) throw();
 
   bool allowPassthrough() throw();
@@ -364,13 +364,13 @@ public:
   {}
   ~CDA_CodeGeneratorBootstrap() {}
 
-  iface::cellml_services::CodeGenerator*
+  already_AddRefd<iface::cellml_services::CodeGenerator>
   createCodeGenerator() throw(std::exception&)
   {
     return new CDA_CodeGenerator(false);
   }
 
-  iface::cellml_services::IDACodeGenerator*
+  already_AddRefd<iface::cellml_services::IDACodeGenerator>
   createIDACodeGenerator() throw(std::exception&)
   {
     return new CDA_CodeGenerator(true);
@@ -383,24 +383,24 @@ public:
     return iface::cellml_context::CellMLModule::SERVICE;
   }
 
-  wchar_t* moduleName() throw (std::exception&)
+  std::wstring moduleName() throw (std::exception&)
   {
-    return CDA_wcsdup(L"CCCGS");
+    return L"CCCGS";
   }
 
-  wchar_t* moduleDescription() throw (std::exception&)
+  std::wstring moduleDescription() throw (std::exception&)
   {
-    return CDA_wcsdup(L"The CellML C Code Generation Service");
+    return L"The CellML C Code Generation Service";
   }
 
-  wchar_t* moduleVersion() throw (std::exception&)
+  std::wstring moduleVersion() throw (std::exception&)
   {
-    return CDA_wcsdup(L"0.0");
+    return L"0.0";
   }
 
-  wchar_t* moduleIconURL() throw (std::exception&)
+  std::wstring moduleIconURL() throw (std::exception&)
   {
-    return CDA_wcsdup(L"");
+    return L"";
   }
 
   void unload() throw (std::exception&)

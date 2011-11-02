@@ -151,9 +151,8 @@ CellMLTest::testDOMModelLoader()
                                 mLocalURLLoader);
   CPPUNIT_ASSERT(m);
   // For now, just check the name to make sure we loaded the right model...
-  wchar_t* str = m->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade_1995"));
-  free(str);
+  std::wstring str = m->name();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade_1995"), str);
   m->release_ref();
 }
 //   };
@@ -179,9 +178,8 @@ CellMLTest::testModelLoader()
 //       raises(CellMLException);
   loadAchCascade();
   CPPUNIT_ASSERT(mAchCascade);
-  wchar_t* str = mAchCascade->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade_1995"));
-  free(str);
+  std::wstring str = mAchCascade->name();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade_1995"), str);
   
 //     /**
 //      * An error message describing the cause of the last CellMLException.
@@ -202,8 +200,7 @@ CellMLTest::testModelLoader()
   CPPUNIT_ASSERT_THROW(throwaway=mModelLoader->loadFromURL(BASE_DIRECTORY L"dont_create_this_file.xml"),
                        iface::cellml_api::CellMLException);
   str = mModelLoader->lastErrorMessage();
-  CPPUNIT_ASSERT(!wcscmp(str, L"servererror"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"servererror"), str);
 
 
 //    /**
@@ -247,9 +244,8 @@ CellMLTest::testDOMURLLoader()
   CPPUNIT_ASSERT(d);
   iface::dom::Element* de = d->documentElement();
   CPPUNIT_ASSERT(de);
-  wchar_t* str = de->localName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"model"));
-  free(str);
+  std::wstring str = de->localName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"model"), str);
   de->release_ref();
   d->release_ref();
 //     /**
@@ -275,8 +271,7 @@ CellMLTest::testDOMURLLoader()
                        (BASE_DIRECTORY L"dont_create_this_file.xml"),
                        iface::cellml_api::CellMLException);
   str = mLocalURLLoader->lastErrorMessage();
-  CPPUNIT_ASSERT(!wcscmp(str, L"servererror"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"servererror"), str);
 }
 //   };
 
@@ -300,9 +295,8 @@ CellMLTest::testRDFRepresentation()
     );
   CPPUNIT_ASSERT(rr);
 
-  wchar_t* str = rr->type();
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.cellml.org/RDFXML/DOM"));
-  free(str);
+  std::wstring str = rr->type();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.cellml.org/RDFXML/DOM"), str);
   rr->release_ref();
 
   CPPUNIT_ASSERT_NO_THROW
@@ -312,8 +306,7 @@ CellMLTest::testRDFRepresentation()
   CPPUNIT_ASSERT(rr);
 
   str = rr->type();
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.cellml.org/RDFXML/string"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.cellml.org/RDFXML/string"), str);
 
   rr->release_ref();
 }
@@ -353,9 +346,8 @@ CellMLTest::testRDFXMLDOMRepresentation()
   iface::dom::Element* de = doc->documentElement();
   doc->release_ref();
 
-  wchar_t* str = de->localName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"RDF"));
-  free(str);
+  std::wstring str = de->localName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"RDF"), str);
 
   iface::dom::NodeList* nl = de->childNodes();
   de->release_ref();
@@ -364,16 +356,14 @@ CellMLTest::testRDFXMLDOMRepresentation()
   
   CPPUNIT_ASSERT(n);
   str = n->localName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Description"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Description"), str);
 
   DECLARE_QUERY_INTERFACE_REPLACE(el, n, dom::Element);
 
   str =
     el->getAttributeNS(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                        L"about");
-  CPPUNIT_ASSERT(!wcscmp(str, L""));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
 
   el->release_ref();
 }
@@ -401,7 +391,7 @@ CellMLTest::testRDFXMLStringRepresentation()
 
   DECLARE_QUERY_INTERFACE_REPLACE(rrs, rr,
                                   cellml_api::RDFXMLStringRepresentation);
-  const wchar_t* correctValue =
+  const std::wstring correctValue =
 L"<?xml version=\"1.0\"?>\n"
 L"<RDF xmlns=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" rdf:about=\"\">\n"
 L"      <!--\n"
@@ -535,9 +525,8 @@ L"        </bqs:JournalArticle>\n"
 L"      </bqs:reference>\n"
 L"    </rdf:Description></RDF>";
 
-  wchar_t* str = rrs->serialisedData();  
-  CPPUNIT_ASSERT(!wcscmp(str, correctValue));
-  free(str);
+  std::wstring str = rrs->serialisedData();  
+  CPPUNIT_ASSERT_EQUAL(std::wstring(correctValue), str);
 
   rrs->release_ref();
 }
@@ -561,22 +550,16 @@ CellMLTest::testURI()
   iface::cellml_api::URI* uri = mAchCascade->xmlBase();
   CPPUNIT_ASSERT(uri);
 
-  wchar_t* str = uri->asText();
-  CPPUNIT_ASSERT
-    (!wcscmp(str, L"http://www.example.org/repository/Ach_cascade_1995.xml"));
-  free(str);
+  std::wstring str = uri->asText();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/repository/Ach_cascade_1995.xml"), str);
 
   uri->asText(L"http://www.example.org/repository/some_other_example.xml");
   str = uri->asText();
-  CPPUNIT_ASSERT
-    (!wcscmp(str, L"http://www.example.org/repository/some_other_example.xml"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/repository/some_other_example.xml"), str);
 
   mAchCascade->clearXMLBase();
   str = uri->asText();
-  CPPUNIT_ASSERT
-    (!wcscmp(str, L""));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
   
   uri->release_ref();
 }
@@ -609,29 +592,28 @@ public:
       delete this;
   }
 
-  char* objid()
+  std::string objid()
     throw(std::exception&)
   {
-    return strdup("4d77f9ec-22b6-4329-a427-76e52de494da");
+    return "4d77f9ec-22b6-4329-a427-76e52de494da";
   }
 
   void*
-  query_interface(const char* className)
+  query_interface(const std::string& className)
     throw(std::exception&)
   {
-    if (!strcmp(className, "xpcom::IObject"))
+    if (className == "xpcom::IObject")
       return static_cast<iface::XPCOM::IObject*>(this);
-    else if (!strcmp(className, "cellml_api::UserData"))
+    else if (className == "cellml_api::UserData")
       return static_cast<iface::cellml_api::UserData*>(this);
     return NULL;
   }
 
-  char** supported_interfaces(uint32_t* len) throw()
+  std::vector<std::string> supported_interfaces() throw()
   {
-    *len = 2;
-    char** ret = static_cast<char**>(malloc(sizeof(char*) * 2));
-    ret[0] = strdup("xpcom::IObject");
-    ret[1] = strdup("cellml_api::UserData");
+    std::vector<std::string> ret;
+    ret.push_back("xpcom::IObject");
+    ret.push_back("cellml_api::UserData");
     return ret;
   }
 private:
@@ -654,9 +636,8 @@ CellMLTest::testCellMLElement()
 //      * Other values are reserved for future use.
 //      */
 //     readonly attribute CellMLAttributeString cellmlVersion;
-  wchar_t* str = mAchCascade->cellmlVersion();
-  CPPUNIT_ASSERT(!wcscmp(str, L"1.0"));
-  free(str);
+  std::wstring str = mAchCascade->cellmlVersion();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"1.0"), str);
   // TODO: Make a 1.1 model for testing things.
 
 //     /**
@@ -664,12 +645,10 @@ CellMLTest::testCellMLElement()
 //      */
 //     attribute CellMLAttributeString cmetaId;
   str = mAchCascade->cmetaId();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade"), str);
   mAchCascade->cmetaId(L"Ach_cascade_test");
   str = mAchCascade->cmetaId();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade_test"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade_test"), str);
   // Just so we don't mess up other tests...
   mAchCascade->cmetaId(L"Ach_cascade");
 
@@ -722,8 +701,7 @@ CellMLTest::testCellMLElement()
   // Now check that the new extension element is in the right place...
   el1 = eel->getAt(2);
   str = el1->getAttributeNS(L"", L"ismodified");
-  CPPUNIT_ASSERT(!wcscmp(str, L"true"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"true"), str);
 
 //     /**
 //      * Remove an extension element. If the element is not found,
@@ -742,8 +720,7 @@ CellMLTest::testCellMLElement()
   el1->release_ref();
   el1 = eel->getAt(5);
   str = el1->getAttributeNS(L"", L"ismodified");
-  CPPUNIT_ASSERT(!wcscmp(str, L"true"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"true"), str);
   mAchCascade->removeExtensionElement(el1);
   el1->release_ref();
 
@@ -757,8 +734,7 @@ CellMLTest::testCellMLElement()
   // Now check that the new extension element is in the right place...
   el1 = eel->getAt(5);
   str = el1->getAttributeNS(L"", L"ismodified");
-  CPPUNIT_ASSERT(!wcscmp(str, L"true"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"true"), str);
   mAchCascade->removeExtensionElement(el1);
   el1->release_ref();
   CPPUNIT_ASSERT_EQUAL(5, (int)eel->length());
@@ -773,8 +749,7 @@ CellMLTest::testCellMLElement()
   // Now check that the new extension element is in the right place...
   el1 = eel->getAt(0);
   str = el1->getAttributeNS(L"", L"ismodified");
-  CPPUNIT_ASSERT(!wcscmp(str, L"true"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"true"), str);
   CPPUNIT_ASSERT_NO_THROW(mAchCascade->removeExtensionElement(el1));
   el1->release_ref();
   CPPUNIT_ASSERT_EQUAL(5, (int)eel->length());
@@ -792,8 +767,7 @@ CellMLTest::testCellMLElement()
   el1->release_ref();
   el1 = eel->getAt(0);
   str = el1->getAttributeNS(L"", L"ismodified");
-  CPPUNIT_ASSERT(!wcscmp(str, L"true"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"true"), str);
   el1->release_ref();
 
 //     /**
@@ -809,8 +783,7 @@ CellMLTest::testCellMLElement()
   // Now check that the new extension element is in the right place...
   el1 = eel->getAt(0);
   str = el1->getAttributeNS(L"", L"ismodified");
-  CPPUNIT_ASSERT(!wcscmp(str, L"true"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"true"), str);
   el1->release_ref();
   newel->release_ref();
   eel->release_ref();
@@ -999,8 +972,7 @@ CellMLTest::testCellMLElement()
   els->release_ref();
 
   str = el->cmetaId();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade"), str);
   el->release_ref();
 
   el = mAchCascade->clone(false);
@@ -1014,8 +986,7 @@ CellMLTest::testCellMLElement()
   els->release_ref();
 
   str = el->cmetaId();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade"), str);
   el->release_ref();
 
   // There are two separate implementations of clone, one on Model and a base
@@ -1064,9 +1035,8 @@ CellMLTest::testCellMLDOMElement()
 
   iface::dom::Element* el = dcc->domElement();
   CPPUNIT_ASSERT(el);
-  wchar_t* str = el->getAttribute(L"name");
-  CPPUNIT_ASSERT(!wcscmp(str, L"reaction19"));
-  free(str);
+  std::wstring str = el->getAttribute(L"name");
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"reaction19"), str);
   el->release_ref();
 
   dcc->release_ref();
@@ -1088,14 +1058,12 @@ CellMLTest::testNamedCellMLElement()
 //      * The name associated with this CellML element.
 //      */
 //     attribute CellMLAttributeString name;
-  wchar_t* str = mAchCascade->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Ach_cascade_1995"));
-  free(str);
+  std::wstring str = mAchCascade->name();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade_1995"), str);
 
   mAchCascade->name(L"Test_cascade_1995");
   str = mAchCascade->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"Test_cascade_1995"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Test_cascade_1995"), str);
 }
 //   };
 
@@ -1113,15 +1081,13 @@ CellMLTest::testModel()
   //  Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
   iface::cellml_api::Model* m = NULL;
   CPPUNIT_ASSERT_NO_THROW(m = mBeelerReuter->getAlternateVersion(L"1.1"));
-  wchar_t* str = NULL;
+  std::wstring str = NULL;
   CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
-  CPPUNIT_ASSERT(!wcscmp(str, L"1.1"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"1.1"), str);
   m->release_ref();
   CPPUNIT_ASSERT_NO_THROW(m = mTenTusscher->getAlternateVersion(L"1.0"));
   CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
-  CPPUNIT_ASSERT(!wcscmp(str, L"1.0"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"1.0"), str);
   m->release_ref();
 
 //     /**
@@ -1248,16 +1214,15 @@ CellMLTest::testModel()
   iface::cellml_api::URI* xh = NULL;
   CPPUNIT_ASSERT_NO_THROW(xh = ci->xlinkHref());
   CPPUNIT_ASSERT_NO_THROW(str = xh->asText());
-  CPPUNIT_ASSERT(!wcscmp(str, L"../../common/units.xml"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"../../common/units.xml"), str);
   xh->release_ref();
   ci->release_ref();
   CPPUNIT_ASSERT_NO_THROW(ci = cii->nextImport());
   CPPUNIT_ASSERT_NO_THROW(xh = ci->xlinkHref());
   CPPUNIT_ASSERT_NO_THROW(str = xh->asText());
-  CPPUNIT_ASSERT(!wcscmp(str, L"../2004_"
-                         L"tenTusscher_noble_noble_panfilov-endo.xml"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"../2004_"
+                                    L"tenTusscher_noble_noble_panfilov-endo.xml"),
+                       str);
   xh->release_ref();
   ci->release_ref();
   cii->release_ref();
@@ -1274,8 +1239,7 @@ CellMLTest::testModel()
 //     readonly attribute URI xmlBase;
   CPPUNIT_ASSERT_NO_THROW(xh = mBeelerReuter->xmlBase());
   CPPUNIT_ASSERT_NO_THROW(str = xh->asText());
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.example.com/base/beelerreuter.xml"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.com/base/beelerreuter.xml"), str);
   xh->release_ref();
 
 //     /**
@@ -1315,12 +1279,10 @@ CellMLTest::testModel()
   DECLARE_QUERY_INTERFACE_REPLACE(icu, cu, cellml_api::ImportUnits);
   CPPUNIT_ASSERT(icu);
   CPPUNIT_ASSERT_NO_THROW(str = icu->name());
-  CPPUNIT_ASSERT(!wcscmp(str, L"ms"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"ms"), str);
 
   CPPUNIT_ASSERT_NO_THROW(str = icu->unitsRef());
-  CPPUNIT_ASSERT(!wcscmp(str, L"ms"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"ms"), str);
 
   icu->release_ref();
   ui->release_ref();
@@ -1461,8 +1423,7 @@ CellMLTest::testModel()
   CPPUNIT_ASSERT_NO_THROW(rr = rri->nextRelationshipRef());
   rri->release_ref();
   CPPUNIT_ASSERT_NO_THROW(str = rr->relationship());
-  CPPUNIT_ASSERT(!wcscmp(str, L"containment"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"containment"), str);
   rr->release_ref();
   rrs->release_ref();
   gs->release_ref();
@@ -1670,9 +1631,8 @@ CellMLTest::testMathContainer()
 //      */
 //     MathMLElement next();
   iface::mathml_dom::MathMLElement* me = mi->next();
-  wchar_t* str = me->className();
-  CPPUNIT_ASSERT(!wcscmp(str, L"testmath"));
-  free(str);
+  std::wstring str = me->className();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"testmath"), str);
 //   };
   mi->release_ref();
 
@@ -1774,12 +1734,10 @@ CellMLTest::testCellMLComponent()
   iface::cellml_api::CellMLVariable* v2 = cvi2->nextVariable();
   cvi->release_ref();
   cvi2->release_ref();
-  wchar_t* str = v->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"footime"));
-  free(str);
+  std::wstring str = v->name();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"footime"), str);
   str = v2->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"time"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"time"), str);
   v->release_ref();
   v2->release_ref();
   cvs->release_ref();
@@ -1844,14 +1802,12 @@ CellMLTest::testCellMLComponent()
   // Order is not specified by the CellML API specification. Implementators may
   // adjust this if their API returns elements in a different order...
   str = c3->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"membrane_potential"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"membrane_potential"), str);
   // We haven't really tested encapsulationParent() properly yet, so test...
   iface::cellml_api::CellMLComponent* c4 = NULL;
   CPPUNIT_ASSERT_NO_THROW(c4 = c3->encapsulationParent());
   str = c4->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"interface"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"interface"), str);
   c4->release_ref();
   c3->release_ref();
   cs2->release_ref();
@@ -1868,8 +1824,7 @@ CellMLTest::testCellMLComponent()
 
   c3 = c->containmentParent();
   str = c3->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"membrane"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"membrane"), str);
 
 //     /**
 //      * The containment parent for this component. This must work correctly
@@ -1924,12 +1879,10 @@ CellMLTest::testUnits()
   // The CellML API specification does not specify the order in which iterators
   // return elements, so implementators or compliant API implementations may
   // need modify this logic to fetch the correct units.
-  wchar_t* str = u1->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"notarealunit"));
-  free(str);
+  std::wstring str = u1->name();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"notarealunit"), str);
   str = u2->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millisecond"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millisecond"), str);
 
 //     /**
 //      * True if this units element defines a base unit, or false otherwise.
@@ -2069,27 +2022,21 @@ CellMLTest::testUnit()
 //      * The name of the units attribute.
 //      */
 //     attribute CellMLAttributeString units;
-  wchar_t* str;
-  str = un1->units();
-  CPPUNIT_ASSERT(!wcscmp(str, L"second"));
-  free(str);
+  std::wstring str(un1->units());
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"second"), str);
 
   un1->units(L"foobar");
   str = un1->units();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foobar"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foobar"), str);
 
   str = un2->units();
-  CPPUNIT_ASSERT(!wcscmp(str, L"second"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"second"), str);
 
   str = un31->units();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millivolt"), str);
 
   str = un32->units();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millisecond"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millisecond"), str);
 
   un1->release_ref();
   un2->release_ref();
@@ -2131,13 +2078,11 @@ CellMLTest::testCellMLImport()
 //      */
 //     readonly attribute URI xlinkHref;
   iface::cellml_api::URI* u = ci1->xlinkHref();
-  wchar_t* str = u->asText();
-  CPPUNIT_ASSERT(!wcscmp(str, L"../../common/units.xml"));
-  free(str);
+  std::wstring str = u->asText();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"../../common/units.xml"), str);
   u->asText(L"http://www.example.org/models/test.xml");
   str = u->asText();
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.example.org/models/test.xml"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/models/test.xml"), str);
   u->asText(L"http://www.cellml.org/Members/miller/andres_models/"
             L"common/units.xml");
   u->release_ref();
@@ -2202,8 +2147,7 @@ CellMLTest::testCellMLImport()
 //    readonly attribute Model importedModel;
   iface::cellml_api::Model* m = ci1->importedModel();
   str = m->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"units"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"units"), str);
 
   m->release_ref();
 
@@ -2248,13 +2192,11 @@ CellMLTest::testImportComponent()
 //      * The name of the component referenced by this import component.
 //      */
 //     attribute CellMLAttributeString componentRef;
-  wchar_t* str = ic->componentRef();
-  CPPUNIT_ASSERT(!wcscmp(str, L"interface"));
-  free(str);
+  std::wstring str = ic->componentRef();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"interface"), str);
   ic->componentRef(L"foobar");
   str = ic->componentRef();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foobar"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foobar"), str);
   ic->componentRef(L"interface");
 
   mTenTusscher->fullyInstantiateImports();
@@ -2336,13 +2278,11 @@ CellMLTest::testImportUnits()
 //      * The name of the units referenced by this import component.
 //      */
 //     attribute CellMLAttributeString unitsRef;
-  wchar_t* str = iu->unitsRef();
-  CPPUNIT_ASSERT(!wcscmp(str, L"per_ms"));
-  free(str);
+  std::wstring str = iu->unitsRef();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"per_ms"), str);
   iu->unitsRef(L"foobar");
   str = iu->unitsRef();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foobar"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foobar"), str);
   iu->unitsRef(L"per_ms");
 
   mTenTusscher->fullyInstantiateImports();
@@ -2389,13 +2329,11 @@ CellMLTest::testCellMLVariable()
 //      * The initial value of this variable.
 //      */
 //     attribute CellMLAttributeString initialValue;
-  wchar_t* str = v1->initialValue();
-  CPPUNIT_ASSERT(!wcscmp(str, L"-84.624"));
-  free(str);
+  std::wstring str = v1->initialValue();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"-84.624"), str);
   v2->initialValue(L"123.45");
   str = v2->initialValue();
-  CPPUNIT_ASSERT(!wcscmp(str, L"123.45"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"123.45"), str);
 
 //     /**
 //      * The private interface direction of this variable.
@@ -2447,8 +2385,7 @@ CellMLTest::testCellMLVariable()
   iface::cellml_api::CellMLElement* el = v4->parentElement();
   DECLARE_QUERY_INTERFACE_REPLACE(c3, el, cellml_api::CellMLComponent);
   str = c3->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"environment"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"environment"), str);
   c3->release_ref();
   v4->release_ref();
 
@@ -2457,44 +2394,36 @@ CellMLTest::testCellMLVariable()
 //      */
 //     readonly attribute CellMLAttributeString componentName;
   str = v1->componentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"membrane"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"membrane"), str);
 
   str = v1->unitsName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millivolt"), str);
 
   str = v2->unitsName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millisecond"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millisecond"), str);
 
   str = v3->unitsName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"dimensionless"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"dimensionless"), str);
 
   v3->unitsName(L"millivolt");
   str = v3->unitsName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millivolt"), str);
   v3->unitsName(L"dimensionless");
 
   iface::cellml_api::Units* u1 = v1->unitsElement();
   str = u1->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millivolt"), str);
 
   iface::cellml_api::Units* u2 = v2->unitsElement();
   str = u2->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millisecond"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millisecond"), str);
   u2->release_ref();
 
   v2->unitsElement(u1);
 
   u2 = v2->unitsElement();
   str = u2->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"millivolt"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"millivolt"), str);
   u2->release_ref();
 
   u1->release_ref();
@@ -2587,13 +2516,11 @@ CellMLTest::testComponentRef()
 //      * The name of the component being referenced.
 //      */
 //     attribute CellMLAttributeString componentName;
-  wchar_t* str = cr->componentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"sodium_current"));
-  free(str);
+  std::wstring str = cr->componentName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"sodium_current"), str);
   cr->componentName(L"foobar");
   str = cr->componentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foobar"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foobar"), str);
 
 //     /**
 //      * A collection of component references which are beneath this one in the
@@ -2613,9 +2540,9 @@ CellMLTest::testComponentRef()
 //      * component reference.
 //      */
 //     readonly attribute ComponentRef parentComponentRef;
-  CPPUNIT_ASSERT(!cr->parentComponentRef());
+  CPPUNIT_ASSERT(!cr->parentComponentRef().getPointer());
   iface::cellml_api::ComponentRef* cr3 = cr2->parentComponentRef();
-  CPPUNIT_ASSERT(CDA_objcmp(cr, cr3) == 0);
+  CPPUNIT_ASSERT_EQUAL(0, CDA_objcmp(cr, cr3));
   cr3->release_ref();
 
 //     /**
@@ -2664,29 +2591,25 @@ CellMLTest::testRelationshipRef()
 //      * is defined.
 //      */
 //     attribute CellMLAttributeString name;
-  wchar_t* str = rr->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foobar"));
-  free(str);
+  std::wstring str = rr->name();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foobar"), str);
   rr->name(L"barfoo");
   str = rr->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"barfoo"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"barfoo"), str);
 
 //     /**
 //      * The name of the relationship referenced by this element.
 //      */
 //     readonly attribute CellMLAttributeString relationship;
   CPPUNIT_ASSERT_NO_THROW(str = rr->relationship());
-  CPPUNIT_ASSERT(!wcscmp(str, L"encapsulation"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"encapsulation"), str);
 
 //     /**
 //      * The namespace in which the relationship attribute belongs.
 //      */
 //     readonly attribute CellMLAttributeString relationshipNamespace;
   CPPUNIT_ASSERT_NO_THROW(str = rr->relationshipNamespace());
-  CPPUNIT_ASSERT(!wcscmp(str, L""));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
 
 //     /**
 //      * Sets the namespace and relationship name. This will remove any other
@@ -2700,13 +2623,10 @@ CellMLTest::testRelationshipRef()
     (rr->setRelationshipName(L"http://www.example.org/examplerelationship/"
                              L"namespace", L"testrelationship"));
   CPPUNIT_ASSERT_NO_THROW(str = rr->relationship());
-  CPPUNIT_ASSERT(!wcscmp(str, L"testrelationship"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"testrelationship"), str);
   CPPUNIT_ASSERT_NO_THROW(str = rr->relationshipNamespace());
-  CPPUNIT_ASSERT(!wcscmp(str,
-                         L"http://www.example.org/examplerelationship/"
-                         L"namespace"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.org/examplerelationship/"
+                                    L"namespace"), str);
 
   rr->release_ref();
 }
@@ -2746,13 +2666,11 @@ CellMLTest::testConnection()
 //      * shall not translate the name of imported components).
 //      */
 //     attribute CellMLAttributeString firstComponentName;
-  wchar_t* str = mc->firstComponentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"membrane"));
-  free(str);
+  std::wstring str = mc->firstComponentName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"membrane"), str);
   mc->firstComponentName(L"foobar");
   str = mc->firstComponentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foobar"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foobar"), str);
   mc->firstComponentName(L"membrane");
 
 //     /**
@@ -2762,12 +2680,10 @@ CellMLTest::testConnection()
 //      */
 //     attribute CellMLAttributeString secondComponentName;
   str = mc->secondComponentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"environment"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"environment"), str);
   mc->secondComponentName(L"barfoo");
   str = mc->secondComponentName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"barfoo"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"barfoo"), str);
   mc->secondComponentName(L"environment");
 
 //     /**
@@ -2777,8 +2693,7 @@ CellMLTest::testConnection()
 //     attribute CellMLComponent firstComponent;
   iface::cellml_api::CellMLComponent* comp = mc->firstComponent();
   str = comp->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"membrane"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"membrane"), str);
 //     /**
 //      * The second component. This component shall be the component definition if
 //      * imports have been instantiated, and otherwise shall be the ImportComponent.
@@ -2786,8 +2701,7 @@ CellMLTest::testConnection()
 //     attribute CellMLComponent secondComponent;
   iface::cellml_api::CellMLComponent* comp2 = mc->secondComponent();
   str = comp2->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"environment"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"environment"), str);
 
   // Switch the components...
   CPPUNIT_ASSERT_NO_THROW(mc->firstComponent(comp2));
@@ -2796,14 +2710,12 @@ CellMLTest::testConnection()
   iface::cellml_api::CellMLComponent* comp3 = NULL;
   CPPUNIT_ASSERT_NO_THROW(comp3 = mc->firstComponent());
   str = comp3->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"environment"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"environment"), str);
   comp3->release_ref();
 
   CPPUNIT_ASSERT_NO_THROW(comp3 = mc->secondComponent());
   str = comp3->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"membrane"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"membrane"), str);
   comp3->release_ref();
 //   }; 
   // Switch them back so next tests work...
@@ -2843,12 +2755,10 @@ CellMLTest::testConnection()
 //      */
 //     attribute CellMLAttributeString firstVariableName;
   str = mv->firstVariableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"time"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"time"), str);
   mv->firstVariableName(L"time2");
   str = mv->firstVariableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"time2"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"time2"), str);
   mv->firstVariableName(L"time");
 
 //     /**
@@ -2863,12 +2773,10 @@ CellMLTest::testConnection()
 //      */
 //     attribute CellMLAttributeString secondVariableName;
   str = mv->secondVariableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"footime"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"footime"), str);
   mv->secondVariableName(L"bartime");
   str = mv->secondVariableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"bartime"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"bartime"), str);
   mv->secondVariableName(L"footime");
 
 //     /**
@@ -2881,8 +2789,7 @@ CellMLTest::testConnection()
 //     attribute CellMLVariable firstVariable;
   iface::cellml_api::CellMLVariable* v = mv->firstVariable();
   str = v->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"time"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"time"), str);
 
 //     /**
 //      * The second variable. If this has already been added to a Connection, it
@@ -2894,8 +2801,7 @@ CellMLTest::testConnection()
 //     attribute CellMLVariable secondVariable;
   iface::cellml_api::CellMLVariable* v2 = mv->secondVariable();
   str = v2->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"footime"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"footime"), str);
 
   // Switch the components...
   CPPUNIT_ASSERT_NO_THROW(mc->firstComponent(comp2));
@@ -2912,14 +2818,12 @@ CellMLTest::testConnection()
   iface::cellml_api::CellMLVariable* v3 = NULL;
   CPPUNIT_ASSERT_NO_THROW(v3 = mv->firstVariable());
   str = v3->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"footime"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"footime"), str);
   v3->release_ref();
 
   v3 = mv->secondVariable();
   str = v3->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"time"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"time"), str);
   v3->release_ref();
 
   mv->release_ref();
@@ -2998,9 +2902,8 @@ CellMLTest::testReaction()
 //      * The name of the variable being referenced.
 //      */
 //     attribute wstring variableName;
-  wchar_t* str = vr->variableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"G6P"));
-  free(str);
+  std::wstring str = vr->variableName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"G6P"), str);
 
 //     /**
 //      * The variable being referenced. This may be assigned to a variable in the
@@ -3009,8 +2912,7 @@ CellMLTest::testReaction()
 //     attribute CellMLVariable variable;
   iface::cellml_api::CellMLVariable* v = vr->variable();
   str = v->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"G6P"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"G6P"), str);
   v->release_ref();
   iface::cellml_api::CellMLVariableSet* vs = c->variables();
   c->release_ref();
@@ -3020,18 +2922,15 @@ CellMLTest::testReaction()
   v->release_ref();
   CPPUNIT_ASSERT_NO_THROW(v = vr->variable());
   CPPUNIT_ASSERT_NO_THROW(str = v->name());
-  CPPUNIT_ASSERT(!wcscmp(str, L"PERM"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"PERM"), str);
   v->release_ref();
   str = vr->variableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"PERM"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"PERM"), str);
 
   // Now try setting the variable name...
   vr->variableName(L"test123");
   str = vr->variableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"test123"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"test123"), str);
 
   // Now try setting the VariableRef
 
@@ -3125,12 +3024,10 @@ CellMLTest::testReaction()
   CPPUNIT_ASSERT_NO_THROW(rl = r->getRoleByDeltaVariable
                           (L"delta_Glc_C_rxn1"));
   str = rl->deltaVariableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"delta_Glc_C_rxn1"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"delta_Glc_C_rxn1"), str);
   v = rl->deltaVariable();
   str = v->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"delta_Glc_C_rxn1"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"delta_Glc_C_rxn1"), str);
   v->release_ref();
 
   v = vs->getVariable(L"delta_Glc_rxn1");
@@ -3139,12 +3036,10 @@ CellMLTest::testReaction()
   v->release_ref();
 
   str = rl->deltaVariableName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"delta_Glc_rxn1"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"delta_Glc_rxn1"), str);
   v = rl->deltaVariable();
   str = v->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"delta_Glc_rxn1"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"delta_Glc_rxn1"), str);
   v->release_ref();
 
   rl->release_ref();
@@ -3173,9 +3068,8 @@ CellMLTest::testExtensionElementList()
 //      */
 //     ExtensionElement getAt(in unsigned long index);
   iface::dom::Element* el = eel->getAt(3);
-  wchar_t* str = el->localName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"abc"));
-  free(str);
+  std::wstring str = el->localName();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"abc"), str);
 
 //     /**
 //      * Finds the index of the given extension element.
@@ -3214,15 +3108,13 @@ CellMLTest::testExtensionAttributeSet()
 //     * @param localName The local name of the attribute to fetch.
 //     */
 //    wstring getExtensionAttributeNS(in wstring ns, in wstring localName);
-  wchar_t* str =
+  std::wstring str =
     mAchCascade->getExtensionAttributeNS(L"http://example.org/mytest", L"hello");
-  CPPUNIT_ASSERT(!wcscmp(str, L"world"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"world"), str);
 
   str =
     mAchCascade->getExtensionAttributeNS(L"http://example.org/yourtest", L"hello");
-  CPPUNIT_ASSERT(!wcscmp(str, L""));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
 
 //    /**
 //     * Sets an extension attribute (adding it if it doesn't already exist,
@@ -3236,8 +3128,7 @@ CellMLTest::testExtensionAttributeSet()
   mAchCascade->setExtensionAttributeNS(L"http://example.org/thetest", L"nsblah:atest", L"456");
   str =
     mAchCascade->getExtensionAttributeNS(L"http://example.org/newtest", L"thistest");
-  CPPUNIT_ASSERT(!wcscmp(str, L"123"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"123"), str);
 
 //    /**
 //     * Removes an extension attribute. No action is taken if the attribute is
@@ -3249,8 +3140,7 @@ CellMLTest::testExtensionAttributeSet()
   mAchCascade->removeExtensionAttributeNS(L"http://example.org/newtest", L"thistest");
   str =
     mAchCascade->getExtensionAttributeNS(L"http://example.org/newtest", L"thistest");
-  CPPUNIT_ASSERT(!wcscmp(str, L""));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
 
 //
 //    /**
@@ -3302,12 +3192,12 @@ CellMLTest::testExtensionAttributeSet()
   iface::dom::Attr* attr6 = eai->nextAttribute();
   CPPUNIT_ASSERT(attr6 != NULL);
 
-  CPPUNIT_ASSERT(eai->nextAttribute() == NULL);
+  CPPUNIT_ASSERT(!eai->nextAttribute().getPointer());
 
-  wchar_t * attr1ns = attr1->namespaceURI(), * attr2ns = attr2->namespaceURI(), * attr3ns = attr3->namespaceURI(),
-    * attr4ns = attr4->namespaceURI(), * attr5ns = attr5->namespaceURI(), * attr6ns = attr6->namespaceURI();
-  wchar_t * attr1ln = attr1->localName(), * attr2ln = attr2->localName(), * attr3ln = attr3->localName(),
-    * attr4ln = attr4->localName(), * attr5ln = attr5->localName(), * attr6ln = attr6->localName();
+  std::wstring attr1ns = attr1->namespaceURI(), attr2ns = attr2->namespaceURI(), attr3ns = attr3->namespaceURI(),
+    attr4ns = attr4->namespaceURI(), attr5ns = attr5->namespaceURI(), attr6ns = attr6->namespaceURI();
+  std::wstring attr1ln = attr1->localName(), attr2ln = attr2->localName(), attr3ln = attr3->localName(),
+    attr4ln = attr4->localName(), attr5ln = attr5->localName(), attr6ln = attr6->localName();
 
   attr1->release_ref();
   attr2->release_ref();
@@ -3316,27 +3206,27 @@ CellMLTest::testExtensionAttributeSet()
   attr5->release_ref();
   attr6->release_ref();
 
-  if (!wcscmp(attr2ns, L"http://example.org/thetest"))
+  if (attr2ns == L"http://example.org/thetest")
   {
-    wchar_t* tmp = attr2ns;
+    std::wstring tmp = attr2ns;
     attr2ns = attr1ns;
     attr1ns = tmp;
     tmp = attr2ln;
     attr2ln = attr1ln;
     attr1ln = tmp;
   }
-  else if (!wcscmp(attr3ns, L"http://example.org/thetest"))
+  else if (attr3ns == L"http://example.org/thetest")
   {
-    wchar_t* tmp = attr3ns;
+    std::wstring tmp = attr3ns;
     attr3ns = attr1ns;
     attr1ns = tmp;
     tmp = attr3ln;
     attr3ln = attr1ln;
     attr1ln = tmp;
   }
-  if (!wcscmp(attr3ns, L"http://example.org/hello"))
+  if (attr3ns == L"http://example.org/hello")
   {
-    wchar_t* tmp = attr3ns;
+    std::wstring tmp = attr3ns;
     attr3ns = attr2ns;
     attr2ns = tmp;
     tmp = attr3ln;
@@ -3347,32 +3237,19 @@ CellMLTest::testExtensionAttributeSet()
   // printf("%S %S %S %S %S %S %S %S %S %S %S %S\n", attr1ns, attr1ln,
   //        attr2ns, attr2ln, attr3ns, attr3ln, attr4ns, attr4ln, attr5ns,
   //        attr5ln, attr6ns, attr6ln);
-  CPPUNIT_ASSERT(!wcscmp(attr1ns, L"http://example.org/thetest"));
-  CPPUNIT_ASSERT(!wcscmp(attr1ln, L"atest"));
-  CPPUNIT_ASSERT(!wcscmp(attr2ns, L"http://www.w3.org/2000/xmlns/"));
-  CPPUNIT_ASSERT(!wcscmp(attr2ln, L"cellml"));
-  CPPUNIT_ASSERT(!wcscmp(attr3ns, L"http://www.w3.org/2000/xmlns/"));
-  CPPUNIT_ASSERT(!wcscmp(attr3ln, L"cmeta"));
-  CPPUNIT_ASSERT(!wcscmp(attr4ns, L"http://example.org/mytest"));
-  CPPUNIT_ASSERT(!wcscmp(attr4ln, L"hello"));
-  CPPUNIT_ASSERT(!wcscmp(attr5ns, L"http://www.w3.org/2000/xmlns/"));
-  CPPUNIT_ASSERT(!wcscmp(attr5ln, L"mytest"));
-  CPPUNIT_ASSERT(!wcscmp(attr6ns, L"http://example.org/livetest"));
-  CPPUNIT_ASSERT(!wcscmp(attr6ln, L"shouldbe"));
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://example.org/thetest"), attr1ns);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"atest"), attr1ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.w3.org/2000/xmlns/"), attr2ns);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"cellml"), attr2ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.w3.org/2000/xmlns/"), attr3ns);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"cmeta"), attr3ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://example.org/mytest"), attr4ns);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"hello"), attr4ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.w3.org/2000/xmlns/"), attr5ns);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"mytest"), attr5ln);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://example.org/livetest"), attr6ns);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"shouldbe"), attr6ln);
 
-  free(attr1ns);
-  free(attr2ns);
-  free(attr3ns);
-  free(attr4ns);
-  free(attr5ns);
-  free(attr6ns);
-  free(attr1ln);
-  free(attr2ln);
-  free(attr3ln);
-  free(attr4ln);
-  free(attr5ln);
-  free(attr6ln);
-  
   eai->release_ref();
 }
 
@@ -3444,9 +3321,8 @@ CellMLTest::testIteratorLiveness()
   refnode->release_ref();
 
   iface::cellml_api::Units* u = ui->nextUnits();
-  wchar_t* str = u->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"newunits"));
-  free(str);
+  std::wstring str = u->name();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"newunits"), str);
   u->release_ref();
 
   n = newel->nextSibling();
@@ -3460,15 +3336,13 @@ CellMLTest::testIteratorLiveness()
 
   u = ui->nextUnits();
   str = u->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"newunits2"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"newunits2"), str);
   mBeelerReuter->removeElement(u);
   u->release_ref();
 
   u = ui->nextUnits();
   str = u->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"notarealunit"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"notarealunit"), str);
   mBeelerReuter->removeElement(u);
   u->release_ref();
 
@@ -3484,10 +3358,7 @@ CellMLTest::testIteratorLiveness()
     n = n2;
 
     str = n->nodeName();
-    bool isUnits = !wcscmp(str, L"units");
-    free(str);
-
-    if (!isUnits)
+    if (str == L"units")
     {
       if (!firstHit)
       {
@@ -3509,8 +3380,7 @@ CellMLTest::testIteratorLiveness()
 
   u = ui->nextUnits();
   str = u->name();
-  CPPUNIT_ASSERT(!wcscmp(str, L"newunits3"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"newunits3"), str);
   mBeelerReuter->removeElement(u);
   u->release_ref();
 
@@ -3531,9 +3401,8 @@ CellMLTest::testRelativeImports()
   iface::cellml_api::CellMLComponent* c = cci->nextComponent();
   cci->release_ref();
 
-  wchar_t* ret = c->cmetaId();
-  CPPUNIT_ASSERT(!wcscmp(ret, L"level2_component"));
-  free(ret);
+  std::wstring ret = c->cmetaId();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"level2_component"), ret);
   c->release_ref();
 }
 
@@ -3558,10 +3427,8 @@ CellMLTest::testImportClone()
   ii->release_ref();
   iface::cellml_api::Model* mod = imp->importedModel();
   imp->release_ref();
-  wchar_t* name = mod->name();
+  std::wstring name = mod->name();
   mod->release_ref();
 
-  CPPUNIT_ASSERT(!wcscmp(name, L"level1"));
-
-  free(name);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"level1"), name);
 }

@@ -17,7 +17,7 @@ p2j::XPCOM::IObject::~IObject()
 #define snprintf _snprintf
 #endif
 
-char*
+std::string
 p2j::XPCOM::IObject::objid()
   throw()
 {
@@ -31,13 +31,13 @@ p2j::XPCOM::IObject::objid()
 };
 
 void*
-p2j::XPCOM::IObject::query_interface(const char* name) throw()
+p2j::XPCOM::IObject::query_interface(const std::string& name) throw()
 {
   P2JFactory* f = P2JFactory::findP2J(name);
 
   if (f == NULL)
   {
-    if (!strcmp(name, "XPCOM::IObject"))
+    if (name == "XPCOM::IObject")
       return reinterpret_cast<void*>(static_cast<iface::XPCOM::IObject*>(this));
     return NULL;
   }
@@ -51,16 +51,15 @@ p2j::XPCOM::IObject::query_interface(const char* name) throw()
   return f->create(env, mObject);
 }
 
-char**
-p2j::XPCOM::IObject::supported_interfaces(uint32_t* len) throw()
+std::vector<std::string>
+p2j::XPCOM::IObject::supported_interfaces() throw()
 {
   // We could use reflection and get more information from Java, but there is
   // not currently a strong use case for this much complexity. So just return
   // the xpcom::IObject and ...
-  *len = 2;
-  char** ret = static_cast<char**>(malloc(sizeof(char*) * 2));
-  ret[0] = strdup("xpcom::IObject");
-  ret[1] = strdup("...");
+  std::vector<std::string> ret;
+  ret.push_back("xpcom::IObject");
+  ret.push_back("...");
   return ret;
 }
 

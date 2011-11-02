@@ -107,32 +107,31 @@ public:
   {
   }
 
-  void* query_interface(const char* id) throw()
+  void* query_interface(const std::string& id) throw()
   {
-    if (!strcmp(id, "xpcom::IObject"))
+    if (id == "xpcom::IObject")
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
-    if (!strcmp(id, "cellml_context::ModelNodeMonitor"))
+    if (id == "cellml_context::ModelNodeMonitor")
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
-    if (!strcmp(id, "cellml_context::ModelListMonitor"))
+    if (id == "cellml_context::ModelListMonitor")
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelListMonitor*>(this));
     return NULL;
   }
 
-  char** supported_interfaces(uint32_t* len) throw()
+  std::vector<std::string> supported_interfaces() throw()
   {
-    *len = 3;
-    char** ret = static_cast<char**>(malloc(sizeof(char*) * 3));
-    ret[0] = strdup("xpcom::IObject");
-    ret[1] = strdup("cellml_context::ModelNodeMonitor");
-    ret[2] = strdup("cellml_context::ModelListMonitor");
+    std::vector<std::string> ret;
+    ret.push_back("xpcom::IObject");
+    ret.push_back("cellml_context::ModelNodeMonitor");
+    ret.push_back("cellml_context::ModelListMonitor");
     return ret;
   }
 
-  char* objid() throw() { return strdup("TheTestModelMonitor"); }
+  std::string objid() throw() { return "TheTestModelMonitor"; }
 
   void
   modelRenamed(iface::cellml_context::ModelNode* renamedNode,
-               const wchar_t* newName) throw()
+               const std::wstring& newName) throw()
   {
     countRenames++;
   }
@@ -332,7 +331,7 @@ CellMLContextTest::testModelList()
   //     * this list has no parent.
   //     */
   //    readonly attribute ModelNode parentNode;
-  CPPUNIT_ASSERT(ml->parentNode() == NULL);
+  CPPUNIT_ASSERT(ml->parentNode().getPointer() == NULL);
   RETURN_INTO_OBJREF(mlBrD, iface::cellml_context::ModelList, mlBr->derivedModels());
   RETURN_INTO_OBJREF(mlBrDN, iface::cellml_context::ModelNode, mlBrD->parentNode());
   CPPUNIT_ASSERT(!CDA_objcmp(mlBr, mlBrDN));
@@ -462,7 +461,7 @@ CellMLContextTest::testModelNode()
   //     * before being destroyed.
   //     */
   //    attribute XPCOM::IObject owner;
-  CPPUNIT_ASSERT(mlBr->owner() == NULL);
+  CPPUNIT_ASSERT(mlBr->owner().getPointer() == NULL);
   gTMM.resetCounts();
   mlBr->owner(mlBr);
   RETURN_INTO_OBJREF(mlBrO, iface::XPCOM::IObject, mlBr->owner());

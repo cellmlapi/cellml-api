@@ -1219,9 +1219,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
         
         RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                            dv->variable());
-        char* objidp = cv->objid();
-        std::string objid(objidp);
-        free(objidp);
+        std::string objid(cv->objid());
         uint32_t deg(dv->degree());
 
         std::map<std::string, uint32_t>::iterator mdi = maxDegreeByVariableID.find(objid);
@@ -1246,9 +1244,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
            k++
           )
       {
-        char * objidp = (*k)->mVariable->objid();
-        std::string objid(objidp);
-        free(objidp);
+        std::string objid((*k)->mVariable->objid());
 
         std::map<std::string, uint32_t>::iterator mdi = maxDegreeByVariableID.find(objid);
         if (mdi == maxDegreeByVariableID.end())
@@ -1270,9 +1266,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
 
     resetCT->mIsReset = true;
 
-    char * vobjidp = resetCT->mVariable->objid();
-    std::string vobjid(vobjidp);
-    free(vobjidp);
+    std::string vobjid(resetCT->mVariable->objid());
     uint32_t deg(resetCT->degree());
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, pw->mMaths->ownerDocument());

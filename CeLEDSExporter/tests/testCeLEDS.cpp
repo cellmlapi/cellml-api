@@ -75,9 +75,8 @@ main(int argc, char** argv)
   }
   delete [] languageURL;
 
-  wchar_t * code = ce->generateCode(mod);
-  wprintf(L"%ls", code);
-  free(code);
+  std::wstring code = ce->generateCode(mod);
+  wprintf(L"%ls", code.c_str());
 
   return 0;
 }

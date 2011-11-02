@@ -467,13 +467,7 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         # Build all parameters, copying for in & in/out parameters...
         pcmarglist = ''
         for (p, i) in map(None, params, range(0, len(params))):
-            if ti.has_length:
-                if i > 0:
-                    pcmarglist = pcmarglist + ', '
-                if p.is_out():
-                    pcmarglist = pcmarglist + '&'
-                pcmarglist = pcmarglist + '_length_pcmparam%u' % i
-            if i > 0 or ti.has_length:
+            if i > 0:
                 pcmarglist = pcmarglist + ', '
             if p.is_out():
                 pcmarglist = pcmarglist + '&'
@@ -485,9 +479,6 @@ class PythonToCWalker(idlvisitor.AstVisitor):
         retExtra = ''
         if returns.kind() != idltype.tk_void:
             rti = typeinfo.GetTypeInformation(returns, self)
-            if rti.has_length:
-                self.out.out('uint32_t _length__ret_pcm;')
-                retExtra = ', &_length__ret_pcm'
             self.out.out(rti.makePCMFromPyarg("_ret_pcm", "", 0, 1))
             retPrefix = '_ret_pcm = '
 

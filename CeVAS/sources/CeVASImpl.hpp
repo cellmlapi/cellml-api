@@ -60,9 +60,9 @@ public:
   CDAConnectedVariableSet(iface::cellml_api::CellMLVariable*) throw();
   ~CDAConnectedVariableSet() throw();
 
-  iface::cellml_api::CellMLVariable* sourceVariable() throw(std::exception&);
+  already_AddRefd<iface::cellml_api::CellMLVariable> sourceVariable() throw(std::exception&);
   uint32_t length() throw(std::exception&);
-  iface::cellml_api::CellMLVariable* getVariable(uint32_t aIndex)
+  already_AddRefd<iface::cellml_api::CellMLVariable> getVariable(uint32_t aIndex)
     throw(std::exception&);
 
   void addVariable(iface::cellml_api::CellMLVariable* v);
@@ -85,14 +85,14 @@ public:
   CDACeVAS(iface::cellml_api::Model* aModel) throw();
   ~CDACeVAS() throw();
 
-  wchar_t* modelError() throw();
-  iface::cellml_api::CellMLComponentIterator* iterateRelevantComponents()
+  std::wstring modelError() throw();
+  already_AddRefd<iface::cellml_api::CellMLComponentIterator> iterateRelevantComponents()
     throw(std::exception&);
-  iface::cellml_services::ConnectedVariableSet* findVariableSet(
+  already_AddRefd<iface::cellml_services::ConnectedVariableSet> findVariableSet(
     iface::cellml_api::CellMLVariable* aVariable)
     throw(std::exception&);
   uint32_t length() throw(std::exception&);
-  iface::cellml_services::ConnectedVariableSet* getVariableSet(uint32_t aIndex)
+  already_AddRefd<iface::cellml_services::ConnectedVariableSet> getVariableSet(uint32_t aIndex)
     throw(std::exception&);
 
 private:
@@ -120,7 +120,7 @@ public:
 
   ~CDACeVASBootstrap() throw() {}
 
-  iface::cellml_services::CeVAS*
+  already_AddRefd<iface::cellml_services::CeVAS>
   createCeVASForModel(iface::cellml_api::Model* aModel)
     throw(std::exception&)
   {

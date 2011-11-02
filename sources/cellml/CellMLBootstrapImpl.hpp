@@ -11,23 +11,23 @@ public:
   CDA_IMPL_QI2(cellml_api::DOMModelLoader, cellml_api::ModelLoader);
   CDA_IMPL_ID;
 
-  iface::cellml_api::Model* loadFromURL(const wchar_t* URL)
+  already_AddRefd<iface::cellml_api::Model> loadFromURL(const std::wstring& URL)
     throw(std::exception&);
-  void asyncLoadFromURL(const wchar_t* URL,
+  void asyncLoadFromURL(const std::wstring& URL,
                         iface::cellml_api::ModelLoadedListener* listener)
     throw(std::exception&);
-  wchar_t* lastErrorMessage() throw(std::exception&);
+  std::wstring lastErrorMessage() throw(std::exception&);
 
-  iface::cellml_api::Model* createFromText(const wchar_t* xmlText) throw(std::exception&);
+  already_AddRefd<iface::cellml_api::Model> createFromText(const std::wstring& xmlText) throw(std::exception&);
 
-  iface::cellml_api::Model*
-  createFromDOM(const wchar_t* url,
+  already_AddRefd<iface::cellml_api::Model>
+  createFromDOM(const std::wstring& url,
                 iface::cellml_api::DOMURLLoader* loader)
     throw(std::exception&);
-  iface::cellml_api::Model*
+  already_AddRefd<iface::cellml_api::Model>
   createFromDOMDocument(iface::dom::Document* aModel)
     throw(std::exception&);
-  void asyncCreateFromDOM(const wchar_t* URL,
+  void asyncCreateFromDOM(const std::wstring& URL,
                           iface::cellml_api::DOMURLLoader* loader,
                           iface::cellml_api::ModelLoadedListener* listener)
     throw(std::exception&);
@@ -48,14 +48,14 @@ public:
   CDA_IMPL_QI1(cellml_api::DOMURLLoader);
   CDA_IMPL_ID;
 
-  iface::dom::Document* loadDocument(const wchar_t* URL)
+  already_AddRefd<iface::dom::Document> loadDocument(const std::wstring& URL)
     throw(std::exception&);
-  iface::dom::Document* loadDocumentFromText(const wchar_t* text)
+  already_AddRefd<iface::dom::Document> loadDocumentFromText(const std::wstring& text)
     throw(std::exception&);
-  void asyncLoadDocument(const wchar_t* URL,
+  void asyncLoadDocument(const std::wstring& URL,
                          iface::cellml_api::DocumentLoadedListener* listener)
     throw(std::exception&);
-  wchar_t* lastErrorMessage() throw(std::exception&);
+  std::wstring lastErrorMessage() throw(std::exception&);
 private:
   CellML_DOMImplementationBase* mDOMImpl;
   std::wstring mLastError;
@@ -72,13 +72,13 @@ public:
   CDA_IMPL_QI1(cellml_api::CellMLBootstrap);
   CDA_IMPL_ID;
 
-  iface::cellml_api::DOMModelLoader* modelLoader() throw(std::exception&);
-  iface::dom::DOMImplementation* domImplementation() throw(std::exception&);
-  iface::cellml_api::DOMURLLoader* localURLLoader() throw(std::exception&);
-  iface::cellml_api::Model* createModel(const wchar_t* version)
+  already_AddRefd<iface::cellml_api::DOMModelLoader> modelLoader() throw(std::exception&);
+  already_AddRefd<iface::dom::DOMImplementation> domImplementation() throw(std::exception&);
+  already_AddRefd<iface::cellml_api::DOMURLLoader> localURLLoader() throw(std::exception&);
+  already_AddRefd<iface::cellml_api::Model> createModel(const std::wstring& version)
     throw(std::exception&);
-  wchar_t* serialiseNode(iface::dom::Node* aNode) throw(std::exception&);
-  wchar_t* makeURLAbsolute(const wchar_t* aRelTo, const wchar_t* aRelURL) throw();
+  std::wstring serialiseNode(iface::dom::Node* aNode) throw(std::exception&);
+  std::wstring makeURLAbsolute(const std::wstring& aRelTo, const std::wstring& aRelURL) throw();
 private:
   CellML_DOMImplementationBase* domimpl;
 };

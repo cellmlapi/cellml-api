@@ -27,8 +27,8 @@ CDA_DataSource::~CDA_DataSource()
   delete mTripleSet;
 }
 
-iface::rdf_api::URIReference*
-CDA_DataSource::getURIReference(const wchar_t* aURI)
+already_AddRefd<iface::rdf_api::URIReference>
+CDA_DataSource::getURIReference(const std::wstring& aURI)
   throw(std::exception&)
 {
   URI u(aURI);
@@ -51,16 +51,16 @@ CDA_DataSource::getURIReference(const wchar_t* aURI)
   return ur;
 }
 
-iface::rdf_api::BlankNode*
+already_AddRefd<iface::rdf_api::BlankNode>
 CDA_DataSource::createBlankNode()
   throw(std::exception&)
 {
   return new CDA_BlankNode(this);
 }
 
-iface::rdf_api::PlainLiteral*
-CDA_DataSource::getPlainLiteral(const wchar_t* aForm,
-                                  const wchar_t* aLanguage)
+already_AddRefd<iface::rdf_api::PlainLiteral>
+CDA_DataSource::getPlainLiteral(const std::wstring& aForm,
+				const std::wstring& aLanguage)
   throw(std::exception&)
 {
   wstringpair p(aForm, aLanguage);
@@ -79,9 +79,9 @@ CDA_DataSource::getPlainLiteral(const wchar_t* aForm,
   return pl;
 }
 
-iface::rdf_api::TypedLiteral*
-CDA_DataSource::getTypedLiteral(const wchar_t* aForm,
-                                const wchar_t* aDatatypeURI)
+already_AddRefd<iface::rdf_api::TypedLiteral>
+CDA_DataSource::getTypedLiteral(const std::wstring& aForm,
+                                const std::wstring& aDatatypeURI)
   throw(std::exception&)
 {
   wstringpair p(aForm, aDatatypeURI);
@@ -100,7 +100,7 @@ CDA_DataSource::getTypedLiteral(const wchar_t* aForm,
   return tl;
 }
 
-iface::rdf_api::TripleSet*
+already_AddRefd<iface::rdf_api::TripleSet>
 CDA_DataSource::getAllTriples()
   throw(std::exception&)
 {
@@ -248,14 +248,14 @@ CDA_RDFNode::releaseAssociation()
   }
 }
 
-iface::rdf_api::TripleSet*
+already_AddRefd<iface::rdf_api::TripleSet>
 CDA_RDFNode::getTriplesInto()
   throw(std::exception&)
 {
   return new CDA_FilteringTripleSet(mDataSource->mTripleSet, NULL, NULL, this);
 }
 
-iface::rdf_api::TripleSet*
+already_AddRefd<iface::rdf_api::TripleSet>
 CDA_RDFNode::getTriplesIntoByPredicate
 (
  iface::rdf_api::Resource* aPredicate
@@ -278,7 +278,7 @@ CDA_Resource::~CDA_Resource()
 {
 }
 
-iface::rdf_api::TripleSet*
+already_AddRefd<iface::rdf_api::TripleSet>
 CDA_Resource::getTriplesOutOfByPredicate(iface::rdf_api::Resource* aPredicate)
   throw(std::exception&)
 {
@@ -289,7 +289,7 @@ CDA_Resource::getTriplesOutOfByPredicate(iface::rdf_api::Resource* aPredicate)
   return new CDA_FilteringTripleSet(mDataSource->mTripleSet, this, pred, NULL);
 }
 
-iface::rdf_api::Triple*
+already_AddRefd<iface::rdf_api::Triple>
 CDA_Resource::getTripleOutOfByPredicate(iface::rdf_api::Resource* aPredicate)
   throw(std::exception&)
 {
@@ -301,7 +301,7 @@ CDA_Resource::getTripleOutOfByPredicate(iface::rdf_api::Resource* aPredicate)
     throw iface::rdf_api::RDFProcessingError();
 
   t->add_ref();
-  return t;
+  return t.getPointer();
 }
 
 bool
@@ -344,7 +344,7 @@ CDA_Resource::createTripleOutOf
   mDataSource->assert(this, pred, obj);
 }
 
-iface::rdf_api::TripleSet*
+already_AddRefd<iface::rdf_api::TripleSet>
 CDA_Resource::getTriplesOutOfByObject
 (
  iface::rdf_api::Node* aObject
@@ -358,28 +358,28 @@ CDA_Resource::getTriplesOutOfByObject
   return new CDA_FilteringTripleSet(mDataSource->mTripleSet, this, NULL, obj);
 }
 
-iface::rdf_api::TripleSet*
+already_AddRefd<iface::rdf_api::TripleSet>
 CDA_Resource::getTriplesWherePredicate()
   throw(std::exception&)
 {
   return new CDA_FilteringTripleSet(mDataSource->mTripleSet, NULL, this, NULL);
 }
 
-iface::rdf_api::TripleSet*
+already_AddRefd<iface::rdf_api::TripleSet>
 CDA_Resource::getTriplesWhereSubject()
   throw(std::exception&)
 {
   return new CDA_FilteringTripleSet(mDataSource->mTripleSet, this, NULL, NULL);
 }
 
-iface::rdf_api::Container*
+already_AddRefd<iface::rdf_api::Container>
 CDA_Resource::correspondingContainer()
   throw(std::exception&)
 {
   return new CDA_Container(mDataSource, this);
 }
 
-iface::rdf_api::Container*
+already_AddRefd<iface::rdf_api::Container>
 CDA_Resource::findOrMakeContainer
 (
  iface::rdf_api::Resource* aPredicate,
@@ -424,7 +424,7 @@ CDA_Resource::findOrMakeContainer
   if (result != NULL)
   {
     result->add_ref();
-    return result;
+    return result.getPointer();
   }
   
   // So no matching containter exists. Make one...
@@ -436,7 +436,7 @@ CDA_Resource::findOrMakeContainer
 
 #define MAX_SEQUENTIAL_SEARCH 5
 
-iface::rdf_api::Node*
+already_AddRefd<iface::rdf_api::Node>
 CDA_NodeIteratorContainer::getNextNode()
   throw(std::exception&)
 {
@@ -499,18 +499,18 @@ CDA_NodeIteratorContainer::getNextNode()
     closestNode->add_ref();
     mNextIndex = smallestIndex + 1;
   }
-  return closestNode;
+  return closestNode.getPointer();
 }
 
-iface::rdf_api::Resource*
+already_AddRefd<iface::rdf_api::Resource>
 CDA_Container::correspondingResource()
   throw(std::exception&)
 {
   mCorrespondingResource->add_ref();
-  return mCorrespondingResource;
+  return mCorrespondingResource.getPointer();
 }
 
-iface::rdf_api::Resource*
+already_AddRefd<iface::rdf_api::Resource>
 CDA_Container::containerType()
   throw(std::exception&)
 {
@@ -523,7 +523,7 @@ CDA_Container::containerType()
     RETURN_INTO_OBJREF(n, iface::rdf_api::Node, t->object());
     DECLARE_QUERY_INTERFACE_OBJREF(r, n, rdf_api::Resource);
     r->add_ref();
-    return r;
+    return r.getPointer();
   }
   catch (iface::rdf_api::RDFProcessingError)
   {
@@ -553,7 +553,7 @@ CDA_Container::containerType(iface::rdf_api::Resource* aType)
   mCorrespondingResource->createTripleOutOf(type, aType);
 }
 
-iface::rdf_api::NodeIterator*
+already_AddRefd<iface::rdf_api::NodeIterator>
 CDA_Container::iterateChildren()
   throw(std::exception&)
 {
@@ -721,7 +721,7 @@ CDA_Container::renumberContainer()
   }
 }
 
-iface::rdf_api::Container*
+already_AddRefd<iface::rdf_api::Container>
 CDA_Container::mergeWith(iface::rdf_api::Container* aContainer)
   throw(std::exception&)
 {
@@ -729,7 +729,7 @@ CDA_Container::mergeWith(iface::rdf_api::Container* aContainer)
 }
 
 
-iface::rdf_api::Node*
+already_AddRefd<iface::rdf_api::Node>
 CDA_NodeIteratorMergedContainer::getNextNode()
   throw(std::exception&)
 {
@@ -745,14 +745,14 @@ CDA_NodeIteratorMergedContainer::getNextNode()
   return n;
 }
 
-iface::rdf_api::Resource*
+already_AddRefd<iface::rdf_api::Resource>
 CDA_MergedContainer::correspondingResource()
   throw(std::exception&)
 {
   return mContainer1->correspondingResource();
 }
 
-iface::rdf_api::Resource*
+already_AddRefd<iface::rdf_api::Resource>
 CDA_MergedContainer::containerType()
   throw(std::exception&)
 {
@@ -766,7 +766,7 @@ CDA_MergedContainer::containerType(iface::rdf_api::Resource* aType)
   mContainer1->containerType(aType);
 }
 
-iface::rdf_api::NodeIterator*
+already_AddRefd<iface::rdf_api::NodeIterator>
 CDA_MergedContainer::iterateChildren()
   throw(std::exception&)
 {
@@ -799,7 +799,7 @@ CDA_MergedContainer::renumberContainer()
   mContainer2->renumberContainer();
 }
 
-iface::rdf_api::Container*
+already_AddRefd<iface::rdf_api::Container>
 CDA_MergedContainer::mergeWith(iface::rdf_api::Container* aContainer)
   throw(std::exception&)
 {
@@ -817,7 +817,7 @@ CDA_BlankNode::~CDA_BlankNode()
 
 CDA_URIReference::CDA_URIReference
 (
- const wchar_t* aURI,
+ const std::wstring& aURI,
  CDA_DataSource* aDataSource
 )
   : CDA_Resource(aDataSource), mURI(aURI)
@@ -829,14 +829,14 @@ CDA_URIReference::~CDA_URIReference()
   mDataSource->uriReferenceDeleted(this);
 }
 
-wchar_t*
+std::wstring
 CDA_URIReference::URI()
   throw()
 {
   return CDA_wcsdup(mURI.c_str());
 }
 
-CDA_Literal::CDA_Literal(const wchar_t* aLexicalForm, CDA_DataSource* aDataSource)
+CDA_Literal::CDA_Literal(const std::wstring& aLexicalForm, CDA_DataSource* aDataSource)
   : CDA_RDFNode(aDataSource), mLexicalForm(aLexicalForm)
 {
 }
@@ -845,15 +845,15 @@ CDA_Literal::~CDA_Literal()
 {
 }
 
-wchar_t*
+std::wstring
 CDA_Literal::lexicalForm()
   throw()
 {
   return CDA_wcsdup(mLexicalForm.c_str());
 }
 
-CDA_PlainLiteral::CDA_PlainLiteral(const wchar_t* aLexicalForm,
-                                   const wchar_t* aLanguage,
+CDA_PlainLiteral::CDA_PlainLiteral(const std::wstring& aLexicalForm,
+                                   const std::wstring& aLanguage,
                                    CDA_DataSource* aDataSource)
   : CDA_Literal(aLexicalForm, aDataSource), mLanguage(aLanguage)
 {
@@ -864,7 +864,7 @@ CDA_PlainLiteral::~CDA_PlainLiteral()
   mDataSource->plainLiteralDeleted(this);
 }
 
-wchar_t*
+std::wstring
 CDA_PlainLiteral::language()
   throw()
 {
@@ -873,7 +873,7 @@ CDA_PlainLiteral::language()
 
 CDA_TypedLiteral::CDA_TypedLiteral
 (
- const wchar_t* aLexicalForm, const wchar_t* aTypeURI,
+ const std::wstring& aLexicalForm, const std::wstring& aTypeURI,
  CDA_DataSource* aDataSource
 )
   : CDA_Literal(aLexicalForm, aDataSource), mTypeURI(aTypeURI)
@@ -885,7 +885,7 @@ CDA_TypedLiteral::~CDA_TypedLiteral()
   mDataSource->typedLiteralDeleted(this);
 }
 
-wchar_t*
+std::wstring
 CDA_TypedLiteral::datatypeURI()
   throw()
 {
@@ -903,28 +903,28 @@ CDA_Triple::~CDA_Triple()
 {
 }
 
-iface::rdf_api::Resource*
+already_AddRefd<iface::rdf_api::Resource>
 CDA_Triple::subject()
   throw(std::exception&)
 {
   mSubject->add_ref();
-  return mSubject;
+  return mSubject.getPointer();
 }
 
-iface::rdf_api::Resource*
+already_AddRefd<iface::rdf_api::Resource>
 CDA_Triple::predicate()
   throw(std::exception&)
 {
   mPredicate->add_ref();
-  return mPredicate;
+  return mPredicate.getPointer();
 }
 
-iface::rdf_api::Node*
+already_AddRefd<iface::rdf_api::Node>
 CDA_Triple::object()
   throw(std::exception&)
 {
   mObject->add_ref();
-  return mObject;
+  return mObject.getPointer();
 }
 
 void
@@ -951,7 +951,7 @@ CDA_AllTriplesEnumerator::~CDA_AllTriplesEnumerator()
   mSet->enumeratorDeleted(this);
 }
 
-iface::rdf_api::Triple*
+already_AddRefd<iface::rdf_api::Triple>
 CDA_AllTriplesEnumerator::getNextTriple()
   throw(std::exception&)
 {
@@ -984,7 +984,7 @@ CDA_AllTriplesSet::~CDA_AllTriplesSet()
 {
 }
 
-iface::rdf_api::TripleEnumerator*
+already_AddRefd<iface::rdf_api::TripleEnumerator>
 CDA_AllTriplesSet::enumerateTriples()
   throw(std::exception&)
 {
@@ -1060,7 +1060,7 @@ CDA_FilteringTripleSet::~CDA_FilteringTripleSet()
 {
 }
 
-iface::rdf_api::TripleEnumerator*
+already_AddRefd<iface::rdf_api::TripleEnumerator>
 CDA_FilteringTripleSet::enumerateTriples()
   throw(std::exception&)
 {
@@ -1084,7 +1084,7 @@ CDA_FilteringTripleEnumerator::~CDA_FilteringTripleEnumerator()
 {
 }
 
-iface::rdf_api::Triple*
+already_AddRefd<iface::rdf_api::Triple>
 CDA_FilteringTripleEnumerator::getNextTriple()
   throw(std::exception&)
 {
@@ -1114,7 +1114,7 @@ CDA_FilteringTripleEnumerator::getNextTriple()
     }
 
     t->add_ref();
-    return t;
+    return t.getPointer();
   }
 }
 
@@ -1126,7 +1126,7 @@ CDA_RDFBootstrap::~CDA_RDFBootstrap()
 {
 }
 
-iface::rdf_api::DataSource*
+already_AddRefd<iface::rdf_api::DataSource>
 CDA_RDFBootstrap::createDataSource()
   throw(std::exception&)
 {
@@ -1136,7 +1136,7 @@ CDA_RDFBootstrap::createDataSource()
 /* We should really support xml:lang properly. But for now it is hardcoded. */
 #define LANGUAGE L"en"
 
-static wchar_t*
+static std::wstring
 getLanguage(iface::dom::Element* aElement)
 {
   for (ObjRef<iface::dom::Node> n = aElement;
@@ -1151,7 +1151,7 @@ getLanguage(iface::dom::Element* aElement)
       return el->getAttribute(L"xml:lang");
   }
 
-  return CDA_wcsdup(LANGUAGE);
+  return LANGUAGE;
 }
 
 static URI
@@ -1400,7 +1400,7 @@ private:
   }
 #undef T
 
-  iface::rdf_api::BlankNode*
+  already_AddRefd<iface::rdf_api::BlankNode>
   findOrCreateBlankNodeById(const std::wstring& aNodeID)
   {
     std::map<std::wstring, iface::rdf_api::BlankNode*>::iterator i
@@ -1779,7 +1779,7 @@ CDA_RDFBootstrap::parseIntoDataSource
 (
  iface::rdf_api::DataSource* aDataSource,
  iface::dom::Element* aElement,
- const wchar_t* aBaseURI
+ const std::wstring& aBaseURI
 )
   throw(std::exception&)
 {
@@ -1933,9 +1933,7 @@ private:
   std::wstring
   getOrAssignNodeID(iface::rdf_api::Node* n)
   {
-    char* tmp = n->objid();
-    std::string objId(tmp);
-    free(tmp);
+    std::string objId(n->objid());
 
     std::map<std::string, std::wstring>::iterator i = mNodeIds.find(objId);
     if (i != mNodeIds.end())
@@ -1951,7 +1949,7 @@ private:
     return nodeId;
   }
 
-  iface::dom::Element*
+  already_AddRefd<iface::dom::Element>
   createNodeElementForResource(iface::rdf_api::Resource* res)
   {
     RETURN_INTO_OBJREF(descr, iface::dom::Element,
@@ -1972,18 +1970,18 @@ private:
     }
 
     descr->add_ref();
-    return descr;
+    return descr.getPointer();
   }
 
   uint32_t mLastId;
   std::map<std::string, std::wstring> mNodeIds;
 };
 
-iface::dom::Document*
+already_AddRefd<iface::dom::Document>
 CDA_RDFBootstrap::getDOMForDataSource
 (
  iface::rdf_api::DataSource* aDataSource,
- const wchar_t* aBaseURI
+ const std::wstring& aBaseURI
 )
   throw(std::exception&)
 {
@@ -1995,14 +1993,14 @@ CDA_RDFBootstrap::getDOMForDataSource
   RDFDOMBuilder b(rdoc, rdocel, aDataSource, aBaseURI);
 
   rdoc->add_ref();
-  return rdoc;
+  return rdoc.getPointer();
 }
 
-wchar_t*
+std::wstring
 CDA_RDFBootstrap::serialiseDataSource
 (
  iface::rdf_api::DataSource* aDataSource,
- const wchar_t* aBaseURI
+ const std::wstring& aBaseURI
 )
   throw(std::exception&)
 {
@@ -2014,7 +2012,7 @@ CDA_RDFBootstrap::serialiseDataSource
   return CDA_wcsdup(str.c_str());
 }
 
-iface::rdf_api::Bootstrap*
+already_AddRefd<iface::rdf_api::Bootstrap>
 CreateRDFBootstrap()
 {
   return new CDA_RDFBootstrap();

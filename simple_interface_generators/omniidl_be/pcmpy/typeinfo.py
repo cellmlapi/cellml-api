@@ -139,11 +139,19 @@ class Base(Type):
 class String(Type):
     format_pyarg = 'O'
     pyarg_c_type = 'PyObject*'
-    type_pcm = 'char*'
+    type_pcm = 'std::string'
     arg_prefix = 'const '
     
     def __init__(self, type):
         pass
+
+    def pcmType(self, isOut=0, isRet=0):
+        if isOut:
+            return 'std::string&'
+        elif not isRet:
+            return 'const std::string&'
+        else:
+            return 'std::string'
 
     def makePyArgFromPCM(self, pyargName, pcmName, hasIn, hasOut, copyOut=0):
         if copyOut:
@@ -152,7 +160,7 @@ class String(Type):
                 return c + 'return Py_BuildValue("O", %s_tmp);' % (pyargName)
             return c + 'PyBridge_Set_Output(%s, "O", %s_tmp);' % (pyargName, pyargName)
         elif hasIn and not hasOut:
-            return "PyObject* %s = PyString_FromString(%s);\n" % (pyargName, pcmName) +\
+            return "PyObject* %s = PyString_FromString(%s.c_str());\n" % (pyargName, pcmName) +\
                    "ScopedPyObjectReference %sScoped(%s);" % (pyargName, pyargName)
         elif hasOut and not hasIn:
             return 'PyObject* %s = PyList_New(0);' % pyargName +\
@@ -161,7 +169,7 @@ class String(Type):
             return "PyObject* %s;\n" % pyargName +\
                    "{\n" +\
                    "  %s = PyList_New(1);\n" % pyargName +\
-                   "  PyList_SetItem(%s, 0, PyString_FromString(*%s));\n" % (pyargName, pcmName) +\
+                   "  PyList_SetItem(%s, 0, PyString_FromString((*%s).c_str()));\n" % (pyargName, pcmName) +\
                    "}\n" +\
                    "ScopedPyObjectReference %sScoped(%s);" % (pyargName, pyargName)
 
@@ -169,32 +177,38 @@ class String(Type):
         if copyOut:
             if hasOut:
                 return "char* _retpcm = PyString_AsString(%s);\n" % (pyargName) +\
-                       "return strdup(_retpcm ? _retpcm : \"\");"
+                       "return _retpcm ? _retpcm : \"\";"
             return "{\nchar* _tmp = PyString_AsString(%s);\n" % (pyargName) +\
-                   "*%s = strdup(_retpcm ? _tmp : \"\"); \n}" % (pcmName)
+                   "%s = _retpcm ? _tmp : \"\"; \n}" % (pcmName)
         if hasIn and not hasOut:
-            return "char* %s = PyString_AsString(%s);\n" % (pcmName, pyargName) +\
-                   "%s = strdup(%s ? %s : \"\");\n" % (pcmName, pcmName, pcmName) +\
-                   "PyAutoFree<char> %s_release(%s);" % (pcmName, pcmName)
+            return "char* %s_tmp = PyString_AsString(%s);\n" % (pcmName, pyargName) +\
+                   "std::string %s = %s_tmp ? %s_tmp : \"\";\n" % (pcmName, pcmName, pcmName)
         elif hasOut and not hasIn:
-            return "char* %s;\nPyOutputPtrFree<char> %s_release(&%s);" % (pcmName, pcmName, pcmName)
+            return "std::string %s;" % (pcmName)
         else:
-            return "char* %s;\n" % pcmName +\
+            return "std::string %s;\n" % pcmName +\
                    "{\n" +\
                    "  PyObject* stmp = PyList_GetItem(%s, 0);\n" % pyargName +\
-                   "  %s = stmp ? PyString_AsString(stmp) : \"\";\n" % pcmName +\
-                   "  %s = strdup(%s ? %s : \"\");\n" % (pcmName, pcmName, pcmName) +\
-                   "}\n" +\
-                   "PyAutoFree<char> %s_release(%s);" % (pcmName, pcmName)
+                   "  char* _tmp_%s = stmp ? PyString_AsString(stmp) : \"\";\n" % pcmName +\
+                   "  %s = %s ? %s : \"\";\n" % (pcmName, pcmName, pcmName) +\
+                   "}"
 
 class WString(Type):
     format_pyarg = 'O'
     pyarg_c_type = 'PyObject*'
-    type_pcm = 'wchar_t*'
+    type_pcm = 'std::wstring'
     arg_prefix = 'const '
     
     def __init__(self, type):
         pass
+
+    def pcmType(self, isOut=0, isRet=0):
+        if isOut:
+            return 'std::wstring&'
+        elif not isRet:
+            return 'const std::wstring&'
+        else:
+            return 'std::wstring'
 
     def makePyArgFromPCM(self, pyargName, pcmName, hasIn, hasOut, copyOut=0):
         if copyOut:
@@ -205,9 +219,9 @@ class WString(Type):
         elif hasIn and not hasOut:
             return "PyObject* %s;\n" % pyargName +\
                    "{\n" +\
-                   "  size_t ltmp = wcslen(%s) * 4 + 1;\n" % pcmName +\
+                   "  size_t ltmp = %s.size() * 4 + 1;\n" % pcmName +\
                    "  char* stmp = new char[ltmp];\n" +\
-                   "  wcstombs(stmp, %s, ltmp);\n" % pcmName +\
+                   "  wcstombs(stmp, %s.c_str(), ltmp);\n" % pcmName +\
                    "  %s = PyString_FromString(stmp);\n" % pyargName +\
                    "  delete [] stmp;\n" +\
                    "}\n" +\
@@ -218,9 +232,9 @@ class WString(Type):
         else:
             return "PyObject* %s;\n" % pyargName +\
                    "{\n" +\
-                   "  size_t ltmp = wcslen(*%s) * 4 + 1;\n" % pcmName +\
+                   "  size_t ltmp = (*%s).size() * 4 + 1;\n" % pcmName +\
                    "  char* stmp = new char[ltmp];\n" +\
-                   "  wcstombs(stmp, *%s, ltmp);\n" % pcmName +\
+                   "  wcstombs(stmp, (*%s).c_str(), ltmp);\n" % pcmName +\
                    "  %s = PyList_New(1);\n" % pyargName +\
                    "  PyList_SetItem(%s, 0, PyString_FromString(stmp));\n" % pyargName +\
                    "  delete [] stmp;\n" +\
@@ -231,15 +245,17 @@ class WString(Type):
         if copyOut:
             if hasOut:
                 return "{\n" +\
-                       "  wchar_t* _retpcm;\n" +\
+                       "  std::wstring _retpcm;\n" +\
                        "  char* stmp = PyString_AsString(%s);\n" % pyargName +\
-                       "  if (stmp == NULL) _retpcm = CDA_wcsdup(L\"\");\n" +\
+                       "  if (stmp == NULL) _retpcm = L\"\";\n" +\
                        "  else\n" +\
                        "  {\n" +\
                        "    size_t ltmp = strlen(stmp);\n" +\
-                       "    _retpcm = (wchar_t*)malloc(sizeof(wchar_t) * (ltmp + 1));\n" +\
-                       "    mbstowcs(_retpcm, stmp, ltmp);\n" +\
-                       "    _retpcm[ltmp] = 0;\n" +\
+                       "    wchar_t* _retpcm_tmp = (wchar_t*)malloc(sizeof(wchar_t) * (ltmp + 1));\n" +\
+                       "    mbstowcs(_retpcm_tmp, stmp, ltmp);\n" +\
+                       "    _retpcm_tmp[ltmp] = 0;\n" +\
+                       "    _retpcm = _retpcm_tmp;\n" +\
+                       "    free(_retpcm_tmp);\n" +\
                        "  }\n" +\
                        "  return _retpcm;\n" +\
                        "}\n"
@@ -254,26 +270,28 @@ class WString(Type):
                    "    mbstowcs(_retpcm, stmp, ltmp);\n" +\
                    "    _tmp[ltmp] = 0;\n" +\
                    "  }\n" +\
-                   "  *%s = _tmp;\n" % pcmName +\
+                   "  %s = _tmp;\n" % pcmName +\
+                   "  free(_tmp);\n" +\
                    "}\n"
         if hasIn and not hasOut:
-            return "wchar_t* %s;\n" % pcmName +\
+            return "std::wstring %s;\n" % pcmName +\
                    "{\n" +\
                    "  char* stmp = PyString_AsString(%s);\n" % pyargName +\
-                   "  if (stmp == NULL) %s = CDA_wcsdup(L\"\");\n" % pcmName +\
+                   "  if (stmp == NULL) %s = L\"\";\n" % pcmName +\
                    "  else\n" +\
                    "  {\n" +\
                    "    size_t ltmp = strlen(stmp);\n" +\
-                   "    %s = (wchar_t*)malloc(sizeof(wchar_t) * (ltmp + 1));\n" % pcmName +\
-                   "    mbstowcs(%s, stmp, ltmp);\n" % pcmName +\
-                   "    %s[ltmp] = 0;\n" % (pcmName) +\
+                   "    wchar_t* %s_tmp = (wchar_t*)malloc(sizeof(wchar_t) * (ltmp + 1));\n" % pcmName +\
+                   "    mbstowcs(%s_tmp, stmp, ltmp);\n" % pcmName +\
+                   "    %s_tmp[ltmp] = 0;\n" % (pcmName) +\
+                   "    %s = %s_tmp;\n" % (pcmName, pcmName) +\
+                   "    free(%s_tmp);\n" % pcmName +\
                    "  }\n" +\
-                   "}\n" +\
-                   "PyAutoFree<wchar_t> %s_release(%s);" % (pcmName, pcmName)
+                   "}\n"
         elif hasOut and not hasIn:
-            return "wchar_t* %s;\nPyOutputPtrFree<wchar_t> %s_release(&%s);" % (pcmName, pcmName, pcmName)
+            return "std::wstring %s;" % pcmName
         else:
-            return "wchar_t* %s;\n" % pcmName +\
+            return "std::wstring %s;\n" % pcmName +\
                    "{\n" +\
                    "  PyObject* stmp = PyList_GetItem(%s, 0);\n" % pyargName +\
                    "  char* strtmp = PyString_AsString(stmp);\n" +\
@@ -281,12 +299,13 @@ class WString(Type):
                    "  else\n" +\
                    "  {\n" +\
                    "    size_t ltmp = strlen(strtmp);\n" +\
-                   "    %s = (wchar_t*)malloc(sizeof(wchar_t) * (ltmp + 1));\n" % pcmName +\
-                   "    mbstowcs(%s, strtmp, ltmp);\n" % pcmName +\
-                   "    %s[ltmp] = 0;\n" % pcmName +\
+                   "    wchar_t* %s_tmp = (wchar_t*)malloc(sizeof(wchar_t) * (ltmp + 1));\n" % pcmName +\
+                   "    mbstowcs(%s_tmp, strtmp, ltmp);\n" % pcmName +\
+                   "    %s_tmp[ltmp] = 0;\n" % pcmName +\
+                   "    %s = %s_tmp;\n" % pcmName +\
+                   "    free(%s_tmp);\n" % pcmName +\
                    "  }\n" +\
-                   "}\n" +\
-                   "PyAutoFree<wchar_t> %s_release(%s);" % (pcmName, pcmName)
+                   "}"
 
 class Sequence(Type):
     format_pyarg = 'O'
@@ -295,7 +314,15 @@ class Sequence(Type):
     
     def __init__(self, type, context):
         self.superti = GetTypeInformation(type.seqType(), context)
-        self.type_pcm = self.superti.type_pcm + '*'
+        self.type_pcm = 'std::vector<' + self.superti.type_pcm + '>'
+
+    def pcmType(self, isOut=0, isRet=0):
+        if isOut:
+            return self.type_pcm + '&'
+        elif not isRet:
+            return 'const ' + self.type_pcm + '&'
+        else:
+            return self.type_pcm
 
     def makePyArgFromPCM(self, pyargName, pcmName, hasIn, hasOut, copyOut=0):
         if copyOut:
@@ -321,8 +348,8 @@ class Sequence(Type):
                 doconvert = "PyObject* _tmpo = Py_BuildValue(\"%s\", _tmp);\n" % self.superti.format_pyarg +\
                             "ScopedPyObjectReference _tmpo_release(_tmpo);\n"
                 
-            return "PyObject* %s = PyList_New(_length_%s);\n" % (pyargName, pcmName) +\
-                   "for (uint32_t _i = 0; _i < _length_%s; _i++)\n" % (pcmName) +\
+            return "PyObject* %s = PyList_New(%s.size());\n" % (pyargName, pcmName) +\
+                   "for (uint32_t _i = 0; _i < %s.size(); _i++)\n" % (pcmName) +\
                    "{\n" +\
                    self.superti.makePyArgFromPCM("_tmp%s" % maybeo, '(%s[_i])' % pcmName, 1, 0) +\
                    doconvert +\
@@ -351,34 +378,31 @@ class Sequence(Type):
                        "}"
             return "{\n" +\
                    self.makePCMFromPyArg('_outpcm', pyargName, 1, 0, 0) +\
-                   "  _outpcm_release.release();\n" +\
                    "  *%s = _outpcm;\n" % pcmName +\
-                   "  *%s_length = _outpcm_length;\n" % pcmName +\
                    "}"
         
         if hasIn and not hasOut:
             return "uint32_t _length_%s = PyList_Size(%s);\n" % (pcmName, pyargName) +\
-                   "%s* %s = new %s[_length_%s];" % (self.superti.type_pcm, pcmName, self.superti.type_pcm, pcmName) +\
-                   "std::auto_ptr<%s> %s_release(%s);\n" % (self.superti.type_pcm, pcmName, pcmName) +\
-                   "for (uint32_t _i = 0; _i < _length_%s; _i++)" % pcmName +\
+                   "std::vector<%s> %s;" % (self.superti.type_pcm, pcmName) +\
+                   "for (uint32_t _i = 0; _i < %s.size(); _i++)" % pcmName +\
                    "{\n" +\
                    "  PyObject* _pytmp = PyList_GetItem(%s, _i);\n" % pyargName +\
-                   self.superti.makePCMFromPyarg("(%s + _i)" % pcmName, "_pytmp", 0, 0, 1) +\
+                   self.superti.makePCMFromPyarg("_add_tmp", "_pytmp", 1, 1, 0) +\
+                   "  %s.push_back(_add_tmp);\n" % pcmName +\
                    "}"
         elif hasOut and not hasIn:
-            return "uint32_t _length_%s;\n" % pcmName +\
-                   "%s* %s;" % (self.superti.type_pcm, pcmName)
+            return "%s %s;" % (self.type_pcm, pcmName)
         else:
             return "{\n" +\
                    "  PyObject* stmp = PyList_GetItem(%s, 0);\n" % pyargName +\
                    "  *_length_%s = stmp ? PyList_Size(stmp) : 0;\n" % (pcmName) +\
                    "  if (*%s) delete [] %s;" % (pcmName, pcmName) +\
-                   "  *%s = new %s[*_length_%s];" % (pcmName, self.superti.type_pcm, pcmName) +\
-                   "  std::auto_ptr<%s> %s_release(%s);\n" % (self.superti.type_pcm, pcmName, pcmName) +\
+                   "  %s.clear();" % pcmName +\
                    "  for (uint32_t _i = 0; _i < _length_%s; _i++)" % pcmName +\
                    "  {\n" +\
                    "    PyObject* _pytmp = PyList_GetItem(%s, _i);\n" % pyargName +\
-                   self.superti.makePCMFromPyarg("((*%s) + _i)" % pcmName, "_pytmp", 0, 0, 1) +\
+                   self.superti.makePCMFromPyarg("_add_tmp" % pcmName, "_pytmp", 1, 1, 0) +\
+                   "  %s.push_back(_add_tmp);\n" % pcmName +\
                    "  }\n" +\
                    "}"
 
@@ -407,6 +431,17 @@ class Objref(Declared):
                        "PyObject* type = typeMod ? PyObject_GetAttrString(typeMod, \"%s\") : NULL;\n"\
                          % type.decl().identifier() +\
                        'if (typeMod) Py_DECREF(typeMod);'
+
+    def pcmType(self, isOut=0, isRet=0):
+        if isOut:
+            return self.type_pcm + '*'
+        elif not isRet:
+            return self.type_pcm
+        else:
+            if isRet == 2:
+                return 'already_AddRefd<' + self.base_type_pcm + '>'
+
+            return self.type_pcm
 
     def makePyArgFromPCM(self, pyargName, pcmName, hasIn, hasOut, copyOut=0):
         if copyOut:

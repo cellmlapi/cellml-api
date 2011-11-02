@@ -33,7 +33,7 @@ CDA_CodeExporter::CDA_CodeExporter(iface::cellml_services::DictionaryGenerator* 
     mCodeStyle = CODESTYLE_EXPLICIT;
 }
 
-wchar_t* 
+std::wstring
 CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
   throw(std::exception&)
 {
@@ -193,7 +193,7 @@ CDA_CodeExporter::generateCodeCommonFooter
   return 0;
 }
 
-wchar_t*
+std::wstring
 CDA_CodeExporter::generateCodeExplicit(iface::cellml_api::Model* model)
 {
   std::wstring output;
@@ -218,7 +218,7 @@ CDA_CodeExporter::generateCodeExplicit(iface::cellml_api::Model* model)
   return CDA_wcsdup(output.c_str());
 }
 
-wchar_t*
+std::wstring
 CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
 {
   std::wstring output;
@@ -259,7 +259,7 @@ CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
 }
 
 std::wstring
-CDA_CodeExporter::getCodeSection(const wchar_t* name)
+CDA_CodeExporter::getCodeSection(const std::wstring& name)
   throw(std::exception&)
 {
   uint32_t i;
@@ -302,7 +302,7 @@ CDA_CodeExporter::getCodeSection(const wchar_t* name)
 }
 
 std::wstring 
-CDA_CodeExporter::getAlgebraic(const wchar_t* ratesCalc, const wchar_t* algebraicNamePattern)
+CDA_CodeExporter::getAlgebraic(const std::wstring& ratesCalc, const std::wstring& algebraicNamePattern)
   throw(std::exception&)
 {
   std::wstring algebraicCalc(L"");
@@ -333,7 +333,7 @@ CDA_CodeExporter::getAlgebraic(const wchar_t* ratesCalc, const wchar_t* algebrai
 }
 
 void
-CDA_CodeExporter::replaceParameter(std::wstring &code, const wchar_t* parameter, double value)
+CDA_CodeExporter::replaceParameter(std::wstring &code, const std::wstring& parameter, double value)
   throw(std::exception&)
 {
   std::wstring param(parameter);
@@ -363,7 +363,7 @@ CDA_CodeExporter::diffop(uint32_t deg)
 }
 
 std::wstring
-CDA_CodeExporter::defineExtraFunctions(const std::wstring output)
+CDA_CodeExporter::defineExtraFunctions(const std::wstring& output)
   throw(std::exception&)
 {
   uint32_t i, len;
@@ -579,7 +579,7 @@ CDA_CodeExporter::transferCommonCodeAttributes
   cg->transform(mt);
 }
 
-iface::cellml_services::CodeGenerator*
+already_AddRefd<iface::cellml_services::CodeGenerator>
 CDA_CodeExporter::getExplicitCodeGenerator()
   throw(std::exception&)
 {
@@ -592,10 +592,10 @@ CDA_CodeExporter::getExplicitCodeGenerator()
   transferCommonCodeAttributes(cg);
 
   cg->add_ref();
-  return cg;
+  return cg.getPointer();
 }
 
-iface::cellml_services::IDACodeGenerator*
+already_AddRefd<iface::cellml_services::IDACodeGenerator>
 CDA_CodeExporter::getImplicitCodeGenerator()
   throw(std::exception&)
 {
@@ -622,11 +622,11 @@ CDA_CodeExporter::getImplicitCodeGenerator()
   }
 
   cg->add_ref();
-  return cg;
+  return cg.getPointer();
 }
 
-iface::cellml_services::CodeExporter* 
-CDA_CeLEDSExporterBootstrap::createExporter(const wchar_t* URL)
+already_AddRefd<iface::cellml_services::CodeExporter>
+CDA_CeLEDSExporterBootstrap::createExporter(const std::wstring& URL)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(dg, iface::cellml_services::DictionaryGenerator,
@@ -637,8 +637,8 @@ CDA_CeLEDSExporterBootstrap::createExporter(const wchar_t* URL)
     return new CDA_CodeExporter(dg);
 }
 
-iface::cellml_services::CodeExporter* 
-CDA_CeLEDSExporterBootstrap::createExporterFromText(const wchar_t* XMLText)
+already_AddRefd<iface::cellml_services::CodeExporter>
+CDA_CeLEDSExporterBootstrap::createExporterFromText(const std::wstring& XMLText)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(dg, iface::cellml_services::DictionaryGenerator,
@@ -649,8 +649,8 @@ CDA_CeLEDSExporterBootstrap::createExporterFromText(const wchar_t* XMLText)
     return new CDA_CodeExporter(dg);
 }
 
-iface::cellml_services::DictionaryGenerator* 
-CDA_CeLEDSExporterBootstrap::createDictGenerator(const wchar_t* URL)
+already_AddRefd<iface::cellml_services::DictionaryGenerator>
+CDA_CeLEDSExporterBootstrap::createDictGenerator(const std::wstring& URL)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(clb, iface::cellml_services::CeLEDSBootstrap,
@@ -660,11 +660,11 @@ CDA_CeLEDSExporterBootstrap::createDictGenerator(const wchar_t* URL)
   RETURN_INTO_WSTRING(mLoadError, clb->loadError());
   if (dg != NULL)
     dg->add_ref();
-  return dg;
+  return dg.getPointer();
 }
 
-iface::cellml_services::DictionaryGenerator* 
-CDA_CeLEDSExporterBootstrap::createDictGeneratorFromText(const wchar_t* XMLText)
+already_AddRefd<iface::cellml_services::DictionaryGenerator>
+CDA_CeLEDSExporterBootstrap::createDictGeneratorFromText(const std::wstring& XMLText)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(clb, iface::cellml_services::CeLEDSBootstrap,
@@ -675,14 +675,14 @@ CDA_CeLEDSExporterBootstrap::createDictGeneratorFromText(const wchar_t* XMLText)
   mLoadError = le;
   if (dg != NULL)
     dg->add_ref();
-  return dg;
+  return dg.getPointer();
 }
 
-wchar_t* 
+std::wstring
 CDA_CeLEDSExporterBootstrap::loadError() 
   throw()
 {
-  return CDA_wcsdup(mLoadError.c_str());
+  return mLoadError;
 }
 
 iface::cellml_services::CeLEDSExporterBootstrap*
@@ -691,7 +691,7 @@ CreateCeLEDSExporterBootstrap()
   return new CDA_CeLEDSExporterBootstrap();
 }
 
-wchar_t*
+std::wstring
 CDA_CodeExporter::getTextContents(iface::dom::Node* inNode)
   throw(std::exception&)
 {
@@ -706,5 +706,5 @@ CDA_CodeExporter::getTextContents(iface::dom::Node* inNode)
       return tn->data();
   }
 
-  return CDA_wcsdup(L"");
+  return L"";
 }

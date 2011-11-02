@@ -121,9 +121,8 @@ CellMLEventsTest::testMathModified()
   iface::events::Event* evt = teh1->getLastEvent();
 
   DECLARE_QUERY_INTERFACE_REPLACE(mevt, evt, cellml_events::MutationEvent);
-  wchar_t* str = mevt->type();
-  CPPUNIT_ASSERT(!wcscmp(str, L"MathModified"));
-  free(str);
+  std::wstring str = mevt->type();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"MathModified"), str);
   // Should be the maths node...
   iface::events::EventTarget* et = mevt->target();
   CPPUNIT_ASSERT_EQUAL(0, CDA_objcmp(et, me));
@@ -383,18 +382,14 @@ CellMLEventsTest::testCellMLAttributeChanged()
                  iface::cellml_events::MutationEvent::MODIFICATION ==
                  mevt->attrChange()
                 );
-  wchar_t* str = mevt->prevValue();
-  CPPUNIT_ASSERT(!wcscmp(str, L"F6P"));
-  free(str);
+  std::wstring str = mevt->prevValue();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"F6P"), str);
   str = mevt->newValue();
-  CPPUNIT_ASSERT(!wcscmp(str, L"foobar"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"foobar"), str);
   str = mevt->attrLocalName();
-  CPPUNIT_ASSERT(!wcscmp(str, L"id"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"id"), str);
   str = mevt->attrNamespaceURI();
-  CPPUNIT_ASSERT(!wcscmp(str, L"http://www.cellml.org/metadata/1.0#"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.cellml.org/metadata/1.0#"), str);
 
   mevt->release_ref();
   c->release_ref();

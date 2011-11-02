@@ -25,7 +25,8 @@ class Type:
     OUT = 2
     INOUT = 3
     RETURN = 4
-    DERIVE = 5
+    RETURN_SIG = 5
+    DERIVE = 6
 
     def javaType(self, direction):
         return {Type.IN: self.java_type,
@@ -255,15 +256,13 @@ class String(Type):
                }[direction]
 
     def pcmType(self, direction):
-        return {Type.IN: 'const char*',
-                Type.OUT: 'char**',
-                Type.INOUT: 'char**',
-                Type.RETURN: 'char*',
-                Type.DERIVE: 'char*'
+        return {Type.IN: 'const std::string&',
+                Type.OUT: 'std::string&',
+                Type.INOUT: 'std::string&',
+                Type.RETURN: 'std::string',
+                Type.RETURN_SIG: 'std::string',
+                Type.DERIVE: 'std::string'
                }[direction]
-
-    def pcmDestroy(self, name):
-        return 'free(' + name + ');'
 
     def convertToPCM(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, unbox = 0):
         if indirectOut:
@@ -280,10 +279,8 @@ class String(Type):
         
         extract = "{\n" +\
                   "  uint32_t tmplen = env->GetStringUTFLength(" + xname + ");\n" +\
-                  "  " + oname + " = (char*)malloc(tmplen + 1);\n" +\
                   "  const char* tmpstr = env->GetStringUTFChars(" + xname + ", NULL);\n" +\
-                  "  memcpy(" + oname + ", tmpstr, tmplen);\n" +\
-                  "  (" + oname + ")[tmplen] = 0;\n" +\
+                  "  " + oname + " = std::string(tmpstr, tmplen);\n" +\
                   "  env->ReleaseStringUTFChars(" + xname + ", tmpstr);\n" +\
                   "}\n"
 
@@ -303,8 +300,8 @@ class String(Type):
             xname = 'tmpobj'
 
         if box:
-            return xname + ' = static_cast<jobject>(env->NewStringUTF(' + iname + '));'
-        extract = xname + " = env->NewStringUTF(" + iname + ");"
+            return xname + ' = static_cast<jobject>(env->NewStringUTF(' + iname + '.c_str()));'
+        extract = xname + " = env->NewStringUTF(" + iname + ".c_str());"
 
         if indirectOut:
             return self.writeJNIReference(extract, jniname)
@@ -333,16 +330,14 @@ class WString(String):
                }[direction]
     
     def pcmType(self, direction):
-        return {Type.IN: 'const wchar_t*',
-                Type.OUT: 'wchar_t**',
-                Type.INOUT: 'wchar_t**',
-                Type.RETURN: 'wchar_t*',
-                Type.DERIVE: 'wchar_t*',
+        return {Type.IN: 'const std::wstring&',
+                Type.OUT: 'std::wstring&',
+                Type.INOUT: 'std::wstring&',
+                Type.RETURN: 'std::wstring',
+                Type.RETURN_SIG: 'std::wstring',
+                Type.DERIVE: 'std::wstring',
                }[direction]
     
-    def pcmDestroy(self, name):
-        return 'free(' + name + ');'
-
     def convertToPCM(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, unbox = 0):
         if indirectOut:
             oname = '*' + pcmname
@@ -358,11 +353,10 @@ class WString(String):
         
         extract = "{\n" +\
                   "  uint32_t tmplen = env->GetStringLength(" + xname + ");\n" +\
-                  "  " + oname + " = (wchar_t*)malloc((tmplen + 1) * sizeof(wchar_t));\n" +\
                   "  const jchar* tmpstr = env->GetStringChars(" + xname + ", NULL);\n" +\
-                  "  for (uint32_t tmpidx = 0; tmpidx < tmplen; tmpidx++)\n" +\
-                  "    (" + oname + ")[tmpidx] = static_cast<wchar_t>(tmpstr[tmpidx]);\n" +\
-                  "  (" + oname + ")[tmplen] = 0;\n" +\
+                  "  std::wstring " + oname + ";\n" +\
+                  "  for (uint32_t i = 0; i < tmplen; i++)\n" +\
+                  "    " + oname + " += tmpstr[i];\n" +\
                   "  env->ReleaseStringChars(" + xname + ", tmpstr);\n" +\
                   "}\n"
         if indirectIn:
@@ -382,8 +376,8 @@ class WString(String):
             xname = jniname
 
         if box:
-            return xname + ' = static_cast<jobject>(ConvertWcharStringToJString(env, ' + iname + '));'
-        extract = xname + " = ConvertWcharStringToJString(env, " + iname + ");"
+            return xname + ' = static_cast<jobject>(ConvertWcharStringToJString(env, ' + iname + '.c_str()));'
+        extract = xname + " = ConvertWcharStringToJString(env, " + iname + ".c_str());"
 
         if indirectOut:
             return self.writeJNIReference(extract, jniname)
@@ -408,27 +402,27 @@ class Sequence(Type):
 
     def pcmType(self, direction):
         deriv = self.seqType.pcmType(Type.DERIVE)
-        return {Type.IN: deriv + '*', # Should have 'const' but Iface* doesn't.
-                Type.OUT: deriv + '**',
-                Type.INOUT: deriv + '**',
-                Type.RETURN: deriv + '*',
-                Type.DERIVE: deriv + '*'
+        return {Type.IN: 'const std::vector<' + deriv + '>&',
+                Type.OUT: 'std::vector<' + deriv + '>&',
+                Type.INOUT: 'std::vector<' + deriv + '>&',
+                Type.RETURN: 'std::vector<' + deriv + '>',
+                Type.RETURN_SIG: 'std::vector<' + deriv + '>',
+                Type.DERIVE: 'std::vector<' + deriv + '> '
                }[direction]
 
     def needLength(self):
         return 1
 
     def pcmDestroy(self, name):
-        return "{\nfor (uint32_t idx = 0; idx < _length_" + name + "; idx++) {\n" +\
-               self.seqType.pcmDestroy(name + '[idx]') + "}\ndelete [] " + name + ";\n}"
+        if self.seqType.pcmDestroy('arbitrary') == '':
+            return "{\nfor (uint32_t idx = 0; idx < " + name + ".size(); idx++) {\n" +\
+                self.seqType.pcmDestroy(name + '[idx]') + "}\n}"
 
     def convertToPCM(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, unbox = 0):
         if indirectOut:
             oname = '*' + pcmname
-            olength = '*_length_' + pcmname
         else:
             oname = pcmname
-            olength = '_length_' + pcmname
 
         if indirectIn:
             iname = 'tmpobj'
@@ -439,13 +433,14 @@ class Sequence(Type):
                "  jclass vec = env->FindClass(\"java/util/Vector\");\n" +\
                "  jmethodID vecsize = env->GetMethodID(vec, \"size\", \"()I\");\n"+\
                "  jmethodID vecget = env->GetMethodID(vec, \"get\", \"(I)Ljava/lang/Object;\");\n"+\
-               '  ' + olength + ' = env->CallIntMethod(' + iname + ", vecsize);\n"+\
-               '  ' + oname + ' = new ' + self.seqType.pcmType(Type.DERIVE) + "[" + olength + "];\n"+\
-               "  for (uint32_t tmpidx = 0; tmpidx < " + olength + "; tmpidx++)\n"+\
+               '  uint32_t _tmp_length = env->CallIntMethod(' + iname + ", vecsize);\n"+\
+               '  ' + oname + ' = std::vector<' + self.seqType.pcmType(Type.DERIVE) + ">();\n"+\
+               "  for (uint32_t tmpidx = 0; tmpidx < _tmp_length; tmpidx++)\n"+\
                "  {\n"+\
                "    jobject tmparrayobj = env->CallObjectMethod(" + iname + ", vecget, tmpidx);\n"+\
-               self.seqType.convertToPCM('tmparrayobj', '(' + oname +\
-                                         ")[tmpidx]", 0, 0, 1)+\
+               "    " + self.seqType.pcmType(Type.RETURN) + " _tmp_val;"+\
+               self.seqType.convertToPCM('tmparrayobj', '_tmp_val', 0, 0, 1)+\
+               "    " + oname + ".push_back(_tmp_val);\n"+\
                "    env->DeleteLocalRef(tmparrayobj);\n"+\
                "  }\n" +\
                "}\n"
@@ -458,10 +453,8 @@ class Sequence(Type):
     def convertToJNI(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, box = 0):
         if indirectIn:
             iname = '*' + pcmname
-            ilength = '*_length_' + pcmname
         else:
             iname = pcmname
-            ilength = '_length_' + pcmname
 
         if indirectIn:
             oname = 'tmpobj'
@@ -472,9 +465,9 @@ class Sequence(Type):
                "  jclass vec = env->FindClass(\"java/util/Vector\");\n" +\
                "  jmethodID initmethod = env->GetMethodID(vec, \"<init>\", " +\
                "\"(I)V\");\n" +\
-               "  " + oname + " = env->NewObject(vec, initmethod, " + ilength + ");\n" +\
+               "  " + oname + " = env->NewObject(vec, initmethod, " + iname + ".size());\n" +\
                "  jmethodID vecadd = env->GetMethodID(vec, \"add\", \"(Ljava/lang/Object;)V\");"+\
-               "  for (uint32_t tmpidx = 0; tmpidx < " + ilength + "; tmpidx++)\n"+\
+               "  for (uint32_t tmpidx = 0; tmpidx < " + iname + ".size(); tmpidx++)\n"+\
                "  {\n"+\
                "    jobject tmparrayobj;\n"+\
                self.seqType.convertToJNI('tmparrayobj', '(' + iname +\
@@ -505,6 +498,7 @@ class Declared(Type):
                 Type.OUT: self.cpp_type + '**',
                 Type.INOUT: self.cpp_type + '**',
                 Type.RETURN: self.cpp_type + '*',
+                Type.RETURN_SIG: self.cpp_type + '*',
                 Type.DERIVE: self.cpp_type + '*'
                }[direction]
 
@@ -519,7 +513,16 @@ class Objref(Declared):
         self.p2j_type = 'p2j::' + string.join(type.scopedName(), '::')
         self.field_name = 'nativePtr_' + string.join(type.scopedName(), '_')
         self.wrap_name = 'wrap_' + string.join(type.scopedName(), '_')
-        
+
+    def pcmType(self, direction):
+        return {Type.IN: self.cpp_type + '*',
+                Type.OUT: self.cpp_type + '**',
+                Type.INOUT: self.cpp_type + '**',
+                Type.RETURN: self.cpp_type + '*',
+                Type.RETURN_SIG: 'already_AddRefd<' + self.cpp_type + '>',
+                Type.DERIVE: self.cpp_type + '*'
+               }[direction]
+
     def pcmDestroy(self, name):
         return 'if (' + name + ') ' + name + '->release_ref();'
 
@@ -577,6 +580,7 @@ class Enum(Declared):
                 Type.OUT: self.cpp_type + '*',
                 Type.INOUT: self.cpp_type + '*',
                 Type.RETURN: self.cpp_type,
+                Type.RETURN_SIG: self.cpp_type,
                 Type.DERIVE: self.cpp_type
                }[direction]
 

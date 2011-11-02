@@ -9,5 +9,5 @@
 #define CELLML_CONTEXT_PUBLIC_POST CDA_IMPORT_POST
 #endif
 
-CELLML_CONTEXT_PUBLIC_PRE iface::cellml_context::CellMLContext*
+CELLML_CONTEXT_PUBLIC_PRE already_AddRefd<iface::cellml_context::CellMLContext>
   CreateCellMLContext() CELLML_CONTEXT_PUBLIC_POST;

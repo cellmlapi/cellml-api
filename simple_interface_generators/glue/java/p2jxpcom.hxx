@@ -30,10 +30,10 @@ namespace p2j
       PUBLIC_JAVA_PRE IObject(JNIEnv* aEnv, jobject aObject) PUBLIC_JAVA_POST;
       PUBLIC_JAVA_PRE ~IObject() PUBLIC_JAVA_POST;
 
-      PUBLIC_JAVA_PRE char* objid() throw() PUBLIC_JAVA_POST;
+      PUBLIC_JAVA_PRE std::string objid() throw() PUBLIC_JAVA_POST;
 
-      PUBLIC_JAVA_PRE void* query_interface(const char*) throw() PUBLIC_JAVA_POST;
-      PUBLIC_JAVA_PRE char** supported_interfaces(uint32_t*) throw() PUBLIC_JAVA_POST;
+      PUBLIC_JAVA_PRE void* query_interface(const std::string&) throw() PUBLIC_JAVA_POST;
+      PUBLIC_JAVA_PRE std::vector<std::string> supported_interfaces() throw() PUBLIC_JAVA_POST;
 
       jobject unwrap() { return mObject; }
 
@@ -57,7 +57,7 @@ public:
     P2JFactory::registerP2JFactory(this);
   }
 
-  static P2JFactory* findP2J(const char* name)
+  static P2JFactory* findP2J(const std::string& name)
   {
     if (mMap == NULL)
       return NULL;

@@ -161,14 +161,10 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
   qname += elpr;
   if (elpr != L"")
     qname += L":";
-  wchar_t* ln = el->localName();
-  if (!wcscmp(ln, L""))
-  {
-    free(ln);
+  std::wstring ln = el->localName();
+  if (ln == L"")
     ln = el->nodeName();
-  }
   qname += ln;
-  free(ln);
 
   appendTo += qname;
 
@@ -185,11 +181,8 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
     RETURN_INTO_WSTRING(nsURI, at->namespaceURI());
     RETURN_INTO_WSTRING(ln, at->localName());
     if (ln == L"")
-    {
-      wchar_t* nn = at->nodeName();
-      ln = nn;
-      free(nn);
-    }
+      ln = at->nodeName();
+
     if (nsURI == L"http://www.w3.org/2000/xmlns/" ||
         /* This is tecnically incorrect but needed in practice... */
         (nsURI == L"" && ln == L"xmlns"))
@@ -213,13 +206,11 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
 
     // See if the attribute is in the XMLNS namespace...
     RETURN_INTO_WSTRING(nsURI, at->namespaceURI());
-    RETURN_INTO_WSTRING(ln, at->localName());
+
+    ln = at->localName();
     if (ln == L"")
-    {
-      wchar_t* nn = at->nodeName();
-      ln = nn;
-      free(nn);
-    }
+      ln = at->nodeName();
+
     if (nsURI == L"http://www.w3.org/2000/xmlns/")
       continue;
     /* This is tecnically incorrect but needed in practice... */
@@ -280,11 +271,8 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
     RETURN_INTO_WSTRING(nsURI, at->namespaceURI());
     RETURN_INTO_WSTRING(ln, at->localName());
     if (ln == L"")
-    {
-      wchar_t* nn = at->nodeName();
-      ln = nn;
-      free(nn);
-    }
+      ln = at->nodeName();
+
     if (nsURI == L"http://www.w3.org/2000/xmlns/")
       continue;
     /* This is tecnically incorrect but needed in practice... */
@@ -357,19 +345,15 @@ DOMWriter::writeAttr(DOMNamespaceContext* dnc, iface::dom::Attr* at, std::wstrin
     appendTo += atpr;
     appendTo += L":";
   }
-  wchar_t* ln = at->localName();
-  if (ln == NULL || !wcscmp(ln, L""))
-  {
-    free(ln);
+  std::wstring ln = at->localName();
+  if (ln == L"")
     ln = at->nodeName();
-  }
+
   appendTo += ln;
-  free(ln);
 
   appendTo += L"=\"";
-  wchar_t* value = at->value();
+  std::wstring value = at->value();
   appendTo += TranslateEntities(value, true);
-  free(value);
   appendTo += L"\"";
 }
 
@@ -378,9 +362,7 @@ DOMWriter::writeText(DOMNamespaceContext* dnc, iface::dom::Text* txt,
                      std::wstring& appendTo)
   throw(std::exception&)
 {
-  wchar_t* data = txt->data();
-  appendTo += TranslateEntities(data);
-  free(data);
+  appendTo += TranslateEntities(txt->data());
 }
 
 void
@@ -389,9 +371,7 @@ DOMWriter::writeCDATASection
   throw(std::exception&)
 {
   appendTo += L"<![CDATA[";
-  wchar_t* data = cds->data();
-  appendTo += data;
-  free(data);
+  appendTo += cds->data();
   appendTo += L"]]>";
 }
 
@@ -417,17 +397,14 @@ DOMWriter::writeProcessingInstruction(DOMNamespaceContext* dnc,
   throw(std::exception&)
 {
   appendTo += L"<?";
-  wchar_t* target = proci->target();
-  appendTo += target;
-  free(target);
+  appendTo += proci->target();
 
-  wchar_t* data = proci->data();
-  if (data[0] != 0)
+  std::wstring data = proci->data();
+  if (data.size())
   {
     appendTo += L" ";
     appendTo += data;
   }
-  free(data);
 
   appendTo += L"?>";
 }
@@ -438,9 +415,7 @@ DOMWriter::writeComment(DOMNamespaceContext* dnc, iface::dom::Comment* comment,
   throw(std::exception&)
 {
   appendTo += L"<!--";
-  wchar_t* data = comment->data();
-  appendTo += data;
-  free(data);
+  appendTo += comment->data();
   appendTo += L"-->";
 }
 
