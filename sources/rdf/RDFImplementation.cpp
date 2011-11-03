@@ -833,7 +833,7 @@ std::wstring
 CDA_URIReference::URI()
   throw()
 {
-  return CDA_wcsdup(mURI.c_str());
+  return mURI;
 }
 
 CDA_Literal::CDA_Literal(const std::wstring& aLexicalForm, CDA_DataSource* aDataSource)
@@ -849,7 +849,7 @@ std::wstring
 CDA_Literal::lexicalForm()
   throw()
 {
-  return CDA_wcsdup(mLexicalForm.c_str());
+  return mLexicalForm;
 }
 
 CDA_PlainLiteral::CDA_PlainLiteral(const std::wstring& aLexicalForm,
@@ -868,7 +868,7 @@ std::wstring
 CDA_PlainLiteral::language()
   throw()
 {
-  return CDA_wcsdup(mLanguage.c_str());
+  return mLanguage;
 }
 
 CDA_TypedLiteral::CDA_TypedLiteral
@@ -889,7 +889,7 @@ std::wstring
 CDA_TypedLiteral::datatypeURI()
   throw()
 {
-  return CDA_wcsdup(mTypeURI.c_str());
+  return mTypeURI;
 }
 
 CDA_Triple::CDA_Triple(CDA_DataSource* aDataSource, CDA_Resource* aSubject,
@@ -2009,7 +2009,7 @@ CDA_RDFBootstrap::serialiseDataSource
   DOMWriter dw;
   std::wstring str;
   dw.writeDocument(NULL, doc, str);
-  return CDA_wcsdup(str.c_str());
+  return str;
 }
 
 already_AddRefd<iface::rdf_api::Bootstrap>

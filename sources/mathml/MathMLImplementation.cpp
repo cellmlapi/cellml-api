@@ -1835,7 +1835,7 @@ CDA_MathMLTendsToElement::type()
   }
   catch (iface::dom::DOMException& de)
   {
-    return CDA_wcsdup(L"two-sided");
+    return L"two-sided";
   }
 }
 

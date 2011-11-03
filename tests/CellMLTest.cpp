@@ -1081,7 +1081,7 @@ CellMLTest::testModel()
   //  Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
   iface::cellml_api::Model* m = NULL;
   CPPUNIT_ASSERT_NO_THROW(m = mBeelerReuter->getAlternateVersion(L"1.1"));
-  std::wstring str = NULL;
+  std::wstring str;
   CPPUNIT_ASSERT_NO_THROW(str = m->cellmlVersion());
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"1.1"), str);
   m->release_ref();

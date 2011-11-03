@@ -50,7 +50,7 @@ CDA_LanguageDictionary::getValue(const std::wstring& keyName)
       return getTextContents(currentNode);
   }
 
-  return CDA_wcsdup(L"");
+  return L"";
 }
 
 static std::wstring
@@ -185,7 +185,7 @@ CDA_DictionaryGenerator::padMalString(const std::wstring& inString)
     }
   }
 
-  return CDA_wcsdup(valueString.c_str());
+  return valueString;
 }
 
 already_AddRefd<iface::cellml_services::DictionaryGenerator>

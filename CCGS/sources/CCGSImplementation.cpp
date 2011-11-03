@@ -143,7 +143,7 @@ CDA_CodeInformation::~CDA_CodeInformation()
 std::wstring
 CDA_CodeInformation::errorMessage() throw()
 {
-  return CDA_wcsdup(mErrorMessage.c_str());
+  return mErrorMessage;
 }
 
 iface::cellml_services::ModelConstraintLevel

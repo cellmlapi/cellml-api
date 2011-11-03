@@ -47,8 +47,8 @@ CDA_CodeExporter::generateCode(iface::cellml_api::Model* model)
     return generateCodeExplicit(model);
   }
 
-  return CDA_wcsdup(L"CDA_CodeExporter::generateCode encountered an unknown code style - "
-                    L"this shouldn't happen, so please file a bug report.");
+  return L"CDA_CodeExporter::generateCode encountered an unknown code style - "
+    L"this shouldn't happen, so please file a bug report.";
 }
 
 int
@@ -202,20 +202,20 @@ CDA_CodeExporter::generateCodeExplicit(iface::cellml_api::Model* model)
                      getExplicitCodeGenerator());
 
   if (cg == NULL)
-    return CDA_wcsdup(L"Could not access CCGS information.\n");
+    return L"Could not access CCGS information.\n";
 
   RETURN_INTO_OBJREF(codeinfo, iface::cellml_services::CodeInformation,
       cg->generateCode(model));
 
   if (generateCodeCommonHeader(output, cg, codeinfo))
-    return CDA_wcsdup(output.c_str());
+    return output;
 
   if (generateCodeCommonBody(output, cg, codeinfo))
-    return CDA_wcsdup(output.c_str());
+    return output;
 
   generateCodeCommonFooter(output, codeinfo);
   
-  return CDA_wcsdup(output.c_str());
+  return output;
 }
 
 std::wstring
@@ -227,20 +227,20 @@ CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
                      getImplicitCodeGenerator());
 
   if (cg == NULL)
-    return CDA_wcsdup(L"Could not access CCGS information.\n");
+    return L"Could not access CCGS information.\n";
 
   RETURN_INTO_OBJREF(codeinfo, iface::cellml_services::IDACodeInformation,
                      cg->generateIDACode(model));
 
   if (generateCodeCommonHeader(output, cg, codeinfo))
-    return CDA_wcsdup(output.c_str());
+    return output;
 
   output += getCodeSection(L"preConditionVariableCount");
   output += toStr(codeinfo->conditionVariableCount());
   output += getCodeSection(L"postConditionVariableCount");
 
   if (generateCodeCommonBody(output, cg, codeinfo))
-    return CDA_wcsdup(output.c_str());
+    return output;
 
   output += getCodeSection(L"preEssentialVariables");
   RETURN_INTO_WSTRING(evs, codeinfo->essentialVariablesString());
@@ -255,7 +255,7 @@ CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
 
   generateCodeCommonFooter(output, codeinfo);
   
-  return CDA_wcsdup(output.c_str());
+  return output;
 }
 
 std::wstring

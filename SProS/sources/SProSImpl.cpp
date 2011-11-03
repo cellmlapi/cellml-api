@@ -1305,7 +1305,7 @@ CDA_SProSSimulation::algorithmKisaoID() throw()
   while (true)
   {
     if (n == NULL)
-      return CDA_wcsdup(L"");
+      return L"";
     DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
     if (el != NULL)
     {
@@ -2030,7 +2030,7 @@ CDA_SProSBootstrap::sedmlToText(iface::SProS::SEDMLElement* el)
   RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap, CreateCellMLBootstrap());
   CDA_SProSBase* sb = dynamic_cast<CDA_SProSBase*>(el);
   if (sb == NULL)
-    return CDA_wcsdup(L"");
+    return L"";
 
   return cbs->serialiseNode(sb->mDomEl);
 }

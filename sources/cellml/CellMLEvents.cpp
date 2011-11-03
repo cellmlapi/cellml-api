@@ -151,7 +151,7 @@ public:
   type()
     throw(std::exception&)
   {
-    return CDA_wcsdup(mType.c_str());
+    return mType;
   }
 
   already_AddRefd<iface::events::EventTarget>

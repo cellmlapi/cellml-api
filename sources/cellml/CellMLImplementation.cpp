@@ -219,7 +219,7 @@ CDA_RDFXMLStringRepresentation::serialisedData()
   DOMWriter dw;
   std::wstring str;
   dw.writeDocument(NULL, rdoc, str);
-  return CDA_wcsdup(str.c_str());
+  return str;
 }
 
 void
@@ -2168,7 +2168,7 @@ CDA_Model::serialisedText()
   DOMWriter dw;
   std::wstring str;
   dw.writeDocument(NULL, mDoc, str);
-  return CDA_wcsdup(str.c_str());
+  return str;
 }
 
 CDA_MathContainer::CDA_MathContainer(iface::XPCOM::IObject* parent,
