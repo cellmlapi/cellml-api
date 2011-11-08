@@ -565,10 +565,9 @@ private:
     }
     else
     {
-      char* objid = xmlSubj->objid();
+      std::string objid = xmlSubj->objid();
       std::map<std::string, iface::rdf_api::BlankNode*>::iterator i =
         mNTripleBlankNodeByXMLBlankNode.find(objid);
-      free(objid);
 
       if (i != mNTripleBlankNodeByXMLBlankNode.end())
         ntSubj = (*i).second;
@@ -583,10 +582,9 @@ private:
     }
     else
     {
-      char* objid = xmlPredicate->objid();
+      std::string objid = xmlPredicate->objid();
       std::map<std::string, iface::rdf_api::BlankNode*>::iterator i =
         mNTripleBlankNodeByXMLBlankNode.find(objid);
-      free(objid);
 
       if (i != mNTripleBlankNodeByXMLBlankNode.end())
         ntPredicate = (*i).second;
@@ -621,10 +619,9 @@ private:
         }
         else
         {
-          char* objid = xmlObject->objid();
+          std::string objid = xmlObject->objid();
           std::map<std::string, iface::rdf_api::BlankNode*>::iterator i =
             mNTripleBlankNodeByXMLBlankNode.find(objid);
-          free(objid);
           
           if (i != mNTripleBlankNodeByXMLBlankNode.end())
             ntObject = (*i).second;
@@ -677,10 +674,9 @@ private:
         if (blank == NULL)
           continue;
 
-        char* objid = blank->objid();
+        std::string objid = blank->objid();
         bool known = (mXMLBlankNodeByNTripleBlankNode.find(objid) !=
                       mXMLBlankNodeByNTripleBlankNode.end());
-        free(objid);
 
         if (known)
           continue;
@@ -702,10 +698,9 @@ private:
         if (blank == NULL)
           continue;
 
-        char* objid = blank->objid();
+        std::string objid = blank->objid();
         bool known = (mXMLBlankNodeByNTripleBlankNode.find(objid) !=
                       mXMLBlankNodeByNTripleBlankNode.end());
-        free(objid);
 
         if (known)
           continue;
@@ -730,10 +725,9 @@ private:
           continue;
         }
 
-        char* objid = blank->objid();
+        std::string objid = blank->objid();
         bool known = (mXMLBlankNodeByNTripleBlankNode.find(objid) !=
                       mXMLBlankNodeByNTripleBlankNode.end());
-        free(objid);
 
         if (known)
         {
@@ -812,7 +806,7 @@ private:
         DECLARE_QUERY_INTERFACE_OBJREF(tripleBN, tripleNodes[i], rdf_api::BlankNode);
         DECLARE_QUERY_INTERFACE_OBJREF(xmlBN, xmlNodes[i], rdf_api::BlankNode);
         
-        char* objid = xmlBN->objid();
+        std::string objid = xmlBN->objid();
         bool done = true;
         if (
             mNTripleBlankNodeByXMLBlankNode.find(objid) ==
@@ -824,14 +818,12 @@ private:
             (std::pair<std::string, iface::rdf_api::BlankNode*>(objid, tripleBN));
           tripleBN->add_ref();
         }
-        free(objid);
         if (!done)
         {
           objid = tripleBN->objid();
           mXMLBlankNodeByNTripleBlankNode.insert
             (std::pair<std::string, iface::rdf_api::BlankNode*>(objid, xmlBN));
           xmlBN->add_ref();
-          free(objid);
         }
       }
     }

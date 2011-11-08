@@ -111,6 +111,7 @@ class Walker(idlvisitor.AstVisitor):
         self.cxxheader.out('public:')
         self.cxxheader.inc_indent()
         # Write a pure virtual destructor...
+        self.cxxheader.out('static const char* INTERFACE_NAME() { return "' + node.simplecxxscoped + '"; }')
         self.cxxheader.out('virtual ~' + node.simplename + '() {}')
         for n in node.contents():
             n.accept(self)
@@ -140,18 +141,7 @@ class Walker(idlvisitor.AstVisitor):
                ' ' + alln + ';'
         self.cxxheader.out(alln)
     
-    def visitMember(self, node):
-        if simplecxx.doesTypeNeedLength(node.memberType()):
-            needcomma = 0
-            alln = ''
-            for n in node.declarators():
-                if needcomma:
-                    alln = alln + ', '
-                needcomma = 1
-                alln = alln + '_length_' + n.simplename
-            alln = 'uint32_t ' + alln + ';'
-            self.cxxheader.out(alln)
-        
+    def visitMember(self, node):        
         alln = ''
         needcomma = 0
         for n in node.declarators():
@@ -232,27 +222,21 @@ class Walker(idlvisitor.AstVisitor):
         self.cxxheader.out('} ' + node.simplename + ';')
     
     def visitAttribute(self, node):
-        typename = simplecxx.typeToSimpleCXX(node.attrType())
+        typename = simplecxx.typeToSimpleCXX(node.attrType(), is_ret=1)
         typenameC = simplecxx.typeToSimpleCXX(node.attrType(), is_const=1)
         possibleWarnUnused = simplecxx.shouldWarnIfUnused(node.attrType());
-        if simplecxx.doesTypeNeedLength(node.attrType()):
-            extra_getter_params = 'uint32_t* _length_attr'
-            extra_setter_params = ', uint32_t _length_attr'
-        else:
-            extra_getter_params = ''
-            extra_setter_params = ''
         for n in node.declarators():
             self.cxxheader.out('virtual ' + typename + ' ' + n.simplename +
-                               '(' + extra_getter_params +
+                               '(' +
                                ') throw(std::exception&) ' +
                                possibleWarnUnused + ' = 0;')
             if not node.readonly():
                 self.cxxheader.out('virtual void ' + n.simplename + '(' + typenameC +
-                                   ' attr' + extra_setter_params +
+                                   ' attr' +
                                    ') throw(std::exception&) = 0;')
     
     def visitOperation(self, node):
-        rtype = simplecxx.typeToSimpleCXX(node.returnType())
+        rtype = simplecxx.typeToSimpleCXX(node.returnType(), is_ret=True)
         if node.simplename == 'query_interface':
             rtype = 'void*'
         call = 'virtual ' + rtype
@@ -262,13 +246,6 @@ class Walker(idlvisitor.AstVisitor):
             if needcomma:
                 call = call + ', '
             needcomma = 1
-            # See if we need to add an extra parameter...
-            if simplecxx.doesTypeNeedLength(n.paramType()):
-                if n.is_out():
-                    call = call + 'uint32_t* _length_'
-                else:
-                    call = call + 'uint32_t _length_'
-                call = call + n.simplename + ', '
             if n.is_out():
                 numpoint = 1
             else:
@@ -276,10 +253,6 @@ class Walker(idlvisitor.AstVisitor):
             call = call + simplecxx.typeToSimpleCXX(n.paramType(), numpoint,
                                                     not n.is_out()) +\
                    ' ' + n.simplename
-        if simplecxx.doesTypeNeedLength(node.returnType()):
-            if needcomma:
-                call = call + ', '
-            call = call + 'uint32_t* _retlength'
         
         # Every operation can throw, e.g. in an I/O error, not just those that
         # list exceptions with raises.

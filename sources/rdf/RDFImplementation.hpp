@@ -25,17 +25,17 @@ public:
   CDA_IMPL_QI1(rdf_api::DataSource);
   CDA_IMPL_ID;
 
-  iface::rdf_api::URIReference* getURIReference(const wchar_t* aURI)
+  already_AddRefd<iface::rdf_api::URIReference> getURIReference(const std::wstring& aURI)
     throw(std::exception&);
-  iface::rdf_api::BlankNode* createBlankNode()
+  already_AddRefd<iface::rdf_api::BlankNode> createBlankNode()
     throw(std::exception&);
-  iface::rdf_api::PlainLiteral* getPlainLiteral(const wchar_t* aForm,
-                                                const wchar_t* aLanguage)
+  already_AddRefd<iface::rdf_api::PlainLiteral> getPlainLiteral(const std::wstring& aForm,
+								const std::wstring& aLanguage)
     throw(std::exception&);
-  iface::rdf_api::TypedLiteral* getTypedLiteral(const wchar_t* aForm,
-                                                const wchar_t* datatypeURI)
+  already_AddRefd<iface::rdf_api::TypedLiteral> getTypedLiteral(const std::wstring& aForm,
+								const std::wstring& datatypeURI)
     throw(std::exception&);
-  iface::rdf_api::TripleSet* getAllTriples()
+  already_AddRefd<iface::rdf_api::TripleSet> getAllTriples()
     throw(std::exception&);
 
   // Implementation use only...
@@ -65,10 +65,10 @@ public:
   CDA_RDFNode(CDA_DataSource* aDataSource);
   ~CDA_RDFNode();
 
-  iface::rdf_api::TripleSet* getTriplesInto()
+  already_AddRefd<iface::rdf_api::TripleSet> getTriplesInto()
     throw(std::exception&);
-  iface::rdf_api::TripleSet* getTriplesIntoByPredicate(iface::rdf_api::Resource*
-                                                       aPredicate)
+  already_AddRefd<iface::rdf_api::TripleSet> getTriplesIntoByPredicate(iface::rdf_api::Resource*
+								       aPredicate)
     throw(std::exception&);
 
   void add_ref() throw();
@@ -90,9 +90,9 @@ public:
   CDA_Resource(CDA_DataSource* aDataSource);
   ~CDA_Resource();
 
-  iface::rdf_api::TripleSet* getTriplesOutOfByPredicate(iface::rdf_api::Resource* aPredicate)
+  already_AddRefd<iface::rdf_api::TripleSet> getTriplesOutOfByPredicate(iface::rdf_api::Resource* aPredicate)
     throw(std::exception&);
-  iface::rdf_api::Triple* getTripleOutOfByPredicate
+  already_AddRefd<iface::rdf_api::Triple> getTripleOutOfByPredicate
   (iface::rdf_api::Resource* aPredicate)
     throw(std::exception&);
   bool hasTripleOutOf(iface::rdf_api::Resource* aPredicate,
@@ -101,17 +101,17 @@ public:
   void createTripleOutOf(iface::rdf_api::Resource* aPredicate,
                          iface::rdf_api::Node* aObject)
     throw(std::exception&);
-  iface::rdf_api::TripleSet* getTriplesOutOfByObject
+  already_AddRefd<iface::rdf_api::TripleSet> getTriplesOutOfByObject
   (iface::rdf_api::Node* aObject)
     throw(std::exception&);
-  iface::rdf_api::TripleSet* getTriplesWherePredicate()
+  already_AddRefd<iface::rdf_api::TripleSet> getTriplesWherePredicate()
     throw(std::exception&);
-  iface::rdf_api::TripleSet* getTriplesWhereSubject()
+  already_AddRefd<iface::rdf_api::TripleSet> getTriplesWhereSubject()
     throw(std::exception&);
-  iface::rdf_api::Container* correspondingContainer()
+  already_AddRefd<iface::rdf_api::Container> correspondingContainer()
     throw(std::exception&);
-  iface::rdf_api::Container* findOrMakeContainer(iface::rdf_api::Resource* aPredicate,
-                                                 iface::rdf_api::Resource* aContainerType)
+  already_AddRefd<iface::rdf_api::Container> findOrMakeContainer(iface::rdf_api::Resource* aPredicate,
+								 iface::rdf_api::Resource* aContainerType)
     throw(std::exception&);
 };
 
@@ -131,7 +131,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(rdf_api::NodeIterator);
 
-  iface::rdf_api::Node* getNextNode()
+  already_AddRefd<iface::rdf_api::Node> getNextNode()
     throw(std::exception&);
 
 private:
@@ -154,13 +154,13 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
 
-  iface::rdf_api::Resource* correspondingResource()
+  already_AddRefd<iface::rdf_api::Resource> correspondingResource()
     throw(std::exception&);
-  iface::rdf_api::Resource* containerType()
+  already_AddRefd<iface::rdf_api::Resource> containerType()
     throw(std::exception&);
   void containerType(iface::rdf_api::Resource* aType)
     throw(std::exception&);
-  iface::rdf_api::NodeIterator* iterateChildren()
+  already_AddRefd<iface::rdf_api::NodeIterator> iterateChildren()
     throw(std::exception&);
   void appendChild(iface::rdf_api::Node* aChild)
     throw(std::exception&);
@@ -168,7 +168,7 @@ public:
     throw(std::exception&);
   void renumberContainer()
     throw(std::exception&);
-  iface::rdf_api::Container* mergeWith(iface::rdf_api::Container* aContainer)
+  already_AddRefd<iface::rdf_api::Container> mergeWith(iface::rdf_api::Container* aContainer)
     throw(std::exception&);
 
 private:
@@ -191,7 +191,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(rdf_api::NodeIterator);
 
-  iface::rdf_api::Node* getNextNode() throw(std::exception&);
+  already_AddRefd<iface::rdf_api::Node> getNextNode() throw(std::exception&);
 
 private:
   ObjRef<iface::rdf_api::NodeIterator> mIterator1, mIterator2;
@@ -211,13 +211,13 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
 
-  iface::rdf_api::Resource* correspondingResource()
+  already_AddRefd<iface::rdf_api::Resource> correspondingResource()
     throw(std::exception&);
-  iface::rdf_api::Resource* containerType()
+  already_AddRefd<iface::rdf_api::Resource> containerType()
     throw(std::exception&);
   void containerType(iface::rdf_api::Resource* aType)
     throw(std::exception&);
-  iface::rdf_api::NodeIterator* iterateChildren()
+  already_AddRefd<iface::rdf_api::NodeIterator> iterateChildren()
     throw(std::exception&);
   void appendChild(iface::rdf_api::Node* aChild)
     throw(std::exception&);
@@ -225,7 +225,7 @@ public:
     throw(std::exception&);
   void renumberContainer()
     throw(std::exception&);
-  iface::rdf_api::Container* mergeWith(iface::rdf_api::Container* aContainer)
+  already_AddRefd<iface::rdf_api::Container> mergeWith(iface::rdf_api::Container* aContainer)
     throw(std::exception&);
 
 private:
@@ -247,13 +247,13 @@ class CDA_URIReference
   : public CDA_Resource, public iface::rdf_api::URIReference
 {
 public:
-  CDA_URIReference(const wchar_t* aURI, CDA_DataSource* aDataSource);
+  CDA_URIReference(const std::wstring& aURI, CDA_DataSource* aDataSource);
   ~CDA_URIReference();
 
   CDA_IMPL_QI3(rdf_api::Node, rdf_api::Resource, rdf_api::URIReference);
   CDA_IMPL_ID;
 
-  wchar_t* URI() throw();
+  std::wstring URI() throw();
 
   // Implementation use only...
   std::wstring mURI;
@@ -263,10 +263,10 @@ class CDA_Literal
   : public CDA_RDFNode, public virtual iface::rdf_api::Literal
 {
 public:
-  CDA_Literal(const wchar_t* aLexicalForm, CDA_DataSource* aDataSource);
+  CDA_Literal(const std::wstring& aLexicalForm, CDA_DataSource* aDataSource);
   ~CDA_Literal();
 
-  wchar_t* lexicalForm() throw();
+  std::wstring lexicalForm() throw();
 
   // Implementation use only...
   std::wstring mLexicalForm;
@@ -276,14 +276,14 @@ class CDA_PlainLiteral
   : public CDA_Literal, public iface::rdf_api::PlainLiteral
 {
 public:
-  CDA_PlainLiteral(const wchar_t* aLexicalForm, const wchar_t* aLanguage,
+  CDA_PlainLiteral(const std::wstring& aLexicalForm, const std::wstring& aLanguage,
                    CDA_DataSource* aDataSource);
   ~CDA_PlainLiteral();
 
   CDA_IMPL_QI3(rdf_api::Node, rdf_api::Literal, rdf_api::PlainLiteral);
   CDA_IMPL_ID;
 
-  wchar_t* language() throw();
+  std::wstring language() throw();
 
   // Implementation use only...
   std::wstring mLanguage;
@@ -293,14 +293,14 @@ class CDA_TypedLiteral
   : public CDA_Literal, public iface::rdf_api::TypedLiteral
 {
 public:
-  CDA_TypedLiteral(const wchar_t* aLexicalForm, const wchar_t* aTypeURI,
+  CDA_TypedLiteral(const std::wstring& aLexicalForm, const std::wstring& aTypeURI,
                    CDA_DataSource* aDataSource);
   ~CDA_TypedLiteral();
 
   CDA_IMPL_QI3(rdf_api::Node, rdf_api::Literal, rdf_api::TypedLiteral);
   CDA_IMPL_ID;
 
-  wchar_t* datatypeURI() throw();
+  std::wstring datatypeURI() throw();
 
   // Implementation use only...
   std::wstring mTypeURI;
@@ -318,9 +318,9 @@ public:
   CDA_IMPL_QI1(rdf_api::Triple);
   CDA_IMPL_ID;
 
-  iface::rdf_api::Resource* subject() throw(std::exception&);
-  iface::rdf_api::Resource* predicate() throw(std::exception&);
-  iface::rdf_api::Node* object() throw(std::exception&);
+  already_AddRefd<iface::rdf_api::Resource> subject() throw(std::exception&);
+  already_AddRefd<iface::rdf_api::Resource> predicate() throw(std::exception&);
+  already_AddRefd<iface::rdf_api::Node> object() throw(std::exception&);
   void unassert() throw();
 
 private:
@@ -353,7 +353,7 @@ public:
   CDA_IMPL_QI1(rdf_api::TripleSet);
   CDA_IMPL_ID;
 
-  iface::rdf_api::TripleEnumerator* enumerateTriples()
+  already_AddRefd<iface::rdf_api::TripleEnumerator> enumerateTriples()
     throw(std::exception&);
 
   // Implementation use only...
@@ -411,7 +411,7 @@ public:
   CDA_IMPL_QI1(rdf_api::TripleEnumerator);
   CDA_IMPL_ID;
 
-  iface::rdf_api::Triple* getNextTriple() throw(std::exception&);
+  already_AddRefd<iface::rdf_api::Triple> getNextTriple() throw(std::exception&);
   void aboutToDelete(const std::set<CDA_AllTriplesSet::RealTriple>::iterator& aWhere);
 
 private:
@@ -432,7 +432,7 @@ public:
   CDA_IMPL_QI1(rdf_api::TripleSet);
   CDA_IMPL_ID;
   
-  iface::rdf_api::TripleEnumerator* enumerateTriples()
+  already_AddRefd<iface::rdf_api::TripleEnumerator> enumerateTriples()
     throw(std::exception&);
 private:
   ObjRef<CDA_AllTriplesSet> mMasterSource;
@@ -453,7 +453,7 @@ public:
   CDA_IMPL_QI1(rdf_api::TripleEnumerator);
   CDA_IMPL_ID;
 
-  iface::rdf_api::Triple* getNextTriple() throw(std::exception&);
+  already_AddRefd<iface::rdf_api::Triple> getNextTriple() throw(std::exception&);
 
 private:
   ObjRef<iface::rdf_api::TripleEnumerator> mMasterEnum;
@@ -472,24 +472,24 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(rdf_api::Bootstrap);
 
-  iface::rdf_api::DataSource* createDataSource()
+  already_AddRefd<iface::rdf_api::DataSource> createDataSource()
     throw(std::exception&);
   void parseIntoDataSource(iface::rdf_api::DataSource* aDataSource,
                            iface::dom::Element* aRoot,
-                           const wchar_t* aBaseURI)
+                           const std::wstring& aBaseURI)
     throw(std::exception&);
 
-  iface::dom::Document* getDOMForDataSource
+  already_AddRefd<iface::dom::Document> getDOMForDataSource
   (
    iface::rdf_api::DataSource* aDataSource,
-   const wchar_t* aBaseURI
+   const std::wstring& aBaseURI
   )
     throw(std::exception&);
 
-  wchar_t* serialiseDataSource
+  std::wstring serialiseDataSource
   (
    iface::rdf_api::DataSource* aDataSource,
-   const wchar_t* aBaseURI
+   const std::wstring& aBaseURI
   )
     throw(std::exception&);
 };

@@ -49,10 +49,9 @@ CUSESTest::testCUSESObject()
   iface::cellml_services::CUSES* c =
     mCUSESBootstrap->createCUSESForModel(tenTusscher, false);
 
-  wchar_t* str = c->modelError();
+  std::wstring str = c->modelError();
   // This happens due to an error in the coding of the model.
-  CPPUNIT_ASSERT(!wcscmp(str, L"Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; "));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; Found a unit with no units attribute in units mm_per_ms; "), str);
 
   iface::cellml_services::CanonicalUnitRepresentation* cu1
     = c->getUnitsByName(tenTusscher, L"mM_per_ms");
@@ -73,7 +72,7 @@ CUSESTest::testCUSESObject()
   iface::cellml_services::BaseUnit * bu1 = bui1->unit(),
     * bu2 = bui2->unit(), * bu3 = bui3->unit(), * butmp;
 
-  wchar_t * str1 = bu1->name(), * str2 = bu2->name(), * str3 = bu3->name(), *strtmp;
+  std::wstring str1 = bu1->name(), str2 = bu2->name(), str3 = bu3->name(), strtmp;
   
 #define ASSIGN(n1, n2) \
   bui##n1 = bui##n2; \
@@ -84,31 +83,28 @@ CUSESTest::testCUSESObject()
   ASSIGN(n1, n2); \
   ASSIGN(n2, tmp);
 
-  if (!wcscmp(str2, L"mole"))
+  if (str2 == L"mole")
   {
     SWAP(1, 2);
   }
-  else if (!wcscmp(str3, L"mole"))
+  else if (str3 == L"mole")
   {
     SWAP(1, 3);
   }
-  if (!wcscmp(str2, L"second"))
+  if (str2 == L"second")
   {
     SWAP(2, 3);
   }
 #undef SWAP
 #undef ASSIGN
 
-  CPPUNIT_ASSERT(!wcscmp(str1, L"mole"));
-  CPPUNIT_ASSERT(!wcscmp(str2, L"metre"));
-  CPPUNIT_ASSERT(!wcscmp(str3, L"second"));
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"mole"), str1);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"metre"), str2);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"second"), str3);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(bui1->exponent(), 1.0, 1E-10);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(bui2->exponent(), -3.0, 1E-10);
   CPPUNIT_ASSERT_DOUBLES_EQUAL(bui3->exponent(), -1.0, 1E-10);
 
-  free(str1);
-  free(str2);
-  free(str3);
   bu1->release_ref();
   bu2->release_ref();
   bu3->release_ref();

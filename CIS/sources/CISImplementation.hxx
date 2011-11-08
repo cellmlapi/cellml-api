@@ -55,14 +55,14 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
 
-  iface::cellml_api::Model* model()
+  already_AddRefd<iface::cellml_api::Model> model()
     throw(std::exception&)
   {
     mModel->add_ref();
     return mModel;
   }
 
-  iface::cellml_services::CodeInformation* codeInformation()
+  already_AddRefd<iface::cellml_services::CodeInformation> codeInformation()
     throw(std::exception&)
   {
     mCCI->add_ref();
@@ -240,23 +240,23 @@ public:
                             std::string& sourcename,
                             std::ofstream& ss);
 
-  iface::cellml_services::ODESolverCompiledModel*
+  already_AddRefd<iface::cellml_services::ODESolverCompiledModel>
   compileModelODE(iface::cellml_api::Model* aModel)
     throw(std::exception&);
-  iface::cellml_services::DAESolverCompiledModel*
+  already_AddRefd<iface::cellml_services::DAESolverCompiledModel>
   compileModelDAE(iface::cellml_api::Model* aModel)
     throw(std::exception&);
 
-  iface::cellml_services::ODESolverRun*
+  already_AddRefd<iface::cellml_services::ODESolverRun>
   createODEIntegrationRun(iface::cellml_services::ODESolverCompiledModel* aModel)
     throw(std::exception&);
-  iface::cellml_services::DAESolverRun*
+  already_AddRefd<iface::cellml_services::DAESolverRun>
   createDAEIntegrationRun(iface::cellml_services::DAESolverCompiledModel* aModel)
     throw(std::exception&);
   
-  wchar_t* lastError() throw(std::exception&)
+  std::wstring lastError() throw(std::exception&)
   {
-    return CDA_wcsdup(mLastError.c_str());
+    return mLastError;
   }
 
 #ifdef ENABLE_CONTEXT
@@ -266,24 +266,24 @@ public:
     return iface::cellml_context::CellMLModule::SERVICE;
   }
 
-  wchar_t* moduleName() throw (std::exception&)
+  std::wstring moduleName() throw (std::exception&)
   {
-    return CDA_wcsdup(L"CIS");
+    return L"CIS";
   }
 
-  wchar_t* moduleDescription() throw (std::exception&)
+  std::wstring moduleDescription() throw (std::exception&)
   {
-    return CDA_wcsdup(L"The CellML Integration Service");
+    return L"The CellML Integration Service";
   }
 
-  wchar_t* moduleVersion() throw (std::exception&)
+  std::wstring moduleVersion() throw (std::exception&)
   {
-    return CDA_wcsdup(L"0.0");
+    return L"0.0";
   }
 
-  wchar_t* moduleIconURL() throw (std::exception&)
+  std::wstring moduleIconURL() throw (std::exception&)
   {
-    return CDA_wcsdup(L"");
+    return L"";
   }
 
   void unload() throw (std::exception&)

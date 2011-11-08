@@ -19,7 +19,7 @@ CDA_TypeAnnotationManager::~CDA_TypeAnnotationManager()
 }
 
 void
-CDA_TypeAnnotationManager::setUserData(const wchar_t* type, const wchar_t* key,
+CDA_TypeAnnotationManager::setUserData(const std::wstring& type, const std::wstring& key,
                                        iface::XPCOM::IObject* data)
   throw(std::exception&)
 {
@@ -40,8 +40,8 @@ CDA_TypeAnnotationManager::setUserData(const wchar_t* type, const wchar_t* key,
                      iface::XPCOM::IObject*>(p, data));
 }
 
-iface::XPCOM::IObject*
-CDA_TypeAnnotationManager::getUserData(const wchar_t* type, const wchar_t* key)
+already_AddRefd<iface::XPCOM::IObject>
+CDA_TypeAnnotationManager::getUserData(const std::wstring& type, const std::wstring& key)
   throw(std::exception&)
 {
   std::pair<std::wstring,std::wstring> p(type, key);
@@ -72,7 +72,7 @@ CDA_CellMLModuleIterator::~CDA_CellMLModuleIterator()
   mMM->release_ref();
 }
 
-iface::cellml_context::CellMLModule*
+already_AddRefd<iface::cellml_context::CellMLModule>
 CDA_CellMLModuleIterator::nextModule()
   throw(std::exception&)
 {
@@ -105,7 +105,7 @@ CDA_ModelNodeIterator::~CDA_ModelNodeIterator()
   mML->release_ref();
 }
 
-iface::cellml_context::ModelNode*
+already_AddRefd<iface::cellml_context::ModelNode>
 CDA_ModelNodeIterator::nextModelNode()
   throw(std::exception&)
 {
@@ -194,13 +194,10 @@ struct XPCOMEquator
     /* NULL != x unless x == NULL. */
     if (o1 == NULL)
       return o2 ? false : true;
-    char *id1, *id2;
-    id1 = o1->objid();
-    id2 = o2->objid();
-    bool ret = (strcmp(id1, id2) == 0);
-    free(id1);
-    free(id2);
-    return ret;
+
+    std::string id1(o1->objid());
+    std::string id2(o2->objid());
+    return id1 == id2;
   }
   
 private:
@@ -258,10 +255,10 @@ CDA_ModuleManager::deregisterModule
   mRegisteredModuleList.erase(i3);
 }
 
-iface::cellml_context::CellMLModule*
+already_AddRefd<iface::cellml_context::CellMLModule>
 CDA_ModuleManager::findModuleByName
 (
- const wchar_t* moduleName, const wchar_t* moduleVersion
+ const std::wstring& moduleName, const std::wstring& moduleVersion
 )
   throw(std::exception&)
 {
@@ -280,7 +277,7 @@ CDA_ModuleManager::findModuleByName
 void
 CDA_ModuleManager::requestModuleByName
 (
- const wchar_t* moduleName, const wchar_t* moduleVersion
+ const std::wstring& moduleName, const std::wstring& moduleVersion
 )
   throw(std::exception&)
 {
@@ -317,7 +314,7 @@ CDA_ModuleManager::removeMonitor
     }
 }
 
-iface::cellml_context::CellMLModuleIterator*
+already_AddRefd<iface::cellml_context::CellMLModuleIterator>
 CDA_ModuleManager::iterateModules()
   throw(std::exception&)
 {
@@ -390,7 +387,7 @@ CDA_ModelNode::release_ref()
 }
 
 void
-CDA_ModelNode::name(const wchar_t* name)
+CDA_ModelNode::name(const std::wstring& name)
   throw(std::exception&)
 {
   std::list<iface::cellml_context::ModelNodeMonitor*>::iterator i, j;
@@ -436,14 +433,14 @@ CDA_ModelNode::name(const wchar_t* name)
   mName = name;
 }
 
-wchar_t*
+std::wstring
 CDA_ModelNode::name()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mName.c_str());
+  return mName;
 }
 
-iface::cellml_context::ModelNode*
+already_AddRefd<iface::cellml_context::ModelNode>
 CDA_ModelNode::getLatestDerivative()
   throw(std::exception&)
 {
@@ -472,10 +469,10 @@ CDA_ModelNode::getLatestDerivative()
   }
 
   bestCandidate->add_ref();
-  return bestCandidate;
+  return bestCandidate.getPointer();
 }
 
-iface::cellml_context::ModelNode*
+already_AddRefd<iface::cellml_context::ModelNode>
 CDA_ModelNode::getWritable()
   throw(std::exception&)
 {
@@ -502,7 +499,7 @@ CDA_ModelNode::getWritable()
   mDerivedModels->addModel(cmn);
 
   cmn->add_ref();
-  return cmn;
+  return cmn.getPointer();
 }
 
 bool
@@ -575,7 +572,7 @@ CDA_ModelNode::stampModifiedNow()
   mTimestamp = time(0);
 }
 
-iface::cellml_api::Model*
+already_AddRefd<iface::cellml_api::Model>
 CDA_ModelNode::model()
   throw(std::exception&)
 {
@@ -737,14 +734,14 @@ CDA_ModelNode::flushChanges()
   }
 }
 
-iface::XPCOM::IObject*
+already_AddRefd<iface::XPCOM::IObject>
 CDA_ModelNode::owner()
   throw(std::exception&)
 {
   if (mOwner)
     mOwner->add_ref();
 
-  return mOwner;
+  return mOwner.getPointer();
 }
 
 void
@@ -794,7 +791,7 @@ CDA_ModelNode::owner(iface::XPCOM::IObject* aOwner)
   mOwner = aOwner;
 }
 
-iface::cellml_context::ModelList*
+already_AddRefd<iface::cellml_context::ModelList>
 CDA_ModelNode::derivedModels()
   throw(std::exception&)
 {
@@ -834,7 +831,7 @@ CDA_ModelNode::removeModelMonitor
   }
 }
 
-iface::cellml_context::ModelList*
+already_AddRefd<iface::cellml_context::ModelList>
 CDA_ModelNode::parentList()
   throw(std::exception&)
 {
@@ -942,7 +939,7 @@ CDA_ModelList::removeListMonitor
   }
 }
 
-iface::cellml_context::ModelNode*
+already_AddRefd<iface::cellml_context::ModelNode>
 CDA_ModelList::makeNode(iface::cellml_api::Model* mod)
   throw(std::exception&)
 {
@@ -1020,14 +1017,14 @@ CDA_ModelList::removeModel(iface::cellml_context::ModelNode* node)
   }
 }
 
-iface::cellml_context::ModelNodeIterator*
+already_AddRefd<iface::cellml_context::ModelNodeIterator>
 CDA_ModelList::iterateModelNodes()
   throw(std::exception&)
 {
   return new CDA_ModelNodeIterator(this, mModels);
 }
 
-iface::cellml_context::ModelNode*
+already_AddRefd<iface::cellml_context::ModelNode>
 CDA_ModelList::parentNode()
   throw(std::exception&)
 {
@@ -1102,7 +1099,7 @@ CDA_CellMLContext::~CDA_CellMLContext()
     mModelList->release_ref();
 }
 
-CDA_EXPORT_PRE CDA_EXPORT_POST iface::cellml_context::CellMLContext*
+CDA_EXPORT_PRE CDA_EXPORT_POST already_AddRefd<iface::cellml_context::CellMLContext>
 CreateCellMLContext()
 {
   return new CDA_CellMLContext();

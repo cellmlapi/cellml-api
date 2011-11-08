@@ -76,8 +76,8 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
         continue;
       }
       iface::cellml_api::CellMLVariable* v = ct->variable();
-      wchar_t* n = v->name();
-      wchar_t* c = v->componentName();
+      std::wstring n = v->name();
+      std::wstring c = v->componentName();
       std::wstring str = L" * * ";
       uint32_t deg = ct->degree();
       if (deg != 0)
@@ -94,8 +94,6 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
       str += L" (in ";
       str += c;
       str += L")\n";
-      free(n);
-      free(c);
       messages.push_back(str);
       v->release_ref();
       ct->release_ref();
@@ -127,7 +125,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
         continue;
       }
       iface::cellml_api::CellMLVariable* v = ct->variable();
-      wchar_t* n = v->name();
+      std::wstring n = v->name();
       std::wstring str = L" * * ";
       uint32_t deg = ct->degree();
       if (deg != 0)
@@ -141,7 +139,6 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
         str += L" ";
       }
       str += n;
-      free(n);
       str += L"\n";
       messages.push_back(str);
       v->release_ref();
@@ -164,12 +161,11 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
       reinterpret_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
     n->release_ref();
 
-    wchar_t* cmeta = el->getAttribute(L"id");
-    if (!wcscmp(cmeta, L""))
+    std::wstring cmeta = el->getAttribute(L"id");
+    if (cmeta == L"")
       printf(" *   <equation with no cmeta ID>\n");
     else
-      printf(" *   %S\n", cmeta);
-    free(cmeta);
+      printf(" *   %S\n", cmeta.c_str());
 
     n = el->parentNode();
     el->release_ref();
@@ -181,11 +177,10 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
       n->release_ref();
 
       cmeta = el->getAttribute(L"id");
-      if (!wcscmp(cmeta, L""))
+      if (cmeta == L"")
         printf(" *   in <math with no cmeta ID>\n");
       else
-        printf(" *   in math with cmeta:id %S\n", cmeta);
-      free(cmeta);
+        printf(" *   in math with cmeta:id %S\n", cmeta.c_str());
 
       el->release_ref();
     }
@@ -224,9 +219,8 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
         str += L" ";
       }
       iface::cellml_api::CellMLVariable* v = ct->variable();
-      wchar_t* n = v->name();
+      std::wstring n = v->name();
       str += n;
-      free(n);
       str += L"\n";
       messages.push_back(str);
       v->release_ref();
@@ -260,9 +254,9 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
       reinterpret_cast<iface::dom::Element*>(n->query_interface("dom::Element"));
     n->release_ref();
 
-    wchar_t* cmeta = el->getAttribute(L"id");
+    std::wstring cmeta = el->getAttribute(L"id");
     std::wstring str;
-    if (!wcscmp(cmeta, L""))
+    if (cmeta == L"")
       str += L" *   <equation with no cmeta ID>\n";
     else
     {
@@ -270,7 +264,6 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
       str += cmeta;
       str += L"\n";
     }
-    free(cmeta);
 
     n = el->parentNode();
     el->release_ref();
@@ -280,7 +273,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
     n->release_ref();
 
     cmeta = el->getAttribute(L"id");
-    if (!wcscmp(cmeta, L""))
+    if (cmeta == L"")
       str += L" *   in <math with no cmeta ID>\n";
     else
     {
@@ -288,7 +281,6 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
       str += cmeta;
       str += L"\n";
     }
-    free(cmeta);
     el->release_ref();
 
     messages.push_back(str);
@@ -321,7 +313,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
     el->release_ref();
 
     std::wstring str;
-    wchar_t* vn = v->name(), * cn = c->name();
+    std::wstring vn = v->name(), cn = c->name();
     str += L" * * Target ";
     uint32_t deg = ct->degree();
     if (deg != 0)
@@ -338,8 +330,6 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
     str += L" in component ";
     str += cn;
     str += L"\n";
-    free(vn);
-    free(cn);
 
     c->release_ref();
     v->release_ref();
@@ -352,10 +342,8 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
     str += buf;
 
     str += L" * * * Variable storage: ";
-    wchar_t * vsn;
-    vsn = ct->name();
+    std::wstring vsn = ct->name();
     str += vsn;
-    free(vsn);
     str += '\n';
 
     ct->release_ref();
@@ -371,19 +359,16 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
 
   printf(" */\n");
 
-  wchar_t* frag = cci->functionsString();
-  printf("%S", frag);
-  free(frag);
+  std::wstring frag = cci->functionsString();
+  printf("%S", frag.c_str());
 
   // Now start the code...
   frag = cci->initConstsString();
-  printf("void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)\n{\n%S}\n", frag);
-  free(frag);
+  printf("void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)\n{\n%S}\n", frag.c_str());
 
   frag = cci->variablesString();
   printf("void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\n"
-         "{\n%S}\n", frag);
-  free(frag);
+         "{\n%S}\n", frag.c_str());
 
   if (useida)
   {
@@ -392,22 +377,18 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
 
     frag = icci->essentialVariablesString();
     printf("void EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)\n"
-           "{\n%S}\n", frag);
-    free(frag);
+           "{\n%S}\n", frag.c_str());
 
     frag = cci->ratesString();
     printf("void ComputeResiduals(double VOI, double* STATES, double* RATES, double* CONSTANTS, "
            "double* ALGEBRAIC)\n"
-           "{\n%S}\n", frag);
-    free(frag);
+           "{\n%S}\n", frag.c_str());
 
     frag = icci->stateInformationString();
-    printf("void SetupStateInfo(double * SI)\n{\n%S}\n", frag);
-    free(frag);
+    printf("void SetupStateInfo(double * SI)\n{\n%S}\n", frag.c_str());
 
     frag = icci->rootInformationString();
-    printf("void RootInformation()\n{\n%S}\n", frag);
-    free(frag);
+    printf("void RootInformation()\n{\n%S}\n", frag.c_str());
 
     icci->release_ref();
   }
@@ -416,8 +397,7 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
     frag = cci->ratesString();
     printf("void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, "
            "double* ALGEBRAIC)\n"
-           "{\n%S}\n", frag);
-    free(frag);
+           "{\n%S}\n", frag.c_str());
   }
 }
 
@@ -443,7 +423,7 @@ doNameAnnotations(iface::cellml_api::Model* aModel,
   while ((comp = cci->nextComponent()) != NULL)
   {
     iface::cellml_api::CellMLVariableSet* vs(comp->variables());
-    wchar_t* compname = comp->name();
+    std::wstring compname = comp->name();
     comp->release_ref();
     iface::cellml_api::CellMLVariableIterator* vi(vs->iterateVariables());
     vs->release_ref();
@@ -451,11 +431,10 @@ doNameAnnotations(iface::cellml_api::Model* aModel,
     iface::cellml_api::CellMLVariable* v;
     while ((v = vi->nextVariable()) != NULL)
     {
-      wchar_t* name = v->name();
+      std::wstring name = v->name();
       std::wstring varn = compname;
       varn += L"_";
       varn += name;
-      free(name);
       std::wstring raten = L"rate_";
       raten += varn;
       as->setStringAnnotation(v, L"expression", varn.c_str());
@@ -464,8 +443,6 @@ doNameAnnotations(iface::cellml_api::Model* aModel,
     }
 
     vi->release_ref();
-
-    free(compname);
   }
 
   cci->release_ref();
@@ -562,15 +539,13 @@ main(int argc, char** argv)
   mod->release_ref();
   cg->release_ref();
 
-  wchar_t* m = cci->errorMessage();
-  if (wcscmp(m, L""))
+  std::wstring m = cci->errorMessage();
+  if (m != L"")
   {
-    printf("Error generating code: %S\n", m);
+    printf("Error generating code: %S\n", m.c_str());
     cci->release_ref();
-    free(m);
     return -1;
   }
-  free(m);
 
   // We now have the code information...
   WriteCode(cci, useida);

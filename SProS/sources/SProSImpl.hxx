@@ -16,11 +16,11 @@ public:
 
   CDA_SProSBootstrap() {}
 
-  iface::SProS::SEDMLElement* createEmptySEDML() throw(std::exception&);
-  iface::SProS::SEDMLElement* parseSEDMLFromURI(const wchar_t* uri, const wchar_t* relativeTo) throw(std::exception&);
-  iface::SProS::SEDMLElement* parseSEDMLFromText(const wchar_t* text, const wchar_t* baseURI) throw();
-  iface::SProS::SEDMLElement* makeSEDMLFromElement(iface::dom::Element* el) throw();
-  wchar_t* sedmlToText(iface::SProS::SEDMLElement* el) throw();
+  already_AddRefd<iface::SProS::SEDMLElement> createEmptySEDML() throw(std::exception&);
+  already_AddRefd<iface::SProS::SEDMLElement> parseSEDMLFromURI(const std::wstring& uri, const std::wstring& relativeTo) throw(std::exception&);
+  already_AddRefd<iface::SProS::SEDMLElement> parseSEDMLFromText(const std::wstring& text, const std::wstring& baseURI) throw();
+  already_AddRefd<iface::SProS::SEDMLElement> makeSEDMLFromElement(iface::dom::Element* el) throw();
+  std::wstring sedmlToText(iface::SProS::SEDMLElement* el) throw();
 };
 
 class CDA_SProSBase
@@ -34,10 +34,10 @@ public:
   void release_ref() throw();
 
   // Base:
-  iface::dom::Element* domElement() throw();
-  iface::dom::NodeList* notes() throw();
-  iface::dom::NodeList* annotations() throw();
-  iface::SProS::Base* parent() throw();
+  already_AddRefd<iface::dom::Element> domElement() throw();
+  already_AddRefd<iface::dom::NodeList> notes() throw();
+  already_AddRefd<iface::dom::NodeList> annotations() throw();
+  already_AddRefd<iface::SProS::Base> parent() throw();
 
   // Semi-private: for use within SProSImpl only.
   void reparent(CDA_SProSBase* aParent);
@@ -66,7 +66,7 @@ public:
   void release_ref() throw();
   void insert(iface::SProS::Base* b) throw(std::exception&);
   void remove(iface::SProS::Base* b) throw(std::exception&);
-  iface::SProS::BaseIterator* iterateElements() throw();
+  already_AddRefd<iface::SProS::BaseIterator> iterateElements() throw();
 
   // semi-private (SProS internal use only):
 
@@ -75,8 +75,8 @@ public:
   void checkListParentAndInvalidateIfWrong();
   iface::dom::Element* tryFindListElement();
   iface::dom::Element* findOrCreateListElement();
-  bool checkLocalNameMatch(const wchar_t* aCheck);
-  CDA_SProSBase* wrapOrFindElement(CDA_SProSBase*, iface::dom::Element*);
+  bool checkLocalNameMatch(const std::wstring& aCheck);
+  already_AddRefd<CDA_SProSBase> wrapOrFindElement(CDA_SProSBase*, iface::dom::Element*);
 
   void cache(const std::string& aIDS, CDA_SProSBase* aSB);
   void decache(CDA_SProSBase* aSB);
@@ -93,7 +93,7 @@ public:
   CDA_SProSDOMIteratorBase(iface::dom::Element* parentElement);
   virtual ~CDA_SProSDOMIteratorBase();
   
-  iface::dom::Element* fetchNextElement();
+  already_AddRefd<iface::dom::Element> fetchNextElement();
   /*
    * fetch next element, with a hint that anything without localName aWantEl
    * can safely be skipped.
@@ -107,7 +107,7 @@ public:
    *     fetchNextElement() and newly inserted nodes can be returned which
    *     don't match aWantEl.
    */
-  iface::dom::Element* fetchNextElement(const wchar_t* aWantEl);
+  already_AddRefd<iface::dom::Element> fetchNextElement(const std::wstring& aWantEl);
 
 private:
   ObjRef<iface::dom::Element> mPrevElement, mNextElement, mParentElement;
@@ -147,7 +147,7 @@ public:
   CDA_SProSIteratorBase(CDA_SomeSet*);
   ~CDA_SProSIteratorBase();
 
-  iface::SProS::Base* nextElement() throw();
+  already_AddRefd<iface::SProS::Base> nextElement() throw();
 
 protected:
 
@@ -174,13 +174,13 @@ public:
     : CDA_SProSBase(aParent, aEl) {}
   ~CDA_SProSNamedElement() {}
 
-  wchar_t* name() throw()
+  std::wstring name() throw()
   {
     return mDomEl->getAttribute(L"name");
   }
 
   void
-  name(const wchar_t* aName) throw()
+  name(const std::wstring& aName) throw()
   {
     mDomEl->setAttribute(L"name", aName);
   }
@@ -201,7 +201,7 @@ public:
   {
   }
 
-  iface::SProS::NamedElementIterator* iterateNamedElement() throw();
+  already_AddRefd<iface::SProS::NamedElementIterator> iterateNamedElement() throw();
 };
 
 class CDA_SProSNamedElementIteratorBase
@@ -212,7 +212,7 @@ public:
     : CDA_SProSIteratorBase(aS) {}
   ~CDA_SProSNamedElementIteratorBase() {}
 
-  iface::SProS::NamedElement*
+  already_AddRefd<iface::SProS::NamedElement>
   nextNamedElement() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
@@ -242,14 +242,14 @@ public:
     : CDA_SProSBase(aParent, aEl), CDA_SProSNamedElement(aParent, aEl) {}
   ~CDA_SProSNamedIdentifiedElement() {}
 
-  wchar_t*
+  std::wstring
   id() throw()
   {
     return mDomEl->getAttribute(L"id");
   }
 
   void
-  id(const wchar_t* aValue) throw()
+  id(const std::wstring& aValue) throw()
   {
     mDomEl->setAttribute(L"id", aValue);
   }
@@ -271,13 +271,15 @@ public:
   {
   }
 
-  iface::SProS::NamedIdentifiedElementIterator*
+  already_AddRefd<iface::SProS::NamedIdentifiedElementIterator>
   iterateNamedIdentifiedElements() throw();
 
-  iface::SProS::NamedIdentifiedElement*
-  getNamedIdentifiedElementByIdentifier(const wchar_t* aIdMatch)
+  already_AddRefd<iface::SProS::NamedIdentifiedElement>
+  getNamedIdentifiedElementByIdentifier(const std::wstring& aIdMatch)
     throw();
 };
+
+#include <assert.h>
 
 class CDA_SProSNamedIdentifiedElementIteratorBase
   : public CDA_SProSNamedElementIteratorBase, public virtual iface::SProS::NamedIdentifiedElementIterator
@@ -288,11 +290,12 @@ public:
   {}
   ~CDA_SProSNamedIdentifiedElementIteratorBase() {}
 
-  iface::SProS::NamedIdentifiedElement*
+  already_AddRefd<iface::SProS::NamedIdentifiedElement>
   nextNamedIdentifiedElement() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::NamedIdentifiedElement);
+    assert(el == NULL || ret != NULL);
     return ret;
   }
 };
@@ -319,8 +322,8 @@ public: \
   \
   CDA_IMPL_QI4(SProS::BaseSet, SProS::NamedElementSet, SProS::NamedIdentifiedElementSet, SProS::whatUpper##Set); \
   \
-  iface::SProS::whatUpper##Iterator* iterate##whatUpper##s() throw(); \
-  iface::SProS::whatUpper* get##whatUpper##ByIdentifier(const wchar_t* aId) \
+  already_AddRefd<iface::SProS::whatUpper##Iterator> iterate##whatUpper##s() throw(); \
+  already_AddRefd<iface::SProS::whatUpper> get##whatUpper##ByIdentifier(const std::wstring& aId) \
     throw() \
   { \
     RETURN_INTO_OBJREF(el, iface::SProS::NamedIdentifiedElement, getNamedIdentifiedElementByIdentifier(aId)); \
@@ -339,7 +342,7 @@ public: \
   CDA_IMPL_QI4(SProS::BaseIterator, SProS::NamedElementIterator, \
                SProS::NamedIdentifiedElementIterator, SProS::whatUpper##Iterator); \
   \
-  iface::SProS::whatUpper* next##whatUpper() throw() \
+  already_AddRefd<iface::SProS::whatUpper> next##whatUpper() throw()    \
   { \
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());  \
     DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpper); \
@@ -356,7 +359,7 @@ public: \
   \
   CDA_IMPL_QI2(SProS::BaseSet, SProS::whatUpper##Set); \
   \
-  iface::SProS::whatUpper##Iterator* iterate##whatUpper##s() throw(); \
+  already_AddRefd<iface::SProS::whatUpper##Iterator> iterate##whatUpper##s() throw(); \
 }; \
 class CDA_SProS##whatUpper##Iterator \
   : public CDA_SProSIteratorBase, public iface::SProS::whatUpper##Iterator \
@@ -368,7 +371,7 @@ public: \
   \
   CDA_IMPL_QI2(SProS::BaseIterator, SProS::whatUpper##Iterator); \
   \
-  iface::SProS::whatUpper* next##whatUpper() throw() \
+  already_AddRefd<iface::SProS::whatUpper> next##whatUpper() throw()    \
   { \
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());  \
     DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpper); \
@@ -409,32 +412,32 @@ public:
   uint32_t version() throw();
   void version(uint32_t aVersion) throw();
   
-  iface::SProS::ModelSet* models() throw();
-  iface::SProS::TaskSet* tasks() throw();
-  iface::SProS::SimulationSet* simulations() throw();
-  iface::SProS::DataGeneratorSet* generators() throw();
-  iface::SProS::OutputSet* outputs() throw();
+  already_AddRefd<iface::SProS::ModelSet> models() throw();
+  already_AddRefd<iface::SProS::TaskSet> tasks() throw();
+  already_AddRefd<iface::SProS::SimulationSet> simulations() throw();
+  already_AddRefd<iface::SProS::DataGeneratorSet> generators() throw();
+  already_AddRefd<iface::SProS::OutputSet> outputs() throw();
 
-  iface::SProS::Model* createModel() throw();
-  iface::SProS::UniformTimeCourse* createUniformTimeCourse() throw();
-  iface::SProS::SamplingSensitivityAnalysis* createSamplingSensitivityAnalysis() throw();
-  iface::SProS::Task* createTask() throw();
-  iface::SProS::DataGenerator* createDataGenerator() throw();
-  iface::SProS::Plot2D* createPlot2D() throw();
-  iface::SProS::Plot3D* createPlot3D() throw();
-  iface::SProS::Report* createReport() throw();
-  iface::SProS::ComputeChange* createComputeChange() throw();
-  iface::SProS::ChangeAttribute* createChangeAttribute() throw();
-  iface::SProS::AddXML* createAddXML() throw();
-  iface::SProS::RemoveXML* createRemoveXML() throw();
-  iface::SProS::ChangeXML* createChangeXML() throw();
-  iface::SProS::Variable* createVariable() throw();
-  iface::SProS::Parameter* createParameter() throw();
-  iface::SProS::Curve* createCurve() throw();
-  iface::SProS::Surface* createSurface() throw();
-  iface::SProS::DataSet* createDataSet() throw();
-  wchar_t* originalURL() throw();
-  void originalURL(const wchar_t* aURL) throw();
+  already_AddRefd<iface::SProS::Model> createModel() throw();
+  already_AddRefd<iface::SProS::UniformTimeCourse> createUniformTimeCourse() throw();
+  already_AddRefd<iface::SProS::SamplingSensitivityAnalysis> createSamplingSensitivityAnalysis() throw();
+  already_AddRefd<iface::SProS::Task> createTask() throw();
+  already_AddRefd<iface::SProS::DataGenerator> createDataGenerator() throw();
+  already_AddRefd<iface::SProS::Plot2D> createPlot2D() throw();
+  already_AddRefd<iface::SProS::Plot3D> createPlot3D() throw();
+  already_AddRefd<iface::SProS::Report> createReport() throw();
+  already_AddRefd<iface::SProS::ComputeChange> createComputeChange() throw();
+  already_AddRefd<iface::SProS::ChangeAttribute> createChangeAttribute() throw();
+  already_AddRefd<iface::SProS::AddXML> createAddXML() throw();
+  already_AddRefd<iface::SProS::RemoveXML> createRemoveXML() throw();
+  already_AddRefd<iface::SProS::ChangeXML> createChangeXML() throw();
+  already_AddRefd<iface::SProS::Variable> createVariable() throw();
+  already_AddRefd<iface::SProS::Parameter> createParameter() throw();
+  already_AddRefd<iface::SProS::Curve> createCurve() throw();
+  already_AddRefd<iface::SProS::Surface> createSurface() throw();
+  already_AddRefd<iface::SProS::DataSet> createDataSet() throw();
+  std::wstring originalURL() throw();
+  void originalURL(const std::wstring& aURL) throw();
 
 private:
   CDA_SProSModelSet mModelSet;
@@ -457,12 +460,12 @@ public:
 
   CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Model);
 
-  wchar_t* language() throw();
-  void language(const wchar_t*) throw();
-  wchar_t* source() throw();
-  void source(const wchar_t*) throw();
+  std::wstring language() throw();
+  void language(const std::wstring&) throw();
+  std::wstring source() throw();
+  void source(const std::wstring&) throw();
 
-  iface::SProS::ChangeSet* changes() throw();
+  already_AddRefd<iface::SProS::ChangeSet> changes() throw();
 
 private:
   CDA_SProSChangeSet mChangeSet;
@@ -480,8 +483,8 @@ public:
   }
   ~CDA_SProSSimulation() {}
 
-  wchar_t* algorithmKisaoID() throw();
-  void algorithmKisaoID(const wchar_t* aID) throw();
+  std::wstring algorithmKisaoID() throw();
+  void algorithmKisaoID(const std::wstring& aID) throw();
 };
 
 class CDA_SProSUniformTimeCourseBase
@@ -564,14 +567,14 @@ public:
 
   CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Task);
 
-  wchar_t* simulationReferenceIdentifier() throw();
-  void simulationReferenceIdentifier(const wchar_t* aId) throw();
-  iface::SProS::Simulation* simulationReference() throw();
+  std::wstring simulationReferenceIdentifier() throw();
+  void simulationReferenceIdentifier(const std::wstring& aId) throw();
+  already_AddRefd<iface::SProS::Simulation> simulationReference() throw();
   void simulationReference(iface::SProS::Simulation* aSim) throw();
 
-  wchar_t* modelReferenceIdentifier() throw();
-  void modelReferenceIdentifier(const wchar_t* aId) throw();
-  iface::SProS::Model* modelReference() throw();
+  std::wstring modelReferenceIdentifier() throw();
+  void modelReferenceIdentifier(const std::wstring& aId) throw();
+  already_AddRefd<iface::SProS::Model> modelReference() throw();
   void modelReference(iface::SProS::Model* aModel) throw();
 };
 
@@ -590,10 +593,10 @@ public:
   ~CDA_SProSDataGenerator() {}
 
   CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::DataGenerator);
-
-  iface::SProS::ParameterSet* parameters() throw();
-  iface::SProS::VariableSet* variables() throw();
-  iface::mathml_dom::MathMLMathElement* math() throw();
+  
+  already_AddRefd<iface::SProS::ParameterSet> parameters() throw();
+  already_AddRefd<iface::SProS::VariableSet> variables() throw();
+  already_AddRefd<iface::mathml_dom::MathMLMathElement> math() throw();
   void math(iface::mathml_dom::MathMLMathElement* aEl) throw();
 
 private:
@@ -610,7 +613,7 @@ public:
   CDA_SProSCurveSetBase(CDA_SProSBase* aParent, const wchar_t* aName, const wchar_t** aElNames);
   ~CDA_SProSCurveSetBase() {}
   
-  iface::SProS::CurveIterator* iterateCurves() throw();
+  already_AddRefd<iface::SProS::CurveIterator> iterateCurves() throw();
 };
 
 class CDA_SProSCurveSet
@@ -631,7 +634,7 @@ public:
     : CDA_SProSNamedElementIteratorBase(aParent) {}
   ~CDA_SProSCurveIteratorBase() {}
   
-  iface::SProS::Curve* nextCurve() throw()
+  already_AddRefd<iface::SProS::Curve> nextCurve() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::Curve);
@@ -661,7 +664,7 @@ public:
 
   CDA_IMPL_QI3(SProS::BaseSet, SProS::CurveSet, SProS::SurfaceSet);
 
-  iface::SProS::SurfaceIterator* iterateSurfaces() throw();
+  already_AddRefd<iface::SProS::SurfaceIterator> iterateSurfaces() throw();
 };
 
 class CDA_SProSSurfaceIterator
@@ -674,7 +677,7 @@ public:
 
   CDA_IMPL_QI3(SProS::BaseIterator, SProS::CurveIterator, SProS::SurfaceIterator);
   
-  iface::SProS::Surface* nextSurface() throw()
+  already_AddRefd<iface::SProS::Surface> nextSurface() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::Surface);
@@ -707,7 +710,7 @@ public:
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::Output, SProS::Plot2D);
 
-  iface::SProS::CurveSet* curves() throw();
+  already_AddRefd<iface::SProS::CurveSet> curves() throw();
 
 private:
   CDA_SProSCurveSet mCurveSet;
@@ -726,7 +729,7 @@ public:
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::Output, SProS::Plot3D);
 
-  iface::SProS::SurfaceSet* surfaces() throw();
+  already_AddRefd<iface::SProS::SurfaceSet> surfaces() throw();
 
 private:
   CDA_SProSSurfaceSet mSurfaceSet;
@@ -743,7 +746,7 @@ public:
 
   CDA_IMPL_QI3(SProS::BaseSet, SProS::NamedElementSet, SProS::DataSetSet);
   
-  iface::SProS::DataSetIterator* iterateDataSets() throw();
+  already_AddRefd<iface::SProS::DataSetIterator> iterateDataSets() throw();
 };
 
 class CDA_SProSDataSetIterator
@@ -757,7 +760,7 @@ public:
   CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator,
                SProS::DataSetIterator);
   
-  iface::SProS::DataSet* nextDataSet() throw()
+  already_AddRefd<iface::SProS::DataSet> nextDataSet() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::DataSet);
@@ -778,7 +781,7 @@ public:
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::Output, SProS::Report);
 
-  iface::SProS::DataSetSet* datasets() throw();
+  already_AddRefd<iface::SProS::DataSetSet> datasets() throw();
 
 private:
   CDA_SProSDataSetSet mDataSetSet;
@@ -793,8 +796,8 @@ public:
     : CDA_SProSBase(aParent, aEl) {}
   ~CDA_SProSChange() {}
 
-  wchar_t* target() throw();
-  void target(const wchar_t* aTarg) throw();
+  std::wstring target() throw();
+  void target(const std::wstring& aTarg) throw();
 };
 
 class CDA_SProSComputeChange
@@ -809,9 +812,9 @@ public:
 
   CDA_IMPL_QI3(SProS::Base, SProS::Change, SProS::ComputeChange)
 
-  iface::SProS::VariableSet* variables() throw();
-  iface::SProS::ParameterSet* parameters() throw();
-  iface::mathml_dom::MathMLMathElement* math() throw();
+  already_AddRefd<iface::SProS::VariableSet> variables() throw();
+  already_AddRefd<iface::SProS::ParameterSet> parameters() throw();
+  already_AddRefd<iface::mathml_dom::MathMLMathElement> math() throw();
   void math(iface::mathml_dom::MathMLMathElement*) throw();
 private:
   CDA_SProSVariableSet mVariables;
@@ -829,8 +832,8 @@ public:
 
   CDA_IMPL_QI3(SProS::Base, SProS::Change, SProS::ChangeAttribute);
 
-  wchar_t* newValue() throw();
-  void newValue(const wchar_t* aValue) throw();
+  std::wstring newValue() throw();
+  void newValue(const std::wstring& aValue) throw();
 };
 
 class CDA_SProSAddXML
@@ -842,7 +845,7 @@ public:
     : CDA_SProSBase(aParent, aEl), CDA_SProSChange(aParent, aEl) {}
   ~CDA_SProSAddXML() {}
 
-  iface::dom::NodeList* anyXML() throw();
+  already_AddRefd<iface::dom::NodeList> anyXML() throw();
 
   CDA_IMPL_QI3(SProS::Base, SProS::Change, SProS::AddXML);
 };
@@ -858,7 +861,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(dom::NodeList);
 
-  iface::dom::Node* item(uint32_t aIndex) throw(std::exception&);
+  already_AddRefd<iface::dom::Node> item(uint32_t aIndex) throw(std::exception&);
   uint32_t length() throw();
 
   // SProS internal use only:
@@ -906,13 +909,13 @@ public:
   CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::Variable);
 
-  wchar_t* target() throw();
-  void target(const wchar_t* aTarget) throw();
-  wchar_t* symbol() throw();
-  void symbol(const wchar_t* aTarget) throw();
-  wchar_t* taskReferenceID() throw();
-  void taskReferenceID(const wchar_t* aTarget) throw();
-  iface::SProS::Task* taskReference() throw();
+  std::wstring target() throw();
+  void target(const std::wstring& aTarget) throw();
+  std::wstring symbol() throw();
+  void symbol(const std::wstring& aTarget) throw();
+  std::wstring taskReferenceID() throw();
+  void taskReferenceID(const std::wstring& aTarget) throw();
+  already_AddRefd<iface::SProS::Task> taskReference() throw();
   void taskReference(iface::SProS::Task* aTask) throw(std::exception&);
 };
 
@@ -951,13 +954,13 @@ public:
   void logX(bool aValue) throw();
   bool logY() throw();
   void logY(bool aValue) throw();
-  wchar_t* xDataGeneratorID() throw();
-  void xDataGeneratorID(const wchar_t* aValue) throw();
-  wchar_t* yDataGeneratorID() throw();
-  void yDataGeneratorID(const wchar_t* aValue) throw();
-  iface::SProS::DataGenerator* xDataGenerator() throw();
+  std::wstring xDataGeneratorID() throw();
+  void xDataGeneratorID(const std::wstring& aValue) throw();
+  std::wstring yDataGeneratorID() throw();
+  void yDataGeneratorID(const std::wstring& aValue) throw();
+  already_AddRefd<iface::SProS::DataGenerator> xDataGenerator() throw();
   void xDataGenerator(iface::SProS::DataGenerator* aValue) throw();
-  iface::SProS::DataGenerator* yDataGenerator() throw();
+  already_AddRefd<iface::SProS::DataGenerator> yDataGenerator() throw();
   void yDataGenerator(iface::SProS::DataGenerator* aValue) throw();
 };
 
@@ -975,9 +978,9 @@ public:
   bool logZ() throw();
   void logZ(bool aValue) throw();
 
-  wchar_t* zDataGeneratorID() throw();
-  void zDataGeneratorID(const wchar_t* aValue) throw();
-  iface::SProS::DataGenerator* zDataGenerator() throw();
+  std::wstring zDataGeneratorID() throw();
+  void zDataGeneratorID(const std::wstring& aValue) throw();
+  already_AddRefd<iface::SProS::DataGenerator> zDataGenerator() throw();
   void zDataGenerator(iface::SProS::DataGenerator* aValue) throw();
 };
   
@@ -990,9 +993,9 @@ public:
   
   CDA_IMPL_QI3(SProS::Base, SProS::NamedElement, SProS::DataSet);
 
-  wchar_t* dataGeneratorID() throw();
-  void dataGeneratorID(const wchar_t*) throw();
-  iface::SProS::DataGenerator* dataGen() throw();
+  std::wstring dataGeneratorID() throw();
+  void dataGeneratorID(const std::wstring&) throw();
+  already_AddRefd<iface::SProS::DataGenerator> dataGen() throw();
   void dataGen(iface::SProS::DataGenerator*) throw();
 };
 

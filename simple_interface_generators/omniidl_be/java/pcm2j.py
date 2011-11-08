@@ -224,21 +224,15 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
     def writeMethod(self, name, javaName, rtype, params):
         if rtype == None:
             rtypeName = 'void'
+            rtypeNameSig = 'void'
         else:
             rtypeName = rtype.pcmType(jnutils.Type.RETURN)
+            rtypeNameSig = rtype.pcmType(jnutils.Type.RETURN_SIG)
 
         javasig = '('
         paramstr = '('
         paramComma = 0
         for (pname, ti, dirn) in params:
-            if ti.needLength():
-                if paramComma:
-                    paramstr = paramstr + ', '
-                paramComma = 1
-                if dirn == jnutils.Type.IN:
-                    paramstr = paramstr + 'uint32_t _length_' + pname
-                else:
-                    paramstr = paramstr + 'uint32_t* _length_' + pname
             if paramComma:
                 paramstr = paramstr + ', '
             paramstr = paramstr + ti.pcmType(dirn) + ' ' + pname
@@ -251,16 +245,10 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         else:
             javasig = javasig + 'V'
         
-        if rtype and rtype.needLength():
-            if paramComma:
-                paramstr = paramstr + ', '
-            paramstr = paramstr + 'uint32_t* _length__ret'
-            paramComma = 1
-        
         paramstr = paramstr + ')'
 
-        self.hxx.out('PUBLIC_' + self.defname + '_PRE ' + rtypeName + ' ' + name + paramstr + ' throw(std::exception&) ' + 'PUBLIC_' + self.defname + '_POST;')
-        self.cpp.out(rtypeName + ' ' + self.classname + '::' + name + paramstr)
+        self.hxx.out('PUBLIC_' + self.defname + '_PRE ' + rtypeNameSig + ' ' + name + paramstr + ' throw(std::exception&) ' + 'PUBLIC_' + self.defname + '_POST;')
+        self.cpp.out(rtypeNameSig + ' ' + self.classname + '::' + name + paramstr)
         self.cpp.out('  throw(std::exception&)')
         self.cpp.out('{')
         self.cpp.inc_indent()

@@ -24,8 +24,8 @@ public:
   CDAUserBaseUnit(iface::cellml_api::Units* aBaseUnits) throw();
   ~CDAUserBaseUnit() throw();
 
-  wchar_t* name() throw(std::exception&);
-  iface::cellml_api::Units* cellmlUnits() throw(std::exception&);
+  std::wstring name() throw(std::exception&);
+  already_AddRefd<iface::cellml_api::Units> cellmlUnits() throw(std::exception&);
 
 private:
   ObjRef<iface::cellml_api::Units> mBaseUnits;
@@ -45,7 +45,7 @@ public:
                       double aExponent) throw();
   ~CDABaseUnitInstance() throw();
 
-  iface::cellml_services::BaseUnit* unit() throw(std::exception&);
+  already_AddRefd<iface::cellml_services::BaseUnit> unit() throw(std::exception&);
   double prefix() throw(std::exception&);
   double offset() throw(std::exception&);
   double exponent() throw(std::exception&);
@@ -67,7 +67,7 @@ public:
   ~CDACanonicalUnitRepresentation() throw();
 
   uint32_t length() throw(std::exception&);
-  iface::cellml_services::BaseUnitInstance* fetchBaseUnit(uint32_t aIndex)
+  already_AddRefd<iface::cellml_services::BaseUnitInstance> fetchBaseUnit(uint32_t aIndex)
     throw(std::exception&);
   bool compatibleWith(iface::cellml_services::CanonicalUnitRepresentation* aCompareWith)
     throw(std::exception&);
@@ -79,7 +79,7 @@ public:
 
   void canonicalise() throw(std::exception&);
   void addBaseUnit(iface::cellml_services::BaseUnitInstance* baseUnit) throw();
-  iface::cellml_services::CanonicalUnitRepresentation*
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
   mergeWith(double aThisExponent,
             iface::cellml_services::CanonicalUnitRepresentation* aOther,
             double aOtherExponent)
@@ -107,12 +107,12 @@ public:
   CDACUSES(iface::cellml_api::Model* aModel, bool aStrict) throw();
   ~CDACUSES() throw();
 
-  iface::cellml_services::CanonicalUnitRepresentation* getUnitsByName(
-    iface::cellml_api::CellMLElement* aContext, const wchar_t* aName)
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation> getUnitsByName
+  (iface::cellml_api::CellMLElement* aContext, const std::wstring& aName)
     throw(std::exception&);
 
-  wchar_t* modelError() throw(std::exception&);
-  iface::cellml_services::CanonicalUnitRepresentation* createEmptyUnits()
+  std::wstring modelError() throw(std::exception&);
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation> createEmptyUnits()
     throw(std::exception&);
 
 private:
@@ -163,7 +163,7 @@ private:
     scopedFind(
                ScopeMap<C>& aMap,
                iface::cellml_api::CellMLElement* aContext,
-               std::wstring& aName
+               const std::wstring& aName
               );
 
   class UnitDependencies
@@ -216,7 +216,7 @@ public:
   {
   }
 
-  iface::cellml_services::CUSES*
+  already_AddRefd<iface::cellml_services::CUSES>
   createCUSESForModel(iface::cellml_api::Model* aModel,
                       bool aStrict)
     throw(std::exception&)

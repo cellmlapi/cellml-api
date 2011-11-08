@@ -99,14 +99,21 @@ public:
 
   void add_ref() throw() {}
   void release_ref() throw() {}
-  char* objid() throw() { return strdup("RunSEDMLMonitor"); }
-  void* query_interface(const char* aInterface) throw()
+  std::string objid() throw() { return "RunSEDMLMonitor"; }
+  void* query_interface(const std::string& aInterface) throw()
   {
-    if (!strcmp(aInterface, "xpcom::IObject") ||
-        !strcmp(aInterface, "SRuS::GeneratedDataMonitor"))
+    if (aInterface == "xpcom::IObject" ||
+        aInterface == "SRuS::GeneratedDataMonitor")
       return static_cast<iface::XPCOM::IObject*>(this);
     else
       return NULL;
+  }
+  std::vector<std::string> supported_interfaces() throw()
+  {
+    std::vector<std::string> ret;
+    ret.push_back("xpcom::IObject");
+    ret.push_back("SRuS::GeneratedDataMonitor");
+    return ret;
   }
 
   void progress(iface::SRuS::GeneratedDataSet* aData) throw()
@@ -144,9 +151,9 @@ public:
     }
   }
 
-  void failure(const char* aMsg) throw()
+  void failure(const std::string& aMsg) throw()
   {
-    printf("Task Failure: %s\n", aMsg);
+    printf("Task Failure: %s\n", aMsg.c_str());
     tasksFinished++;
   }
 

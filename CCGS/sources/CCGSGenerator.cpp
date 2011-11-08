@@ -1219,9 +1219,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
         
         RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                            dv->variable());
-        char* objidp = cv->objid();
-        std::string objid(objidp);
-        free(objidp);
+        std::string objid(cv->objid());
         uint32_t deg(dv->degree());
 
         std::map<std::string, uint32_t>::iterator mdi = maxDegreeByVariableID.find(objid);
@@ -1246,9 +1244,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
            k++
           )
       {
-        char * objidp = (*k)->mVariable->objid();
-        std::string objid(objidp);
-        free(objidp);
+        std::string objid((*k)->mVariable->objid());
 
         std::map<std::string, uint32_t>::iterator mdi = maxDegreeByVariableID.find(objid);
         if (mdi == maxDegreeByVariableID.end())
@@ -1270,9 +1266,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
 
     resetCT->mIsReset = true;
 
-    char * vobjidp = resetCT->mVariable->objid();
-    std::string vobjid(vobjidp);
-    free(vobjidp);
+    std::string vobjid(resetCT->mVariable->objid());
     uint32_t deg(resetCT->degree());
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, pw->mMaths->ownerDocument());
@@ -2170,7 +2164,7 @@ CodeGenerationState::AllocateDelayed(ptr_tag<CDA_ComputationTarget> aCT,
 {
   std::wstring str;
   GenerateVariableName(str, aPattern, aNextIndex);
-  aCT->setDelayedName(str.c_str());
+  aCT->setDelayedName(str);
 }
 
 void
@@ -2189,7 +2183,7 @@ CodeGenerationState::ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT,
     index = aCT->mInfDelayedAssignedIndex;
 
   GenerateVariableName(aStr, mAlgebraicVariableNamePattern, index);
-  aCT->setDelayedName(aStr.c_str());
+  aCT->setDelayedName(aStr);
 }
 
 void
@@ -2306,7 +2300,7 @@ CodeGenerationState::CloneNamesIntoDelayedNames()
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
          mCodeInfo->mTargets.begin(); i != mCodeInfo->mTargets.end(); i++)
   {    
-    (*i)->setDelayedName(NULL);
+    (*i)->setDelayedName(L"");
   }
 }
 

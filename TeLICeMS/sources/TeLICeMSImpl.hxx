@@ -33,10 +33,10 @@ public:
     mMessage += L"\n";
   }
 
-  wchar_t*
+  std::wstring
   errorMessage() throw()
   {
-    return CDA_wcsdup(mMessage.c_str());
+    return mMessage;
   }
 
 private:
@@ -54,11 +54,11 @@ public:
 
   CDA_IMPL_QI2(cellml_services::TeLICeMResult, cellml_services::TeLICeMModelResult);
 
-  iface::cellml_api::Model*
+  already_AddRefd<iface::cellml_api::Model>
   modelResult() throw()
   {
     mModel->add_ref();
-    return mModel;
+    return mModel.getPointer();
   }
 
   ObjRef<iface::cellml_api::Model> mModel;
@@ -94,7 +94,7 @@ public:
     return false;
   }
 
-  virtual iface::dom::Document* document() = 0;
+  virtual already_AddRefd<iface::dom::Document> document() = 0;
 
   ObjRef<CDA_TeLICeMResultBase> mResult;
   int mRow, mColumn;
@@ -117,13 +117,13 @@ public:
   // Not AddRefd - AddRef required if this is to leave the parser.
   iface::cellml_api::Model* model() const { return mModel; }
 
-  iface::cellml_services::TeLICeMModelResult* result() const
+  already_AddRefd<iface::cellml_services::TeLICeMModelResult> result() const
   {
     DECLARE_QUERY_INTERFACE(ret, mResult, cellml_services::TeLICeMModelResult);
     return ret;
   }
 
-  iface::dom::Document* document()
+  already_AddRefd<iface::dom::Document> document()
   {
     DECLARE_QUERY_INTERFACE_OBJREF(de, mModel, cellml_api::CellMLDOMElement);
     RETURN_INTO_OBJREF(el, iface::dom::Element, de->domElement());
@@ -145,11 +145,11 @@ public:
 
   CDA_IMPL_QI2(cellml_services::TeLICeMResult, cellml_services::TeLICeMMathResult);
 
-  iface::mathml_dom::MathMLMathElement*
+  already_AddRefd<iface::mathml_dom::MathMLElement>
   mathResult() throw()
   {
     mElement->add_ref();
-    return mElement;
+    return mElement.getPointer();
   }
 private:
   ObjRef<iface::mathml_dom::MathMLMathElement> mElement;
@@ -170,13 +170,13 @@ public:
   // Not AddRefd - AddRef required if this is to leave the parser.
   iface::mathml_dom::MathMLMathElement* mathElement() const { return mElement; }
 
-  iface::cellml_services::TeLICeMMathResult* result() const
+  already_AddRefd<iface::cellml_services::TeLICeMMathResult> result() const
   {
     DECLARE_QUERY_INTERFACE(ret, mResult, cellml_services::TeLICeMMathResult);
     return ret;
   }
 
-  iface::dom::Document* document()
+  already_AddRefd<iface::dom::Document> document()
   {
     return mElement->ownerDocument();
   }

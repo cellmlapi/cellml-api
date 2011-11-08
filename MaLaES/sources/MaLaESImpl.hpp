@@ -128,17 +128,17 @@ public:
                   bool aVarFromSource);
   ~CDAMaLaESResult();
 
-  wchar_t* compileErrors() throw(std::exception&);
-  wchar_t* expression() throw(std::exception&);
+  std::wstring compileErrors() throw(std::exception&);
+  std::wstring expression() throw(std::exception&);
   uint32_t supplementariesLength() throw(std::exception&);
-  wchar_t* getSupplementary(uint32_t aIndex) throw(std::exception&);
-  iface::cellml_api::CellMLVariableIterator* iterateInvolvedVariables()
+  std::wstring getSupplementary(uint32_t aIndex) throw(std::exception&);
+  already_AddRefd<iface::cellml_api::CellMLVariableIterator> iterateInvolvedVariables()
     throw(std::exception&);
-  iface::cellml_api::CellMLVariableIterator* iterateBoundVariables()
+  already_AddRefd<iface::cellml_api::CellMLVariableIterator> iterateBoundVariables()
     throw(std::exception&);
-  iface::cellml_api::CellMLVariableIterator* iterateLocallyBoundVariables()
+  already_AddRefd<iface::cellml_api::CellMLVariableIterator> iterateLocallyBoundVariables()
     throw(std::exception&);
-  iface::cellml_services::DegreeVariableIterator*
+  already_AddRefd<iface::cellml_services::DegreeVariableIterator>
     iterateInvolvedVariablesByDegree() throw(std::exception&);
   bool involvesExternalCode() throw(std::exception&);
   
@@ -254,11 +254,11 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::MaLaESTransform);
   
-  CDAMaLaESTransform(const wchar_t* aSpec);
+  CDAMaLaESTransform(const std::wstring& aSpec);
   ~CDAMaLaESTransform();
 
-  wchar_t* compileErrors() throw(std::exception&);
-  iface::cellml_services::MaLaESResult*
+  std::wstring compileErrors() throw(std::exception&);
+  already_AddRefd<iface::cellml_services::MaLaESResult>
   transform(iface::cellml_services::CeVAS* aCeVAS,
             iface::cellml_services::CUSES* aCUSES,
             iface::cellml_services::AnnotationSet* aAnnos,
@@ -300,9 +300,9 @@ private:
 
   std::map<std::wstring, Operator> operMap;
 
-  void GetTagsForSpec(const wchar_t* aSpec, stringpairlist& aTags);
-  void ParseError(const wchar_t* msg, size_t lineno);
-  void OpError(const wchar_t* msg, const std::wstring& op);
+  void GetTagsForSpec(const std::wstring& aSpec, stringpairlist& aTags);
+  void ParseError(const std::wstring& msg, size_t lineno);
+  void OpError(const std::wstring& msg, const std::wstring& op);
   void AddOperator(const std::wstring& aOpName, const std::wstring& aOpValue);
   void AppendCommandToProgram(commandlist& aProgram, const std::wstring& aCmd,
                               const std::wstring& aArg, int& maxarg);
@@ -328,7 +328,7 @@ public:
 
   CDAMaLaESBootstrap();
   ~CDAMaLaESBootstrap();
-  iface::cellml_services::MaLaESTransform* compileTransformer(const wchar_t*)
+  already_AddRefd<iface::cellml_services::MaLaESTransform> compileTransformer(const std::wstring&)
     throw(std::exception&);
   void stripPassthrough(iface::cellml_api::Model* aModel)
     throw(std::exception&);

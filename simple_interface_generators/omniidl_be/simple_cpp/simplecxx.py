@@ -9,10 +9,19 @@ def shouldWarnIfUnused(type):
         return ' WARN_IF_RETURN_UNUSED'
     return ''
 
-def typeToSimpleCXX(type, extrapointer=0, is_const=0):
-    extrastar = '*'*extrapointer;
+def typeToSimpleCXX(type, extrapointer=0, is_const=0, is_ret=0):
+    prefixIndirect = '';
+    suffixIndirect = '*'*extrapointer
+    if extrapointer != 0:
+        if is_const:
+            prefixIndirect = 'const ' + prefixIndirect
 
     type = type.unalias()
+
+    if not is_ret:
+        amp = '&'
+    else:
+        amp = ''
 
     if is_const:
         ckw = 'const '
@@ -25,23 +34,23 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0):
             raise "Can't make pointer to nothing"
         return 'void'
     elif tk == idltype.tk_short:
-        return 'int16_t' + extrastar
+        return prefixIndirect + 'int16_t' + suffixIndirect
     elif tk == idltype.tk_long:
-        return 'int32_t' + extrastar
+        return prefixIndirect + 'int32_t' + suffixIndirect
     elif tk == idltype.tk_ushort:
-        return 'uint16_t' + extrastar
+        return prefixIndirect + 'uint16_t' + suffixIndirect
     elif tk == idltype.tk_ulong:
-        return 'uint32_t' + extrastar
+        return prefixIndirect + 'uint32_t' + suffixIndirect
     elif tk == idltype.tk_float:
-        return 'float' + extrastar
+        return prefixIndirect + 'float' + suffixIndirect
     elif tk == idltype.tk_double:
-        return 'double' + extrastar
+        return prefixIndirect + 'double' + suffixIndirect
     elif tk == idltype.tk_boolean:
-        return 'bool' + extrastar
+        return prefixIndirect + 'bool' + suffixIndirect
     elif tk == idltype.tk_char:
-        return 'char' + extrastar
+        return prefixIndirect + 'char' + suffixIndirect
     elif tk == idltype.tk_octet:
-        return 'uint8_t' + extrastar
+        return prefixIndirect + 'uint8_t' + suffixIndirect
     elif tk == idltype.tk_any:
         raise 'Any is not supported'
     elif tk == idltype.tk_TypeCode:
@@ -49,13 +58,17 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0):
     elif tk == idltype.tk_Principal:
         raise 'Principal is not supported'
     elif tk == idltype.tk_objref or tk == idltype.tk_struct:
-        return type.decl().simplecxxscoped + '*' + extrastar
+        if is_ret:
+            return prefixIndirect + 'already_AddRefd<' + type.decl().simplecxxscoped + '> ' + suffixIndirect
+        else:
+            return prefixIndirect + type.decl().simplecxxscoped + '*' + suffixIndirect
     elif tk == idltype.tk_array:
-        return ckw + type.decl().simplecxxscoped + '*' + extrastar
+        return ckw + 'std::vector<' + prefixIndirect + type.decl().simplecxxscoped + suffixIndirect + '> ' + suffixIndirect + amp
     elif tk == idltype.tk_sequence:
-        return typeToSimpleCXX(type.seqType(), extrapointer + 1, is_const)
+        base = typeToSimpleCXX(type.seqType(), extrapointer, is_ret = 1)
+        return ckw + 'std::vector<' + base + '>' + amp
     elif tk == idltype.tk_enum:
-        return type.decl().simplecxxscoped + extrastar
+        return prefixIndirect + type.decl().simplecxxscoped + suffixIndirect
     elif tk == idltype.tk_alias:
         raise 'Unalias didn\'t work!'
         #if type.unalias().kind == idltype.tk_objref or \
@@ -65,21 +78,19 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0):
     elif tk == idltype.tk_union:
         raise 'Union is not supported'
     elif tk == idltype.tk_string:
-        return ckw + 'char*' + extrastar
+        return ckw + prefixIndirect + 'std::string' + suffixIndirect + amp
     elif tk == idltype.tk_except:
         raise 'Can\'t pass an exception as a type.'
     elif tk == idltype.tk_longlong:
-        return 'int64_t' + extrastar
+        return prefixIndirect + 'int64_t' + suffixIndirect
     elif tk == idltype.tk_ulonglong:
-        return 'uint64_t' + extrastar
+        return prefixIndirect + 'uint64_t' + suffixIndirect
     elif tk == idltype.tk_longdouble:
-        return 'long double' + extrastar
+        return prefixIndirect + 'long double' + suffixIndirect
     elif tk == idltype.tk_wchar:
-        return 'wchar_t' + extrastar
+        return prefixIndirect + 'wchar_t' + suffixIndirect
     elif tk == idltype.tk_wstring:
-        if is_const:
-            ckw = 'const '
-        return ckw + 'wchar_t*' + extrastar
+        return ckw + prefixIndirect + 'std::wstring' + suffixIndirect + amp
     elif tk == idltype.tk_fixed:
         raise 'Fixed precision is not supported.'
     elif tk == idltype.tk_value:
@@ -92,9 +103,6 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0):
         raise 'Passing interfaces is not supported.'
     else:
         raise 'Unknown type kind %u' % tk
-
-def doesTypeNeedLength(type):
-    return type.unalias().kind() == idltype.tk_sequence
 
 def enumOrInt(eoi):
     if isinstance(eoi, idlast.Enumerator):

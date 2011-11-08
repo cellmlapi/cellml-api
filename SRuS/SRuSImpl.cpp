@@ -28,17 +28,17 @@ public:
   CDA_IMPL_QI1(SRuS::SEDMLProcessor);
   CDA_IMPL_REFCOUNT;
 
-  bool supportsModellingLanguage(const wchar_t* aLang) throw();
-  iface::SRuS::TransformedModel* buildOneModel(iface::SProS::Model* aModel)
+  bool supportsModellingLanguage(const std::wstring& aLang) throw();
+  already_AddRefd<iface::SRuS::TransformedModel> buildOneModel(iface::SProS::Model* aModel)
     throw(std::exception&);
-  iface::SRuS::TransformedModelSet* buildAllModels
+  already_AddRefd<iface::SRuS::TransformedModelSet> buildAllModels
     (iface::SProS::SEDMLElement* aElement) throw();
   void generateData(iface::SRuS::TransformedModelSet* aSet,
                     iface::SProS::SEDMLElement* aElement,
                     iface::SRuS::GeneratedDataMonitor* aMonitor) throw(std::exception&);
 
 private:
-  iface::cellml_api::CellMLElement* xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Node* aNode)
+  already_AddRefd<iface::cellml_api::CellMLElement> xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Node* aNode)
     throw();
   uint32_t mRecursionDepth;
 };
@@ -85,7 +85,7 @@ private:
 
 
 // Find the CellMLElement corresponding to a given DOM node.
-iface::cellml_api::CellMLElement*
+already_AddRefd<iface::cellml_api::CellMLElement>
 CDA_SRuSProcessor::xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Node* aNode) throw()
 {
   RETURN_INTO_OBJREF(doc, iface::dom::Document, aNode->ownerDocument());
@@ -149,15 +149,15 @@ CDA_SRuSProcessor::xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Nod
   }
 
   cur->add_ref();
-  return cur;
+  return cur.getPointer();
 }
 
 bool
-CDA_SRuSProcessor::supportsModellingLanguage(const wchar_t* aLang)
+CDA_SRuSProcessor::supportsModellingLanguage(const std::wstring& aLang)
   throw()
 {
-  if (!wcscmp(aLang, L"http://www.cellml.org/cellml/1.1#") ||
-      !wcscmp(aLang, L"http://www.cellml.org/cellml/1.0#"))
+  if (aLang == L"http://www.cellml.org/cellml/1.1#" ||
+      aLang == L"http://www.cellml.org/cellml/1.0#")
     return true;
 
   // In future, make this extensible so we can support other modelling languages.
@@ -175,23 +175,23 @@ public:
   CDA_IMPL_QI1(SRuS::TransformedModel);
   CDA_IMPL_REFCOUNT;
 
-  iface::dom::Document* xmlDocument() throw()
+  already_AddRefd<iface::dom::Document> xmlDocument() throw()
   {
     mDocument->add_ref();
-    return mDocument;
+    return mDocument.getPointer();
   }
 
-  iface::XPCOM::IObject* modelDocument() throw(std::exception&)
+  already_AddRefd<iface::XPCOM::IObject> modelDocument() throw(std::exception&)
   {
     ensureModelOrRaise();
     mModel->add_ref();
-    return mModel;
+    return mModel.getPointer();
   }
 
-  iface::SProS::Model* sedmlModel() throw()
+  already_AddRefd<iface::SProS::Model> sedmlModel() throw()
   {
     mSEDMLModel->add_ref();
-    return mSEDMLModel;
+    return mSEDMLModel.getPointer();
   }
 
 private:
@@ -1014,7 +1014,7 @@ private:
   uint32_t& mInt;
 };
 
-iface::SRuS::TransformedModel*
+already_AddRefd<iface::SRuS::TransformedModel>
 CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
   throw(std::exception&)
 {
@@ -1205,7 +1205,7 @@ public:
     return mTransformed.size();
   }
 
-  iface::SRuS::TransformedModel* item(uint32_t aIdx)
+  already_AddRefd<iface::SRuS::TransformedModel> item(uint32_t aIdx)
     throw(std::exception&)
   {
     if (aIdx >= length())
@@ -1216,7 +1216,7 @@ public:
     return ret;
   }
 
-  iface::SRuS::TransformedModel* getItemByID(const wchar_t* aMatchID)
+  already_AddRefd<iface::SRuS::TransformedModel> getItemByID(const std::wstring& aMatchID)
     throw(std::exception&)
   {
     for (std::vector<iface::SRuS::TransformedModel*>::iterator i = mTransformed.begin();
@@ -1245,7 +1245,7 @@ private:
   XPCOMContainerRAII<std::vector<iface::SRuS::TransformedModel*> > mTransformedRAII;
 };
 
-iface::SRuS::TransformedModelSet*
+already_AddRefd<iface::SRuS::TransformedModelSet>
 CDA_SRuSProcessor::buildAllModels(iface::SProS::SEDMLElement* aElement)
   throw()
 {
@@ -1263,7 +1263,7 @@ CDA_SRuSProcessor::buildAllModels(iface::SProS::SEDMLElement* aElement)
   }
 
   tms->add_ref();
-  return tms;
+  return tms.getPointer();
 }
 
 class CDA_SRuSGeneratedData
@@ -1277,10 +1277,10 @@ public:
   CDA_IMPL_QI1(SRuS::GeneratedData);
   CDA_IMPL_REFCOUNT;
 
-  iface::SProS::DataGenerator* sedmlDataGenerator() throw()
+  already_AddRefd<iface::SProS::DataGenerator> sedmlDataGenerator() throw()
   {
     mDataGenerator->add_ref();
-    return mDataGenerator;
+    return mDataGenerator.getPointer();
   }
   uint32_t length() throw()
   {
@@ -1317,7 +1317,7 @@ public:
     return mData.size();
   }
 
-  iface::SRuS::GeneratedData*
+  already_AddRefd<iface::SRuS::GeneratedData>
   item(uint32_t aIdx)
     throw(std::exception&)
   {
@@ -1346,7 +1346,7 @@ public:
                        const std::map<std::wstring, iface::SProS::DataGenerator*>& aDataGeneratorsById)
     : mRun(aRun), mMonitor(aMonitor), mCodeInfo(aCodeInfo),
       mAggregateMode(0), mVarInfoByDataGeneratorId(aVarInfoByDataGeneratorId),
-      mConstants(NULL), mDataGeneratorsById(aDataGeneratorsById),
+      mDataGeneratorsById(aDataGeneratorsById),
       mDataGeneratorsByIdRAII(mDataGeneratorsById), mTotalN(0)
   {
     uint32_t aic = mCodeInfo->algebraicIndexCount();
@@ -1360,18 +1360,15 @@ public:
 
   ~CDA_SRuSResultBridge()
   {
-    if (mConstants)
-      delete [] mConstants;
   }
 
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_services::IntegrationProgressObserver);
 
-  void computedConstants(uint32_t aSize, double* aValues) throw()
+  void computedConstants(const std::vector<double>& aValues) throw()
   {
-    mConstants = new double[aSize];
-    memcpy(mConstants, aValues, sizeof(double) * aSize);
+    mConstants = aValues;
   }
 
   void done()
@@ -1422,7 +1419,7 @@ public:
     mRun = NULL;
   }
 
-  void failed(const char* aErrorMessage)
+  void failed(const std::string& aErrorMessage)
     throw(std::exception&)
   {
     try
@@ -1436,10 +1433,10 @@ public:
     mRun = NULL;
   }
 
-  void results(uint32_t nState, double* state)
+  void results(const std::vector<double>& state)
     throw(std::exception&)
   {
-    uint32_t n = nState / mRecSize;
+    uint32_t n = state.size() / mRecSize;
     mTotalN += n;
     if (mAggregateMode == 1)
     {
@@ -1496,7 +1493,7 @@ public:
         catch (NeedsAggregate&)
         {
           mAggregateMode = 1;
-          results(nState, state);
+          results(state);
           return;
         }
       }
@@ -1516,7 +1513,7 @@ private:
   int mAggregateMode;
   std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >
     mVarInfoByDataGeneratorId;
-  double* mConstants;
+  std::vector<double> mConstants;
   std::map<std::wstring, std::map<std::wstring, std::vector<double> > > mAggregateData;
   std::map<std::wstring, iface::SProS::DataGenerator*> mDataGeneratorsById;
   XPCOMContainerSecondRAII<std::map<std::wstring, iface::SProS::DataGenerator*> > mDataGeneratorsByIdRAII;
@@ -1558,23 +1555,23 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_services::IntegrationProgressObserver);
 
-  void computedConstants(uint32_t, double*) throw()
+  void computedConstants(const std::vector<double>&) throw()
   {
   }
 
-  void failed(const char* aMessage)
+  void failed(const std::string& aMessage)
     throw (std::exception&)
   {
     mMonitor->failure(aMessage);
   }
 
-  void results(uint32_t nstate, double* state)
+  void results(const std::vector<double>& state)
     throw (std::exception&)
   {
-    uint32_t nRows = nstate / mRecSize;
-    double* sp = state + (nRows - 1) * mRecSize;
+    uint32_t nRows = state.size() / mRecSize;
+    uint32_t offs = (nRows - 1) * mRecSize;
     for (uint32_t i = 0; i < mRecSize; i++)
-      mRow[i] = sp[i];
+      mRow[i] = state[i + offs];
   }
 
   void done()
@@ -1641,20 +1638,18 @@ CDA_SRuSProcessor::generateData
     RETURN_INTO_OBJREF(t, iface::SProS::Task, ti->nextTask());
     if (t == NULL)
       break;
-    wchar_t* idStr = t->id();
+    std::wstring idStr = t->id();
     t->add_ref();
     tasksById.insert(std::pair<std::wstring, iface::SProS::Task*>(idStr, t));
-    free(idStr);
   }
 
   for (uint32_t i = 0, l = aSet->length(); i < l; i++)
   {
     RETURN_INTO_OBJREF(tm, iface::SRuS::TransformedModel, aSet->item(i));
     RETURN_INTO_OBJREF(sm, iface::SProS::Model, tm->sedmlModel());
-    wchar_t* idStr = sm->id();
+    std::wstring idStr = sm->id();
     tm->add_ref();
     modelsById.insert(std::pair<std::wstring, iface::SRuS::TransformedModel*>(idStr, tm));
-    free(idStr);
   }
 
   RETURN_INTO_OBJREF(gens, iface::SProS::DataGeneratorSet,
@@ -1671,10 +1666,9 @@ CDA_SRuSProcessor::generateData
     if (gen == NULL)
       break;
 
-    wchar_t* dgid(gen->id());
+    std::wstring dgid(gen->id());
     gen->add_ref();
     dataGeneratorsById.insert(std::pair<std::wstring, iface::SProS::DataGenerator*>(dgid, gen));
-    free(dgid);
 
     RETURN_INTO_OBJREF(vs, iface::SProS::VariableSet,
                        gen->variables());
@@ -1689,16 +1683,14 @@ CDA_SRuSProcessor::generateData
         break;
 
       RETURN_INTO_OBJREF(t, iface::SProS::Task, v->taskReference());
-      wchar_t* idS = t->id();
+      std::wstring idS = t->id();
       activeTasks.insert(idS);
       if (!didAdd)
       {
         didAdd = true;
-        wchar_t* dgidS = gen->id();
+        std::wstring dgidS = gen->id();
         dataGeneratorIdsByTaskId.insert(std::pair<std::wstring, std::wstring>(idS, dgidS));
-        free(dgidS);
       }
-      free(idS);
     }
   }
 
@@ -1710,9 +1702,8 @@ CDA_SRuSProcessor::generateData
     if (sm == NULL)
       throw iface::SRuS::SRuSException();
 
-    wchar_t* idS = sm->id();
+    std::wstring idS = sm->id();
     iface::SRuS::TransformedModel* tm = modelsById[idS];
-    free(idS);
 
     RETURN_INTO_WSTRING(taskId, t->id());
 
@@ -1918,14 +1909,14 @@ public:
   CDA_IMPL_QI1(SRuS::Bootstrap);
   CDA_IMPL_REFCOUNT;
 
-  iface::SRuS::SEDMLProcessor* makeDefaultProcessor()
+  already_AddRefd<iface::SRuS::SEDMLProcessor> makeDefaultProcessor()
     throw()
   {
     return new CDA_SRuSProcessor();
   }
 };
 
-iface::SRuS::Bootstrap*
+already_AddRefd<iface::SRuS::Bootstrap>
 CreateSRuSBootstrap() throw()
 {
   return new CDA_SRuSBootstrap();

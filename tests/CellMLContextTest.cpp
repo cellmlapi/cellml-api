@@ -107,20 +107,31 @@ public:
   {
   }
 
-  void* query_interface(const char* id) throw()
+  void* query_interface(const std::string& id) throw()
   {
-    if (!strcmp(id, "cellml_context::ModelNodeMonitor"))
+    if (id == "xpcom::IObject")
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
-    if (!strcmp(id, "cellml_context::ModelListMonitor"))
+    if (id == "cellml_context::ModelNodeMonitor")
+      return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
+    if (id == "cellml_context::ModelListMonitor")
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelListMonitor*>(this));
     return NULL;
   }
 
-  char* objid() throw() { return strdup("TheTestModelMonitor"); }
+  std::vector<std::string> supported_interfaces() throw()
+  {
+    std::vector<std::string> ret;
+    ret.push_back("xpcom::IObject");
+    ret.push_back("cellml_context::ModelNodeMonitor");
+    ret.push_back("cellml_context::ModelListMonitor");
+    return ret;
+  }
+
+  std::string objid() throw() { return "TheTestModelMonitor"; }
 
   void
   modelRenamed(iface::cellml_context::ModelNode* renamedNode,
-               const wchar_t* newName) throw()
+               const std::wstring& newName) throw()
   {
     countRenames++;
   }
@@ -320,7 +331,7 @@ CellMLContextTest::testModelList()
   //     * this list has no parent.
   //     */
   //    readonly attribute ModelNode parentNode;
-  CPPUNIT_ASSERT(ml->parentNode() == NULL);
+  CPPUNIT_ASSERT(ml->parentNode().getPointer() == NULL);
   RETURN_INTO_OBJREF(mlBrD, iface::cellml_context::ModelList, mlBr->derivedModels());
   RETURN_INTO_OBJREF(mlBrDN, iface::cellml_context::ModelNode, mlBrD->parentNode());
   CPPUNIT_ASSERT(!CDA_objcmp(mlBr, mlBrDN));
@@ -450,7 +461,7 @@ CellMLContextTest::testModelNode()
   //     * before being destroyed.
   //     */
   //    attribute XPCOM::IObject owner;
-  CPPUNIT_ASSERT(mlBr->owner() == NULL);
+  CPPUNIT_ASSERT(mlBr->owner().getPointer() == NULL);
   gTMM.resetCounts();
   mlBr->owner(mlBr);
   RETURN_INTO_OBJREF(mlBrO, iface::XPCOM::IObject, mlBr->owner());

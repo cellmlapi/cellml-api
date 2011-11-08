@@ -39,23 +39,23 @@ static bool CDA_DOMCompareSerial(cda_serial_t aSerial)
 CDA_DOMImplementation* CDA_DOMImplementation::sDOMImplementation = 
   new CDA_DOMImplementation();
 
-CDA_Element* CDA_NewElement
+already_AddRefd<CDA_Element> CDA_NewElement
 (
- CDA_Document* doc,  const wchar_t* nsURI, const wchar_t* elname
+ CDA_Document* doc,  const std::wstring& nsURI, const std::wstring& elname
 )
 {
-  if (!wcscmp(nsURI, L"http://www.w3.org/1998/Math/MathML"))
+  if (nsURI == L"http://www.w3.org/1998/Math/MathML")
     return WrapMathMLElement(doc, elname);
 
   return new CDA_Element(doc);
 }
 
-CDA_Document* CDA_NewDocument
+already_AddRefd<CDA_Document> CDA_NewDocument
 (
- const wchar_t* nsURI
+ const std::wstring& nsURI
 )
 {
-  if (!wcscmp(nsURI, L"http://www.w3.org/1998/Math/MathML"))
+  if (nsURI == L"http://www.w3.org/1998/Math/MathML")
   {
     return WrapMathMLDocument();
   }
@@ -64,44 +64,45 @@ CDA_Document* CDA_NewDocument
 }
 
 bool
-CDA_DOMImplementation::hasFeature(const wchar_t* feature, const wchar_t* version)
+CDA_DOMImplementation::hasFeature(const std::wstring& feature, const std::wstring& version)
   throw(std::exception&)
 {
-  if (!wcscmp(feature, L"Core") &&
-      (!wcscmp(version, L"1.0") || !wcscmp(version, L"2.0")))
+  if (feature == L"Core" &&
+      (version == L"1.0" || version == L"2.0"))
     return true;
-  if (!wcscmp(feature, L"Events") && !wcscmp(version, L"2.0"))
+  if (feature == L"Events" && version == L"2.0")
     return true;
-  if (!wcscmp(feature, L"org.w3c.dom.mathml") && !wcscmp(version, L"2.0"))
+  if (feature == L"org.w3c.dom.mathml" && version == L"2.0")
     return true;
 
   return false;
 }
 
 
-iface::dom::DocumentType*
-CDA_DOMImplementation::createDocumentType(const wchar_t* qualifiedName,
-                                          const wchar_t* publicId,
-                                          const wchar_t* systemId)
+already_AddRefd<iface::dom::DocumentType>
+CDA_DOMImplementation::createDocumentType(const std::wstring& qualifiedName,
+                                          const std::wstring& publicId,
+                                          const std::wstring& systemId)
   throw(std::exception&)
 {
   return new CDA_DocumentType(NULL, qualifiedName, publicId, systemId);
 }
 
-iface::dom::Document*
-CDA_DOMImplementation::createDocument(const wchar_t* namespaceURI,
-                                      const wchar_t* qualifiedName,
+already_AddRefd<iface::dom::Document>
+CDA_DOMImplementation::createDocument(const std::wstring& namespaceURI,
+                                      const std::wstring& qualifiedName,
                                       iface::dom::DocumentType* idoctype)
   throw(std::exception&)
 {
-  const wchar_t* colon = wcschr(qualifiedName, L':');
+  const wchar_t* cqname = qualifiedName.c_str();
+  const wchar_t* colon = wcschr(cqname, L':');
   if (colon != NULL)
   {
-    if (!wcscmp(namespaceURI, L""))
+    if (namespaceURI == L"")
       throw iface::dom::DOMException();
-    if (colon-qualifiedName == 3 &&
-        !wcsncmp(qualifiedName, L"xml", 3) &&
-        !wcscmp(namespaceURI, L"http://www.w3.org/XML/1998/namespace"))
+    if (colon-cqname == 3 &&
+        !wcsncmp(cqname, L"xml", 3) &&
+	qualifiedName != L"http://www.w3.org/XML/1998/namespace")
       throw iface::dom::DOMException();
   }
 
@@ -120,21 +121,21 @@ CDA_DOMImplementation::createDocument(const wchar_t* namespaceURI,
     doc->insertBeforePrivate(doctype, NULL)->release_ref();
   }
 
-  const wchar_t* pos = wcschr(qualifiedName, L':');
+  const wchar_t* pos = wcschr(cqname, L':');
   if (pos == NULL)
-    pos = qualifiedName;
+    pos = cqname;
   else
     pos++;
   RETURN_INTO_OBJREF(docel, CDA_Element,
                      CDA_NewElement(doc, namespaceURI, pos));
   docel->mNamespaceURI = namespaceURI;
-  docel->mNodeName = qualifiedName;
+  docel->mNodeName = cqname;
   docel->mLocalName = pos;
 
   doc->appendChild(docel)->release_ref();
 
   doc->add_ref();
-  return doc;
+  return doc.getPointer();
 }
 
 CDA_Node::CDA_Node(CDA_Document* aDocument)
@@ -153,7 +154,6 @@ CDA_Node::~CDA_Node()
   for (; i != mListeners.end(); i++)
   {
     eventid e((*i).first);
-    e.release();
     (*i).second->release_ref();
   }
   std::list<CDA_Node*>::iterator i2(mNodeList.begin());
@@ -162,28 +162,28 @@ CDA_Node::~CDA_Node()
     delete (*i2);
 }
 
-wchar_t*
+std::wstring
 CDA_Node::nodeName()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeName.c_str());
+  return mNodeName;
 }
 
-wchar_t*
+std::wstring
 CDA_Node::nodeValue()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeValue.c_str());
+  return mNodeValue;
 }
 
 void
-CDA_Node::nodeValue(const wchar_t* attr)
+CDA_Node::nodeValue(const std::wstring& attr)
   throw(std::exception&)
 {
   mNodeValue = attr;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::parentNode()
   throw(std::exception&)
 {
@@ -192,14 +192,14 @@ CDA_Node::parentNode()
   return mParent;
 }
 
-iface::dom::NodeList*
+already_AddRefd<iface::dom::NodeList>
 CDA_Node::childNodes()
   throw(std::exception&)
 {
   return new CDA_NodeList(this);
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::firstChild()
   throw(std::exception&)
 {
@@ -218,7 +218,7 @@ CDA_Node::firstChild()
   return NULL;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::lastChild()
   throw(std::exception&)
 {
@@ -238,7 +238,7 @@ CDA_Node::lastChild()
   return NULL;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::previousSibling()
   throw(std::exception&)
 {
@@ -266,7 +266,7 @@ CDA_Node::previousSibling()
   }
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::nextSibling()
   throw(std::exception&)
 {
@@ -297,14 +297,14 @@ CDA_Node::nextSibling()
   }
 }
 
-iface::dom::NamedNodeMap*
+already_AddRefd<iface::dom::NamedNodeMap>
 CDA_Node::attributes()
   throw(std::exception&)
 {
   return new CDA_EmptyNamedNodeMap();
 }
 
-iface::dom::Document*
+already_AddRefd<iface::dom::Document>
 CDA_Node::ownerDocument()
   throw(std::exception&)
 {
@@ -368,7 +368,7 @@ CDA_Node::dispatchRemovedFromDocument(CDA_MutationEvent* me)
     (*i)->dispatchRemovedFromDocument(me);
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::insertBefore(iface::dom::Node* inewChild,
                        iface::dom::Node* irefChild)
   throw(std::exception&)
@@ -405,7 +405,7 @@ CDA_Node::insertBefore(iface::dom::Node* inewChild,
   return insertBeforePrivate(newChild, refChild);
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::insertBeforePrivate(CDA_Node* newChild,
                        CDA_Node* refChild)
   throw(std::exception&)
@@ -503,7 +503,7 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
   return newChild;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::replaceChild(iface::dom::Node* inewChild,
                        iface::dom::Node* ioldChild)
   throw(std::exception&)
@@ -524,7 +524,7 @@ CDA_Node::replaceChild(iface::dom::Node* inewChild,
   return removeChild(oldChild);
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::removeChild(iface::dom::Node* ioldChild)
   throw(std::exception&)
 {
@@ -544,7 +544,7 @@ CDA_Node::removeChild(iface::dom::Node* ioldChild)
   return removeChildPrivate(oldChild);
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::removeChildPrivate(CDA_Node* oldChild)
   throw(std::exception&)
 {
@@ -592,7 +592,7 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
   return oldChild;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::appendChild(iface::dom::Node* inewChild)
   throw(std::exception&)
 {
@@ -608,14 +608,14 @@ CDA_Node::hasChildNodes()
   return !mNodeList.empty();
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Node::cloneNode(bool deep)
   throw(std::exception&)
 {
   return cloneNodePrivate(mDocument, deep);
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Node::cloneNodePrivate(CDA_Document* aDoc, bool deep)
   throw(std::exception&)
 {
@@ -624,7 +624,7 @@ CDA_Node::cloneNodePrivate(CDA_Document* aDoc, bool deep)
   if (!deep)
   {
     c->add_ref();
-    return c;
+    return c.getPointer();
   }
 
   // Clone all children...
@@ -640,7 +640,7 @@ CDA_Node::cloneNodePrivate(CDA_Document* aDoc, bool deep)
 
   c->add_ref();
 
-  return c;
+  return c.getPointer();
 }
 
 void
@@ -681,54 +681,53 @@ CDA_Node::normalize()
 }
 
 bool
-CDA_Node::isSupported(const wchar_t* feature, const wchar_t* version)
+CDA_Node::isSupported(const std::wstring& feature, const std::wstring& version)
   throw(std::exception&)
 {
-  if (!wcscmp(feature, L"Core") &&
-      (!wcscmp(version, L"1.0") || !wcscmp(version, L"2.0")))
+  if (feature == L"Core" &&
+      (version == L"1.0") || (version == L"2.0"))
     return true;
-  if (!wcscmp(feature, L"Events") && !wcscmp(version, L"2.0"))
+  if (feature == L"Events" && version == L"2.0")
     return true;
-  if (!wcscmp(feature, L"org.w3c.dom.mathml") && !wcscmp(version, L"2.0"))
+  if (feature == L"org.w3c.dom.mathml" && version == L"2.0")
     return true;
 
   return false;
 }
 
-wchar_t*
+std::wstring
 CDA_Node::namespaceURI()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNamespaceURI.c_str());
+  return mNamespaceURI;
 }
 
-wchar_t*
+std::wstring
 CDA_Node::prefix()
   throw(std::exception&)
 {
   size_t pos = mNodeName.find(L':');
   if (pos == std::wstring::npos)
-    return CDA_wcsdup(L"");
+    return L"";
 
-  std::wstring s = mNodeName.substr(0, pos);
-  return CDA_wcsdup(s.c_str());
+  return mNodeName.substr(0, pos);
 }
 
 void
-CDA_Node::prefix(const wchar_t* attr)
+CDA_Node::prefix(const std::wstring& attr)
   throw(std::exception&)
 {
   if (mNamespaceURI == L"")
     throw iface::dom::DOMException();
 
-  if (!wcscmp(attr, L"xml") &&
+  if (attr == L"xml" &&
       mNamespaceURI != L"http://www.w3.org/XML/1998/namespace")
     throw iface::dom::DOMException();
     
-  if (mLocalName == L"xmlns" && wcscmp(attr, L""))
+  if (mLocalName == L"xmlns" && attr != L"")
     throw iface::dom::DOMException();
 
-  if (!wcscmp(attr, L"xmlns") &&
+  if (attr == L"xmlns" &&
       mNamespaceURI != L"http://www.w3.org/2000/xmlns/")
     throw iface::dom::DOMException();
 
@@ -737,22 +736,22 @@ CDA_Node::prefix(const wchar_t* attr)
   mNodeName += mLocalName;
 }
 
-wchar_t*
+std::wstring
 CDA_Node::localName()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mLocalName.c_str());
+  return mLocalName;
 }
 
 void
-CDA_Node::addEventListener(const wchar_t* type,
+CDA_Node::addEventListener(const std::wstring& type,
                            iface::events::EventListener* listener,
                            bool useCapture)
   throw(std::exception&)
 {
   if (listener == NULL)
     throw iface::dom::DOMException();
-  eventid p(const_cast<wchar_t*>(type), useCapture);
+  eventid p(type, useCapture);
   std::multimap<eventid, iface::events::EventListener*>
     ::iterator i = mListeners.lower_bound(p);
 
@@ -762,21 +761,20 @@ CDA_Node::addEventListener(const wchar_t* type,
       return;
 
   listener->add_ref();
-  p.clone();
   mListeners.insert(std::pair<eventid,
                     iface::events::EventListener*>
                     (p, listener));
 }
 
 void
-CDA_Node::removeEventListener(const wchar_t* type,
+CDA_Node::removeEventListener(const std::wstring& type,
                               iface::events::EventListener* listener,
                               bool useCapture)
   throw(std::exception&)
 {
   if (listener == NULL)
     throw iface::dom::DOMException();
-  eventid p(const_cast<wchar_t*>(type), useCapture);
+  eventid p(type, useCapture);
   std::multimap<eventid,iface::events::EventListener*>
      ::iterator i =
     mListeners.lower_bound(p);
@@ -784,7 +782,6 @@ CDA_Node::removeEventListener(const wchar_t* type,
     if (CDA_objcmp((*i).second, listener) == 0)
     {
       eventid e((*i).first);
-      e.release();
       (*i).second->release_ref();
       mListeners.erase(i);
       return;
@@ -912,7 +909,7 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
 
   if (wantCapturing)
   {
-    eventid p(const_cast<wchar_t*>(me->mType.c_str()), true);
+    eventid p(me->mType, true);
     std::multimap<eventid,iface::events::EventListener*>
        ::iterator i(mListeners.lower_bound(p)), i2;
     while (i != mListeners.end() && (*i).first == p)
@@ -934,7 +931,7 @@ CDA_Node::callEventListeners(CDA_MutationEvent* me)
   }
   if (wantBubbling)
   {
-    eventid p(const_cast<wchar_t*>(me->mType.c_str()), false);
+    eventid p(me->mType, false);
     std::multimap<eventid,iface::events::EventListener*>
        ::iterator i(mListeners.lower_bound(p)), i2;
     while (i != mListeners.end() && (*i).first == p)
@@ -974,8 +971,8 @@ CDA_Node::recursivelyChangeDocument(CDA_Document* aNewDocument)
     (*i)->recursivelyChangeDocument(mDocument);
 }
 
-iface::dom::Element*
-CDA_Node::searchForElementById(const wchar_t* elementId)
+already_AddRefd<iface::dom::Element>
+CDA_Node::searchForElementById(const std::wstring& elementId)
 {
   std::list<CDA_Node*>::iterator i = mNodeList.begin();
   for (; i != mNodeList.end(); i++)
@@ -1004,7 +1001,7 @@ CDA_Node::find_leaked()
 }
 #endif // DEBUG_NODELEAK
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NodeList::item(uint32_t index)
   throw(std::exception&)
 {
@@ -1069,7 +1066,7 @@ CDA_NodeList::length()
   return length;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NodeListDFSSearch::item(uint32_t index)
   throw(std::exception&)
 {
@@ -1217,19 +1214,19 @@ CDA_NamedNodeMap::~CDA_NamedNodeMap()
   mElement->release_ref();
 }
 
-iface::dom::Node*
-CDA_NamedNodeMap::getNamedItem(const wchar_t* name)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMap::getNamedItem(const std::wstring& name)
   throw(std::exception&)
 {
   std::map<CDA_Element::LocalName, CDA_Attr*>::iterator i =
-    mElement->attributeMap.find(CDA_Element::LocalName(const_cast<wchar_t*>(name)));
+    mElement->attributeMap.find(CDA_Element::LocalName(name));
   if (i == mElement->attributeMap.end())
     return NULL;
   (*i).second->add_ref();
   return (*i).second;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMap::setNamedItem(iface::dom::Node* arg)
   throw(std::exception&)
 {
@@ -1238,13 +1235,13 @@ CDA_NamedNodeMap::setNamedItem(iface::dom::Node* arg)
   return mElement->setAttributeNode(attr);
 }
 
-iface::dom::Node*
-CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMap::removeNamedItem(const std::wstring& name)
   throw(std::exception&)
 {
   // std::pair<std::wstring,std::wstring> p(L"", name);
   std::map<CDA_Element::LocalName, CDA_Attr*>::iterator
-    i = mElement->attributeMap.find(CDA_Element::LocalName(const_cast<wchar_t*>(name)));
+    i = mElement->attributeMap.find(CDA_Element::LocalName(name));
 
   if (i == mElement->attributeMap.end())
     throw iface::dom::DOMException();
@@ -1254,15 +1251,13 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
   mElement->removeChildPrivate(at)->release_ref();
 
   CDA_Element::LocalName ln((*i).first);
-  ln.release();
 
   mElement->attributeMap.erase(i);
   std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator j =
     mElement->attributeMapNS.find(CDA_Element::QualifiedName
-                                  (const_cast<wchar_t*>(at->mNamespaceURI.c_str()),
-                                   const_cast<wchar_t*>(at->mLocalName.c_str())));
+                                  (at->mNamespaceURI,
+                                   at->mLocalName));
   CDA_Element::QualifiedName qn((*j).first);
-  qn.release();
   mElement->attributeMapNS.erase(j);
 
   CDA_DOM_SomethingChanged();
@@ -1280,10 +1275,10 @@ CDA_NamedNodeMap::removeNamedItem(const wchar_t* name)
   }
 
   at->add_ref();
-  return at;
+  return at.getPointer();
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMap::item(uint32_t index)
   throw(std::exception&)
 {
@@ -1322,22 +1317,21 @@ CDA_NamedNodeMap::length()
   return mElement->attributeMap.size();
 }
 
-iface::dom::Node*
-CDA_NamedNodeMap::getNamedItemNS(const wchar_t* namespaceURI,
-                                 const wchar_t* localName)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMap::getNamedItemNS(const std::wstring& namespaceURI,
+                                 const std::wstring& localName)
   throw(std::exception&)
 {
   std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator i =
     mElement->attributeMapNS.find(CDA_Element::QualifiedName
-                                  (const_cast<wchar_t*>(namespaceURI),
-                                   const_cast<wchar_t*>(localName)));
+                                  (namespaceURI, localName));
   if (i == mElement->attributeMapNS.end())
     return NULL;
   (*i).second->add_ref();
   return (*i).second;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMap::setNamedItemNS(iface::dom::Node* arg)
   throw(std::exception&)
 {
@@ -1346,15 +1340,14 @@ CDA_NamedNodeMap::setNamedItemNS(iface::dom::Node* arg)
   return mElement->setAttributeNodeNS(attr);
 }
 
-iface::dom::Node*
-CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
-                                    const wchar_t* localName)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMap::removeNamedItemNS(const std::wstring& namespaceURI,
+                                    const std::wstring& localName)
   throw(std::exception&)
 {
   std::map<CDA_Element::QualifiedName, CDA_Attr*>::iterator
     i = mElement->attributeMapNS.find
-    (CDA_Element::QualifiedName(const_cast<wchar_t*>(namespaceURI),
-                                const_cast<wchar_t*>(localName)));
+    (CDA_Element::QualifiedName(namespaceURI, localName));
 
   if (i == mElement->attributeMapNS.end())
     throw iface::dom::DOMException();
@@ -1363,15 +1356,9 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
   ObjRef<CDA_Attr> at = (*i).second;
   mElement->removeChildPrivate(at)->release_ref();
 
-  CDA_Element::QualifiedName qn((*i).first);
-  qn.release();
-
   std::map<CDA_Element::LocalName, CDA_Attr*>::iterator j =
     mElement->attributeMap.find(CDA_Element::LocalName
-                                (const_cast<wchar_t*>(at->mNodeName.c_str())));
-
-  CDA_Element::LocalName ln((*j).first);
-  ln.release();
+                                (at->mNodeName));
 
   mElement->attributeMapNS.erase(i);
   mElement->attributeMap.erase(j);
@@ -1391,7 +1378,7 @@ CDA_NamedNodeMap::removeNamedItemNS(const wchar_t* namespaceURI,
     mElement->dispatchEvent(me);
   }
 
-  return at;
+  return at.getPointer();
 }
 
 CDA_NamedNodeMapDT::CDA_NamedNodeMapDT(CDA_DocumentType* aDocType,
@@ -1406,8 +1393,8 @@ CDA_NamedNodeMapDT::~CDA_NamedNodeMapDT()
   mDocType->release_ref();
 }
 
-iface::dom::Node*
-CDA_NamedNodeMapDT::getNamedItem(const wchar_t* name)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMapDT::getNamedItem(const std::wstring& name)
   throw(std::exception&)
 {
   std::list<CDA_Node*>::iterator i = mDocType->mNodeList.begin();
@@ -1423,21 +1410,21 @@ CDA_NamedNodeMapDT::getNamedItem(const wchar_t* name)
   return NULL;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMapDT::setNamedItem(iface::dom::Node* arg)
   throw(std::exception&)
 {
   throw iface::dom::DOMException();
 }
 
-iface::dom::Node*
-CDA_NamedNodeMapDT::removeNamedItem(const wchar_t* name)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMapDT::removeNamedItem(const std::wstring& name)
   throw(std::exception&)
 {
   throw iface::dom::DOMException();
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMapDT::item(uint32_t index)
   throw(std::exception&)
 {
@@ -1473,9 +1460,9 @@ CDA_NamedNodeMapDT::length()
   return l;
 }
 
-iface::dom::Node*
-CDA_NamedNodeMapDT::getNamedItemNS(const wchar_t* namespaceURI,
-                                   const wchar_t* localName)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMapDT::getNamedItemNS(const std::wstring& namespaceURI,
+                                   const std::wstring& localName)
   throw(std::exception&)
 {
   std::list<CDA_Node*>::iterator i = mDocType->mNodeList.begin();
@@ -1493,31 +1480,31 @@ CDA_NamedNodeMapDT::getNamedItemNS(const wchar_t* namespaceURI,
   return NULL;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMapDT::setNamedItemNS(iface::dom::Node* arg)
   throw(std::exception&)
 {
   throw iface::dom::DOMException();
 }
 
-iface::dom::Node*
-CDA_NamedNodeMapDT::removeNamedItemNS(const wchar_t* namespaceURI,
-                                    const wchar_t* localName)
+already_AddRefd<iface::dom::Node>
+CDA_NamedNodeMapDT::removeNamedItemNS(const std::wstring& namespaceURI,
+				      const std::wstring& localName)
   throw(std::exception&)
 {
   throw iface::dom::DOMException();
 }
 
 
-wchar_t*
+std::wstring
 CDA_CharacterData::data()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeValue.c_str());
+  return mNodeValue;
 }
 
 void
-CDA_CharacterData::data(const wchar_t* attr)
+CDA_CharacterData::data(const std::wstring& attr)
   throw(std::exception&)
 {
   std::wstring oldData = mNodeValue;
@@ -1526,7 +1513,7 @@ CDA_CharacterData::data(const wchar_t* attr)
 }
 
 void
-CDA_CharacterData::nodeValue(const wchar_t* attr)
+CDA_CharacterData::nodeValue(const std::wstring& attr)
   throw(std::exception&)
 {
   std::wstring oldData = mNodeValue;
@@ -1541,14 +1528,13 @@ CDA_CharacterData::length()
   return mNodeValue.length();
 }
 
-wchar_t*
+std::wstring
 CDA_CharacterData::substringData(uint32_t offset, uint32_t count)
   throw(std::exception&)
 {
   try
   {
-    std::wstring s = mNodeValue.substr(offset, count);
-    return CDA_wcsdup(s.c_str());
+    return mNodeValue.substr(offset, count);
   }
   catch (std::out_of_range& oor)
   {
@@ -1557,7 +1543,7 @@ CDA_CharacterData::substringData(uint32_t offset, uint32_t count)
 }
 
 void
-CDA_CharacterData::appendData(const wchar_t* arg)
+CDA_CharacterData::appendData(const std::wstring& arg)
   throw(std::exception&)
 {
   std::wstring oldData = mNodeValue;
@@ -1566,7 +1552,7 @@ CDA_CharacterData::appendData(const wchar_t* arg)
 }
 
 void
-CDA_CharacterData::insertData(uint32_t offset, const wchar_t* arg)
+CDA_CharacterData::insertData(uint32_t offset, const std::wstring& arg)
   throw(std::exception&)
 {
   try
@@ -1604,7 +1590,7 @@ CDA_CharacterData::deleteData(uint32_t offset, uint32_t count)
 
 void
 CDA_CharacterData::replaceData(uint32_t offset, uint32_t count,
-                               const wchar_t* arg)
+                               const std::wstring& arg)
   throw(std::exception&)
 {
   try
@@ -1638,7 +1624,7 @@ CDA_CharacterData::dispatchCharDataModified(const std::wstring& oldValue)
   dispatchEvent(me);
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Attr::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -1651,11 +1637,11 @@ CDA_Attr::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-wchar_t*
+std::wstring
 CDA_Attr::name()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeName.c_str());
+  return mNodeName;
 }
 
 bool
@@ -1665,15 +1651,15 @@ CDA_Attr::specified()
   return mSpecified;
 }
 
-wchar_t*
+std::wstring
 CDA_Attr::value()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeValue.c_str());
+  return mNodeValue;
 }
 
 void
-CDA_Attr::value(const wchar_t* attr)
+CDA_Attr::value(const std::wstring& attr)
   throw(std::exception&)
 {
   mNodeValue = attr;
@@ -1697,7 +1683,7 @@ CDA_Attr::value(const wchar_t* attr)
   }
 }
 
-iface::dom::Element*
+already_AddRefd<iface::dom::Element>
 CDA_Attr::ownerElement()
   throw(std::exception&)
 {
@@ -1709,21 +1695,9 @@ CDA_Attr::ownerElement()
 
 CDA_Element::~CDA_Element()
 {
-  std::map<QualifiedName, CDA_Attr*>::iterator i = attributeMapNS.begin();
-  for (; i != attributeMapNS.end(); i++)
-  {
-    QualifiedName qn((*i).first);
-    qn.release();
-  }
-  std::map<LocalName, CDA_Attr*>::iterator j = attributeMap.begin();
-  for (; j != attributeMap.end(); j++)
-  {
-    LocalName ln((*j).first);
-    ln.release();
-  }
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Element::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -1747,7 +1721,7 @@ CDA_Element::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-iface::dom::NamedNodeMap*
+already_AddRefd<iface::dom::NamedNodeMap>
 CDA_Element::attributes()
   throw(std::exception&)
 {
@@ -1761,31 +1735,31 @@ CDA_Element::hasAttributes()
   return !attributeMap.empty();
 }
 
-wchar_t*
+std::wstring
 CDA_Element::tagName()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeName.c_str());
+  return mNodeName;
 }
 
-wchar_t*
-CDA_Element::getAttribute(const wchar_t* name)
+std::wstring
+CDA_Element::getAttribute(const std::wstring& name)
   throw(std::exception&)
 {
   std::map<LocalName, CDA_Attr*>::iterator
-    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
+    i = attributeMap.find(LocalName(name));
   if (i == attributeMap.end())
-    return CDA_wcsdup(L"");
+    return L"";
 
   return (*i).second->value();
 }
 
 void
-CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
+CDA_Element::setAttribute(const std::wstring& name, const std::wstring& value)
   throw(std::exception&)
 {
   std::map<LocalName, CDA_Attr*>::iterator
-    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
+    i = attributeMap.find(LocalName(name));
 
   CDA_DOM_SomethingChanged();
 
@@ -1796,11 +1770,10 @@ CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
     a->mNodeName = name;
     insertBeforePrivate(a, NULL)->release_ref();
     attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
-                          (QualifiedName(CDA_wcsdup(L""),
-                                         CDA_wcsdup(name)),
+                          (QualifiedName(L"", name),
                            a));
     attributeMap.insert(std::pair<LocalName,CDA_Attr*>
-                        (LocalName(CDA_wcsdup(name)), a));
+                        (LocalName(name), a));
 
     if (eventsHaveEffects())
     {
@@ -1833,11 +1806,11 @@ CDA_Element::setAttribute(const wchar_t* name, const wchar_t* value)
 }
 
 void
-CDA_Element::removeAttribute(const wchar_t* name)
+CDA_Element::removeAttribute(const std::wstring& name)
   throw(std::exception&)
 {
   std::map<LocalName, CDA_Attr*>::iterator
-    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
+    i = attributeMap.find(LocalName(name));
 
   if (i == attributeMap.end())
   {
@@ -1848,27 +1821,23 @@ CDA_Element::removeAttribute(const wchar_t* name)
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
-  LocalName ln((*i).first);
-  ln.release();
   attributeMap.erase(i);
 
   std::map<QualifiedName, CDA_Attr*>::iterator j;
   if (at->mLocalName != L"")
     j = attributeMapNS.find
       (
-       QualifiedName(const_cast<wchar_t*>(at->mNamespaceURI.c_str()),
-                     const_cast<wchar_t*>(at->mLocalName.c_str()))
+       QualifiedName(at->mNamespaceURI,
+                     at->mLocalName)
       );
   else
     j = attributeMapNS.find
       (
-       QualifiedName(const_cast<wchar_t*>(at->mNamespaceURI.c_str()),
-                     const_cast<wchar_t*>(at->mNodeName.c_str()))
+       QualifiedName(at->mNamespaceURI.c_str(),
+                     at->mNodeName.c_str())
       );
 
-  QualifiedName qn((*j).first);
   attributeMapNS.erase(j);
-  qn.release();
 
   CDA_DOM_SomethingChanged();
 
@@ -1885,12 +1854,12 @@ CDA_Element::removeAttribute(const wchar_t* name)
   }
 }
 
-iface::dom::Attr*
-CDA_Element::getAttributeNode(const wchar_t* name)
+already_AddRefd<iface::dom::Attr>
+CDA_Element::getAttributeNode(const std::wstring& name)
   throw(std::exception&)
 {
   std::map<LocalName, CDA_Attr*>::iterator
-    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name)));
+    i = attributeMap.find(LocalName(name));
   if (i == attributeMap.end())
     return NULL;
 
@@ -1898,30 +1867,27 @@ CDA_Element::getAttributeNode(const wchar_t* name)
   return (*i).second;
 }
 
-iface::dom::Attr*
+already_AddRefd<iface::dom::Attr>
 CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   throw(std::exception&)
 {
   CDA_Attr* newAttr = dynamic_cast<CDA_Attr*>(inewAttr);
   if (newAttr == NULL)
     throw iface::dom::DOMException();
-  RETURN_INTO_THINSTRING(name, newAttr->name());
+  std::wstring name = newAttr->name();
   std::map<LocalName, CDA_Attr*>::iterator
-    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name.getPointer())));
+    i = attributeMap.find(LocalName(name));
   std::map<QualifiedName, CDA_Attr*>::iterator
-    j = attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(L""),
-                                          const_cast<wchar_t*>(name.getPointer())));
+    j = attributeMapNS.find(QualifiedName(L"", name));
 
   CDA_DOM_SomethingChanged();
 
   if (i == attributeMap.end())
   {
     insertBeforePrivate(newAttr, NULL)->release_ref();
-    attributeMap.insert(std::pair<LocalName, CDA_Attr*>
-                        (CDA_wcsdup(name), newAttr));
+    attributeMap.insert(std::pair<LocalName, CDA_Attr*>(name, newAttr));
     attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
-                          (QualifiedName(CDA_wcsdup(L""), CDA_wcsdup(name)),
-                           newAttr));
+                          (QualifiedName(L"", name), newAttr));
 
     if (eventsHaveEffects())
     {
@@ -1938,20 +1904,18 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   }
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
-  LocalName((*i).first).release();
   attributeMap.erase(i);
 
   if (j != attributeMapNS.end())
   {
-    QualifiedName((*j).first).release();
     attributeMapNS.erase(j);
   }
 
   insertBeforePrivate(newAttr, NULL)->release_ref();
   attributeMap.insert(std::pair<LocalName, CDA_Attr*>
-                      (LocalName(CDA_wcsdup(name)), newAttr));
+                      (LocalName(name), newAttr));
   attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
-                        (QualifiedName(CDA_wcsdup(L""), CDA_wcsdup(name)),
+                        (QualifiedName(L"", name),
                          newAttr));
 
   if (eventsHaveEffects())
@@ -1971,39 +1935,33 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
   }
 
   at->add_ref();
-  return at;
+  return at.getPointer();
 }
 
-iface::dom::Attr*
+already_AddRefd<iface::dom::Attr>
 CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   throw(std::exception&)
 {
   CDA_Attr* oldAttr = dynamic_cast<CDA_Attr*>(ioldAttr);
   if (oldAttr == NULL)
     throw iface::dom::DOMException();
-  RETURN_INTO_THINSTRING(name, oldAttr->name());
-  RETURN_INTO_THINSTRING(lname, oldAttr->localName());
-  RETURN_INTO_THINSTRING(nsuri, oldAttr->namespaceURI());
+  std::wstring name = oldAttr->name();
+  std::wstring lname = oldAttr->localName();
+  std::wstring nsuri = oldAttr->namespaceURI();
   std::map<LocalName, CDA_Attr*>::iterator
-    i = attributeMap.find(LocalName(const_cast<wchar_t*>(name.getPointer())));
+    i = attributeMap.find(LocalName(name));
   if (i == attributeMap.end())
   {
     throw iface::dom::DOMException();
   }
   ObjRef<CDA_Attr> at = (*i).second;
   LocalName ln((*i).first);
-  ln.release();
   removeChildPrivate(at)->release_ref();
   attributeMap.erase(i);
 
   std::map<QualifiedName, CDA_Attr*>::iterator
-    j = attributeMapNS.find
-    (
-     QualifiedName(const_cast<wchar_t*>(nsuri.getPointer()),
-                   const_cast<wchar_t*>(lname.getPointer()))
-    );
+    j = attributeMapNS.find(QualifiedName(nsuri, lname));
   QualifiedName qn((*j).first);
-  qn.release();
   attributeMapNS.erase(j);
   
   CDA_DOM_SomethingChanged();
@@ -2012,7 +1970,7 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMAttrModified", true, false,
-                          at, at->mNodeValue.c_str(), L"",
+                          at, at->mNodeValue, L"",
                           name, iface::events::MutationEvent::REMOVAL);
     dispatchEvent(me);
     me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
@@ -2021,48 +1979,45 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
   }
 
   at->add_ref();
-  return at;
+  return at.getPointer();
 }
 
-iface::dom::NodeList*
-CDA_Element::getElementsByTagName(const wchar_t* name)
+already_AddRefd<iface::dom::NodeList>
+CDA_Element::getElementsByTagName(const std::wstring& name)
   throw(std::exception&)
 {
   return new CDA_NodeListDFSSearch(this, name);
 }
 
-wchar_t*
-CDA_Element::getAttributeNS(const wchar_t* namespaceURI,
-                            const wchar_t* localName)
+std::wstring
+CDA_Element::getAttributeNS(const std::wstring& namespaceURI,
+                            const std::wstring& localName)
   throw(std::exception&)
 {
   std::pair<std::wstring,std::wstring> p(namespaceURI, localName);
   std::map<QualifiedName, CDA_Attr*>::iterator
-    i = attributeMapNS.find(QualifiedName
-                            (const_cast<wchar_t*>(namespaceURI),
-                             const_cast<wchar_t*>(localName)));
+    i = attributeMapNS.find(QualifiedName(namespaceURI, localName));
   if (i == attributeMapNS.end())
-    return CDA_wcsdup(L"");
+    return L"";
 
   return (*i).second->value();
 }
 
 void
-CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
-                            const wchar_t* qualifiedName,
-                            const wchar_t* value)
+CDA_Element::setAttributeNS(const std::wstring& namespaceURI,
+                            const std::wstring& qualifiedName,
+                            const std::wstring& value)
   throw(std::exception&)
 {
   const wchar_t* localName;
-  const wchar_t* pos = wcschr(qualifiedName, L':');
+  const wchar_t* pos = wcschr(qualifiedName.c_str(), L':');
   if (pos == NULL)
-    localName = qualifiedName;
+    localName = qualifiedName.c_str();
   else
     localName = pos + 1;
 
   std::map<QualifiedName, CDA_Attr*>::iterator
-    i = attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(namespaceURI),
-                                          const_cast<wchar_t*>(localName)));
+    i = attributeMapNS.find(QualifiedName(namespaceURI, localName));
 
   CDA_DOM_SomethingChanged();
 
@@ -2076,22 +2031,20 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
     insertBeforePrivate(a, NULL)->release_ref();
     attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
                           (
-                           QualifiedName(CDA_wcsdup(namespaceURI),
-                                         CDA_wcsdup(localName)), a
+                           QualifiedName(namespaceURI, localName), a
                           )
                          );
 
 
     std::map<LocalName, CDA_Attr*>::iterator
-      j = attributeMap.find(LocalName(const_cast<wchar_t*>(qualifiedName)));
+      j = attributeMap.find(LocalName(qualifiedName));
     if (j != attributeMap.end())
     {
-      LocalName((*j).first).release();
       attributeMap.erase(j);
     }
 
     attributeMap.insert(std::pair<LocalName,CDA_Attr*>
-                        (LocalName(CDA_wcsdup(qualifiedName)), a));
+                        (LocalName(qualifiedName), a));
 
     if (eventsHaveEffects())
     {
@@ -2124,14 +2077,13 @@ CDA_Element::setAttributeNS(const wchar_t* namespaceURI,
 }
 
 void
-CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
-                               const wchar_t* localName)
+CDA_Element::removeAttributeNS(const std::wstring& namespaceURI,
+                               const std::wstring& localName)
   throw(std::exception&)
 {
   std::map<QualifiedName, CDA_Attr*>::iterator
     i = attributeMapNS.find
-    (QualifiedName(const_cast<wchar_t*>(namespaceURI),
-                   const_cast<wchar_t*>(localName)));
+    (QualifiedName(namespaceURI, localName));
 
   if (i == attributeMapNS.end())
   {
@@ -2145,17 +2097,14 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
   ObjRef<CDA_Attr> at = (*i).second;
   removeChildPrivate(at)->release_ref();
   QualifiedName qn((*i).first);
-  qn.release();
 
   std::map<LocalName, CDA_Attr*>::iterator  
-    j = attributeMap.find(LocalName(const_cast<wchar_t*>
-                                    ((*i).second->mNodeName.c_str())));
+    j = attributeMap.find(LocalName((*i).second->mNodeName));
 
   ObjRef<iface::dom::Node> n = (*i).second;
 
   attributeMapNS.erase(i);
   LocalName ln((*j).first);
-  ln.release();
   attributeMap.erase(j);
 
   if (eventsHaveEffects())
@@ -2171,14 +2120,13 @@ CDA_Element::removeAttributeNS(const wchar_t* namespaceURI,
   }
 }
 
-iface::dom::Attr*
-CDA_Element::getAttributeNodeNS(const wchar_t* namespaceURI,
-                                const wchar_t* localName)
+already_AddRefd<iface::dom::Attr>
+CDA_Element::getAttributeNodeNS(const std::wstring& namespaceURI,
+                                const std::wstring& localName)
   throw(std::exception&)
 {
   std::map<QualifiedName, CDA_Attr*>::iterator
-    i = attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(namespaceURI),
-                                          const_cast<wchar_t*>(localName)));
+    i = attributeMapNS.find(QualifiedName(namespaceURI, localName));
   if (i == attributeMapNS.end())
     return NULL;
 
@@ -2186,7 +2134,7 @@ CDA_Element::getAttributeNodeNS(const wchar_t* namespaceURI,
   return (*i).second;
 }
 
-iface::dom::Attr*
+already_AddRefd<iface::dom::Attr>
 CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
   throw(std::exception&)
 {
@@ -2199,8 +2147,8 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
     (newAttr->mNamespaceURI, newAttr->mLocalName);
   std::map<QualifiedName, CDA_Attr*>::iterator
     i = attributeMapNS.find
-    (QualifiedName(const_cast<wchar_t*>(newAttr->mNamespaceURI.c_str()),
-                   const_cast<wchar_t*>(newAttr->mLocalName.c_str())));
+    (QualifiedName(newAttr->mNamespaceURI.c_str(),
+                   newAttr->mLocalName.c_str()));
 
   CDA_DOM_SomethingChanged();
 
@@ -2210,12 +2158,12 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
     attributeMapNS.insert
       (
        std::pair<QualifiedName, CDA_Attr*>
-       (QualifiedName(CDA_wcsdup(newAttr->mNamespaceURI.c_str()),
-                      CDA_wcsdup(newAttr->mLocalName.c_str())), newAttr)
+       (QualifiedName(newAttr->mNamespaceURI,
+		      newAttr->mLocalName), newAttr)
       );
     attributeMap.insert(std::pair<LocalName,CDA_Attr*>
-                        (LocalName(CDA_wcsdup(newAttr->mNodeName.c_str())),
-                                   newAttr));
+                        (LocalName(newAttr->mNodeName),
+			 newAttr));
 
     if (eventsHaveEffects())
     {
@@ -2234,23 +2182,21 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
   }
   ObjRef<CDA_Attr> at = (*i).second;
   QualifiedName qn((*i).first);
-  qn.release();
   removeChildPrivate(at)->release_ref();
   attributeMapNS.erase(i);
 
   std::map<LocalName, CDA_Attr*>::iterator j =
-    attributeMap.find(LocalName(const_cast<wchar_t*>(at->mNodeName.c_str())));
+    attributeMap.find(LocalName(at->mNodeName.c_str()));
   LocalName ln((*j).first);
-  ln.release();
   attributeMap.erase(j);
 
   insertBeforePrivate(newAttr, NULL)->release_ref();
   attributeMapNS.insert(std::pair<QualifiedName, CDA_Attr*>
-                        (QualifiedName(CDA_wcsdup(newAttr->mNamespaceURI.c_str()),
-                                       CDA_wcsdup(newAttr->mLocalName.c_str())),
+                        (QualifiedName(newAttr->mNamespaceURI,
+                                       newAttr->mLocalName),
                          newAttr));
   attributeMap.insert(std::pair<LocalName, CDA_Attr*>
-                      (LocalName(CDA_wcsdup(at->mNodeName.c_str())), newAttr));
+                      (LocalName(at->mNodeName), newAttr));
 
   if (eventsHaveEffects())
   {
@@ -2270,36 +2216,35 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
   }
 
   at->add_ref();
-  return at;
+  return at.getPointer();
 }
 
-iface::dom::NodeList*
-CDA_Element::getElementsByTagNameNS(const wchar_t* namespaceURI,
-                                    const wchar_t* localName)
+already_AddRefd<iface::dom::NodeList>
+CDA_Element::getElementsByTagNameNS(const std::wstring& namespaceURI,
+                                    const std::wstring& localName)
   throw(std::exception&)
 {
   return new CDA_NodeListDFSSearch(this, namespaceURI, localName);
 }
 
 bool
-CDA_Element::hasAttribute(const wchar_t* name)
+CDA_Element::hasAttribute(const std::wstring& name)
   throw(std::exception&)
 {
-  return attributeMap.find(LocalName(const_cast<wchar_t*>(name))) !=
+  return attributeMap.find(LocalName(name)) !=
     attributeMap.end();
 }
 
-bool CDA_Element::hasAttributeNS(const wchar_t* namespaceURI,
-                                 const wchar_t* localName)
+bool CDA_Element::hasAttributeNS(const std::wstring& namespaceURI,
+                                 const std::wstring& localName)
   throw(std::exception&)
 {
-  return attributeMapNS.find(QualifiedName(const_cast<wchar_t*>(namespaceURI),
-                                           const_cast<wchar_t*>(localName)))
+  return attributeMapNS.find(QualifiedName(namespaceURI, localName))
     != attributeMapNS.end();
 }
 
-iface::dom::Element*
-CDA_Element::searchForElementById(const wchar_t* elementId)
+already_AddRefd<iface::dom::Element>
+CDA_Element::searchForElementById(const std::wstring& elementId)
 {
   // XXX DOM says: 'Attributes with the name "ID" are not of type ID unless so
   //     defined.', but we don't deal with DTDs, so we deviate from the DOM and
@@ -2307,12 +2252,9 @@ CDA_Element::searchForElementById(const wchar_t* elementId)
   RETURN_INTO_WSTRING(ourId, getAttribute(L"id"));
   if (ourId == L"")
   {
-    wchar_t* tmp = getAttribute(L"xml:id");
-    if (tmp != NULL)
-    {
+    std::wstring tmp = getAttribute(L"xml:id");
+    if (tmp != L"")
       ourId = tmp;
-      free(tmp);
-    }
   }
   if (ourId == elementId)
   {
@@ -2323,15 +2265,15 @@ CDA_Element::searchForElementById(const wchar_t* elementId)
   std::list<CDA_Node*>::iterator i = mNodeList.begin();
   for (; i != mNodeList.end(); i++)
   {
-    iface::dom::Element* e = (*i)->searchForElementById(elementId);
-    if (e != NULL)
+    already_AddRefd<iface::dom::Element> e = (*i)->searchForElementById(elementId);
+    if (e.getPointer() != NULL)
       return e;
   }
 
   return NULL;
 }
 
-iface::dom::Text*
+already_AddRefd<iface::dom::Text>
 CDA_TextBase::splitText(uint32_t offset)
   throw(std::exception&)
 {
@@ -2353,7 +2295,7 @@ CDA_TextBase::splitText(uint32_t offset)
   return tb;
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Text::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2367,7 +2309,7 @@ CDA_Text::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Comment::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2381,7 +2323,7 @@ CDA_Comment::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_CDATASection::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2395,7 +2337,7 @@ CDA_CDATASection::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_DocumentType::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2408,51 +2350,51 @@ CDA_DocumentType::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-wchar_t*
+std::wstring
 CDA_DocumentType::name()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeName.c_str());
+  return mNodeName;
 }
 
-iface::dom::NamedNodeMap*
+already_AddRefd<iface::dom::NamedNodeMap>
 CDA_DocumentType::entities()
   throw(std::exception&)
 {
   return new CDA_NamedNodeMapDT(this, iface::dom::Node::ENTITY_NODE);
 }
 
-iface::dom::NamedNodeMap*
+already_AddRefd<iface::dom::NamedNodeMap>
 CDA_DocumentType::notations()
   throw(std::exception&)
 {
   return new CDA_NamedNodeMapDT(this, iface::dom::Node::NOTATION_NODE);
 }
 
-wchar_t*
+std::wstring
 CDA_DocumentType::publicId()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mPublicId.c_str());
+  return mPublicId;
 }
 
-wchar_t*
+std::wstring
 CDA_DocumentType::systemId()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mSystemId.c_str());
+  return mSystemId;
 }
 
-wchar_t*
+std::wstring
 CDA_DocumentType::internalSubset()
   throw(std::exception&)
 {
   // The DOM basically leaves this up to the API, and since we don't store this
   // information as it is irrelevant to CellML, lets just skip it...
-  return CDA_wcsdup(L"");
+  return L"";
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Notation::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2464,21 +2406,21 @@ CDA_Notation::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-wchar_t*
+std::wstring
 CDA_Notation::publicId()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mPublicId.c_str());
+  return mPublicId;
 }
 
-wchar_t*
+std::wstring
 CDA_Notation::systemId()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mSystemId.c_str());
+  return mSystemId;
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Entity::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2491,28 +2433,28 @@ CDA_Entity::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-wchar_t*
+std::wstring
 CDA_Entity::publicId()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mPublicId.c_str());
+  return mPublicId;
 }
 
-wchar_t*
+std::wstring
 CDA_Entity::systemId()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mSystemId.c_str());
+  return mSystemId;
 }
 
-wchar_t*
+std::wstring
 CDA_Entity::notationName()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNotationName.c_str());
+  return mNotationName;
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_EntityReference::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2525,7 +2467,7 @@ CDA_EntityReference::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_ProcessingInstruction::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2536,22 +2478,22 @@ CDA_ProcessingInstruction::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-wchar_t*
+std::wstring
 CDA_ProcessingInstruction::target()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeName.c_str());
+  return mNodeName;
 }
 
-wchar_t*
+std::wstring
 CDA_ProcessingInstruction::data()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNodeValue.c_str());
+  return mNodeValue;
 }
 
 void
-CDA_ProcessingInstruction::data(const wchar_t* attr)
+CDA_ProcessingInstruction::data(const std::wstring& attr)
   throw(std::exception&)
 {
   std::wstring oldData = mNodeValue;
@@ -2563,7 +2505,7 @@ CDA_ProcessingInstruction::data(const wchar_t* attr)
   {
     RETURN_INTO_OBJREF(me, CDA_MutationEvent, new CDA_MutationEvent());
     me->initMutationEvent(L"DOMCharacterData", true, false,
-                          NULL, oldData.c_str(), mNodeValue.c_str(), L"",
+                          NULL, oldData, mNodeValue, L"",
                           iface::events::MutationEvent::MODIFICATION);
     dispatchEvent(me);
     me->initMutationEvent(L"DOMSubtreeModified", true, false, NULL, L"", L"",
@@ -2572,7 +2514,7 @@ CDA_ProcessingInstruction::data(const wchar_t* attr)
   }
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_DocumentFragment::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2587,13 +2529,13 @@ CDA_DocumentFragment::shallowCloneNode(CDA_Document* aDoc)
 
 CDA_Document::CDA_Document
 (
- const wchar_t* namespaceURI,
- const wchar_t* qualifiedName,
+ const std::wstring& namespaceURI,
+ const std::wstring& qualifiedName,
  CDA_DocumentType* doctype
 )
   : CDA_Node(this)
 {
-  const wchar_t* pos = wcschr(qualifiedName, L':');
+  const wchar_t* pos = wcschr(qualifiedName.c_str(), L':');
   
   // We are our own document ancestor, so fix the refcounts...
   mDocumentIsAncestor = true;
@@ -2613,7 +2555,7 @@ CDA_Document::CDA_Document
     insertBeforePrivate(doctype, NULL)->release_ref();
 
   if (pos == NULL)
-    pos = qualifiedName;
+    pos = qualifiedName.c_str();
   else
     pos++;
 
@@ -2626,7 +2568,7 @@ CDA_Document::CDA_Document
   appendChild(docel)->release_ref();
 }
 
-iface::dom::DocumentType*
+already_AddRefd<iface::dom::DocumentType>
 CDA_Document::doctype()
   throw(std::exception&)
 {
@@ -2641,7 +2583,7 @@ CDA_Document::doctype()
   return NULL;
 }
 
-iface::dom::DOMImplementation*
+already_AddRefd<iface::dom::DOMImplementation>
 CDA_Document::implementation()
   throw(std::exception&)
 {
@@ -2649,7 +2591,7 @@ CDA_Document::implementation()
   return CDA_DOMImplementation::sDOMImplementation;
 }
 
-iface::dom::Element*
+already_AddRefd<iface::dom::Element>
 CDA_Document::documentElement()
   throw(std::exception&)
 {
@@ -2664,8 +2606,8 @@ CDA_Document::documentElement()
   return NULL;
 }
 
-iface::dom::Element*
-CDA_Document::createElement(const wchar_t* tagName)
+already_AddRefd<iface::dom::Element>
+CDA_Document::createElement(const std::wstring& tagName)
   throw(std::exception&)
 {
   CDA_Element* el = CDA_NewElement(this, L"", tagName);
@@ -2673,7 +2615,7 @@ CDA_Document::createElement(const wchar_t* tagName)
   return el;
 }
 
-iface::dom::DocumentFragment*
+already_AddRefd<iface::dom::DocumentFragment>
 CDA_Document::createDocumentFragment()
   throw(std::exception&)
 {
@@ -2681,8 +2623,8 @@ CDA_Document::createDocumentFragment()
   return df;
 }
 
-iface::dom::Text*
-CDA_Document::createTextNode(const wchar_t* data)
+already_AddRefd<iface::dom::Text>
+CDA_Document::createTextNode(const std::wstring& data)
   throw(std::exception&)
 {
   CDA_Text* tn = new CDA_Text(this);
@@ -2690,8 +2632,8 @@ CDA_Document::createTextNode(const wchar_t* data)
   return tn;
 }
 
-iface::dom::Comment*
-CDA_Document::createComment(const wchar_t* data)
+already_AddRefd<iface::dom::Comment>
+CDA_Document::createComment(const std::wstring& data)
   throw(std::exception&)
 {
   CDA_Comment* cn = new CDA_Comment(this);
@@ -2699,8 +2641,8 @@ CDA_Document::createComment(const wchar_t* data)
   return cn;
 }
 
-iface::dom::CDATASection*
-CDA_Document::createCDATASection(const wchar_t* data)
+already_AddRefd<iface::dom::CDATASection>
+CDA_Document::createCDATASection(const std::wstring& data)
   throw(std::exception&)
 {
   CDA_CDATASection* cds = new CDA_CDATASection(this);
@@ -2708,19 +2650,19 @@ CDA_Document::createCDATASection(const wchar_t* data)
   return cds;
 }
 
-iface::dom::ProcessingInstruction*
+already_AddRefd<iface::dom::ProcessingInstruction>
 CDA_Document::createProcessingInstruction
 (
- const wchar_t* target,
- const wchar_t* data
+ const std::wstring& target,
+ const std::wstring& data
 )
   throw(std::exception&)
 {
   return new CDA_ProcessingInstruction(this, target, data);
 }
 
-iface::dom::Attr*
-CDA_Document::createAttribute(const wchar_t* name)
+already_AddRefd<iface::dom::Attr>
+CDA_Document::createAttribute(const std::wstring& name)
   throw(std::exception&)
 {
   CDA_Attr* at = new CDA_Attr(this);
@@ -2728,8 +2670,8 @@ CDA_Document::createAttribute(const wchar_t* name)
   return at;
 }
 
-iface::dom::EntityReference*
-CDA_Document::createEntityReference(const wchar_t* name)
+already_AddRefd<iface::dom::EntityReference>
+CDA_Document::createEntityReference(const std::wstring& name)
   throw(std::exception&)
 {
   CDA_EntityReference* er = new CDA_EntityReference(this);
@@ -2737,14 +2679,14 @@ CDA_Document::createEntityReference(const wchar_t* name)
   return er;
 }
 
-iface::dom::NodeList*
-CDA_Document::getElementsByTagName(const wchar_t* tagname)
+already_AddRefd<iface::dom::NodeList>
+CDA_Document::getElementsByTagName(const std::wstring& tagname)
   throw(std::exception&)
 {
   return new CDA_NodeListDFSSearch(this, tagname);
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_Document::importNode(iface::dom::Node* importedNode, bool deep)
   throw(std::exception&)
 {
@@ -2765,14 +2707,14 @@ CDA_Document::importNode(iface::dom::Node* importedNode, bool deep)
   return n;
 }
 
-iface::dom::Element*
-CDA_Document::createElementNS(const wchar_t* namespaceURI,
-                              const wchar_t* qualifiedName)
+already_AddRefd<iface::dom::Element>
+CDA_Document::createElementNS(const std::wstring& namespaceURI,
+                              const std::wstring& qualifiedName)
   throw(std::exception&)
 {
-  const wchar_t* pos = wcschr(qualifiedName, L':');
+  const wchar_t* pos = wcschr(qualifiedName.c_str(), L':');
   if (pos == NULL)
-    pos = qualifiedName;
+    pos = qualifiedName.c_str();
   else
     pos++;
   CDA_Element* el = CDA_NewElement(this, namespaceURI, pos);
@@ -2782,15 +2724,15 @@ CDA_Document::createElementNS(const wchar_t* namespaceURI,
   return el;
 }
 
-iface::dom::Attr*
-CDA_Document::createAttributeNS(const wchar_t* namespaceURI,
-                                const wchar_t* qualifiedName)
+already_AddRefd<iface::dom::Attr>
+CDA_Document::createAttributeNS(const std::wstring& namespaceURI,
+                                const std::wstring& qualifiedName)
   throw(std::exception&)
 {
   CDA_Attr* at = new CDA_Attr(mDocument);
   at->mNamespaceURI = namespaceURI;
   at->mNodeName = qualifiedName;
-  const wchar_t* pos = wcschr(qualifiedName, L':');
+  const wchar_t* pos = wcschr(qualifiedName.c_str(), L':');
   if (pos == NULL)
     at->mLocalName = qualifiedName;
   else
@@ -2798,38 +2740,38 @@ CDA_Document::createAttributeNS(const wchar_t* namespaceURI,
   return at;
 }
 
-iface::dom::NodeList*
-CDA_Document::getElementsByTagNameNS(const wchar_t* namespaceURI,
-                                     const wchar_t* localName)
+already_AddRefd<iface::dom::NodeList>
+CDA_Document::getElementsByTagNameNS(const std::wstring& namespaceURI,
+                                     const std::wstring& localName)
   throw(std::exception&)
 {
   return new CDA_NodeListDFSSearch(this, namespaceURI, localName);
 }
 
-iface::dom::Element*
-CDA_Document::getElementById(const wchar_t* elementId)
+already_AddRefd<iface::dom::Element>
+CDA_Document::getElementById(const std::wstring& elementId)
   throw(std::exception&)
 {
   return searchForElementById(elementId);
 }
 
-iface::events::Event*
-CDA_Document::createEvent(const wchar_t* domEventType)
+already_AddRefd<iface::events::Event>
+CDA_Document::createEvent(const std::wstring& domEventType)
   throw(std::exception&)
 {
-  if (wcscmp(domEventType, L"DOMSubtreeModified") &&
-      wcscmp(domEventType, L"DOMNodeInserted") &&
-      wcscmp(domEventType, L"DOMNodeRemoved") &&
-      wcscmp(domEventType, L"DOMNodeRemovedFromDocument") &&
-      wcscmp(domEventType, L"DOMNodeInsertedIntoDocument") &&
-      wcscmp(domEventType, L"DOMAttrModified") &&
-      wcscmp(domEventType, L"DOMCharacterDataModified"))
+  if (domEventType != L"DOMSubtreeModified" &&
+      domEventType != L"DOMNodeInserted" &&
+      domEventType != L"DOMNodeRemoved" &&
+      domEventType != L"DOMNodeRemovedFromDocument" &&
+      domEventType != L"DOMNodeInsertedIntoDocument" &&
+      domEventType != L"DOMAttrModified" &&
+      domEventType != L"DOMCharacterDataModified")
     throw iface::dom::DOMException();
 
   return new CDA_MutationEvent();
 }
 
-CDA_Node*
+already_AddRefd<CDA_Node>
 CDA_Document::shallowCloneNode(CDA_Document* aDoc)
   throw(std::exception&)
 {
@@ -2840,8 +2782,8 @@ CDA_Document::shallowCloneNode(CDA_Document* aDoc)
   return ca;
 }
 
-iface::dom::Element*
-CDA_Document::searchForElementById(const wchar_t* elementId)
+already_AddRefd<iface::dom::Element>
+CDA_Document::searchForElementById(const std::wstring& elementId)
 {
   std::list<CDA_Node*>::iterator i = mNodeList.begin();
   for (; i != mNodeList.end(); i++)
@@ -2854,29 +2796,29 @@ CDA_Document::searchForElementById(const wchar_t* elementId)
   return NULL;
 }
 
-wchar_t*
+std::wstring
 CDA_MutationEvent::type()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mType.c_str());
+  return mType;
 }
 
-iface::events::EventTarget*
+already_AddRefd<iface::events::EventTarget>
 CDA_MutationEvent::target()
   throw(std::exception&)
 {
   if (mTarget != NULL)
     mTarget->add_ref();
-  return mTarget;
+  return mTarget.getPointer();
 }
 
-iface::events::EventTarget*
+already_AddRefd<iface::events::EventTarget>
 CDA_MutationEvent::currentTarget()
   throw(std::exception&)
 {
   if (mCurrentTarget != NULL)
     mCurrentTarget->add_ref();
-  return mCurrentTarget;
+  return mCurrentTarget.getPointer();
 }
 
 uint16_t
@@ -2924,7 +2866,7 @@ CDA_MutationEvent::preventDefault()
 void
 CDA_MutationEvent::initEvent
 (
- const wchar_t* eventTypeArg, bool canBubbleArg, bool cancelableArg
+ const std::wstring& eventTypeArg, bool canBubbleArg, bool cancelableArg
 )
   throw(std::exception&)
 {
@@ -2933,34 +2875,34 @@ CDA_MutationEvent::initEvent
   mCancelable = cancelableArg;
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_MutationEvent::relatedNode()
   throw(std::exception&)
 {
   if (mRelatedNode != NULL)
     mRelatedNode->add_ref();
-  return mRelatedNode;
+  return mRelatedNode.getPointer();
 }
 
-wchar_t*
+std::wstring
 CDA_MutationEvent::prevValue()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mPrevValue.c_str());
+  return mPrevValue;
 }
 
-wchar_t*
+std::wstring
 CDA_MutationEvent::newValue()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mNewValue.c_str());
+  return mNewValue;
 }
 
-wchar_t*
+std::wstring
 CDA_MutationEvent::attrName()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mAttrName.c_str());
+  return mAttrName;
 }
 
 uint16_t
@@ -2973,10 +2915,10 @@ CDA_MutationEvent::attrChange()
 void
 CDA_MutationEvent::initMutationEvent
 (
- const wchar_t* typeArg, bool canBubbleArg,
+ const std::wstring& typeArg, bool canBubbleArg,
  bool cancelableArg, iface::dom::Node* relatedNodeArg,
- const wchar_t* prevValueArg, const wchar_t* newValueArg,
- const wchar_t* attrNameArg, uint16_t attrChangeArg
+ const std::wstring& prevValueArg, const std::wstring& newValueArg,
+ const std::wstring& attrNameArg, uint16_t attrChangeArg
 )
   throw(std::exception&)
 {

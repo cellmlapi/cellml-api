@@ -174,13 +174,11 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
 
   CPPUNIT_ASSERT(mr);
 
-  wchar_t* str = mr->compileErrors();
-  CPPUNIT_ASSERT(!wcscmp(str, L""));
-  free(str);
+  std::wstring str = mr->compileErrors();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
 
   str = mr->expression();
-  CPPUNIT_ASSERT(!wcscmp(str, L"first_derivative_of_glcC*0.00100000==1000.00*(1000.00*delta_Glc_C_rxn1*0.00100000+delta_Glc_C_rxn2)"));
-  free(str);
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"first_derivative_of_glcC*0.00100000==1000.00*(1000.00*delta_Glc_C_rxn1*0.00100000+delta_Glc_C_rxn2)"), str);
 
   uint32_t l = mr->supplementariesLength();
   CPPUNIT_ASSERT_EQUAL(0, (int)l);
@@ -209,7 +207,7 @@ L"xor: #prec[25(30)](#expr1 != 0) ^ (#expr2 != 0)\r\n"
   var = cvi->nextVariable();
   CPPUNIT_ASSERT(var != vglcC);
   var->release_ref();
-  CPPUNIT_ASSERT(!cvi->nextVariable());
+  CPPUNIT_ASSERT(!cvi->nextVariable().getPointer());
   cvi->release_ref();
 
   CPPUNIT_ASSERT_EQUAL(1, (int)mr->getDiffDegree(vglcC));

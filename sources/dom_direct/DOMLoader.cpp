@@ -259,12 +259,11 @@ WrapXML2Node
         el->attributeMapNS.insert
           (
            std::pair<CDA_Element::QualifiedName, CDA_Attr*>
-           (CDA_Element::QualifiedName(CDA_wcsdup(nsURI.c_str()),
-                                       CDA_wcsdup(name.c_str())), cattr)
+           (CDA_Element::QualifiedName(nsURI.c_str(), name.c_str()), cattr)
           );
         el->attributeMap.insert(std::pair<CDA_Element::LocalName, CDA_Attr*>
                                 (CDA_Element::LocalName
-                                 (CDA_wcsdup(cattr->mNodeName.c_str())), cattr));
+                                 (cattr->mNodeName), cattr));
         el->insertBeforePrivate(cattr, NULL)->release_ref();
       }
 
@@ -295,12 +294,12 @@ WrapXML2Node
         el->attributeMapNS.insert
           (
            std::pair<CDA_Element::QualifiedName, CDA_Attr*>
-           (CDA_Element::QualifiedName(CDA_wcsdup(nsURI.c_str()),
-                                       CDA_wcsdup(name.c_str())), cattr)
+           (CDA_Element::QualifiedName(nsURI.c_str(),
+                                       name.c_str()), cattr)
           );
         el->attributeMap.insert(std::pair<CDA_Element::LocalName, CDA_Attr*>
                                 (CDA_Element::LocalName
-                                 (CDA_wcsdup(cattr->mNodeName.c_str())), cattr));
+                                 (cattr->mNodeName.c_str()), cattr));
         el->insertBeforePrivate(cattr, NULL)->release_ref();
       }
     }
@@ -1232,12 +1231,12 @@ static void CDA_XMLStructuredHandler
 iface::dom::Document*
 CDA_DOMImplementation::loadDocument
 (
- const wchar_t* aURL,
+ const std::wstring& aURL,
  std::wstring& aErrorMessage
 )
   throw(std::exception&)
 {
-  char* URL = CDA_wchar_to_UTF8(aURL);
+  char* URL = CDA_wchar_to_UTF8(aURL.c_str());
   char* protRestrict = getenv("CELLML_RESTRICT_PROTOCOL");
   if (protRestrict != NULL)
   {
@@ -1306,12 +1305,12 @@ CDA_DOMImplementation::loadDocument
 iface::dom::Document*
 CDA_DOMImplementation::loadDocumentFromText
 (
- const wchar_t* aText,
+ const std::wstring& aText,
  std::wstring& aErrorMessage
 )
   throw(std::exception&)
 {
-  char* text = CDA_wchar_to_UTF8(aText);
+  char* text = CDA_wchar_to_UTF8(aText.c_str());
 
   CDA_PartialLoad pl = { this, aErrorMessage };
   xmlParserCtxtPtr ctxt =

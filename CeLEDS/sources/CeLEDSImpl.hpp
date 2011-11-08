@@ -18,13 +18,13 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::LanguageDictionary);
 
-  CDA_LanguageDictionary(const wchar_t* nameSpace, iface::dom::Element *DictionaryXML) throw();
+  CDA_LanguageDictionary(const std::wstring& nameSpace, iface::dom::Element *DictionaryXML) throw();
   ~CDA_LanguageDictionary() {};
 
-  wchar_t* getValue(const wchar_t* keyName) 
+  std::wstring getValue(const std::wstring& keyName) 
     throw(std::exception&);
 
-  iface::dom::NodeList* getMappings()
+  already_AddRefd<iface::dom::NodeList> getMappings()
     throw(std::exception&);
 
 private:
@@ -43,18 +43,18 @@ public:
   CDA_DictionaryGenerator(iface::dom::Document *LangXML) throw();
   ~CDA_DictionaryGenerator() {};
 
-  iface::cellml_services::LanguageDictionary* 
-  getDictionary(const wchar_t* dictionaryNameSpace) 
+  already_AddRefd<iface::cellml_services::LanguageDictionary>
+  getDictionary(const std::wstring& dictionaryNameSpace) 
     throw(std::exception&);
 
-  iface::dom::Element* 
-  getElementNS(const wchar_t* nameSpace, const wchar_t* elementName)
+  already_AddRefd<iface::dom::Element>
+  getElementNS(const std::wstring& nameSpace, const std::wstring& elementName)
     throw(std::exception&);
 
-  iface::cellml_services::MaLaESTransform* getMalTransform() 
+  already_AddRefd<iface::cellml_services::MaLaESTransform> getMalTransform() 
     throw(std::exception&);
 
-  wchar_t* padMalString(const wchar_t* inString) 
+  std::wstring padMalString(const std::wstring& inString) 
     throw(std::exception&);
 
 private:
@@ -72,13 +72,13 @@ public:
   CDA_CeLEDSBootstrap() : mLoadError(L"") {};
   ~CDA_CeLEDSBootstrap() {};
 
-  iface::cellml_services::DictionaryGenerator* createDictGenerator(const wchar_t* URL)
+  already_AddRefd<iface::cellml_services::DictionaryGenerator> createDictGenerator(const std::wstring& URL)
     throw(std::exception&);
 
-  iface::cellml_services::DictionaryGenerator* createDictGeneratorFromText(const wchar_t* XMLText)
+  already_AddRefd<iface::cellml_services::DictionaryGenerator> createDictGeneratorFromText(const std::wstring& XMLText)
     throw(std::exception&);
 
-  wchar_t* loadError() throw();
+  std::wstring loadError() throw();
 
 private:
   std::wstring mLoadError;

@@ -89,18 +89,18 @@ CDAMaLaESResult::~CDAMaLaESResult()
 {
 }
 
-wchar_t*
+std::wstring
 CDAMaLaESResult::compileErrors()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mError.c_str());
+  return mError;
 }
 
-wchar_t*
+std::wstring
 CDAMaLaESResult::expression()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mActive.c_str());
+  return mActive;
 }
 
 uint32_t
@@ -110,13 +110,13 @@ CDAMaLaESResult::supplementariesLength()
   return mSupplementaries.size();
 }
 
-wchar_t*
+std::wstring
 CDAMaLaESResult::getSupplementary(uint32_t aIndex)
   throw(std::exception&)
 {
   if (aIndex >= mSupplementaries.size())
-    return CDA_wcsdup(L"");
-  return CDA_wcsdup(mSupplementaries[aIndex].c_str());
+    return L"";
+  return mSupplementaries[aIndex];
 }
 
 bool
@@ -149,7 +149,7 @@ public:
   {
   }
 
-  iface::cellml_api::CellMLVariable*
+  already_AddRefd<iface::cellml_api::CellMLVariable>
   nextVariable()
     throw(std::exception&)
   {
@@ -162,7 +162,7 @@ public:
     return v;
   }
 
-  iface::cellml_api::CellMLElement*
+  already_AddRefd<iface::cellml_api::CellMLElement>
   next()
     throw(std::exception&)
   {
@@ -191,11 +191,11 @@ public:
   {
   }
 
-  iface::cellml_api::CellMLVariable*
+  already_AddRefd<iface::cellml_api::CellMLVariable>
   variable() throw(std::exception&)
   {
     mVar->add_ref();
-    return mVar;
+    return mVar.getPointer();
   }
 
   uint32_t
@@ -244,7 +244,7 @@ public:
   {
   }
 
-  iface::cellml_services::DegreeVariable*
+  already_AddRefd<iface::cellml_services::DegreeVariable>
   nextDegreeVariable()
     throw(std::exception&)
   {
@@ -268,28 +268,28 @@ private:
     iterator mIt;
 };
 
-iface::cellml_api::CellMLVariableIterator*
+already_AddRefd<iface::cellml_api::CellMLVariableIterator>
 CDAMaLaESResult::iterateInvolvedVariables()
   throw(std::exception&)
 {
   return new CDAMaLaESInvolvedVariableIterator(this, mInvolved);
 }
 
-iface::cellml_api::CellMLVariableIterator*
+already_AddRefd<iface::cellml_api::CellMLVariableIterator>
 CDAMaLaESResult::iterateBoundVariables()
   throw(std::exception&)
 {
   return new CDAMaLaESInvolvedVariableIterator(this, mBoundVars);
 }
 
-iface::cellml_api::CellMLVariableIterator*
+already_AddRefd<iface::cellml_api::CellMLVariableIterator>
 CDAMaLaESResult::iterateLocallyBoundVariables()
   throw(std::exception&)
 {
   return new CDAMaLaESInvolvedVariableIterator(this, mLocallyBoundVars);
 }
 
-iface::cellml_services::DegreeVariableIterator*
+already_AddRefd<iface::cellml_services::DegreeVariableIterator>
 CDAMaLaESResult::iterateInvolvedVariablesByDegree()
   throw(std::exception&)
 {
@@ -919,7 +919,7 @@ CDAMaLaESResult::getDiffDegree(iface::cellml_api::CellMLVariable* aVar)
   return (*i).second;
 }
 
-CDAMaLaESTransform::CDAMaLaESTransform(const wchar_t* aSpec)
+CDAMaLaESTransform::CDAMaLaESTransform(const std::wstring& aSpec)
   : mVariablesFromSource(true)
 {
   stringpairlist tags;
@@ -953,14 +953,14 @@ CDAMaLaESTransform::~CDAMaLaESTransform()
 {
 }
 
-wchar_t*
+std::wstring
 CDAMaLaESTransform::compileErrors()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mMessage.c_str());
+  return mMessage;
 }
 
-iface::cellml_services::MaLaESResult*
+already_AddRefd<iface::cellml_services::MaLaESResult>
 CDAMaLaESTransform::transform
 (
  iface::cellml_services::CeVAS* aCeVAS,
@@ -1109,7 +1109,7 @@ CDAMaLaESTransform::transform
 
   r->finishTransform();
   r->add_ref();
-  return r;
+  return r.getPointer();
 }
 
 void
@@ -1337,9 +1337,9 @@ CDAMaLaESTransform::AppendCommandToProgram
 }
 
 void
-CDAMaLaESTransform::GetTagsForSpec(const wchar_t* aSpec, stringpairlist& aTags)
+CDAMaLaESTransform::GetTagsForSpec(const std::wstring& aSpec, stringpairlist& aTags)
 {
-  const wchar_t* idx = aSpec;
+  std::wstring::const_iterator idx = aSpec.begin();
   enum
   {
     EXPECT_TAG,
@@ -1488,7 +1488,7 @@ CDAMaLaESTransform::GetTagsForSpec(const wchar_t* aSpec, stringpairlist& aTags)
 }
 
 void
-CDAMaLaESTransform::ParseError(const wchar_t* msg, size_t lineno)
+CDAMaLaESTransform::ParseError(const std::wstring& msg, size_t lineno)
 {
   std::wstringstream wss;
   wss << L"Parse error in MAL specification line " << lineno
@@ -1497,7 +1497,7 @@ CDAMaLaESTransform::ParseError(const wchar_t* msg, size_t lineno)
 }
 
 void
-CDAMaLaESTransform::OpError(const wchar_t* msg, const std::wstring& op)
+CDAMaLaESTransform::OpError(const std::wstring& msg, const std::wstring& op)
 {
   mMessage += L"Invalid MAL operator definition ";
   mMessage += op;
@@ -1785,9 +1785,7 @@ CDAMaLaESTransform::RunTransformOnOperator
     DECLARE_QUERY_INTERFACE_OBJREF(pds, op, mathml_dom::MathMLPredefinedSymbol);
     if (pds == NULL)
       throw MaLaESError(L"Found a MathML apply with an invalid operator.");
-    wchar_t* str = pds->symbolName();
-    opName = str;
-    free(str);
+    opName = pds->symbolName();
   }
 
   l = apply->nArguments();
@@ -1883,8 +1881,8 @@ CDAMaLaESBootstrap::~CDAMaLaESBootstrap()
 {
 }
 
-iface::cellml_services::MaLaESTransform*
-CDAMaLaESBootstrap::compileTransformer(const wchar_t* aSpec)
+already_AddRefd<iface::cellml_services::MaLaESTransform>
+CDAMaLaESBootstrap::compileTransformer(const std::wstring& aSpec)
   throw(std::exception&)
 {
   return new CDAMaLaESTransform(aSpec);
@@ -1983,7 +1981,7 @@ CDAMaLaESTransform::stripPassthrough(iface::cellml_api::Model* aModel)
   }
 }
 
-iface::cellml_services::MaLaESBootstrap*
+already_AddRefd<iface::cellml_services::MaLaESBootstrap>
 CreateMaLaESBootstrap()
 {
   return new CDAMaLaESBootstrap();

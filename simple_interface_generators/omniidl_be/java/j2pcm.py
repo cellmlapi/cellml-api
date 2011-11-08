@@ -195,10 +195,10 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppMod.inc_indent()
         self.cppMod.out('jclass thisclazz = env->GetObjectClass(thisptr);')
         self.cppMod.out('jfieldID fid = env->GetFieldID(thisclazz, "nativePtr", "J");')
-        self.cppMod.out('char* oid1 = reinterpret_cast<' + self.cxxclass +
+        self.cppMod.out('std::string oid1 = reinterpret_cast<' + self.cxxclass +
                         '*>(env->GetLongField(thisptr, fid))->objid();')
         self.cppMod.out('jint hash = 0;')
-        self.cppMod.out('size_t l = strlen(oid1);');
+        self.cppMod.out('size_t l = oid1.size();');
         self.cppMod.out('for (uint32_t i = 0; i < l; i++)')
         self.cppMod.out('{')
         self.cppMod.inc_indent()
@@ -206,7 +206,6 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppMod.out('hash ^= (oid1[i] << n) | (oid1[i] >> (32 - n));')
         self.cppMod.dec_indent()
         self.cppMod.out('}')
-        self.cppMod.out('free(oid1);')
         self.cppMod.out('return hash;')
         self.cppMod.dec_indent()
         self.cppMod.out('}')
@@ -298,8 +297,6 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         if (rtype != None and rtypeName != 'void'):
             needRet = 1
             self.cppMod.out(rtype.pcmType(jnutils.Type.DERIVE) + ' _pcm_ret;')
-            if rtype.needLength():
-                self.cppMod.out('uint32_t _length__pcm_ret;')
         else:
             needRet = 0
 
@@ -309,11 +306,6 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             indirect = ''
             if dirn != jnutils.Type.IN:
                 indirect = '&'
-            if ti.needLength():
-                if pcmParams != '':
-                    pcmParams = pcmParams + ', '
-                self.cppMod.out('uint32_t _length__pcm_' + pname + ';')
-                pcmParams = pcmParams + indirect + '_length__pcm_' + pname
             if pcmParams != '':
                 pcmParams = pcmParams + ', '
             self.cppMod.out(ti.pcmType(jnutils.Type.DERIVE) + ' _pcm_' + pname + ';')
@@ -321,11 +313,6 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             if dirn == jnutils.Type.OUT:
                 continue
             self.cppMod.out(ti.convertToPCM(pname, '_pcm_' + pname, dirn != jnutils.Type.IN))
-
-        if needRet and rtype.needLength():
-            if pcmParams != '':
-                pcmParams = pcmParams + ', '
-            pcmParams = pcmParams + '&_length__pcm_ret';
 
         # Next, we need to extract the 'this' pointer...
         self.cppMod.out(self.cxxclass + '* pcm_this;')

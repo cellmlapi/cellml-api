@@ -24,7 +24,8 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::VACSService);
 
-  iface::cellml_services::CellMLValidityErrorSet* validateModel
+  already_AddRefd<iface::cellml_services::CellMLValidityErrorSet>
+  validateModel
     (iface::cellml_api::Model* aModel) throw ();
   uint32_t getPositionInXML(iface::dom::Node* aNode,
                             uint32_t aNodalOffset,
@@ -70,7 +71,7 @@ public:
   CDA_CellMLValidityErrorSet();
   virtual ~CDA_CellMLValidityErrorSet() throw();
   uint32_t nValidityErrors() throw();
-  iface::cellml_services::CellMLValidityError* getValidityError(uint32_t aIndex)
+  already_AddRefd<iface::cellml_services::CellMLValidityError> getValidityError(uint32_t aIndex)
     throw(std::exception&);
 
   // Does not follow PCM rules (takes ownership of the CellMLValidityError, to
@@ -95,9 +96,9 @@ public:
     throw();
   virtual ~CDA_CellMLValidityErrorBase() throw();
   
-  wchar_t* description() throw();
+  std::wstring description() throw();
   uint32_t nSupplements() throw();
-  iface::cellml_services::CellMLValidityError* getSupplement(uint32_t nSupplements)
+  already_AddRefd<iface::cellml_services::CellMLValidityError> getSupplement(uint32_t nSupplements)
     throw(std::exception&);
   bool isWarningOnly() throw();
 
@@ -149,7 +150,7 @@ public:
     throw();
   virtual ~CDA_CellMLRepresentationValidityError() throw() {}
 
-  iface::dom::Node* errorNode() throw();
+  already_AddRefd<iface::dom::Node> errorNode() throw();
   uint32_t errorNodalOffset() throw();
 
 private:
@@ -180,7 +181,7 @@ public:
     throw();
   virtual ~CDA_CellMLSemanticValidityError() throw() {}
 
-  iface::cellml_api::CellMLElement* errorElement() throw();
+  already_AddRefd<iface::cellml_api::CellMLElement> errorElement() throw();
 
 private:
   ObjRef<iface::cellml_api::CellMLElement> mElement;
@@ -278,7 +279,7 @@ class ModelValidation
 public:
   ModelValidation(iface::cellml_api::Model* aModel);
   
-  iface::cellml_services::CellMLValidityErrorSet* validate();
+  already_AddRefd<iface::cellml_services::CellMLValidityErrorSet> validate();
 private:
   enum ApplyInputType
   {
@@ -348,24 +349,24 @@ private:
   void validatePerImportComponent(iface::cellml_api::ImportComponent*
                                   aComponent);
   void validatePerImportUnits(iface::cellml_api::ImportUnits* aUnits);
-  iface::mathml_dom::MathMLElement*
+  already_AddRefd<iface::mathml_dom::MathMLElement>
   extractSemanticsValidateAnnotation(iface::dom::Element* aEl);
-  iface::cellml_services::CanonicalUnitRepresentation*
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
   validateMathMLExpression(iface::cellml_api::CellMLElement* aContext,
                            iface::dom::Element* aEl);
-  iface::cellml_services::CanonicalUnitRepresentation*
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
   validateChildMathMLExpression(iface::cellml_api::CellMLElement* aContext,
                                 iface::dom::Element* aEl);
-  iface::cellml_services::CanonicalUnitRepresentation*
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
   validateMathMLConstant(iface::cellml_api::CellMLElement* aContext,
                          iface::mathml_dom::MathMLElement* aEl);
-  iface::cellml_services::CanonicalUnitRepresentation*
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
   validateMathMLCI(iface::cellml_api::CellMLElement* aContext,
                    iface::mathml_dom::MathMLElement* aEl);
-  iface::cellml_services::CanonicalUnitRepresentation*
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
   validateMathMLPiecewise(iface::cellml_api::CellMLElement* aContext,
                           iface::mathml_dom::MathMLElement* aEl);
-  iface::cellml_services::CanonicalUnitRepresentation*
+  already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
   validateMathMLApply(iface::cellml_api::CellMLElement* aContext,
                       iface::mathml_dom::MathMLElement* aEl);
 

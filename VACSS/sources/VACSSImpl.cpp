@@ -46,7 +46,7 @@ CDA_CellMLValidityErrorSet::nValidityErrors()
   return mErrors.size();
 }
 
-iface::cellml_services::CellMLValidityError*
+already_AddRefd<iface::cellml_services::CellMLValidityError>
 CDA_CellMLValidityErrorSet::getValidityError(uint32_t aIndex)
   throw(std::exception&)
 {
@@ -84,11 +84,11 @@ CDA_CellMLValidityErrorBase::~CDA_CellMLValidityErrorBase()
 {
 }
 
-wchar_t*
+std::wstring
 CDA_CellMLValidityErrorBase::description()
   throw()
 {
-  return CDA_wcsdup(mDescription.c_str());
+  return mDescription;
 }
 
 uint32_t
@@ -101,14 +101,16 @@ CDA_CellMLValidityErrorBase::nSupplements()
   return 0;
 }
 
-iface::cellml_services::CellMLValidityError*
+already_AddRefd<iface::cellml_services::CellMLValidityError>
 CDA_CellMLValidityErrorBase::getSupplement(uint32_t supplement)
   throw(std::exception&)
 {
   if (supplement > 0)
     return NULL;
 
-  return mSupplement;
+  if (mSupplement)
+    mSupplement->add_ref();
+  return mSupplement.getPointer();
 }
 
 bool
@@ -141,14 +143,14 @@ CDA_CellMLRepresentationValidityError::CDA_CellMLRepresentationValidityError
 {
 }
 
-iface::dom::Node*
+already_AddRefd<iface::dom::Node>
 CDA_CellMLRepresentationValidityError::errorNode()
   throw()
 {
   if (mNode)
     mNode->add_ref();
 
-  return mNode;
+  return mNode.getPointer();
 }
 
 uint32_t
@@ -170,14 +172,14 @@ CDA_CellMLSemanticValidityError::CDA_CellMLSemanticValidityError
 {
 }
 
-iface::cellml_api::CellMLElement*
+already_AddRefd<iface::cellml_api::CellMLElement>
 CDA_CellMLSemanticValidityError::errorElement()
   throw()
 {
   if (mElement)
     mElement->add_ref();
 
-  return mElement;
+  return mElement.getPointer();
 }
 
 const ModelValidation::ApplyOperatorInformation
@@ -285,7 +287,7 @@ ModelValidation::ModelValidation(iface::cellml_api::Model* aModel)
 #define REPR_WARNING(message, node) \
   mErrors->adoptValidityError(new CDA_CellMLRepresentationValidityError(message, node, 0, true))
 
-iface::cellml_services::CellMLValidityErrorSet*
+already_AddRefd<iface::cellml_services::CellMLValidityErrorSet>
 ModelValidation::validate()
 {
   mErrors = already_AddRefd<CDA_CellMLValidityErrorSet>
@@ -342,7 +344,7 @@ ModelValidation::validate()
 
   if (mErrors != NULL)
     mErrors->add_ref();
-  return mErrors;
+  return mErrors.getPointer();
 }
 
 static const wchar_t* kCellMLNamespaces[] =
@@ -1191,11 +1193,7 @@ ModelValidation::validateElementRepresentation
     RETURN_INTO_WSTRING(ns, atn->namespaceURI());
     RETURN_INTO_WSTRING(ln, atn->localName());
     if (ln == L"")
-    {
-      wchar_t* tmp = atn->nodeName();
-      ln = tmp;
-      free(tmp);
-    }
+      ln = atn->nodeName();
 
     if (ns == ((mCellMLVersion == kCellML_1_0) ?
                CELLML_1_1_NS : CELLML_1_0_NS))
@@ -1303,11 +1301,7 @@ ModelValidation::validateElementRepresentation
         RETURN_INTO_WSTRING(ns, cel->namespaceURI());
         RETURN_INTO_WSTRING(ln, cel->localName());
         if (ln == L"")
-        {
-          wchar_t* tmp = cel->nodeName();
-          ln = tmp;
-          free(tmp);
-        }
+          ln = cel->nodeName();
 
         if (ns == ((mCellMLVersion == kCellML_1_0) ?
                    CELLML_1_1_NS : CELLML_1_0_NS))
@@ -1362,9 +1356,7 @@ ModelValidation::validateElementRepresentation
     case iface::dom::Node::CDATA_SECTION_NODE:
       {
         DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
-        wchar_t* tmp = tn->data();
-        textData += tmp;
-        free(tmp);
+        textData += tn->data();
       }
       break;
 
@@ -1472,11 +1464,7 @@ ModelValidation::validateRelationshipRef(iface::dom::Element* aRR)
     RETURN_INTO_OBJREF(n, iface::dom::Node, nnm->item(i));
     RETURN_INTO_WSTRING(ln, n->localName());
     if (ln == L"")
-    {
-      wchar_t* str = n->nodeName();
-      ln = str;
-      free(str);
-    }
+      ln = n->nodeName();
     RETURN_INTO_WSTRING(ns, n->namespaceURI());
 
     if (ln == L"relationship")
@@ -1924,9 +1912,7 @@ ModelValidation::validateMaths(iface::cellml_api::CellMLElement* aContext,
       if (el == NULL)
         continue;
 
-      wchar_t *tmp = el->localName();
-      ln = tmp;
-      free(tmp);
+      ln = el->localName();
     }
 
     if (ln != L"apply")
@@ -1994,7 +1980,7 @@ ModelValidation::validateMaths(iface::cellml_api::CellMLElement* aContext,
   }
 }
 
-iface::mathml_dom::MathMLElement*
+already_AddRefd<iface::mathml_dom::MathMLElement>
 ModelValidation::extractSemanticsValidateAnnotation(iface::dom::Element* aEl)
 {
   ObjRef<iface::dom::Element> result;
@@ -2064,7 +2050,7 @@ ModelValidation::extractSemanticsValidateAnnotation(iface::dom::Element* aEl)
   return r;
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 ModelValidation::validateMathMLExpression
 (
  iface::cellml_api::CellMLElement* aContext,
@@ -2087,9 +2073,7 @@ ModelValidation::validateMathMLExpression
     // If it is a semantics element, extract the annotated MathML and continue...
     el = already_AddRefd<iface::mathml_dom::MathMLElement>
       (extractSemanticsValidateAnnotation(el));
-    wchar_t* tmp = el->localName();
-    ln = tmp;
-    free(tmp);
+    ln = el->localName();
   }
 
   if (el == NULL)
@@ -2152,7 +2136,7 @@ ModelValidation::validateMathMLExpression
   return NULL;
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 ModelValidation::validateChildMathMLExpression
 (
  iface::cellml_api::CellMLElement* aContext,
@@ -2227,10 +2211,10 @@ ModelValidation::validateChildMathMLExpression
   if (ret != NULL)
     ret->add_ref();
 
-  return ret;
+  return ret.getPointer();
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 ModelValidation::validateMathMLConstant
 (
  iface::cellml_api::CellMLElement* aContext,
@@ -2264,9 +2248,7 @@ ModelValidation::validateMathMLConstant
     case iface::dom::Node::CDATA_SECTION_NODE:
       {
         DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
-        wchar_t* tmp = tn->data();
-        txt += tmp;
-        free(tmp);
+        txt += tn->data();
       }
       break;
     default:
@@ -2501,10 +2483,10 @@ ModelValidation::validateMathMLConstant
   else
     u->add_ref();
 
-  return u;
+  return u.getPointer();
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 ModelValidation::validateMathMLCI
 (
  iface::cellml_api::CellMLElement* aContext,
@@ -2527,9 +2509,7 @@ ModelValidation::validateMathMLCI
     case iface::dom::Node::CDATA_SECTION_NODE:
       {
         DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
-        wchar_t* tmp = tn->data();
-        txt += tmp;
-        free(tmp);
+        txt += tn->data();
       }
       break;
     default:
@@ -2618,7 +2598,7 @@ ModelValidation::validateMathMLCI
   return mStrictCUSES->getUnitsByName(comp, vunits.c_str());
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 ModelValidation::validateMathMLPiecewise
 (
  iface::cellml_api::CellMLElement* aContext,
@@ -2816,7 +2796,7 @@ ModelValidation::validateMathMLPiecewise
 
   if (units != NULL)
     units->add_ref();
-  return units;
+  return units.getPointer();
 }
 
 template<class T>
@@ -2982,9 +2962,7 @@ ModelValidation::findConstantValue
   {
     el2 = already_AddRefd<iface::dom::Element>
       (extractSemanticsValidateAnnotation(el2));
-    wchar_t* str = el2->localName();
-    ln2 = str;
-    free(str);
+    ln2 = el2->localName();
   }
 
   if (ln2 != L"cn")
@@ -3048,7 +3026,7 @@ ModelValidation::findChildConstantValue
   return false;
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 ModelValidation::validateMathMLApply
 (
  iface::cellml_api::CellMLElement* aContext,
@@ -3353,9 +3331,7 @@ ModelValidation::validateMathMLApply
         {
           el3 = already_AddRefd<iface::dom::Element>
             (extractSemanticsValidateAnnotation(el3));
-          wchar_t* str = el3->localName();
-          ln3 = str;
-          free(str);
+          ln3 = el3->localName();
         }
 
         if (ln3 != L"cn")
@@ -3684,7 +3660,7 @@ ModelValidation::validateMathMLApply
     if (mDimensionlessUnits->compatibleWith(ubase))
     {
       mDimensionlessUnits->add_ref();
-      return mDimensionlessUnits;
+      return mDimensionlessUnits.getPointer();
     }
 
     if (!findConstantValue(*eli, expVal, L"exponent"))
@@ -3731,7 +3707,7 @@ ModelValidation::validateMathMLApply
     }
 
     finalUnits->add_ref();
-    return finalUnits;
+    return finalUnits.getPointer();
   }
   else if (ln == L"quotient" || ln == L"divide")
   {
@@ -3764,12 +3740,12 @@ ModelValidation::validateMathMLApply
   else if (opinfo->mOutput == AR_DIMENSIONLESS)
   {
     mDimensionlessUnits->add_ref();
-    return mDimensionlessUnits;
+    return mDimensionlessUnits.getPointer();
   }
   else if (opinfo->mOutput == AR_BOOLEAN)
   {
     mBooleanUnits->add_ref();
-    return mBooleanUnits;
+    return mBooleanUnits.getPointer();
   }
 
   // Unreachable...
@@ -3996,15 +3972,12 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
 
       if (comp1 != NULL && comp2 != NULL)
       {
-        char* s1 = comp1->objid();
-        char* s2 = comp2->objid();
+        std::string s1 = comp1->objid();
+        std::string s2 = comp2->objid();
 
-        int match = strcmp(s1, s2);
+        int match = strcmp(s1.c_str(), s2.c_str());
         std::string id1((match > 0) ? s1 : s2);
         std::string id2((match > 0) ? s2 : s1);
-
-        free(s1);
-        free(s2);
 
         if (match == 0)
         {
@@ -4678,9 +4651,7 @@ ModelValidation::validateGroupComponentRefs
     if (c == NULL)
       continue;
 
-    char* sobjid = c->objid();
-    std::string objid = sobjid;
-    free(sobjid);
+    std::string objid = c->objid();
 
     if (hasChildren)
     {
@@ -4744,7 +4715,7 @@ ModelValidation::validateSemantics()
   validatePerModel(mModel);
 }
 
-iface::cellml_services::CellMLValidityErrorSet*
+already_AddRefd<iface::cellml_services::CellMLValidityErrorSet>
 CDA_VACSService::validateModel(iface::cellml_api::Model* aModel)
   throw()
 {
@@ -5024,7 +4995,7 @@ CDA_VACSService::advanceCursorThroughString
   }
 }
 
-iface::cellml_services::VACSService*
+already_AddRefd<iface::cellml_services::VACSService>
 CreateVACSService(void)
 {
   return new CDA_VACSService();

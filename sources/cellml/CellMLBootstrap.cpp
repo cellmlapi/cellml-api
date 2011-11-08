@@ -23,7 +23,7 @@ CDA_CellMLBootstrap::CDA_CellMLBootstrap()
 {
 }
 
-iface::cellml_api::DOMModelLoader*
+already_AddRefd<iface::cellml_api::DOMModelLoader>
 CDA_CellMLBootstrap::modelLoader()
   throw(std::exception&)
 {
@@ -31,7 +31,7 @@ CDA_CellMLBootstrap::modelLoader()
   return new CDA_ModelLoader(dul);
 }
 
-iface::dom::DOMImplementation*
+already_AddRefd<iface::dom::DOMImplementation>
 CDA_CellMLBootstrap::domImplementation()
   throw(std::exception&)
 {
@@ -39,23 +39,23 @@ CDA_CellMLBootstrap::domImplementation()
   return domimpl;
 }
 
-iface::cellml_api::DOMURLLoader*
+already_AddRefd<iface::cellml_api::DOMURLLoader>
 CDA_CellMLBootstrap::localURLLoader()
   throw(std::exception&)
 {
   return new CDA_DOMURLLoader(domimpl);
 }
 
-iface::cellml_api::Model*
-CDA_CellMLBootstrap::createModel(const wchar_t* version)
+already_AddRefd<iface::cellml_api::Model>
+CDA_CellMLBootstrap::createModel(const std::wstring& version)
   throw(std::exception&)
 {
   ObjRef<iface::cellml_api::DOMURLLoader> ul =
     already_AddRefd<iface::cellml_api::DOMURLLoader>(localURLLoader());
   const wchar_t* ns;
-  if (!wcscmp(version, L"1.0"))
+  if (version == L"1.0")
     ns = L"http://www.cellml.org/cellml/1.0#";
-  else if (!wcscmp(version, L"1.1"))
+  else if (version == L"1.1")
     ns = L"http://www.cellml.org/cellml/1.1#";
   else // unrecognised CellML version requested.
     throw iface::cellml_api::CellMLException();
@@ -68,28 +68,28 @@ CDA_CellMLBootstrap::createModel(const wchar_t* version)
   return new CDA_Model(ul, doc, de);
 }
 
-wchar_t*
+std::wstring
 CDA_CellMLBootstrap::serialiseNode(iface::dom::Node* aNode)
   throw(std::exception&)
 {
   DOMWriter dw;
   std::wstring str;
   dw.writeNode(NULL, aNode, str);
-  return CDA_wcsdup(str.c_str());
+  return str;
 }
 
-wchar_t*
+std::wstring
 CDA_CellMLBootstrap::makeURLAbsolute
-(const wchar_t* aRelTo, const wchar_t* aRelURL) throw()
+(const std::wstring& aRelTo, const std::wstring& aRelURL) throw()
 {
   std::wstring aURL(aRelURL);
 
   // It may already be an absolute URL...
   if (aURL.find(L"://") != std::wstring::npos)
-    return CDA_wcsdup(aRelURL);
+    return aRelURL;
 
   if (aURL.find(L"://") != std::wstring::npos)
-    return CDA_wcsdup(aRelURL);
+    return aRelURL;
 
   std::wstring base(aRelTo);
 
@@ -99,7 +99,7 @@ CDA_CellMLBootstrap::makeURLAbsolute
     size_t pos = base.find(L"://");
     // Bail if we are trying to resolve relative to a relative URL...
     if (pos == std::wstring::npos)
-      return CDA_wcsdup(aRelURL);
+      return aRelURL;
 
     // Assume protocol://host/path, where host may be zero length e.g. file:///
     pos = base.find(L"/", pos + 3);
@@ -111,12 +111,12 @@ CDA_CellMLBootstrap::makeURLAbsolute
       absURL = base.substr(0, pos);
     absURL += aURL;
     aURL.assign(absURL);
-    return CDA_wcsdup(aURL.c_str());
+    return aURL;
   }
 
   // No point trying to deal with a zero-length base URI.
   if (base.length() == 0)
-    return CDA_wcsdup(aRelURL);
+    return aRelURL;
 
   // It is a completely relative URL.
   // See if base ends in a /...
@@ -189,7 +189,7 @@ CDA_CellMLBootstrap::makeURLAbsolute
   if (base[base.length() - 1] == L'/')
     aURL += L'/';
 
-  return CDA_wcsdup(aURL.c_str());
+  return aURL;
 }
 
 CDA_DOMURLLoader::CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl)
@@ -198,8 +198,8 @@ CDA_DOMURLLoader::CDA_DOMURLLoader(CellML_DOMImplementationBase* aDOMImpl)
   mDOMImpl->add_ref();
 }
 
-iface::dom::Document*
-CDA_DOMURLLoader::loadDocument(const wchar_t* URL)
+already_AddRefd<iface::dom::Document>
+CDA_DOMURLLoader::loadDocument(const std::wstring& URL)
   throw(std::exception&)
 {
   iface::dom::Document* d = mDOMImpl->loadDocument(URL, mLastError);
@@ -210,8 +210,8 @@ CDA_DOMURLLoader::loadDocument(const wchar_t* URL)
   return d;
 }
 
-iface::dom::Document*
-CDA_DOMURLLoader::loadDocumentFromText(const wchar_t* xmlText)
+already_AddRefd<iface::dom::Document>
+CDA_DOMURLLoader::loadDocumentFromText(const std::wstring& xmlText)
   throw(std::exception&)
 {
   iface::dom::Document* d = mDOMImpl->loadDocumentFromText(xmlText, mLastError);
@@ -225,7 +225,7 @@ CDA_DOMURLLoader::loadDocumentFromText(const wchar_t* xmlText)
 void
 CDA_DOMURLLoader::asyncLoadDocument
 (
- const wchar_t* URL,
+ const std::wstring& URL,
  iface::cellml_api::DocumentLoadedListener* listener
 )
   throw(std::exception&)
@@ -236,11 +236,11 @@ CDA_DOMURLLoader::asyncLoadDocument
   throw iface::cellml_api::CellMLException();
 }
 
-wchar_t*
+std::wstring
 CDA_DOMURLLoader::lastErrorMessage()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mLastError.c_str());
+  return mLastError;
 }
 
 CDA_ModelLoader::CDA_ModelLoader(iface::cellml_api::DOMURLLoader* aURLLoader)
@@ -249,8 +249,8 @@ CDA_ModelLoader::CDA_ModelLoader(iface::cellml_api::DOMURLLoader* aURLLoader)
   mURLLoader->add_ref();
 }
 
-iface::cellml_api::Model*
-CDA_ModelLoader::loadFromURL(const wchar_t* URL)
+already_AddRefd<iface::cellml_api::Model>
+CDA_ModelLoader::loadFromURL(const std::wstring& URL)
   throw(std::exception&)
 {
   return createFromDOM(URL, mURLLoader);
@@ -259,7 +259,7 @@ CDA_ModelLoader::loadFromURL(const wchar_t* URL)
 void
 CDA_ModelLoader::asyncLoadFromURL
 (
- const wchar_t* URL,
+ const std::wstring& URL,
  iface::cellml_api::ModelLoadedListener* listener
 )
   throw(std::exception&)
@@ -267,14 +267,14 @@ CDA_ModelLoader::asyncLoadFromURL
   throw iface::cellml_api::CellMLException();
 }
 
-wchar_t*
+std::wstring
 CDA_ModelLoader::lastErrorMessage()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mLastError.c_str());
+  return mLastError;
 }
 
-iface::cellml_api::Model*
+already_AddRefd<iface::cellml_api::Model>
 CDA_ModelLoader::createFromDOMDocument(iface::dom::Document* modelDoc)
   throw (std::exception&)
 {
@@ -313,8 +313,8 @@ CDA_ModelLoader::createFromDOMDocument(iface::dom::Document* modelDoc)
   }
 }
 
-iface::cellml_api::Model*
-CDA_ModelLoader::createFromText(const wchar_t* xmlText)
+already_AddRefd<iface::cellml_api::Model>
+CDA_ModelLoader::createFromText(const std::wstring& xmlText)
   throw (std::exception&)
 {
   ObjRef<iface::dom::Document> modelDoc;
@@ -325,17 +325,15 @@ CDA_ModelLoader::createFromText(const wchar_t* xmlText)
   }
   catch (...)
   {
-    wchar_t* str = mURLLoader->lastErrorMessage();
-    mLastError = str;
-    free(str);
+    mLastError = mURLLoader->lastErrorMessage();
     throw iface::cellml_api::CellMLException();
   }
 
   return createFromDOMDocument(modelDoc);
 }
 
-iface::cellml_api::Model*
-CDA_ModelLoader::createFromDOM(const wchar_t* URL,
+already_AddRefd<iface::cellml_api::Model>
+CDA_ModelLoader::createFromDOM(const std::wstring& URL,
                                iface::cellml_api::DOMURLLoader* loader)
   throw(std::exception&)
 {
@@ -347,9 +345,7 @@ CDA_ModelLoader::createFromDOM(const wchar_t* URL,
   }
   catch (...)
   {
-    wchar_t* str = loader->lastErrorMessage();
-    mLastError = str;
-    free(str);
+    mLastError = loader->lastErrorMessage();
     throw iface::cellml_api::CellMLException();
   }
 
@@ -429,9 +425,7 @@ public:
   {
     if (doc == NULL)
     {
-      wchar_t* str = mLoader->lastErrorMessage();
-      mModelLoader->mLastError = str;
-      free(str);
+      mModelLoader->mLastError = mLoader->lastErrorMessage();
       mListener->loadCompleted(NULL);
       return;
     }
@@ -486,7 +480,7 @@ private:
 void
 CDA_ModelLoader::asyncCreateFromDOM
 (
- const wchar_t* URL,
+ const std::wstring& URL,
  iface::cellml_api::DOMURLLoader* loader,
  iface::cellml_api::ModelLoadedListener* listener
 )
@@ -501,7 +495,7 @@ CDA_ModelLoader::asyncCreateFromDOM
 
 int myfunc() { return 0; }
 
-CDA_EXPORT_PRE CDA_EXPORT_POST iface::cellml_api::CellMLBootstrap*
+CDA_EXPORT_PRE CDA_EXPORT_POST already_AddRefd<iface::cellml_api::CellMLBootstrap>
 CreateCellMLBootstrap()
 {
   return new CDA_CellMLBootstrap();

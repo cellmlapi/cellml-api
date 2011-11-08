@@ -473,7 +473,10 @@ CDA_ODESolverRun::SolveODEProblemCVODE
       if (timeNow >= storageExpiry || storageSize == storageCapacity)
       {
         if (mObserver != NULL)
-          mObserver->results(storageSize, storage);
+        {
+          std::vector<double> resultsVector(storage, storage + storageSize);
+          mObserver->results(resultsVector);
+        }
         storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
         storageSize = 0;
       }
@@ -481,7 +484,8 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   }
   if (storageSize != 0 && mObserver != NULL)
   {
-    mObserver->results(storageSize, storage);
+    std::vector<double> resultsVector(storage, storage + storageSize);
+    mObserver->results(resultsVector);
   }
   if (mObserver != NULL)
   {
@@ -976,7 +980,10 @@ CDA_DAESolverRun::SolveDAEProblem
         if (timeNow >= storageExpiry || storageSize == storageCapacity)
         {
           if (mObserver != NULL)
-            mObserver->results(storageSize, storage);
+          {
+            std::vector<double> resultsVector(storage, storage + storageSize);
+            mObserver->results(resultsVector);
+          }
           storageExpiry = timeNow + VARIABLE_TIME_LIMIT;
           storageSize = 0;
         }
@@ -992,7 +999,8 @@ CDA_DAESolverRun::SolveDAEProblem
 
   if (storageSize != 0 && mObserver != NULL)
   {
-    mObserver->results(storageSize, storage);
+    std::vector<double> resultsVector(storage, storage + storageSize);
+    mObserver->results(resultsVector);
   }
   if (mObserver != NULL)
   {

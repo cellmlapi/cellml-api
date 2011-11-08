@@ -17,13 +17,13 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_QI1(cellml_services::TeLICeMService);
 
-  iface::cellml_services::TeLICeMModelResult* parseModel(const wchar_t* aModelText)
+  already_AddRefd<iface::cellml_services::TeLICeMModelResult> parseModel(const std::wstring& aModelText)
     throw();
-  iface::cellml_services::TeLICeMMathResult* parseMaths(iface::dom::Document* aDoc, const wchar_t* aMathText)
+  already_AddRefd<iface::cellml_services::TeLICeMMathResult> parseMaths(iface::dom::Document* aDoc, const std::wstring& aMathText)
     throw();
-  wchar_t* showModel(iface::cellml_api::Model* aModel)
+  std::wstring showModel(iface::cellml_api::Model* aModel)
     throw();
-  wchar_t* showMaths(iface::mathml_dom::MathMLContentElement* aMaths)
+  std::wstring showMaths(iface::mathml_dom::MathMLContentElement* aMaths)
     throw();
 };
 
@@ -32,8 +32,8 @@ int telicem_parse(
                   TeLICeMSParseTarget* aParseTarget
                  );
 
-iface::cellml_services::TeLICeMModelResult*
-CDA_TeLICeMService::parseModel(const wchar_t* aModelText)
+already_AddRefd<iface::cellml_services::TeLICeMModelResult>
+CDA_TeLICeMService::parseModel(const std::wstring& aModelText)
   throw()
 {
   RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap,
@@ -45,16 +45,16 @@ CDA_TeLICeMService::parseModel(const wchar_t* aModelText)
   RETURN_INTO_OBJREF(m, iface::cellml_api::Model, cbs->createModel(L"1.0"));
 
   TeLICeMSParseCellML parseCellML(m);
-  RETURN_INTO_OBJREF(res, CDA_TeLICeMModelResult, parseCellML.result());
+  RETURN_INTO_OBJREF(res, CDA_TeLICeMModelResult, parseCellML.result().getPointer());
 
-  size_t l = wcslen(aModelText);
+  size_t l = aModelText.size();
   char* s = new char[l + 1];
-  if (wcstombs(s, aModelText, l + 1) != l)
+  if (wcstombs(s, aModelText.c_str(), l + 1) != l)
   {
     delete [] s;
     res->addMessage(L"The input model text could not be converted to UTF8.");
     res->add_ref();
-    return res;
+    return res.getPointer();
   }
   std::stringstream str(s);
   delete [] s;
@@ -69,11 +69,11 @@ CDA_TeLICeMService::parseModel(const wchar_t* aModelText)
     res->addMessage(L"Parsing failed due to a syntax error (see above).");
 
   res->add_ref();
-  return res;
+  return res.getPointer();
 }
 
-iface::cellml_services::TeLICeMMathResult*
-CDA_TeLICeMService::parseMaths(iface::dom::Document* aDoc, const wchar_t* aMathText)
+already_AddRefd<iface::cellml_services::TeLICeMMathResult>
+CDA_TeLICeMService::parseMaths(iface::dom::Document* aDoc, const std::wstring& aMathText)
   throw()
 {
   RETURN_INTO_OBJREF(el, iface::dom::Element,
@@ -82,16 +82,16 @@ CDA_TeLICeMService::parseMaths(iface::dom::Document* aDoc, const wchar_t* aMathT
   DECLARE_QUERY_INTERFACE_OBJREF(mel, el, mathml_dom::MathMLMathElement);
 
   TeLICeMSParseMathML parseMath(mel);
-  RETURN_INTO_OBJREF(res, CDA_TeLICeMMathResult, parseMath.result());
+  RETURN_INTO_OBJREF(res, CDA_TeLICeMMathResult, parseMath.result().getPointer());
 
-  size_t l = wcslen(aMathText);
+  size_t l = aMathText.size();
   char* s = new char[l + 1];
-  if (wcstombs(s, aMathText, l + 1) != l)
+  if (wcstombs(s, aMathText.c_str(), l + 1) != l)
   {
     delete [] s;
     res->addMessage(L"The input math text could not be converted to UTF8.");
     res->add_ref();
-    return res;
+    return res.getPointer();
   }
   std::stringstream str(s);
   delete [] s;
@@ -106,7 +106,7 @@ CDA_TeLICeMService::parseMaths(iface::dom::Document* aDoc, const wchar_t* aMathT
     res->addMessage(L"Parsing failed due to a syntax error (see above).");
 
   res->add_ref();
-  return res;
+  return res.getPointer();
 }
 
 // Note: only works for valid CellML identifiers.
@@ -1225,20 +1225,18 @@ ShowModel(const std::wstring& indent, iface::cellml_api::Model* aModel)
   return txt;
 }
 
-wchar_t*
+std::wstring
 CDA_TeLICeMService::showModel(iface::cellml_api::Model* aModel)
   throw()
 {
-  std::wstring txt = ShowModel(L"", aModel);
-  return CDA_wcsdup(txt.c_str());
+  return ShowModel(L"", aModel);
 }
 
-wchar_t*
+std::wstring
 CDA_TeLICeMService::showMaths(iface::mathml_dom::MathMLContentElement* aMaths)
   throw()
 {
-  std::wstring txt = ShowMathExpression(L"", aMaths, 100);
-  return CDA_wcsdup(txt.c_str());
+  return ShowMathExpression(L"", aMaths, 100);
 }
 
 TeLICeMStateScan::TeLICeMStateScan(std::stringstream* aStr,
@@ -1297,7 +1295,7 @@ int telicem_lex(TeLICeMSLValue* aLValue, TeLICeMStateScan* aLexer)
   return val;
 }
 
-iface::cellml_services::TeLICeMService*
+already_AddRefd<iface::cellml_services::TeLICeMService>
 CreateTeLICeMService(void)
 {
   return new CDA_TeLICeMService();

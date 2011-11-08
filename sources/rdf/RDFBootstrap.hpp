@@ -9,5 +9,5 @@
 #define RDF_PUBLIC_POST CDA_IMPORT_POST
 #endif
 
-RDF_PUBLIC_PRE iface::rdf_api::Bootstrap* CreateRDFBootstrap()
+RDF_PUBLIC_PRE already_AddRefd<iface::rdf_api::Bootstrap> CreateRDFBootstrap()
   RDF_PUBLIC_POST;

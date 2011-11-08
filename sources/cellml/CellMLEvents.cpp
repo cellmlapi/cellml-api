@@ -147,14 +147,14 @@ public:
       mRelatedElement->release_ref();
   }
 
-  wchar_t*
+  std::wstring
   type()
     throw(std::exception&)
   {
-    return CDA_wcsdup(mType.c_str());
+    return mType;
   }
 
-  iface::events::EventTarget*
+  already_AddRefd<iface::events::EventTarget>
   target()
     throw(std::exception&)
   {
@@ -163,7 +163,7 @@ public:
     return mTarget;
   }
 
-  iface::events::EventTarget*
+  already_AddRefd<iface::events::EventTarget>
   currentTarget()
     throw(std::exception&)
   {
@@ -215,7 +215,7 @@ public:
   }
 
   void
-  initEvent(const wchar_t* aEventTypeArg,
+  initEvent(const std::wstring& aEventTypeArg,
             bool aCanBubble,
             bool aCancelable)
     throw(std::exception&)
@@ -225,32 +225,32 @@ public:
       throw iface::dom::DOMException();
   }
 
-  wchar_t*
+  std::wstring
   prevValue()
     throw(std::exception&)
   {
-    return CDA_wcsdup(mPrevValue.c_str());
+    return mPrevValue;
   }
 
-  wchar_t*
+  std::wstring
   newValue()
     throw(std::exception&)
   {
-    return CDA_wcsdup(mNewValue.c_str());
+    return mNewValue;
   }
 
-  wchar_t*
+  std::wstring
   attrLocalName()
     throw(std::exception&)
   {
-    return CDA_wcsdup(mLocalName.c_str());
+    return mLocalName;
   }
 
-  wchar_t*
+  std::wstring
   attrNamespaceURI()
     throw(std::exception&)
   {
-    return CDA_wcsdup(mNamespaceURI.c_str());
+    return mNamespaceURI;
   }
 
   uint16_t
@@ -260,7 +260,7 @@ public:
     return mAttrChange;
   }
 
-  iface::cellml_api::CellMLElement*
+  already_AddRefd<iface::cellml_api::CellMLElement>
   relatedElement()
     throw(std::exception&)
   {
@@ -278,14 +278,14 @@ public:
 };
 
 static int32_t
-FindEventByName(const wchar_t* aType)
+FindEventByName(const std::wstring& aType)
 {
   int32_t eventMin = 0;
   int32_t eventMax = (sizeof(kSupportedEvents)/sizeof(kSupportedEvents[0]));
   while (eventMin < eventMax)
   {
     uint32_t event = (eventMin + eventMax) / 2;
-    int cmp = wcscmp(kSupportedEvents[event].mEventName, aType);
+    int cmp = wcscmp(kSupportedEvents[event].mEventName, aType.c_str());
     if (cmp == 0)
       return event;
     if (cmp > 0)
@@ -294,7 +294,7 @@ FindEventByName(const wchar_t* aType)
       eventMin = event + 1;
   }
   if (eventMin == eventMax &&
-      !wcscmp(kSupportedEvents[eventMin].mEventName, aType))
+      kSupportedEvents[eventMin].mEventName == aType)
     return eventMin;
   return -1;
 }
@@ -302,7 +302,7 @@ FindEventByName(const wchar_t* aType)
 void
 CDA_CellMLElement::addEventListener
 (
- const wchar_t* aType,
+ const std::wstring& aType,
  iface::events::EventListener* aListener,
  bool aUseCapture
 )
@@ -350,7 +350,7 @@ CDA_CellMLElement::addEventListener
 void
 CDA_CellMLElement::removeEventListener
 (
- const wchar_t* aType,
+ const std::wstring& aType,
  iface::events::EventListener* aListener,
  bool aUseCapture
 )
@@ -749,19 +749,11 @@ CDA_CellMLElementEventAdaptor::handleAttrModified(iface::events::Event* aEvent)
     return;
   me->mAttrChange = mutation->attrChange();
   me->mType = L"CellMLAtttibuteChanged";
-  wchar_t* tmp  = mutation->prevValue();
-  me->mPrevValue = tmp;
-  free(tmp);
-  tmp = mutation->newValue();
-  me->mNewValue = tmp;
-  free(tmp);
+  me->mPrevValue = mutation->prevValue();
+  me->mNewValue = mutation->newValue();
   RETURN_INTO_OBJREF(attrN, iface::dom::Node, mutation->relatedNode());
-  tmp = attrN->localName();
-  me->mLocalName = tmp;
-  free(tmp);
-  tmp = attrN->namespaceURI();
-  me->mNamespaceURI = tmp;
-  free(tmp);
+  me->mLocalName = attrN->localName();
+  me->mNamespaceURI = attrN->namespaceURI();
   mCellMLListener->handleEvent(me);
   if (me->mPropagationStopped)
     mutation->stopPropagation();

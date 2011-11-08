@@ -8,28 +8,28 @@
 #include <sstream>
 #include <iostream>
 
-static wchar_t*
+static std::wstring
 getTextContents(iface::dom::Node* inNode)
   throw(std::exception&);
 
-CDA_LanguageDictionary::CDA_LanguageDictionary(const wchar_t* nameSpace, iface::dom::Element *DictionaryXML)
+CDA_LanguageDictionary::CDA_LanguageDictionary(const std::wstring& nameSpace, iface::dom::Element *DictionaryXML)
   throw ()
   : mNameSpace(nameSpace), mDictionaryXML(DictionaryXML)
 {
 }
 
-iface::dom::NodeList*
+already_AddRefd<iface::dom::NodeList>
 CDA_LanguageDictionary::getMappings() 
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(entries, iface::dom::NodeList,
       mDictionaryXML->getElementsByTagNameNS(mNameSpace.c_str(), L"mapping"));
   entries->add_ref();
-  return entries;
+  return entries.getPointer();
 }
 
-wchar_t*
-CDA_LanguageDictionary::getValue(const wchar_t* keyName) 
+std::wstring
+CDA_LanguageDictionary::getValue(const std::wstring& keyName)
   throw(std::exception&)
 {
   // Return a value from the dictionary
@@ -50,10 +50,10 @@ CDA_LanguageDictionary::getValue(const wchar_t* keyName)
       return getTextContents(currentNode);
   }
 
-  return CDA_wcsdup(L"");
+  return L"";
 }
 
-static wchar_t*
+static std::wstring
 getTextContents(iface::dom::Node* inNode)
   throw(std::exception&)
 {
@@ -68,7 +68,7 @@ getTextContents(iface::dom::Node* inNode)
       return tn->data();
   }
 
-  return CDA_wcsdup(L"");
+  return L"";
 }
 
 CDA_DictionaryGenerator::CDA_DictionaryGenerator(iface::dom::Document* LangXML)
@@ -77,8 +77,8 @@ CDA_DictionaryGenerator::CDA_DictionaryGenerator(iface::dom::Document* LangXML)
 {
 }
 
-iface::cellml_services::LanguageDictionary*
-CDA_DictionaryGenerator::getDictionary(const wchar_t* dictionaryNameSpace) 
+already_AddRefd<iface::cellml_services::LanguageDictionary>
+CDA_DictionaryGenerator::getDictionary(const std::wstring& dictionaryNameSpace) 
   throw(std::exception&)
 {
   // Use XML element dictionary corresponding to 
@@ -92,8 +92,8 @@ CDA_DictionaryGenerator::getDictionary(const wchar_t* dictionaryNameSpace)
     return NULL;
 }
 
-iface::dom::Element* 
-CDA_DictionaryGenerator::getElementNS(const wchar_t* nameSpace, const wchar_t* elementName)
+already_AddRefd<iface::dom::Element>
+CDA_DictionaryGenerator::getElementNS(const std::wstring& nameSpace, const std::wstring& elementName)
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(elements, iface::dom::NodeList,
@@ -104,13 +104,13 @@ CDA_DictionaryGenerator::getElementNS(const wchar_t* nameSpace, const wchar_t* e
     DECLARE_QUERY_INTERFACE_OBJREF(returnElement, element, dom::Element);
 
     returnElement->add_ref();
-    return returnElement;
+    return returnElement.getPointer();
   }
   else
     return NULL;
 }
 
-iface::cellml_services::MaLaESTransform*
+already_AddRefd<iface::cellml_services::MaLaESTransform>
 CDA_DictionaryGenerator::getMalTransform() 
   throw(std::exception&)
 {
@@ -168,8 +168,8 @@ CDA_DictionaryGenerator::getMalTransform()
   }
 }
 
-wchar_t*
-CDA_DictionaryGenerator::padMalString(const wchar_t* inString) 
+std::wstring
+CDA_DictionaryGenerator::padMalString(const std::wstring& inString)
   throw(std::exception&)
 {
   // Insert two spaces at beginning of new lines
@@ -185,11 +185,11 @@ CDA_DictionaryGenerator::padMalString(const wchar_t* inString)
     }
   }
 
-  return CDA_wcsdup(valueString.c_str());
+  return valueString;
 }
 
-iface::cellml_services::DictionaryGenerator* 
-CDA_CeLEDSBootstrap::createDictGenerator(const wchar_t* URL)
+already_AddRefd<iface::cellml_services::DictionaryGenerator>
+CDA_CeLEDSBootstrap::createDictGenerator(const std::wstring& URL)
   throw(std::exception&)
 {
   mLoadError = L"";
@@ -212,8 +212,8 @@ CDA_CeLEDSBootstrap::createDictGenerator(const wchar_t* URL)
   }
 }
 
-iface::cellml_services::DictionaryGenerator* 
-CDA_CeLEDSBootstrap::createDictGeneratorFromText(const wchar_t* XMLText)
+already_AddRefd<iface::cellml_services::DictionaryGenerator>
+CDA_CeLEDSBootstrap::createDictGeneratorFromText(const std::wstring& XMLText)
   throw(std::exception&)
 {
   mLoadError = L"";
@@ -236,13 +236,13 @@ CDA_CeLEDSBootstrap::createDictGeneratorFromText(const wchar_t* XMLText)
   }
 }
 
-wchar_t*
+std::wstring
 CDA_CeLEDSBootstrap::loadError() throw()
 {
-  return CDA_wcsdup(mLoadError.c_str());
+  return mLoadError;
 }
 
-iface::cellml_services::CeLEDSBootstrap*
+already_AddRefd<iface::cellml_services::CeLEDSBootstrap>
 CreateCeLEDSBootstrap()
 {
   return new CDA_CeLEDSBootstrap();

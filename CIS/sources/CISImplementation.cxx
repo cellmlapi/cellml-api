@@ -445,13 +445,19 @@ CDA_ODESolverRun::runthread()
         states[(*oli).first] = (*oli).second;
 
     if (mObserver != NULL)
-      mObserver->computedConstants(constSize, constants);
+    {
+      std::vector<double> constantsVec(constants, constants + constSize);
+      mObserver->computedConstants(constantsVec);
+    }
 
     f->ComputeRates(mStartBvar, constants, rates, states, algebraic);
     f->ComputeVariables(mStartBvar, constants, rates, states, algebraic);
 
     if (mObserver != NULL)
-      mObserver->results(2 * rateSize + algSize + 1, buffer);
+    {
+      std::vector<double> resultsVec(buffer, buffer + 2 * rateSize + algSize + 1);
+      mObserver->results(resultsVec);
+    }
 
     SolveODEProblem(f, constSize, constants, rateSize, rates, states,
                     algSize, algebraic);
@@ -517,7 +523,10 @@ CDA_DAESolverRun::runthread()
         states[(*oli).first] = (*oli).second;
 
     if (mObserver != NULL)
-      mObserver->computedConstants(constSize, constants);
+    {
+      std::vector<double> constVector(constants, constants + constSize);
+      mObserver->computedConstants(constVector);
+    }
 
     SolveDAEProblem(f, constSize, constants, rateSize, rates, rateSize, states,
                     algSize, algebraic, condVarSize, condvars);
@@ -649,16 +658,15 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
      << "extern void do_levmar(void (*)(double *, double *, int, int, void*), "
     "double*, double*, double*, int*, unsigned long, void*);" << std::endl;
 
-  wchar_t* frag = cci->functionsString();
-  size_t fragLen = wcstombs(NULL, frag, 0) + 1;
+  std::wstring frag = cci->functionsString();
+  size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << frag8 << std::endl;
-  free(frag);
   delete [] frag8;
 }
 
-iface::cellml_services::ODESolverCompiledModel*
+already_AddRefd<iface::cellml_services::ODESolverCompiledModel>
 CDA_CellMLIntegrationService::compileModelODE
 (
  iface::cellml_api::Model* aModel
@@ -676,13 +684,10 @@ CDA_CellMLIntegrationService::compileModelODE
   {
     cci = already_AddRefd<iface::cellml_services::CodeInformation>
       (cg->generateCode(aModel));
-    wchar_t* msg = cci->errorMessage();
-    if (!wcscmp(msg, L""))
-      free(msg);
-    else
+    std::wstring msg = cci->errorMessage();
+    if (msg != L"")
     {
       mLastError = msg;
-      free(msg);
       throw iface::cellml_api::CellMLException();
     }
   }
@@ -698,10 +703,10 @@ CDA_CellMLIntegrationService::compileModelODE
 
   ss << "int SetupConstants(double* CONSTANTS, double* RATES, "
     "double *STATES)" << std::endl;
-  wchar_t* frag = cci->initConstsString();
-  size_t fragLen = wcstombs(NULL, frag, 0) + 1;
+  std::wstring frag = cci->initConstsString();
+  size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << "#define VOI 0.0" << std::endl
@@ -711,35 +716,32 @@ CDA_CellMLIntegrationService::compileModelODE
      << "#undef ALGEBRAIC" << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
 
   ss << "int ComputeRates(double VOI, double* CONSTANTS, double* RATES, "
      << "double* STATES, double* ALGEBRAIC)" << std::endl;
   frag = cci->ratesString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
+  fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
 
   ss << "int ComputeVariables(double VOI, double* CONSTANTS, double* RATES, "
     "double* STATES, double* ALGEBRAIC)" << std::endl;
   frag = cci->variablesString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
+  fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
   ss.close();
 
@@ -749,7 +751,7 @@ CDA_CellMLIntegrationService::compileModelODE
   return new CDA_ODESolverModel(mod, cmf, aModel, cci, dirname);
 }
 
-iface::cellml_services::DAESolverCompiledModel*
+already_AddRefd<iface::cellml_services::DAESolverCompiledModel>
 CDA_CellMLIntegrationService::compileModelDAE
 (
  iface::cellml_api::Model* aModel
@@ -767,13 +769,10 @@ CDA_CellMLIntegrationService::compileModelDAE
   {
     cci = already_AddRefd<iface::cellml_services::IDACodeInformation>
       (cg->generateIDACode(aModel));
-    wchar_t* msg = cci->errorMessage();
-    if (!wcscmp(msg, L""))
-      free(msg);
-    else
+    std::wstring msg = cci->errorMessage();
+    if (msg != L"")
     {
       mLastError = msg;
-      free(msg);
       throw iface::cellml_api::CellMLException();
     }
   }
@@ -789,10 +788,10 @@ CDA_CellMLIntegrationService::compileModelDAE
 
   ss << "int SetupFixedConstants(double* CONSTANTS, double* RATES, "
     "double *STATES)" << std::endl;
-  wchar_t* frag = cci->initConstsString();
-  size_t fragLen = wcstombs(NULL, frag, 0) + 1;
+  std::wstring frag = cci->initConstsString();
+  size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << "#define VOI 0.0" << std::endl
@@ -802,74 +801,68 @@ CDA_CellMLIntegrationService::compileModelDAE
      << "#undef ALGEBRAIC" << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
 
   ss << "int EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, "
      << "double* STATES, double* ALGEBRAIC)" << std::endl;
   frag = cci->variablesString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
+  fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
 
   ss << "int EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, "
      << "double* OLDRATES, double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR)" << std::endl;
   frag = cci->essentialVariablesString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
+  fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
 
   ss << "int ComputeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
     "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR, double* resid)" << std::endl;
   frag = cci->ratesString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
+  fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
 
   ss << "int ComputeRootInformation(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
     "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR)" << std::endl;
   frag = cci->rootInformationString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
+  fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
      << "  return ret;" << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
 
   ss << "void SetupStateInfo(double * SI)" << std::endl;
   frag = cci->stateInformationString();
-  fragLen = wcstombs(NULL, frag, 0) + 1;
+  fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
-  wcstombs(frag8, frag, fragLen);
+  wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << frag8 << std::endl
      << "}" << std::endl;
-  free(frag);
   delete [] frag8;
   ss.close();
 
@@ -879,7 +872,7 @@ CDA_CellMLIntegrationService::compileModelDAE
   return new CDA_DAESolverModel(mod, cmf, aModel, cci, dirname);
 }
 
-iface::cellml_services::ODESolverRun*
+already_AddRefd<iface::cellml_services::ODESolverRun>
 CDA_CellMLIntegrationService::createODEIntegrationRun
 (
  iface::cellml_services::ODESolverCompiledModel* aModel
@@ -889,7 +882,7 @@ CDA_CellMLIntegrationService::createODEIntegrationRun
   return new CDA_ODESolverRun(unsafe_dynamic_cast<CDA_ODESolverModel*>(aModel));
 }
 
-iface::cellml_services::DAESolverRun*
+already_AddRefd<iface::cellml_services::DAESolverRun>
 CDA_CellMLIntegrationService::createDAEIntegrationRun
 (
  iface::cellml_services::DAESolverCompiledModel* aModel
@@ -899,7 +892,7 @@ CDA_CellMLIntegrationService::createDAEIntegrationRun
   return new CDA_DAESolverRun(unsafe_dynamic_cast<CDA_DAESolverModel*>(aModel));
 }
 
-iface::cellml_services::CellMLIntegrationService*
+already_AddRefd<iface::cellml_services::CellMLIntegrationService>
 CreateIntegrationService()
 {
   return new CDA_CellMLIntegrationService();

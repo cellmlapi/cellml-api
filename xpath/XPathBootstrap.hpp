@@ -10,5 +10,5 @@
 #include "Ifacexpath.hxx"
 
 XPATH_PUBLIC_PRE
-  iface::xpath::XPathEvaluator* CreateXPathEvaluator()
+  already_AddRefd<iface::xpath::XPathEvaluator> CreateXPathEvaluator()
 XPATH_PUBLIC_POST;

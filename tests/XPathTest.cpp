@@ -67,7 +67,7 @@ XPathTest::testBasicXPath()
     RETURN_INTO_OBJREF(o3, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o4, iface::dom::Node, r->iterateNext());
     CPPUNIT_ASSERT(o4);
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
 
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"b1");
@@ -94,7 +94,7 @@ XPathTest::testBasicXPath()
     RETURN_INTO_OBJREF(o4, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o5, iface::dom::Node, r->iterateNext());
     CPPUNIT_ASSERT(o5);
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
 
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"b1");
@@ -119,7 +119,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(av, o1->nodeValue());
     CPPUNIT_ASSERT(av == L"world");
   }
@@ -132,7 +132,7 @@ XPathTest::testBasicXPath()
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(av1, o1->nodeValue());
     CPPUNIT_ASSERT(av1 == L"bar");
     RETURN_INTO_WSTRING(av2, o2->nodeValue());
@@ -147,7 +147,7 @@ XPathTest::testBasicXPath()
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(av1, o1->nodeValue());
     CPPUNIT_ASSERT(av1 == L"Hello");
     RETURN_INTO_WSTRING(av2, o2->nodeValue());
@@ -162,7 +162,7 @@ XPathTest::testBasicXPath()
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(av1, o1->nodeValue());
     RETURN_INTO_WSTRING(av2, o2->nodeValue());
     CPPUNIT_ASSERT(av1 == L"Hello");
@@ -177,7 +177,7 @@ XPathTest::testBasicXPath()
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(av1, o1->nodeValue());
     RETURN_INTO_WSTRING(av2, o2->nodeValue());
     CPPUNIT_ASSERT(av1 == L"Hello");
@@ -194,7 +194,7 @@ XPathTest::testBasicXPath()
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o3, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o4, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(av1, o1->nodeValue());
     RETURN_INTO_WSTRING(av2, o2->nodeValue());
     RETURN_INTO_WSTRING(av3, o3->nodeValue());
@@ -212,7 +212,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1n, o1->nodeName());
     CPPUNIT_ASSERT(o1n == L"test7");
   }
@@ -226,7 +226,7 @@ XPathTest::testBasicXPath()
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o3, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     RETURN_INTO_WSTRING(o2v, o2->nodeValue());
     RETURN_INTO_WSTRING(o3v, o3->nodeValue());
@@ -242,7 +242,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Foo");
   }
@@ -254,7 +254,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     DECLARE_QUERY_INTERFACE_OBJREF(o1d, o1, dom::Document);
     CPPUNIT_ASSERT(o1d != NULL);
   }
@@ -266,7 +266,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Good 1");
   }
@@ -278,7 +278,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Bad 3");
   }
@@ -290,7 +290,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Bad 2");
   }
@@ -304,7 +304,7 @@ XPathTest::testBasicXPath()
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o3, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Bad 1");
     RETURN_INTO_WSTRING(o2v, o2->nodeValue());
@@ -319,7 +319,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Foo");
   }
@@ -330,7 +330,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Baz");
   }
@@ -341,7 +341,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"5s2");
   }
@@ -353,7 +353,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Selected text");
   }
@@ -365,7 +365,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Selected text");
   }
@@ -377,7 +377,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"The sixth");
   }
@@ -389,7 +389,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Introduction");
   }
@@ -403,7 +403,7 @@ XPathTest::testBasicXPath()
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o2, iface::dom::Node, r->iterateNext());
     RETURN_INTO_OBJREF(o3, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     RETURN_INTO_WSTRING(o2v, o2->nodeValue());
     RETURN_INTO_WSTRING(o3v, o3->nodeValue());
@@ -419,7 +419,7 @@ XPathTest::testBasicXPath()
                         mTestDoc, mXPResolv,
                         iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE, NULL));
     RETURN_INTO_OBJREF(o1, iface::dom::Node, r->iterateNext());
-    CPPUNIT_ASSERT(r->iterateNext() == NULL);
+    CPPUNIT_ASSERT(r->iterateNext().getPointer() == NULL);
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"XPath");
   }

@@ -58,11 +58,10 @@ public:
           ct->degree() == 0)
       {
         iface::cellml_api::CellMLVariable* source = ct->variable();
-        wchar_t* n = source->name();
+	std::wstring n = source->name();
         source->release_ref();
-        printf(first ? "\"%S\"" : ",\"%S\"", n);
+        printf(first ? "\"%S\"" : ",\"%S\"", n.c_str());
         first = false;
-        free(n);
       }
       ct->release_ref();
     }
@@ -90,25 +89,33 @@ public:
       delete this;
   }
 
-  char* objid()
+  std::string objid()
     throw (std::exception&)
   {
-    return strdup("singletonTestProgressObserver");
+    return "singletonTestProgressObserver";
   }
 
-  void* query_interface(const char* iface)
+  void* query_interface(const std::string& iface)
     throw (std::exception&)
   {
-    if (!strcmp(iface, "xpcom::IObject"))
+    if (iface == "xpcom::IObject")
       return static_cast< ::iface::XPCOM::IObject* >(this);
-    else if (!strcmp(iface, "cellml_services::IntegrationProgressObserver"))
+    else if (iface == "cellml_services::IntegrationProgressObserver")
       return
         static_cast< ::iface::cellml_services::IntegrationProgressObserver*>
         (this);
     return NULL;
   }
 
-  void computedConstants(uint32_t length, double* values)
+  std::vector<std::string> supported_interfaces() throw()
+  {
+    std::vector<std::string> ret;
+    ret.push_back("xpcom::IObject");
+    ret.push_back("cellml_services::IntegrationProgressObserver");
+    return ret;
+  }
+
+  void computedConstants(const std::vector<double>& values)
     throw (std::exception&)
   {
     iface::cellml_services::ComputationTargetIterator* cti =
@@ -122,17 +129,16 @@ public:
           ct->degree() == 0)
       {
         iface::cellml_api::CellMLVariable* source = ct->variable();
-        wchar_t* n = source->name();
+	std::wstring n = source->name();
         source->release_ref();
-        printf("# Computed constant: %S = %e\n", n, values[ct->assignedIndex()]);
-        free(n);
+        printf("# Computed constant: %S = %e\n", n.c_str(), values[ct->assignedIndex()]);
       }
       ct->release_ref();
     }
     cti->release_ref();
   }
 
-  void results(uint32_t length, double* values)
+  void results(const std::vector<double>& values)
     throw (std::exception&)
   {
     uint32_t aic = mCI->algebraicIndexCount();
@@ -143,7 +149,7 @@ public:
       return;
 
     uint32_t i;
-    for (i = 0; i < length; i += recsize)
+    for (i = 0; i < values.size(); i += recsize)
     {
       bool first = true;
       iface::cellml_services::ComputationTargetIterator* cti =
@@ -196,10 +202,10 @@ public:
     gFinished = true;
   }
 
-  void failed(const char* errmsg)
+  void failed(const std::string& errmsg)
     throw (std::exception&)
   {
-    printf("# Integration failed (%s)\n", errmsg);
+    printf("# Integration failed (%s)\n", errmsg.c_str());
     gFinished = true;
   }
 private:
@@ -399,9 +405,8 @@ IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
   }
   catch (iface::cellml_api::CellMLException& ce)
   {
-    wchar_t* err = cis->lastError();
-    printf("Caught a CellMLException while compiling model: %S\n", err);
-    free(err);
+    std::wstring err = cis->lastError();
+    printf("Caught a CellMLException while compiling model: %S\n", err.c_str());
     return -1;
   }
   catch (...)
@@ -450,9 +455,8 @@ ODEMain(iface::cellml_services::CellMLIntegrationService* cis,
   }
   catch (iface::cellml_api::CellMLException& ce)
   {
-    wchar_t* err = cis->lastError();
-    printf("Caught a CellMLException while compiling model: %S\n", err);
-    free(err);
+    std::wstring err = cis->lastError();
+    printf("Caught a CellMLException while compiling model: %S\n", err.c_str());
     return -1;
   }
   catch (...)

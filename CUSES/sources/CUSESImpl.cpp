@@ -19,19 +19,19 @@ CDAUserBaseUnit::~CDAUserBaseUnit()
 {
 }
 
-wchar_t*
+std::wstring
 CDAUserBaseUnit::name()
   throw(std::exception&)
 {
-  return CDA_wcsdup(mBaseUnits->name());
+  return mBaseUnits->name();
 }
 
-iface::cellml_api::Units*
+already_AddRefd<iface::cellml_api::Units>
 CDAUserBaseUnit::cellmlUnits()
   throw(std::exception&)
 {
   mBaseUnits->add_ref();
-  return mBaseUnits;
+  return mBaseUnits.getPointer();
 }
 
 // Next, the built in base units. These get defined by macro...
@@ -47,7 +47,7 @@ CDAUserBaseUnit::cellmlUnits()
     CDABuiltinBaseUnit##x() throw() {} \
     ~CDABuiltinBaseUnit##x() throw() {} \
     \
-    wchar_t* name() throw() { return CDA_wcsdup(L###x); } \
+    std::wstring name() throw() { return L###x; }	\
   }; \
   CDABuiltinBaseUnit##x gBuiltinBase##x;
 
@@ -77,12 +77,12 @@ CDABaseUnitInstance::~CDABaseUnitInstance()
 {
 }
 
-iface::cellml_services::BaseUnit*
+already_AddRefd<iface::cellml_services::BaseUnit>
 CDABaseUnitInstance::unit()
   throw(std::exception&)
 {
   mBaseUnit->add_ref();
-  return mBaseUnit;
+  return mBaseUnit.getPointer();
 }
 
 double
@@ -127,7 +127,7 @@ CDACanonicalUnitRepresentation::length()
   return baseUnits.size();
 }
 
-iface::cellml_services::BaseUnitInstance*
+already_AddRefd<iface::cellml_services::BaseUnitInstance>
 CDACanonicalUnitRepresentation::fetchBaseUnit(uint32_t aIndex)
   throw(std::exception&)
 {
@@ -378,7 +378,7 @@ CDACanonicalUnitRepresentation::addBaseUnit
   baseUnits.push_back(baseUnit);
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 CDACanonicalUnitRepresentation::mergeWith
 (
  double aThisExponent,
@@ -606,9 +606,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
         RETURN_INTO_WSTRING(unitsRef, iu->unitsRef());
         if (unitsRef == currentName)
         {
-          wchar_t* str = iu->name();
-          currentName = str;
-          free(str);
+          currentName = iu->name();
 
           RETURN_INTO_OBJREF(mod, iface::cellml_api::CellMLElement,
                              imp->parentElement());
@@ -652,9 +650,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
     RETURN_INTO_OBJREF(deps, UnitDependencies, new UnitDependencies());
     cusesAS->setObjectAnnotation((*umi).second, L"dependencies", deps);
 
-    wchar_t* str = (*umi).second->name();
-    deps->name = str;
-    free(str);
+    deps->name = (*umi).second->name();
 
     deps->scopes.push_back((*umi).first);
 
@@ -718,7 +714,7 @@ CDACUSES::scopedFind
 (
  ScopeMap<C>& aMap,
  iface::cellml_api::CellMLElement* aContext,
- std::wstring& aName
+ const std::wstring& aName
 )
 {
   std::wstring contextScope = getUnitScope(aContext);
@@ -755,11 +751,7 @@ CDACUSES::getUnitScope(iface::cellml_api::CellMLElement* aContext)
 
   DECLARE_QUERY_INTERFACE_OBJREF(u, aContext, cellml_api::Units);
   if (u != NULL)
-  {
-    wchar_t* str = u->name();
-    scope = str;
-    free(str);
-  }
+    scope = u->name();
 
   do
   {
@@ -1147,33 +1139,32 @@ CDACUSES::ComputeUnits
   }
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 CDACUSES::getUnitsByName
 (
  iface::cellml_api::CellMLElement* aContext,
- const wchar_t* aName
+ const std::wstring& aName
 )
   throw(std::exception&)
 {
-  std::wstring name(aName);
   iface::cellml_services::CanonicalUnitRepresentation* cur =
-    scopedFind(mUnitsMap, aContext, name);
+    scopedFind(mUnitsMap, aContext, aName);
   if (cur != NULL)
     cur->add_ref();
   
   return cur;
 }
 
-wchar_t*
+std::wstring
 CDACUSES::modelError()
   throw(std::exception&)
 {
   std::wstring tot = errorDescription;
   tot += warningDescription;
-  return CDA_wcsdup(tot.c_str());
+  return tot;
 }
 
-iface::cellml_services::CanonicalUnitRepresentation*
+already_AddRefd<iface::cellml_services::CanonicalUnitRepresentation>
 CDACUSES::createEmptyUnits()
   throw(std::exception&)
 {
