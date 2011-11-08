@@ -545,8 +545,9 @@ CDA_SomeSet::wrapOrFindElement(CDA_SProSBase* aBase, iface::dom::Element* aEl)
 bool
 CDA_SomeSet::checkLocalNameMatch(const std::wstring& aCheck)
 {
+  const wchar_t* against = aCheck.c_str();
   for (const wchar_t** p = mElNames; *p != NULL; p++)
-    if (aCheck.c_str() == *p)
+    if (!wcscmp(against, *p))
       return true;
 
   return false;

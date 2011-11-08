@@ -279,6 +279,8 @@ public:
     throw();
 };
 
+#include <assert.h>
+
 class CDA_SProSNamedIdentifiedElementIteratorBase
   : public CDA_SProSNamedElementIteratorBase, public virtual iface::SProS::NamedIdentifiedElementIterator
 {
@@ -293,6 +295,7 @@ public:
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
     DECLARE_QUERY_INTERFACE(ret, el, SProS::NamedIdentifiedElement);
+    assert(el == NULL || ret != NULL);
     return ret;
   }
 };

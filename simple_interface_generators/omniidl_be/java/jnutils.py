@@ -354,7 +354,6 @@ class WString(String):
         extract = "{\n" +\
                   "  uint32_t tmplen = env->GetStringLength(" + xname + ");\n" +\
                   "  const jchar* tmpstr = env->GetStringChars(" + xname + ", NULL);\n" +\
-                  "  std::wstring " + oname + ";\n" +\
                   "  for (uint32_t i = 0; i < tmplen; i++)\n" +\
                   "    " + oname + " += tmpstr[i];\n" +\
                   "  env->ReleaseStringChars(" + xname + ", tmpstr);\n" +\

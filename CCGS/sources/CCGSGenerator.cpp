@@ -2164,7 +2164,7 @@ CodeGenerationState::AllocateDelayed(ptr_tag<CDA_ComputationTarget> aCT,
 {
   std::wstring str;
   GenerateVariableName(str, aPattern, aNextIndex);
-  aCT->setDelayedName(str.c_str());
+  aCT->setDelayedName(str);
 }
 
 void
@@ -2183,7 +2183,7 @@ CodeGenerationState::ComputeInfDelayedName(ptr_tag<CDA_ComputationTarget> aCT,
     index = aCT->mInfDelayedAssignedIndex;
 
   GenerateVariableName(aStr, mAlgebraicVariableNamePattern, index);
-  aCT->setDelayedName(aStr.c_str());
+  aCT->setDelayedName(aStr);
 }
 
 void
@@ -2300,7 +2300,7 @@ CodeGenerationState::CloneNamesIntoDelayedNames()
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
          mCodeInfo->mTargets.begin(); i != mCodeInfo->mTargets.end(); i++)
   {    
-    (*i)->setDelayedName(NULL);
+    (*i)->setDelayedName(L"");
   }
 }
 

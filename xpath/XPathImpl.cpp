@@ -3492,6 +3492,7 @@ private:
       {
         std::wstring s(mParseIt, tParseIt);
         mParseIt = tParseIt;
+        aSuccess = true;
         return s;
       }
       wchar_t c = *tParseIt;
@@ -3507,6 +3508,7 @@ private:
       {
         std::wstring s(mParseIt, tParseIt);
         mParseIt = tParseIt;
+        aSuccess = true;
         return s;
       }
       tParseIt++;
