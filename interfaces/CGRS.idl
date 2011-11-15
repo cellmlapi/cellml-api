@@ -123,6 +123,16 @@ module CGRS
      */
     EnumValue makeEnumFromIndex(in EnumType etype,
                                 in long index);
+
+    /**
+     * Creates an object value from an object.
+     */
+    ObjectValue makeObject(in xpcom::IObject value);
+
+    /**
+     * Creates a void value...
+     */
+    GenericValue makeVoid();
   };
 
   /**
@@ -239,6 +249,15 @@ module CGRS
      * @raises CGRSError if there is no ensemble member with the listed name.
      */
     long nameToIndex(in wstring name) raises(CGRSError);
+  };
+
+  interface ObjectType
+    : GenericType
+  {
+    /**
+     * The name of an interface that objects of this type must support.
+     */
+    readonly attribute string interfaceName;
   };
 
   /**
@@ -383,6 +402,47 @@ module CGRS
      * The value as an octet.
      */
     attribute octet asOctet;
+  };
+
+  /**
+   * Represents a native object.
+   */
+  interface ObjectValue
+    : GenericValue
+  {
+    /**
+     * The value as an object.
+     */
+    attribute xpcom::IObject asObject;
+  };
+
+  /**
+   * Represents an object implemented by a generics user. The generics user must
+   * provide an implementation of this interface, and can then pass this as a
+   * callback.
+   */
+  interface CallbackObjectValue
+    : GenericValue
+  {
+    /**
+     * Called to attempt to invoke a user-implemented operation on an object.
+     * The user should at least implement query_interface on xpcom::IObject, and all
+     * required operations and attributes for the supported interfaces.
+     * There is no need to implement add_ref and release_ref via invokeOnInterface;
+     * such calls will be directed to the CallbackObjectValue object directly rather than
+     * via generics.
+     * @param interfaceName The name of the interface on which to invoke the operation.
+     * @param methodName The name of the method to invoke. _get_ is prefixed for attribute
+     *                   getters; _set_ is prefixed for attribute setters.
+     * @param inValues The values of the in and in/out parameters to invoke the method with.
+     * @param outValues The values of the out and in/out parameters returned from the method.
+     * @param wasException If this out parameter comes back true, an exception was raised. In this case,
+     *                     the size and generic type of outValues and the return value are undefined.
+     * @return A GenericValue representing the return value.
+     */
+    GenericValue invokeOnInterface(in string interfaceName, in string methodName,
+                                   in ValueSequence inValues, out ValueSequence outValues,
+                                   out boolean wasException);
   };
 
   /**
