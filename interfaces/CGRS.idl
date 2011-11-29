@@ -9,13 +9,36 @@
  */
 module CGRS
 {
-  interface GenericModule;
   interface GenericAttribute;
   interface GenericMethod;
   interface GenericValue;
+  interface GenericInterface;
+  interface StringValue;
+  interface WStringValue;
+  interface ShortValue;
+  interface LongValue;
+  interface UShortValue;
+  interface ULongValue;
+  interface FloatValue;
+  interface DoubleValue;
+  interface BooleanValue;
+  interface CharValue;
+  interface OctetValue;
+  interface SequenceValue;
+  interface SequenceType;
+  interface EnumValue;
+  interface EnumType;
+  interface EnumValue;
+  interface EnumType;
+  interface ObjectValue;
+
+  /**
+   * Represents a sequence of values.
+   */
   typedef sequence<GenericValue> ValueSequence;
 
   exception CGRSError {};
+  interface GenericType;
 
   /**
    * The GenericsService is the top-level object used for working with the CellML API
@@ -110,13 +133,13 @@ module CGRS
     /**
      * Creates a sequence value from a sequence.
      */
-    SequenceValue makeSequence(in SequenceType innerType);
+    SequenceValue makeSequence(in GenericType innerType);
 
     /**
      * Creates an enum value from an enum.
      */
     EnumValue makeEnumFromString(in EnumType etype,
-                                 in wstring name);
+                                 in string name);
 
     /**
      * Creates an enum value from an index.
@@ -127,7 +150,7 @@ module CGRS
     /**
      * Creates an object value from an object.
      */
-    ObjectValue makeObject(in xpcom::IObject value);
+    ObjectValue makeObject(in XPCOM::IObject value);
 
     /**
      * Creates a void value...
@@ -242,22 +265,13 @@ module CGRS
      * Finds the name of an enumeration member from the corresponding index.
      * @raises CGRSError if the index is out of range.
      */
-    wstring indexToName(in long index) raises(CGRSError);
+    string indexToName(in long index) raises(CGRSError);
 
     /**
      * Retrieves the index of an enumeration member from the name.
      * @raises CGRSError if there is no ensemble member with the listed name.
      */
-    long nameToIndex(in wstring name) raises(CGRSError);
-  };
-
-  interface ObjectType
-    : GenericType
-  {
-    /**
-     * The name of an interface that objects of this type must support.
-     */
-    readonly attribute string interfaceName;
+    long nameToIndex(in string name) raises(CGRSError);
   };
 
   /**
@@ -269,7 +283,7 @@ module CGRS
     /**
      * The type corresponding to the value.
      */
-    readonly attribute GenericType valueType;
+    readonly attribute GenericType typeOfValue;
   };
 
   /**
@@ -413,7 +427,7 @@ module CGRS
     /**
      * The value as an object.
      */
-    attribute xpcom::IObject asObject;
+    attribute XPCOM::IObject asObject;
   };
 
   /**
@@ -426,7 +440,7 @@ module CGRS
   {
     /**
      * Called to attempt to invoke a user-implemented operation on an object.
-     * The user should at least implement query_interface on xpcom::IObject, and all
+     * The user should at least implement query_interface on XPCOM::IObject, and all
      * required operations and attributes for the supported interfaces.
      * There is no need to implement add_ref and release_ref via invokeOnInterface;
      * such calls will be directed to the CallbackObjectValue object directly rather than
@@ -479,7 +493,7 @@ module CGRS
     /**
      * The value as a string.
      */
-    attribute wstring asString;
+    attribute string asString;
 
     /**
      * The value as a long index.
@@ -491,6 +505,7 @@ module CGRS
    * Represents an attribute.
    */
   interface GenericAttribute
+    : XPCOM::IObject
   {
     /**
      * If true, this attribute is readonly.
@@ -523,6 +538,7 @@ module CGRS
    * Represents a parameter.
    */
   interface GenericParameter
+    : XPCOM::IObject
   {
     /**
      * If true, this parameter is an input to the method. Note that parameters
@@ -546,17 +562,13 @@ module CGRS
   /**
    * Represents a sequence of parameters.
    */
-  typedef Sequence<GenericParameter> ParameterSequence;
-
-  /**
-   * Represents a sequence of values.
-   */
-  typedef Sequence<GenericValue> ValueSequence;
+  typedef sequence<GenericParameter> ParameterSequence;
 
   /**
    * Represents a method.
    */
   interface GenericMethod
+    : XPCOM::IObject
   {
     /**
      * The sequence of parameters required by a method.

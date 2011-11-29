@@ -32,6 +32,7 @@ OPTION(ENABLE_SRUS "Enable SRuS, the SED-ML Running Service, for running simulat
 OPTION(ENABLE_SPROS "Enable SProS, the SED-ML Processing Service, for manipulating and creating SED-ML descriptions of simulation experiments")
 OPTION(ENABLE_TELICEMS "Enable the TeLICeM (Text-based Language for the Input of CellML Models) Service")
 OPTION(ENABLE_VACSS "Build the Validation Against CellML Specification Service (VACSS), allowing CellML models to be validated to detect potential or actual problems with the model")
+OPTION(ENABLE_CGRS "Build the CellML Generics and Reflection Service (CGRS), providing access to the CellML API through a generic interface that allows each operation and attribute in the API to be discovered programmatically.")
 
 OPTION(CHECK_BUILD "Run some basic checks on whether the build is likely to succeed before actually building" ON)
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
@@ -46,6 +47,7 @@ IF (ENABLE_EVERYTHING)
   SET(ENABLE_JAVA_BUILD ON)
   SET(ENABLE_PYTHON ON)
   SET(ENABLE_RDF ON)
+  SET(ENABLE_CGRS ON)
 ENDIF()
 IF (ENABLE_CELEDS_EXPORTER)
   SET(ENABLE_CELEDS ON)
@@ -137,12 +139,20 @@ IF (ENABLE_VACSS)
   INCLUDE(VACSS/vacss.cmake)
 ENDIF()
 
+IF (ENABLE_CGRS)
+  INCLUDE(CGRS/cgrs-interface.cmake)
+ENDIF()
+
 # Run the tests...
 INCLUDE(build/test.cmake)
 
 # Do all the language specific bits...
 
 INCLUDE(build/cxx.cmake)
+
+IF (ENABLE_CGRS)
+  INCLUDE(CGRS/cgrs-modules.cmake)
+ENDIF()
 
 IF (ENABLE_CORBA)
   INCLUDE(build/corba.cmake)

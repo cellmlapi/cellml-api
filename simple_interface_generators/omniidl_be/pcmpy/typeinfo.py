@@ -96,6 +96,7 @@ BASE_MAP = {
 
 class Base(Type):
     def __init__(self, type):
+        self.cref = '&'
         k = type.kind()
         info = BASE_MAP[k]
         self.__dict__.update(info)
@@ -143,6 +144,7 @@ class String(Type):
     arg_prefix = 'const '
     
     def __init__(self, type):
+        self.cref = ''
         pass
 
     def pcmType(self, isOut=0, isRet=0):
@@ -200,6 +202,7 @@ class WString(Type):
     arg_prefix = 'const '
     
     def __init__(self, type):
+        self.cref = ''
         pass
 
     def pcmType(self, isOut=0, isRet=0):
@@ -313,6 +316,7 @@ class Sequence(Type):
     has_length = 1
     
     def __init__(self, type, context):
+        self.cref = ''
         self.superti = GetTypeInformation(type.seqType(), context)
         self.type_pcm = 'std::vector<' + self.superti.type_pcm + '>'
 
@@ -328,13 +332,13 @@ class Sequence(Type):
         if copyOut:
             if hasOut:
                 return "{\n" +\
-                       makePyArgFromPCM('_retpy', pcmName, 1, 0, 0) + "\n" +\
+                       self.makePyArgFromPCM('_retpy', pcmName, 1, 0, 0) + "\n" +\
                        "  Py_INCREF(_retpy);" +\
                        "  return _retpy;\n" +\
                        "}"
             else:
                 return "{\n" +\
-                       makePyArgFromPCM('_outpy', pcmName, 1, 0, 0) + "\n" +\
+                       self.makePyArgFromPCM('_outpy', pcmName, 1, 0, 0) + "\n" +\
                        "  Py_INCREF(_outpy);" +\
                        "  %s = _outpy;\n" % pyargName +\
                        "}"
@@ -373,38 +377,23 @@ class Sequence(Type):
         if copyOut:
             if hasOut:
                 return self.makePCMFromPyarg('_retpcm', pyargName, 1, 0, 0) +\
-                       "_retpcm->add_ref();\n" +\
-                       "return _retpcm;" +\
-                       "}"
+                       "return _retpcm;"
             return "{\n" +\
-                   self.makePCMFromPyArg('_outpcm', pyargName, 1, 0, 0) +\
-                   "  *%s = _outpcm;\n" % pcmName +\
+                   self.makePCMFromPyarg('_outpcm', pyargName, 1, 0, 0) +\
+                   "  %s = _outpcm;\n" % pcmName +\
                    "}"
         
-        if hasIn and not hasOut:
-            return "uint32_t _length_%s = PyList_Size(%s);\n" % (pcmName, pyargName) +\
-                   "std::vector<%s> %s;" % (self.superti.type_pcm, pcmName) +\
-                   "for (uint32_t _i = 0; _i < %s.size(); _i++)" % pcmName +\
+        decl = "std::vector<%s> %s;\n" % (self.superti.type_pcm, pcmName)
+        if hasIn:
+            return decl +\
+                   "uint32_t _length_%s = PyList_Size(%s);\n" % (pcmName, pyargName) +\
+                   "for (uint32_t _i = 0; _i < %s.size(); _i++)\n" % pcmName +\
                    "{\n" +\
                    "  PyObject* _pytmp = PyList_GetItem(%s, _i);\n" % pyargName +\
                    self.superti.makePCMFromPyarg("_add_tmp", "_pytmp", 1, 1, 0) +\
                    "  %s.push_back(_add_tmp);\n" % pcmName +\
                    "}"
-        elif hasOut and not hasIn:
-            return "%s %s;" % (self.type_pcm, pcmName)
-        else:
-            return "{\n" +\
-                   "  PyObject* stmp = PyList_GetItem(%s, 0);\n" % pyargName +\
-                   "  *_length_%s = stmp ? PyList_Size(stmp) : 0;\n" % (pcmName) +\
-                   "  if (*%s) delete [] %s;" % (pcmName, pcmName) +\
-                   "  %s.clear();" % pcmName +\
-                   "  for (uint32_t _i = 0; _i < _length_%s; _i++)" % pcmName +\
-                   "  {\n" +\
-                   "    PyObject* _pytmp = PyList_GetItem(%s, _i);\n" % pyargName +\
-                   self.superti.makePCMFromPyarg("_add_tmp" % pcmName, "_pytmp", 1, 1, 0) +\
-                   "  %s.push_back(_add_tmp);\n" % pcmName +\
-                   "  }\n" +\
-                   "}"
+        return decl
 
 class Declared(Type):
     def __init__(self, type, context):
@@ -412,7 +401,7 @@ class Declared(Type):
 
 class Struct(Declared):
     def __init__(self, type, context):
-        raise "Sequence type encountered - but we don't support sequence types."
+        raise "Struct type encountered - but we don't support struct types."
 
 class Objref(Declared):
     format_pyarg = 'O'
@@ -424,6 +413,8 @@ class Objref(Declared):
         self.base_type_pcm = type.decl().simplecxxscoped
         self.iface_flat = type.decl().simplecscoped
         self.scopedname = type.decl().corbacxxscoped
+        self.cref = '&'
+
         directory, filename = os.path.split(type.decl().file())
         filebase, extension = os.path.splitext(filename)
         self.getType = "PyObject* typeMod = PyImport_ImportModule(\"%s.%s\");\n" % \
@@ -502,8 +493,13 @@ class Objref(Declared):
                    "  *%s = _outpcm;\n" % pcmName +\
                    "}"
         
-        if hasIn and not hasOut:
-            return "%s %s;\n" % (self.type_pcm, pcmName) +\
+        decl = "%s %s;\n" % (self.type_pcm, pcmName)
+        if hasOut:
+            rel = "ObjRef<%s> %s_release = already_AddRefd<%s>(%s);" % (self.base_type_pcm, pcmName, self.base_type_pcm, pcmName)
+        else:
+            rel = ''
+        if hasIn:
+            return  decl +\
                    "if (%s == Py_None)\n" % pyargName +\
                    "{\n" +\
                    "  %s = NULL;\n" % pcmName +\
@@ -523,34 +519,9 @@ class Objref(Declared):
                    "    Py_DECREF(cptr);\n" +\
                    "  }\n" +\
                    "}\n" +\
-                   "ObjRef<%s> %s_release = already_AddRefd<%s>(%s);" % (self.base_type_pcm, pcmName, self.base_type_pcm, pcmName)
-        elif hasOut and not hasIn:
+                   rel
+        elif hasOut:
             return "%s %s;\nPyOutputIObjectRelease<%s> %s_release(&%s);" % (self.type_pcm, pcmName, self.base_type_pcm, pcmName, pcmName)
-        else:
-            return "%s %s;\n" % (self.type_pcm, pcmName) +\
-                   "{\n" +\
-                   "  PyObject* stmp = PyList_GetItem(%s, 0);\n" % pyargName +\
-                   "  if (stmp == Py_None)\n" +\
-                   "  {\n" +\
-                   "    *%s = NULL;\n" +\
-                   "  }\n" +\
-                   "  } else {\n" +\
-                   "    PyObject* cptr = PyObject_GetAttrString(stmp, \"_iobject_%s_cptr\");\n" %\
-                   node.simplecscoped +\
-                   "    if (cptr == NULL)\n" +\
-                   "    {\n" +\
-                   "      *%s = new ::p2py::%s(stmp);" % (pcmName, self.scopedname) +\
-                   "    }\n" +\
-                   "    else\n" +\
-                   "    {\n" +\
-                   "      *%s = reinterpret_cast<%s>(PyCObject_AsVoidPtr(cptr));\n" % (pcmName, self.type_pcm) +\
-                   "      if (*%s != NULL) *%s->add_ref();\n" % (pcmName, pcmName) +\
-                   "      Py_DECREF(cptr);\n" +\
-                   "    }\n" +\
-                   "    Py_DECREF(stmp);\n" +\
-                   "  }\n" +\
-                   "}\n" +\
-                   "ObjRef<%s> %s_release = already_AddRefd<%s>(*%s);" % (self.type_pcm, pcmName, self.type_pcm, pcmName)
 
 # Not actually a base type, but we mixin Base since it has all aspects in common.
 class Enum(Declared, Base):
@@ -561,3 +532,4 @@ class Enum(Declared, Base):
     def __init__(self, omniidl_type):
         self.pyarg_cast_out = '(%s)' % omniidl_type.decl().simplecxxscoped
         self.type_pcm = omniidl_type.decl().simplecxxscoped
+        self.cref = ''

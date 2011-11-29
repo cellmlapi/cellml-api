@@ -58,14 +58,14 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0, is_ret=0):
     elif tk == idltype.tk_Principal:
         raise 'Principal is not supported'
     elif tk == idltype.tk_objref or tk == idltype.tk_struct:
-        if is_ret:
+        if is_ret == 1:
             return prefixIndirect + 'already_AddRefd<' + type.decl().simplecxxscoped + '> ' + suffixIndirect
         else:
             return prefixIndirect + type.decl().simplecxxscoped + '*' + suffixIndirect
     elif tk == idltype.tk_array:
         return ckw + 'std::vector<' + prefixIndirect + type.decl().simplecxxscoped + suffixIndirect + '> ' + suffixIndirect + amp
     elif tk == idltype.tk_sequence:
-        base = typeToSimpleCXX(type.seqType(), extrapointer, is_ret = 1)
+        base = typeToSimpleCXX(type.seqType(), 0, is_ret = 2)
         return ckw + 'std::vector<' + base + '>' + amp
     elif tk == idltype.tk_enum:
         return prefixIndirect + type.decl().simplecxxscoped + suffixIndirect

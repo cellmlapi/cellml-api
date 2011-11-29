@@ -470,7 +470,8 @@ class PythonToCWalker(idlvisitor.AstVisitor):
             if i > 0:
                 pcmarglist = pcmarglist + ', '
             if p.is_out():
-                pcmarglist = pcmarglist + '&'
+                ti = typeinfo.GetTypeInformation(p.paramType(), self)
+                pcmarglist = pcmarglist + ti.cref
             pcmarglist = pcmarglist + 'pcmparam%u' % i
             self.out.out(typeinfo.GetTypeInformation(p.paramType(), self).makePCMFromPyarg("pcmparam%u" % i, "pyparam%u" % i,\
                                                                                      p.is_in(), p.is_out()))
