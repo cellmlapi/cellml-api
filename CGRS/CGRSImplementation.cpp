@@ -208,6 +208,8 @@ already_AddRefd<iface::CGRS::ObjectValue>
 CDA_GenericsService::makeObject(iface::XPCOM::IObject* value)
   throw(std::exception&)
 {
+  if (value == NULL)
+    return makeVoid();
   return new CDA_GenericObjectValue(value);
 }
 

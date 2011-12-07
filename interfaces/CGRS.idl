@@ -557,6 +557,11 @@ module CGRS
      * The name given to the parameter in the IDL file.
      */
     readonly attribute string name;
+
+    /**
+     * The type of the parameter.
+     */
+    readonly attribute GenericType type;
   };
 
   /**
@@ -582,13 +587,15 @@ module CGRS
 
     /**
      * Invokes the method using the specified sequence of input values.
+     * @param invokeOn The object on which to invoke this object (must be of the correct type).
      * @param inValues The values of the in and in/out parameters to invoke the method with.
      * @param outValues The values of the out and in/out parameters returned from the method.
      * @param wasException If this out parameter comes back true, an exception was raised. In this case,
      *                     the size and generic type of outValues and the return value are undefined.
      * @return A GenericValue representing the return value.
+     * @raises CGRSError if one or more of the input values is of the incorrect type.
      */
-    GenericValue invoke(in ValueSequence inValues, out ValueSequence outValues, out boolean wasException);
+    GenericValue invoke(in ObjectValue invokeOn, in ValueSequence inValues, out ValueSequence outValues, out boolean wasException);
   };
 };
 #endif

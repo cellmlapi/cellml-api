@@ -63,6 +63,7 @@ public:
   already_AddRefd<iface::CGRS::CharValue> makeChar(char val) throw(std::exception&);
   already_AddRefd<iface::CGRS::OctetValue> makeOctet(uint8_t val) throw(std::exception&);
   already_AddRefd<iface::CGRS::SequenceValue> makeSequence(iface::CGRS::GenericType* innerType) throw(std::exception&);
+  already_AddRefd<iface::CGRS::SequenceType> makeSequenceType(iface::CGRS::GenericType* innerType) throw(std::exception&);
   already_AddRefd<iface::CGRS::EnumValue> makeEnumFromString(iface::CGRS::EnumType* etype, const std::string& name) throw(std::exception&);
   already_AddRefd<iface::CGRS::EnumValue> makeEnumFromIndex(iface::CGRS::EnumType* etype, int32_t index) throw(std::exception&);
   already_AddRefd<iface::CGRS::ObjectValue> makeObject(iface::XPCOM::IObject* value) throw(std::exception&);
