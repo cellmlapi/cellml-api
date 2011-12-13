@@ -20,6 +20,8 @@ For example, the core API interfaces are in interfaces/CellML_APISPEC.idl
 You can browse a version of the interface reference documentation (which may
 not correspond to the version you have) online at
 <http://cellml-api.sourceforge.net/>.
+Other documentation, includig information on how to build the API, is available
+at that site.
 
 You can also generate the documentation as follows:
   cd interfaces
