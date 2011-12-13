@@ -236,7 +236,7 @@ class Walker(idlvisitor.AstVisitor):
                                    ') throw(std::exception&) = 0;')
     
     def visitOperation(self, node):
-        rtype = simplecxx.typeToSimpleCXX(node.returnType(), is_ret=True)
+        rtype = simplecxx.typeToSimpleCXX(node.returnType(), is_ret=1)
         if node.simplename == 'query_interface':
             rtype = 'void*'
         call = 'virtual ' + rtype
