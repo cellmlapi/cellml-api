@@ -204,7 +204,7 @@ CDA_GenericsService::makeEnumFromIndex(iface::CGRS::EnumType* etype, int32_t ind
   return new CDA_GenericEnumValue(etype, index);
 }
 
-already_AddRefd<iface::CGRS::ObjectValue>
+already_AddRefd<iface::CGRS::GenericValue>
 CDA_GenericsService::makeObject(iface::XPCOM::IObject* value)
   throw(std::exception&)
 {

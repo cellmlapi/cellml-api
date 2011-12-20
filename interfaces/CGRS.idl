@@ -150,7 +150,7 @@ module CGRS
     /**
      * Creates an object value from an object.
      */
-    ObjectValue makeObject(in XPCOM::IObject value);
+    GenericValue makeObject(in XPCOM::IObject value);
 
     /**
      * Creates a void value...

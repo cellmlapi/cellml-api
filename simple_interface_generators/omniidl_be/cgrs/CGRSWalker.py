@@ -177,7 +177,42 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.dec_indent()
         self.cxx.out('};') # Close class
 
-        self.iface = node.simplename
+        self.cxx.out('class Callback%s' % node.simplename)
+        self.cxx.out('  : public %s' % node.simplecxxscoped)
+        self.cxx.out('{')
+        self.cxx.out('public:')
+        self.cxx.inc_indent()
+        self.cxx.out('Callback%s(iface::CGRS::CallbackObjectValue* aValue)' % node.simplename)
+        self.cxx.out('  : mValue(aValue)')
+        self.cxx.out('{')
+        self.cxx.out('}')
+        self.generateCallbackFunctions(node)
+        self.cxx.dec_indent()
+        self.cxx.out('private:')
+        self.cxx.inc_indent()
+        self.cxx.out('ObjRef<iface::CGRS::CallbackObjectValue> mValue;')
+        self.cxx.dec_indent()
+        self.cxx.out('};')
+
+    def generateCallbackFunctions(self, node):
+        for d in node.inherits():
+            self.generateCallbackFunctions(d)
+        if node.simplecxxname == "iface::XPCOM::IObject":
+            TODO: Implement special IObject functions....
+            return
+        for d in node.callables():
+            if isinstance(d, Operation):
+                self.generateCallbackFunction(\
+                    d.simplename, d.returnType(),\
+                    map(lambda x: (x.identifer(), x.is_in(), x.is_out()),\
+                            d.parameters()))
+            elif isinstance(a, Attribute):
+                for d in a.declarators():
+                    self.generateCallbackFunction(\
+                        d.simplename, a.attrType(), [])
+                    if a.readonly():
+                        self.generateCallbackFunction(\
+                            d.simplename, None, [(a.attrType(), 1, 0)])
 
     def visitTypedef(self, node):
         pass
