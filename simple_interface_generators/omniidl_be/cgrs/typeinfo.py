@@ -30,49 +30,70 @@ def GetTypeInformation(type, context = None):
 
 class Type:
     def fetchType(self, doWhat = 'return '):
-        return "ObjRef<iface::CGRS::GenericsService> cgs = CreateGenericsService();\n" +\
+
+        return "ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();\n" +\
                '%scgs->getTypeByName("%s");' % (doWhat, self.typename)
     def makeStorage(self, name):
         return '%s %s;' % (self.cppType, name)
-    def destroyStorage(self, name):
-        return ''
+    def makeScopedDestructor(self, name):
+        return 'scoped_destroy<%s> %sScopedDestroy(%s, %s);' % (self.cppType, name, name, self.destructorValue())
+
     def returnStorage(self, name):
         return 'return %s;' % name
     def defaultStorageValue(self, name):
-        return '%s = %s;' % (name, self.defaultCxxValue)
+        return '%sScopedDestroy.manual_destroy(); %s = %s;' % (name, name, self.defaultCxxValue)
     def convertGenericToNative(self, genName, natName):
-        return 'DECLARE_QUERY_INTERFACE_OBJREF(%s_specific, %s, %s); %s = %s_specific->%s();' % (genName, genName, self.genericIface,
-                                                                                                 natName, genName, self.nativeGetter)
+        return '{ DECLARE_QUERY_INTERFACE_OBJREF(tmp_specific, %s, %s); %s = tmp_specific->%s();' % (genName, self.genericIface,
+                                                                                                     natName, self.nativeGetter)
     def convertNativeToGeneric(self, natName, genName):
         return '%s = cgs->%s(%s);' % (genName, self.genericCreationCall, natName)
 
+    def deref(self, isOut):
+        if isOut == 0:
+            return ''
+        return ('*' if self.cppOutSignatureType == self.cppInSignatureType + '*' else '')
+
+    def destructorValue(self):
+        return 'new void_destructor<%s>()' % self.cppType
+
 BASE_MAP = {
     idltype.tk_short: {'typename': 'short', 'cppType': 'int16_t', 'defaultCxxValue': '0', 'nativeGetter': 'asShort',
-                       'genericCreationCall': 'makeShort', 'genericIface': 'CGRS::ShortValue'},
+                       'genericCreationCall': 'makeShort', 'genericIface': 'CGRS::ShortValue',
+                       'cppReturnSignatureType': 'int16_t', 'cppInSignatureType': 'int16_t', 'cppOutSignatureType': 'int16_t*'},
     idltype.tk_long: {'typename': 'long', 'cppType': 'int32_t', 'defaultCxxValue': '0', 'nativeGetter': 'asLong',
-                       'genericCreationCall': 'makeLong', 'genericIface': 'CGRS::LongValue'},
+                      'genericCreationCall': 'makeLong', 'genericIface': 'CGRS::LongValue',
+                      'cppReturnSignatureType': 'int32_t', 'cppInSignatureType': 'int32_t', 'cppOutSignatureType': 'int32_t*'},
     idltype.tk_ushort: {'typename': 'unsigned short', 'cppType': 'uint16_t', 'defaultCxxValue': '0', 'nativeGetter': 'asUShort',
-                       'genericCreationCall': 'makeUShort', 'genericIface': 'CGRS::UShortValue'},
+                        'genericCreationCall': 'makeUShort', 'genericIface': 'CGRS::UShortValue',
+                        'cppReturnSignatureType': 'uint16_t', 'cppInSignatureType': 'uint16_t', 'cppOutSignatureType': 'uint16_t*'},
     idltype.tk_ulong: {'typename': 'unsigned long', 'cppType': 'uint32_t', 'defaultCxxValue': '0', 'nativeGetter': 'asULong',
-                       'genericCreationCall': 'makeULong', 'genericIface': 'CGRS::ULongValue'},
+                       'genericCreationCall': 'makeULong', 'genericIface': 'CGRS::ULongValue',
+                       'cppReturnSignatureType': 'uint32_t', 'cppInSignatureType': 'uint32_t', 'cppOutSignatureType': 'uint32_t*'},
     idltype.tk_float: {'typename': 'float', 'cppType': 'float', 'defaultCxxValue': '0.0', 'nativeGetter': 'asFloat',
-                       'genericCreationCall': 'makeFloat', 'genericIface': 'CGRS::FloatValue'},
+                       'genericCreationCall': 'makeFloat', 'genericIface': 'CGRS::FloatValue',
+                       'cppReturnSignatureType': 'float', 'cppInSignatureType': 'float', 'cppOutSignatureType': 'float*'},
     idltype.tk_double: {'typename': 'double', 'cppType': 'double', 'defaultCxxValue': '0.0', 'nativeGetter': 'asDouble',
-                       'genericCreationCall': 'makeDouble', 'genericIface': 'CGRS::DoubleValue'},
+                        'genericCreationCall': 'makeDouble', 'genericIface': 'CGRS::DoubleValue',
+                        'cppReturnSignatureType': 'double', 'cppInSignatureType': 'double', 'cppOutSignatureType': 'double*'},
     idltype.tk_boolean: {'typename': 'boolean', 'cppType': 'bool', 'defaultCxxValue': 'false', 'nativeGetter': 'asBoolean',
-                       'genericCreationCall': 'makeBoolean', 'genericIface': 'CGRS::BooleanValue'},
+                         'genericCreationCall': 'makeBoolean', 'genericIface': 'CGRS::BooleanValue',
+                         'cppReturnSignatureType': 'bool', 'cppInSignatureType': 'bool', 'cppOutSignatureType': 'bool*'},
     idltype.tk_char: {'typename': 'char', 'cppType': 'char', 'defaultCxxValue': '0', 'nativeGetter': 'asChar',
-                       'genericCreationCall': 'makeChar', 'genericIface': 'CGRS::CharValue'},
+                      'genericCreationCall': 'makeChar', 'genericIface': 'CGRS::CharValue',
+                      'cppReturnSignatureType': 'char', 'cppInSignatureType': 'char', 'cppOutSignatureType': 'char*'},
     idltype.tk_octet: {'typename': 'octet', 'cppType': 'uint8_t', 'defaultCxxValue': '0', 'nativeGetter': 'asOctet',
-                       'genericCreationCall': 'makeOctet', 'genericIface': 'CGRS::OctetValue'},
+                       'genericCreationCall': 'makeOctet', 'genericIface': 'CGRS::OctetValue',
+                       'cppReturnSignatureType': 'uint8_t', 'cppInSignatureType': 'uint8_t', 'cppOutSignatureType': 'uint8_t*'},
     idltype.tk_ulonglong: {'typename': 'ulonglong', 'cppType': 'uint64_t', 'defaultCxxValue': '0', 'nativeGetter': 'asULongLong',
-                       'genericCreationCall': 'makeULongLong', 'genericIface': 'CGRS::ULongLongValue'},
-    idltype.tk_void: {'typename': 'void', 'cppType': 'void'}
+                           'genericCreationCall': 'makeULongLong', 'genericIface': 'CGRS::ULongLongValue',
+                           'cppReturnSignatureType': 'uint64_t', 'cppInSignatureType': 'uint64_t', 'cppOutSignatureType': 'uint64_t*'},
+    idltype.tk_void: {'typename': 'void', 'cppType': 'void', 'cppReturnSignatureType': 'void'}
 }
 
 class VoidType(Type):
     def __init__(self):
         self.typename = 'void'
+        self.cppReturnSignatureType = 'void'
     def makeStorage(self, name):
         return ''
     def returnStorage(self, name):
@@ -82,6 +103,8 @@ class VoidType(Type):
     def convertGenericToNative(self, genName, natName):
         return ''
     def convertNativeToGeneric(self, natName, genName):
+        return ''
+    def makeScopedDestructor(self, name):
         return ''
 
 class Base(Type):
@@ -94,17 +117,23 @@ class String(Type):
     def __init__(self, type):
         self.typename = 'string'
         self.cppType = 'std::string'
+        self.cppReturnSignatureType = 'std::string'
+        self.cppInSignatureType = 'const std::string&'
+        self.cppOutSignatureType = 'std::string&'
         self.defaultCxxValue = '""'
         self.nativeGetter = 'asString'
-        self.genericIface = 'StringValue'
+        self.genericIface = 'CGRS::StringValue'
         self.genericCreationCall = 'makeString'
 class WString(Type):
     def __init__(self, type):
         self.typename = 'wstring'
         self.cppType = 'std::wstring'
+        self.cppReturnSignatureType = 'std::wstring'
+        self.cppInSignatureType = 'const std::wstring&'
+        self.cppOutSignatureType = 'std::wstring&'
         self.defaultCxxValue = 'L""'
         self.nativeGetter = 'asWString'
-        self.genericIface = 'WStringValue'
+        self.genericIface = 'CGRS::WStringValue'
         self.genericCreationCall = 'makeWString'
 
 class Sequence(Type):
@@ -113,12 +142,15 @@ class Sequence(Type):
         self.st = GetTypeInformation(bt)
         self.typename = 'sequence<' + self.st.typename + '>'
         self.cppType = 'std::vector<' + self.st.cppType + '>'
+        self.cppReturnSignatureType = 'std::vector<' + self.st.cppType + '>'
+        self.cppInSignatureType = 'const std::vector<' + self.st.cppType + '>&'
+        self.cppOutSignatureType = 'std::vector<' + self.st.cppType + '>&'
 
     def defaultStorageValue(self, name):
         return '%s.clear();' % name
 
     def fetchType(self, doWhat = 'return '):
-        return "ObjRef<CDA_GenericsService> cgs = CreateGenericsService();\n" +\
+        return "ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();\n" +\
                "ObjRef<iface::CGRS::GenericType> innerType%d;\n" % len(self.typename) +\
                "{" + self.st.fetchType('innerType%d = ' % len(self.typename)) + "}\n" +\
                'return cgs->makeSequenceType(innerType%d);' % len(self.typename)
@@ -133,7 +165,7 @@ class Sequence(Type):
                self.st.convertGenericToNative("%s_sval" % genName, "%s_nval" % genName) +\
                "}"
     def convertNativeToGeneric(self, natName, genName):
-        return "ObjRef<CDA_GenericsService> cgs = CreateGenericsService();\n" +\
+        return "ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();\n" +\
                "ObjRef<iface::CGRS::GenericType> innerType%d;\n" % len(self.typename) +\
                "{" + self.st.fetchType('innerType%d = ' % len(self.typename)) + "}\n" +\
                "%s = cgs->makeSequence(innerType%d);\n" % (genName, len(self.typename)) +\
@@ -143,6 +175,9 @@ class Sequence(Type):
                self.st.convertNativeToGeneric("(*%s_i)" % natName, "%s_gval" % genName) +\
                "%s.appendValue(%s_gval);\n" % (genName, genName) +\
                "}\n"
+
+    def destructorValue(self):
+        return 'new container_destructor<%s>(%s)' % (self.cppType, self.st.destructorValue())
 
 class Declared(Type):
     def __init__(self, type, context):
@@ -161,6 +196,10 @@ class Objref(Declared):
         self.className = type.simplename
         self.defaultCxxValue = 'NULL'
         self.genericCreationCall = 'makeObject'
+        self.cppReturnSignatureType = 'already_AddRefd<' + self.typename + '>'
+        self.cppInSignatureType = self.typename + '*'
+        self.cppOutSignatureType = self.typename + '**'
+
     def convertGenericToNative(self, genName, natName):
         # Note: this line leaks void objrefs, but it doesn't matter since it is a singleton.
         return "if (!CDA_objcmp(%s, cgs->makeVoid())) %s = NULL;\n" % (genName, natName) +\
@@ -183,11 +222,17 @@ class Objref(Declared):
                'else %s = cgs->%s(%s);' % (genName, self.genericCreationCall, natName) +\
                '}'
 
+    def destructorValue(self):
+        return 'new objref_destructor<%s>()' % (self.cppType)
+
 class Enum(Declared, Base):
     def __init__(self, type):
         AnnotateByRepoID(type)
         self.typename = type.simplecxxscoped
         self.cppType = type.simplecxxscoped
+        self.cppReturnSignatureType = self.typename
+        self.cppInSignatureType = self.typename
+        self.cppOutSignatureType = self.typename + '**'
         self.defaultCxxValue = type.decl().enumerators()[0].simplecxxscoped
     def convertGenericToNative(self, genName, natName):
         return '%s = reinterpret_cast<%s>(%s->asLong());' % (natName, self.typename, genName)

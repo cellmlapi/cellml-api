@@ -1,6 +1,7 @@
 # -*- python -*-
 from omniidl import idlast, idlvisitor, idlutil, idltype, output
 import os.path
+import string
 import CGRSWalker
 
 def run(tree, args):

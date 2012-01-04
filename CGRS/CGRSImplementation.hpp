@@ -1,3 +1,4 @@
+#include "CGRSBootstrap.hpp"
 #include "IfaceCGRS.hxx"
 #include <map>
 
@@ -79,9 +80,16 @@ private:
   CDA_GenericVoidValue mVoid;
 };
 
+class CDA_GenericInterfaceBase
+  : public iface::CGRS::GenericInterface
+{
+public:
+  void* makeCallbackProxy(iface::CGRS::CallbackObjectValue* aObjectValue);
+};
+
 #if 0 // This is what generated implementations look like...
 class CDA_GenericInterface
-  : public iface::CGRS::GenericInterface
+  : public CDA_GenericInterfaceBase
 {
 public:
   CDA_GenericInterface() {}
@@ -490,3 +498,8 @@ private:
   bool mIsIn, mIsOut;
   std::string mName;
 };
+
+CGRS_PUBLIC_PRE
+  already_AddRefd<CDA_GenericsService>
+  CreateGenericsServiceInternal(void)
+CGRS_PUBLIC_POST;

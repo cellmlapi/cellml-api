@@ -28,8 +28,6 @@ module CGRS
   interface SequenceType;
   interface EnumValue;
   interface EnumType;
-  interface EnumValue;
-  interface EnumType;
   interface ObjectValue;
 
   /**

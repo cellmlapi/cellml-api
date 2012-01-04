@@ -354,3 +354,13 @@ CreateGenericsService(void)
   gCDAGenericsService->add_ref();
   return gCDAGenericsService;
 }
+
+already_AddRefd<CDA_GenericsService>
+CreateGenericsServiceInternal(void)
+{
+  if (gCDAGenericsService == NULL)
+    gCDAGenericsService = new CDA_GenericsService();
+
+  gCDAGenericsService->add_ref();
+  return gCDAGenericsService;
+}
