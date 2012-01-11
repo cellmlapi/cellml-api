@@ -140,6 +140,7 @@ module SRuS
      */
     void done();
   };
+#pragma user-callback
 
   /**
    * GeneratedData describes the output of a single DataGenerator. Note that

@@ -31,7 +31,7 @@ def AnnotateByRepoID(node, skiplastscope=0):
     # This is used, e.g. for enums, where the enum scope isn't part of the C++
     # scoped name.
     if skiplastscope:
-        sn = sn[:-2]
+        sn = sn[:-1]
         sn.append(node.simplename)
     node.simplecscoped = string.join(sn, '_')
     node.corbacxxscoped = string.join(sn, '::')

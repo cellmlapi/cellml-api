@@ -191,13 +191,13 @@ public:
   ~scoped_destroy()
   {
     if (!mOverride)
-      mDestructor_Functor(mValue);
+      (*mDestructor)(mValue);
     delete mDestructor;
   }
 
   void manual_destroy()
   {
-    mDestructor(mValue);
+    (*mDestructor)(mValue);
   }
 
   void override()

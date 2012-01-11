@@ -44,27 +44,29 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(CGRS::GenericsService);
 
-  void registerType(iface::CGRS::GenericType* aType);
-  already_AddRefd<iface::CGRS::GenericType> getTypeByName(const std::string& aName) throw(iface::CGRS::CGRSError&);
+  CGRS_PUBLIC_PRE void registerType(iface::CGRS::GenericType* aType) CGRS_PUBLIC_POST;
+  CGRS_PUBLIC_PRE already_AddRefd<iface::CGRS::GenericType> getTypeByName(const std::string& aName) throw(iface::CGRS::CGRSError&) CGRS_PUBLIC_POST;
 
   void loadGenericModule(const std::string& aModulePath) throw(std::exception&);
-  void registerBootstrap(const std::string& aBootstrapName, iface::CGRS::GenericValue* aValue) throw(std::exception&);
+  CGRS_PUBLIC_PRE void registerBootstrap(const std::string& aBootstrapName, iface::CGRS::GenericValue* aValue) throw(std::exception&) CGRS_PUBLIC_POST;
   already_AddRefd<iface::CGRS::GenericValue> getBootstrapByName(const std::string& aBootstrapName) throw(std::exception&);
-  void registerInterface(const std::string& aBootstrapName, iface::CGRS::GenericInterface* aIface) throw(std::exception&);
+  CGRS_PUBLIC_PRE void registerInterface(const std::string& aBootstrapName, iface::CGRS::GenericInterface* aIface) throw(std::exception&) CGRS_PUBLIC_POST;
   already_AddRefd<iface::CGRS::GenericInterface> getInterfaceByName(const std::string& aInterfaceName) throw(std::exception&);
   already_AddRefd<iface::CGRS::StringValue> makeString(const std::string& val) throw(std::exception&);
   already_AddRefd<iface::CGRS::WStringValue> makeWString(const std::wstring& val) throw(std::exception&);
   already_AddRefd<iface::CGRS::ShortValue> makeShort(int16_t val) throw(std::exception&);
   already_AddRefd<iface::CGRS::LongValue> makeLong(int32_t val) throw(std::exception&);
+  already_AddRefd<iface::CGRS::LongLongValue> makeLongLong(int64_t val) throw(std::exception&);
   already_AddRefd<iface::CGRS::UShortValue> makeUShort(uint16_t val) throw(std::exception&);
   already_AddRefd<iface::CGRS::ULongValue> makeULong(uint32_t val) throw(std::exception&);
+  already_AddRefd<iface::CGRS::ULongLongValue> makeULongLong(uint64_t val) throw(std::exception&);
   already_AddRefd<iface::CGRS::FloatValue> makeFloat(float val) throw(std::exception&);
   already_AddRefd<iface::CGRS::DoubleValue> makeDouble(double val) throw(std::exception&);
   already_AddRefd<iface::CGRS::BooleanValue> makeBoolean(bool val) throw(std::exception&);
   already_AddRefd<iface::CGRS::CharValue> makeChar(char val) throw(std::exception&);
   already_AddRefd<iface::CGRS::OctetValue> makeOctet(uint8_t val) throw(std::exception&);
   already_AddRefd<iface::CGRS::SequenceValue> makeSequence(iface::CGRS::GenericType* innerType) throw(std::exception&);
-  already_AddRefd<iface::CGRS::SequenceType> makeSequenceType(iface::CGRS::GenericType* innerType) throw(std::exception&);
+  CGRS_PUBLIC_PRE already_AddRefd<iface::CGRS::SequenceType> makeSequenceType(iface::CGRS::GenericType* innerType) throw(std::exception&) CGRS_PUBLIC_POST;
   already_AddRefd<iface::CGRS::EnumValue> makeEnumFromString(iface::CGRS::EnumType* etype, const std::string& name) throw(std::exception&);
   already_AddRefd<iface::CGRS::EnumValue> makeEnumFromIndex(iface::CGRS::EnumType* etype, int32_t index) throw(std::exception&);
   already_AddRefd<iface::CGRS::GenericValue> makeObject(iface::XPCOM::IObject* value) throw(std::exception&);
@@ -74,17 +76,17 @@ private:
   std::map<std::string, iface::CGRS::GenericType*> mTypeRegistry;
   std::map<std::string, iface::CGRS::GenericValue*> mValueRegistry;
   std::map<std::string, iface::CGRS::GenericInterface*> mInterfaceRegistry;
-  CDA_GenericPrimitiveType mStringType, mWStringType, mShortType, mLongType,
-    mUShortType, mULongType, mFloatType, mDoubleType, mBooleanType, mCharType,
+  CDA_GenericPrimitiveType mStringType, mWStringType, mShortType, mLongType, mLongLongType,
+    mUShortType, mULongType, mULongLongType, mFloatType, mDoubleType, mBooleanType, mCharType,
     mOctetType, mIObjectType, mVoidType;
   CDA_GenericVoidValue mVoid;
 };
 
-class CDA_GenericInterfaceBase
+CGRS_PUBLIC_PRE class CGRS_PUBLIC_POST CDA_GenericInterfaceBase
   : public iface::CGRS::GenericInterface
 {
 public:
-  void* makeCallbackProxy(iface::CGRS::CallbackObjectValue* aObjectValue);
+  virtual void* makeCallbackProxy(iface::CGRS::CallbackObjectValue* aObjectValue) = 0;
 };
 
 #if 0 // This is what generated implementations look like...
@@ -261,6 +263,25 @@ private:
   int32_t mValue;
 };
 
+class CDA_GenericLongLongValue
+  : public iface::CGRS::LongLongValue
+{
+public:
+  CDA_GenericLongLongValue(int64_t aValue) : mValue(aValue) {}
+  ~CDA_GenericLongLongValue() {}
+
+  CDA_IMPL_ID;
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI2(CGRS::GenericValue, CGRS::LongLongValue)
+
+  already_AddRefd<iface::CGRS::GenericType> typeOfValue() throw(std::exception&);
+  int64_t asLongLong() throw(std::exception&) { return mValue; }
+  void asLongLong(int64_t attr) throw(std::exception&) { mValue = attr; }
+
+private:
+  int64_t mValue;
+};
+
 class CDA_GenericUShortValue
   : public iface::CGRS::UShortValue
 {
@@ -297,6 +318,25 @@ public:
 
 private:
   uint32_t mValue;
+};
+
+class CDA_GenericULongLongValue
+  : public iface::CGRS::ULongLongValue
+{
+public:
+  CDA_GenericULongLongValue(int64_t aValue) : mValue(aValue) {}
+  ~CDA_GenericULongLongValue() {}
+
+  CDA_IMPL_ID;
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_QI2(CGRS::GenericValue, CGRS::ULongLongValue)
+
+  already_AddRefd<iface::CGRS::GenericType> typeOfValue() throw(std::exception&);
+  uint64_t asULongLong() throw(std::exception&) { return mValue; }
+  void asULongLong(uint64_t attr) throw(std::exception&) { mValue = attr; }
+
+private:
+  uint64_t mValue;
 };
 
 class CDA_GenericFloatValue
@@ -497,6 +537,13 @@ public:
 private:
   bool mIsIn, mIsOut;
   std::string mName;
+};
+
+CGRS_PUBLIC_PRE
+class CGRS_PUBLIC_POST CGRSCallback
+{
+public:
+  virtual already_AddRefd<iface::CGRS::CallbackObjectValue> unwrap() = 0;
 };
 
 CGRS_PUBLIC_PRE

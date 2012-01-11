@@ -2,7 +2,7 @@
 import os.path
 import identifier
 import string
-from typeinfo import GetTypeInformation
+from typeinfo import GetTypeInformation, VoidType
 from omniidl import idlast, idlvisitor, idlutil, idltype, output
 
 class CGRSWalker(idlvisitor.AstVisitor):
@@ -61,7 +61,8 @@ class CGRSWalker(idlvisitor.AstVisitor):
                 self.cxx.out('{')
                 self.cxx.inc_indent()
                 self.cxx.out('ObjRef<iface::%s> bstmp = %s();' % (n[0], n[1]))
-                self.cxx.out('cgs->registerBootstrap("%s", bstmp);' % n[1])
+                self.cxx.out('ObjRef<iface::CGRS::GenericValue> objtmp = cgs->makeObject(bstmp);')
+                self.cxx.out('cgs->registerBootstrap("%s", objtmp);' % n[1])
                 self.cxx.dec_indent()
                 self.cxx.out('}')
 
@@ -75,7 +76,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
             self.cxx.inc_indent()
             self.cxx.out('RETURN_INTO_OBJREF(typ, CDA::CGRS::%s, new CDA::CGRS::%s());' %\
                          (n.corbacxxscoped, n.corbacxxscoped))
-            self.cxx.out('cgs->registerType("%s", typ);' % n.corbacxxscoped)
+            self.cxx.out('cgs->registerType(typ);')
             self.cxx.dec_indent()
             self.cxx.out('}')
 
@@ -119,14 +120,39 @@ class CGRSWalker(idlvisitor.AstVisitor):
     def recursivelyFindAncestralBases(self, node):
         ret = []
         for inh in node.inherits():
-            ret.append(inh)
-            ret += self.recursivelyFindAncestralBases(inh)
+            # It seems inherits can return other things...
+            if isinstance(inh, idlast.Interface):
+                ret.append(inh)
+                ret += self.recursivelyFindAncestralBases(inh)
         return ret
 
     def visitInterface(self, node):
         self.iface = node.corbacxxscoped
 
         self.enterAllNamespaces()
+
+        hasCallback = False
+        for p in node.pragmas(): hasCallback = hasCallback or (p.text() == "user-callback")
+
+        if hasCallback:
+            self.cxx.out('class Callback%s' % node.simplename)
+            self.cxx.out('  : public %s, public CGRSCallback' % node.simplecxxscoped)
+            self.cxx.out('{')
+            self.cxx.out('public:')
+            self.cxx.inc_indent()
+            self.cxx.out('Callback%s(iface::CGRS::CallbackObjectValue* aValue)' % node.simplename)
+            self.cxx.out('  : mValue(aValue)')
+            self.cxx.out('{')
+            self.cxx.out('}')
+            self.cxx.out('already_AddRefd<iface::CGRS::CallbackObjectValue> unwrap() { mValue->add_ref(); return mValue.getPointer(); }')
+            self.generateCallbackFunctions(node, {})
+            self.cxx.dec_indent()
+            self.cxx.out('private:')
+            self.cxx.inc_indent()
+            self.cxx.out('ObjRef<iface::CGRS::CallbackObjectValue> mValue;')
+            self.cxx.dec_indent()
+            self.cxx.out('};')
+
         self.cxx.out('class %s' % node.simplename)
         self.cxx.out('  : public CDA_GenericInterfaceBase')
         self.cxx.out('{')
@@ -186,7 +212,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('{')
         self.cxx.inc_indent()
         for (i, b) in zip(range(0,len(self.supportedAttributes)), self.supportedAttributes):
-            self.cxx.out('case %d: return new CDA::CGRS::%s::attr%s();' % (i, node.simplecxxscoped, b))
+            self.cxx.out('case %d: return new CDA::CGRS::%s::attr%s();' % (i, node.corbacxxscoped, b))
         self.cxx.out('default: throw iface::CGRS::CGRSError();')
         self.cxx.dec_indent()
         self.cxx.out('}')
@@ -201,7 +227,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('{')
         self.cxx.inc_indent()
         for (i, b) in zip(range(0,len(self.supportedOperations)), self.supportedOperations):
-            self.cxx.out('case %d: return new CDA::CGRS::%s::meth%s();' % (i, node.simplecxxscoped, b))
+            self.cxx.out('case %d: return new CDA::CGRS::%s::meth%s();' % (i, node.corbacxxscoped, b))
         self.cxx.out('default: throw iface::CGRS::CGRSError();')
         self.cxx.dec_indent()
         self.cxx.out('}')
@@ -214,7 +240,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.inc_indent()
         elseV = ''
         for b in self.supportedAttributes:
-            self.cxx.out('%sif (aAttributeName == "%s") return new CDA::CGRS::%s::attr%s();' % (elseV, b, node.simplecxxscoped, b))
+            self.cxx.out('%sif (aAttributeName == "%s") return new CDA::CGRS::%s::attr%s();' % (elseV, b, node.corbacxxscoped, b))
             elseV = 'else '
         self.cxx.out('throw iface::CGRS::CGRSError();')
         self.cxx.dec_indent()
@@ -226,64 +252,58 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.inc_indent()
         elseV = ''
         for b in self.supportedOperations:
-            self.cxx.out('%sif (aOperationName == "%s") return new CDA::CGRS::%s::meth%s();' % (elseV, b, node.simplecxxscoped, b))
+            self.cxx.out('%sif (aOperationName == "%s") return new CDA::CGRS::%s::meth%s();' % (elseV, b, node.corbacxxscoped, b))
             elseV = 'else '
         self.cxx.out('throw iface::CGRS::CGRSError();')
         self.cxx.dec_indent()
         self.cxx.out('}')
 
         self.cxx.out('void* makeCallbackProxy(iface::CGRS::CallbackObjectValue* aValue);')
-
+        
         self.cxx.dec_indent()
         self.cxx.out('};') # Close class
 
-        self.cxx.out('class Callback%s' % node.simplename)
-        self.cxx.out('  : public %s' % node.simplecxxscoped)
+        self.leaveAllNamespaces()
+        self.cxx.out('void* CDA::CGRS::%s::makeCallbackProxy(iface::CGRS::CallbackObjectValue* aValue)' % node.corbacxxscoped)
         self.cxx.out('{')
-        self.cxx.out('public:')
-        self.cxx.inc_indent()
-        self.cxx.out('Callback%s(iface::CGRS::CallbackObjectValue* aValue)' % node.simplename)
-        self.cxx.out('  : mValue(aValue)')
-        self.cxx.out('{')
+        if hasCallback:
+            self.cxx.out('  return reinterpret_cast<void*>(static_cast<%s*>(new Callback%s(aValue)));' %\
+                             (node.simplecxxscoped, node.simplename))
+        else:
+            self.cxx.out('  return NULL;')
         self.cxx.out('}')
-        self.generateCallbackFunctions(node)
-        self.cxx.dec_indent()
-        self.cxx.out('private:')
-        self.cxx.inc_indent()
-        self.cxx.out('ObjRef<iface::CGRS::CallbackObjectValue> mValue;')
-        self.cxx.dec_indent()
-        self.cxx.out('};')
 
-        self.cxx.out('void* %s::makeCallbackProxy(iface::CGRS::CallbackObjectValue* aValue) {' % node.simplecxxscoped +
-                     ' return reinterpret_cast<void*>(static_cast<%s>(new Callback%s(aValue))); }' %\
-                         (node.simplecxxscoped, node.simplename))
 
-    def generateCallbackFunctions(self, node):
+    def generateCallbackFunctions(self, node, seen):
+        if (seen.has_key(node.simplecxxscoped)): return
+        seen[node.simplecxxscoped] = 1
         for d in node.inherits():
-            self.generateCallbackFunctions(d)
+            self.generateCallbackFunctions(d, seen)
+        blacklist = []
         if node.simplecxxscoped == "iface::XPCOM::IObject":
             self.cxx.out('CDA_IMPL_REFCOUNT;')
             self.cxx.out('CDA_IMPL_ID;')
-            self.cxx.out('void* query_interface(const std::string& aTarget)')
+            self.cxx.out('void* query_interface(const std::string& aTarget) throw()')
             self.cxx.out('{')
             self.cxx.inc_indent()
             # Firstly check with the target...
-            self.cxx.out('std::list<iface::CGRS::GenericValue*> valseq;')
+            self.cxx.out('std::vector<iface::CGRS::GenericValue*> valseq;')
             self.cxx.out('bool wasExcept;')
             self.cxx.out('ObjRef<iface::CGRS::GenericValue> qiRet = ')
-            self.cxx.out('  mValue->invokeOnInterface("XPCOM::IObject", "query_interface", valseq, valseq, wasExcept);')
+            self.cxx.out('  mValue->invokeOnInterface("XPCOM::IObject", "query_interface", valseq, valseq, &wasExcept);')
             self.cxx.out('if (wasExcept) return NULL;')
             self.cxx.out('ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();')
             self.cxx.out('ObjRef<iface::CGRS::GenericValue> vv = cgs->makeVoid();\n')
             self.cxx.out('if (!CDA_objcmp(vv, qiRet)) return NULL;')
             self.cxx.out('ObjRef<iface::CGRS::GenericInterface> gi = cgs->getInterfaceByName(aTarget);\n')
             self.cxx.out('if (gi == NULL) return NULL;')
-            self.cxx.out('return gi->makeCallbackProxy(mValue);')
+            self.cxx.out('return static_cast<CDA_GenericInterfaceBase*>(gi.getPointer())->makeCallbackProxy(mValue);')
             self.cxx.dec_indent()
             self.cxx.out('}')
-            return
+            blacklist = ['add_ref', 'release_ref', 'query_interface', 'objid']
         for d in node.callables():
             if isinstance(d, idlast.Operation):
+                if d.simplename in blacklist: continue
                 exception = "std::exception" if d.raises() == [] else d.raises()[0].simplecxxscoped
                 self.generateCallbackFunction(\
                     node.corbacxxscoped, d.simplename, exception, d.returnType(),\
@@ -291,9 +311,10 @@ class CGRSWalker(idlvisitor.AstVisitor):
                             d.parameters()))
             elif isinstance(d, idlast.Attribute):
                 for a in d.declarators():
+                    if a.simplename in blacklist: continue
                     self.generateCallbackFunction(\
                         node.corbacxxscoped, a.simplename, 'std::exception', d.attrType(), [])
-                    if d.readonly():
+                    if not d.readonly():
                         self.generateCallbackFunction(\
                             node.corbacxxscoped, a.simplename, 'std::exception', None, [(d.attrType(), 1, 0)])
 
@@ -308,34 +329,42 @@ class CGRSWalker(idlvisitor.AstVisitor):
             argsig = '%s%s arg%d' % (argsig, argt.cppOutSignatureType if argOut else argt.cppInSignatureType, i)
 
         self.cxx.out('%s %s(%s)' % (rname, name, argsig))
-        self.cxx.out('  throw(%s&)' % exception)
+        self.cxx.out('  throw(std::exception&)')
         self.cxx.out('{')
         self.cxx.inc_indent()
 
         self.cxx.out('ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();')
-        self.cxx.out('std::list<iface::CGRS::GenericValue*> inValSeq;')
-        self.cxx.out('scoped_destroy<std::list<iface::CGRS::GenericValue*> > inValSeqReleaser(inValSeq, ' +\
-                     'container_destructor<std::list<iface::CGRS::GenericValue*> >(objref_destructor<iface::CGRS::GenericValue>())')
-        self.cxx.out('iface::CGRS::GenericValue* genval;')
+        self.cxx.out('std::vector<iface::CGRS::GenericValue*> inValSeq;')
+        self.cxx.out('scoped_destroy<std::vector<iface::CGRS::GenericValue*> > inValSeqReleaser(inValSeq, ' +\
+                     'new container_destructor<std::vector<iface::CGRS::GenericValue*> >(new objref_destructor<iface::CGRS::GenericValue>()));')
         for (i, (argType, argIn, argOut)) in zip(range(0, len(argInfo)), argInfo):
             if argIn:
+                self.cxx.out('{')
+                self.cxx.inc_indent()
                 argt = GetTypeInformation(argType)
+                # Note: Objects can actually have one of two incompatible interfaces - callback or normal.
+                self.cxx.out('iface::%s* genval;' % argt.genericIface)
                 self.cxx.out(argt.convertNativeToGeneric('%sarg%d' % (argt.deref(argOut), i), 'genval'))
                 self.cxx.out('inValSeq.push_back(genval);')
-        self.cxx.out('std::list<iface::CGRS::GenericValue*> outValSeq;')
-        self.cxx.out('scoped_destroy<std::list<iface::CGRS::GenericValue*> > outValSeqReleaser(outValSeq, container_destructor<std::list<iface::CGRS::GenericValue*> >(objref_destructor<iface::CGRS::GenericValue>()));')
+                self.cxx.dec_indent()
+                self.cxx.out('}')
+        self.cxx.out('std::vector<iface::CGRS::GenericValue*> outValSeq;')
+        self.cxx.out('scoped_destroy<std::vector<iface::CGRS::GenericValue*> > outValSeqReleaser(outValSeq, new container_destructor<std::vector<iface::CGRS::GenericValue*> >(new objref_destructor<iface::CGRS::GenericValue>()));')
         self.cxx.out('bool wasException = false;')
         self.cxx.out('ObjRef<iface::CGRS::GenericValue> genret = mValue->invokeOnInterface("%s", "%s", inValSeq, outValSeq, &wasException);' % (ifaceName, name))
         self.cxx.out('if (wasException) throw %s();' % exception)
-        self.cxx.out('std::list<iface::CGRS::GenericValue*>::iterator outVali = outValSeq.begin();')
+
+        self.cxx.out('std::vector<iface::CGRS::GenericValue*>::iterator outVali = outValSeq.begin();')
         for (i, (argType, argIn, argOut)) in zip(range(0, len(argInfo)), argInfo):
             if argOut:
                 argt = GetTypeInformation(argType)
-                self.cxx.out(argt.convertGenericToNative('*outVali', '%sarg%d' % (argt.deref(1), i)))
+                self.cxx.out('DECLARE_QUERY_INTERFACE_OBJREF(genout%d, (*outVali), %s);' % (i, argt.genericIface))
+                self.cxx.out(argt.convertGenericToNative('genout%d' % i, '%sarg%d' % (argt.deref(1), i)))
                 self.cxx.out('outVali++;')
-        if rtype != None:
+        if rtype != None and not isinstance(rtype, VoidType):
+            self.cxx.out('DECLARE_QUERY_INTERFACE_OBJREF(genreti, genret, %s);' % rtype.genericIface)
             self.cxx.out(rtype.makeStorage('retval'))
-            self.cxx.out(rtype.convertGenericToNative('genret', 'retval'))
+            self.cxx.out(rtype.convertGenericToNative('genreti', 'retval'))
             self.cxx.out(rtype.returnStorage('retval'))
         self.cxx.dec_indent()
         self.cxx.out('}')
@@ -362,7 +391,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('{')
         self.cxx.out('public:')
         self.cxx.inc_indent()
-        self.cxx.out('%s()' % node.simplecxxscoped)
+        self.cxx.out('%s()' % node.simplename)
         self.cxx.out('{')
         self.cxx.inc_indent()
         for n in node.enumerators():
@@ -372,20 +401,24 @@ class CGRSWalker(idlvisitor.AstVisitor):
                              (n.value(), n.identifier()))
         self.cxx.dec_indent()
         self.cxx.out('}')
-
-        self.cxx.out('std::string indexToName(uint32_t aIndex)')
+        self.cxx.out('CDA_IMPL_ID;')
+        self.cxx.out('CDA_IMPL_REFCOUNT;')
+        self.cxx.out('CDA_IMPL_QI2(CGRS::EnumType, CGRS::GenericType);')
+        self.cxx.out('std::string asString() throw() { return "%s"; }' % node.corbacxxscoped)
+        self.cxx.out('int32_t maxIndex() throw() { return %d; }' % (len(node.enumerators()) - 1))
+        self.cxx.out('std::string indexToName(int32_t aIndex) throw(std::exception&)')
         self.cxx.out('{')
         self.cxx.inc_indent()
-        self.cxx.out('std::map<std::string, uint32_t>::iterator i = mIntToName.find(aIndex);')
+        self.cxx.out('std::map<uint32_t, std::string>::iterator i = mIntToName.find(aIndex);')
         self.cxx.out('if (i == mIntToName.end()) throw iface::CGRS::CGRSError();')
         self.cxx.out('return (*i).second;')
         self.cxx.dec_indent()
         self.cxx.out('}')
 
-        self.cxx.out('std::string nameToIndex(const std::string& aName)')
+        self.cxx.out('int32_t nameToIndex(const std::string& aName) throw(std::exception&)')
         self.cxx.out('{')
         self.cxx.inc_indent()
-        self.cxx.out('std::map<uint32_t, std::string>::iterator i = mNameToInt.find(aName);')
+        self.cxx.out('std::map<std::string, uint32_t>::iterator i = mNameToInt.find(aName);')
         self.cxx.out('if (i == mNameToInt.end()) throw iface::CGRS::CGRSError();')
         self.cxx.out('return (*i).second;')
         self.cxx.dec_indent()
@@ -397,7 +430,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('std::map<std::string, uint32_t> mNameToInt;')
         self.cxx.out('std::map<uint32_t, std::string> mIntToName;')
         self.cxx.dec_indent()
-        self.cxx.out('}')
+        self.cxx.out('};')
     
     def visitException(self, node):
         pass
@@ -438,13 +471,14 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('already_AddRefd<iface::CGRS::GenericType> returnType() throw()')
         self.cxx.out('{')
         self.cxx.inc_indent()
+        self.cxx.out('ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();')
         self.cxx.out(GetTypeInformation(retType).fetchType())
         self.cxx.dec_indent()
         self.cxx.out('}')
 
         self.cxx.out('already_AddRefd<iface::CGRS::GenericValue>')
-        self.cxx.out('invoke(iface::CGRS::ObjectValue* aInvokeOn, const std::vector<iface::CGRS::GenericValue>& aInValues,')
-        self.cxx.out('       std::vector<iface::CGRS::GenericValue>& aOutValues, bool& aWasException)')
+        self.cxx.out('invoke(iface::CGRS::ObjectValue* aInvokeOn, const std::vector<iface::CGRS::GenericValue*>& aInValues,')
+        self.cxx.out('       std::vector<iface::CGRS::GenericValue*>& aOutValues, bool* aWasException)')
         self.cxx.out('  throw(std::exception&)')
         self.cxx.out('{')
         self.cxx.inc_indent()
@@ -468,17 +502,18 @@ class CGRSWalker(idlvisitor.AstVisitor):
             self.cxx.out(ti.makeStorage('param%d' % pidx))
             self.cxx.out(ti.makeScopedDestructor('param%d' % pidx))
             if pIsIn:
-                self.cxx.out(ti.convertGenericToNative('aInValues[%d]' % inidx, 'param%d' % pidx))
+                self.cxx.out('DECLARE_QUERY_INTERFACE_OBJREF(inValues%d, (aInValues[%d]), %s);' % (inidx, inidx, ti.genericIface))
+                self.cxx.out(ti.convertGenericToNative('inValues%d' % inidx, 'param%d' % pidx))
                 inidx = inidx + 1
             if pidx != 0:
                 paramstring = paramstring + ', '
-            paramstring = paramstring + 'param%d' % pidx
+            paramstring = paramstring + '%sparam%d' % (ti.ref(pIsOut), pidx)
             pidx = pidx + 1
 
         rti = GetTypeInformation(retType)
         self.cxx.out(rti.makeStorage('retval'))
         self.cxx.out(rti.makeScopedDestructor('retval'))
-        self.cxx.out('aWasException = false;')
+        self.cxx.out('*aWasException = false;')
         self.cxx.out('try')
         self.cxx.out('{')
         self.cxx.inc_indent()
@@ -498,7 +533,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
             if pIsOut:
                 self.cxx.out(rti.defaultStorageValue('param%d' % pidx))
             pidx = pidx + 1
-        self.cxx.out('aWasException = true;')
+        self.cxx.out('*aWasException = true;')
         self.cxx.dec_indent()
         self.cxx.out('}')
 
@@ -516,7 +551,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
             pidx = pidx + 1
 
         if rti.typename != 'void':
-            self.cxx.out('ObjRef<iface::CGRS::GenericValue> gretval;')
+            self.cxx.out('ObjRef<iface::%s> gretval;' % rti.genericIface)
             self.cxx.out(rti.convertNativeToGeneric('retval', 'gretval'))
             self.cxx.out('gretval->add_ref();')
             self.cxx.out('return gretval.getPointer();')
@@ -543,6 +578,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
             self.cxx.out('already_AddRefd<iface::CGRS::GenericType> type() throw()')
             self.cxx.out('{')
             self.cxx.inc_indent()
+            self.cxx.out('ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();')
             self.cxx.out(GetTypeInformation(ptype).fetchType())
             self.cxx.dec_indent()
             self.cxx.out('}')
@@ -571,12 +607,13 @@ class CGRSWalker(idlvisitor.AstVisitor):
             self.cxx.out('already_AddRefd<iface::CGRS::GenericType> type() throw()')
             self.cxx.out('{')
             self.cxx.inc_indent()
+            self.cxx.out('ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();')
             self.cxx.out(GetTypeInformation(at.attrType()).fetchType())
             self.cxx.dec_indent()
             self.cxx.out('}')
             self.cxx.out('already_AddRefd<iface::CGRS::GenericMethod> getter() throw() { return new methget%s(); }' % n.simplename)
             if at.readonly():
-                self.cxx.out('already_AddRefd<iface::CGRS::GenericMethod> setter() throw(iface::CGRS::CGRSError) { throw iface::CGRS::CGRSError(); }')
+                self.cxx.out('already_AddRefd<iface::CGRS::GenericMethod> setter() throw(std::exception&) { throw iface::CGRS::CGRSError(); }')
             else:
                 self.cxx.out('already_AddRefd<iface::CGRS::GenericMethod> setter() throw() { return new methset%s(); }' % n.simplename)
             self.cxx.dec_indent()

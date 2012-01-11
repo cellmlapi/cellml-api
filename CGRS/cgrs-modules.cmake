@@ -8,11 +8,18 @@ FOREACH(bootstrap ${BOOTSTRAP_LIST})
   LIST(APPEND CGRSOMNIOPTS -Wbinclude${BOOTSTRAP_${bootstrap}_IDL}=${BOOTSTRAP_${bootstrap}_HEADER} -Wbbootstrap${BOOTSTRAP_${bootstrap}_IFACEMODULE}::${BOOTSTRAP_${bootstrap}_IFACE}=${BOOTSTRAP_${bootstrap}_METHODCXX})
 ENDFOREACH(bootstrap)
 
-SET(EXTENSION_LIST_PLUSXPCOM ${EXTENSION_LIST})
-LIST(APPEND EXTENSION_LIST_PLUSXPCOM xpcom)
+SET(EXTENSION_LIST_MODIFIED ${EXTENSION_LIST})
+
+# We remove CGRS from the list of interfaces callable through CGRS for two reasons:
+#  1. It would be fairly pointless to access CGRS through CGRS, and as every interface in
+#     CGRS increases the cost, it is better to simply disable it.
+#  2. CGRS currently has a name conflict when processing itself - we could fix this, but see 1.
+LIST(REMOVE_ITEM EXTENSION_LIST_MODIFIED cgrs)
+
+LIST(APPEND EXTENSION_LIST_MODIFIED xpcom)
 SET(IDL_LIST_xpcom xpcom)
 
-FOREACH(extension ${EXTENSION_LIST_PLUSXPCOM})
+FOREACH(extension ${EXTENSION_LIST_MODIFIED})
   SET(allcgrssources)
   SET(moduleinitcalls)
   SET(moduleinitexterns)
@@ -27,10 +34,10 @@ FOREACH(extension ${EXTENSION_LIST_PLUSXPCOM})
     ADD_CUSTOM_COMMAND(OUTPUT ${cgrspath}
       COMMAND ${OMNIIDL} -bcgrs ${CGRSOMNIOPTS} -Wbinclude${BOOTSTRAP_${extension}_IFACE}=${BOOTSTRAP_${extension}_HEADER} -Wbbootstrap${BOOTSTRAP_${extension}_IFACEMODULE}::${BOOTSTRAP_${extension}_IFACE}=${BOOTSTRAP_${extension}_METHODCXX} -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
-              simple_interface_generators/omniidl_be/cgrs/__init__.py
-              simple_interface_generators/omniidl_be/cgrs/identifier.py
-              simple_interface_generators/omniidl_be/cgrs/typeinfo.py
-              simple_interface_generators/omniidl_be/cgrs/CGRSWalker.py
+              ${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be/cgrs/__init__.py
+              ${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be/cgrs/identifier.py
+              ${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be/cgrs/typeinfo.py
+              ${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be/cgrs/CGRSWalker.py
       WORKING_DIRECTORY interfaces VERBATIM)
 
   ENDFOREACH(idlfile)
@@ -39,6 +46,10 @@ FOREACH(extension ${EXTENSION_LIST_PLUSXPCOM})
   FILE(WRITE "${CMAKE_BINARY_DIR}/cgrs-${extension}-init.cpp" "${moduleinitcode}")
 
   ADD_LIBRARY(cgrs_${extension} MODULE "${CMAKE_BINARY_DIR}/cgrs-${extension}-init.cpp" ${allcgrssources})
-  TARGET_LINK_LIBRARIES(cgrs_${extension} CGRS ${deplibs} ${extension})
+  IF (NOT (${extension} STREQUAL "xpcom"))
+    TARGET_LINK_LIBRARIES(cgrs_${extension} cgrs ${deplibs} ${extension})
+  ELSE()
+    TARGET_LINK_LIBRARIES(cgrs_xpcom cgrs ${deplibs})
+  ENDIF()
   INSTALL(TARGETS cgrs_${extension} DESTINATION lib/cgrs_modules)
 ENDFOREACH(extension)

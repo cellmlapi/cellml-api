@@ -17,8 +17,10 @@ module CGRS
   interface WStringValue;
   interface ShortValue;
   interface LongValue;
+  interface LongLongValue;
   interface UShortValue;
   interface ULongValue;
+  interface ULongLongValue;
   interface FloatValue;
   interface DoubleValue;
   interface BooleanValue;
@@ -94,6 +96,11 @@ module CGRS
     LongValue makeLong(in long val);
 
     /**
+     * Creates a long long value from a long long.
+     */
+    LongLongValue makeLongLong(in long long val);
+
+    /**
      * Creates an unsigned short value from an unsigned short.
      */
     UShortValue makeUShort(in unsigned short val);
@@ -102,6 +109,11 @@ module CGRS
      * Creates an unsigned long value from an unsigned long.
      */
     ULongValue makeULong(in unsigned long val);
+
+    /**
+     * Creates an unsigned long long value from an unsigned long.
+     */
+    ULongLongValue makeULongLong(in unsigned long long val);
 
     /**
      * Creates a float value from a float.
@@ -155,6 +167,7 @@ module CGRS
      */
     GenericValue makeVoid();
   };
+#pragma terminal-interface
 
   /**
    * A GenericModule represents a loaded module that provides generics support
@@ -218,6 +231,7 @@ module CGRS
      */
     GenericMethod getOperationByName(in string aOperationName) raises(CGRSError);
   };
+#pragma terminal-interface
 
   /**
    * Information on a type used in an IDL file (either built in to IDL or defined in the
@@ -246,6 +260,7 @@ module CGRS
      */
     readonly attribute GenericType innerType;
   };
+#pragma terminal-interface
 
   /**
    * Information on a particular enum type (a choice between one of several options).
@@ -271,6 +286,7 @@ module CGRS
      */
     long nameToIndex(in string name) raises(CGRSError);
   };
+#pragma terminal-interface
 
   /**
    * An interface for describing values in general.
@@ -295,6 +311,7 @@ module CGRS
      */
     attribute string asString;
   };
+#pragma terminal-interface
 
   /**
    * Represents a wide string value.
@@ -307,6 +324,7 @@ module CGRS
      */
     attribute wstring asWString;
   };
+#pragma terminal-interface
 
   /**
    * Represents a short value.
@@ -319,6 +337,7 @@ module CGRS
      */
     attribute short asShort;
   };
+#pragma terminal-interface
 
   /**
    * Represents a long value.
@@ -331,6 +350,20 @@ module CGRS
      */
     attribute long asLong;
   };
+#pragma terminal-interface
+
+  /**
+   * Represents a long value.
+   */
+  interface LongLongValue
+    : GenericValue
+  {
+    /**
+     * The value as a long.
+     */
+    attribute long long asLongLong;
+  };
+#pragma terminal-interface
 
   /**
    * Represents an unsigned short value.
@@ -343,6 +376,7 @@ module CGRS
      */
     attribute unsigned short asUShort;
   };
+#pragma terminal-interface
 
   /**
    * Represents an unsigned long value.
@@ -355,6 +389,20 @@ module CGRS
      */
     attribute unsigned long asULong;
   };
+#pragma terminal-interface
+
+  /**
+   * Represents an unsigned long long value.
+   */
+  interface ULongLongValue
+    : GenericValue
+  {
+    /**
+     * The value as an unsigned long.
+     */
+    attribute unsigned long long asULongLong;
+  };
+#pragma terminal-interface
 
   /**
    * Represents a float value.
@@ -367,6 +415,7 @@ module CGRS
      */
     attribute float asFloat;
   };
+#pragma terminal-interface
 
   /**
    * Represents a double value.
@@ -379,6 +428,7 @@ module CGRS
      */
     attribute double asDouble;
   };
+#pragma terminal-interface
 
   /**
    * Represents a boolean value.
@@ -391,6 +441,7 @@ module CGRS
      */
     attribute boolean asBoolean;
   };
+#pragma terminal-interface
 
   /**
    * Represents a char value.
@@ -403,6 +454,7 @@ module CGRS
      */
     attribute char asChar;
   };
+#pragma terminal-interface
 
   /**
    * Represents an octet value.
@@ -415,6 +467,7 @@ module CGRS
      */
     attribute octet asOctet;
   };
+#pragma terminal-interface
 
   /**
    * Represents a native object.
@@ -427,6 +480,7 @@ module CGRS
      */
     attribute XPCOM::IObject asObject;
   };
+#pragma terminal-interface
 
   /**
    * Represents an object implemented by a generics user. The generics user must
@@ -456,6 +510,7 @@ module CGRS
                                    in ValueSequence inValues, out ValueSequence outValues,
                                    out boolean wasException);
   };
+#pragma user-callback
 
   /**
    * Represents a sequence value (a sequence of some inner type). Once the inner
@@ -481,6 +536,7 @@ module CGRS
      */
     void appendValue(in GenericValue v) raises(CGRSError);
   };
+#pragma terminal-interface
 
   /**
    * Represents an enumeration value.
@@ -498,6 +554,7 @@ module CGRS
      */
     attribute long asLong;
   };
+#pragma terminal-interface
 
   /**
    * Represents an attribute.
@@ -531,6 +588,7 @@ module CGRS
      */
     readonly attribute GenericMethod setter;
   };
+#pragma terminal-interface
 
   /**
    * Represents a parameter.
@@ -561,6 +619,7 @@ module CGRS
      */
     readonly attribute GenericType type;
   };
+#pragma terminal-interface
 
   /**
    * Represents a sequence of parameters.
@@ -595,5 +654,6 @@ module CGRS
      */
     GenericValue invoke(in ObjectValue invokeOn, in ValueSequence inValues, out ValueSequence outValues, out boolean wasException);
   };
+#pragma terminal-interface
 };
 #endif

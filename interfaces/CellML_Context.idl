@@ -101,6 +101,7 @@ module cellml_context
     void moduleDeregistered(in CellMLModule mod);
   };
 #pragma terminal-interface
+#pragma user-callback
 
   /**
    * This interface is for a 'module manager': a way of managing the modules
@@ -287,6 +288,7 @@ module cellml_context
     void modelRemoved(in ModelNode oldNode, in short depth);
   };
 #pragma terminal-interface
+#pragma user-callback
 
   /**
    * This represents a node in the tree containing all models available to the

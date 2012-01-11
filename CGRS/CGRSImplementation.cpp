@@ -20,7 +20,8 @@ static CDA_GenericsService* gCDAGenericsService = NULL;
 
 CDA_GenericsService::CDA_GenericsService()
   : mStringType("string"), mWStringType("wstring"), mShortType("short"),
-    mLongType("long"), mUShortType("unsigned short"), mULongType("unsigned long"),
+    mLongType("long"), mLongLongType("long long"), mUShortType("unsigned short"), mULongType("unsigned long"),
+    mULongLongType("unsigned long long"),
     mFloatType("float"), mDoubleType("double"), mBooleanType("boolean"),
     mCharType("char"), mOctetType("octet"), mIObjectType("XPCOM::IObject"), mVoidType("void")
 {
@@ -28,8 +29,10 @@ CDA_GenericsService::CDA_GenericsService()
   registerType(&mWStringType);
   registerType(&mShortType);
   registerType(&mLongType);
+  registerType(&mLongLongType);
   registerType(&mUShortType);
   registerType(&mULongType);
+  registerType(&mULongLongType);
   registerType(&mFloatType);
   registerType(&mDoubleType);
   registerType(&mBooleanType);
@@ -142,6 +145,12 @@ CDA_GenericsService::makeLong(int32_t val) throw(std::exception&)
   return new CDA_GenericLongValue(val);
 }
 
+already_AddRefd<iface::CGRS::LongLongValue>
+CDA_GenericsService::makeLongLong(int64_t val) throw(std::exception&)
+{
+  return new CDA_GenericLongLongValue(val);
+}
+
 already_AddRefd<iface::CGRS::UShortValue>
 CDA_GenericsService::makeUShort(uint16_t val) throw(std::exception&)
 {
@@ -152,6 +161,12 @@ already_AddRefd<iface::CGRS::ULongValue>
 CDA_GenericsService::makeULong(uint32_t val) throw(std::exception&)
 {
   return new CDA_GenericULongValue(val);
+}
+
+already_AddRefd<iface::CGRS::ULongLongValue>
+CDA_GenericsService::makeULongLong(uint64_t val) throw(std::exception&)
+{
+  return new CDA_GenericULongLongValue(val);
 }
 
 already_AddRefd<iface::CGRS::FloatValue>
@@ -188,6 +203,12 @@ already_AddRefd<iface::CGRS::SequenceValue>
 CDA_GenericsService::makeSequence(iface::CGRS::GenericType* aInnerType) throw(std::exception&)
 {
   return new CDA_GenericSequenceValue(aInnerType);
+}
+
+already_AddRefd<iface::CGRS::SequenceType>
+CDA_GenericsService::makeSequenceType(iface::CGRS::GenericType* aInnerType) throw(std::exception&)
+{
+  return new CDA_GenericSequenceType(aInnerType);
 }
 
 already_AddRefd<iface::CGRS::EnumValue>
@@ -250,6 +271,13 @@ CDA_GenericLongValue::typeOfValue()
 }
 
 already_AddRefd<iface::CGRS::GenericType>
+CDA_GenericLongLongValue::typeOfValue()
+  throw(std::exception&)
+{
+  return gCDAGenericsService->getTypeByName("long long");
+}
+
+already_AddRefd<iface::CGRS::GenericType>
 CDA_GenericUShortValue::typeOfValue()
   throw(std::exception&)
 {
@@ -261,6 +289,13 @@ CDA_GenericULongValue::typeOfValue()
   throw(std::exception&)
 {
   return gCDAGenericsService->getTypeByName("unsigned long");
+}
+
+already_AddRefd<iface::CGRS::GenericType>
+CDA_GenericULongLongValue::typeOfValue()
+  throw(std::exception&)
+{
+  return gCDAGenericsService->getTypeByName("unsigned long long");
 }
 
 already_AddRefd<iface::CGRS::GenericType>
