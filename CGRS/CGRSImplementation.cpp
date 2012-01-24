@@ -74,11 +74,16 @@ CDA_GenericsService::loadGenericModule(const std::string& aModulePath)
   if (s == NULL)
     throw iface::CGRS::CGRSError();
 
+  void* addr = 
 #ifdef WIN32
-  reinterpret_cast<void (*)(CDA_GenericsService*)>(GetProcAddress((HMODULE)s, "init_cgrsmodule"))(this);
+    reinterpret_cast<void*>(GetProcAddress((HMODULE)s, "init_cgrsmodule"));
 #else
-  reinterpret_cast<void (*)(CDA_GenericsService*)>(dlsym(s, "init_cgrsmodule"))(this);
+    reinterpret_cast<void*>(dlsym(s, "init_cgrsmodule"));
 #endif
+  if (addr == NULL)
+    throw iface::CGRS::CGRSError();
+
+  return reinterpret_cast<void (*)(CDA_GenericsService*)>(addr)(this);
 }
 
 void
