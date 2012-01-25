@@ -555,6 +555,8 @@ class CGRSWalker(idlvisitor.AstVisitor):
             self.cxx.out(rti.convertNativeToGeneric('retval', 'gretval'))
             self.cxx.out('gretval->add_ref();')
             self.cxx.out('return gretval.getPointer();')
+        else:
+            self.cxx.out('return cgs->makeVoid();')
 
         self.cxx.dec_indent()
         self.cxx.out('}')

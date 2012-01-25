@@ -549,7 +549,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -559,7 +559,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       return v; \
     }
 
@@ -567,7 +567,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -582,7 +582,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       return v; \
     }
@@ -591,7 +591,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -611,7 +611,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       return v; \
@@ -621,7 +621,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -646,7 +646,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -657,7 +657,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -687,7 +687,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -699,7 +699,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -734,7 +734,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -747,7 +747,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -787,7 +787,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -801,7 +801,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -846,7 +846,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -861,7 +861,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -911,7 +911,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \

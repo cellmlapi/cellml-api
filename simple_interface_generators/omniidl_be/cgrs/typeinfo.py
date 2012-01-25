@@ -198,7 +198,7 @@ class Struct(Declared):
 class Objref(Declared):
     def __init__(self, type, context):
         AnnotateByRepoID(type)
-        self.typename = type.simplecxxscoped
+        self.typename = type.corbacxxscoped
         self.cppType = type.simplecxxscoped + '*'
         self.rawIface = type.corbacxxscoped
         # It could be either a callback or a normal wrapper, so...
@@ -207,8 +207,11 @@ class Objref(Declared):
         self.defaultCxxValue = 'NULL'
         self.genericCreationCall = 'makeObject'
         self.cppReturnSignatureType = 'already_AddRefd<' + self.typename + '>'
-        self.cppInSignatureType = self.typename + '*'
-        self.cppOutSignatureType = self.typename + '**'
+        self.cppInSignatureType = 'iface::' + self.typename + '*'
+        self.cppOutSignatureType = 'iface::' + self.typename + '**'
+
+    def fetchType(self, doWhat = 'return '):
+        return '%scgs->getTypeByName("XPCOM::IObject");' % doWhat
 
     def convertGenericToNative(self, genName, natName):
         # Note: this line leaks void objrefs, but it doesn't matter since it is a singleton.
@@ -228,20 +231,20 @@ class Objref(Declared):
                "  QUERY_INTERFACE(%s, %s_tmp, %s);\n" % (natName, natName, self.rawIface) +\
                "}"
     def convertNativeToGeneric(self, natName, genName):
-        return "if (!CDA_objcmp(%s, cgs->makeVoid())) %s = NULL;\n" % (genName, natName) +\
+        return "if (%s == NULL) %s = cgs->makeVoid();\n" % (natName, genName) +\
                "else {\n" +\
-               "CGRSCallback* %s_cb = dynamic_cast<CGRSCallback*>(static_cast<%s*>(%s));\n" % (natName, self.typename, natName) +\
+               "CGRSCallback* %s_cb = dynamic_cast<CGRSCallback*>(static_cast<iface::%s*>(%s));\n" % (natName, self.typename, natName) +\
                "if (%s_cb != NULL) %s = %s_cb->unwrap();\n" % (natName, genName, natName) +\
                'else %s = cgs->%s(%s);' % (genName, self.genericCreationCall, natName) +\
                '}'
 
     def destructorValue(self):
-        return 'new objref_destructor<%s>()' % (self.typename)
+        return 'new objref_destructor<iface::%s>()' % (self.typename)
 
 class Enum(Declared, Base):
     def __init__(self, type):
         AnnotateByRepoID(type)
-        self.typename = type.simplecxxscoped
+        self.typename = type.corbacxxscoped
         self.cppType = type.simplecxxscoped
         self.cppReturnSignatureType = self.typename
         self.cppInSignatureType = self.typename
@@ -249,7 +252,7 @@ class Enum(Declared, Base):
         self.cppOutSignatureType = self.typename + '**'
         self.defaultCxxValue = type.decl().enumerators()[0].simplecxxscoped
     def convertGenericToNative(self, genName, natName):
-        return '%s = static_cast<%s>(%s->asLong());' % (natName, self.typename, genName)
+        return '%s = static_cast<iface::%s>(%s->asLong());' % (natName, self.typename, genName)
     def convertNativeToGeneric(self, natName, genName):
         return "ObjRef<iface::CGRS::GenericType> %s_type = cgs->getTypeByName(\"%s\");\n" % (genName, self.typename) +\
                "DECLARE_QUERY_INTERFACE_OBJREF(%s_etype, %s_type, CGRS::EnumType);\n" % (genName, genName) +\

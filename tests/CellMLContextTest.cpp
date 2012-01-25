@@ -109,7 +109,7 @@ public:
 
   void* query_interface(const std::string& id) throw()
   {
-    if (id == "xpcom::IObject")
+    if (id == "XPCOM::IObject")
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
     if (id == "cellml_context::ModelNodeMonitor")
       return reinterpret_cast<void*>(static_cast<iface::cellml_context::ModelNodeMonitor*>(this));
@@ -121,7 +121,7 @@ public:
   std::vector<std::string> supported_interfaces() throw()
   {
     std::vector<std::string> ret;
-    ret.push_back("xpcom::IObject");
+    ret.push_back("XPCOM::IObject");
     ret.push_back("cellml_context::ModelNodeMonitor");
     ret.push_back("cellml_context::ModelListMonitor");
     return ret;

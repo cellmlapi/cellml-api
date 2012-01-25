@@ -95,7 +95,7 @@ class X2PFactory_X2PISupports
 {
 public:
   X2PFactory_X2PISupports()
-    : X2PFactory("xpcom::IObject", NS_GET_IID(nsISupports))
+    : X2PFactory("XPCOM::IObject", NS_GET_IID(nsISupports))
   {
   }
 

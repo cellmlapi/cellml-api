@@ -46,6 +46,9 @@ void
 CDA_GenericsService::registerType(iface::CGRS::GenericType* aType)
 {
   std::string tname = aType->asString();
+  if (mTypeRegistry.find(tname) != mTypeRegistry.end())
+    return;
+
   aType->add_ref();
   mTypeRegistry.insert(std::pair<std::string, iface::CGRS::GenericType*>(tname, aType));
 }
@@ -90,6 +93,9 @@ void
 CDA_GenericsService::registerBootstrap(const std::string& aBootstrapName, iface::CGRS::GenericValue* aBootstrap)
   throw(std::exception&)
 {
+  if (mValueRegistry.find(aBootstrapName) != mValueRegistry.end())
+    return;
+
   aBootstrap->add_ref();
   mValueRegistry.insert(std::pair<std::string, iface::CGRS::GenericValue*>(aBootstrapName, aBootstrap));
 }
@@ -110,6 +116,9 @@ void
 CDA_GenericsService::registerInterface(const std::string& aIfaceName, iface::CGRS::GenericInterface* aIface)
   throw(std::exception&)
 {
+  if (mInterfaceRegistry.find(aIfaceName) != mInterfaceRegistry.end())
+    return;
+
   aIface->add_ref();
   mInterfaceRegistry.insert(std::pair<std::string, iface::CGRS::GenericInterface*>(aIfaceName, aIface));
 }

@@ -390,7 +390,7 @@ class Declared(Type):
             self.type_xpcom = 'nsISupports*'
             self.type_xpcom_class = 'nsISupports'
             self.type_pcm = '::iface::XPCOM::IObject*'
-            self.qiclass = 'xpcom::IObject'
+            self.qiclass = 'XPCOM::IObject'
             self.x2pclass = '::x2p::XPCOM::IObject'
             self.p2xclass = '::p2x::XPCOM::IObject'
         else:

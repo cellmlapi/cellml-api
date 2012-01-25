@@ -54,14 +54,14 @@ p2py::XPCOM::IObject::supported_interfaces() throw()
   if (!o || !PySequence_Check(o))
   {
     PyErr_Clear();
-    ret.push_back("xpcom::IObject");
+    ret.push_back("XPCOM::IObject");
     if (o != NULL)
       Py_DECREF(o);
     return ret;
   }
 
   uint32_t l = PySequence_Length(o);
-  ret.push_back("xpcom::IObject");
+  ret.push_back("XPCOM::IObject");
   for (uint32_t i = 0; i < l; i++)
   {
     PyObject* so = PySequence_GetItem(o, i);
