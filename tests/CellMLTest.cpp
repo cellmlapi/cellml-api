@@ -602,7 +602,7 @@ public:
   query_interface(const std::string& className)
     throw(std::exception&)
   {
-    if (className == "xpcom::IObject")
+    if (className == "XPCOM::IObject")
       return static_cast<iface::XPCOM::IObject*>(this);
     else if (className == "cellml_api::UserData")
       return static_cast<iface::cellml_api::UserData*>(this);
@@ -612,7 +612,7 @@ public:
   std::vector<std::string> supported_interfaces() throw()
   {
     std::vector<std::string> ret;
-    ret.push_back("xpcom::IObject");
+    ret.push_back("XPCOM::IObject");
     ret.push_back("cellml_api::UserData");
     return ret;
   }

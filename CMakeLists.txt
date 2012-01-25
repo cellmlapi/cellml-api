@@ -10,7 +10,9 @@ OPTION(ENABLE_CORBA "Generate a two-way bridge between the C++ implementation an
 MARK_AS_ADVANCED(FORCE ENABLE_CORBA)
 OPTION(ENABLE_XPCOM "Generate XPIDL interfaces and a two-way bridge between the C++ implementation and XPCOM, allowing all parts of the API to be accessed from XPCOM. Note: this functionality is not widely tested; if you find a bug, we are only interested if you also provide a working patch to fix the problem")
 OPTION(ENABLE_JAVA_BUILD "Build Java interfaces and a bridge between the C++ implementation and Java, allowing all parts of the API to be accessed from Java.")
-OPTION(ENABLE_PYTHON "Build Python interfaces and a bridge between the C++ implementation and Python, allowing all parts of the API to be accessed from Python.")
+OPTION(ENABLE_PYTHON "*** DEPRECATED *** Build Python interfaces and a bridge between the C++ implementation and Python, allowing all parts of the API to be accessed from Python. *** This interface will be removed in a future version of the API; new code should enable CGRS, and use the cgrspy Python module ***")
+MARK_AS_ADVANCED(FORCE ENABLE_PYTHON)
+
 MARK_AS_ADVANCED(FORCE ENABLE_XPCOM)
 SET(XULRUNNER_SDK_PATH "/usr/local/xulrunner-sdk" CACHE PATH "This property is only used when XPCOM support has been enabled. It determines the path to the xulrunner SDK used to build the XPCOM bridge")
 MARK_AS_ADVANCED(FORCE XULRUNNER_SDK_PATH)
@@ -32,6 +34,7 @@ OPTION(ENABLE_SRUS "Enable SRuS, the SED-ML Running Service, for running simulat
 OPTION(ENABLE_SPROS "Enable SProS, the SED-ML Processing Service, for manipulating and creating SED-ML descriptions of simulation experiments")
 OPTION(ENABLE_TELICEMS "Enable the TeLICeM (Text-based Language for the Input of CellML Models) Service")
 OPTION(ENABLE_VACSS "Build the Validation Against CellML Specification Service (VACSS), allowing CellML models to be validated to detect potential or actual problems with the model")
+OPTION(ENABLE_CGRS "Build the CellML Generics and Reflection Service (CGRS), providing access to the CellML API through a generic interface that allows each operation and attribute in the API to be discovered programmatically.")
 
 OPTION(CHECK_BUILD "Run some basic checks on whether the build is likely to succeed before actually building" ON)
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
@@ -44,8 +47,10 @@ IF (ENABLE_EVERYTHING)
   SET(ENABLE_VACSS ON)
   SET(ENABLE_TELICEMS ON)
   SET(ENABLE_JAVA_BUILD ON)
-  SET(ENABLE_PYTHON ON)
+  # This Python interface is deprecated, so don't turn it on.
+  # SET(ENABLE_PYTHON ON)
   SET(ENABLE_RDF ON)
+  SET(ENABLE_CGRS ON)
 ENDIF()
 IF (ENABLE_CELEDS_EXPORTER)
   SET(ENABLE_CELEDS ON)
@@ -137,12 +142,20 @@ IF (ENABLE_VACSS)
   INCLUDE(VACSS/vacss.cmake)
 ENDIF()
 
+IF (ENABLE_CGRS)
+  INCLUDE(CGRS/cgrs-interface.cmake)
+ENDIF()
+
 # Run the tests...
 INCLUDE(build/test.cmake)
 
 # Do all the language specific bits...
 
 INCLUDE(build/cxx.cmake)
+
+IF (ENABLE_CGRS)
+  INCLUDE(CGRS/cgrs-modules.cmake)
+ENDIF()
 
 IF (ENABLE_CORBA)
   INCLUDE(build/corba.cmake)

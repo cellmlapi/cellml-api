@@ -73,7 +73,7 @@ namespace p2x
     {
     public:
       IObjectFactory()
-        : P2XFactory("xpcom::IObject", NS_GET_IID(nsISupports))
+        : P2XFactory("XPCOM::IObject", NS_GET_IID(nsISupports))
       {
       }
 

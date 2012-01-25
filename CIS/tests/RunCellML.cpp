@@ -98,7 +98,7 @@ public:
   void* query_interface(const std::string& iface)
     throw (std::exception&)
   {
-    if (iface == "xpcom::IObject")
+    if (iface == "XPCOM::IObject")
       return static_cast< ::iface::XPCOM::IObject* >(this);
     else if (iface == "cellml_services::IntegrationProgressObserver")
       return
@@ -110,7 +110,7 @@ public:
   std::vector<std::string> supported_interfaces() throw()
   {
     std::vector<std::string> ret;
-    ret.push_back("xpcom::IObject");
+    ret.push_back("XPCOM::IObject");
     ret.push_back("cellml_services::IntegrationProgressObserver");
     return ret;
   }

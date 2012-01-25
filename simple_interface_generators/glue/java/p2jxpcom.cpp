@@ -56,9 +56,9 @@ p2j::XPCOM::IObject::supported_interfaces() throw()
 {
   // We could use reflection and get more information from Java, but there is
   // not currently a strong use case for this much complexity. So just return
-  // the xpcom::IObject and ...
+  // the XPCOM::IObject and ...
   std::vector<std::string> ret;
-  ret.push_back("xpcom::IObject");
+  ret.push_back("XPCOM::IObject");
   ret.push_back("...");
   return ret;
 }

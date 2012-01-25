@@ -102,7 +102,7 @@ public:
   std::string objid() throw() { return "RunSEDMLMonitor"; }
   void* query_interface(const std::string& aInterface) throw()
   {
-    if (aInterface == "xpcom::IObject" ||
+    if (aInterface == "XPCOM::IObject" ||
         aInterface == "SRuS::GeneratedDataMonitor")
       return static_cast<iface::XPCOM::IObject*>(this);
     else
@@ -111,7 +111,7 @@ public:
   std::vector<std::string> supported_interfaces() throw()
   {
     std::vector<std::string> ret;
-    ret.push_back("xpcom::IObject");
+    ret.push_back("XPCOM::IObject");
     ret.push_back("SRuS::GeneratedDataMonitor");
     return ret;
   }

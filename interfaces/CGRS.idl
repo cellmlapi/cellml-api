@@ -1,0 +1,659 @@
+#ifndef _INCLUDED_CRGS_IDL
+#define _INCLUDED_CRGS_IDL
+#include "xpcom.idl"
+
+/**
+ * The CellML Generics and Reflection Service (CGRS) provides a way to access
+ * all operations and attributes on CellML API components using completely
+ * generic facilities with dynamic typing.
+ */
+module CGRS
+{
+  interface GenericAttribute;
+  interface GenericMethod;
+  interface GenericValue;
+  interface GenericInterface;
+  interface StringValue;
+  interface WStringValue;
+  interface ShortValue;
+  interface LongValue;
+  interface LongLongValue;
+  interface UShortValue;
+  interface ULongValue;
+  interface ULongLongValue;
+  interface FloatValue;
+  interface DoubleValue;
+  interface BooleanValue;
+  interface CharValue;
+  interface OctetValue;
+  interface SequenceValue;
+  interface SequenceType;
+  interface EnumValue;
+  interface EnumType;
+  interface ObjectValue;
+
+  /**
+   * Represents a sequence of values.
+   */
+  typedef sequence<GenericValue> ValueSequence;
+
+  exception CGRSError {};
+  interface GenericType;
+
+  /**
+   * The GenericsService is the top-level object used for working with the CellML API
+   * using the generic interface.
+   */
+  interface GenericsService
+    : XPCOM::IObject
+  {
+    /**
+     * Loads a generics module (a module specifically produced to be used with the generics
+     * code, rather than an ordinary CellML API module).
+     *
+     * Once the module has been loaded, subsequent interface and bootstrap lookups will
+     * include that module.
+     *
+     * @param aModulePath The path from which to load the module.
+     * @raises CGRSError If the module cannot be loaded.
+     */
+    void loadGenericModule(in string aModulePath) raises(CGRSError);
+
+    /**
+     * Retrieves a generic bootstrap by name.
+     * @param aBootstrapName The name of the bootstrap to retrieve.
+     * @return A GenericValue for the bootstrap.
+     * @raises CGRSError if the bootstrap cannot be found.
+     */
+    GenericValue getBootstrapByName(in string aBootstrapName) raises(CGRSError);
+
+    /**
+     * Retrieves a generic interface by name.
+     * @param aInterfaceName The name of the interface to retrieve.
+     * @return A GenericInterface for the interface.
+     * @raises CGRSError if the interface cannot be found.
+     */
+    GenericInterface getInterfaceByName(in string aInterfaceName) raises(CGRSError);
+
+    /**
+     * Creates a string value from a string.
+     */
+    StringValue makeString(in string val);
+
+    /**
+     * Creates a wide string value from a wide string.
+     */
+    WStringValue makeWString(in wstring val);
+
+    /**
+     * Creates a short value from a short.
+     */
+    ShortValue makeShort(in short val);
+
+    /**
+     * Creates a long value from a long.
+     */
+    LongValue makeLong(in long val);
+
+    /**
+     * Creates a long long value from a long long.
+     */
+    LongLongValue makeLongLong(in long long val);
+
+    /**
+     * Creates an unsigned short value from an unsigned short.
+     */
+    UShortValue makeUShort(in unsigned short val);
+
+    /**
+     * Creates an unsigned long value from an unsigned long.
+     */
+    ULongValue makeULong(in unsigned long val);
+
+    /**
+     * Creates an unsigned long long value from an unsigned long.
+     */
+    ULongLongValue makeULongLong(in unsigned long long val);
+
+    /**
+     * Creates a float value from a float.
+     */
+    FloatValue makeFloat(in float val);
+
+    /**
+     * Creates a double value from a double.
+     */
+    DoubleValue makeDouble(in double val);
+
+    /**
+     * Creates a boolean value from a boolean.
+     */
+    BooleanValue makeBoolean(in boolean val);
+
+    /**
+     * Creates a character value from a char.
+     */
+    CharValue makeChar(in char val);
+
+    /**
+     * Creates an octet value from an octet.
+     */
+    OctetValue makeOctet(in octet val);
+
+    /**
+     * Creates a sequence value from a sequence.
+     */
+    SequenceValue makeSequence(in GenericType innerType);
+
+    /**
+     * Creates an enum value from an enum.
+     */
+    EnumValue makeEnumFromString(in EnumType etype,
+                                 in string name);
+
+    /**
+     * Creates an enum value from an index.
+     */
+    EnumValue makeEnumFromIndex(in EnumType etype,
+                                in long index);
+
+    /**
+     * Creates an object value from an object.
+     */
+    GenericValue makeObject(in XPCOM::IObject value);
+
+    /**
+     * Creates a void value...
+     */
+    GenericValue makeVoid();
+  };
+#pragma terminal-interface
+
+  /**
+   * A GenericModule represents a loaded module that provides generics support
+   * for a particular part of the CellML API.
+   */
+  interface GenericInterface
+    : XPCOM::IObject
+  {
+    /**
+     * The number of base interfaces underlying this interface.
+     */
+    readonly attribute long baseCount;
+
+    /**
+     * Retrieves the aBaseNumber'th base interface for this interface.
+     * @param aBaseNumber A zero-based index for the base.
+     * @return A GenericInterface corresponding to the index.
+     * @raises CGRSError if the base number is negative or too high.
+     */
+    GenericInterface getBase(in long aBaseNumber) raises(CGRSError);
+
+    /**
+     * The number of attributes on this interface.
+     */
+    readonly attribute long attributeCount;
+
+    /**
+     * Retrieves the aAttributeNumber'th attribute for this interface.
+     * @param aAttributeNumber A zero-based index for the attribute.
+     * @return A GenericAttribute corresponding to the attribute.
+     * @raises CGRSError if the attribute number is negative or too high.
+     */
+    GenericAttribute getAttributeByIndex(in long aAttributeNumber) raises(CGRSError);
+
+    /**
+     * Retrieves an attribute on this interface by name.
+     * @param aAttributeName A name for the attribute.
+     * @return A GenericAttribute corresponding to the attribute.
+     * @raises CGRSError if no attribute exists with the specified name.
+     */
+    GenericAttribute getAttributeByName(in string aAttributeName) raises(CGRSError);
+
+    /**
+     * The number of operations on this interface.
+     */
+    readonly attribute long operationCount;
+
+    /**
+     * Retrieves the aOperationNumber'th attribute for this interface.
+     * @param aOperationNumber A zero-based index for the operation.
+     * @return A GenericMethod corresponding to the operation.
+     * @raises CGRSError if the operation number is negative or too high.
+     */
+    GenericMethod getOperationByIndex(in long aOperationNumber) raises(CGRSError);
+
+    /**
+     * Retrieves an operation on this interface by name.
+     * @param aOperationName A name for the operation.
+     * @return A GenericMethod corresponding to the operation.
+     * @raises CGRSError if no operation exists with the specified name.
+     */
+    GenericMethod getOperationByName(in string aOperationName) raises(CGRSError);
+  };
+#pragma terminal-interface
+
+  /**
+   * Information on a type used in an IDL file (either built in to IDL or defined in the
+   * IDL file).
+   */
+  interface GenericType
+    : XPCOM::IObject
+  {
+    /**
+     * A string describing the type, as either a scoped, dot delimited name referencing
+     * into the IDL, as name of a built in primitive type, or sequence<> with a
+     * type name inserted between the < and the >.
+     */
+    readonly attribute string asString;
+  };
+
+  /**
+   * Information on a particular sequence type (a variable length sequence of some other type).
+   */
+  interface SequenceType
+    : GenericType
+  {
+    /**
+     * The 'inner' type of the sequence. In some parts of the API, a SequenceType
+     * with an innerType 'void' is used to represent a sequence of unknown innerType.
+     */
+    readonly attribute GenericType innerType;
+  };
+#pragma terminal-interface
+
+  /**
+   * Information on a particular enum type (a choice between one of several options).
+   * Enum indices run from 0 through to maxIndex.
+   */
+  interface EnumType
+    : GenericType
+  {
+    /**
+     * The highest index used in the enum indexing scheme.
+     */
+    readonly attribute long maxIndex;
+
+    /**
+     * Finds the name of an enumeration member from the corresponding index.
+     * @raises CGRSError if the index is out of range.
+     */
+    string indexToName(in long index) raises(CGRSError);
+
+    /**
+     * Retrieves the index of an enumeration member from the name.
+     * @raises CGRSError if there is no ensemble member with the listed name.
+     */
+    long nameToIndex(in string name) raises(CGRSError);
+  };
+#pragma terminal-interface
+
+  /**
+   * An interface for describing values in general.
+   */
+  interface GenericValue
+    : XPCOM::IObject
+  {
+    /**
+     * The type corresponding to the value.
+     */
+    readonly attribute GenericType typeOfValue;
+  };
+
+  /**
+   * Represents a string value.
+   */
+  interface StringValue
+    : GenericValue
+  {
+    /**
+     * The value as a string.
+     */
+    attribute string asString;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a wide string value.
+   */
+  interface WStringValue
+    : GenericValue
+  {
+    /**
+     * The value as a wide string.
+     */
+    attribute wstring asWString;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a short value.
+   */
+  interface ShortValue
+    : GenericValue
+  {
+    /**
+     * The value as a short.
+     */
+    attribute short asShort;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a long value.
+   */
+  interface LongValue
+    : GenericValue
+  {
+    /**
+     * The value as a long.
+     */
+    attribute long asLong;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a long value.
+   */
+  interface LongLongValue
+    : GenericValue
+  {
+    /**
+     * The value as a long.
+     */
+    attribute long long asLongLong;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents an unsigned short value.
+   */
+  interface UShortValue
+    : GenericValue
+  {
+    /**
+     * The value as an unsigned short.
+     */
+    attribute unsigned short asUShort;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents an unsigned long value.
+   */
+  interface ULongValue
+    : GenericValue
+  {
+    /**
+     * The value as an unsigned long.
+     */
+    attribute unsigned long asULong;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents an unsigned long long value.
+   */
+  interface ULongLongValue
+    : GenericValue
+  {
+    /**
+     * The value as an unsigned long.
+     */
+    attribute unsigned long long asULongLong;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a float value.
+   */
+  interface FloatValue
+    : GenericValue
+  {
+    /**
+     * The value as a float.
+     */
+    attribute float asFloat;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a double value.
+   */
+  interface DoubleValue
+    : GenericValue
+  {
+    /**
+     *  The value as a double.
+     */
+    attribute double asDouble;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a boolean value.
+   */
+  interface BooleanValue
+    : GenericValue
+  {
+    /**
+     * The value as a boolean.
+     */
+    attribute boolean asBoolean;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a char value.
+   */
+  interface CharValue
+    : GenericValue
+  {
+    /**
+     * The value as a char.
+     */
+    attribute char asChar;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents an octet value.
+   */
+  interface OctetValue
+    : GenericValue
+  {
+    /**
+     * The value as an octet.
+     */
+    attribute octet asOctet;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a native object.
+   */
+  interface ObjectValue
+    : GenericValue
+  {
+    /**
+     * The value as an object.
+     */
+    attribute XPCOM::IObject asObject;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents an object implemented by a generics user. The generics user must
+   * provide an implementation of this interface, and can then pass this as a
+   * callback.
+   */
+  interface CallbackObjectValue
+    : GenericValue
+  {
+    /**
+     * Called to attempt to invoke a user-implemented operation on an object.
+     * The user should at least implement query_interface on XPCOM::IObject, and all
+     * required operations and attributes for the supported interfaces.
+     * There is no need to implement add_ref and release_ref via invokeOnInterface;
+     * such calls will be directed to the CallbackObjectValue object directly rather than
+     * via generics.
+     * @param interfaceName The name of the interface on which to invoke the operation.
+     * @param methodName The name of the method to invoke. _get_ is prefixed for attribute
+     *                   getters; _set_ is prefixed for attribute setters.
+     * @param inValues The values of the in and in/out parameters to invoke the method with.
+     * @param outValues The values of the out and in/out parameters returned from the method.
+     * @param wasException If this out parameter comes back true, an exception was raised. In this case,
+     *                     the size and generic type of outValues and the return value are undefined.
+     * @return A GenericValue representing the return value.
+     */
+    GenericValue invokeOnInterface(in string interfaceName, in string methodName,
+                                   in ValueSequence inValues, out ValueSequence outValues,
+                                   out boolean wasException);
+  };
+#pragma user-callback
+
+  /**
+   * Represents a sequence value (a sequence of some inner type). Once the inner
+   * type is fixed, all internal values must be of that type.
+   */
+  interface SequenceValue
+    : GenericValue
+  {
+    /**
+     * Retrieves the number of values in the sequence.
+     */
+    readonly attribute long valueCount;
+
+    /**
+     * Retrieves a value from the sequence by index.
+     * @raises CGRSError if the index is out of range.
+     */
+    GenericValue getValueByIndex(in long index) raises(CGRSError);
+
+    /**
+     * Appends a value to the sequence.
+     * @raises CGRSError if the value is of the wrong type.
+     */
+    void appendValue(in GenericValue v) raises(CGRSError);
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents an enumeration value.
+   */
+  interface EnumValue
+    : GenericValue
+  {
+    /**
+     * The value as a string.
+     */
+    attribute string asString;
+
+    /**
+     * The value as a long index.
+     */
+    attribute long asLong;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents an attribute.
+   */
+  interface GenericAttribute
+    : XPCOM::IObject
+  {
+    /**
+     * If true, this attribute is readonly.
+     */
+    readonly attribute boolean isReadonly;
+
+    /**
+     * The name of the attribute.
+     */
+    readonly attribute string name;
+
+    /**
+     * The type of the attribute.
+     */
+    readonly attribute GenericType type;
+
+    /**
+     * Retrieves the getter.
+     */
+    readonly attribute GenericMethod getter;
+
+    /**
+     * Retrieves the setter.
+     * @raises CGRSError if this attribute is readonly.
+     */
+    readonly attribute GenericMethod setter;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a parameter.
+   */
+  interface GenericParameter
+    : XPCOM::IObject
+  {
+    /**
+     * If true, this parameter is an input to the method. Note that parameters
+     * can be in, out, or in/out - this will be true except for out-only parameters.
+     */
+    readonly attribute boolean isIn;
+
+    /**
+     * If true, this parameter is an output of the method.
+     * Note that parameters can be in, out, or in/out - this will be true except
+     * for in-only parameters.
+     */
+    readonly attribute boolean isOut;
+
+    /**
+     * The name given to the parameter in the IDL file.
+     */
+    readonly attribute string name;
+
+    /**
+     * The type of the parameter.
+     */
+    readonly attribute GenericType type;
+  };
+#pragma terminal-interface
+
+  /**
+   * Represents a sequence of parameters.
+   */
+  typedef sequence<GenericParameter> ParameterSequence;
+
+  /**
+   * Represents a method.
+   */
+  interface GenericMethod
+    : XPCOM::IObject
+  {
+    /**
+     * The sequence of parameters required by a method.
+     */
+    readonly attribute ParameterSequence parameters;
+
+    /**
+     * The return type of the method.
+     */
+    readonly attribute GenericType returnType;
+
+    /**
+     * Invokes the method using the specified sequence of input values.
+     * @param invokeOn The object on which to invoke this object (must be of the correct type).
+     * @param inValues The values of the in and in/out parameters to invoke the method with.
+     * @param outValues The values of the out and in/out parameters returned from the method.
+     * @param wasException If this out parameter comes back true, an exception was raised. In this case,
+     *                     the size and generic type of outValues and the return value are undefined.
+     * @return A GenericValue representing the return value.
+     * @raises CGRSError if one or more of the input values is of the incorrect type.
+     */
+    GenericValue invoke(in ObjectValue invokeOn, in ValueSequence inValues, out ValueSequence outValues, out boolean wasException);
+  };
+#pragma terminal-interface
+};
+#endif

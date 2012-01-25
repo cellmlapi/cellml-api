@@ -52,7 +52,7 @@ operator<<(std::ostream& data, const std::wstring& str)
   char* buf = new char[n + 1];
   wcstombs(buf, str.c_str(), n + 1);
   data << buf;
-  free(buf);
+  delete [] buf;
 }
 
 

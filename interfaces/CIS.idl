@@ -78,6 +78,7 @@ module cellml_services
     void failed(in string errorMessage);
   };
 #pragma terminal-interface
+#pragma user-callback
 
   interface CellMLIntegrationRun
     : XPCOM::IObject

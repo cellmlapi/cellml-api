@@ -305,7 +305,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             # We need to convert in parameters to the CXX type...
             indirect = ''
             if dirn != jnutils.Type.IN:
-                indirect = '&'
+                indirect = ti.cref
             if pcmParams != '':
                 pcmParams = pcmParams + ', '
             self.cppMod.out(ti.pcmType(jnutils.Type.DERIVE) + ' _pcm_' + pname + ';')
@@ -346,11 +346,11 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             self.cppMod.out(ti.pcmDestroy('_pcm_' + pname))
         # Raise an exception...
         self.cppMod.out('jclass eclazz = env->FindClass("java/lang/RuntimeException");')
-        self.cppMod.out('env->ThrowNew(eclazz, "Native code threw exception");');
+        self.cppMod.out('env->ThrowNew(eclazz, "Native code threw exception");')
         if needRet:
-            self.cppMod.out('return ' + rtype.failure_return + ';');
+            self.cppMod.out('return ' + rtype.failure_return + ';')
         else:
-            self.cppMod.out('return;');        
+            self.cppMod.out('return;')
         self.cppMod.dec_indent()
         self.cppMod.out('}')
 

@@ -51,6 +51,166 @@
 
 #include <locale.h>
 
+template<typename T>
+class XPCOMContainerReleaser
+{
+public:
+  XPCOMContainerReleaser(T& aCont)
+    : mCont(aCont), mOverride(false)
+  {}
+
+  ~XPCOMContainerReleaser()
+  {
+    if (mOverride)
+      return;
+    for (typename T::iterator i = mCont.begin();
+         i != mCont.end(); i++)
+      (*i)->release_ref();
+  }
+
+  void override()
+  {
+    mOverride = true;
+  }
+
+private:
+  T& mCont;
+  bool mOverride;
+};
+
+template<typename C>
+class destructor_functor
+{
+public:
+  virtual void operator()(C& aValue) = 0;
+};
+
+template<typename C>
+class cxxptr_destructor
+  : public destructor_functor<C*>
+{
+public:
+  cxxptr_destructor()
+  {
+  }
+
+  void
+  operator()(C*& aValue)
+  {
+    delete aValue;
+  }
+};
+
+template<typename C>
+class objref_destructor
+  : public destructor_functor<C*>
+{
+public:
+  objref_destructor()
+  {
+  }
+
+  void operator()(C*& aValue)
+  {
+    if (aValue)
+      aValue->release_ref();
+  }
+};
+
+template<typename C>
+class container_destructor
+  : public destructor_functor<C>
+{
+public:
+  container_destructor(destructor_functor<typename C::value_type>* aSubDis)
+    : mSubDis(aSubDis)
+  {
+  }
+
+  ~container_destructor()
+  {
+    delete mSubDis;
+  }
+
+  void
+  operator()(C& aValue)
+  {
+    for (typename C::iterator i = aValue.begin(); i != aValue.end(); i++)
+      (*mSubDis)(*i);
+  }
+private:
+  destructor_functor<typename C::value_type>* mSubDis;
+};
+
+template<typename C>
+class void_destructor
+  : public destructor_functor<C>
+{
+public:
+  void_destructor() {}
+  void operator()(C&) {}
+};
+
+template<typename T1, typename T2>
+class pair_both_destructor
+  : public destructor_functor<std::pair<T1, T2> >
+{
+public:
+  pair_both_destructor(destructor_functor<T1>* aSubDis1, destructor_functor<T2>* aSubDis2)
+    : mSubDis1(aSubDis1), mSubDis2(aSubDis2)
+  {
+  }
+
+  ~pair_both_destructor()
+  {
+    delete mSubDis1;
+    delete mSubDis2;
+  }
+
+  void
+  operator()(std::pair<T1, T2>& aValue)
+  {
+    (*mSubDis1)(aValue.first);
+    (*mSubDis2)(aValue.second);
+  }
+
+private:
+  destructor_functor<T1>* mSubDis1;
+  destructor_functor<T2>* mSubDis2;
+};
+
+template<typename C>
+class scoped_destroy
+{
+public:
+  scoped_destroy(C& aValue, destructor_functor<C>* aDestructor)
+    : mValue(aValue), mDestructor(aDestructor), mOverride(false)
+  {
+  }
+
+  ~scoped_destroy()
+  {
+    if (!mOverride)
+      (*mDestructor)(mValue);
+    delete mDestructor;
+  }
+
+  void manual_destroy()
+  {
+    (*mDestructor)(mValue);
+  }
+
+  void override()
+  {
+    mOverride = true;
+  }
+
+private:
+  C& mValue;
+  destructor_functor<C>* mDestructor;
+  bool mOverride;
+};
+
 // A dynamic_cast which can efficiently convert to the most derived type, but
 // gives undefined results if T isn't the most derived type of the input.
 template<class T>
@@ -389,7 +549,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -399,7 +559,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       return v; \
     }
 
@@ -407,7 +567,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -422,7 +582,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       return v; \
     }
@@ -431,7 +591,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -451,7 +611,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       return v; \
@@ -461,7 +621,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -486,7 +646,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -497,7 +657,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -527,7 +687,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -539,7 +699,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -574,7 +734,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -587,7 +747,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -627,7 +787,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -641,7 +801,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -686,7 +846,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
@@ -701,7 +861,7 @@ private:
     void* query_interface(const std::string& id) \
       throw(std::exception&) \
     { \
-      if (id == "xpcom::IObject") \
+      if (id == "XPCOM::IObject") \
       { \
         add_ref(); \
         return static_cast<iface::XPCOM::IObject*>(this); \
@@ -751,7 +911,7 @@ private:
     std::vector<std::string> supported_interfaces() throw() \
     { \
       std::vector<std::string> v; \
-      v.push_back("xpcom::IObject"); \
+      v.push_back("XPCOM::IObject"); \
       v.push_back(#c1); \
       v.push_back(#c2); \
       v.push_back(#c3); \
