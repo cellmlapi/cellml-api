@@ -139,7 +139,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
 
         self.enterAllNamespaces()
 
-        hasCallback = False
+        hasCallback = 0
         for p in node.pragmas(): hasCallback = hasCallback or (p.text() == "user-callback")
 
         if hasCallback:
