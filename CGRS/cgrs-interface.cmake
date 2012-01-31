@@ -10,7 +10,7 @@ INCLUDE_DIRECTORIES(CGRS)
 
 ADD_LIBRARY(cgrs
   CGRS/CGRSImplementation.cpp)
-TARGET_LINK_LIBRARIES(cgrs ${CMAKE_DL_LIBS})
+TARGET_LINK_LIBRARIES(cgrs ${CMAKE_DL_LIBS} cellml)
 INSTALL(TARGETS cgrs DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CGRSBootstrap" "CGRS" "GenericsService" "CGRS" "createGenericsService" "CreateGenericsService" "CGRSBootstrap.hpp" "CGRS" "cgrs")
