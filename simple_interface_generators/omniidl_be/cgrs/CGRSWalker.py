@@ -37,12 +37,12 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('ObjRef<CDA_GenericsService> cgs = CreateGenericsServiceInternal();')
         allMods = []
         newMods = filter(lambda x: isinstance(x, idlast.Module), node.declarations())
-        allMods += newMods
+        allMods = allMods + newMods
         while newMods != []:
             newMods = reduce(lambda x, y: x + y, \
                                map(lambda x: filter(lambda y: (isinstance(y, idlast.Module)), \
                                                     x.definitions()), newMods), [])
-            allMods += newMods
+            allMods = allMods + newMods
         allMods = filter(lambda x: x.mainFile(), allMods)
 
         allIfaces = reduce(lambda x, y: x + y, \
@@ -95,7 +95,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         if self.inputInNamespaces == self.outputInNamespaces:
             return
         try:
-            keepDepth = map(lambda (a, b): a != b, zip(self.inputInNamespaces, self.outputInNamespaces)).index(True)
+            keepDepth = map(lambda (a, b): a != b, zip(self.inputInNamespaces, self.outputInNamespaces)).index(1)
         except ValueError:
             keepDepth = min(len(self.inputInNamespaces), len(self.outputInNamespaces))
 
@@ -123,7 +123,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
             # It seems inherits can return other things...
             if isinstance(inh, idlast.Interface):
                 ret.append(inh)
-                ret += self.recursivelyFindAncestralBases(inh)
+                ret = ret + self.recursivelyFindAncestralBases(inh)
         return ret
 
     def visitInterface(self, node):
