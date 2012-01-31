@@ -5,6 +5,14 @@ import string
 from typeinfo import GetTypeInformation, VoidType, ternary
 from omniidl import idlast, idlvisitor, idlutil, idltype, output
 
+# For compatibility with older Pythons...
+def zip(a1, a2):
+    l = min(len(a1), len(a2))
+    az = []
+    for i in range(0, l):
+        az.append((a1[i], a2[i]))
+    return az
+
 class CGRSWalker(idlvisitor.AstVisitor):
     """Walks over the AST once and writes the CGRS code in the process"""
 
