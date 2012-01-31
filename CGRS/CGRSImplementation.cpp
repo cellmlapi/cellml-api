@@ -1,4 +1,5 @@
 #define IN_CGRS_MODULE
+#define MODULE_CONTAINS_CGRS
 #include "Utilities.hxx"
 #include "IfaceCGRS.hxx"
 #include "CGRSImplementation.hpp"
