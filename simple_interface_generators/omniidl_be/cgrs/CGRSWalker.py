@@ -327,7 +327,8 @@ class CGRSWalker(idlvisitor.AstVisitor):
                             node.corbacxxscoped, a.simplename, 'std::exception', None, [(d.attrType(), 1, 0)])
 
     def generateCallbackFunction(self, ifaceName, name, exception, ret, argInfo):
-        rtype = ternary(ret == None, lambda: None, lambda: GetTypeInformation(ret))
+        retv = ret # Workaround for Python 1.x
+        rtype = ternary(ret == None, lambda: None, lambda: GetTypeInformation(retv))
         rname = ternary(rtype == None, lambda: "void", lambda: rtype.cppReturnSignatureType)
         argsig = ''
         for (i, (argType, argIn, argOut)) in zip(range(0, len(argInfo)), argInfo):
