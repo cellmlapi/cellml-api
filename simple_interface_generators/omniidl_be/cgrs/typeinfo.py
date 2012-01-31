@@ -3,6 +3,12 @@ import string
 import os.path
 from identifier import AnnotateByRepoID
 
+def ternary(cond, v1, v2):
+    if cond:
+        return v1()
+    else:
+        return v2()
+
 def GetTypeInformation(type, context = None):
     if (type == None):
         return VoidType()
@@ -50,12 +56,12 @@ class Type:
     def deref(self, isOut):
         if isOut == 0:
             return ''
-        return ('*' if self.cppOutSignatureType == self.cppInSignatureType + '*' else '')
+        return (ternary(self.cppOutSignatureType == self.cppInSignatureType+ '*', lambda: '*', lambda: ''))
 
     def ref(self, isOut):
         if isOut == 0:
             return ''
-        return ('&' if self.cppOutSignatureType == self.cppInSignatureType + '*' else '')
+        return (ternary(self.cppOutSignatureType == self.cppInSignatureType + '*', lambda: '&', lambda: ''))
 
     def destructorValue(self):
         return 'new void_destructor<%s>()' % self.cppType

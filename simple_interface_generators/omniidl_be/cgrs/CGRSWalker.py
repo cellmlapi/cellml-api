@@ -2,7 +2,7 @@
 import os.path
 import identifier
 import string
-from typeinfo import GetTypeInformation, VoidType
+from typeinfo import GetTypeInformation, VoidType, ternary
 from omniidl import idlast, idlvisitor, idlutil, idltype, output
 
 class CGRSWalker(idlvisitor.AstVisitor):
@@ -304,7 +304,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         for d in node.callables():
             if isinstance(d, idlast.Operation):
                 if d.simplename in blacklist: continue
-                exception = "std::exception" if d.raises() == [] else d.raises()[0].simplecxxscoped
+                exception = ternary(d.raises() == [], lambda: "std::exception", lambda: d.raises()[0].simplecxxscoped)
                 self.generateCallbackFunction(\
                     node.corbacxxscoped, d.simplename, exception, d.returnType(),\
                     map(lambda x: (x.paramType(), x.is_in(), x.is_out()),\
@@ -319,14 +319,14 @@ class CGRSWalker(idlvisitor.AstVisitor):
                             node.corbacxxscoped, a.simplename, 'std::exception', None, [(d.attrType(), 1, 0)])
 
     def generateCallbackFunction(self, ifaceName, name, exception, ret, argInfo):
-        rtype = None if ret == None else GetTypeInformation(ret)
-        rname = "void" if rtype == None else rtype.cppReturnSignatureType
+        rtype = ternary(ret == None, lambda: None, lambda: GetTypeInformation(ret))
+        rname = ternary(rtype == None, lambda: "void", lambda: rtype.cppReturnSignatureType)
         argsig = ''
         for (i, (argType, argIn, argOut)) in zip(range(0, len(argInfo)), argInfo):
             argt = GetTypeInformation(argType)
             if argsig != '':
                 argsig = argsig + ', '
-            argsig = '%s%s arg%d' % (argsig, argt.cppOutSignatureType if argOut else argt.cppInSignatureType, i)
+            argsig = '%s%s arg%d' % (argsig, ternary(argOut, lambda: argt.cppOutSignatureType, lambda: argt.cppInSignatureType), i)
 
         self.cxx.out('%s %s(%s)' % (rname, name, argsig))
         self.cxx.out('  throw(std::exception&)')
