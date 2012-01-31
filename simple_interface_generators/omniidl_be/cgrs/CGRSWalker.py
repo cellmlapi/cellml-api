@@ -312,7 +312,9 @@ class CGRSWalker(idlvisitor.AstVisitor):
         for d in node.callables():
             if isinstance(d, idlast.Operation):
                 if d.simplename in blacklist: continue
-                exception = ternary(d.raises() == [], lambda: "std::exception", lambda: d.raises()[0].simplecxxscoped)
+                global dv
+                dv = d
+                exception = ternary(d.raises() == [], lambda: "std::exception", lambda: dv.raises()[0].simplecxxscoped)
                 self.generateCallbackFunction(\
                     node.corbacxxscoped, d.simplename, exception, d.returnType(),\
                     map(lambda x: (x.paramType(), x.is_in(), x.is_out()),\
@@ -327,15 +329,20 @@ class CGRSWalker(idlvisitor.AstVisitor):
                             node.corbacxxscoped, a.simplename, 'std::exception', None, [(d.attrType(), 1, 0)])
 
     def generateCallbackFunction(self, ifaceName, name, exception, ret, argInfo):
-        retv = ret # Workaround for Python 1.x
+        global retv # Workaround for Python 1.x
+        retv = ret 
         rtype = ternary(ret == None, lambda: None, lambda: GetTypeInformation(retv))
-        rname = ternary(rtype == None, lambda: "void", lambda: rtype.cppReturnSignatureType)
+        global rtypev
+        rtypev = rtype
+        rname = ternary(rtype == None, lambda: "void", lambda: rtypev.cppReturnSignatureType)
         argsig = ''
         for (i, (argType, argIn, argOut)) in zip(range(0, len(argInfo)), argInfo):
             argt = GetTypeInformation(argType)
             if argsig != '':
                 argsig = argsig + ', '
-            argsig = '%s%s arg%d' % (argsig, ternary(argOut, lambda: argt.cppOutSignatureType, lambda: argt.cppInSignatureType), i)
+            global argtv
+            argtv = argt
+            argsig = '%s%s arg%d' % (argsig, ternary(argOut, lambda: argtv.cppOutSignatureType, lambda: argtv.cppInSignatureType), i)
 
         self.cxx.out('%s %s(%s)' % (rname, name, argsig))
         self.cxx.out('  throw(std::exception&)')
