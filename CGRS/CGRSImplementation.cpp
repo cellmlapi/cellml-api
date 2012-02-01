@@ -71,8 +71,25 @@ CDA_GenericsService::loadGenericModule(const std::string& aModulePath)
 {
 #ifdef WIN32
   void* s = LoadLibrary(aModulePath.c_str());
+  if (s == NULL)
+  {
+    std::string tmp;
+    tmp = aModulePath + ".dll";
+    s = LoadLibrary(tmp.c_str()); 
+    if (s == NULL)
+    {
+      tmp = "lib" + tmp;
+      s = LoadLibrary(tmp.c_str()); 
+    }
+  }
 #else
   void* s = dlopen(aModulePath.c_str(), RTLD_LAZY);
+  if (s == NULL)
+  {
+    std::string tmp;
+    tmp = "lib" + aModulePath + ".so";
+    s = dlopen(tmp.c_str(), RTLD_LAZY);
+  }
 #endif
 
   if (s == NULL)

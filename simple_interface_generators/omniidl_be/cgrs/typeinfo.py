@@ -39,7 +39,7 @@ class Type:
 
         return '%scgs->getTypeByName("%s");' % (doWhat, self.typename)
     def makeStorage(self, name):
-        return '%s %s;' % (self.cppType, name)
+        return '%s %s%s;' % (self.cppType, name, self.assignCxxValue)
     def makeScopedDestructor(self, name):
         return 'scoped_destroy<%s > %sScopedDestroy(%s, %s);' % (self.cppType, name, name, self.destructorValue())
 
@@ -125,6 +125,7 @@ class Base(Type):
         k = type.kind()
         info = BASE_MAP[k]
         self.__dict__.update(info)
+        self.assignCxxValue = " = " + self.defaultCxxValue
 
 class String(Type):
     def __init__(self, type):
@@ -137,6 +138,7 @@ class String(Type):
         self.nativeGetter = 'asString'
         self.genericIface = 'CGRS::StringValue'
         self.genericCreationCall = 'makeString'
+        self.assignCxxValue = ""
 class WString(Type):
     def __init__(self, type):
         self.typename = 'wstring'
@@ -148,6 +150,7 @@ class WString(Type):
         self.nativeGetter = 'asWString'
         self.genericIface = 'CGRS::WStringValue'
         self.genericCreationCall = 'makeWString'
+        self.assignCxxValue = ""
 
 class Sequence(Type):
     def __init__(self, type, context):
@@ -159,6 +162,7 @@ class Sequence(Type):
         self.cppReturnSignatureType = 'std::vector<' + self.st.cppType + '>'
         self.cppInSignatureType = 'const std::vector<' + self.st.cppType + '>&'
         self.cppOutSignatureType = 'std::vector<' + self.st.cppType + '>&'
+        self.assignCxxValue = ""
 
     def defaultStorageValue(self, name):
         return '%s.clear();' % name
@@ -215,6 +219,7 @@ class Objref(Declared):
         self.cppReturnSignatureType = 'already_AddRefd<' + self.typename + '>'
         self.cppInSignatureType = 'iface::' + self.typename + '*'
         self.cppOutSignatureType = 'iface::' + self.typename + '**'
+        self.assignCxxValue = " = NULL"
 
     def fetchType(self, doWhat = 'return '):
         return '%scgs->getTypeByName("XPCOM::IObject");' % doWhat
@@ -233,8 +238,11 @@ class Objref(Declared):
                "static_cast<iface::CGRS::GenericInterface*>(gi))->makeCallbackProxy(%s_cb));\n" % genName +\
                "    if (%s == NULL) return cgs->makeVoid();\n" % natName +\
                "  }\n" +\
-               "  ObjRef<iface::XPCOM::IObject> %s_tmp = %s_qi->asObject();\n" % (natName, genName) +\
-               "  QUERY_INTERFACE(%s, %s_tmp, %s);\n" % (natName, natName, self.rawIface) +\
+               "  else\n" +\
+               "  {\n" +\
+               "    ObjRef<iface::XPCOM::IObject> %s_tmp = %s_qi->asObject();\n" % (natName, genName) +\
+               "    QUERY_INTERFACE(%s, %s_tmp, %s);\n" % (natName, natName, self.rawIface) +\
+               "  }\n" +\
                "}"
     def convertNativeToGeneric(self, natName, genName):
         return "if (%s == NULL) %s = cgs->makeVoid();\n" % (natName, genName) +\
@@ -257,6 +265,8 @@ class Enum(Declared, Base):
         self.genericIface = 'CGRS::EnumValue'
         self.cppOutSignatureType = self.typename + '**'
         self.defaultCxxValue = type.decl().enumerators()[0].simplecxxscoped
+        self.assignCxxValue = " = " + self.defaultCxxValue
+
     def convertGenericToNative(self, genName, natName):
         return '%s = static_cast<iface::%s>(%s->asLong());' % (natName, self.typename, genName)
     def convertNativeToGeneric(self, natName, genName):
