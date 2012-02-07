@@ -379,6 +379,12 @@ CDA_GenericVoidValue::typeOfValue()
   return gCDAGenericsService->getTypeByName("void");
 }
 
+CDA_GenericSequenceValue::~CDA_GenericSequenceValue()
+{
+  for (std::vector<iface::CGRS::GenericValue*>::iterator i = mVec.begin(); i != mVec.end(); i++)
+    (*i)->release_ref();
+}
+
 already_AddRefd<iface::CGRS::GenericType>
 CDA_GenericSequenceValue::typeOfValue()
   throw(std::exception&)

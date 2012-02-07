@@ -82,6 +82,7 @@ template<typename C>
 class destructor_functor
 {
 public:
+  virtual ~destructor_functor() {}
   virtual void operator()(C& aValue) = 0;
 };
 
@@ -198,6 +199,7 @@ public:
   void manual_destroy()
   {
     (*mDestructor)(mValue);
+    mOverride = true;
   }
 
   void override()

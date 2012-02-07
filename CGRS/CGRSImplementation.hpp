@@ -459,7 +459,7 @@ class CDA_GenericSequenceValue
 {
 public:
   CDA_GenericSequenceValue(iface::CGRS::GenericType* aInnerType) : mInnerType(aInnerType) {}
-  ~CDA_GenericSequenceValue() {}
+  ~CDA_GenericSequenceValue();
 
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
