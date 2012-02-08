@@ -1,0 +1,47 @@
+#!/bin/bash
+
+if [[ $OSTYPE == msys ]]; then
+    /c/cygwin/bin/bash build/make-python $*
+    exit $?
+fi
+
+VERSION_MAJOR=$1
+VERSION_MINOR=$2
+BINDIR=$3
+
+UNAME=$(uname -a)
+case $UNAME in
+    *Linux)
+        export PATH="$BINDIR:$PATH"
+        export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
+        export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
+        export LD_LIBRARY_PATH="$BINDIR:$LD_LIBRARY_PATH"
+        ;;
+    *Cygwin|*Msys*)
+        export PATH="$BINDIR:$PATH"
+        export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
+        export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
+        export LIB="$BINDIR;$LIB"
+        export INCLUDE="$BINDIR;$INCLUDE"
+        ;;
+    *Darwin*)
+        export PATH="$BINDIR:$PATH"
+        export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
+        export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
+        export DYLD_PATH="$BINDIR:$DYLD_PATH"
+        ;;
+    default)
+        echo "Fatal error - Cannot identify system to make Python dist for from uname output ($UNAME)"
+        exit 1
+        ;;
+esac
+
+if [[ -d cgrspy ]]; then
+  cd cgrspy
+  git pull
+else
+  git clone git@github.com:A1kmm/cgrspy.git
+  cd cgrspy
+fi
+
+python setup.py build test
