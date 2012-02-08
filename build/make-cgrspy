@@ -28,7 +28,7 @@ case $UNAME in
         export PATH="$BINDIR:$PATH"
         export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
         export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
-        export DYLD_PATH="$BINDIR:$DYLD_PATH"
+        export DYLD_LIBRARY_PATH="$BINDIR:$DYLD_LIBRARY_PATH"
         ;;
     default)
         echo "Fatal error - Cannot identify system to make Python dist for from uname output ($UNAME)"
