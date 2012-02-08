@@ -39,14 +39,14 @@ esac
 # Allow proxying out if we are at UoA...
 hostname | grep -q bioeng
 if [[ $? == 0 ]]; then
-  https_proxy=proxy.bioeng.auckland.ac.nz:8080
+  export https_proxy=proxy.bioeng.auckland.ac.nz:8080
 fi
 
 if [[ -d cgrspy ]]; then
   cd cgrspy
   git pull
 else
-  git clone https://A1kmm@github.com/A1kmm/cgrspy.git
+  git clone https://github.com/A1kmm/cgrspy.git
   cd cgrspy
 fi
 
