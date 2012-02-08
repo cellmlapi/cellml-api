@@ -1,6 +1,7 @@
 #!/bin/bash
 
 if [[ $OSTYPE == msys ]]; then
+    export WAS_MSYS=1
     /c/cygwin/bin/bash build/make-cgrspy $*
     exit $?
 fi
@@ -10,6 +11,7 @@ VERSION_MINOR=$2
 BINDIR=$3
 
 UNAME=$(uname -a)
+GIT=git
 case $UNAME in
     *Linux)
         export PATH="$BINDIR:$PATH"
@@ -18,11 +20,16 @@ case $UNAME in
         export LD_LIBRARY_PATH="$BINDIR:$LD_LIBRARY_PATH"
         ;;
     *Cygwin|*Msys*)
+        if [[ $WAS_MSYS != 1 ]]; then
+          echo On Windows but not MinGW, so silently suppressing Python build as it is done on MinGW instead
+          exit 0
+        fi
         export PATH="$BINDIR:$PATH"
         export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
         export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
         export LIB="$BINDIR;$LIB"
         export INCLUDE="$BINDIR;$INCLUDE"
+        export GIT=/cygdrive/c/cygwin/bin/git
         ;;
     *Darwin*)
         export PATH="$BINDIR:$PATH"
@@ -44,9 +51,9 @@ fi
 
 if [[ -d cgrspy ]]; then
   cd cgrspy
-  git pull
+  $GIT pull
 else
-  git clone https://github.com/A1kmm/cgrspy.git
+  $GIT clone https://github.com/A1kmm/cgrspy.git
   cd cgrspy
 fi
 
