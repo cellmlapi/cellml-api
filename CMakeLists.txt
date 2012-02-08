@@ -379,3 +379,4 @@ CONFIGURE_FILE(extdep/libxml/xml2_config.h.in extdep/libxml/xml2_config.h)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/extdep/libxml/)
 
 INCLUDE(build/packing.cmake)
+INCLUDE(build/python.cmake)
