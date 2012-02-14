@@ -30,7 +30,7 @@ case $UNAME in
         export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
         export LIB="$BINDIR;$LIB"
         export INCLUDE="$BINDIR;$INCLUDE"
-        export GIT=/cygdrive/c/cygwin/bin/git
+        set
         ;;
     *Darwin*)
         export PATH="$BINDIR:$PATH"
