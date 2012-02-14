@@ -43,7 +43,7 @@
  */
 double pdf_0(double bvar, double* CONSTANTS, double* ALGEBRAIC)
 {
-  return ( 1.00000/ pow( 2.00000* 3.14159265358979*CONSTANTS[3], 1.0 / 2)*exp(- (pow(bvar - CONSTANTS[4], 2.00000)/( 2.00000*CONSTANTS[3]))));
+  return ( (1.00000/ pow(( 2.00000* 3.14159265358979*CONSTANTS[3]), 1.0 / 2))*exp(- (pow(bvar - CONSTANTS[4], 2.00000)/( 2.00000*CONSTANTS[3]))));
 }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {

@@ -472,7 +472,7 @@ CDAMaLaESResult::endConversionMode()
 bool
 CDAMaLaESResult::pushPrecedence(uint32_t outer, uint32_t inner)
 {
-  bool eqNeed = mPrec.back().second && outer != 0;
+  bool eqNeed = mPrec.back().second || outer != 0;
   if (!eqNeed)
     mPrec.back().second = true;
   bool ret;
