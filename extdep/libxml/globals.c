@@ -73,11 +73,13 @@ void xmlCleanupGlobals(void)
 /*
  * Memory allocation routines
  */
+/*
 #undef	xmlFree
 #undef	xmlMalloc
 #undef	xmlMallocAtomic
 #undef	xmlMemStrdup
 #undef	xmlRealloc
+*/
 
 #if defined(DEBUG_MEMORY_LOCATION) || defined(DEBUG_MEMORY)
 xmlFreeFunc xmlFree = (xmlFreeFunc) xmlMemFree;

@@ -64,6 +64,7 @@ XMLCALL xmlOutputBufferCreateFilenameDefault (xmlOutputBufferCreateFilenameFunc 
  * compatibility support.
  */
 
+/*
 #undef	docbDefaultSAXHandler
 #undef	htmlDefaultSAXHandler
 #undef	oldXMLWDcompatibility
@@ -97,6 +98,7 @@ XMLCALL xmlOutputBufferCreateFilenameDefault (xmlOutputBufferCreateFilenameFunc 
 #undef  xmlLastError
 #undef  xmlParserInputBufferCreateFilenameValue
 #undef  xmlOutputBufferCreateFilenameValue
+*/
 
 /**
  * xmlRegisterNodeFunc:
