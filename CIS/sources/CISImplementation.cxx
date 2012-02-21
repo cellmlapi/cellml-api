@@ -709,8 +709,8 @@ CDA_CellMLIntegrationService::compileModelODE
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "  int ret = 0, *pret = &ret;" << std::endl
+     << "  double ALGEBRAIC[" << cci->algebraicIndexCount() << "];" << std::endl
      << "#define VOI 0.0" << std::endl
-     << "#define ALGEBRAIC NULL" << std::endl
      << frag8 << std::endl
      << "#undef VOI" << std::endl
      << "#undef ALGEBRAIC" << std::endl
