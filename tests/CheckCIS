@@ -82,5 +82,6 @@ runtest reset_rule
 runtest definite_integral
 runtest TestParameterIVAmbiguity
 runtest IVComputation
+runtest defint-constant
 
 exit 0
