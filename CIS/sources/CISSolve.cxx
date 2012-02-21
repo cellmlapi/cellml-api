@@ -1131,98 +1131,36 @@ double lcm_pair(double a, double b)
 
 double gcd_multi(uint32_t count, ...)
 {
-  va_list val;
-  double* storage1, *storage2, *t, ret;
-  uint32_t i, j = 0;
-
-  if (count == 0)
+  if (!count)
     return 1.0;
 
-  storage1 = new double[count];
-  assert(storage1 != NULL /* Out of memory? */);
-  storage2 = new double[count >> 1];
-  assert(storage2 != NULL /* Out of memory? */);
+  va_list parameters;
 
-  va_start(val, count);
-  for (i = 0; i < count - 1; i += 2)
-  {
-    double a1, a2;
-    a1 = va_arg(val, double);
-    a2 = va_arg(val, double);
-    storage1[j++] = gcd_pair(a1, a2);
-  }
-  if (i < count)
-    storage1[j++] = va_arg(val, double);
-  va_end(val);
+  va_start(parameters, count);
+  double res = va_arg(parameters, double);
 
-  while (j != 1)
-  {
-    count = j;
-    j = 0;
+  while (--count)
+    res = gcd_pair(res, va_arg(parameters, double));
 
-    for (i = 0; i < j - 1; i += 2)
-      storage2[j++] = gcd_pair(storage1[i], storage1[i + 1]);
-    if (i < j)
-      storage2[j++] = storage1[i];
-
-    t = storage1;
-    storage1 = storage2;
-    storage2 = t;
-  }
-
-  ret = storage1[0];
-  delete [] storage1;
-  delete [] storage2;
-
-  return ret;
+  va_end(parameters);
+  return res;
 }
 
 double lcm_multi(uint32_t count, ...)
 {
-  va_list val;
-  double* storage1, *storage2, *t, ret;
-  uint32_t i, j = 0;
-
-  if (count == 0)
+  if (!count)
     return 1.0;
 
-  storage1 = new double[count];
-  assert(storage1 != NULL /* Out of memory? */);
-  storage2 = new double[count >> 1];
-  assert(storage2 != NULL /* Out of memory? */);
+  va_list parameters;
 
-  va_start(val, count);
-  for (i = 0; i < count - 1; i += 2)
-  {
-    double a1, a2;
-    a1 = va_arg(val, double);
-    a2 = va_arg(val, double);
-    storage1[j++] = lcm_pair(a1, a2);
-  }
-  if (i < count)
-    storage1[j++] = va_arg(val, double);
-  va_end(val);
+  va_start(parameters, count);
+  double res = va_arg(parameters, double);
 
-  while (j != 1)
-  {
-    count = j;
-    j = 0;
+  while (--count)
+    res = lcm_pair(res, va_arg(parameters, double));
 
-    for (i = 0; i < j - 1; i += 2)
-      storage2[j++] = lcm_pair(storage1[i], storage1[i + 1]);
-    if (i < j)
-      storage2[j++] = storage1[i];
-
-    t = storage1;
-    storage1 = storage2;
-    storage2 = t;
-  }
-
-  ret = storage1[0];
-  delete [] storage1;
-  delete [] storage2;
-
-  return ret;
+  va_end(parameters);
+  return res;
 }
 
 double multi_min(uint32_t count, ...)
