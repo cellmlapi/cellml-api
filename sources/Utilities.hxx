@@ -137,7 +137,7 @@ public:
   operator()(C& aValue)
   {
     for (typename C::iterator i = aValue.begin(); i != aValue.end(); i++)
-      (*mSubDis)(*i);
+      (*mSubDis)(const_cast<typename C::value_type&>(*i));
   }
 private:
   destructor_functor<typename C::value_type>* mSubDis;

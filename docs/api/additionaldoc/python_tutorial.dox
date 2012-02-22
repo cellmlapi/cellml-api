@@ -1,6 +1,10 @@
 /*!
 \page python_tutorial Working with CellML models using Python
 
+\section cgrspy Setting up cgrspy
+
+The CellML API comes with a module called CGRS (the CellML Generics and Reflection Service). To 
+
 \section python_interp_setup Setting up your interpreter
 
 After obtaining the CellML SDK, you need to set the PYTHONPATH environment variable to include the python subdirectory of the CellML SDK.

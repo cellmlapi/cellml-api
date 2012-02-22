@@ -3,6 +3,7 @@
 #include "CeVASImpl.hpp"
 #include "CeVASBootstrap.hpp"
 #include <set>
+#include <assert.h>
 
 class CeVASError
 {
@@ -75,11 +76,10 @@ public:
     }
 
     // Next, populate the list of relevant models...
-    std::map<iface::cellml_api::Model*,RelevanceModelData,XPCOMComparator>::
-      iterator mi;
-    for (mi = groupProcessingMap.begin(); mi != groupProcessingMap.end(); mi++)
+    std::list<iface::cellml_api::Model*>::iterator mi;
+    for (mi = groupList.begin(); mi != groupList.end(); mi++)
     {
-      iface::cellml_api::Model* mod = (*mi).first;
+      iface::cellml_api::Model* mod = *mi;
       mRelevantModels.push_back(mod);
       mod->add_ref();
     }
@@ -91,8 +91,8 @@ private:
   std::set<iface::cellml_api::CellMLComponent*> relevantComponents;
   std::list<iface::cellml_api::Model*>& mRelevantModels;
   std::list<iface::cellml_api::Model*> groupProcessingQueue;
-  std::map<iface::cellml_api::Model*,RelevanceModelData,XPCOMComparator>
-    groupProcessingMap;
+  std::map<iface::cellml_api::Model*, RelevanceModelData, XPCOMComparator> groupProcessingMap;
+  std::list<iface::cellml_api::Model*> groupList;
 
   bool markComponentRelevant(iface::cellml_api::CellMLComponent* aComp)
   {
@@ -116,6 +116,7 @@ private:
       groupProcessingMap.insert(std::pair<iface::cellml_api::Model*,
                                           RelevanceModelData>(aModel, aModel));
       groupProcessingQueue.push_back(aModel);
+      groupList.push_back(aModel);
     }
     else if (!(*i).second.inQueue)
     {
@@ -351,7 +352,7 @@ public:
   VariableDisjointSet(iface::cellml_api::CellMLVariable* aV)
     : mRank(0), mV(aV), mSource(NULL), mParent(NULL)
   {
-    if ((mV->publicInterface() != iface::cellml_api::INTERFACE_IN) &&
+    if ((mV->publicInterface() != iface::cellml_api::INTERFACE_IN) ||
         (mV->privateInterface() != iface::cellml_api::INTERFACE_IN))
       mSource = mV;
   }
@@ -364,7 +365,8 @@ public:
     return (mParent = mParent->root());
   }
 
-  void merge(VariableDisjointSet* aWith)
+  void merge(VariableDisjointSet* aWith, iface::cellml_api::CellMLVariable* v1,
+             iface::cellml_api::CellMLVariable* v2, bool isParent, bool isChild)
   {
     VariableDisjointSet* s1 = root();
     VariableDisjointSet* s2 = aWith->root();
@@ -377,21 +379,74 @@ public:
 
     if (s1->mSource && s2->mSource)
     {
-      std::wstring msg = L"Two non-in variables are connected: Variable ";
-      RETURN_INTO_WSTRING(v1name, s1->mSource->name());
-      RETURN_INTO_WSTRING(v1comp, s1->mSource->componentName());
-      RETURN_INTO_WSTRING(v2name, s2->mSource->name());
-      RETURN_INTO_WSTRING(v2comp, s2->mSource->componentName());
+      iface::cellml_api::VariableInterface iface1Conn, iface2Conn, iface1Noconn, iface2Noconn;
+      if (isParent)
+      {
+        iface1Conn = v1->privateInterface();
+        iface2Conn = v2->publicInterface();
+        iface1Noconn = v1->publicInterface();
+        iface2Noconn = v2->privateInterface();
+      }
+      else if (isChild)
+      {
+        iface1Conn = v1->publicInterface();
+        iface2Conn = v2->privateInterface();
+        iface1Noconn = v1->privateInterface();
+        iface2Noconn = v2->publicInterface();
+      }
+      else
+      {
+        iface1Conn = v1->publicInterface();
+        iface2Conn = v2->publicInterface();
+        iface1Noconn = v1->privateInterface();
+        iface2Noconn = v2->privateInterface();
+      }
 
-      msg += v1name;
-      msg += L" in component ";
-      msg += v1comp;
-      msg += L" is connected (directly or indirectly) to variable ";
-      msg += v2name;
-      msg += L" in component ";
-      msg += v2comp;
-      msg += L"; ";
-      throw CeVASError(msg);
+      if (iface1Conn == iface::cellml_api::INTERFACE_NONE)
+      {
+        std::wstring msg = L"Variable is connected to another variable on 'none' interface: Variable with none interface: " +
+          s1->mSource->name() + L" in component " + s1->mSource->componentName() + L"; other variable: " +
+          s2->mSource->name() + L" in component " + s2->mSource->componentName();
+        throw CeVASError(msg);
+      }
+      if (iface2Conn == iface::cellml_api::INTERFACE_NONE)
+      {
+        std::wstring msg = L"Variable is connected to another variable on 'none' interface: Variable with none interface: " +
+          s2->mSource->name() + L" in component " + s2->mSource->componentName() + L"; other variable: " +
+          s1->mSource->name() + L" in component " + s1->mSource->componentName();
+        throw CeVASError(msg);
+      }
+      if (iface1Conn == iface::cellml_api::INTERFACE_IN && iface2Conn == iface::cellml_api::INTERFACE_IN)
+      {
+        std::wstring msg = L"Two 'in' variables are connected: variable " +
+          s1->mSource->name() + L" in component " + s1->mSource->componentName() + L" and variable " +
+          s2->mSource->name() + L" in component " + s2->mSource->componentName();
+        throw CeVASError(msg);
+      }
+      if (iface1Conn == iface::cellml_api::INTERFACE_OUT && iface2Conn == iface::cellml_api::INTERFACE_OUT)
+      {
+        std::wstring msg = L"Two 'out' variables are connected: variable " +
+          s1->mSource->name() + L" in component " + s1->mSource->componentName() + L" and variable " +
+          s2->mSource->name() + L" in component " + s2->mSource->componentName();
+        throw CeVASError(msg);
+      }
+      if (iface1Noconn == iface::cellml_api::INTERFACE_IN && iface1Conn == iface::cellml_api::INTERFACE_IN)
+      {
+        std::wstring msg = L"Variable has two 'in' interfaces: variable " +
+          s1->mSource->name() + L" in component " + s1->mSource->componentName();
+        throw CeVASError(msg);
+      }
+      if (iface2Noconn == iface::cellml_api::INTERFACE_IN && iface2Conn == iface::cellml_api::INTERFACE_IN)
+      {
+        std::wstring msg = L"Variable has two 'in' interfaces: variable " +
+          s2->mSource->name() + L" in component " + s2->mSource->componentName();
+        throw CeVASError(msg);
+      }
+
+      if (iface1Conn == iface::cellml_api::INTERFACE_OUT)
+        s2->mSource = s1->mSource;
+      else
+        s1->mSource = s2->mSource;
     }
 
     if (s1->mRank > s2->mRank)
@@ -458,17 +513,82 @@ CDACeVAS::~CDACeVAS()
 {
 }
 
+static void
+recursivelyAddRelationshipsFrom
+(
+ std::set<std::pair<iface::cellml_api::CellMLComponent*, iface::cellml_api::CellMLComponent*> >& aRels,
+ iface::cellml_api::ComponentRef* aCR
+)
+{
+  ObjRef<iface::cellml_api::Model> me(aCR->modelElement());
+  ObjRef<iface::cellml_api::CellMLComponentSet> ccs(me->modelComponents());
+  ObjRef<iface::cellml_api::ComponentRefSet> crs(aCR->componentRefs());
+  ObjRef<iface::cellml_api::ComponentRefIterator> cri(crs->iterateComponentRefs());
+
+  std::wstring cn1 = aCR->componentName();
+  ObjRef<iface::cellml_api::CellMLComponent> c1(ccs->getComponent(cn1.c_str()));
+  if (c1 == NULL)
+    return;
+
+  while (true)
+  {
+    ObjRef<iface::cellml_api::ComponentRef> cr(cri->nextComponentRef());
+    if (cr == NULL)
+      break;
+
+    std::wstring cn2 = cr->componentName();
+    ObjRef<iface::cellml_api::CellMLComponent> c2(ccs->getComponent(cn2.c_str()));
+    if (c2 == NULL)
+      continue;
+
+    c1->add_ref();
+    c2->add_ref();
+    aRels.insert(std::pair<iface::cellml_api::CellMLComponent*, iface::cellml_api::CellMLComponent*>
+                 (c1, c2));
+  }
+}
+
 void
 CDACeVAS::ComputeConnectedVariables
 (
  std::list<iface::cellml_api::Model*>& aRelevantModels
 )
 {
+  // Build a set of encapsulation relationships...
+  std::set<std::pair<iface::cellml_api::CellMLComponent*, iface::cellml_api::CellMLComponent*> > encap;
+  scoped_destroy<std::set<std::pair<iface::cellml_api::CellMLComponent*, iface::cellml_api::CellMLComponent*> > > dEncap(encap,
+    new container_destructor<std::set<std::pair<iface::cellml_api::CellMLComponent*, iface::cellml_api::CellMLComponent*> > >(
+    (new pair_both_destructor<iface::cellml_api::CellMLComponent*, iface::cellml_api::CellMLComponent*>
+     (new objref_destructor<iface::cellml_api::CellMLComponent>(),
+      new objref_destructor<iface::cellml_api::CellMLComponent>()))));
+
   // Build a collection of disjoint sets.
   AutoList<VariableDisjointSet*> disjointSetElements;
   std::map<iface::cellml_api::CellMLVariable*, VariableDisjointSet*,
            XPCOMComparator>
     varToDSMap;
+
+  for (std::list<iface::cellml_api::Model*>::iterator i = aRelevantModels.begin(); i != aRelevantModels.end(); i++)
+  {
+    ObjRef<iface::cellml_api::GroupSet> gs = 
+      (*i)->findGroupsWithRelationshipRefName(L"encapsulation");
+    ObjRef<iface::cellml_api::GroupIterator> gi(gs->iterateGroups());
+    while (true)
+    {
+      ObjRef<iface::cellml_api::Group> g(gi->nextGroup());
+      if (g == NULL)
+        break;
+      ObjRef<iface::cellml_api::ComponentRefSet> crs(g->componentRefs());
+      ObjRef<iface::cellml_api::ComponentRefIterator> cri(crs->iterateComponentRefs());
+      while (true)
+      {
+        ObjRef<iface::cellml_api::ComponentRef> cr(cri->nextComponentRef());
+        if (cr == NULL)
+          break;
+        recursivelyAddRelationshipsFrom(encap, cr);
+      }
+    }
+  }
   
   CleanupList<iface::cellml_api::CellMLComponent*>::iterator i;
   for (i = mRelevantComponents.begin(); i != mRelevantComponents.end(); i++)
@@ -495,6 +615,9 @@ CDACeVAS::ComputeConnectedVariables
        rmi != aRelevantModels.end();
        rmi++)
   {
+    RETURN_INTO_OBJREF(comps,
+                       iface::cellml_api::CellMLComponentSet,
+                       (*rmi)->modelComponents());
     RETURN_INTO_OBJREF(conns, iface::cellml_api::ConnectionSet,
                        (*rmi)->connections());
     RETURN_INTO_OBJREF(conni, iface::cellml_api::ConnectionIterator,
@@ -505,7 +628,9 @@ CDACeVAS::ComputeConnectedVariables
                          conni->nextConnection());
       if (conn == NULL)
         break;
-      
+
+      RETURN_INTO_OBJREF(mc, iface::cellml_api::MapComponents,
+                         conn->componentMapping());
       RETURN_INTO_OBJREF(mvs, iface::cellml_api::MapVariablesSet,
                          conn->variableMappings());
       RETURN_INTO_OBJREF(mvi, iface::cellml_api::MapVariablesIterator,
@@ -562,7 +687,28 @@ CDACeVAS::ComputeConnectedVariables
         if (vli1 == varToDSMap.end() || vli2 == varToDSMap.end())
           continue;
 
-        (*vli1).second->merge((*vli2).second);
+        ObjRef<iface::cellml_api::CellMLComponent> cvc1(comps->getComponent(mc->firstComponentName())),
+          cvc2(comps->getComponent(mc->secondComponentName()));
+
+        /*
+        std::wcout << cvc1->name() << L", " << cvc2->name() << L" " <<
+          mc->firstComponentName() << L", " << mc->secondComponentName() << L": " << L"1in2: "<< 
+          (encap.count(std::pair<iface::cellml_api::CellMLComponent*,
+                                 iface::cellml_api::CellMLComponent*>(cvc1, cvc2)) > 0)
+                  << L" 2in1: " << 
+          (encap.count(std::pair<iface::cellml_api::CellMLComponent*,
+                                 iface::cellml_api::CellMLComponent*>(cvc2, cvc1)) > 0)
+                  << std::endl;
+        */
+
+        (*vli1).second->merge
+          (
+           (*vli2).second, cv1, cv2,
+           encap.count(std::pair<iface::cellml_api::CellMLComponent*,
+                                 iface::cellml_api::CellMLComponent*>(cvc1, cvc2)) > 0,
+           encap.count(std::pair<iface::cellml_api::CellMLComponent*,
+                                 iface::cellml_api::CellMLComponent*>(cvc2, cvc1)) > 0
+          );
       }
     }
   }

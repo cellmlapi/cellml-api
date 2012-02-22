@@ -103,5 +103,6 @@ runtest definite_integral
 runtest TestParameterIVAmbiguity
 runtest IVComputation
 runtest uncertain-param1
+runtest law1
 
 exit 0
