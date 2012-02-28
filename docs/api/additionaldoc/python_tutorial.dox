@@ -93,9 +93,9 @@ cgrspy.bootstrap.loadGenericModule('cgrs_cellml')
 cellmlBootstrap = cgrspy.bootstrap.fetch('CreateCellMLBootstrap')
 
 model = cellmlBootstrap.modelLoader.loadFromURL("http://models.cellml.org/workspace/beeler_reuter_1977/@@rawfile/afb6088af6518dbe9c3b7564d9514f54356335d9/beeler_reuter_1977.cellml")
-\endcode
 
 for c in model.allComponents:
   print("Component: %s" % c.name)
+\endcode
 
 */
