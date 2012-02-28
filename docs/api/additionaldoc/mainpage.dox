@@ -17,6 +17,9 @@ The CellML API comes with a complete, Free / Open Source implementation, and thi
   - \subpage java_tutorial
   - \subpage python_tutorial
 
+\section apicodeinfo Understanding the CellML API Code
+  - \subpage codebase_intro
+
 \section other Miscellaneous information
   - \subpage citing_api
 */
