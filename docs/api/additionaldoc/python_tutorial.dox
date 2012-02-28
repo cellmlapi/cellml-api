@@ -84,4 +84,18 @@ c.addMath(telicemService.parseMaths(doc, 'd(x)/d(t) = x - power(y, 2{units="dime
 model.serialisedText
 \endcode
 
+One feature of the Python bindings is that you can use iterators conveniently using the Python iterator protocol to write code that looks more natural. The Python binding can be used anywhere where an interface defines an iterate function, and the return value defines a next function. For example, you can use it to iterate through all components in a model:
+
+\code
+import cgrspy.bootstrap
+cgrspy.bootstrap.loadGenericModule('cgrs_cellml')
+
+cellmlBootstrap = cgrspy.bootstrap.fetch('CreateCellMLBootstrap')
+
+model = cellmlBootstrap.modelLoader.loadFromURL("http://models.cellml.org/workspace/beeler_reuter_1977/@@rawfile/afb6088af6518dbe9c3b7564d9514f54356335d9/beeler_reuter_1977.cellml")
+\endcode
+
+for c in model.allComponents:
+  print("Component: %s" % c.name)
+
 */
