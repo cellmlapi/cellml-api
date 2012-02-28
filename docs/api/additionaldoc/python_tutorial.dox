@@ -3,36 +3,85 @@
 
 \section cgrspy Setting up cgrspy
 
-The CellML API comes with a module called CGRS (the CellML Generics and Reflection Service). To 
+The CellML API comes with a module called CGRS (the CellML Generics and Reflection Service). A module called cgrspy allows you to call API services from Python through the CGRS.
 
-\section python_interp_setup Setting up your interpreter
+Firstly, make sure the CellML SDK is in your dynamic linker library path and include paths, as discussed on the \ref getting_started "Getting Started" page. Then you can run something like:
 
-After obtaining the CellML SDK, you need to set the PYTHONPATH environment variable to include the python subdirectory of the CellML SDK.
-
-For example, on Linux (bash shell), if you have installed the CellML SDK in /usr/share/cellml-sdk, you could type the following:
 \code
-export PYTHONPATH=/usr/share/cellml-sdk/python:$PYTHONPATH
-python
+sudo pip install cgrspy
 \endcode
 
-\section python_mapping Understanding the API from a Python perspective
+\section python_mapping Getting started with the API in Python
 
-In the CellML API version of Python, all modules are in the cellml_api top-level module. Inside this module, there is a module for each IDL file (for example, there is a module called CellML_APISPEC, containing most of the core API). The classes you use to work with the API are in turn defined inside these modules.
+The only Python module you need to import to use the CellML API is cgrspy.bootstrap.
 
-Where the IDL documents show an attribute, you can read the attribute using a Python method called get&lt;AttributeName&gt;, where &lt;AttributeName&gt; is the attribute name in the documentation. If the attribute is not marked as readonly, there is also a corresponding attribute setter called set&lt;AttributeName&gt; available.
+The CellML API is divided up into services. Each service has a CGRS module which needs to be loaded before you can have any interaction with that part of the API. You load a CGRS module by calling cgrspy.botostrap.loadGenericModule("nameOfModuleHere"). The CGRS module should be in the dynamic library loader path. For example, this program simply loads the CGRS module for the core CellML API:
 
-In the Python bindings, each class type has an __init__ function. This is used for two purposes. Firstly, it is used to retrieve bindings for another interface supported by the object you currently have an interface to (the so-called query_interface operation). For example, if you have an instance of the cellml_api.XPCOM.IObject class in a variable x, and you know the underlying API object also supports the CellML_APISPEC.Model interface, you can call cellml_api.CellML_APISPEC.Model(x) to construct a binding to that interface. If the interface is not, in fact, supported by the object, then an exception will be raised instead.
+\code
+import cgrspy.bootstrap
+cgrspy.bootstrap.loadGenericModule('cgrs_cellml')
+\endcode
 
-The other use of the __init__ function only applies to a few special interfaces, specifically those that are intended to be 'bootstraps'. The CellML API works by letting you run operations and fetch attributes on interfaces, but at some point, you need to get the initial interface to use. Bootstraps provide this initial access into the CellML API. In Python, to obtain a bootstrap interface (such as cellml_api.CellML_APISPEC.CellMLBootstrap), you simply call cellml_api.CellML_APISPEC.CellMLBootstrap()
+The CellML API is object-orientated, and you generally obtain objects from other objects. However, to get started, you need to obtain a special object called a bootstrap object (there is typically only one bootstrap object per API service). You can use cgrspy.bootstrap.fetch to fetch a CellML API bootstrap. For example, to obtain the CellML Bootstrap:
 
-For example, to create an empty model, set its name, and serialise it out, you can do
-\code 
-import cellml_api.CellML_APISPEC
+\code
+import cgrspy.bootstrap
+cgrspy.bootstrap.loadGenericModule('cgrs_cellml')
+cellmlBootstrap = cgrspy.bootstrap.fetch('CreateCellMLBootstrap')
+\endcode
 
-cb = cellml_api.CellML_APISPEC.CellMLBootstrap()
-m = cb.createModel("1.1")
-m.setname('mymodel')
-print m.getserialisedText()
+The Python object cellmlBootstrap is of Python type cgrspy.Object, as all objects obtained from cgrspy are. In the CellML API, one object can implement multiple interfaces; you can access attributes and methods on any of those interfaces directly from a Python object that supports them. You can see the list of interfaces that are supported by an object using the XPCOM::IObject::supported_interfaces attribute:
+
+\code
+>>> cgrspy.bootstrap.loadGenericModule('cgrs_xpcom')
+>>> cellmlBootstrap.supported_interfaces
+['XPCOM::IObject', 'cellml_api::CellMLBootstrap'] 
+\endcode
+
+All attributes defined on the API can be accessed directly as a Python attribute. Operations defined on the CellML API become methods in Python; `in' parameters are Python parameters, and the return value and any `out' parameters get put together as a Python tuple in the return value.
+
+For example, the below example uses cellml_api::CellMLBootstrap::createModel, cellml_api::CellMLBootstrap::createComponent,
+cellml_api::NamedCellMLElement::name, cellml_api::CellMLElement::addElement, cellml_api::CellMLBootstrap::createCellMLVariable,
+cellml_services::TeLICeMService::parseMaths, cellml_api::CellMLDOMElement::domElement,
+dom::Document::ownerDocument, cellml_services::TeLICeMMathResult::mathResult, cellml_api::MathContainer::addMath and
+cellml_api::Model::serialisedText to create a simple
+document. Referring to the documentation for each of these operations will help you understand the Python code and how it relates
+to the API documentation.
+
+\code
+import cgrspy.bootstrap
+cgrspy.bootstrap.loadGenericModule('cgrs_cellml')
+cgrspy.bootstrap.loadGenericModule('cgrs_telicems')
+
+cellmlBootstrap = cgrspy.bootstrap.fetch('CreateCellMLBootstrap')
+telicemService = cgrspy.bootstrap.fetch('CreateTeLICeMService')
+
+model = cellmlBootstrap.createModel("1.0")
+c = model.createComponent()
+c.name = "maincomponent"
+model.addElement(c)
+
+xvar = model.createCellMLVariable()
+xvar.name = "x"
+xvar.unitsName = "dimensionless"
+yvar = model.createCellMLVariable()
+yvar.name = "y"
+yvar.unitsName = "dimensionless"
+tvar = model.createCellMLVariable()
+tvar.name = "t"
+tvar.unitsName = "dimensionless"
+xvar.initialValue = "1.0"
+yvar.initialValue = "1.0"
+
+c.addElement(xvar)
+c.addElement(yvar)
+c.addElement(tvar)
+
+doc = model.domElement.ownerDocument
+c.addMath(telicemService.parseMaths(doc, "d(y)/d(t) = x").mathResult)
+c.addMath(telicemService.parseMaths(doc, 'd(x)/d(t) = x - power(y, 2{units="dimensionless"})').mathResult)
+
+model.serialisedText
 \endcode
 
 */
