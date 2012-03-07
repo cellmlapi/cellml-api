@@ -1353,7 +1353,7 @@ CDAMaLaESTransform::GetTagsForSpec(const std::wstring& aSpec, stringpairlist& aT
 
   std::wstring tmpn, tmpv, contv;
   size_t lineno = 1;
-  for (; *idx != 0; idx++)
+  for (; idx != aSpec.end(); idx++)
   {
     wchar_t c = *idx;
     if (c == L'\n')
