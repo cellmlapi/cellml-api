@@ -3281,7 +3281,7 @@ CDA_Unit::offset()
   {
     RETURN_INTO_WSTRING(nsURI, datastore->namespaceURI());
     std::wstring offstr = datastore->getAttributeNS(NULL_NS, L"offset");
-    if (offstr[0] == 0)
+    if (offstr == L"")
       return 0.0;
 
     wchar_t* endstr;
@@ -3338,7 +3338,7 @@ CDA_Unit::exponent()
   {
     std::wstring nsURI = datastore->namespaceURI();
     std::wstring expstr = datastore->getAttributeNS(NULL_NS, L"exponent");
-    if (expstr[0] == 0)
+    if (expstr == L"")
       return 1.0;
 
     wchar_t* endstr;
