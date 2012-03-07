@@ -11,7 +11,7 @@ public:
   CDAMutex()
   {
 #ifdef WIN32
-    mMutex = CreateMutex(NULL, FALSE, NULL);
+    InitializeCriticalSection(&mMutex);
 #else
     pthread_mutex_init(&mMutex, NULL);
 #endif
@@ -20,7 +20,7 @@ public:
   ~CDAMutex()
   {
 #ifdef WIN32
-    CloseHandle(mMutex);
+    DeleteCriticalSection(&mMutex);
 #else
     pthread_mutex_destroy(&mMutex);
 #endif
@@ -29,7 +29,7 @@ public:
   void Lock()
   {
 #ifdef WIN32
-    WaitForSingleObject(mMutex, INFINITE);
+    EnterCriticalSection(&mMutex);
 #else
     pthread_mutex_lock(&mMutex);
 #endif
@@ -38,14 +38,14 @@ public:
   void Unlock()
   {
 #ifdef WIN32
-    ReleaseMutex(mMutex);
+    LeaveCriticalSection(&mMutex);
 #else
     pthread_mutex_unlock(&mMutex);
 #endif
   }
 private:
 #ifdef WIN32
-  HANDLE mMutex;
+  CRITICAL_SECTION mMutex;
 #else
   pthread_mutex_t mMutex;
 #endif
