@@ -492,32 +492,50 @@ public:
 
   operator uint32_t()
   {
+#if !(defined(WIN32) || defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4))
     CDALock l(mMutex);
+#endif
     return mRefcount;
   }
 
   CDA_RefCount& operator=(const uint32_t& aValue)
   {
+#if !(defined(WIN32) || defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4))
     CDALock l(mMutex);
+#endif
     mRefcount = aValue;
     return *this;
   }
 
   void operator++()
   {
+#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
+    __sync_fetch_and_add(&mRefcount, 1);
+#elif defined(WIN32)
+    InterlockedIncrement(&mRefcount);
+#else
     CDALock l(mMutex);
     mRefcount++;
+#endif
   }
 
   bool operator--()
   {
+#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
+    return __sync_sub_and_fetch(&mRefcount, 1) != 0;
+#elif defined(WIN32)
+    return InterlockedDecrement(&mRefcount) != 0;
+#else
     CDALock l(mMutex);
     mRefcount--;
     return (mRefcount != 0);
+#endif
   }
 
 private:
+#if !(defined(WIN32) || defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4))
   CDAMutex mMutex;
+#endif
   uint32_t mRefcount;
 };
 
