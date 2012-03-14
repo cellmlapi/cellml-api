@@ -512,7 +512,7 @@ public:
 #if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
     __sync_fetch_and_add(&mRefcount, 1);
 #elif defined(WIN32)
-    InterlockedIncrement(&mRefcount);
+    InterlockedIncrement((volatile long int*)&mRefcount);
 #else
     CDALock l(mMutex);
     mRefcount++;
@@ -524,7 +524,7 @@ public:
 #if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
     return __sync_sub_and_fetch(&mRefcount, 1) != 0;
 #elif defined(WIN32)
-    return InterlockedDecrement(&mRefcount) != 0;
+    return InterlockedDecrement((volatile long int*)&mRefcount) != 0;
 #else
     CDALock l(mMutex);
     mRefcount--;
