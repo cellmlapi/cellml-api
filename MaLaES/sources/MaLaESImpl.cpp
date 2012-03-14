@@ -1905,6 +1905,24 @@ DoSanitiseString(const std::wstring& aInput, bool aWhiteOk)
   return out;
 }
 
+static bool
+StringNeedsSanitise(const std::wstring& aInput, bool aWhiteOk)
+{
+  std::wstring out;
+  for (std::wstring::const_iterator i = aInput.begin(); i != aInput.end(); i++)
+  {
+    char c = static_cast<char>(*i);
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9') || c == '_')
+      continue;
+    if (aWhiteOk && (c == ' ' || c == '\r' || c == '\n' || c == '\t'))
+      continue;
+    return true;
+  }
+
+  return false;
+}
+
 static void
 DoSanitiseElem(iface::dom::Element* aEl)
 {
@@ -1916,7 +1934,8 @@ DoSanitiseElem(iface::dom::Element* aEl)
     if (ns == CELLML_1_0_NS || ns == CELLML_1_1_NS)
     {
       RETURN_INTO_WSTRING(nameAttr, aEl->getAttributeNS(L"", L"name"));
-      aEl->setAttributeNS(L"", L"name", DoSanitiseString(nameAttr, false).c_str());
+      if (StringNeedsSanitise(nameAttr, false))
+        aEl->setAttributeNS(L"", L"name", DoSanitiseString(nameAttr, false).c_str());
     }
   }
   else if (ln == L"ci")
@@ -1930,7 +1949,8 @@ DoSanitiseElem(iface::dom::Element* aEl)
       {
         DECLARE_QUERY_INTERFACE_OBJREF(tn, child, dom::Text);
         RETURN_INTO_WSTRING(d, tn->data());
-        tn->data(DoSanitiseString(d, true).c_str());
+        if (StringNeedsSanitise(d, true))
+          tn->data(DoSanitiseString(d, true).c_str());
       }
     }
   }
