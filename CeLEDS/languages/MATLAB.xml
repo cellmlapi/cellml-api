@@ -55,10 +55,10 @@
   <mal:mapping keyname="not" precedence="950">~#expr1</mal:mapping>
   <mal:mapping keyname="or" precedence="10">#exprs[|]</mal:mapping>
   <mal:mapping keyname="plus" precedence="500">#exprs[+]</mal:mapping>
-  <mal:mapping keyname="power" precedence="H">#expr1 .^ #expr2</mal:mapping>
+  <mal:mapping keyname="power" precedence="900(0)">power(#expr1, #expr2)</mal:mapping>
   <mal:mapping keyname="quotient" precedence="900(0)"> floor(#expr1 ./ #expr2)</mal:mapping>
   <mal:mapping keyname="rem" precedence="900(0)"> rem(#expr1, #expr2)</mal:mapping>
-  <mal:mapping keyname="root" precedence="1000(900)"> #expr1 .^ (1.0 / #degree)</mal:mapping>
+  <mal:mapping keyname="root" precedence="900(0)">power(#expr1, 1.0 ./ #degree)</mal:mapping>
   <mal:mapping keyname="sec" precedence="H">sec(#expr1)</mal:mapping>
   <mal:mapping keyname="sech" precedence="H">sech(#expr1)</mal:mapping>
   <mal:mapping keyname="sin" precedence="H"> sin(#expr1)</mal:mapping>
