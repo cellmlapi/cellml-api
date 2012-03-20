@@ -575,14 +575,13 @@ CDA_Container::appendChild(iface::rdf_api::Node* aChild)
     {
       RETURN_INTO_OBJREF(t, iface::rdf_api::Triple,
                          mCorrespondingResource->getTripleOutOfByPredicate(indexp));
-      continue;
     }
     catch (iface::rdf_api::RDFProcessingError)
     {
+      mCorrespondingResource->createTripleOutOf(indexp, aChild);
+      return;
     }
 
-    mCorrespondingResource->createTripleOutOf(indexp, aChild);
-    return;
   }
 }
 
