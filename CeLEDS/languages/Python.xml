@@ -62,10 +62,10 @@
   <mal:mapping keyname="piecewise_otherwise" precedence="5">, True, #expr1])</mal:mapping>
   <mal:mapping keyname="piecewise_no_otherwise" precedence="5">, True, float('nan')])</mal:mapping>
   <mal:mapping keyname="plus" precedence="500">#exprs[+]</mal:mapping>
-  <mal:mapping keyname="power" precedence="900(0)">pow(#expr1, #expr2)</mal:mapping>
+  <mal:mapping keyname="power" precedence="900(0)">power(#expr1, #expr2)</mal:mapping>
   <mal:mapping keyname="quotient" precedence="900(0)"> floor(float(#expr1) / (#expr2))</mal:mapping>
   <mal:mapping keyname="rem" precedence="900(0)"> #expr1 % #expr2</mal:mapping>
-  <mal:mapping keyname="root" precedence="900(0)">pow(#expr1, 1.0/#degree)</mal:mapping>
+  <mal:mapping keyname="root" precedence="900(0)">power(#expr1, 1.0/#degree)</mal:mapping>
   <mal:mapping keyname="sec" precedence="900(0)">1.0/cos(#expr1)</mal:mapping>
   <mal:mapping keyname="sech" precedence="900(0)">1.0/cosh(#expr1)</mal:mapping>
   <mal:mapping keyname="sin" precedence="H">sin(#expr1)</mal:mapping>
