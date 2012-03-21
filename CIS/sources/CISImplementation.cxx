@@ -106,7 +106,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #endif
   std::string cmd = "gcc -ggdb "
 #ifdef WIN32
-    "-mno-cygwin -mthreads -Llib -L. -lcis "
+    "-mthreads -Llib -L. -lcis "
 #else
     "-nodefaultlibs "
 #ifdef __MACH__
