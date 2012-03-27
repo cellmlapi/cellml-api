@@ -134,6 +134,51 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 #else
     "-shared -o";
 #endif
+
+#ifdef WIN32
+  // -1 means no, 1 yes, 0 means to be determined...
+  static int need_no_cygwin = 0;
+  if (need_no_cygwin == 0)
+  {
+    char* dumpstring = "gcc -dumpspecs";
+    SECURITY_ATTRIBUTES sa; 
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    // Set up to inherit stdout, by allowing handle inheritance...
+    memset(&sa, 0, sizeof(sa));
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+    HANDLE stdoutForNewProc = NULL, stdoutFromNewProc = NULL;
+    CreatePipe(&stdoutFromNewProc, &stdoutForNewProc, &sa, 0);
+    // Only one end of the pipe needs to be inherited by the new process...
+    SetHandleInformation(&stdoutFromNewProc, HANDLE_FLAG_INHERIT, 0);
+    if (!CreateProcess(NULL, dumpstring, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+    {
+      need_no_cygwin = -1;
+    }
+    else
+    {
+      CloseHandle(pi.hProcess);
+      CloseHandle(pi.hThread);
+      char buf[1024];
+      DWORD readCount;
+      std::string spec;
+      while (ReadFile(stdoutFromNewProc, buf, sizeof(buf), &readCount, NULL) && readCount != 0)
+        spec += std::string(buf, readCount);
+      if (spec.find("mno-cygwin") != std::string::nstring)
+        need_no_cygwin = 1;
+      else
+        need_no_cygwin = -1;
+    }
+    CloseHandle(stdoutForNewProc);
+    CloseHandle(stdoutFromNewProc);
+  }
+
+  if (need_no_cygwin)
+    cmd += " -mno-cygwin";
+#endif
+
   cmd += targ;
   cmd += " ";
   cmd += sourceFile;
