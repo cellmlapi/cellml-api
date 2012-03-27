@@ -166,7 +166,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
       std::string spec;
       while (ReadFile(stdoutFromNewProc, buf, sizeof(buf), &readCount, NULL) && readCount != 0)
         spec += std::string(buf, readCount);
-      if (spec.find("mno-cygwin") != std::string::nstring)
+      if (spec.find("mno-cygwin") != std::string::npos)
         need_no_cygwin = 1;
       else
         need_no_cygwin = -1;
