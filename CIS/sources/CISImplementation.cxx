@@ -135,6 +135,9 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     "-shared -o";
 #endif
 
+  cmd += targ;
+  cmd += " ";
+  cmd += sourceFile;
 #ifdef WIN32
   // -1 means no, 1 yes, 0 means to be determined...
   static int need_no_cygwin = 0;
@@ -186,12 +189,7 @@ CompileSource(std::string& destDir, std::string& sourceFile,
 
   if (need_no_cygwin > 0)
     cmd += " -mno-cygwin";
-#endif
 
-  cmd += targ;
-  cmd += " ";
-  cmd += sourceFile;
-#ifdef WIN32
   // Need this at the end for the import library to work in all cases.
   cmd += " -lcis";
     STARTUPINFO si;
