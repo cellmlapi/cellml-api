@@ -145,6 +145,10 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
     // Set up to inherit stdout, by allowing handle inheritance...
     memset(&sa, 0, sizeof(sa));
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -153,14 +157,20 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     CreatePipe(&stdoutFromNewProc, &stdoutForNewProc, &sa, 0);
     // Only one end of the pipe needs to be inherited by the new process...
     SetHandleInformation(&stdoutFromNewProc, HANDLE_FLAG_INHERIT, 0);
+
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdOutput = stdoutForNewProc;
+
     if (!CreateProcess(NULL, dumpstring, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
     {
+      CloseHandle(stdoutForNewProc);
       need_no_cygwin = -1;
     }
     else
     {
       CloseHandle(pi.hProcess);
       CloseHandle(pi.hThread);
+      CloseHandle(stdoutForNewProc);
       char buf[1024];
       DWORD readCount;
       std::string spec;
@@ -171,11 +181,10 @@ CompileSource(std::string& destDir, std::string& sourceFile,
       else
         need_no_cygwin = -1;
     }
-    CloseHandle(stdoutForNewProc);
     CloseHandle(stdoutFromNewProc);
   }
 
-  if (need_no_cygwin)
+  if (need_no_cygwin > 0)
     cmd += " -mno-cygwin";
 #endif
 
