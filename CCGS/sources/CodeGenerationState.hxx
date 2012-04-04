@@ -418,6 +418,7 @@ public:
   void TransformCaseCondition(iface::mathml_dom::MathMLElement* aEl,
                               iface::cellml_api::CellMLComponent* aContext);
   void GenerateRootInformation();
+  void CheckInappropriateStateAssignments(std::list<System*>& aSystems);
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,

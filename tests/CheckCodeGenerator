@@ -104,5 +104,6 @@ runtest TestParameterIVAmbiguity
 runtest IVComputation
 runtest uncertain-param1
 runtest law1
+runtest overconstrained_statevsrate
 
 exit 0

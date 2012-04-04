@@ -343,9 +343,9 @@ CodeGenerationState::GenerateCode()
     
     // Now, determine all constants computable from the current constants...
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems, true);
-    
+    CheckInappropriateStateAssignments(systems);
     mUnwanted.clear();
-    
+
     // Assign constant variables for set...
     AllocateVariablesInSet(systems, iface::cellml_services::CONSTANT,
                            mConstantPattern, mNextConstantIndex,
@@ -372,6 +372,7 @@ CodeGenerationState::GenerateCode()
     
     BuildStateAndConstantLists();
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
+    CheckInappropriateStateAssignments(systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     CheckStateVariableIVConstraints(systems);
     
@@ -628,6 +629,29 @@ CodeGenerationState::GenerateRootInformation()
 }
 
 void
+CodeGenerationState::CheckInappropriateStateAssignments(std::list<System*>& aSystems)
+{
+  for (std::list<System*>::iterator i = aSystems.begin(); i != aSystems.end(); i++)
+  {
+    bool hasState = false;
+    for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j = (*i)->mUnknowns.begin();
+         j != (*i)->mUnknowns.end(); j++)
+      if ((*j)->type() == iface::cellml_services::STATE_VARIABLE)
+      {
+        hasState = true;
+        break;
+      }
+    // If there is a state variable computed by this system, it must be an initial assignment...
+    if (hasState && ((*i)->mMathStatements.size() != 1 ||
+        (*((*i)->mMathStatements.begin()))->mType !=
+                     MathStatement::INITIAL_ASSIGNMENT))
+      throw OverconstrainedError
+        ((static_cast<MathMLMathStatement*>(static_cast<MathStatement*>(*((*i)->mMathStatements.begin()))))
+         ->mMaths);
+  }
+}
+
+void
 CodeGenerationState::IDAStyleCodeGeneration()
 {
   if (mTrackPiecewiseConditions)
@@ -830,6 +854,7 @@ CodeGenerationState::ODESolverStyleCodeGeneration()
   std::list<System*> systems;
   
   bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
+  CheckInappropriateStateAssignments(systems);
   MakeSystemsForResetRulesAndClearKnown(mResets, systems, mKnown, mFloating);
   std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
   BuildSystemsByTargetsRequired(systems, sysByTargReq);
