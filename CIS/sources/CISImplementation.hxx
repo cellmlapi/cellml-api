@@ -24,7 +24,7 @@ struct IDACompiledModelFunctions
 {
   int (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES);
   int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
-                           double *STATES, double* ALGEBRAIC);
+                           double *STATES, double* ALGEBRAIC, double* CONDVAR);
   int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
                                     double* OLDRATES, double* STATES,
                                     double* OLDSTATES, double* ALGEBRAIC,

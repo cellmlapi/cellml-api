@@ -635,7 +635,7 @@ struct DAEEvaluationInformation
   int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                                     double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR);
   int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
-                           double* STATES, double* ALGEBRAIC);
+                           double* STATES, double* ALGEBRAIC, double* CONDVAR);
 
   ~DAEEvaluationInformation()
   {
@@ -963,7 +963,7 @@ CDA_DAESolverRun::SolveDAEProblem
       
         lastVOI = voi;
       
-        f->EvaluateVariables(voi, constants, rates, states, algebraic);
+        f->EvaluateVariables(voi, constants, rates, states, algebraic, condvars);
       
         // Add to storage...
         storage[storageSize] = voi;

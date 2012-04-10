@@ -80,7 +80,7 @@ SetupIDACompiledModelFunctions(void* module)
   IDACompiledModelFunctions* cmf = new IDACompiledModelFunctions;
   cmf->SetupFixedConstants = (int (*)(double*, double*, double*))
     getsym(module, "SetupFixedConstants");
-  cmf->EvaluateVariables = (int (*)(double, double*, double*, double*, double*))
+  cmf->EvaluateVariables = (int (*)(double, double*, double*, double*, double*, double*))
     getsym(module, "EvaluateVariables");
   cmf->EvaluateEssentialVariables = (int (*)(double, double*, double*, double*, double*, double*, double*, double*))
     getsym(module, "EvaluateEssentialVariables");
@@ -856,7 +856,7 @@ CDA_CellMLIntegrationService::compileModelDAE
   delete [] frag8;
 
   ss << "int EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, "
-     << "double* STATES, double* ALGEBRAIC)" << std::endl;
+     << "double* STATES, double* ALGEBRAIC, double* CONDVAR)" << std::endl;
   frag = cci->variablesString();
   fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
