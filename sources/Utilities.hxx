@@ -1408,4 +1408,14 @@ private:
   C* mPtr;
 };
 
+static void
+operator<<(std::ostream& data, const std::wstring& str)
+{
+  size_t n = wcstombs(NULL, str.c_str(), 0);
+  char* buf = new char[n + 1];
+  wcstombs(buf, str.c_str(), n + 1);
+  data << buf;
+  delete [] buf;
+}
+
 #endif // _UTILITIES_HXX
