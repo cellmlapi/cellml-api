@@ -1841,6 +1841,9 @@ CDAMaLaESTransform::ExecuteTransform
 
   if (omi != operMap.end())
     o = &(*omi).second;
+  // ignore special-purpose operators that are handled separately by CCGS...
+  else if (opName != L"" && opName != L"other" && opName != L"vector")
+    aResult->gotError(L"Encountered unsupported operator " + opName);
 
   if (o->maxarg != -1 && o->maxarg != (int)args.size())
   {
