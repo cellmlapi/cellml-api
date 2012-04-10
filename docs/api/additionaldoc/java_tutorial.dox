@@ -142,10 +142,10 @@ To compile and run this code on Linux (with /path/to/sdk/ changed to the appropr
 
 On Windows (with c:/path/to/sdk/ changed to the appropriate path):
 <pre>
-  set CLASSPATH=c:/path/to/sdk/lib/cellml.jar;.;%CLASSPATH%
-  set PATH=c:/path/to/sdk/lib;%PATH%
+  set CLASSPATH="c:/path/to/sdk/lib/cellml.jar;.;%CLASSPATH%"
+  set PATH="c:/path/to/sdk/lib;%PATH%"
   javac IterateElementTest.java
-  java -Djava.library.path=c:/path/to/sdk/lib IterateElementTest
+  java "-Djava.library.path=c:/path/to/sdk/lib" IterateElementTest
 </pre>
 
 On Mac OS X:
