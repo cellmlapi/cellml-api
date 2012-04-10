@@ -1,6 +1,6 @@
 // This is not an official part of the API, but including it is not a problem
 // because it doesn't directly access any private APIs.
-#include "cellml-ai-cxx-support.hpp"
+#include "cellml-api-cxx-support.hpp"
 
 // This is the standard C++ interface for the core CellML API.
 #include "IfaceCellML_APISPEC.hxx"
@@ -62,7 +62,7 @@ main(int argc, char** argv)
   }
   // Most parts of the CellML API raise this exception. The DOM/MathML API, on the
   // other hand, raises iface::dom::DOMException.
-  catch (iface::cellml_api::CellMLException& e)
+  catch (iface::cellml_api::CellMLException&)
   {
     // Unfortunately, due to the need to support the 'lowest common
     // denominator' of functionality in our bindings, exceptions can't have

@@ -11,4 +11,6 @@ export CELLML_SDK=path/to/cellml-sdk
 g++ -I$CELLML_SDK/include -L$CELLML_SDK/lib -lcellml ./MyTest.cpp -o MyTest
 LD_LIBRARY_PATH=$CELLML_SDK/lib ./MyTest
 \endverbatim
+
+Note: When linking on Windows with Visual C++, it is normal to see the following compiler warnings, due to the coding style of the CellML API: warning C4290 and warning C4091. Neither of these warnings represent a real problem with the API; you can suppress them by giving MSVC the "/wd4290" and "/wd4091" flags.
  */
