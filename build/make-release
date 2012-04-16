@@ -11,6 +11,7 @@ BINDIR=$3
 RELEASE=$(date +%Y%m%d)
 SCP="scp"
 SFTP="sftp"
+BUILD=$(grep CMAKE_BUILD_TYPE:STRING CMakeCache.txt | cut -d"=" -f2)
 
 UNAME=$(uname -a)
 case $UNAME in
@@ -26,9 +27,17 @@ case $UNAME in
         ;;
     *i686*Cygwin)
         SYSTEM=win32
-        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
+        case $BUILD in
+            Deb*)
+                BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10-Debug.exe
+                BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10-Debug.zip
+                ;;
+            Release)
+                BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
+                BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.zip
+                ;;
+        esac
         BINFULL=$(cygpath "$BINDIR/$BINARY")
-        BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.zip
         BINFULL2=$(cygpath "$BINDIR/$BINARY2")
         ;;
     *Msys*)
