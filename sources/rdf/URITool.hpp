@@ -37,7 +37,7 @@ public:
     }
 
     // See if we have an authority...
-    if (d[0] == L'/' && d[1] == L'/')
+    if (d.size() > 2 && d[0] == L'/' && d[1] == L'/')
     {
       p = d.find(L'/', 2);
       if (p != std::wstring::npos)
