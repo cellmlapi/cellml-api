@@ -2573,7 +2573,9 @@ CodeGenerationState::DecomposeIntoAssignments
         {
           Equation* eq = static_cast<Equation*>(ms);
           std::wstring throwAway;
+          mDryRun = true;
           GenerateCodeForEquation(throwAway, eq, newUnknown, true);
+          mDryRun = false;
         }
         catch (AssignmentOnlyRequestedNeedSolve aorns)
         {
@@ -3904,7 +3906,8 @@ CodeGenerationState::GenerateAssignmentMaLaESResult
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_WSTRING(s, aMR->getSupplementary(i));
-    mCodeInfo->mFuncsStr += s + L"\r\n";
+    if (!mDryRun)
+      mCodeInfo->mFuncsStr += s + L"\r\n";
   }
 
   AppendAssign(aCodeTo, lhs, rhs);

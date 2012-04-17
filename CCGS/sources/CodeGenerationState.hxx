@@ -192,7 +192,8 @@ public:
       mNextVOI(aArrayOffset),
       mNextConditionVariable(aArrayOffset),
       mNextSolveId(0),
-      mIDAStyle(aIDAStyle)
+      mIDAStyle(aIDAStyle),
+      mDryRun(false)
   {
   }
 
@@ -455,6 +456,7 @@ public:
   std::list<ptr_tag<CDA_ComputationTarget> > mInfDelayedTargets;
   bool mIDAStyle;
   std::list<std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>, iface::mathml_dom::MathMLContentElement*> > mRootInformation;
+  bool mDryRun;
 };
 
 #endif // _CodeGenerationState_hxx
