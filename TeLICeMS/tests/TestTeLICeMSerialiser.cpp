@@ -37,6 +37,8 @@ main(int argc, char** argv)
   catch (...)
   {
     printf("Error loading model URL.\n");
+    RETURN_INTO_WSTRING(le, ml->lastErrorMessage());
+    printf("Last error: %S\n", le.c_str());
     return -1;
   }
 
