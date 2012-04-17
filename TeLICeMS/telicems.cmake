@@ -31,4 +31,4 @@ ENDIF()
 
 ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_BINARY_DIR}/TeLICeMParse.genf.cpp
                    COMMAND ${BASH} "${CMAKE_SOURCE_DIR}/TeLICeMS/FixBison" "${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp" "${CMAKE_BINARY_DIR}/TeLICeMParse.genf.cpp"
-                   DEPENDS ${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp)
+                   DEPENDS ${CMAKE_BINARY_DIR}/TeLICeMParse.gen.cpp ${CMAKE_SOURCE_DIR}/TeLICeMS/FixBison)
