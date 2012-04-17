@@ -27,18 +27,20 @@ case $UNAME in
         ;;
     *i686*Cygwin)
         SYSTEM=win32
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
+        BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.zip
+        BINFULL=$(cygpath "$BINDIR/$BINARY")
+        BINFULL2=$(cygpath "$BINDIR/$BINARY2")
+
         case $BUILD in
             Deb*)
+                # Override BINARY and BINARY2, leaving BINFULL / BINFULL2 the same.
                 BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10-Debug.exe
                 BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10-Debug.zip
                 ;;
             Release)
-                BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.exe
-                BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MSVC10.zip
                 ;;
         esac
-        BINFULL=$(cygpath "$BINDIR/$BINARY")
-        BINFULL2=$(cygpath "$BINDIR/$BINARY2")
         ;;
     *Msys*)
         SYSTEM=win32
