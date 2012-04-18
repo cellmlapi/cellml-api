@@ -330,11 +330,12 @@
    const std::string& aOp,
    TeLICeMSLValue& aLHS, TeLICeMSLValue& aRHS,
    TeLICeMSParseTarget* aParseTarget,
-   const std::map<std::string, std::string>& aPropList
+   const std::map<std::string, std::string>& aPropList,
+   bool foldLeft
   )
   {
     // Firstly, we try to merge into the left-hand expression...
-    if (aPropList.size() == 0 && !(aOp == "minus"))
+    if (foldLeft && aPropList.size() == 0)
     {
       DECLARE_QUERY_INTERFACE_OBJREF(apply, aLHS.math(), mathml_dom::MathMLApplyElement);
       if (apply != NULL)
@@ -1115,32 +1116,32 @@ math_expr: T_IDENTIFIER math_attrs math_maybefunction_args {
 } | math_expr additive_op math_attrs math_expr %prec '+' {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression($2.string(), $1, $4, aParseTarget,
-                                         $3.propertyMap()));
+                                         $3.propertyMap(), $2.string() == "plus"));
   $$.math(m);
 } | math_expr multiplicative_op math_attrs math_expr %prec '*' {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression($2.string(), $1, $4, aParseTarget,
-                                         $3.propertyMap()));
+                                         $3.propertyMap(), $2.string() == "times"));
   $$.math(m);
 } | math_expr comparative_op_lowerprec math_attrs math_expr %prec T_EQEQ {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression($2.string(), $1, $4, aParseTarget,
-                                         $3.propertyMap()));
+                                         $3.propertyMap(), true));
   $$.math(m);
 } | math_expr comparative_op_higherprec math_attrs math_expr %prec T_GE {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression($2.string(), $1, $4, aParseTarget,
-                                         $3.propertyMap()));
+                                         $3.propertyMap(), true));
   $$.math(m);
 } | math_expr T_AND math_attrs math_expr {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression("and", $1, $4, aParseTarget,
-                                         $3.propertyMap()));
+                                         $3.propertyMap(), true));
   $$.math(m);
 } | math_expr T_OR math_attrs math_expr {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,
                      DoInorderExpression("or", $1, $4, aParseTarget,
-                                         $3.propertyMap()));
+                                         $3.propertyMap(), true));
   $$.math(m);
 } | T_NONNEGNUMBER math_attrs {
   RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLContentElement,

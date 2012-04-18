@@ -99,6 +99,7 @@ function roundtrip()
 }
 
 runtest trivial
+runtest divide
 runtestser Unary-Minus
 runtest Unary-Minus2
 roundtrip Unary-Minus2

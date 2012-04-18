@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<model xmlns="http://www.cellml.org/cellml/1.0#" name="m"><component name="test"><variable name="a" units="dimensionless"/><math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><ci>a</ci><apply><divide/><apply><divide/><cn>1</cn><cn>2</cn></apply><cn>3</cn></apply></apply></math></component></model>

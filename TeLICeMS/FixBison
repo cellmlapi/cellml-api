@@ -23,3 +23,4 @@ yyformat = yyformatbuf + sizeof(YY_BASE_ERROR_STRING) - 1;
 .
 wq $OUTTARGET
 EOF
+exit 0
