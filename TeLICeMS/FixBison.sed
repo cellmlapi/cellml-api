@@ -1,5 +1,5 @@
 s/YYERROR_VERBOSE_ARGS_MAXIMUM = [0-9]*/YYERROR_VERBOSE_ARGS_MAXIMUM = 100/
-/switch (yycount)/,+13c\
+/switch (yycount).*/,/}/c\
 #define YY_BASE_ERROR_STRING "syntax error, unexpected %s, expecting %s"\
 #define YY_EXTEND_ERROR_STRING " or %s"\
 char yyformatbuf[sizeof(YY_BASE_ERROR_STRING) + (sizeof(YY_EXTEND_ERROR_STRING)) * (YYERROR_VERBOSE_ARGS_MAXIMUM - 1)];\
