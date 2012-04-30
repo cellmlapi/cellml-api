@@ -1482,7 +1482,9 @@ public:
       {
         for (std::list<std::pair<std::wstring, int32_t> >::iterator li = (*i).second.begin();
              li != (*i).second.end(); li++)
-          sme.setVariable((*li).first, state[j * mRecSize + (*li).second]);
+          sme.setVariable((*li).first, (*li).second < 0 ?
+                           mConstants[-1 - (*li).second] :
+                           state[j * mRecSize + (*li).second]);
         
         try
         {
