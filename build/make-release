@@ -82,9 +82,9 @@ then
     rm -fr package-src
     mkdir package-src
     cd package-src
-    hg clone ssh://buildbot@bioeng1037//people/amil082/hgmirror/cellml-api cellml-api-$VERSION_MAJOR.$VERSION_MINOR
+    git clone buildbot@bioeng1037:/people/amil082/gitmirror/cellml-api cellml-api-$VERSION_MAJOR.$VERSION_MINOR
     # Note: --exclude is a GNU extension, but this only runs on GNU/Linux systems.
-    tar --exclude .hg -cjf cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-api-$VERSION_MAJOR.$VERSION_MINOR
+    tar --exclude .git -cjf cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-api-$VERSION_MAJOR.$VERSION_MINOR
     $SCP cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2 cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/src/cellml-api-$VERSION_MAJOR.$VERSION_MINOR.tar.bz2
 fi
 
