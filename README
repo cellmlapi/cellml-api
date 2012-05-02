@@ -4,7 +4,6 @@ CellML DOM API README
 This is the CellML DOM API, an implementation of the CellML API built on top
 of the W3C Document Object Model.
 
-This software requires a recent version of libxml2 to compile correctly.
 Please follow the instructions in INSTALL to install this software.
 
 Accessing the API interface reference
