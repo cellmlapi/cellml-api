@@ -591,6 +591,8 @@ static void minfuncForPDF(double *p, double *hx, int m, int n, void *adata)
   *hx = 0;
   N_Vector y = N_VMake_Serial(1, hx);
   CVodeInit(cv, integrandForPDF, -1.0 + 1E-6, y);
+  CVodeSetMaxStep(cv, 1E-3);
+  CVodeSetMaxNumSteps(cv, 2000);
   CVodeSStolerances(cv, 1E-6, 1E-6);
   CVodeSetUserData(cv, info);
   CVDense(cv, 1);
