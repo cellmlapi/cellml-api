@@ -309,50 +309,182 @@ CDA_wcsdup(const wchar_t* str)
 #define UPPER_MASK 0x80000000UL /* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
-static unsigned long mt[N];
-static int mti=N+1;
+template<typename T>
+class ThreadLocalOffset
+{
+public:
+  ThreadLocalOffset(T* aPtr)
+    : mPtr(aPtr)
+  {
+  }
+  
+  operator T()
+  {
+    return *mPtr;
+  }
+
+  const T&
+  operator=(const T& aValue)
+  {
+    *mPtr = aValue;
+  }
+
+private:
+  T* mPtr;
+};
+
+template<typename T>
+class ThreadLocal
+{
+public:
+  ThreadLocal(int l, const T& iv)
+    : mHasInitial(true), mLength(1)
+  {
+    mInitial.value = iv;
+    createKey();
+    (*this) = iv;
+  }
+
+  ThreadLocal(int l)
+    : mHasInitial(false), mLength(l)
+  {
+    createKey();
+  }
+
+  operator T*()
+  {
+    T* mPtr = (static_cast<T*>(
+#ifdef WIN32
+                               TlsGetValue(mKey)
+#else
+                               pthread_getspecific(mKey)
+#endif
+                               ));
+    if (mPtr == NULL)
+      mPtr = initThreadData();
+    return mPtr;
+  }
+
+  ThreadLocalOffset<T>
+  operator [](int idx)
+  {
+    T* mPtr = (static_cast<T*>(
+#ifdef WIN32
+                               TlsGetValue(mKey)
+#else
+                               pthread_getspecific(mKey)
+#endif
+                               )) + idx;
+    if (mPtr == NULL)
+      mPtr = initThreadData() + idx;
+
+    return ThreadLocalOffset<T>(mPtr);
+  }
+
+  operator T()
+  {
+    return (*this)[0];
+  }
+
+  const T&
+  operator=(const T& aT)
+  {
+    (*this)[0] = aT;
+  }
+
+private:
+  static void deleteData(void* aData)
+  {
+    if (aData)
+      delete[](static_cast<T*>(aData));
+  }
+
+  void createKey()
+  {
+#ifdef WIN32
+    mKey = TlsAlloc();
+#else
+    pthread_key_create(&mKey, deleteData);
+#endif
+  }
+
+  T* initThreadData()
+  {
+    T* d = new T[mLength];
+#ifdef WIN32
+    TlsSetValue(mKey, d);
+#else
+    pthread_setspecific(mKey, d);
+#endif
+
+    if (mHasInitial)
+      d[0] = mInitial.value;
+
+    return d;
+  }
+
+  bool mHasInitial;
+  int mLength;
+  union {
+    int nothing;
+    T value;
+  } mInitial;
+#ifdef WIN32
+  DWORD mKey;
+#else
+  pthread_key_t mKey;
+#endif
+};
+
+static ThreadLocal<unsigned long> mt(N);
+static ThreadLocal<int> mti(1, N+1);
 
 /* initializes mt[N] with a seed */
 static void
 mersenne_init_genrand(unsigned long s)
 {
-    mt[0]= s & 0xffffffffUL;
-    for (mti=1; mti<N; mti++) {
-        mt[mti] = 
-	    (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti); 
+    unsigned long* mtl = mt;
+    mtl[0]= s & 0xffffffffUL;
+    unsigned long mtil;
+    for (mtil=1; mtil<N; mtil++) {
+        mtl[mtil] = 
+	    (1812433253UL * (mtl[mtil-1] ^ (mtl[mtil-1] >> 30)) + mtil);
         /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
         /* In the previous versions, MSBs of the seed affect   */
         /* only MSBs of the array mt[].                        */
         /* 2002/01/09 modified by Makoto Matsumoto             */
-        mt[mti] &= 0xffffffffUL;
+        mtl[mtil] &= 0xffffffffUL;
         /* for >32 bit machines */
     }
+    mti = mtil;
 }
 
 static void
 mersenne_init_by_array(unsigned long init_key[], int key_length)
 {
+    unsigned long* mtl = mt;
+
     int i, j, k;
     mersenne_init_genrand(19650218UL);
     i=1; j=0;
     k = (N>key_length ? N : key_length);
     for (; k; k--) {
-        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525UL))
+        mtl[i] = (mtl[i] ^ ((mtl[i-1] ^ (mtl[i-1] >> 30)) * 1664525UL))
           + init_key[j] + j; /* non linear */
-        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        mtl[i] = mtl[i] & 0xffffffffUL; /* for WORDSIZE > 32 machines */
         i++; j++;
-        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+        if (i>=N) { mtl[0] = mtl[N-1]; i=1; }
         if (j>=key_length) j=0;
     }
     for (k=N-1; k; k--) {
-        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941UL))
+        mtl[i] = (mtl[i] ^ ((mtl[i-1] ^ (mtl[i-1] >> 30)) * 1566083941UL))
           - i; /* non linear */
-        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        mtl[i] = mtl[i] & 0xffffffffUL; /* for WORDSIZE > 32 machines */
         i++;
-        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+        if (i>=N) { mtl[0] = mtl[N-1]; i=1; }
     }
 
-    mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */ 
+    mtl[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */ 
 }
 
 static void
@@ -387,31 +519,37 @@ HEADER_INLINE unsigned long mersenne_genrand_int32(void)
     static unsigned long mag01[2]={0x0UL, MATRIX_A};
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-    if (mti >= N) { /* generate N words at one time */
+    unsigned long mtil = mti;
+    unsigned long* mtl = mt;
+    if (mtil >= N) { /* generate N words at one time */
         int kk;
 
-        if (mti == N+1)
+        if (mtil == N+1)
           /* if init_genrand() has not been called, a default initial seed is
            * used. Note that this seed has changed in the Bioengineering
            * Institute version to include the time, pid, and hostname.
            */
+        {
           mersenne_autoseed();
+          mtil = mti;
+        }
 
         for (kk=0;kk<N-M;kk++) {
-            y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
-            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
+            y = (mtl[kk] & UPPER_MASK) | (mtl[kk+1] & LOWER_MASK);
+            mtl[kk] = mtl[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
         }
         for (;kk<N-1;kk++) {
-            y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
-            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+            y = (mtl[kk] & UPPER_MASK) | (mtl[kk+1] & LOWER_MASK);
+            mtl[kk] = mtl[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
         }
-        y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
-        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
+        y = (mtl[N-1]&UPPER_MASK)|(mtl[0]&LOWER_MASK);
+        mtl[N-1] = mtl[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
 
-        mti = 0;
+        mtil = mti = 0;
     }
   
-    y = mt[mti++];
+    y = mtl[mtil];
+    mti = mtil + 1;
 
     /* Tempering */
     y ^= (y >> 11);

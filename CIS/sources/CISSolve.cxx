@@ -44,6 +44,9 @@
 // It would be good to one day make this configurable by the user.
 #define SUBSOL_TOLERANCE 1E-6
 
+// Unfortunately, the Levenberg-Marquardt code has static variables, so it is non-reentrant.
+static CDAMutex gLevmarMutex;
+
 struct EvaluationInformation
 {
   double* constants, * rates, * algebraic, * states;
@@ -612,6 +615,7 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   pdfi.pdf = pdf;
   double p = 0.5;
   double x = (rand() + 0.0) / RAND_MAX;
+  CDALock l(gLevmarMutex);
   dlevmar_dif(minfuncForPDF, &p, &x, 1, 1, 10000, NULL, NULL, NULL, NULL, &pdfi);
   return p;
 }
@@ -875,18 +879,21 @@ CDA_DAESolverRun::SolveDAEProblem
       RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
       
       double info[LM_INFO_SZ];
-      dlevmar_dif(levmar_dae_iv_paramfinder,
-                  params,
-                  NULL, /* Target: Make all residuals 0. */
-                  stateSize, /* There are stateSize unknowns. */
-                  stateSize, /* There are stateSize residuals. */
-                  1000, /* Max 1000 iterations (TODO - make configurable?). */
-                  NULL, /* Default options (TODO - make configurable?). */
-                  info, /* Information returned. */
-                  NULL, /* Allocate work memory as required. */
-                  NULL, /* Don't return covariance matrix. */
-                  reinterpret_cast<void*>(&ivf)
-                  );
+      {
+        CDALock l(gLevmarMutex);
+        dlevmar_dif(levmar_dae_iv_paramfinder,
+                    params,
+                    NULL, /* Target: Make all residuals 0. */
+                    stateSize, /* There are stateSize unknowns. */
+                    stateSize, /* There are stateSize residuals. */
+                    1000, /* Max 1000 iterations (TODO - make configurable?). */
+                    NULL, /* Default options (TODO - make configurable?). */
+                    info, /* Information returned. */
+                    NULL, /* Allocate work memory as required. */
+                    NULL, /* Don't return covariance matrix. */
+                    reinterpret_cast<void*>(&ivf)
+                    );
+      }
       MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
                                            icinfo, params);
       
