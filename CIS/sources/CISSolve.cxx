@@ -576,11 +576,15 @@ static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data
   double tp1 = 1.0 + t;
   // We transform the integral from a limit between -infinity and uplimit into
   // one between -1 and 0...
-  double tprime = info->uplimit - t / tp1;
+  double tprime = info->uplimit + t / tp1;
 
   // The first rate is the integrand...
   *N_VGetArrayPointer_Serial(ratesV) =
     info->pdf(tprime, info->constants, info->algebraic) * (1.0 / (tp1 * tp1));
+
+#ifdef DEBUG_UNCERT
+  printf("PDF' at %f = %f\n", t, *N_VGetArrayPointer_Serial(ratesV));
+#endif
 
   return 0;
 }
@@ -600,7 +604,13 @@ static void minfuncForPDF(double *p, double *hx, int m, int n, void *adata)
   CVodeSetUserData(cv, info);
   CVDense(cv, 1);
   double tret;
+#ifdef DEBUG_UNCERT
+  printf("Running CVode to integrate between -inf and %f (transformed to -1.0 -> 0.0)\n", *p);
+#endif
   CVode(cv, 0, y, &tret, CV_NORMAL);
+#ifdef DEBUG_UNCERT
+  printf("C.D.F.(%f) = %f\n", *p, *hx);
+#endif
   N_VDestroy_Serial(y);
   CVodeFree(&cv);
 }
@@ -616,7 +626,13 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   double p = 0.5;
   double x = (rand() + 0.0) / RAND_MAX;
   CDALock l(gLevmarMutex);
+#ifdef DEBUG_UNCERT
+  printf("Entering dlevmar_dif call with x=%f\n", x);
+#endif
   dlevmar_dif(minfuncForPDF, &p, &x, 1, 1, 10000, NULL, NULL, NULL, NULL, &pdfi);
+#ifdef DEBUG_UNCERT
+  printf("Result: p = %f\n", p);
+#endif
   return p;
 }
 
