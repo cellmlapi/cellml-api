@@ -619,17 +619,30 @@ double
 SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
                double* CONSTANTS, double* ALGEBRAIC)
 {
+  double opt[5] = { 1E-3, 1E-3, 1E-3, 1E-3, 1E-3 };
+  double info[10];
   struct PDFInformation pdfi;
   pdfi.constants = CONSTANTS;
   pdfi.algebraic = ALGEBRAIC;
   pdfi.pdf = pdf;
-  double p = 0.5;
   double x = (rand() + 0.0) / RAND_MAX;
-  CDALock l(gLevmarMutex);
+  double p;
+  for (int attempt = 0; attempt < 26; attempt++)
+  {
+    p = (attempt % 2 ? -1.0 : 1.0) * pow(10.0, attempt / 2.0 - 3.0);
+    CDALock l(gLevmarMutex);
 #ifdef DEBUG_UNCERT
-  printf("Entering dlevmar_dif call with x=%f\n", x);
+    printf("Entering dlevmar_dif call with x=%f, p0 = %f\n", x, p);
 #endif
-  dlevmar_dif(minfuncForPDF, &p, &x, 1, 1, 10000, NULL, NULL, NULL, NULL, &pdfi);
+    dlevmar_dif(minfuncForPDF, &p, &x, 1, 1, 10000, NULL, info, NULL, NULL, &pdfi);
+#ifdef DEBUG_UNCERT
+    printf("dlevmar_dif error = %f\n", info[1]);
+#endif
+    // Mainly to weed out the case where we get all zeros because the starting estimate is so far from
+    // the centre of the distribution.
+    if (info[3] != 0 && info[1] < 1E-2)
+      break;
+  }
 #ifdef DEBUG_UNCERT
   printf("Result: p = %f\n", p);
 #endif
