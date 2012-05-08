@@ -497,10 +497,10 @@ static BaseElementConstructors sBaseConstructors[] = {
   {L"plot2D", makeplot2D},
   {L"plot3D", makeplot3D},
   {L"removeXML", makeremoveXML},
+  {L"repeatedAnalysis", makerepeatedAnalysis},
   {L"report", makereport},
   // Old name for repeatedAnalysis. Will be removed in the future.
   {L"samplingSensitivityAnalysis", makerepeatedAnalysis},
-  {L"repeatedAnalysis", makerepeatedAnalysis},
   {L"sedML", makesedML},
   {L"surface", makesurface},
   {L"task", maketask},
