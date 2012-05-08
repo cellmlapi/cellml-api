@@ -471,9 +471,9 @@ makeuniformTimeCourse(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 }
 
 static already_AddRefd<CDA_SProSBase>
-makesamplingSensitivityAnalysis(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+makerepeatedAnalysis(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 {
-  return new CDA_SProSSamplingSensitivityAnalysis(aParent, aEl);
+  return new CDA_SProSRepeatedAnalysis(aParent, aEl);
 }
 
 static already_AddRefd<CDA_SProSBase>
@@ -498,7 +498,9 @@ static BaseElementConstructors sBaseConstructors[] = {
   {L"plot3D", makeplot3D},
   {L"removeXML", makeremoveXML},
   {L"report", makereport},
-  {L"samplingSensitivityAnalysis", makesamplingSensitivityAnalysis},
+  // Old name for repeatedAnalysis. Will be removed in the future.
+  {L"samplingSensitivityAnalysis", makerepeatedAnalysis},
+  {L"repeatedAnalysis", makerepeatedAnalysis},
   {L"sedML", makesedML},
   {L"surface", makesurface},
   {L"task", maketask},
@@ -1034,14 +1036,14 @@ CDA_SProSSEDMLElement::createUniformTimeCourse()
   return new CDA_SProSUniformTimeCourse(NULL, el);
 }
 
-already_AddRefd<iface::SProS::SamplingSensitivityAnalysis>
-CDA_SProSSEDMLElement::createSamplingSensitivityAnalysis()
+already_AddRefd<iface::SProS::RepeatedAnalysis>
+CDA_SProSSEDMLElement::createRepeatedAnalysis()
   throw()
 {
   RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
-  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"samplingSensitivityAnalysis"));
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"repeatedAnalysis"));
 
-  return new CDA_SProSSamplingSensitivityAnalysis(NULL, el);
+  return new CDA_SProSRepeatedAnalysis(NULL, el);
 }
 
 already_AddRefd<iface::SProS::Task>
@@ -1359,7 +1361,7 @@ CDA_SProSSimulation::algorithmKisaoID(const std::wstring& aID) throw()
   }
 }
 
-#define SimulationTypes L"uniformTimeCourse", L"samplingSensitivityAnalysis"
+#define SimulationTypes L"uniformTimeCourse", L"repeatedAnalysis"
 SomeSProSSet(Simulation, L"listOfSimulations", SimulationTypes);
 
 double

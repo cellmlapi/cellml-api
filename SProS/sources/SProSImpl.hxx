@@ -420,7 +420,7 @@ public:
 
   already_AddRefd<iface::SProS::Model> createModel() throw();
   already_AddRefd<iface::SProS::UniformTimeCourse> createUniformTimeCourse() throw();
-  already_AddRefd<iface::SProS::SamplingSensitivityAnalysis> createSamplingSensitivityAnalysis() throw();
+  already_AddRefd<iface::SProS::RepeatedAnalysis> createRepeatedAnalysis() throw();
   already_AddRefd<iface::SProS::Task> createTask() throw();
   already_AddRefd<iface::SProS::DataGenerator> createDataGenerator() throw();
   already_AddRefd<iface::SProS::Plot2D> createPlot2D() throw();
@@ -525,19 +525,19 @@ public:
                SProS::UniformTimeCourse);
 };
 
-class CDA_SProSSamplingSensitivityAnalysis
-  : public iface::SProS::SamplingSensitivityAnalysis, public CDA_SProSUniformTimeCourseBase
+class CDA_SProSRepeatedAnalysis
+  : public iface::SProS::RepeatedAnalysis, public CDA_SProSUniformTimeCourseBase
 {
 public:
-  CDA_SProSSamplingSensitivityAnalysis(CDA_SProSBase* aParent,
+  CDA_SProSRepeatedAnalysis(CDA_SProSBase* aParent,
                                        iface::dom::Element* aEl)
     : CDA_SProSBase(aParent, aEl), CDA_SProSUniformTimeCourseBase(aParent, aEl)
   {
   }
-  ~CDA_SProSSamplingSensitivityAnalysis() {}
+  ~CDA_SProSRepeatedAnalysis() {}
 
   CDA_IMPL_QI6(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
-               SProS::UniformTimeCourse, SProS::SamplingSensitivityAnalysis);
+               SProS::UniformTimeCourse, SProS::RepeatedAnalysis);
 
   uint32_t numberOfSamples() throw()
   {

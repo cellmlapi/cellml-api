@@ -1833,7 +1833,7 @@ CDA_SRuSProcessor::generateData
     double it = utc->initialTime(), ost = utc->outputStartTime(), oet = utc->outputEndTime();
 
     uint32_t nSamples = 1;
-    DECLARE_QUERY_INTERFACE_OBJREF(ssi, utc, SProS::SamplingSensitivityAnalysis);
+    DECLARE_QUERY_INTERFACE_OBJREF(ssi, utc, SProS::RepeatedAnalysis);
     if (ssi != NULL)
       nSamples = ssi->numberOfSamples();
 

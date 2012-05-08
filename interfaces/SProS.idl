@@ -60,7 +60,7 @@ module SProS
   interface DataSet;
   interface DataSetSet;
   interface DataSetIterator;
-  interface SamplingSensitivityAnalysis;
+  interface RepeatedAnalysis;
 
   interface Bootstrap
     : XPCOM::IObject
@@ -214,10 +214,10 @@ module SProS
     UniformTimeCourse createUniformTimeCourse();
 
     /**
-     * Creates a new SamplingSensitivityAnalysis. It is created with no parent
+     * Creates a new RepeatedAnalysis. It is created with no parent
      * and must be explicitly added.
      */
-    SamplingSensitivityAnalysis createSamplingSensitivityAnalysis();
+    RepeatedAnalysis createRepeatedAnalysis();
 
     /**
      * Creates a new Task. It is created with no parent and must be
@@ -513,11 +513,11 @@ module SProS
   };
 
   /**
-   * A SamplingSensitivityAnalysis.
+   * A RepeatedAnalysis.
    * Note: This is a non-standard (experimental) extension, for sensitivity
    * analyses to be performed by repeatedly running a UniformTimeCourse.
    */
-  interface SamplingSensitivityAnalysis
+  interface RepeatedAnalysis
     : UniformTimeCourse
   {
     attribute unsigned long numberOfSamples;
