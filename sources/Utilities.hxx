@@ -327,6 +327,7 @@ public:
   operator=(const T& aValue)
   {
     *mPtr = aValue;
+    return aValue;
   }
 
 private:
@@ -390,6 +391,7 @@ public:
   operator=(const T& aT)
   {
     (*this)[0] = aT;
+    return aT;
   }
 
 private:
