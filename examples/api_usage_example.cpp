@@ -1,5 +1,4 @@
-// This is not an official part of the API, but including it is not a problem
-// because it doesn't directly access any private APIs.
+// The official C++ binding header, which provides C++ specific utilities like ObjRef
 #include "cellml-api-cxx-support.hpp"
 
 // This is the standard C++ interface for the core CellML API.
@@ -20,15 +19,15 @@ main(int argc, char** argv)
   // C++ binding specific method, which fetches the CellMLBootstrap object.
   // It is the only non-OO method that you should ever call from the CellML
   // API.
-  // Note that RETURN_INTO_OBJREF is a macro from Utilities.hxx. It is creating
-  // a variable called cbs, and assigning into it. CreateCellMLBootstrap
-  // returns iface::cellml_api::CellMLBootstrap*. We could assign this directly
-  // into a variable. We would then have to call cbs->release_ref() to release
-  // the object when we have finished with it. The ObjRef<> template does this
-  // for us, so there is no chance we will forget to clean up on a certain
-  // exit path.
-  RETURN_INTO_OBJREF(cbs, iface::cellml_api::CellMLBootstrap,
-                     CreateCellMLBootstrap());
+  // ObjRef is a template defined in cellml-api-cxx-support.hpp. CreateCellMLBootstrap
+  // has already_Addrefd<iface::cellml_api::CellMLBootstrap> as its return type,
+  // which is the signal that a reference is added (i.e. the reference count is
+  // incremented on the return value, and the caller must ensure it is decremented).
+  // ObjRef will, when given an already_Addrefd argument, not increment the reference
+  // count, but will decrement it when it goes out of scope. If an ObjRef is constructed
+  // from a pointer or another ObjRef, it will add a reference on construction,
+  // and release the reference on destruction.
+  ObjRef<iface::cellml_api::CellMLBootstrap> cbs(CreateCellMLBootstrap());
 
   // Now would be a good time to see what methods we can call. In the
   // CellML_DOM_API source, find interfaces/CellML_APISPEC.idl.
@@ -42,7 +41,18 @@ main(int argc, char** argv)
    */
   // We want to load a model, so we want the modelLoader attribute. We fetch
   // the attribute like this...
-  RETURN_INTO_OBJREF(ml, iface::cellml_api::DOMModelLoader, cbs->modelLoader());
+  ObjRef<iface::cellml_api::DOMModelLoader> ml(cbs->modelLoader());
+
+  // Suppose we only had a general model loader...
+  ObjRef<iface::cellml_api::ModelLoader> generalModelLoader(ml);
+  // if we wanted to get from this to a DOM model loader, we can't just cast,
+  // because the API is designed so it can work through bridges and we might
+  // need to switch to a different bridge (you can cast from an interface to a
+  // parent interface in the inheritance hierarchy, but not the other way).
+  // Instead, we call query_interface to ask the underlying object if it
+  // supports the interface we want, and to return us a value.
+  ObjRef<iface::cellml_api::DOMModelLoader> ml2(do_QueryInterface(generalModelLoader));
+  // ml2 would be null if generalModelLoader didn't support DOMModelLoader.
 
   // Start a try, because we might get an exception...
   try
@@ -52,12 +62,11 @@ main(int argc, char** argv)
     // Be warned that is a synchronous (blocking) load. In a real application,
     // you are probably better to download the file using another asynchronous
     // http library, and then creating the model from the serialised text.
-    RETURN_INTO_OBJREF(model, iface::cellml_api::Model,
-                       ml->loadFromURL(L"http://www.cellml.org/models/beeler_reuter_1977_version04/download"));
+    ObjRef<iface::cellml_api::Model> model(ml->loadFromURL(L"http://www.cellml.org/models/beeler_reuter_1977_version04/download"));
 
     // Fetch the models cmeta:id (there obviously lots of other things we could
     // do here!)
-    RETURN_INTO_WSTRING(cmid, model->cmetaId());
+    std::wstring cmid = model->cmetaId();
     printf("Model's cmeta:id is %S\n", cmid.c_str());
   }
   // Most parts of the CellML API raise this exception. The DOM/MathML API, on the
@@ -69,7 +78,7 @@ main(int argc, char** argv)
     // supplementary information (to suit XPCOM). However, many classes have
     // a way to get the last error, e.g. lastErrorMessage on ModelLoader.
     // However, threadsafety is potentially an issue with this.
-    RETURN_INTO_WSTRING(msg, ml->lastErrorMessage());
+    std::wstring msg = ml->lastErrorMessage();
     printf("Got a CellML Exception loading a model. Error was %S\n",
            msg.c_str());
     return 1;

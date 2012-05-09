@@ -49,6 +49,22 @@ CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
   return cmp;
 }
 
+class DoQueryInterface
+{
+public:
+  DoQueryInterface(iface::XPCOM::IObject* aObj)
+    : mObj(aObj)
+  {
+  }
+  ~DoQueryInterface()
+  {
+    if (mObj)
+      mObj->release_ref();
+  }
+
+  iface::XPCOM::IObject* mObj;
+};
+
 template<class T>
 class ObjRef
 {
@@ -75,6 +91,18 @@ public:
   ObjRef(const already_AddRefd<T> aar)
   {
     mPtr = aar.getPointer();
+  }
+
+  ObjRef(DoQueryInterface dqi)
+  {
+    if (dqi.mObj == NULL)
+    {
+      mPtr = NULL;
+      return;
+    }
+    mPtr = reinterpret_cast<T*>(dqi.mObj->query_interface(T::INTERFACE_NAME()));
+    dqi.mObj->release_ref();
+    dqi.mObj = NULL;
   }
 
   ~ObjRef()
@@ -159,6 +187,19 @@ public:
 private:
   T* mPtr;
 };
+
+DoQueryInterface
+do_QueryInterface(iface::XPCOM::IObject* qi)
+{
+  qi->add_ref();
+  return DoQueryInterface(qi);
+}
+
+DoQueryInterface
+do_QueryInterface(const already_AddRefd<iface::XPCOM::IObject>& qi)
+{
+  return DoQueryInterface(qi.getPointer());
+}
 
 template<class T, class U> bool
 operator==(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
