@@ -69,7 +69,7 @@ public class TestMain
         VACSService vc = cellml_bootstrap.VACSSBootstrap.createVACSService();
         pjm.Reference<Long> col = new pjm.Reference<Long>();
         long row =
-            vc.getPositionInXML(pjm2pcm.cellml_api.CellMLDOMElement.queryInterface(comp1).getDomElement(), 0, col);
+            vc.getPositionInXML(pjm2pcm.cellml_api.CellMLDOMElement.queryInterface((pjm.XPCOMDerived)comp1).getDomElement(), 0, col);
         if (col.get() != 56)
         {
             System.out.println("Read column " + col.get() + ", expected 56 - possible problem with out params.");
