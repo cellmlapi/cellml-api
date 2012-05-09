@@ -425,6 +425,7 @@ private:
     return d;
   }
 
+  bool mReady;
   bool mHasInitial;
   int mLength;
   union {
@@ -438,14 +439,14 @@ private:
 #endif
 };
 
-static ThreadLocal<unsigned long> mt(N);
-static ThreadLocal<int> mti(1, N+1);
+static ThreadLocal<unsigned long>* mt;
+static ThreadLocal<int>* mti;
 
 /* initializes mt[N] with a seed */
 static void
 mersenne_init_genrand(unsigned long s)
 {
-    unsigned long* mtl = mt;
+    unsigned long* mtl = *mt;
     mtl[0]= s & 0xffffffffUL;
     unsigned long mtil;
     for (mtil=1; mtil<N; mtil++) {
@@ -458,13 +459,13 @@ mersenne_init_genrand(unsigned long s)
         mtl[mtil] &= 0xffffffffUL;
         /* for >32 bit machines */
     }
-    mti = mtil;
+    *mti = mtil;
 }
 
 static void
 mersenne_init_by_array(unsigned long init_key[], int key_length)
 {
-    unsigned long* mtl = mt;
+    unsigned long* mtl = *mt;
 
     int i, j, k;
     mersenne_init_genrand(19650218UL);
@@ -517,12 +518,17 @@ mersenne_autoseed(void)
 /* generates a random number on [0,0xffffffff]-interval */
 HEADER_INLINE unsigned long mersenne_genrand_int32(void)
 {
+  if (mt == NULL)
+    mt = new ThreadLocal<unsigned long>(N);
+  if (mti == NULL)
+    mti = new ThreadLocal<int>(1, N + 1);
+
     unsigned long y;
     static unsigned long mag01[2]={0x0UL, MATRIX_A};
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-    unsigned long mtil = mti;
-    unsigned long* mtl = mt;
+    unsigned long mtil = *mti;
+    unsigned long* mtl = *mt;
     if (mtil >= N) { /* generate N words at one time */
         int kk;
 
@@ -533,7 +539,7 @@ HEADER_INLINE unsigned long mersenne_genrand_int32(void)
            */
         {
           mersenne_autoseed();
-          mtil = mti;
+          mtil = *mti;
         }
 
         for (kk=0;kk<N-M;kk++) {
@@ -547,11 +553,11 @@ HEADER_INLINE unsigned long mersenne_genrand_int32(void)
         y = (mtl[N-1]&UPPER_MASK)|(mtl[0]&LOWER_MASK);
         mtl[N-1] = mtl[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
 
-        mtil = mti = 0;
+        mtil = *mti = 0;
     }
   
     y = mtl[mtil];
-    mti = mtil + 1;
+    *mti = mtil + 1;
 
     /* Tempering */
     y ^= (y >> 11);
