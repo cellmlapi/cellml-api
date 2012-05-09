@@ -38,7 +38,7 @@ namespace p2j
       jobject unwrap() { return mObject; }
 
     protected:
-      JNIEnv* env;
+      JavaVM* mVM;
       jobject mObject;
     };
   };

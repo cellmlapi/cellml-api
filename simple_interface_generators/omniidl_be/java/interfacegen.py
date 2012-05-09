@@ -37,14 +37,17 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
         self.out.out('package ' + self.package + ';')
         self.out.out('public interface ' + jnutils.JavaName(node))
         inh = node.inherits()
-        extends = 'extends pjm.XPCOMDerived'
+        extends = ''
         if len(inh) != 0:
             for inherit in inh:
                 if isinstance(inherit, idlast.Declarator) and inherit.alias():
                     inherit = inherit.alias().aliasType().unalias().decl()                
                 if inherit.scopedName() == ['XPCOM', 'IObject']:
                     continue
-                extends = extends + ", " + jnutils.GetClassName(inherit)
+                if extends == '':
+                    extends = 'extends ' + jnutils.GetClassName(inherit)
+                else:
+                    extends = extends + ", " + jnutils.GetClassName(inherit)
         self.out.out('  ' + extends)
         self.out.out('{')
         self.out.inc_indent()

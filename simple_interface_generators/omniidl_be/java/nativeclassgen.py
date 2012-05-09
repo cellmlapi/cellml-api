@@ -39,7 +39,7 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
         self.out = output.Stream(open(self.directory + '/' + jnutils.JavaName(node) + ".java", 'w'))
         self.out.out('package ' + self.package + ';')
         self.out.out('public class ' + jnutils.JavaName(node))
-        self.out.out('  implements ' + jnutils.GetClassName(node))
+        self.out.out('  implements ' + jnutils.GetClassName(node) + ", pjm.XPCOMDerived")
         self.out.out('{')
         self.out.inc_indent()
         self.out.out('private ' + jnutils.JavaName(node) + '() {};')

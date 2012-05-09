@@ -73,3 +73,17 @@ cgrs-*-init.cpp
 cgrspy
 \#*\#
 *\#*
+interfaces/CGRS
+interfaces/SProS
+interfaces/SRuS
+interfaces/cellml_api
+interfaces/cellml_events
+interfaces/cellml_services
+interfaces/dom
+interfaces/events
+interfaces/mathml_dom
+interfaces/pjm2pcm
+interfaces/rdf_api
+interfaces/xpath
+TestTeLICeMParser
+TestTeLICeMSerialiser

@@ -467,13 +467,13 @@ class Sequence(Type):
                "  jmethodID initmethod = env->GetMethodID(vec, \"<init>\", " +\
                "\"(I)V\");\n" +\
                "  " + oname + " = env->NewObject(vec, initmethod, " + iname + ".size());\n" +\
-               "  jmethodID vecadd = env->GetMethodID(vec, \"add\", \"(Ljava/lang/Object;)V\");"+\
+               "  jmethodID vecadd = env->GetMethodID(vec, \"add\", \"(Ljava/lang/Object;)Z\");"+\
                "  for (uint32_t tmpidx = 0; tmpidx < " + iname + ".size(); tmpidx++)\n"+\
                "  {\n"+\
                "    jobject tmparrayobj;\n"+\
                self.seqType.convertToJNI('tmparrayobj', '(' + iname +\
                                          ')[tmpidx]', 0, 0, 1)+\
-               "    env->CallVoidMethod(" + oname + ", vecadd, tmparrayobj);\n"+\
+               "    env->CallBooleanMethod(" + oname + ", vecadd, tmparrayobj);\n"+\
                "    env->DeleteLocalRef(tmparrayobj);\n"+\
                "  }\n" +\
                "}\n"

@@ -167,12 +167,8 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
                      classname=jnutils.CppName(node.identifier()),
                      defname=self.defname)
 
-        self.cpp.out(classname + '::' + jnutils.CppName(node.identifier()) + '(JNIEnv* aEnv, jobject aObject)')
+        self.cpp.out(classname + '::' + jnutils.CppName(node.identifier()) + '(JNIEnv* aEnv, jobject aObject) : ::p2j::XPCOM::IObject(aEnv, aObject)')
         self.cpp.out('{')
-        self.cpp.inc_indent()
-        self.cpp.out('env = aEnv;')
-        self.cpp.out('mObject = aObject;')
-        self.cpp.dec_indent()
         self.cpp.out('}')
         
         for n in node.contents():
@@ -252,6 +248,9 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.cpp.out('  throw(std::exception&)')
         self.cpp.out('{')
         self.cpp.inc_indent()
+
+        self.cpp.out('JNIEnv* env;');
+        self.cpp.out('mVM->AttachCurrentThread((void**)&env, NULL);');
 
         if (rtype != None and rtypeName != 'void'):
             needRet = 1

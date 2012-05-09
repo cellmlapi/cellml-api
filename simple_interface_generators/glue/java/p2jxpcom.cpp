@@ -4,12 +4,15 @@
 #include "p2jxpcom.hxx"
 
 p2j::XPCOM::IObject::IObject(JNIEnv* aEnv, jobject aObject)
-  : env(aEnv), mObject(env->NewGlobalRef(aObject))
+  : mObject(aEnv->NewGlobalRef(aObject))
 {
+  aEnv->GetJavaVM(&mVM);
 }
 
 p2j::XPCOM::IObject::~IObject()
 {
+  JNIEnv* env;
+  mVM->AttachCurrentThread((void**)&env, NULL);
   env->DeleteGlobalRef(mObject);
 }
 
@@ -21,6 +24,8 @@ std::string
 p2j::XPCOM::IObject::objid()
   throw()
 {
+  JNIEnv* env;
+  mVM->AttachCurrentThread((void**)&env, NULL);
   jclass jlo = env->FindClass("java/lang/Object");
   jmethodID meth = env->GetMethodID(jlo, "hashCode", "()I");
   jint ret = env->CallIntMethod(mObject, meth);
@@ -42,6 +47,8 @@ p2j::XPCOM::IObject::query_interface(const std::string& name) throw()
     return NULL;
   }
 
+  JNIEnv* env;
+  mVM->AttachCurrentThread((void**)&env, NULL);
   // Check if it is legal to cast to this interface...
   jclass clazz = env->FindClass(f->javaInterfaceClass());
   if (!env->IsInstanceOf(mObject, clazz))
