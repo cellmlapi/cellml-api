@@ -3,7 +3,7 @@
 
 #include "cda_compiler_support.h"
 
-#ifdef IN_CELLML_MODULE
+#ifdef cellml_EXPORTS
 #define UTILS_PUBLIC_PRE CDA_EXPORT_PRE
 #define UTILS_PUBLIC_POST CDA_EXPORT_POST
 #else
