@@ -2,7 +2,14 @@
 #define _UTILITIES_HXX
 
 #include "cda_compiler_support.h"
-#include "ThreadWrapper.hxx"
+
+#ifdef IN_CELLML_MODULE
+#define UTILS_PUBLIC_PRE CDA_EXPORT_PRE
+#define UTILS_PUBLIC_POST CDA_EXPORT_POST
+#else
+#define UTILS_PUBLIC_PRE CDA_IMPORT_PRE
+#define UTILS_PUBLIC_POST CDA_IMPORT_POST
+#endif
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
@@ -33,11 +40,11 @@
 #include <exception>
 #include <Ifacexpcom.hxx>
 #include <wchar.h>
-
 #ifndef WIN32
 #include <sys/time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <pthread.h>
 #else
 #include <windows.h>
 #undef CreateEvent
@@ -45,38 +52,24 @@
 #undef GetClassName
 #undef AddMonitor
 #endif
-
 #include <stdlib.h>
 #include <string.h>
-
 #include <locale.h>
 
-template<typename T>
-class XPCOMContainerReleaser
-{
-public:
-  XPCOMContainerReleaser(T& aCont)
-    : mCont(aCont), mOverride(false)
-  {}
+// Register a destructor that is called at the termination of every thread
+// created by the API.
+UTILS_PUBLIC_PRE void CDA_RegisterDestructorEveryThread(void* aData, void (*aFunc)(void*)) UTILS_PUBLIC_POST;
 
-  ~XPCOMContainerReleaser()
-  {
-    if (mOverride)
-      return;
-    for (typename T::iterator i = mCont.begin();
-         i != mCont.end(); i++)
-      (*i)->release_ref();
-  }
+// Register a destructor that is called on the termination of the current
+// thread (which must have been created by the API).
+UTILS_PUBLIC_PRE void CDA_RegisterDestructorThreadLocal(void* aData, void (*aFunc)(void*)) UTILS_PUBLIC_POST;
 
-  void override()
-  {
-    mOverride = true;
-  }
-
-private:
-  T& mCont;
-  bool mOverride;
-};
+// Register a destructor that is called on the termination of the current
+// thread (which must have been created by the API). Give the destructor a
+// name; if the name already exists, replace that existing destructor with
+// the new destructor, therefore ensuring that at most one destructor is called
+// for every name.
+UTILS_PUBLIC_PRE void CDA_RegisterNamedDestructorThreadLocal(const char* aName, void* aData, void (*aFunc)(void*)) UTILS_PUBLIC_POST;
 
 template<typename C>
 class destructor_functor
@@ -247,19 +240,241 @@ private:
 };
 
 // wcsdup is non-standard, so use this instead...
-HEADER_INLINE wchar_t*
-CDA_wcsdup(const wchar_t* str)
+UTILS_PUBLIC_PRE wchar_t* CDA_wcsdup(const wchar_t* aStr) UTILS_PUBLIC_POST;
+
+template<typename T>
+class ThreadLocalOffset
 {
-  size_t l = (wcslen(str) + 1) * sizeof(wchar_t);
-  wchar_t* xstr = reinterpret_cast<wchar_t*>(malloc(l));
-  memcpy(xstr, str, l);
-  return xstr;
-}
+public:
+  ThreadLocalOffset(T* aPtr)
+    : mPtr(aPtr)
+  {
+  }
+  
+  operator T&()
+  {
+    return *mPtr;
+  }
+
+  const T&
+  operator=(const T& aValue)
+  {
+    *mPtr = aValue;
+    return aValue;
+  }
+
+private:
+  T* mPtr;
+};
+
+template<typename T>
+class ThreadLocal
+{
+public:
+  ThreadLocal(int l, const T& iv)
+    : mHasInitial(true), mLength(1)
+  {
+    mInitial = new T(iv);
+    createKey();
+    (*this) = iv;
+  }
+
+  ThreadLocal(int l)
+    : mHasInitial(false), mLength(l)
+  {
+    createKey();
+  }
+
+  ~ThreadLocal()
+  {
+    if (mInitial)
+      delete mInitial;
+#ifdef WIN32
+    TlsFree(mKey);
+#else
+    pthread_key_delete(mKey);
+#endif
+  }
+
+  operator T*()
+  {
+    T* mPtr = (static_cast<T*>(
+#ifdef WIN32
+                               TlsGetValue(mKey)
+#else
+                               pthread_getspecific(mKey)
+#endif
+                               ));
+    if (mPtr == NULL)
+      mPtr = initThreadData();
+    return mPtr;
+  }
+
+  ThreadLocalOffset<T>
+  operator [](int idx)
+  {
+    T* mPtr = (static_cast<T*>(
+#ifdef WIN32
+                               TlsGetValue(mKey)
+#else
+                               pthread_getspecific(mKey)
+#endif
+                               )) + idx;
+    if (mPtr == NULL)
+      mPtr = initThreadData() + idx;
+
+    return ThreadLocalOffset<T>(mPtr);
+  }
+
+  operator T&()
+  {
+    return (*this)[0];
+  }
+
+  const T&
+  operator=(const T& aT)
+  {
+    (*this)[0] = aT;
+    return aT;
+  }
+
+private:
+  static void deleteData(void* aData)
+  {
+    if (aData)
+      delete[](static_cast<T*>(aData));
+  }
+
+  void createKey()
+  {
+#ifdef WIN32
+    mKey = TlsAlloc();
+    CDA_RegisterDestructorEveryThread(mKey, deleteData);
+#else
+    pthread_key_create(&mKey, deleteData);
+#endif
+  }
+
+  T* initThreadData()
+  {
+    T* d = new T[mLength];
+#ifdef WIN32
+    TlsSetValue(mKey, d);
+#else
+    pthread_setspecific(mKey, d);
+#endif
+
+    if (mHasInitial)
+      d[0] = *mInitial;
+  
+    return d;
+  }
+
+  bool mReady;
+  bool mHasInitial;
+  int mLength;
+  T* mInitial;
+#ifdef WIN32
+  DWORD mKey;
+#else
+  pthread_key_t mKey;
+#endif
+};
+
+// A wrapper for a mutex...
+class CDAMutex
+{
+public:
+  CDAMutex()
+  {
+#ifdef WIN32
+    InitializeCriticalSection(&mMutex);
+#else
+    pthread_mutex_init(&mMutex, NULL);
+#endif
+  }
+
+  ~CDAMutex()
+  {
+#ifdef WIN32
+    DeleteCriticalSection(&mMutex);
+#else
+    pthread_mutex_destroy(&mMutex);
+#endif
+  }
+
+  void Lock()
+  {
+#ifdef WIN32
+    EnterCriticalSection(&mMutex);
+#else
+    pthread_mutex_lock(&mMutex);
+#endif
+  }
+
+  void Unlock()
+  {
+#ifdef WIN32
+    LeaveCriticalSection(&mMutex);
+#else
+    pthread_mutex_unlock(&mMutex);
+#endif
+  }
+private:
+#ifdef WIN32
+  CRITICAL_SECTION mMutex;
+#else
+  pthread_mutex_t mMutex;
+#endif
+};
+
+// A class to provide a scoped lock...
+class CDALock
+{
+public:
+  CDALock(CDAMutex& m)
+    : mutex(m)
+  {
+    mutex.Lock();
+  }
+
+  ~CDALock()
+  {
+    mutex.Unlock();
+  }
+private:
+  CDAMutex& mutex;
+};
+
+class CDAThread
+{
+public:
+  CDAThread()
+    : mRunning(false)
+  {
+  }
+
+  virtual ~CDAThread() {}
+
+  UTILS_PUBLIC_PRE void startthread() UTILS_PUBLIC_POST;
+
+protected:
+  virtual void runthread() {}
+
+private:
+#ifdef WIN32
+  static DWORD WINAPI ThreadProc(LPVOID lpparam);
+#else
+  static void* start_routine(void* arg);
+#endif
+  static void runThreadCleanup();
+  bool mRunning;
+};
 
 /* 
    The following license applies to the original Mersenne Twister code. My
-   modifications are Copyright (C) 2006, and are under the same license as the
-   rest of the code.
+   modifications are Copyright (C) 2006-2012, and are under the same license as the
+   rest of the CellML API code.
 
    A C-program for MT19937, with initialization improved 2002/1/26.
    Coded by Takuji Nishimura and Makoto Matsumoto.
@@ -308,136 +523,6 @@ CDA_wcsdup(const wchar_t* str)
 #define MATRIX_A 0x9908b0dfUL   /* constant vector a */
 #define UPPER_MASK 0x80000000UL /* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL /* least significant r bits */
-
-template<typename T>
-class ThreadLocalOffset
-{
-public:
-  ThreadLocalOffset(T* aPtr)
-    : mPtr(aPtr)
-  {
-  }
-  
-  operator T()
-  {
-    return *mPtr;
-  }
-
-  const T&
-  operator=(const T& aValue)
-  {
-    *mPtr = aValue;
-    return aValue;
-  }
-
-private:
-  T* mPtr;
-};
-
-template<typename T>
-class ThreadLocal
-{
-public:
-  ThreadLocal(int l, const T& iv)
-    : mHasInitial(true), mLength(1)
-  {
-    mInitial.value = iv;
-    createKey();
-    (*this) = iv;
-  }
-
-  ThreadLocal(int l)
-    : mHasInitial(false), mLength(l)
-  {
-    createKey();
-  }
-
-  operator T*()
-  {
-    T* mPtr = (static_cast<T*>(
-#ifdef WIN32
-                               TlsGetValue(mKey)
-#else
-                               pthread_getspecific(mKey)
-#endif
-                               ));
-    if (mPtr == NULL)
-      mPtr = initThreadData();
-    return mPtr;
-  }
-
-  ThreadLocalOffset<T>
-  operator [](int idx)
-  {
-    T* mPtr = (static_cast<T*>(
-#ifdef WIN32
-                               TlsGetValue(mKey)
-#else
-                               pthread_getspecific(mKey)
-#endif
-                               )) + idx;
-    if (mPtr == NULL)
-      mPtr = initThreadData() + idx;
-
-    return ThreadLocalOffset<T>(mPtr);
-  }
-
-  operator T()
-  {
-    return (*this)[0];
-  }
-
-  const T&
-  operator=(const T& aT)
-  {
-    (*this)[0] = aT;
-    return aT;
-  }
-
-private:
-  static void deleteData(void* aData)
-  {
-    if (aData)
-      delete[](static_cast<T*>(aData));
-  }
-
-  void createKey()
-  {
-#ifdef WIN32
-    mKey = TlsAlloc();
-#else
-    pthread_key_create(&mKey, deleteData);
-#endif
-  }
-
-  T* initThreadData()
-  {
-    T* d = new T[mLength];
-#ifdef WIN32
-    TlsSetValue(mKey, d);
-#else
-    pthread_setspecific(mKey, d);
-#endif
-
-    if (mHasInitial)
-      d[0] = mInitial.value;
-
-    return d;
-  }
-
-  bool mReady;
-  bool mHasInitial;
-  int mLength;
-  union {
-    int nothing;
-    T value;
-  } mInitial;
-#ifdef WIN32
-  DWORD mKey;
-#else
-  pthread_key_t mKey;
-#endif
-};
 
 static ThreadLocal<unsigned long>* mt;
 static ThreadLocal<int>* mti;

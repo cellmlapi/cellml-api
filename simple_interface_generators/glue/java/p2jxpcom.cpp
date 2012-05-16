@@ -13,6 +13,7 @@ p2j::XPCOM::IObject::~IObject()
 {
   JNIEnv* env;
   mVM->AttachCurrentThread((void**)&env, NULL);
+  CDA_RegisterNamedDestructorThreadLocal("DetachJVM", (void**)mVM, (void(*)(void*))mVM->functions->DetachCurrentThread);
   env->DeleteGlobalRef(mObject);
 }
 
@@ -26,6 +27,7 @@ p2j::XPCOM::IObject::objid()
 {
   JNIEnv* env;
   mVM->AttachCurrentThread((void**)&env, NULL);
+  CDA_RegisterNamedDestructorThreadLocal("DetachJVM", (void**)mVM, (void(*)(void*))mVM->functions->DetachCurrentThread);
   jclass jlo = env->FindClass("java/lang/Object");
   jmethodID meth = env->GetMethodID(jlo, "hashCode", "()I");
   jint ret = env->CallIntMethod(mObject, meth);
@@ -49,6 +51,7 @@ p2j::XPCOM::IObject::query_interface(const std::string& name) throw()
 
   JNIEnv* env;
   mVM->AttachCurrentThread((void**)&env, NULL);
+  CDA_RegisterNamedDestructorThreadLocal("DetachJVM", (void**)mVM, (void(*)(void*))mVM->functions->DetachCurrentThread);
   // Check if it is legal to cast to this interface...
   jclass clazz = env->FindClass(f->javaInterfaceClass());
   if (!env->IsInstanceOf(mObject, clazz))

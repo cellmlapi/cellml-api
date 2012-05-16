@@ -251,6 +251,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
 
         self.cpp.out('JNIEnv* env;');
         self.cpp.out('mVM->AttachCurrentThread((void**)&env, NULL);');
+        self.cpp.out('CDA_RegisterNamedDestructorThreadLocal("DetachJVM", (void**)mVM, (void(*)(void*))mVM->functions->DetachCurrentThread);');
 
         if (rtype != None and rtypeName != 'void'):
             needRet = 1

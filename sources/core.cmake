@@ -36,6 +36,7 @@ ELSE()
 ENDIF()
 
 ADD_LIBRARY(cellml
+    sources/Utilities.cpp
     sources/dom/DOMBootstrap.cpp
     sources/dom/DOMWriter.cpp
     sources/dom_direct/DOMImplementation.cpp
