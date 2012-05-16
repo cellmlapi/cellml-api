@@ -2,7 +2,7 @@
 #include <map>
 #include <list>
 
-wchar_t*
+UTILS_PUBLIC_PRE wchar_t*
 CDA_wcsdup(const wchar_t* str)
 {
   size_t l = (wcslen(str) + 1) * sizeof(wchar_t);
@@ -17,6 +17,17 @@ static std::list<std::pair<void*, void(*)(void*)> >* sAllThreadDestructors;
 static ThreadLocal<std::list<std::pair<void*, void(*)(void*)> > >* tlDestructors;
 static ThreadLocal<std::map<std::string, std::pair<void*,void(*)(void*)> > >* tlNamedDestructors;
 
+static void destroyDestructors(std::list<std::pair<void*, void(*)(void*)> >* d)
+{
+  d->~list();
+}
+
+static void destroyNamedDestructors(std::map<std::string, std::pair<void*,void(*)(void*)> >* d)
+{
+  d->~map();
+}
+
+
 static void EnsureInitialised()
 {
   if (sWasInitialised)
@@ -25,33 +36,33 @@ static void EnsureInitialised()
   sWasInitialised = 1;
 
   sAllThreadDestructors = new std::list<std::pair<void*, void(*)(void*)> >();
-  tlDestructors = new ThreadLocal<std::list<std::pair<void*, void(*)(void*)> > >(1, std::list<std::pair<void*, void(*)(void*)> >());
-  tlNamedDestructors = new ThreadLocal<std::map<std::string, std::pair<void*, void(*)(void*)> > >(1, std::map<std::string, std::pair<void*, void(*)(void*)> >());
+  tlDestructors = new ThreadLocal<std::list<std::pair<void*, void(*)(void*)> > >(1, std::list<std::pair<void*, void(*)(void*)> >(), destroyDestructors);
+  tlNamedDestructors = new ThreadLocal<std::map<std::string, std::pair<void*, void(*)(void*)> > >(1, std::map<std::string, std::pair<void*, void(*)(void*)> >(), destroyNamedDestructors);
 }
 
 #define ctlDestructors static_cast<std::list<std::pair<void*, void(*)(void*)> >&>(*tlDestructors)
 #define ctlNamedDestructors static_cast<std::map<std::string, std::pair<void*, void(*)(void*)> >&> (*tlNamedDestructors)
 
-void CDA_RegisterDestructorEveryThread(void* aData, void (*aFunc)(void*))
+UTILS_PUBLIC_PRE void CDA_RegisterDestructorEveryThread(void* aData, void (*aFunc)(void*))
 {
   EnsureInitialised();
   sAllThreadDestructors->push_back(std::pair<void*,void(*)(void*)>(aData, aFunc));
 }
 
-void CDA_RegisterDestructorThreadLocal(void* aData, void (*aFunc)(void*))
+UTILS_PUBLIC_PRE void CDA_RegisterDestructorThreadLocal(void* aData, void (*aFunc)(void*))
 {
   EnsureInitialised();
   ctlDestructors.push_back(std::pair<void*,void(*)(void*)>(aData, aFunc));
 }
 
-void CDA_RegisterNamedDestructorThreadLocal(const char* aName, void* aData, void (*aFunc)(void*))
+UTILS_PUBLIC_PRE void CDA_RegisterNamedDestructorThreadLocal(const char* aName, void* aData, void (*aFunc)(void*))
 {
   EnsureInitialised();
   ctlNamedDestructors.insert(std::pair<std::string, std::pair<void*,void(*)(void*)> >
                              (aName, std::pair<void*,void(*)(void*)>(aData, aFunc)));
 }
 
-void CDAThread::startthread()
+UTILS_PUBLIC_PRE void CDAThread::startthread()
 {
     if (!mRunning)
     {

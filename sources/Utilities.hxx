@@ -271,16 +271,16 @@ template<typename T>
 class ThreadLocal
 {
 public:
-  ThreadLocal(int l, const T& iv)
-    : mHasInitial(true), mLength(1)
+  ThreadLocal(int l, const T& iv, void (*destroy)(T*))
+    : mHasInitial(true), mLength(1), mDestroy(destroy)
   {
     mInitial = new T(iv);
     createKey();
     (*this) = iv;
   }
 
-  ThreadLocal(int l)
-    : mHasInitial(false), mLength(l)
+  ThreadLocal(int l, void (*destroy)(T*))
+    : mHasInitial(false), mLength(l), mDestroy(destroy)
   {
     createKey();
   }
@@ -341,18 +341,33 @@ public:
 private:
   static void deleteData(void* aData)
   {
-    if (aData)
-      delete[](static_cast<T*>(aData));
+    reinterpret_cast<ThreadLocal<T>*>(aData)->deleteMyData();
+  }
+
+  void deleteMyData()
+  {
+    T* ptr = (static_cast<T*>(
+#ifdef WIN32
+                              TlsGetValue(mKey)
+#else
+                              pthread_getspecific(mKey)
+#endif
+                              ));
+    if (mDestroy)
+      for (int i = 0; i < mLength; i++)
+        mDestroy(ptr + i);
+    if (ptr != NULL)
+      delete[] ptr;
   }
 
   void createKey()
   {
 #ifdef WIN32
     mKey = TlsAlloc();
-    CDA_RegisterDestructorEveryThread(mKey, deleteData);
 #else
-    pthread_key_create(&mKey, deleteData);
+    pthread_key_create(&mKey, NULL);
 #endif
+    CDA_RegisterDestructorEveryThread(reinterpret_cast<void*>(this), deleteData);
   }
 
   T* initThreadData()
@@ -374,6 +389,7 @@ private:
   bool mHasInitial;
   int mLength;
   T* mInitial;
+  void (*mDestroy)(T*);
 #ifdef WIN32
   DWORD mKey;
 #else
@@ -604,9 +620,9 @@ mersenne_autoseed(void)
 HEADER_INLINE unsigned long mersenne_genrand_int32(void)
 {
   if (mt == NULL)
-    mt = new ThreadLocal<unsigned long>(N);
+    mt = new ThreadLocal<unsigned long>(N, NULL);
   if (mti == NULL)
-    mti = new ThreadLocal<int>(1, N + 1);
+    mti = new ThreadLocal<int>(1, N + 1, NULL);
 
     unsigned long y;
     static unsigned long mag01[2]={0x0UL, MATRIX_A};
@@ -1475,8 +1491,6 @@ struct XPCOMComparator
     return (CDA_objcmp(o1, o2) < 0);
   }
 };
-
-wchar_t* CDA_wcsdup(const wchar_t* str);
 
 // XXX multithreading - I don't think there is an easy way around this however,
 //     unless we are going to avoid the C library, because locale is a global
