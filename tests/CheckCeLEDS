@@ -6,7 +6,7 @@ cd $BASEDIR
 
 DIFF=diff
 TESTCELEDS=./testCeLEDS
-TEMPFILE=test_celeds_output
+TEMPFILE=test_celeds_output.$$
 
 if [[ ! -f "$TESTCELEDS" ]]; then
         echo testCeLEDS not found. Not testing it.

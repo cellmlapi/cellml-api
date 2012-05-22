@@ -4,7 +4,7 @@ BINDIR=`pwd`
 BASEDIR=`dirname $0`
 DIFF=diff
 VACSS=$BINDIR/ValidateCellML
-TEMPFILE=test_output
+TEMPFILE=test_output.$$
 
 if [[ ! -f "$VACSS" ]]; then
         echo ValidateCellML not found. Not testing it.

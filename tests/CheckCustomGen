@@ -4,7 +4,7 @@ BINDIR=`pwd`
 BASEDIR=`dirname $0`
 DIFF=diff
 CUSTOMGEN=$BINDIR/CustomGen
-TEMPFILE=test_output
+TEMPFILE=test_output.$$
 
 if [[ ! -f "$CUSTOMGEN" ]]; then
         echo CUSTOMGEN not found. Not testing it.

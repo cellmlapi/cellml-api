@@ -5,7 +5,7 @@ BASEDIR=`dirname $0`
 DIFF=diff
 TELICEMPARSE=$BINDIR/TestTeLICeMParser
 TELICEMSER=$BINDIR/TestTeLICeMSerialiser
-TEMPFILE=test_output
+TEMPFILE=test_output.$$
 
 if [[ ! -f "$TELICEMPARSE" ]]; then
         echo TestTeLICeMParser not found. Not testing it.
