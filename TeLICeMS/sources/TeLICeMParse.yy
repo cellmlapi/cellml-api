@@ -541,24 +541,29 @@
     FuncInfo* fi = GetFunctionInformation(aName.c_str());
     FuncInfo deffi;
     std::wstring el;
+    if (fi == NULL)
+      el = convertStringToWString(aName);
+    else
+      el = convertStringToWString(fi->el);
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
-    ObjRef<iface::mathml_dom::MathMLContentElement> namedEl;
+    ObjRef<iface::mathml_dom::MathMLContentElement> namedEl =
+      QueryInterface(doc->createElementNS(MATHML_NS, el));
     if (fi == NULL)
     {
-      namedEl = QueryInterface(doc->createElementNS(MATHML_NS, L"csymbol"));
-      ObjRef<iface::dom::Text> tn(doc->createTextNode(convertStringToWString(aName)));
-      namedEl->appendChild(tn)->release_ref();
+      if (namedEl == NULL)
+      {
+        namedEl = QueryInterface(doc->createElementNS(MATHML_NS, L"csymbol"));
+        ObjRef<iface::dom::Text> tn(doc->createTextNode(el));
+        namedEl->appendChild(tn)->release_ref();
+      }
 
       fi = &deffi;
       deffi.InterpretAs = FuncInfo::APPLY;
       deffi.SpecialQualifiers = 0;
-      el = convertStringToWString(aName);
     }
     else
-    {
       namedEl = QueryInterface(doc->createElementNS(MATHML_NS, convertStringToWString(fi->el)));
-    }
 
     std::list<iface::mathml_dom::MathMLContentElement*> notConsumed;
     std::list<iface::mathml_dom::MathMLContentElement*> endQualifiers;
