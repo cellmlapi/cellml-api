@@ -56,11 +56,6 @@ public:
     : mObj(aObj)
   {
   }
-  ~DoQueryInterface()
-  {
-    if (mObj)
-      mObj->release_ref();
-  }
 
   iface::XPCOM::IObject* mObj;
 };
