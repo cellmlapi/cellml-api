@@ -111,7 +111,7 @@ class Walker(idlvisitor.AstVisitor):
         self.cxxheader.out('public:')
         self.cxxheader.inc_indent()
         # Write a pure virtual destructor...
-        self.cxxheader.out('static const char* INTERFACE_NAME() { return "' + node.simplecxxscoped + '"; }')
+        self.cxxheader.out('static const char* INTERFACE_NAME() { return "' + node.corbacxxscoped + '"; }')
         self.cxxheader.out('virtual ~' + node.simplename + '() {}')
         for n in node.contents():
             n.accept(self)

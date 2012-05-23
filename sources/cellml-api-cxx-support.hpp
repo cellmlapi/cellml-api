@@ -184,19 +184,35 @@ public:
       mPtr->add_ref();
   }
 
+  void operator=(DoQueryInterface dqi)
+  {
+    T* tmp = mPtr;
+
+    if (dqi.mObj == NULL)
+      mPtr = NULL;
+    else
+    {
+      mPtr = reinterpret_cast<T*>(dqi.mObj->query_interface(T::INTERFACE_NAME()));
+      dqi.mObj->release_ref();
+      dqi.mObj = NULL;
+    }
+
+    if (tmp)
+      tmp->release_ref();
+  }
 private:
   T* mPtr;
 };
 
-DoQueryInterface
-do_QueryInterface(iface::XPCOM::IObject* qi)
+inline DoQueryInterface
+QueryInterface(iface::XPCOM::IObject* qi)
 {
   qi->add_ref();
   return DoQueryInterface(qi);
 }
 
-DoQueryInterface
-do_QueryInterface(const already_AddRefd<iface::XPCOM::IObject>& qi)
+inline DoQueryInterface
+QueryInterface(already_AddRefd<iface::XPCOM::IObject> qi)
 {
   return DoQueryInterface(qi.getPointer());
 }

@@ -1190,6 +1190,22 @@ private:
       return v; \
     }
 
+class DoQueryInterface
+{
+public:
+  DoQueryInterface(iface::XPCOM::IObject* aObj)
+    : mObj(aObj)
+  {
+  }
+  ~DoQueryInterface()
+  {
+    if (mObj)
+      mObj->release_ref();
+  }
+
+  iface::XPCOM::IObject* mObj;
+};
+
 template<class T>
 class ObjRef
 {
@@ -1216,6 +1232,18 @@ public:
   ObjRef(const already_AddRefd<T> aar)
   {
     mPtr = aar.getPointer();
+  }
+
+  ObjRef(DoQueryInterface dqi)
+  {
+    if (dqi.mObj == NULL)
+    {
+      mPtr = NULL;
+      return;
+    }
+    mPtr = reinterpret_cast<T*>(dqi.mObj->query_interface(T::INTERFACE_NAME()));
+    dqi.mObj->release_ref();
+    dqi.mObj = NULL;
   }
 
   ~ObjRef()
@@ -1297,9 +1325,42 @@ public:
       mPtr->add_ref();
   }
 
+  void operator=(DoQueryInterface dqi)
+  {
+    T* tmp = mPtr;
+
+    if (dqi.mObj == NULL)
+      mPtr = NULL;
+    else
+    {
+      mPtr = reinterpret_cast<T*>(dqi.mObj->query_interface(T::INTERFACE_NAME()));
+      dqi.mObj->release_ref();
+      dqi.mObj = NULL;
+    }
+
+    if (tmp)
+      tmp->release_ref();
+  }
+
 private:
   T* mPtr;
 };
+
+template<class C>
+DoQueryInterface
+QueryInterface(C* qi)
+{
+  if (qi)
+    qi->add_ref();
+  return DoQueryInterface(qi);
+}
+
+template<class C>
+DoQueryInterface
+QueryInterface(already_AddRefd<C> qi)
+{
+  return DoQueryInterface(qi.getPointer());
+}
 
 template<class T, class U> bool
 operator==(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
