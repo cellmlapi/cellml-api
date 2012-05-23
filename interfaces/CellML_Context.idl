@@ -137,7 +137,7 @@ module cellml_context
      * module is already loaded, does nothing.
      * @param moduleName The name of the module to load.
      * @param moduleVersion The version of the module to load.
-     * @raises CellMLException If the module is not loaded and not configured.
+     * @exception CellMLException If the module is not loaded and not configured.
      * Note that requested module may take some time to start up. The best way
      * to know when it is ready is to use a CellMLModuleMonitor.
      */
@@ -201,7 +201,7 @@ module cellml_context
      * @param type The type to annotate.
      * @param key A string to identify the annotation.
      * @return The user-data associated with the key.
-     * @raises CellMLException if no user data is set for the given key.
+     * @exception CellMLException if no user data is set for the given key.
      */
     XPCOM::IObject getUserData(in wstring type, in wstring key)
       raises(cellml_api::CellMLException);

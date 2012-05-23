@@ -21,7 +21,7 @@ module cellml_services
      * @return The empty string, if the element is valid according to this
      *         validator, or an error message, the format of which shall be
      *         defined by validation services implementing this interface.
-     * @raises CelllMLException If some error occurs during validation.
+     * @exception CelllMLException If some error occurs during validation.
      */
     wstring validateElement(in cellml_api::CellMLElement el)
       raises(cellml_api::CellMLException);
@@ -42,7 +42,7 @@ module cellml_services
      * @param m The input model to transform. This model shall not be modified
      *          in any way by the transformation.
      * @return The model, with the transformations applied.
-     * @raises CellMLException If the input model cannot be transformed.
+     * @exception CellMLException If the input model cannot be transformed.
      */
     cellml_api::Model transformModel(in cellml_api::Model m)
       raises(cellml_api::CellMLException);

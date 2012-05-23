@@ -115,7 +115,7 @@ module rdf_api
      * parameter is the predicate if possible.
      * @param aPredicate The predicate we are searching on.
      * @return A triple meeting the constraints.
-     * @raises RDFProcessingError if there was no matching triple found.
+     * @exception RDFProcessingError if there was no matching triple found.
      */
     Triple getTripleOutOfByPredicate(in Resource aPredicate)
       raises(RDFProcessingError);
@@ -381,7 +381,8 @@ module rdf_api
 
     /**
      * Parses RDF/XML, using the specified element as the root, putting triples
-     * into the DataSource. Raises an RDF processing error if parsing fails.
+     * into the DataSource.
+     * @exception RDFProcessingError if parsing fails.
      * @param ds The DataSource to put triples into.
      * @param root The root element of the RDF/XML serialisation to parse.
      * @param baseURI The base URI against which to resolve relative URIs.

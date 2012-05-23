@@ -44,19 +44,13 @@ module cellml_services
      *
      * @param state A sequence of result entries, for one or more bvar values.
      *   Each entry has the following structure:
-     *     +---------+------------+----------------------------------+
-     *     | Index   |  Length    |       Description                |
-     *     +---------+------------+----------------------------------+
-     *     |   0     |     1      | Variable of integration (e.g.    |
-     *     |         |            | time)                            |
-     *     +---------+------------+----------------------------------+
-     *     |   1     |    nS      | The states array, using indices  |
-     *     |         |            | from the CCGS.                   |
-     *     +---------+------------+----------------------------------+
-     *     | nS+1    |    nS      | The rates array.                 |
-     *     +---------+------------+----------------------------------+
-     *     | 2*nS+1  |    nA      | The algebraic variables array.   |
-     *     +---------+------------+----------------------------------+
+     *     <table>
+     *       <tr><td>Index</td><td>Length</td><td>      Description                </td></tr>
+     *       <tr><td>     0</td><td> 1</td><td>Variable of integration (e.g. time)</td></tr>
+     *       <tr><td>     1</td><td>nS</td><td>The states array, using indices from the CCGS.</td></tr>
+     *       <tr><td>  nS+1</td><td>nS</td><td>The rates array.</td></tr>
+     *       <tr><td>2*nS+1</td><td>nA</td><td>The algebraic variables array.</td></tr>
+     *     </table>
      *   nS is the number of state variables, nA is the number of algebraic
      *   variables.
      *
@@ -73,7 +67,7 @@ module cellml_services
 
     /**
      * Called if integration has failed.
-     * @param msg An error message describing why it failed.
+     * @param errorMessage An error message describing why it failed.
      */
     void failed(in string errorMessage);
   };

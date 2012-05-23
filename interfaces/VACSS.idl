@@ -93,7 +93,7 @@ module cellml_services
      * Fetches a particular validity error.
      * @param index The index of the validity error. Indices start at 0 and go
      *              up to nValidityErrors-1.
-     * @raises CellMLException if the index is invalid.
+     * @exception CellMLException if the index is invalid.
      */
     CellMLValidityError getValidityError(in unsigned long index)
       raises(cellml_api::CellMLException);

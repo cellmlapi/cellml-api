@@ -86,7 +86,7 @@ module cellml_services
     /**
      * Fetches a supplementary block by the index.
      * @param index The zero based index of the block to fetch.
-     * @raises CellMLException if the index is out of range.
+     * @exception CellMLException if the index is out of range.
      */
     wstring getSupplementary(in unsigned long index)
       raises(cellml_api::CellMLException);
@@ -160,9 +160,9 @@ module cellml_services
      *   bvarIndex annotation on a bound variable: what to call the bound variable in the output.
      *   expression on a variable: How to represent the variable (when not a derivative) in the output.
      *   delayed_expression: How to represent an infinitesimally delayed version of the variable in the output.
-     *   expression_d<index> on a variable: How to represent the <index>th derivative in the output.
-     *   delayed_expression_d<index> on a variable: How to represent an infinitesimally delayed version of the
-     *     <index>th derivative in the output.
+     *   expression_d&lt;index> on a variable: How to represent the &lt;index>th derivative in the output.
+     *   delayed_expression_d&lt;index> on a variable: How to represent an infinitesimally delayed version of the
+     *     &lt;index>th derivative in the output.
      * @param aCeVAS The CeVAS object to use to find variable sources.
      * @param aCUSES The CUSES object to use for unit conversions.
      * @param aAnnos The annotation set on which to look up variable names.
@@ -174,6 +174,12 @@ module cellml_services
      *                 units conversion to the expression. This may be set to
      *                 null in which case no units conversion will occur on the
      *                 result.
+     * @param aBoundUnitsOf A bound variable by which the variable is being
+     *                      differentiated. Providing this allows MaLaES to compute
+     *                      the required units for derivatives.
+     * @param aUnitsDiffDegree The degree to which aUnitsOf is differentiated (0 if
+     *                         it has not been differentiated, 1 for first derivative,
+     *                         and so on).
      */
     MaLaESResult transform(
                            in cellml_services::CeVAS aCeVAS,

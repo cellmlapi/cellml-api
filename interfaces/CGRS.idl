@@ -55,7 +55,7 @@ module CGRS
      * include that module.
      *
      * @param aModulePath The path from which to load the module.
-     * @raises CGRSError If the module cannot be loaded.
+     * @exception CGRSError If the module cannot be loaded.
      */
     void loadGenericModule(in string aModulePath) raises(CGRSError);
 
@@ -63,7 +63,7 @@ module CGRS
      * Retrieves a generic bootstrap by name.
      * @param aBootstrapName The name of the bootstrap to retrieve.
      * @return A GenericValue for the bootstrap.
-     * @raises CGRSError if the bootstrap cannot be found.
+     * @exception CGRSError if the bootstrap cannot be found.
      */
     GenericValue getBootstrapByName(in string aBootstrapName) raises(CGRSError);
 
@@ -71,7 +71,7 @@ module CGRS
      * Retrieves a generic interface by name.
      * @param aInterfaceName The name of the interface to retrieve.
      * @return A GenericInterface for the interface.
-     * @raises CGRSError if the interface cannot be found.
+     * @exception CGRSError if the interface cannot be found.
      */
     GenericInterface getInterfaceByName(in string aInterfaceName) raises(CGRSError);
 
@@ -185,7 +185,7 @@ module CGRS
      * Retrieves the aBaseNumber'th base interface for this interface.
      * @param aBaseNumber A zero-based index for the base.
      * @return A GenericInterface corresponding to the index.
-     * @raises CGRSError if the base number is negative or too high.
+     * @exception CGRSError if the base number is negative or too high.
      */
     GenericInterface getBase(in long aBaseNumber) raises(CGRSError);
 
@@ -198,7 +198,7 @@ module CGRS
      * Retrieves the aAttributeNumber'th attribute for this interface.
      * @param aAttributeNumber A zero-based index for the attribute.
      * @return A GenericAttribute corresponding to the attribute.
-     * @raises CGRSError if the attribute number is negative or too high.
+     * @exception CGRSError if the attribute number is negative or too high.
      */
     GenericAttribute getAttributeByIndex(in long aAttributeNumber) raises(CGRSError);
 
@@ -206,7 +206,7 @@ module CGRS
      * Retrieves an attribute on this interface by name.
      * @param aAttributeName A name for the attribute.
      * @return A GenericAttribute corresponding to the attribute.
-     * @raises CGRSError if no attribute exists with the specified name.
+     * @exception CGRSError if no attribute exists with the specified name.
      */
     GenericAttribute getAttributeByName(in string aAttributeName) raises(CGRSError);
 
@@ -219,7 +219,7 @@ module CGRS
      * Retrieves the aOperationNumber'th attribute for this interface.
      * @param aOperationNumber A zero-based index for the operation.
      * @return A GenericMethod corresponding to the operation.
-     * @raises CGRSError if the operation number is negative or too high.
+     * @exception CGRSError if the operation number is negative or too high.
      */
     GenericMethod getOperationByIndex(in long aOperationNumber) raises(CGRSError);
 
@@ -227,7 +227,7 @@ module CGRS
      * Retrieves an operation on this interface by name.
      * @param aOperationName A name for the operation.
      * @return A GenericMethod corresponding to the operation.
-     * @raises CGRSError if no operation exists with the specified name.
+     * @exception CGRSError if no operation exists with the specified name.
      */
     GenericMethod getOperationByName(in string aOperationName) raises(CGRSError);
   };
@@ -276,13 +276,13 @@ module CGRS
 
     /**
      * Finds the name of an enumeration member from the corresponding index.
-     * @raises CGRSError if the index is out of range.
+     * @exception CGRSError if the index is out of range.
      */
     string indexToName(in long index) raises(CGRSError);
 
     /**
      * Retrieves the index of an enumeration member from the name.
-     * @raises CGRSError if there is no ensemble member with the listed name.
+     * @exception CGRSError if there is no ensemble member with the listed name.
      */
     long nameToIndex(in string name) raises(CGRSError);
   };
@@ -526,13 +526,13 @@ module CGRS
 
     /**
      * Retrieves a value from the sequence by index.
-     * @raises CGRSError if the index is out of range.
+     * @exception CGRSError if the index is out of range.
      */
     GenericValue getValueByIndex(in long index) raises(CGRSError);
 
     /**
      * Appends a value to the sequence.
-     * @raises CGRSError if the value is of the wrong type.
+     * @exception CGRSError if the value is of the wrong type.
      */
     void appendValue(in GenericValue v) raises(CGRSError);
   };
@@ -584,7 +584,7 @@ module CGRS
 
     /**
      * Retrieves the setter.
-     * @raises CGRSError if this attribute is readonly.
+     * @exception CGRSError if this attribute is readonly.
      */
     readonly attribute GenericMethod setter;
   };
@@ -650,7 +650,7 @@ module CGRS
      * @param wasException If this out parameter comes back true, an exception was raised. In this case,
      *                     the size and generic type of outValues and the return value are undefined.
      * @return A GenericValue representing the return value.
-     * @raises CGRSError if one or more of the input values is of the incorrect type.
+     * @exception CGRSError if one or more of the input values is of the incorrect type.
      */
     GenericValue invoke(in ObjectValue invokeOn, in ValueSequence inValues, out ValueSequence outValues, out boolean wasException);
   };

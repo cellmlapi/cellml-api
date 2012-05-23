@@ -236,7 +236,7 @@ module cellml_api
      * ensure that the element belongs in this Model, and that it is not
      * already inserted into the document.
      * @param x The CellMLElement to add.
-     * @raises CellMLException if the element cannot be added to this Element.
+     * @exception CellMLException if the element cannot be added to this Element.
      */
     void addElement(in CellMLElement x) raises(CellMLException);
 
@@ -249,8 +249,8 @@ module cellml_api
     /**
      * Removes a CellML element from this element, and replaces it with another
      * CellML element.
-     * @raises CellMLException if the new element is of a type not allowed in
-     *                         this Element type, or belongs to the wrong Model.
+     * @exception CellMLException if the new element is of a type not allowed in
+     *                            this Element type, or belongs to the wrong Model.
      * @param x The CellMLElement to remove.
      * @param y The CellMLElement to add.
      */
@@ -297,7 +297,7 @@ module cellml_api
      * Retrieves user-supplied annotations previously set on this element.
      * @param key A string to identify the annotation.
      * @return The user-data associated with the key.
-     * @raises CellMLException if no UserData is set for the given key.
+     * @exception CellMLException if no UserData is set for the given key.
      */
     UserData getUserData(in wstring key) raises(CellMLException);
 
@@ -371,7 +371,7 @@ module cellml_api
   };
 
   /**
-   * This interface represents a <model> element in the XML.
+   * This interface represents a &lt;model> element in the XML.
    */
   interface Model
     : NamedCellMLElement
@@ -385,7 +385,7 @@ module cellml_api
      * CellML 1.1 import structures into valid CellML 1.0 constructs.
      * @param cellmlVersion The new version of CellML. The string should be 1.0
      *                      or 1.1
-     * @raises CellMLException if the version is not supported by the API.
+     * @exception CellMLException if the version is not supported by the API.
      */
     Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
     
@@ -601,7 +601,7 @@ module cellml_api
      * @return The object containing the RDF representation. The object may
      *         be cast in an application defined manner depending on the type
      *         returned.
-     * @raises CellMLException if type isn't supported.
+     * @exception CellMLException if type isn't supported.
      * All implementations must implement the following types:
      *             http://www.cellml.org/RDFXML/string
      *             http://www.cellml.org/RDFXML/DOM
@@ -612,7 +612,7 @@ module cellml_api
     /**
      * Clones a Model, including all of its imports.
      * Will cause the model to be fully instantiated.
-     * @raises CellMLException if problems occur instantiating imports.
+     * @exception CellMLException if problems occur instantiating imports.
      */
     Model cloneAcrossImports() raises(CellMLException);
 
@@ -641,7 +641,7 @@ module cellml_api
     /**
      * Add an element to this collection.
      * @param x The element to add.
-     * @raises CellMLException if the element cannot be added to this MathContainer.
+     * @exception CellMLException if the element cannot be added to this MathContainer.
      */
     void addMath(in MathMLElement x) raises(CellMLException);
 
@@ -649,9 +649,9 @@ module cellml_api
      * Remove an element from this collection. If the element is not found,
      * do nothing.
      * @param x The element to remove.
-     * @raises CellMLException if the type of element is such that removing the
-     *                         element from the DOM is not permissible. This exception
-     *                         is not raised merely because x is not in the MathContainer.
+     * @exception CellMLException if the type of element is such that removing the
+     *                            element from the DOM is not permissible. This exception
+     *                            is not raised merely because x is not in the MathContainer.
      */
     void removeMath(in MathMLElement x) raises(CellMLException);
 
@@ -660,8 +660,8 @@ module cellml_api
      * with another element.
      * @param x The element to find.
      * @param y The element to replace x with.
-     * @raises CellMLException If y is not valid according to the constraints
-     *                         on this collection (check optional).
+     * @exception CellMLException If y is not valid according to the constraints
+     *                            on this collection (check optional).
      */
     void replaceMath(in MathMLElement x, in MathMLElement y);
 
@@ -745,13 +745,13 @@ module cellml_api
     attribute boolean isBaseUnits;
 
     /**
-     * A collection of all the <unit> elements making up this <units> element.
+     * A collection of all the &lt;unit> elements making up this &lt;units> element.
      */
     readonly attribute UnitSet unitCollection;
   };
 
   /**
-   * Interface to a <unit> element.
+   * Interface to a &lt;unit> element.
    */
   interface Unit
     : CellMLElement
@@ -804,12 +804,12 @@ module cellml_api
     readonly attribute URI xlinkHref;
 
     /**
-     * The collection of all <component> elements inside this element.
+     * The collection of all &lt;component> elements inside this element.
      */
     readonly attribute ImportComponentSet components;
 
     /**
-     * The collection of all <units> elements inside this element.
+     * The collection of all &lt;units> elements inside this element.
      */
     readonly attribute ImportUnitsSet units;
 
@@ -837,7 +837,7 @@ module cellml_api
     /**
      * Causes this import to be instantiated from text.
      * @param xmlText The serialised XML document for the import.
-     * @raises CellMLException if xmlText is not valid.
+     * @exception CellMLException if xmlText is not valid.
      */
     void instantiateFromText(in dom::DOMString xmlText)
       raises(CellMLException);
@@ -892,7 +892,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * This interface represents a <units> found in <import>
+   * This interface represents a &lt;units> found in &lt;import>
    */
   interface ImportUnits
     : Units
@@ -924,7 +924,7 @@ module cellml_api
   };
 
   /**
-   * Represents a <variable> element in a CellML document.
+   * Represents a &lt;variable> element in a CellML document.
    */
   interface CellMLVariable
     : NamedCellMLElement
@@ -988,8 +988,8 @@ module cellml_api
 #pragma cross-module-argument
 
   /**
-   * Represents a <component_ref> element in a group element or in another
-   * <component_ref> element.
+   * Represents a &lt;component_ref> element in a group element or in another
+   * &lt;component_ref> element.
    */
   interface ComponentRef
     : CellMLElement
@@ -1053,7 +1053,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * Represents a <group> element.
+   * Represents a &lt;group> element.
    */
   interface Group : CellMLElement
   {
@@ -1084,7 +1084,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * Represents a <connection> element.
+   * Represents a &lt;connection> element.
    */
   interface Connection
     : CellMLElement
@@ -1147,9 +1147,9 @@ module cellml_api
      * MapVariables is added to a Connection, and the Connection has in turn
      * been added to a model. It also requires that the component name has
      * already been set.
-     * @raises CellMLException if the MapVariables has not been added to a
-     *                         Connection, or the Connection has not been added
-     *                         to the Model.
+     * @exception CellMLException if the MapVariables has not been added to a
+     *                            Connection, or the Connection has not been added
+     *                            to the Model.
      */
     attribute CellMLAttributeString firstVariableName;
 
@@ -1159,9 +1159,9 @@ module cellml_api
      * MapVariables is added to a Connection, and the Connection has in turn
      * been added to a model. It also requires that the component name has
      * already been set.
-     * @raises CellMLException if the MapVariables has not been added to a
-     *                         Connection, or the Connection has not been added
-     *                         to the Model.
+     * @exception CellMLException if the MapVariables has not been added to a
+     *                            Connection, or the Connection has not been added
+     *                            to the Model.
      */
     attribute CellMLAttributeString secondVariableName;
 
@@ -1189,7 +1189,7 @@ module cellml_api
   interface Role;
 
   /**
-   * An interface to a <reaction> element.
+   * An interface to a &lt;reaction> element.
    */
   interface Reaction
     : CellMLElement
@@ -1228,7 +1228,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface to the <variable_ref> element.
+   * An interface to the &lt;variable_ref> element.
    */
   interface VariableRef
     : CellMLElement
@@ -1252,7 +1252,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface to the <role> element.
+   * An interface to the &lt;role> element.
    */
   interface Role
     : CellMLElement, MathContainer
@@ -2002,7 +2002,7 @@ module cellml_api
      * loaders.
      * @param URL The URL from which to load the model.
      * @return The loaded CellML model.
-     * @raises CellMLException if the model cannot be loaded.
+     * @exception CellMLException if the model cannot be loaded.
      */
     Model loadFromURL(in dom::DOMString URL)
       raises(CellMLException);
@@ -2015,7 +2015,7 @@ module cellml_api
      * listener may be called prior to the return on this operation.
      * @param URL The URL from which to load the model.
      * @param listener A ModelLoadedListener to inform when loading completes.
-     * @raises CellMLException if the model cannot be loaded.
+     * @exception CellMLException if the model cannot be loaded.
      */
     void asyncLoadFromURL(in dom::DOMString URL,
                           in ModelLoadedListener listener);
@@ -2024,7 +2024,7 @@ module cellml_api
      * Loads a model from a serialised XML document.
      * @param xmlText A complete XML document, serialised into text.
      * @return The loaded CellML model.
-     * @param CellMLException if the XML cannot be parsed into a model.
+     * @exception CellMLException if the XML cannot be parsed into a model.
      */
     Model createFromText(in dom::DOMString xmlText)
       raises(CellMLException);
@@ -2058,7 +2058,7 @@ module cellml_api
      * remotely hosted URL loaders.
      * @param URL The URL from which to load the document.
      * @return The loaded document.
-     * @raises CellMLException if the model cannot be loaded.
+     * @exception CellMLException if the model cannot be loaded.
      */
     dom::Document loadDocument(in dom::DOMString URL)
       raises(CellMLException);
@@ -2068,7 +2068,7 @@ module cellml_api
      * DOM representation.
      * @param xmlText The serialised XML used to create the document.
      * @return The loaded document.
-     * @raises CellMLException if the model cannot be loaded.
+     * @exception CellMLException if the model cannot be loaded.
      */
     dom::Document loadDocumentFromText(in dom::DOMString xmlText)
       raises(CellMLException);
@@ -2079,7 +2079,7 @@ module cellml_api
      * on some remotely hosted URL loaders.
      * @param URL The URL from which to load the document.
      * @param listener The listener to notify when the load completes.
-     * @raises CellMLException if the model cannot be loaded.
+     * @exception CellMLException if the model cannot be loaded.
      */
     void asyncLoadDocument(in dom::DOMString URL,
                            in DocumentLoadedListener listener)
@@ -2119,8 +2119,8 @@ module cellml_api
      * @param url The URL from which to load.
      * @param loader The URL loader to load the model and any imports needed.
      * @return The loaded model.
-     * @raises CellMLException if there is an error loading the model or the
-     *           DOM document.
+     * @exception CellMLException if there is an error loading the model or the
+     *                            DOM document.
      */
     Model createFromDOM(in dom::DOMString url, in DOMURLLoader loader)
       raises(CellMLException);
@@ -2129,8 +2129,8 @@ module cellml_api
      * Creates a model around an existing DOM document.
      * @param doc The DOM document.
      * @return The model.
-     * @raises CellMLException if there is an error creating the model from
-     *            the DOM document.
+     * @exception CellMLException if there is an error creating the model from
+     *                            the DOM document.
      */
     Model createFromDOMDocument(in dom::Document doc)
       raises(CellMLException);
@@ -2142,8 +2142,8 @@ module cellml_api
      * @param url The URL from which to load.
      * @param loader The URL loader to load the model and any imports needed.
      * @param listener A listener to notify when the model is fully loaded.
-     * @raises CellMLException if there is an error loading the model or the
-     *           DOM document.
+     * @exception CellMLException if there is an error loading the model or the
+     *                            DOM document.
      */
     void asyncCreateFromDOM(in dom::DOMString url, in DOMURLLoader loader,
                        in ModelLoadedListener listener)

@@ -33,7 +33,7 @@ module cellml_services
    /**
     * Creates a CeLEDS language dictionary object from the XML language definition file.
     * Provides a low level interface for accessing dictionaries
-    * @param componentNameSpace XML namespace for element to retrieve dictionary entries from
+    * @param dictionaryNameSpace XML namespace for element to retrieve dictionary entries from
     */
    LanguageDictionary getDictionary(in wstring dictionaryNameSpace);
    /**

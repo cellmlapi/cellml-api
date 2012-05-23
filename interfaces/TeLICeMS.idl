@@ -53,8 +53,8 @@ module cellml_services
     /**
      * Parses a TeLICeM text representation of some MathML, and returns a result
      * from which the parse error or mathematics, as applicable, can be retrieved.
-     * @param aDocument The document to use as the owner document for the
-     *                  newly parsed MathML.
+     * @param aDoc The document to use as the owner document for the
+     *             newly parsed MathML.
      * @param aMathText The TeLiCeM text representation of the math.
      */
     TeLICeMMathResult parseMaths(in dom::Document aDoc,

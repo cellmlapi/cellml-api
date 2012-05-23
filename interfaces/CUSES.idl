@@ -79,7 +79,7 @@ module cellml_services
      *
      * @param index The index of the base unit.
      * @returns The base unit instance at the specified index.
-     * @raises CellMLException on error.
+     * @exception CellMLException on error.
      */
     BaseUnitInstance fetchBaseUnit(in unsigned long index)
       raises(cellml_api::CellMLException);
@@ -101,8 +101,8 @@ module cellml_services
      * object, and you want to convert it to another. If x is the value in the
      * units of this object, and y is the desired value, the equation is:
      *   y = A * x + b.
-     * @param convertTo The units representation to convert to.
-     * @output offset The value b in the equation above.
+     * @param aConvertTo The units representation to convert to.
+     * @param[out] offset The value b in the equation above.
      * @returns The multiplier, i.e. the value A in the equation above.
      */
     double convertUnits(in CanonicalUnitRepresentation aConvertTo,
@@ -114,7 +114,7 @@ module cellml_services
      * rather than, say, g, cm, etc.). The equation is:
      *  y = A * x + b
      * Where y is the SI base units, and x is the current units.
-     * @output offset the value b in the equation above.
+     * @param[out] offset the value b in the equation above.
      * @returns The multiplier, i.e. the value A in the equation above.
      */
     double siConversion(out double offset);
@@ -139,7 +139,7 @@ module cellml_services
      *              and may be null if otherExponent is zero.
      * @param otherExponent The exponent to apply to the other canonical unit
      *                      representation.
-     * @raises CellMLException if other is null and otherExponent is non-zero.
+     * @exception CellMLException if other is null and otherExponent is non-zero.
      */
     CanonicalUnitRepresentation mergeWith(in double thisExponent,
                                           in CanonicalUnitRepresentation other,
@@ -166,12 +166,12 @@ module cellml_services
     /**
      * Gets a units representation for a string (giving the name of the units)
      * in a given context.
-     * @param context The context. This must be part of the model
-     *                (or part of an imported model) for which this object was
-     *                created. It can be any element in the model, but would
-     *                generally be a component, units, or model element.
-     * @param name The units name to look up. This can be a built-in unit, or
-     *             a user-defined unit.
+     * @param aContext The context. This must be part of the model
+     *                 (or part of an imported model) for which this object was
+     *                 created. It can be any element in the model, but would
+     *                 generally be a component, units, or model element.
+     * @param aName The units name to look up. This can be a built-in unit, or
+     *              a user-defined unit.
      * @returns The units representation, or null if the name is invalid.
      */
     CanonicalUnitRepresentation getUnitsByName(in cellml_api::CellMLElement aContext,
