@@ -17,14 +17,14 @@ Summary of how to obtain the API Implementation:
   </tr>
   <tr>
     <th>From source</th>
-    <td>hg clone http://cellml-api.hg.sourceforge.net/hgroot/cellml-api/cellml-api/; cd cellml-api; hg checkout 1.10</td>
-    <td>hg clone http://cellml-api.hg.sourceforge.net/hgroot/cellml-api/cellml-api/</td>
+    <td>git clone https://A1kmm@github.com/cellmlapi/cellml-api.git; cd cellml-api; git checkout 1.11</td>
+    <td>git clone https://A1kmm@github.com/cellmlapi/cellml-api.git</td>
   </tr>
 </table>
 
 If you check out the source code, you can keep up-to-date with new changes, by changing into the cellml-api directory and running:
 \verbatim
-  hg pull -u
+  git pull
 \endverbatim
 
 Note that bleeding edge versions may have problems which stop them from compiling or working correctly. You can check the status of the compilation and automated tests on different platforms <a href="http://autotest.bioeng.auckland.ac.nz/cellml-build/waterfall">here</a>.
