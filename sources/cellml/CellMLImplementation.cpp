@@ -3516,6 +3516,26 @@ CDA_MakeURLAbsolute(CDA_Model* aModel, std::wstring& aURL)
   if (base.length() == 0)
     return;
 
+  // If it is a ? type URL, just take everything after the ? off the base.
+  if (aURL[0] == L'?')
+  {
+    size_t pos = base.find(L'?');
+    base = base.substr(0, pos);
+    base += aURL;
+    aURL.assign(base);
+    return;
+  }
+
+  // If it is a # type URL, just take everything after the # off the base.
+  if (aURL[0] == L'#')
+  {
+    size_t pos = base.find(L'#');
+    base = base.substr(0, pos);
+    base += aURL;
+    aURL.assign(base);
+    return;
+  }
+
   // It is a completely relative URL.
   // See if base ends in a /...
   size_t pos = base.find(L"://");

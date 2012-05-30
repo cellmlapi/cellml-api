@@ -88,9 +88,6 @@ CDA_CellMLBootstrap::makeURLAbsolute
   if (aURL.find(L"://") != std::wstring::npos)
     return aRelURL;
 
-  if (aURL.find(L"://") != std::wstring::npos)
-    return aRelURL;
-
   std::wstring base(aRelTo);
 
   // See if it is a '/' type URL...
@@ -118,7 +115,27 @@ CDA_CellMLBootstrap::makeURLAbsolute
   if (base.length() == 0)
     return aRelURL;
 
-  // It is a completely relative URL.
+  // If it is a ? type URL, just take everything after the ? off the base.
+  if (aURL[0] == L'?')
+  {
+    size_t pos = base.find(L'?');
+    base = base.substr(0, pos);
+    base += aURL;
+    aURL.assign(base);
+    return aURL;
+  }
+
+  // If it is a # type URL, just take everything after the # off the base.
+  if (aURL[0] == L'#')
+  {
+    size_t pos = base.find(L'#');
+    base = base.substr(0, pos);
+    base += aURL;
+    aURL.assign(base);
+    return aURL;
+  }
+
+  // It is a completely relative path URL.
   // See if base ends in a /...
   size_t pos = base.find(L"://");
   if (base[base.length() - 1] != L'/')
