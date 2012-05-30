@@ -41,13 +41,13 @@ Once you have extracted the SDK, you need to set up your build environment to wo
     export CPLUS_INCLUDE_PATH=/path/to/sdk/include:$CPLUS_INCLUDE_PATH
   On MSVC10, a different environment variable is used; at the cmd.exe prompt:
 <pre>
-    set INCLUDE="c:\path\to\sdk\include;%INCLUDE%"
+    set INCLUDE="c:\path\to\sdk\include";"%INCLUDE%"
 </pre>
 - For C++ program compilation, you also need to set your library path. On gcc systems (including MinGW) use the following bash command:
     export LIBRARY_PATH=/path/to/sdk/lib:$LIBRARY_PATH
   On MSVC10 (at the cmd.exe prompt):
 <pre>
-    set LIB="c:\path\to\sdk\libs;%LIB%"
+    set LIB="c:\path\to\sdk\libs";"%LIB%"
 </pre>
 - To run any program using the API (whether C++, Python or Java), you need to tell the dynamic linker where to find the DLLs from the CellML SDK. We suggest you distribute the relevant binaries with your application. However, for development, you may want to point the path into your SDK install like this:
   On Linux (and other glibc based systems) use this bash command:
@@ -60,7 +60,7 @@ Once you have extracted the SDK, you need to set up your build environment to wo
 </pre>
   On Windows (at the cmd.exe prompt):
 <pre>
-    set PATH="c:/path/to/sdk/lib;%PATH%"
+    set PATH="c:/path/to/sdk/lib";"%PATH%"
 </pre>
 - To compile and / or run Java code that uses the CellML API, you need to put cellml.jar into the classpath, using a command like this:
     Non-Windows (bash shell):
@@ -69,7 +69,7 @@ Once you have extracted the SDK, you need to set up your build environment to wo
 </pre>
     Windows (at cmd.exe):
 <pre>
-      set CLASSPATH="c:/path/to/sdk/lib/cellml.jar;%CLASSPATH%"
+      set CLASSPATH="c:/path/to/sdk/lib/cellml.jar";"%CLASSPATH%"
 </pre>
 - When running Java programs, you need to set the java.library.path property to include the CellML SDK lib directory. One way to do this is to pass an option to java like this: "-Djava.library.path=/path/to/sdk/lib"
 - When running Python programs, you need to set the PYTHON_PATH environment variable to point to the Python subdirectory of the SDK lib directory:
