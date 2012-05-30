@@ -136,8 +136,6 @@ public:
   void operator= (const already_AddRefd<T>& newAssign)
   {
     T* nap = newAssign.getPointer();
-    if (mPtr == nap)
-      return;
     if (mPtr)
       mPtr->release_ref();
     mPtr = nap;
@@ -199,17 +197,27 @@ private:
   T* mPtr;
 };
 
-inline DoQueryInterface
-QueryInterface(iface::XPCOM::IObject* qi)
+template<class C>
+DoQueryInterface
+QueryInterface(C* qi)
 {
-  qi->add_ref();
+  if (qi)
+    qi->add_ref();
   return DoQueryInterface(qi);
 }
 
-inline DoQueryInterface
-QueryInterface(already_AddRefd<iface::XPCOM::IObject> qi)
+template<class C>
+DoQueryInterface
+QueryInterface(already_AddRefd<C> qi)
 {
   return DoQueryInterface(qi.getPointer());
+}
+
+template<class C>
+DoQueryInterface
+QueryInterface(ObjRef<C> qi)
+{
+  return QueryInterface(static_cast<C*>(qi));
 }
 
 template<class T, class U> bool

@@ -1279,8 +1279,6 @@ public:
   void operator= (const already_AddRefd<T>& newAssign)
   {
     T* nap = newAssign.getPointer();
-    if (mPtr == nap)
-      return;
     if (mPtr)
       mPtr->release_ref();
     mPtr = nap;
@@ -1357,6 +1355,13 @@ DoQueryInterface
 QueryInterface(already_AddRefd<C> qi)
 {
   return DoQueryInterface(qi.getPointer());
+}
+
+template<class C>
+DoQueryInterface
+QueryInterface(ObjRef<C> qi)
+{
+  return QueryInterface(static_cast<C*>(qi));
 }
 
 template<class T, class U> bool
