@@ -87,3 +87,6 @@ interfaces/rdf_api
 interfaces/xpath
 TestTeLICeMParser
 TestTeLICeMSerialiser
+examples/RDFContainers
+examples/api_usage_example
+interfaces/cellml_context
