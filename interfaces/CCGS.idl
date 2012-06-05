@@ -196,6 +196,7 @@ module cellml_services
      *     is taken.
      *   VOI or Variable of Integration: A variable with respect to which the
      *     model is being integrated.
+     * <table>
      * <tr><th>String</th><th>Targeted Variables</th><th>Possibly computed variables</th><th>Known variables</th><th>Purpose</th></tr>
      * <tr><td>initConsts</td>
      *     <td>All variables which aren't state variables but have an initial_value attribute, and any variables & rates which follow</td>
