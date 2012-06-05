@@ -4221,6 +4221,79 @@ CDA_CellMLVariable::initialValue
   }
 }
 
+bool
+CDA_CellMLVariable::initialValueFromVariable()
+  throw(std::exception&)
+{
+  std::wstring iv = initialValue();
+  const wchar_t* ivS = iv.c_str();
+  wchar_t* ivE;
+
+  wcstod(ivS, &ivE);
+  return (ivE == ivS);
+}
+
+already_AddRefd<iface::cellml_api::CellMLVariable>
+CDA_CellMLVariable::initialValueVariable()
+  throw(std::exception&)
+{
+  std::wstring iv = initialValue();
+  ObjRef<iface::cellml_api::CellMLComponent> comp(QueryInterface(parentElement()));
+  if (comp == NULL)
+    return NULL;
+
+  ObjRef<iface::cellml_api::CellMLVariableSet> vs(comp->variables());
+  return vs->getVariable(iv);
+}
+
+void
+CDA_CellMLVariable::initialValueVariable(iface::cellml_api::CellMLVariable* aValue)
+  throw(std::exception&)
+{
+  if (aValue == NULL)
+  {
+    datastore->removeAttribute(L"initial_value");
+    return;
+  }
+
+  CDA_CellMLVariable* cv = dynamic_cast<CDA_CellMLVariable*>(aValue);
+  if (cv == NULL)
+    throw iface::cellml_api::CellMLException();
+  ObjRef<iface::dom::Node> mycomp(datastore->parentNode());
+  if (mycomp == NULL)
+    throw iface::cellml_api::CellMLException();
+  ObjRef<iface::dom::Node> theircomp(cv->datastore->parentNode());
+  if (CDA_objcmp(mycomp, theircomp))
+    throw iface::cellml_api::CellMLException();
+  std::wstring compName = aValue->name();
+  initialValue(compName);
+}
+
+double
+CDA_CellMLVariable::initialValueValue()
+  throw(std::exception&)
+{
+  std::wstring iv = initialValue();
+  const wchar_t* ivS = iv.c_str();
+  wchar_t * ivE;
+  double v = wcstod(ivS, &ivE);
+  if (ivE == ivS)
+    throw iface::cellml_api::CellMLException();
+
+  return v;
+}
+
+void
+CDA_CellMLVariable::initialValueValue(double aValue)
+  throw(std::exception&)
+{
+  wchar_t buf[30];
+  any_swprintf(buf, 24, L"%g", aValue);
+  buf[29] = 0;
+  
+  initialValue(buf);
+}
+
 iface::cellml_api::VariableInterface
 CDA_CellMLVariable::privateInterface()
   throw(std::exception&)

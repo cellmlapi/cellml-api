@@ -937,6 +937,30 @@ module cellml_api
     attribute CellMLAttributeString initialValue;
 
     /**
+     * Whether the initial value attribute is a number, or names a variable.
+     * @return false if the initial_value attribute represents a number,
+     *         and true otherwise.
+     */
+    readonly attribute boolean initialValueFromVariable;
+
+    /**
+     * The variable named by the initial_value attribute. If the initial_value attribute
+     * does not name a variable found in the model, or there is no initial_value attribute,
+     * returns null. Note that this can happen even if initialValueFromVariable returns
+     * true, because the initial_value attribute might refer to a variable which
+     * doesn't (yet) exist in the component. Setting to null deletes the attribute.
+     * @throw CellMLException If set to a variable not in the same component.
+     */
+    attribute CellMLVariable initialValueVariable;
+
+    /**
+     * The initial value of the variable, as a double.
+     * @throw CellMLException If the initial_value attribute is malformed, missing,
+     *                        or refers to a variable.
+     */
+    attribute double initialValueValue;
+
+    /**
      * The private interface direction of this variable.
      */
     attribute VariableInterface privateInterface;

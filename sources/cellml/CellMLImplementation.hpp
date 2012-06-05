@@ -667,6 +667,12 @@ public:
 
   std::wstring initialValue() throw(std::exception&);
   void initialValue(const std::wstring& attr) throw(std::exception&);
+  bool initialValueFromVariable() throw(std::exception&);
+  already_AddRefd<iface::cellml_api::CellMLVariable> initialValueVariable() throw(std::exception&);
+  void initialValueVariable(iface::cellml_api::CellMLVariable*) throw(std::exception&);
+  double initialValueValue() throw(std::exception&);
+  void initialValueValue(double aValue) throw(std::exception&);
+
   iface::cellml_api::VariableInterface privateInterface() throw(std::exception&);
   void privateInterface(iface::cellml_api::VariableInterface attr) throw(std::exception&);
   iface::cellml_api::VariableInterface publicInterface() throw(std::exception&);

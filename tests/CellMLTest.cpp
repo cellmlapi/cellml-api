@@ -2321,6 +2321,7 @@ CellMLTest::testCellMLVariable()
   vs = c2->variables();
   iface::cellml_api::CellMLVariable* v2 = vs->getVariable(L"time");
   iface::cellml_api::CellMLVariable* v3 = vs->getVariable(L"m");
+  iface::cellml_api::CellMLVariable* v5 = vs->getVariable(L"i_Na");
   vs->release_ref();
   c1->release_ref();
   c2->release_ref();
@@ -2334,6 +2335,46 @@ CellMLTest::testCellMLVariable()
   v2->initialValue(L"123.45");
   str = v2->initialValue();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"123.45"), str);
+
+//    /**
+//     * Whether the initial value attribute is a number, or names a variable.
+//     * @return false if the initial_value attribute represents a number,
+//     *         and true otherwise.
+//     */
+//    readonly attribute boolean initialValueFromVariable;
+  CPPUNIT_ASSERT_EQUAL(false, v2->initialValueFromVariable());
+  v2->initialValue(L"m");
+  CPPUNIT_ASSERT_EQUAL(true, v2->initialValueFromVariable());
+
+//    /**
+//     * The variable named by the initial_value attribute. If the initial_value attribute
+//     * does not name a variable found in the model, or there is no initial_value attribute,
+//     * returns null. Note that this can happen even if initialValueFromVariable returns
+//     * true, because the initial_value attribute might refer to a variable which
+//     * doesn't (yet) exist in the component. Setting to null deletes the attribute.
+//     * @throw CellMLException If set to a variable not in the same component.
+//     */
+//    attribute CellMLVariable initialValueVariable;
+  iface::cellml_api::CellMLVariable* v4 = v2->initialValueVariable();
+  CPPUNIT_ASSERT(!CDA_objcmp(v4, v3));
+  v2->initialValueVariable(v5);
+  v4->release_ref();
+  v4 = v2->initialValueVariable();
+  CPPUNIT_ASSERT(!CDA_objcmp(v4, v5));
+  v4->release_ref();
+  v5->release_ref();
+  str = v2->initialValue();
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"i_Na"), str);
+
+//    /**
+//     * The initial value of the variable, as a double.
+//     * @throw CellMLException If the initial_value attribute is malformed, missing,
+//     *                        or refers to a variable.
+//     */
+//    attribute double initialValueValue;
+  CPPUNIT_ASSERT_EQUAL(-84.624, v1->initialValueValue());
+  v1->initialValueValue(456.25);
+  CPPUNIT_ASSERT_EQUAL(456.25, v1->initialValueValue());
 
 //     /**
 //      * The private interface direction of this variable.
@@ -2377,7 +2418,7 @@ CellMLTest::testCellMLVariable()
 //      * 
 //      */
 //     readonly attribute CellMLVariable sourceVariable;
-  iface::cellml_api::CellMLVariable* v4 = v1->sourceVariable();
+  v4 = v1->sourceVariable();
   // Should be the same...
   CPPUNIT_ASSERT(CDA_objcmp(v4, v1) == 0);
   v4->release_ref();
