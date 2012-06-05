@@ -204,6 +204,9 @@ module cellml_services
     /**
      * Called to compile the model for use with an ODE-style solver.
      * @param aModel The model to compile.
+     * @note Reference Implementation Specific Note: The CellML API Reference
+     *       Implementation requires that gcc be present in the path for this
+     *       call to succeed.
      */
     ODESolverCompiledModel compileModelODE(in cellml_api::Model aModel)
       raises(cellml_api::CellMLException);
@@ -211,6 +214,9 @@ module cellml_services
     /**
      * Called to compile the model for use with a DAE-style solver like IDA.
      * @param aModel The model to compile.
+     * @note Reference Implementation Specific Note: The CellML API Reference
+     *       Implementation requires that gcc be present in the path for this
+     *       call to succeed.
      */
     DAESolverCompiledModel compileModelDAE(in cellml_api::Model aModel)
       raises(cellml_api::CellMLException);
