@@ -11,7 +11,7 @@
   <mal:mapping keyname="opengroup">(</mal:mapping>
   <mal:mapping keyname="closegroup">)</mal:mapping>
   <mal:mapping keyname="abs" precedence="H">abs(#expr1)</mal:mapping>
-  <mal:mapping keyname="and" precedence="20">#exprs[&amp;]</mal:mapping>
+  <mal:mapping keyname="and" precedence="700">#exprs[&amp;]</mal:mapping>
   <mal:mapping keyname="arccos" precedence="H">acos(#expr1)</mal:mapping>
   <mal:mapping keyname="arccosh" precedence="H">acosh(#expr1)</mal:mapping>
   <mal:mapping keyname="arccot" precedence="H">acot(#expr1)</mal:mapping>
@@ -33,32 +33,32 @@
   <mal:mapping keyname="csch" precedence="H">csch(#expr1)</mal:mapping>
   <mal:mapping keyname="diff">#lookupDiffVariable</mal:mapping>
   <mal:mapping keyname="divide" precedence="900">#expr1./#expr2</mal:mapping>
-  <mal:mapping keyname="eq" precedence="30">#exprs[==]</mal:mapping>
+  <mal:mapping keyname="eq" precedence="750">#exprs[==]</mal:mapping>
   <mal:mapping keyname="exp" precedence="H">exp(#expr1)</mal:mapping>
   <mal:mapping keyname="factorial" precedence="H">factorial(#expr1)</mal:mapping>
-  <mal:mapping keyname="factorof" precedence="30(900)">mod(#expr1, #expr2) == 0</mal:mapping>
+  <mal:mapping keyname="factorof" precedence="750(995)">mod(#expr1, #expr2) == 0</mal:mapping>
   <mal:mapping keyname="floor" precedence="H">floor(#expr1)</mal:mapping>
   <mal:mapping keyname="gcd" precedence="H">gcd_multi([#exprs[, ]])</mal:mapping>
-  <mal:mapping keyname="geq">#prec[30]#exprs[&gt;=]</mal:mapping>
-  <mal:mapping keyname="gt" precedence="30">#exprs[&gt;]</mal:mapping>
-  <mal:mapping keyname="implies" precedence="10(950)"> ~#expr1 | #expr2</mal:mapping>
+  <mal:mapping keyname="geq" precedence="750">#exprs[&gt;=]</mal:mapping>
+  <mal:mapping keyname="gt" precedence="750">#exprs[&gt;]</mal:mapping>
+  <mal:mapping keyname="implies" precedence="650(950)"> ~#expr1 || #expr2</mal:mapping>
   <mal:mapping keyname="int" precedence="H">defint(func#unique1, BOUND, CONSTANTS, RATES, VARIABLES, #bvarIndex)#supplement double func#unique1(double* BOUND, double* CONSTANTS, double* RATES, double* VARIABLES) { return #expr1; }</mal:mapping>
   <mal:mapping keyname="lcm" precedence="H">lcm_multi([#exprs[, ]])</mal:mapping>
-  <mal:mapping keyname="leq" precedence="30">#exprs[&lt;=]</mal:mapping>
+  <mal:mapping keyname="leq" precedence="750">#exprs[&lt;=]</mal:mapping>
   <mal:mapping keyname="ln" precedence="H">log(#expr1)</mal:mapping>
   <mal:mapping keyname="log" precedence="H">arbitrary_log(#expr1, #logbase)</mal:mapping>
-  <mal:mapping keyname="lt" precedence="30">#exprs[&lt;]</mal:mapping>
+  <mal:mapping keyname="lt" precedence="750">#exprs[&lt;]</mal:mapping>
   <mal:mapping keyname="max" precedence="H">max([#exprs[, ]],[],2)</mal:mapping>
   <mal:mapping keyname="min" precedence="H">min([#exprs[, ]],[],2)</mal:mapping>
-  <mal:mapping keyname="minus" precedence="500">#expr1 - #expr2</mal:mapping>
-  <mal:mapping keyname="neq" precedence="30">#expr1 ~= #expr2</mal:mapping>
+  <mal:mapping keyname="minus" precedence="850">#expr1 - #expr2</mal:mapping>
+  <mal:mapping keyname="neq" precedence="750">#expr1 ~= #expr2</mal:mapping>
   <mal:mapping keyname="not" precedence="950">~#expr1</mal:mapping>
-  <mal:mapping keyname="or" precedence="10">#exprs[|]</mal:mapping>
-  <mal:mapping keyname="plus" precedence="500">#exprs[+]</mal:mapping>
-  <mal:mapping keyname="power" precedence="900(0)">power(#expr1, #expr2)</mal:mapping>
-  <mal:mapping keyname="quotient" precedence="900(0)"> floor(#expr1 ./ #expr2)</mal:mapping>
-  <mal:mapping keyname="rem" precedence="900(0)"> rem(#expr1, #expr2)</mal:mapping>
-  <mal:mapping keyname="root" precedence="900(0)">power(#expr1, 1.0 ./ #degree)</mal:mapping>
+  <mal:mapping keyname="or" precedence="650">#exprs[||]</mal:mapping>
+  <mal:mapping keyname="plus" precedence="850">#exprs[+]</mal:mapping>
+  <mal:mapping keyname="power" precedence="H">power(#expr1, #expr2)</mal:mapping>
+  <mal:mapping keyname="quotient" precedence="999(900)"> floor(#expr1 ./ #expr2)</mal:mapping>
+  <mal:mapping keyname="rem" precedence="H"> rem(#expr1, #expr2)</mal:mapping>
+  <mal:mapping keyname="root" precedence="999(900)">power(#expr1, 1.0 ./ #degree)</mal:mapping>
   <mal:mapping keyname="sec" precedence="H">sec(#expr1)</mal:mapping>
   <mal:mapping keyname="sech" precedence="H">sech(#expr1)</mal:mapping>
   <mal:mapping keyname="sin" precedence="H"> sin(#expr1)</mal:mapping>
@@ -67,17 +67,17 @@
   <mal:mapping keyname="tanh" precedence="H"> tanh(#expr1)</mal:mapping>
   <mal:mapping keyname="times" precedence="900"> #exprs[.*]</mal:mapping>
   <mal:mapping keyname="unary_minus" precedence="950"> - #expr1</mal:mapping>
-  <mal:mapping keyname="units_conversion" precedence="500(900)">#expr1.*#expr2 + #expr3</mal:mapping>
+  <mal:mapping keyname="units_conversion" precedence="850(900)">#expr1.*#expr2 + #expr3</mal:mapping>
   <mal:mapping keyname="units_conversion_factor" precedence="900">#expr1.*#expr2</mal:mapping>
-  <mal:mapping keyname="units_conversion_offset" precedence="500">#expr1+#expr2</mal:mapping>
-  <mal:mapping keyname="xor" precedence="25(30)">xor(#expr1 , #expr2)</mal:mapping>
-  <mal:mapping keyname="piecewise_first_case" precedence="5">piecewise({#expr1, #expr2 </mal:mapping>
-  <mal:mapping keyname="piecewise_extra_case" precedence="5">, #expr1, #expr2 </mal:mapping>
-  <mal:mapping keyname="piecewise_otherwise" precedence="5">}, #expr1)</mal:mapping>
-  <mal:mapping keyname="piecewise_no_otherwise" precedence="5">}, NaN)</mal:mapping>
+  <mal:mapping keyname="units_conversion_offset" precedence="850">#expr1+#expr2</mal:mapping>
+  <mal:mapping keyname="xor" precedence="H">xor(#expr1 , #expr2)</mal:mapping>
+  <mal:mapping keyname="piecewise_first_case" precedence="H">piecewise({#expr1, #expr2 </mal:mapping>
+  <mal:mapping keyname="piecewise_extra_case" precedence="H">, #expr1, #expr2 </mal:mapping>
+  <mal:mapping keyname="piecewise_otherwise" precedence="H">}, #expr1)</mal:mapping>
+  <mal:mapping keyname="piecewise_no_otherwise" precedence="H">}, NaN)</mal:mapping>
   <mal:mapping keyname="pi" precedence="999"> pi</mal:mapping>
   <mal:mapping keyname="eulergamma" precedence="999">0.577215664901533</mal:mapping>
-  <mal:mapping keyname="infinity" precedence="900"> Inf</mal:mapping>
+  <mal:mapping keyname="infinity" precedence="999"> Inf</mal:mapping>
 </mal:dictionary>
 
 <ccgs:dictionary>
