@@ -43,7 +43,7 @@ Once you have extracted the SDK, you need to set up your build environment to wo
 <pre>
     set INCLUDE="c:\path\to\sdk\include";"%INCLUDE%"
 </pre>
-- For C++ program compilation, you also need to set your library path. On gcc systems (including MinGW) use the following bash command:
+- For C++ program compilation, you also need to set your library path. On gcc systems (including MinGW / MSYS) use the following bash command:
     export LIBRARY_PATH=/path/to/sdk/lib:$LIBRARY_PATH
   On MSVC10 (at the cmd.exe prompt):
 <pre>
