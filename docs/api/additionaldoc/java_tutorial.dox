@@ -1,6 +1,14 @@
 /*!
 \page java_tutorial Working with CellML models using Java
 
+\section java_docs_about About the Java documentation
+
+This documentation starts off with a few examples, and then moves into Java-specific
+reference documentation. Much of the CellML API documentation is language
+independent, so once you have a grasp of how the language independent documentation
+relates to Java, refer to the documentation (for example, interfaces listed in the
+class listing) for more details on how to use the services the API provides.
+
 \section java_bridge Loading java_cellml library 
 
 Here we create a class to load the java_cellml library.
@@ -268,6 +276,37 @@ public class CreateModelTest {
 
 }
 
+\section java_concepts General concepts when using the CellML API Reference Implementation from Java
+Every language-independent interface defined in this operation is mapped to a Java interface. Operations defined on the interfaces map to interface methods of the same name. Attributes map to a getter and a setter (or just a getter in the case of readonly attributes). The getter is named by pre-pending 'get' to the attribute name, capitalising the first letter of the attribute name. The setter is named similarly, except with a prefix of 'set'.
+
+Java is a garbage collected language, and the CellML API Reference Implementation uses reference counting. The Java bridges make these work together by ensuring that a reference is kept whenever you reference a CellML API object from Java, and so for the most part a Java programmer does not need to worry about memory management with the CellML API. The one exception is that cycles, where Java code references the API, and the API references a callback to Java, need to be explicitly broken or the objects in the cycle will never be released.
+
+The same CellML API object can implement multiple interfaces, but doing a Java cast between different interfaces supported by an object will not work, because access to the CellML API object is through a bridge, and each bridge object only supports one chain of interfaces. To get access to other interfaces supported by an object, you need to do a query_interface operation. In Java, you do this using a static method on the bridge of the interface you want to obtain. These bridge classes are named pjm2pcm.namespace.interfaceName, and the static method is called queryInterface. The return value is an object of that class; these classes implement the corresponding Java interfaces.
+
+Note that before you use any objects from a particular Java service, you must load the bridge using System.loadLibrary("java_modulename"), where modulename is the name of the module for the service (for example, cellml for the core of the API, cis for the integration service, ccgs for the code generation service).
+
+\section java_boot Bootstrapping in Java
+
+The language-independent part of the CellML API documentation describes what interfaces objects can support, and how to get different objects by performing operations and retrieving attributes on the existing objects. However, there is a chicken-and-egg problem - you need to get the first object before you can do anything on an interface. This problem is solved differently in different language bindings. In Java, the reference implementation solves the problem using static native methods, called Bootstrap Methods, that return a Java interface.
+
+Here are some of the bootstrap methods available in the CellML API:
+<table>
+  <tr><th>Service</th><th>Bootstrap method</th><th>Return type</th><th>Module to load</th></tr>
+  <tr><td>Core</td><td>cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap</td><td>cellml_api.CellMLBootstrap</td><td>java_cellml</td></tr>
+  <tr><td>AnnoTools</td><td>cellml_bootstrap.AnnoToolsBootstrap.createAnnotationToolService</td><td>cellml_services.AnnotationToolService</td><td>java_annotools</td></tr>
+  <tr><td>CCGS</td><td>cellml_bootstrap.CCGSBootstrap.createCodeGeneratorBootstrap</td><td>cellml_services.CodeGeneratorBootstrap</td><td>java_ccgs</td></tr>
+  <tr><td>CGRS</td><td>cellml_bootstrap.CGRSBootstrap.createGenericsService</td><td>cellml_services.GenericsService</td><td>java_cgrs</td></tr>
+  <tr><td>CIS</td><td>cellml_bootstrap.CISBootstrap.createIntegrationService</td><td>cellml_services.CellMLIntegrationService</td><td>java_cis</td></tr>
+  <tr><td>CUSES</td><td>cellml_bootstrap.CUSESBootstrap.createCUSESBootstrap</td><td>cellml_services.CUSESBootstrap</td><td>java_cuses</td></tr>
+  <tr><td>CeLEDS</td><td>cellml_bootstrap.CeLEDSBootstrap.createCeLEDSBootstrap</td><td>cellml_services.CeLEDSBootstrap</td><td>java_celeds</td></tr>
+  <tr><td>CeLEDSExporter</td><td>cellml_bootstrap.CeLEDSExporterBootstrap.createCeLEDSExporterBootstrap</td><td>cellml_services.CeLEDSExporterBootstrap</td><td>java_celedsexporter</td></tr>
+  <tr><td>CeVAS</td><td>cellml_bootstrap.CeVASBootstrap.createCeVASBootstrap</td><td>cellml_services.CeVASBootstrap</td><td>java_cevas</td></tr>
+  <tr><td>MaLAES</td><td>cellml_bootstrap.MaLaESBootstrap.createMaLaESBootstrap</td><td>cellml_services.MaLaESBootstrap</td><td>java_malaes</td></tr>
+  <tr><td>SProS</td><td>cellml_bootstrap.SProSBootstrap.createSProSBootstrap</td><td>SProS.Bootstrap</td><td>java_spros</td></tr>
+  <tr><td>SRuS</td><td>cellml_bootstrap.SRuSBootstrap.createSRuSBootstrap</td><td>SRuS.Bootstrap</td><td>java_srus</td></tr>
+  <tr><td>TeLICeMS</td><td>cellml_bootstrap.TeLICeMService.createTeLICeMService</td><td>cellml_services.TeLICeMService</td><td>java_telicems</td></tr>
+  <tr><td>VACSS</td><td>cellml_bootstrap.VACSSBootstrap.createVACSService</td><td>cellml_services.VACSService</td><td>java_vacss</td></tr>
+</table>
 
 \endcode
 */

@@ -1,7 +1,7 @@
 /*!
 \page cplusplus_basics The basics of using the CellML API from C++
 
-\section cplusplus_demo A basic C++ program using the API
+\section cplusplus_demo Quick start: A basic C++ program using the API
 
 \include MyExample.cpp
 
@@ -13,4 +13,36 @@ LD_LIBRARY_PATH=$CELLML_SDK/lib ./MyTest
 \endverbatim
 
 Note: When linking on Windows with Visual C++, it is normal to see the following compiler warnings, due to the coding style of the CellML API: warning C4290 and warning C4091. Neither of these warnings represent a real problem with the API; you can suppress them by giving MSVC the "/wd4290" and "/wd4091" flags.
+
+\section cplusplus_intro Concepts when using the API Reference Implementation from C++
+When using the CellML API Reference Implementation from C++, the most basic way of dealing with an API object is as a pointer of type iface::namespace::interfaceName*. These classes are defined in headers named IfaceIDLNAME.hxx, where IDLNAME is the name of the IDL file for the service you want. Operations correspond to identically-named class methods on the class, and attributes correspond to a setter of the same name which takes the value to set to, and a getter, which takes no arguments and returns the value. Read-only attributes have no setter.
+
+Because all interfaces inherit from iface::XPCOM::IObject, you can call add_ref to add a reference to an object, and release_ref to release a reference. When you retrieve a value from an attribute getter, an out parameter, or a return value, the API automatically increases its reference count, and you will need to call release_ref when you have finished with it (with one extra call for each time you call add_ref).
+
+An object can support multiple interfaces, and sometimes you might have a pointer to an interface and want a pointer to an interface that inherits from that interface. Because the API is designed to work correctly with multiple layers of bridges between the caller and the implementation, you might have a pointer to a bridge object that doesn't support all the interfaces the object itself supoprts. Therefore, for robust and reliable code, you should never simply attempt to directly cast the object in this case. Instead, the query_interface operation is used. This takes a string, formatted as namespace::interfaceName, and returns a void* which can be cast with a reinterpret_cast to iface::namespace::interfaceName*.
+
+Because managing reference counts manually in C++ is verbose and error prone, a C++ specific header containing some template classes is provided, called cellml-api-cxx-support.hpp. It provides a template ObjRef<T>; the type T is filled in with an interface type (not the pointer). For example, ObjRef<iface::XPCOM::IObject> is a pointer to an object implementing the IObject interface. Assigning a pointer into an ObjRef increases the reference count, and when the ObjRef goes out of scope, the reference count is automatically decreased. Because operations and attribute getters return an object with the reference count already increased, their C++ signature uses another template in the return type, already_AddRefd<T> in place of T*; assigning an already_AddRefd<T> into an ObjRef<T> means that the reference count is not increased, but it will be decreased when the ObjRef goes out of scope. To QueryInterface, the inline method QueryInterface wraps an object in a DoQueryInterface class, which can be assigned into an ObjRef<T> to cause a query_interface to the interface corresponding to type T, with all reference counting handled correctly. It is also valid to call QueryInterface directly on an already_AddRefd, in which case the reference count on the original object will be decreased. ObjRef objects can be used as if they were pointers, and can be converted into pointers.
+
+\section cplusplus_bootstrap Bootstrapping the CellML API
+
+The language-independent part of the CellML API documentation describes what interfaces objects can support, and how to get different objects by performing operations and retrieving attributes on the existing objects. However, there is a chicken-and-egg problem - you need to get the first object before you can do anything on an interface. This problem is solved differently in different language bindings. In C++, the reference implementation solves the problem using global methods, called Bootstrap Methods, that return interface pointers.
+
+Here are some of the bootstrap methods available in the CellML API:
+<table>
+  <tr><th>Service</th><th>Bootstrap method</th><th>Return type</th><th>Header</th></tr>
+  <tr><td>Core</td><td>CreateCellMLBootstrap</td><td>iface::cellml_api::CellMLBootstrap</td><td>CellMLBootstrap.hpp</td></tr>
+  <tr><td>AnnoTools</td><td>CreateAnnotationToolService</td><td>iface::cellml_services::AnnotationToolService</td><td>AnnoToolsBootstrap.hpp</td></tr>
+  <tr><td>CCGS</td><td>CreateCodeGeneratorBootstrap</td><td>iface::cellml_services::CodeGeneratorBootstrap</td><td>CCGSBootstrap.hpp</td></tr>
+  <tr><td>CGRS</td><td>CreateGenericsService</td><td>iface::cellml_services::GenericsService</td><td>CGRSBootstrap.hpp</td></tr>
+  <tr><td>CIS</td><td>CreateIntegrationService</td><td>iface::cellml_services::CellMLIntegrationService</td><td>CISBootstrap.hpp</td></tr>
+  <tr><td>CUSES</td><td>CreateCUSESBootstrap</td><td>iface::cellml_services::CUSESBootstrap</td><td>CUSESBootstrap.hpp</td></tr>
+  <tr><td>CeLEDS</td><td>CreateCeLEDSBootstrap</td><td>iface::cellml_services::CeLEDSBootstrap</td><td>CeLEDSBootstrap.hpp</td></tr>
+  <tr><td>CeLEDSExporter</td><td>CreateCeLEDSExporterBootstrap</td><td>iface::cellml_services::CeLEDSExporterBootstrap</td><td>CeLEDSExporterBootstrap.hpp</td></tr>
+  <tr><td>CeVAS</td><td>CreateCeVASBootstrap</td><td>iface::cellml_services::CeVASBootstrap</td><td>CeVASBootstrap.hpp</td></tr>
+  <tr><td>MaLAES</td><td>CreateMaLaESBootstrap</td><td>iface::cellml_services::MaLaESBootstrap</td><td>MaLaESBootstrap.hpp</td></tr>
+  <tr><td>SProS</td><td>CreateSProSBootstrap</td><td>iface::SProS::Bootstrap</td><td>SProSBootstrap.hpp</td></tr>
+  <tr><td>SRuS</td><td>CreateSRuSBootstrap</td><td>iface::SRuS::Bootstrap</td><td>SRuSBootstrap.hpp</td></tr>
+  <tr><td>TeLICeMS</td><td>CreateTeLICeMService</td><td>iface::cellml_services::TeLICeMService</td><td>TeLICeMSService.hpp</td></tr>
+  <tr><td>VACSS</td><td>CreateVACSService</td><td>iface::cellml_services::VACSService</td><td>VACSSBootstrap.hpp</td></tr>
+</table>
  */
