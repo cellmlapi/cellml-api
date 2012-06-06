@@ -85,7 +85,6 @@ LIST(APPEND cellml_java_bridge_files simple_interface_generators/glue/java/p2jxp
 LIST(APPEND cellml_java_defines_lib IN_MODULE_JavaSupport)
 FOREACH(extension ${EXTENSION_LIST})
   ADD_LIBRARY(java_${extension} MODULE ${java_${extension}_lib_files})
-  SET_TARGET_PROPERTIES(java_${extension} PROPERTIES SOVERSION ${GLOBAL_SOVERSION})
   IF (WIN32) # Otherwise the filename is wrong on MingW.
     SET_TARGET_PROPERTIES(java_${extension} PROPERTIES PREFIX "" SUFFIX ".dll" OUTPUT_NAME "java_${extension}")
   ELSEIF (APPLE)
