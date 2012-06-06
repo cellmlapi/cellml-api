@@ -18,8 +18,6 @@ INCLUDE_DIRECTORIES(sources/dom)
 INCLUDE_DIRECTORIES(sources/dom_direct)
 INCLUDE_DIRECTORIES(sources/cellml)
 INCLUDE_DIRECTORIES(sources/mathml)
-INCLUDE_DIRECTORIES(extdep/libxml)
-INCLUDE_DIRECTORIES(SYSTEM extdep/libxml/include)
 
 IF (ENABLE_RDF)
   INCLUDE_DIRECTORIES(sources/rdf)
@@ -35,18 +33,19 @@ ELSE()
   SET(MAYBE_CONTEXT_SOURCES)
 ENDIF()
 
-ADD_LIBRARY(cellml
-    sources/Utilities.cpp
-    sources/dom/DOMBootstrap.cpp
-    sources/dom/DOMWriter.cpp
-    sources/dom_direct/DOMImplementation.cpp
-    sources/dom_direct/DOMLoader.cpp
-    sources/cellml/CellMLBootstrap.cpp
-    sources/cellml/CellMLImplementation.cpp
-    sources/cellml/CellMLEvents.cpp
-    sources/mathml/MathMLImplementation.cpp
-    ${MAYBE_RDF_SOURCES}
-    ${MAYBE_CONTEXT_SOURCES}
+OPTION(USE_SYSTEM_LIBXML2 "Use a system or external libxml2 rather than the one included with the CellML API")
+MARK_AS_ADVANCED(USE_SYSTEM_LIBXML2)
+
+IF (USE_SYSTEM_LIBXML2)
+  FIND_PACKAGE(LibXml2 REQUIRED)
+  INCLUDE_DIRECTORIES(SYSTEM ${LIBXML2_INCLUDE_DIR})
+  SET(SYSTEM_XML2 ${LIBXML2_LIBRARIES})
+  SET(EXTDEP_SOURCES)
+ELSE()
+  SET(SYSTEM_XML2)
+  INCLUDE_DIRECTORIES(extdep/libxml)
+  INCLUDE_DIRECTORIES(SYSTEM extdep/libxml/include)
+  SET(EXTDEP_SOURCES
     extdep/libxml/catalog.c
     extdep/libxml/chvalid.c
     extdep/libxml/debugXML.c
@@ -86,13 +85,29 @@ ADD_LIBRARY(cellml
     extdep/libxml/xmlwriter.c
     extdep/libxml/xpath.c
     extdep/libxml/xpointer.c
+    )
+ENDIF()
+
+ADD_LIBRARY(cellml
+    sources/Utilities.cpp
+    sources/dom/DOMBootstrap.cpp
+    sources/dom/DOMWriter.cpp
+    sources/dom_direct/DOMImplementation.cpp
+    sources/dom_direct/DOMLoader.cpp
+    sources/cellml/CellMLBootstrap.cpp
+    sources/cellml/CellMLImplementation.cpp
+    sources/cellml/CellMLEvents.cpp
+    sources/mathml/MathMLImplementation.cpp
+    ${MAYBE_RDF_SOURCES}
+    ${MAYBE_CONTEXT_SOURCES}
+    ${EXTDEP_SOURCES}
   )
 SET(NETWORK_LIBS)
 IF(WIN32)
 LIST(APPEND NETWORK_LIBS ws2_32)
 ENDIF()
 FIND_PACKAGE(Threads)
-TARGET_LINK_LIBRARIES(cellml ${CMAKE_DL_LIBS} ${NETWORK_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+TARGET_LINK_LIBRARIES(cellml ${CMAKE_DL_LIBS} ${NETWORK_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${SYSTEM_XML2})
 INSTALL(TARGETS cellml DESTINATION lib)
 INSTALL(FILES sources/cda_compiler_support.h cda_config.h sources/cellml-api-cxx-support.hpp DESTINATION include)
 

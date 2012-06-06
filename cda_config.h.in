@@ -47,6 +47,9 @@
 /* Define if gcc visibility attributes supported */
 #cmakedefine HAVE_VISIBILITY_ATTRIBUTE
 
+/* Define if we are using the system libxml2 */
+#cmakedefine USE_SYSTEM_LIBXML2
+
 /* The size of `wchar_t*', as computed by sizeof. */
 #define SIZEOF_WCHAR_TP ${SIZEOF_WCHAR_TP}
 

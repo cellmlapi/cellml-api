@@ -5,8 +5,10 @@
 #include "DOMImplementation.hpp"
 #include <stdexcept>
 
+#ifndef USE_SYSTEM_LIBXML2
 #define LIBXML_STATIC
 #include <libxml/rename-libxml.h>
+#endif
 #include <libxml/tree.h>
 
 struct CDA_utf8_data_t
