@@ -16,6 +16,7 @@ ADD_LIBRARY(telicems
   ${CMAKE_BINARY_DIR}/TeLICeMScanner.cpp
   ${CMAKE_BINARY_DIR}/TeLICeMParse.genf.cpp)
 TARGET_LINK_LIBRARIES(telicems cellml ${CMAKE_DL_LIBS})
+SET_TARGET_PROPERTIES(telicems PROPERTIES SOVERSION ${GLOBAL_SOVERSION})
 INSTALL(TARGETS telicems DESTINATION lib)
 
 DECLARE_BOOTSTRAP("TeLICeMSService" "TeLICeMS" "TeLICeMService" "cellml_services" "createTeLICeMService" "CreateTeLICeMService" "TeLICeMService.hpp" "TeLICeMS/sources" "telicems")

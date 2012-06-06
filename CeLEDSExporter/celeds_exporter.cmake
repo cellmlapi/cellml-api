@@ -9,6 +9,7 @@ INCLUDE_DIRECTORIES(CeLEDSExporter/sources)
 ADD_LIBRARY(celedsexporter
   CeLEDSExporter/sources/CeLEDSExporterImpl.cpp)
 TARGET_LINK_LIBRARIES(celedsexporter celeds ccgs ${CMAKE_DL_LIBS})
+SET_TARGET_PROPERTIES(celedsexporter PROPERTIES SOVERSION ${GLOBAL_SOVERSION})
 INSTALL(TARGETS celedsexporter DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CeLEDSExporterBootstrap" "CeLEDSExporter" "CeLEDSExporterBootstrap" "cellml_services" "createCeLEDSExporterBootstrap" "CreateCeLEDSExporterBootstrap" "CeLEDSExporterBootstrap.hpp" "CeLEDSExporter/sources" "celeds_exporter")

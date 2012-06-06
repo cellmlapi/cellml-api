@@ -3,6 +3,7 @@ SET(CMAKE_BACKWARDS_COMPATIBILITY 2.8)
 MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 
 INCLUDE(CTest)
+INCLUDE(build/packing.cmake)
 
 OPTION(ENABLE_EVERYTHING "Turn on all optional features, except the commonly problematic ones (XPCOM, CORBA, and GSL integrators).")
 
@@ -378,5 +379,4 @@ CONFIGURE_FILE(cda_config.h.in cda_config.h)
 CONFIGURE_FILE(extdep/libxml/xml2_config.h.in extdep/libxml/xml2_config.h)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/extdep/libxml/)
 
-INCLUDE(build/packing.cmake)
 INCLUDE(build/python.cmake)

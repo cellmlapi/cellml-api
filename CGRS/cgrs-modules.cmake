@@ -46,6 +46,7 @@ FOREACH(extension ${EXTENSION_LIST_MODIFIED})
   FILE(WRITE "${CMAKE_BINARY_DIR}/cgrs-${extension}-init.cpp" "${moduleinitcode}")
 
   ADD_LIBRARY(cgrs_${extension} MODULE "${CMAKE_BINARY_DIR}/cgrs-${extension}-init.cpp" ${allcgrssources})
+  SET_TARGET_PROPERTIES(cgrs_${extension} PROPERTIES SOVERSION ${GLOBAL_SOVERSION})
   IF (NOT (${extension} STREQUAL "xpcom"))
     TARGET_LINK_LIBRARIES(cgrs_${extension} cgrs ${deplibs} ${extension})
   ELSE()

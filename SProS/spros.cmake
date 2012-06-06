@@ -8,6 +8,7 @@ INCLUDE_DIRECTORIES(SProS/sources)
 ADD_LIBRARY(spros
   SProS/sources/SProSImpl.cpp)
 TARGET_LINK_LIBRARIES(spros cellml ${CMAKE_DL_LIBS})
+SET_TARGET_PROPERTIES(spros PROPERTIES SOVERSION ${GLOBAL_SOVERSION})
 INSTALL(TARGETS spros DESTINATION lib)
 
 DECLARE_BOOTSTRAP("SProSBootstrap" "SProS" "Bootstrap" "SProS" "createSProSBootstrap" "CreateSProSBootstrap" "SProSBootstrap.hpp" "SProS/sources" "spros")
