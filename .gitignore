@@ -92,3 +92,7 @@ interfaces/cellml_context
 *.so.*
 mytest
 test_output*
+docs/Doxyfile
+docs/html
+docs/man
+

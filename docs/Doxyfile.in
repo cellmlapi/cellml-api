@@ -564,7 +564,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = ../../interfaces \ additionaldoc 
+INPUT                  = ${CMAKE_SOURCE_DIR}/interfaces ${CMAKE_SOURCE_DIR}/docs
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
@@ -763,7 +763,7 @@ GENERATE_HTML          = YES
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `html' will be used as the default path.
 
-HTML_OUTPUT            = html
+HTML_OUTPUT            = ${CMAKE_BINARY_DIR}/docs/html
 
 # The HTML_FILE_EXTENSION tag can be used to specify the file extension for 
 # each generated HTML page (for example: .htm,.php,.asp). If it is left blank 
@@ -980,7 +980,7 @@ GENERATE_LATEX         = NO
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `latex' will be used as the default path.
 
-LATEX_OUTPUT           = latex
+LATEX_OUTPUT           = ${CMAKE_BINARY_DIR}/docs/latex
 
 # The LATEX_CMD_NAME tag can be used to specify the LaTeX command name to be 
 # invoked. If left blank `latex' will be used as the default command name.
@@ -1061,7 +1061,7 @@ GENERATE_RTF           = NO
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `rtf' will be used as the default path.
 
-RTF_OUTPUT             = rtf
+RTF_OUTPUT             = ${CMAKE_BINARY_DIR}/docs/latex
 
 # If the COMPACT_RTF tag is set to YES Doxygen generates more compact 
 # RTF documents. This may be useful for small projects and may help to 
@@ -1096,13 +1096,13 @@ RTF_EXTENSIONS_FILE    =
 # If the GENERATE_MAN tag is set to YES (the default) Doxygen will 
 # generate man pages
 
-GENERATE_MAN           = NO
+GENERATE_MAN           = YES
 
 # The MAN_OUTPUT tag is used to specify where the man pages will be put. 
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `man' will be used as the default path.
 
-MAN_OUTPUT             = man
+MAN_OUTPUT             = ${CMAKE_BINARY_DIR}/docs/man
 
 # The MAN_EXTENSION tag determines the extension that is added to 
 # the generated man pages (default is the subroutine's section .3)
@@ -1131,7 +1131,7 @@ GENERATE_XML           = NO
 # If a relative path is entered the value of OUTPUT_DIRECTORY will be 
 # put in front of it. If left blank `xml' will be used as the default path.
 
-XML_OUTPUT             = xml
+XML_OUTPUT             = ${CMAKE_BINARY_DIR}/docs/xml
 
 # The XML_SCHEMA tag can be used to specify an XML schema, 
 # which can be used by a validating XML parser to check the 
