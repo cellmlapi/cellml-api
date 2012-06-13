@@ -72,7 +72,6 @@ test_celeds_output
 cgrs-*-init.cpp
 cgrspy
 \#*\#
-*\#*
 interfaces/CGRS
 interfaces/SProS
 interfaces/SRuS
