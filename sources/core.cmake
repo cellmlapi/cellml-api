@@ -110,7 +110,7 @@ FIND_PACKAGE(Threads)
 TARGET_LINK_LIBRARIES(cellml ${CMAKE_DL_LIBS} ${NETWORK_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${SYSTEM_XML2})
 SET_TARGET_PROPERTIES(cellml PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CELLML_SOVERSION})
 INSTALL(TARGETS cellml DESTINATION lib)
-INSTALL(FILES sources/cda_compiler_support.h cda_config.h sources/cellml-api-cxx-support.hpp DESTINATION include)
+INSTALL(FILES sources/cda_compiler_support.h ${CMAKE_BINARY_DIR}/cda_config.h sources/cellml-api-cxx-support.hpp DESTINATION include)
 
 DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp" "sources/cellml" "cellml")
 INSTALL(FILES sources/dom/DOMBootstrap.hxx DESTINATION include)
