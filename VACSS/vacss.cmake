@@ -16,7 +16,7 @@ DECLARE_BOOTSTRAP("VACSSBootstrap" "VACSS" "VACSService" "cellml_services" "crea
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(ValidateCellML VACSS/tests/ValidateCellML.cpp)
   TARGET_LINK_LIBRARIES(ValidateCellML cellml cuses vacss annotools)
-  ADD_TEST(CheckVACSS ${BASH} tests/CheckVACSS)
+  ADD_TEST(CheckVACSS ${BASH} ${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckVACSS)
   DECLARE_TEST_LIB(vacss)
   DECLARE_CPPUNIT_FILE(VACSS)
 ENDIF()

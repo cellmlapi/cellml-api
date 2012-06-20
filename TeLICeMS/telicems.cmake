@@ -26,7 +26,7 @@ IF (BUILD_TESTING)
   ADD_EXECUTABLE(TestTeLICeMSerialiser TeLICeMS/tests/TestTeLICeMSerialiser.cpp)
   TARGET_LINK_LIBRARIES(TestTeLICeMParser cellml telicems)
   TARGET_LINK_LIBRARIES(TestTeLICeMSerialiser cellml telicems)
-  ADD_TEST(CheckTeLICeMSParser ${BASH} tests/CheckTeLICeMSParser)
+  ADD_TEST(CheckTeLICeMSParser ${BASH} ${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckTeLICeMSParser)
 ENDIF()
 
 

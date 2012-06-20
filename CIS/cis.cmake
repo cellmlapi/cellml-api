@@ -91,7 +91,7 @@ DECLARE_BOOTSTRAP("CISBootstrap" "CIS" "CellMLIntegrationService" "cellml_servic
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(RunCellML CIS/tests/RunCellML.cpp)
   TARGET_LINK_LIBRARIES(RunCellML cellml ccgs cuses cevas malaes annotools cis)
-  ADD_TEST(CheckCIS ${BASH} tests/CheckCIS)
+  ADD_TEST(CheckCIS ${BASH} ${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckCIS)
   DECLARE_TEST_LIB(cis)
 ENDIF()
 
