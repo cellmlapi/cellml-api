@@ -54,10 +54,10 @@
 #define SIZEOF_WCHAR_TP ${SIZEOF_WCHAR_TP}
 
 /* Define TESTDIR to path of test sources. */
-#define TESTDIR L"${CMAKE_CURRENT_BINARY_DIR}/tests"
+#define TESTDIR L"${CMAKE_CURRENT_SOURCE_DIR}/tests"
 
 /* Define TESTDIR to path of test sources. */
-#define TESTDIR8 "${CMAKE_CURRENT_BINARY_DIR}/tests"
+#define TESTDIR8 "${CMAKE_CURRENT_SOURCE_DIR}/tests"
 
 #define SIZE_INT64_T ${SIZE_INT64_T}
 #if ! (SIZE_INT64_T + 0)
