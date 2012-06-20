@@ -1,7 +1,8 @@
 #!/bin/bash
 
 BINDIR=`pwd`
-BASEDIR=`dirname $0`
+BASEDIR=`dirname $0`/..
+cd $BASEDIR
 DIFF="./tests/ndiff -t 0.0000001"
 RUNSEDML=$BINDIR/RunSEDML
 TEMPFILE=test_output.$$
@@ -28,7 +29,7 @@ function runtest()
   rm -f $TEMPFILE;
   $RUNSEDML $name.xml step_type AM_1_12 | tr -d "\r" >$TEMPFILE
   FAIL=0
-  $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name.csv
+  $DIFF -bu $TEMPFILE ./tests/test_expected/$name.csv
   FAIL=$?
 
   if [[ $FAIL -ne 0 ]]; then

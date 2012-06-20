@@ -1,7 +1,8 @@
 #!/bin/bash
 
 BINDIR=`pwd`
-BASEDIR=`dirname $0`
+BASEDIR=`dirname $0`/..
+cd $BASEDIR
 DIFF="./tests/ndiff -t 0.0000001"
 RUNCELLML=$BINDIR/RunCellML
 TEMPFILE=test_output.$$
@@ -29,18 +30,18 @@ function runtest()
 {
   name=$1;
   rm -f $TEMPFILE;
-  $RUNCELLML $BASEDIR/test_xml/$name.xml step_type AM_1_12 | tr -d "\r" >$TEMPFILE
+  $RUNCELLML ./tests/test_xml/$name.xml step_type AM_1_12 | tr -d "\r" >$TEMPFILE
   FAIL=0
-  $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name.csv
+  $DIFF -bu $TEMPFILE ./tests/test_expected/$name.csv
   if [[ $? -ne 0 ]]; then
-    if [[ -f $BASEDIR/test_expected/$name-alt1.csv ]]; then
-        $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt1.csv
+    if [[ -f ./tests/test_expected/$name-alt1.csv ]]; then
+        $DIFF -bu $TEMPFILE ./tests/test_expected/$name-alt1.csv
         if [[ $? -ne 0 ]]; then
-            if [[ -f $BASEDIR/test_expected/$name-alt2.csv ]]; then
-                $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt2.csv
+            if [[ -f ./tests/test_expected/$name-alt2.csv ]]; then
+                $DIFF -bu $TEMPFILE ./tests/test_expected/$name-alt2.csv
                 if [[ $? -ne 0 ]]; then
-                    if [[ -f $BASEDIR/test_expected/$name-alt3.csv ]]; then
-                        $DIFF -bu $TEMPFILE $BASEDIR/test_expected/$name-alt3.csv
+                    if [[ -f ./tests/test_expected/$name-alt3.csv ]]; then
+                        $DIFF -bu $TEMPFILE ./tests/test_expected/$name-alt3.csv
                         FAIL=$?
                     else
                         FAIL=1
