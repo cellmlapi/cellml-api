@@ -17,8 +17,8 @@ Summary of how to obtain the API Implementation:
   </tr>
   <tr>
     <th>From source</th>
-    <td>git clone https://A1kmm@github.com/cellmlapi/cellml-api.git; cd cellml-api; git checkout 1.11</td>
-    <td>git clone https://A1kmm@github.com/cellmlapi/cellml-api.git</td>
+    <td>git clone https://github.com/cellmlapi/cellml-api.git; cd cellml-api; git checkout 1.11</td>
+    <td>git clone https://github.com/cellmlapi/cellml-api.git</td>
   </tr>
 </table>
 

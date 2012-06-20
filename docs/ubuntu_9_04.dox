@@ -7,7 +7,7 @@
 \subsection step1 Step 1: Obtain the CellML API source repository using Mercurial
 
 \verbatim
-hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api/cellml-api
+git clone https://github.com/cellmlapi/cellml-api.git
 \endverbatim
 
 \subsection step1a Optional Step 1a: Switch to a tagged stable release
@@ -15,7 +15,7 @@ hg clone http://cellml-api.hg.sourceforge.net:8000/hgroot/cellml-api/cellml-api
 In the below example, we switch to the 1.10 branch. You don't need to do this if you want the latest version, rather than a stable release.
 
 \verbatim
-hg checkout 1.10
+git checkout 1.11
 \endverbatim
 
 \subsection step2 Step 2: Install external packages
