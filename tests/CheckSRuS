@@ -2,7 +2,7 @@
 
 BINDIR=`pwd`
 BASEDIR=`dirname $0`
-DIFF="$BINDIR/tests/ndiff -t 0.0000001"
+DIFF="./tests/ndiff -t 0.0000001"
 RUNSEDML=$BINDIR/RunSEDML
 TEMPFILE=test_output.$$
 

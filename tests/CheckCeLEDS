@@ -1,11 +1,12 @@
 #!/bin/bash
 
+BINDIR=`pwd`
 BASEDIR=`dirname $0`/..
 
 cd $BASEDIR
 
 DIFF=diff
-TESTCELEDS=./testCeLEDS
+TESTCELEDS=$BINDIR/testCeLEDS
 TEMPFILE=test_celeds_output.$$
 
 if [[ ! -f "$TESTCELEDS" ]]; then
