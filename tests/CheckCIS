@@ -21,9 +21,9 @@ grep -q "s,#define ENABLE_RDF,g" $BINDIR/cda_config.h
 RDF_ENABLED=$?
 
 if [[ $(uname -o) == 'Cygwin' ]]; then
-  export LIBRARY_PATH=".;$LIBRARY_PATH"
+  export LIBRARY_PATH="$BINDIR;$LIBRARY_PATH"
 else
-  export LIBRARY_PATH=.:$LIBRARY_PATH
+  export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
 fi
 
 function runtest()

@@ -20,7 +20,7 @@ if [[ $(uname -o) == 'Cygwin' ]]; then
   export LIBRARY_PATH=".;$LIBRARY_PATH"
   export PATH="/cygdrive/c/MingW/msys/1.0:$PATH"
 else
-  export LIBRARY_PATH=.:$LIBRARY_PATH
+  export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
 fi
 
 function runtest()
