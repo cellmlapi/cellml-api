@@ -53,10 +53,9 @@ fi
 
 if [[ -d cgrspy ]]; then
   cd cgrspy
-  $GIT pull
+  "$GIT" pull
 else
-  
-  $GIT clone $URL
+  "$GIT" clone $URL
   cd cgrspy
 fi
 
