@@ -2,8 +2,6 @@
 
 if [[ $OSTYPE == msys ]]; then
     export WAS_MSYS=1
-    /c/cygwin/bin/bash build/make-cgrspy $*
-    exit $?
 fi
 
 VERSION_MAJOR=$1
