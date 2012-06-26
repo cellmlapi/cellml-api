@@ -30,7 +30,7 @@ case $UNAME in
         export LIBRARY_PATH="$BINDIR;$LIBRARY_PATH"
         export LIB="$BINDIR;$LIB"
         export INCLUDE="$BINDIR;$INCLUDE"
-        export GIT="/c/Program\ Files\ \(x86\)/Git/bin/git"
+        export GIT="/c/Program Files (x86)/Git/bin/git"
         set
         ;;
     *Darwin*)
