@@ -10,6 +10,7 @@ BINDIR=$3
 
 UNAME=$(uname -a)
 GIT=git
+URL=https://github.com/A1kmm/cgrspy.git
 case $UNAME in
     *Linux)
         export PATH="$BINDIR:$PATH"
@@ -18,6 +19,7 @@ case $UNAME in
         export LD_LIBRARY_PATH="$BINDIR:$LD_LIBRARY_PATH"
         ;;
     *Cygwin|*Msys*)
+        URL=http://github.com/A1kmm/cgrspy.git
         if [[ $WAS_MSYS != 1 ]]; then
           echo On Windows but not MinGW, so silently suppressing Python build as it is done on MinGW instead
           exit 0
@@ -53,7 +55,8 @@ if [[ -d cgrspy ]]; then
   cd cgrspy
   $GIT pull
 else
-  $GIT clone https://github.com/A1kmm/cgrspy.git
+  
+  $GIT clone $URL
   cd cgrspy
 fi
 
