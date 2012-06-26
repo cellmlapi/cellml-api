@@ -23,13 +23,12 @@ case $UNAME in
           exit 0
         fi
         # To do: find a more reliable way to put MinGW in the path...
-        CPBINDIR=$(/cygdrive/c/cygwin/bin/cygpath -u $BINDIR)
-        export PATH="$CPBINDIR:/cygdrive/c/MinGW/bin:$PATH"
+        export PATH="/c/MinGW/bin:$PATH"
         export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
         export LIBRARY_PATH="$BINDIR;$LIBRARY_PATH"
         export LIB="$BINDIR;$LIB"
         export INCLUDE="$BINDIR;$INCLUDE"
-        export GIT="/cygdrive/c/cygwin/bin/git"
+        export GIT="/c/MinGW/msys/1.0/bin/git"
         set
         ;;
     *Darwin*)
