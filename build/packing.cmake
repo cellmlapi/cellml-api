@@ -38,4 +38,4 @@ ELSE()
 ENDIF()
 INCLUDE(CPack)
 
-ADD_CUSTOM_TARGET(release chmod "+x" "build/make-release" COMMAND ${SH} build/make-release ${CMake_VERSION_MAJOR} ${CMake_VERSION_MINOR} ${CMAKE_BINARY_DIR})
+ADD_CUSTOM_TARGET(release chmod "+x" "build/make-release" COMMAND sh build/make-release ${CMake_VERSION_MAJOR} ${CMake_VERSION_MINOR} ${CMAKE_BINARY_DIR})
