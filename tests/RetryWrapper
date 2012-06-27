@@ -1,0 +1,12 @@
+#!/bin/bash
+
+chmod +x $1
+$*
+if [[ $? == 0 ]]; then
+  exit 0
+fi
+
+echo "Warning: The test command failed the first time. Because tests sometimes fail due to transient problems like network errors, I am going to wait for a second and then try again. If the command fails a second time, that will be counted as a test failure."
+sleep 1
+$*
+exit $?

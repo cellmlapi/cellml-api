@@ -26,7 +26,7 @@ DECLARE_BOOTSTRAP("SRuSBootstrap" "SRuS" "Bootstrap" "SRuS" "createSRuSBootstrap
 IF (BUILD_TESTING)
   ADD_EXECUTABLE(RunSEDML SRuS/tests/RunSEDML.cpp)
   TARGET_LINK_LIBRARIES(RunSEDML cellml ccgs cuses cevas malaes annotools spros srus xpath)
-  ADD_TEST(CheckSRuS ${BASH} ${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckSRuS)
+  ADD_TEST(CheckSRuS ${BASH} ${CMAKE_CURRENT_SOURCE_DIR}/tests/RetryWrapper ${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckSRuS)
   DECLARE_TEST_LIB(srus)
   DECLARE_TEST_LIB(xpath)
   DECLARE_CPPUNIT_FILE(XPath)
