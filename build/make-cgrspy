@@ -6,8 +6,7 @@ fi
 
 VERSION_MAJOR=$1
 VERSION_MINOR=$2
-BINDIR=$(readlink -f "$3")
-
+BINDIR=$(readlink -f $(pwd))
 UNAME=$(uname -a)
 GIT=git
 URL=https://github.com/A1kmm/cgrspy.git
