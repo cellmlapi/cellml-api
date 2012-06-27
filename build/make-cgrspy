@@ -26,7 +26,7 @@ case $UNAME in
         fi
         export PATH="$BINDIR:/c/MinGW/bin:$PATH"
         export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
-        export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
+        export LIBRARY_PATH="$BINDIR"
         export GIT="/c/Program Files (x86)/Git/bin/git"
         ;;
     *Darwin*)
