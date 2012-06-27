@@ -24,12 +24,9 @@ case $UNAME in
           echo On Windows but not MinGW, so silently suppressing Python build as it is done on MinGW instead
           exit 0
         fi
-        # To do: find a more reliable way to put MinGW in the path...
-        export PATH="/c/MinGW/bin:$PATH"
+        export PATH="$BINDIR:/c/MinGW/bin:$PATH"
         export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
-        export LIBRARY_PATH="$BINDIR;$LIBRARY_PATH"
-        export LIB="$BINDIR;$LIB"
-        export INCLUDE="$BINDIR;$INCLUDE"
+        export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
         export GIT="/c/Program Files (x86)/Git/bin/git"
         set
         ;;
