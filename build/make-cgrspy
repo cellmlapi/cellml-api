@@ -6,7 +6,7 @@ fi
 
 VERSION_MAJOR=$1
 VERSION_MINOR=$2
-BINDIR=$3
+BINDIR=$(readlink -f "$3")
 
 UNAME=$(uname -a)
 GIT=git
@@ -28,7 +28,6 @@ case $UNAME in
         export CPLUS_INCLUDE_PATH="$BINDIR:$CPLUS_INCLUDE_PATH"
         export LIBRARY_PATH="$BINDIR:$LIBRARY_PATH"
         export GIT="/c/Program Files (x86)/Git/bin/git"
-        set
         ;;
     *Darwin*)
         export PATH="$BINDIR:$PATH"
