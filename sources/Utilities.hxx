@@ -609,6 +609,7 @@ mersenne_autoseed(void)
   *p++ = tv.tv_usec;
   p += (l>>2) + ((l & 3) ? 1 : 0);
 #else
+  p = (unsigned long*)key;
   GetSystemTimeAsFileTime((LPFILETIME)p);
   p += 2;
   *p++ = GetCurrentProcessId();
