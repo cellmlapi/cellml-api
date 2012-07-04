@@ -594,26 +594,26 @@ mersenne_init_by_array(unsigned long init_key[], int key_length)
 static void
 mersenne_autoseed(void)
 {
-  unsigned long key[50];
-  unsigned long *p = key;
+  char key[200];
+  unsigned long *p;
   memset(key, 0, sizeof(key));
 #ifndef WIN32
+  gethostname((char*)key, sizeof(key));
+  uint32_t l = strlen(key);
+  p = (unsigned long*)(key + l);
   *p++ = getuid();
   *p++ = getpid();
   struct timeval tv;
   gettimeofday(&tv, NULL);
   *p++ = tv.tv_sec;
   *p++ = tv.tv_usec;
-  gethostname((char*)p, (p - key) * 4);
-  key[49] = 0;
-  uint32_t l = strlen((char*)p);
   p += (l>>2) + ((l & 3) ? 1 : 0);
 #else
   GetSystemTimeAsFileTime((LPFILETIME)p);
   p += 2;
   *p++ = GetCurrentProcessId();
 #endif  
-  mersenne_init_by_array(key, p - key);
+  mersenne_init_by_array((unsigned long*)key, p - (unsigned long*)key);
 }
 
 /* generates a random number on [0,0xffffffff]-interval */
