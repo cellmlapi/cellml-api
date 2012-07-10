@@ -160,14 +160,37 @@ int main(int argc, char** argv)
         ObjRef<iface::rdf_api::URIReference> value(dsHH->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#value"));
         ts = r->getTriplesOutOfByPredicate(value);
         te3 = ts->enumerateTriples();
+
         t = te3->getNextTriple();
         if (t == NULL) continue;
         n = t->object();
         r = QueryInterface(n);
         if (r == NULL) continue;
         ObjRef<iface::rdf_api::Container> cont(r->correspondingContainer());
+
+        // Add a new entry to the container first...
+        ObjRef<iface::rdf_api::PlainLiteral> newPL(dsHH->getPlainLiteral(L"Newly created label", L"en"));
+        cont->appendChild(newPL);
+
+        // Delete any labels that match 'giant axon'...
+        ObjRef<iface::rdf_api::NodeIterator> ni(cont->iterateChildren());
+        while (true)
+        {
+          ObjRef<iface::rdf_api::Node> n(ni->getNextNode());
+          if (n == NULL)
+            break;
+          ObjRef<iface::rdf_api::Literal> l(QueryInterface(n));
+          if (l == NULL)
+            continue;
+          if (l->lexicalForm() == L"giant axon")
+            // The false means don't renumber immediately. This leaves the
+            // container with gaps...
+            cont->removeChild(l, false);
+        }
+        cont->renumberContainer(); // Remove the gaps.
+
         displayContainer(cont, L"    ");
-      }
+      }      
     }
   }
   catch (iface::cellml_api::CellMLException&)
