@@ -1,8 +1,12 @@
+/**
+ * @file
+ * This module contains a description of the CellML supplementary service interfaces
+ * in the language-neutral IDL form.
+ */
 #include "CellML_APISPEC.idl"
 
 /**
- * This module contains a description of the CellML supplementary service interfaces
- * in the language-neutral IDL form.
+ * A module for various CellML Services.
  */
 module cellml_services
 {

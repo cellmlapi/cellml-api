@@ -1,3 +1,11 @@
+/**
+ * @file
+ * MaLaES (the MathML Language Expression Service) provides facilities for
+ * converting from content MathML expressions (in the context of a CellML
+ * component or reaction) into expressions in a particular programming
+ * language. The translation into a programming language occurs according to a
+ * special language description format called MAL.
+ */
 #ifndef _MaLaES_idl_
 #define _MaLaES_idl_
 #include "CUSES.idl"
@@ -5,11 +13,7 @@
 #include "CeVAS.idl"
 
 /**
- * MaLaES (the MathML Language Expression Service) provides facilities for
- * converting from content MathML expressions (in the context of a CellML
- * component or reaction) into expressions in a particular programming
- * language. The translation into a programming language occurs according to a
- * special language description format called MAL.
+ * A module for various CellML Services.
  */
 module cellml_services
 {

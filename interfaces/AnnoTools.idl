@@ -1,3 +1,10 @@
+/**
+ * @file
+ * AnnoTools provide supplementary annotation services to users of the CellML
+ * API, built on top of the user data facilities in the core API. These
+ * convenience services make it easier to write local annotations of various
+ * kinds on different objects.
+ */
 #include "xpcom.idl"
 #ifndef IN_CELLML_MODULE
 #define USERDATA_NEEDED
@@ -5,10 +12,7 @@
 #include "CellML_APISPEC.idl"
 
 /**
- * AnnoTools provide supplementary annotation services to users of the CellML
- * API, built on top of the user data facilities in the core API. These
- * convenience services make it easier to write local annotations of various
- * kinds on different objects.
+ * A module for various CellML Services.
  */
 module cellml_services
 {

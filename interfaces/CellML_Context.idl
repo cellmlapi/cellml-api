@@ -1,10 +1,14 @@
-#include "CellML_APISPEC.idl"
-
 /**
+ * @file
  * This module contains a description of code which ties together all of the
  * CellML code into an environment that tools can integrate into. This allows
  * separate tools which have no knowledge of each other to integrate without
  * problems.
+ */
+#include "CellML_APISPEC.idl"
+
+/**
+ * A module for various CellML Services.
  */
 module cellml_context
 {

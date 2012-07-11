@@ -1,13 +1,16 @@
-#include "CellML_APISPEC.idl"
-#include "MathML_content_APISPEC.idl"
-
 /**
+ * @file
  * TeLICeMS (TeLICeM Service) is a serivce for processing CellML Models
  * represented in the TeLICeM (*Te*xt-based *L*anguage for the *I*nput of *Ce*llML
  * *M*odels) format. It can also be used to process MathML expressions equation
  * using the relevant subset of the TeLICeM format.
  */
+#include "CellML_APISPEC.idl"
+#include "MathML_content_APISPEC.idl"
 
+/**
+ * A module for various CellML Services.
+ */
 module cellml_services
 {
   interface TeLICeMResult

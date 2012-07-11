@@ -1,12 +1,16 @@
-#include "CellML_APISPEC.idl"
-
 /**
+ * @file
  * CUSES (the CellML Units Simplification and Expansion Service) provides
  * services for processing units in CellML, providing services such as looking
  * up unit names in specific contexts, and reducing units to the simplest form
  * involving only built in and user defined base units. It also provides
  * facilities for converting between different but dimensionally compatible
  * units.
+ */
+#include "CellML_APISPEC.idl"
+
+/**
+ * A module for various CellML Services.
  */
 module cellml_services
 {

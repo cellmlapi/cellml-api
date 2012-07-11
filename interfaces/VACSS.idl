@@ -1,9 +1,13 @@
-#include "CellML_APISPEC.idl"
-
 /**
+ * @file
  * The VACSS (validation against CellML specification service) provides
  * services which allow models to be validated to check that they comply with
  * the CellML specifications.
+ */
+#include "CellML_APISPEC.idl"
+
+/**
+ * A module for various CellML Services.
  */
 module cellml_services
 {

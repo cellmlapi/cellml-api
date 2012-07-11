@@ -1,12 +1,17 @@
-#include "CellML_APISPEC.idl"
-#include "CeLEDS.idl"
-#include "CCGS.idl"
 /**
+ * @file
  * CeLEDS (CellML Language Export Definition Service) provides a 
  * service for accessing language export definitions required by components
  * involved in export of CellML models to various programming languages.
  * Language definitions are stored in XML files.
  * This interface uses CCGS to export code as a string.
+ */
+#include "CellML_APISPEC.idl"
+#include "CeLEDS.idl"
+#include "CCGS.idl"
+
+/**
+ * A module for various CellML Services.
  */
 module cellml_services
 {

@@ -1,10 +1,14 @@
-#include "CellML_APISPEC.idl"
-
 /**
+ * @file
  * The CeVAS, or CellML Variable Association Service, provides services which
  * make it easier to work out which variables are the same, and so reduces the
  * complexity of working with models which have mathematics spread across
  * multiple components, possibly imported from multiple documents.
+ */
+#include "CellML_APISPEC.idl"
+
+/**
+ * A module for various CellML Services.
  */
 module cellml_services
 {

@@ -1,12 +1,16 @@
+/**
+ * @file
+ * The CCGS, or CellML Code Generation Service, provides services which allow
+ * code in a procedural language to be generated for an entire CellML model. The
+ * CCGS computes the order in which procedural steps should be performed, and
+ * uses the MaLaES service to generate expressions in the desired language.
+ */
 #include "CellML_APISPEC.idl"
 #include "MathML_content_APISPEC.idl"
 #include "MaLaES.idl"
 
 /**
- * The CCGS, or CellML Code Generation Service, provides services which allow
- * code in a procedural language to be generated for an entire CellML model. The
- * CCGS computes the order in which procedural steps should be performed, and
- * uses the MaLaES service to generate expressions in the desired language.
+ * A module for various CellML Services.
  */
 module cellml_services
 {
