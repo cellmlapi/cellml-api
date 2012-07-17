@@ -55,11 +55,11 @@ private:
   std::map<wstringpair, CDA_TypedLiteral*> mTypedLiterals;
   std::map<wstringpair, CDA_PlainLiteral*> mPlainLiterals;
   std::map<std::wstring, CDA_URIReference*> mURIReferences;
-  std::set<CDA_RDFNode*> mAssociatedNodes;
+  std::set<CDA_RDFNode*, ptr_to_less<CDA_RDFNode> > mAssociatedNodes;
 };
 
 class CDA_RDFNode
-  : public virtual iface::rdf_api::Node
+  : public virtual iface::rdf_api::Node, public consecutive_sort_key
 {
 public:
   CDA_RDFNode(CDA_DataSource* aDataSource);
@@ -381,11 +381,11 @@ public:
       if (subj == aRT.subj)
       {
         if (pred == aRT.pred)
-          return obj < aRT.obj;
+          return *obj < *(aRT.obj);
         else
-          return pred < aRT.pred;
+          return *pred < *(aRT.pred);
       }
-      return subj < aRT.subj;
+      return *subj < *(aRT.subj);
     }
   };
 

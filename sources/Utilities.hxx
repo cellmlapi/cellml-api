@@ -1590,6 +1590,33 @@ static uint32_t cuNextSerial = 0;
 extern std::map<void*,uint32_t> currentlyActivePtrTags;
 #endif
 
+class consecutive_sort_key
+{
+public:
+  consecutive_sort_key()
+    : mIndex(cuNextSerial++)
+  {
+  }
+
+  bool
+  operator<(const consecutive_sort_key& aComp) const
+  {
+    return (mIndex < aComp.mIndex);
+  }
+
+  int mIndex;
+};
+
+template<class C> class ptr_to_less
+{
+public:
+  bool
+  operator()(const C* const & a1, const C* const & a2) const
+  {
+    return (*a1 < *a2);
+  }
+};
+
 // Like a pointer, but with deterministic sort...
 template<class C>
 class ptr_tag

@@ -19,7 +19,7 @@ CDA_DataSource::CDA_DataSource()
 
 CDA_DataSource::~CDA_DataSource()
 {
-  for (std::set<CDA_RDFNode*>::iterator i = mAssociatedNodes.begin();
+  for (std::set<CDA_RDFNode*, ptr_to_less<CDA_RDFNode> >::iterator i = mAssociatedNodes.begin();
        i != mAssociatedNodes.end();
        i++)
     delete *i;
@@ -1818,7 +1818,7 @@ public:
     RETURN_INTO_OBJREF(te, iface::rdf_api::TripleEnumerator,
                        ts->enumerateTriples());
 
-    std::set<iface::rdf_api::Resource*, XPCOMComparator> subjects;
+    std::set<CDA_Resource*, ptr_to_less<CDA_Resource> > subjects;
     while (true)
     {
       RETURN_INTO_OBJREF(t, iface::rdf_api::Triple,
@@ -1827,10 +1827,10 @@ public:
         break;
 
       RETURN_INTO_OBJREF(subj, iface::rdf_api::Resource, t->subject());
-      subjects.insert(subj);
+      subjects.insert(unsafe_dynamic_cast<CDA_Resource*>(subj.getPointer()));
     }
 
-    for (std::set<iface::rdf_api::Resource*, XPCOMComparator>::iterator i
+    for (std::set<CDA_Resource*, ptr_to_less<CDA_Resource> >::iterator i
            (subjects.begin());
          i != subjects.end();
          i++)
