@@ -1827,7 +1827,7 @@ public:
         break;
 
       RETURN_INTO_OBJREF(subj, iface::rdf_api::Resource, t->subject());
-      subjects.insert(unsafe_dynamic_cast<CDA_Resource*>(subj.getPointer()));
+      subjects.insert(dynamic_cast<CDA_Resource*>(subj.getPointer()));
     }
 
     for (std::set<CDA_Resource*, ptr_to_less<CDA_Resource> >::iterator i
