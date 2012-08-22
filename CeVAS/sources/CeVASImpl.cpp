@@ -406,14 +406,18 @@ public:
       {
         std::wstring msg = L"Variable is connected to another variable on 'none' interface: Variable with none interface: " +
           s1->mSource->name() + L" in component " + s1->mSource->componentName() + L"; other variable: " +
-          s2->mSource->name() + L" in component " + s2->mSource->componentName();
+          s2->mSource->name() + L" in component " + s2->mSource->componentName() + L". Note that the relationship between " +
+          L"the first and second variables is that the first is the " + (isParent ? L"parent" : (isChild ? L"child" : L"sibling")) +
+          L" of the second";
         throw CeVASError(msg);
       }
       if (iface2Conn == iface::cellml_api::INTERFACE_NONE)
       {
         std::wstring msg = L"Variable is connected to another variable on 'none' interface: Variable with none interface: " +
           s2->mSource->name() + L" in component " + s2->mSource->componentName() + L"; other variable: " +
-          s1->mSource->name() + L" in component " + s1->mSource->componentName();
+          s1->mSource->name() + L" in component " + s1->mSource->componentName() + L". Note that the relationship between " +
+          L"the first and second variables is that the first is the " + (isParent ? L"parent" : (isChild ? L"child" : L"sibling")) +
+          L" of the second";
         throw CeVASError(msg);
       }
       if (iface1Conn == iface::cellml_api::INTERFACE_IN && iface2Conn == iface::cellml_api::INTERFACE_IN)
@@ -545,6 +549,8 @@ recursivelyAddRelationshipsFrom
     c2->add_ref();
     aRels.insert(std::pair<iface::cellml_api::CellMLComponent*, iface::cellml_api::CellMLComponent*>
                  (c1, c2));
+
+    recursivelyAddRelationshipsFrom(aRels, cr);
   }
 }
 
