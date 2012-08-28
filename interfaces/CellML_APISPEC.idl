@@ -2014,7 +2014,7 @@ module cellml_api
 #pragma terminal-interface
 
   /**
-   * An interface for loading a CellML model by URL.
+   * An interface for loading a CellML model (from URL or string).
    */
   interface ModelLoader
     : XPCOM::IObject
@@ -2071,7 +2071,7 @@ module cellml_api
   };
 
   /**
-   * A DOM specific interface for loading a Document by URL.
+   * A DOM specific interface for loading a Document.
    */
   interface DOMURLLoader
     : XPCOM::IObject
