@@ -144,7 +144,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI2(cellml_services::CodeInformation, cellml_services::IDACodeInformation);
 
-  CDA_CodeInformation() {};
+  CDA_CodeInformation() : mMissingInitial(NULL) {};
   ~CDA_CodeInformation();
 
   std::wstring errorMessage() throw();
@@ -164,6 +164,7 @@ public:
     throw();
   already_AddRefd<iface::mathml_dom::MathMLNodeList> flaggedEquations()
     throw();
+  already_AddRefd<iface::cellml_services::ComputationTarget> missingInitial() throw();
 
   // CCGS implementation access only...
   std::wstring mErrorMessage;
@@ -172,6 +173,7 @@ public:
   std::wstring mInitConstsStr, mRatesStr, mVarsStr, mFuncsStr, mEssentialVarsStr, mStateInformationStr,
                mRootInformationStr;
   std::vector<iface::dom::Element*> mFlaggedEquations;
+  CDA_ComputationTarget* mMissingInitial;
 };
 
 class CDA_CustomCodeInformation

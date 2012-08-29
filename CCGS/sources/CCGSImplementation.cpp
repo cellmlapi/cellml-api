@@ -300,6 +300,14 @@ CDA_CodeInformation::flaggedEquations() throw()
   return new CDA_FlaggedEquationsNodeList(this, mFlaggedEquations);
 }
 
+already_AddRefd<iface::cellml_services::ComputationTarget>
+CDA_CodeInformation::missingInitial() throw()
+{
+  if (mMissingInitial != NULL)
+    mMissingInitial->add_ref();
+  return mMissingInitial;
+}
+
 CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
  : mConstantPattern(L"CONSTANTS[%]"),
    mStateVariableNamePattern(L"STATES[%]"),

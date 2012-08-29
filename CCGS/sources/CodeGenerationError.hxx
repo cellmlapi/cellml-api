@@ -36,6 +36,19 @@ public:
   }
 };
 
+class UnderconstrainedIVError
+  : public std::exception
+{
+public:
+  UnderconstrainedIVError(CDA_ComputationTarget* aCT)
+    : mCT(aCT)
+  {
+  }
+
+  CDA_ComputationTarget* mCT;
+};
+
+
 class UnsuitablyConstrainedError
   : public std::exception
 {

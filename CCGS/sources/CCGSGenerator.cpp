@@ -389,6 +389,11 @@ CodeGenerationState::GenerateCode()
   {
     mCodeInfo->mConstraintLevel = iface::cellml_services::UNDERCONSTRAINED;
   }
+  catch (UnderconstrainedIVError uce)
+  {
+    mCodeInfo->mConstraintLevel = iface::cellml_services::UNDERCONSTRAINED;
+    mCodeInfo->mMissingInitial = uce.mCT;
+  }
   catch (OverconstrainedError oce)
   {
     std::vector<iface::dom::Element*>::iterator fei;
@@ -990,7 +995,7 @@ CodeGenerationState::CheckStateVariableIVConstraints(const std::list<System*>& a
       if (!ct->mStateHasIV)
       {
         ct->mEvaluationType = iface::cellml_services::FLOATING;
-        throw UnderconstrainedError();
+        throw UnderconstrainedIVError(ct);
       }
     }
   }

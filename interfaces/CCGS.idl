@@ -262,6 +262,13 @@ module cellml_services
      * ModelConstraintLevel for more information.
      */
     readonly attribute mathml_dom::MathMLNodeList flaggedEquations;
+
+    /**
+     * If the solver failed with an underconstrained error, and this is non-null,
+     * it means the cause of the failure was a missing initial condition on this
+     * state variable.
+     */
+    readonly attribute ComputationTarget missingInitial;
   };
 #pragma cross-module-argument
 

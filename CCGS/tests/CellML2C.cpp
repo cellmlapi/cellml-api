@@ -60,26 +60,14 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
     cci->constraintLevel();
   if (mcl == iface::cellml_services::UNDERCONSTRAINED)
   {
-    printf("/* Model is underconstrained.\n"
-           " * List of undefined targets follows...\n");
-    iface::cellml_services::ComputationTargetIterator* cti = cci->iterateTargets();
-    iface::cellml_services::ComputationTarget* ct;
-    std::vector<std::wstring> messages;
-    while (true)
+    ObjRef<iface::cellml_services::ComputationTarget> ctMissingIV(cci->missingInitial());
+    if (ctMissingIV != NULL)
     {
-      ct = cti->nextComputationTarget();
-      if (ct == NULL)
-        break;
-      if (ct->type() != iface::cellml_services::FLOATING)
-      {
-        ct->release_ref();
-        continue;
-      }
-      iface::cellml_api::CellMLVariable* v = ct->variable();
+      ObjRef<iface::cellml_api::CellMLVariable> v = ctMissingIV->variable();
       std::wstring n = v->name();
       std::wstring c = v->componentName();
-      std::wstring str = L" * * ";
-      uint32_t deg = ct->degree();
+      std::wstring str;
+      uint32_t deg = ctMissingIV->degree();
       if (deg != 0)
       {
         str += L"d^";
@@ -94,17 +82,56 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
       str += L" (in ";
       str += c;
       str += L")\n";
-      messages.push_back(str);
-      v->release_ref();
-      ct->release_ref();
+      printf("/* Model is underconstrained due to missing initial_value on %S\n", str.c_str());
     }
-    cti->release_ref();
-    // Sort the messages...
-    std::sort(messages.begin(), messages.end());
-    std::vector<std::wstring>::iterator msgi;
-    for (msgi = messages.begin(); msgi != messages.end(); msgi++)
-      printf("%S", (*msgi).c_str());
-    printf(" */\n");
+    else
+    {
+      printf("/* Model is underconstrained.\n"
+             " * List of undefined targets follows...\n");
+      iface::cellml_services::ComputationTargetIterator* cti = cci->iterateTargets();
+      iface::cellml_services::ComputationTarget* ct;
+      std::vector<std::wstring> messages;
+      while (true)
+      {
+        ct = cti->nextComputationTarget();
+        if (ct == NULL)
+          break;
+        if (ct->type() != iface::cellml_services::FLOATING)
+        {
+          ct->release_ref();
+          continue;
+        }
+        iface::cellml_api::CellMLVariable* v = ct->variable();
+        std::wstring n = v->name();
+        std::wstring c = v->componentName();
+        std::wstring str = L" * * ";
+        uint32_t deg = ct->degree();
+        if (deg != 0)
+        {
+          str += L"d^";
+          wchar_t buf[20];
+          any_swprintf(buf, 20, L"%u", deg);
+          str += buf;
+          str += L"/dt^";
+          str += buf;
+          str += L" ";
+        }
+        str += n;
+        str += L" (in ";
+        str += c;
+        str += L")\n";
+        messages.push_back(str);
+        v->release_ref();
+      ct->release_ref();
+      }
+      cti->release_ref();
+      // Sort the messages...
+      std::sort(messages.begin(), messages.end());
+      std::vector<std::wstring>::iterator msgi;
+      for (msgi = messages.begin(); msgi != messages.end(); msgi++)
+        printf("%S", (*msgi).c_str());
+      printf(" */\n");
+    }
     return;
   }
   else if (mcl == iface::cellml_services::OVERCONSTRAINED)
