@@ -38,7 +38,7 @@
 
 #include <list>
 #include <exception>
-#include <Ifacexpcom.hxx>
+#include "Ifacexpcom.hxx"
 #include <wchar.h>
 #ifndef WIN32
 #include <sys/time.h>

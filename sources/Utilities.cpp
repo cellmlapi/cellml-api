@@ -1,4 +1,5 @@
 #include "Utilities.hxx"
+#include "Ifacexpcom.hxx"
 #include <map>
 #include <list>
 
