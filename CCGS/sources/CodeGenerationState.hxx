@@ -132,7 +132,8 @@ public:
 class CodeGenerationState
 {
 public:
-  CodeGenerationState(iface::cellml_api::Model* aModel,
+  CodeGenerationState(int aCompatLevel,
+                      iface::cellml_api::Model* aModel,
                       std::wstring& aConstantPattern,
                       std::wstring& aStateVariableNamePattern,
                       std::wstring& aAlgebraicVariableNamePattern,
@@ -160,7 +161,8 @@ public:
                       iface::cellml_services::CUSES* aCUSES,
                       iface::cellml_services::AnnotationSet* aAnnoSet,
                       bool aIDAStyle)
-    : mModel(aModel), mConstantPattern(aConstantPattern),
+    : mCompatLevel(aCompatLevel),
+      mModel(aModel), mConstantPattern(aConstantPattern),
       mStateVariableNamePattern(aStateVariableNamePattern),
       mAlgebraicVariableNamePattern(aAlgebraicVariableNamePattern),
       mRateNamePattern(aRateNamePattern),
@@ -202,6 +204,8 @@ public:
   iface::cellml_services::IDACodeInformation* GenerateCode();
   void IDAStyleCodeGeneration();
   void ODESolverStyleCodeGeneration();
+
+  void ResetGenerator();
 
   iface::cellml_services::CustomGenerator* CreateCustomGenerator();
   iface::cellml_services::CustomCodeInformation* GenerateCustomCode
@@ -420,6 +424,8 @@ public:
                               iface::cellml_api::CellMLComponent* aContext);
   void GenerateRootInformation();
   void CheckInappropriateStateAssignments(std::list<System*>& aSystems);
+
+  int mCompatLevel;
 
   ObjRef<iface::cellml_api::Model> mModel;
   std::wstring & mConstantPattern, & mStateVariableNamePattern,

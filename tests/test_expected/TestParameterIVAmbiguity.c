@@ -1,6 +1,5 @@
 /* Model is overconstrained.
  * List variables defined at time of error follows...
- * * k
  * * k1
  * * t
  * * y

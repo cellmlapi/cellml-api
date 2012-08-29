@@ -781,7 +781,7 @@ already_AddRefd<iface::cellml_services::CustomGenerator>
 CDA_CodeGenerator::createCustomGenerator(iface::cellml_api::Model* aSourceModel)
   throw(std::exception&)
 {
-  return makeCodeGenerationState(aSourceModel)->CreateCustomGenerator();
+  return makeCodeGenerationState(1, aSourceModel)->CreateCustomGenerator();
 }
 
 /* Note: this generates both IDA and normal code - we implement it as
@@ -794,7 +794,11 @@ CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
 {
   try
   {
-    return makeCodeGenerationState(aSourceModel)->GenerateCode();
+    ObjRef<iface::cellml_services::IDACodeInformation> ci = makeCodeGenerationState(0, aSourceModel)->GenerateCode();
+    if (ci->constraintLevel() == iface::cellml_services::OVERCONSTRAINED)
+      return makeCodeGenerationState(1, aSourceModel)->GenerateCode();
+    ci->add_ref();
+    return ci.getPointer();
   }
   catch (...)
   {
@@ -803,12 +807,13 @@ CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
 }
 
 std::auto_ptr<CodeGenerationState>
-CDA_CodeGenerator::makeCodeGenerationState(iface::cellml_api::Model* aSourceModel)
+CDA_CodeGenerator::makeCodeGenerationState(int aCompat, iface::cellml_api::Model* aSourceModel)
 {
   std::auto_ptr<CodeGenerationState> cgs
     (
      new CodeGenerationState
      (
+      aCompat,
       aSourceModel,
       mConstantPattern, mStateVariableNamePattern,
       mAlgebraicVariableNamePattern,
@@ -1025,13 +1030,13 @@ CDA_CustomGenerator::generateCode()
 {
   std::wstring emp;
 
-  CodeGenerationState cgs(mModel, emp, mStateVariableNamePattern, emp, emp, emp,
+  CodeGenerationState cgs(1, mModel, emp, mStateVariableNamePattern, emp, emp, emp,
                           emp, emp, emp, mAssignPattern,
                           mSolvePattern, mSolveNLSystemPattern,
                           emp, emp, emp, emp, emp, emp, emp, emp, emp, false,
                           mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet, false);
-  return cgs.GenerateCustomCode(mTargetSet, mRequestComputation, mKnown,
-                                mUnwanted);
+  return
+    cgs.GenerateCustomCode(mTargetSet, mRequestComputation, mKnown, mUnwanted);
 }
 
 bool

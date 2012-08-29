@@ -105,5 +105,6 @@ runtest IVComputation
 runtest uncertain-param1
 runtest law1
 runtest overconstrained_statevsrate
+runtest modified_parabola_strictiv
 
 exit 0

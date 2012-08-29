@@ -312,7 +312,7 @@ CodeGenerationState::GenerateCode()
   mCodeInfo->mConstantIndexCount = 0;
   mCodeInfo->mAlgebraicIndexCount = 0;
   mCodeInfo->mConditionVariableCount = 0;
-
+  
   try
   {
     RETURN_INTO_WSTRING(cevError, mCeVAS->modelError());
@@ -321,7 +321,7 @@ CodeGenerationState::GenerateCode()
     RETURN_INTO_WSTRING(cusesError, mCUSES->modelError());
     if (cusesError != L"")
       throw CodeGenerationError(cusesError);
-
+    
     // Create all computation targets...
     CreateBaseComputationTargets();
     
@@ -330,22 +330,22 @@ CodeGenerationState::GenerateCode()
     CreateMathStatements();
     if (!mIDAStyle)
       SplitPiecewiseByResetRule();
-
+    
     // Next, set starting classification for all targets...
     FirstPassTargetClassification();
-
+    
     mUnusedMathStatements.insert(mMathStatements.begin(), mMathStatements.end());
-
+    
     // Put all targets into lists based on their classification...
     BuildFloatingAndConstantLists();
-  
+    
     std::list<System*> systems;
     
     // Now, determine all constants computable from the current constants...
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems, true);
     CheckInappropriateStateAssignments(systems);
     mUnwanted.clear();
-
+    
     // Assign constant variables for set...
     AllocateVariablesInSet(systems, iface::cellml_services::CONSTANT,
                            mConstantPattern, mNextConstantIndex,
@@ -359,14 +359,14 @@ CodeGenerationState::GenerateCode()
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     if (!mIDAStyle)
       CloneNamesIntoDelayedNames();
-  
+    
     ProcessModellerSuppliedIVHints();
     
     // Write evaluations for all constants we just worked out how to compute...
     std::wstring tmp;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mCodeInfo->mInitConstsStr += tmp;
-  
+    
     // Also we need to initialise state variable IVs...
     systems.clear();
     
@@ -379,7 +379,7 @@ CodeGenerationState::GenerateCode()
     tmp = L"";
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mCodeInfo->mInitConstsStr += tmp;
-
+      
     if (mIDAStyle)
       IDAStyleCodeGeneration();
     else
@@ -397,13 +397,13 @@ CodeGenerationState::GenerateCode()
          fei++)
       (*fei)->release_ref();
     mCodeInfo->mFlaggedEquations.clear();
-
+    
     if (oce.mEqn)
     {
       oce.mEqn->add_ref();
       mCodeInfo->mFlaggedEquations.push_back(oce.mEqn);
     }
-
+    
     mCodeInfo->mConstraintLevel = iface::cellml_services::OVERCONSTRAINED;
   }
   catch (UnsuitablyConstrainedError uce)
@@ -414,7 +414,7 @@ CodeGenerationState::GenerateCode()
          fei++)
       (*fei)->release_ref();
     mCodeInfo->mFlaggedEquations.clear();
-
+    
     std::set<ptr_tag<MathStatement> >::iterator uel;
     for (uel = mUnusedMathStatements.begin(); uel != mUnusedMathStatements.end(); uel++)
     {
@@ -428,14 +428,14 @@ CodeGenerationState::GenerateCode()
         mCodeInfo->mFlaggedEquations.push_back(me);
       }
     }
-
+    
     mCodeInfo->mConstraintLevel = iface::cellml_services::UNSUITABLY_CONSTRAINED;
   }
   catch (CodeGenerationError cge)
   {
     mCodeInfo->mErrorMessage = cge.str();
   }
-
+    
   mCodeInfo->add_ref();
   return mCodeInfo;
 }
@@ -2034,10 +2034,11 @@ CodeGenerationState::FirstPassTargetClassification()
 
     RETURN_INTO_WSTRING(iv, ct->mVariable->initialValue());
     bool hasImmedIV = false;
+    double ivVal = 0.0;
     if (iv != L"")
     {
       wchar_t* end;
-      wcstod(iv.c_str(), &end);
+      ivVal = wcstod(iv.c_str(), &end);
       if (end == NULL || *end != 0)
       {
         ptr_tag<InitialAssignment> ia(new InitialAssignment());
@@ -2092,10 +2093,14 @@ CodeGenerationState::FirstPassTargetClassification()
     }
     else
     {
-      if (hasImmedIV && !mDelayedTargs.count(ct))
+      if (hasImmedIV && !mDelayedTargs.count(ct) && mCompatLevel == 0)
         ct->mEvaluationType = iface::cellml_services::CONSTANT;
       else
         ct->mEvaluationType = iface::cellml_services::FLOATING;
+
+      if (hasImmedIV && !mDelayedTargs.count(ct) && mCompatLevel == 1 && !ct->mUpDegree)
+        mInitialOverrides.insert(std::pair<ptr_tag<CDA_ComputationTarget>,
+                                           double>(ct, ivVal));
 
       ptr_tag<CDA_ComputationTarget> tct = ct;
 
