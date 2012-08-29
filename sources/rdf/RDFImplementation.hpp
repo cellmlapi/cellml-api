@@ -44,6 +44,7 @@ public:
   void uriReferenceDeleted(CDA_URIReference* aURIRef);
   void assert(CDA_Resource* aSubject, CDA_Resource* aPredicate, CDA_RDFNode* aObject);
   void unassert(CDA_Resource* aSubject, CDA_Resource* aPredicate, CDA_RDFNode* aObject);
+  bool exists(CDA_Resource* aSubject, CDA_Resource* aPredicate, CDA_RDFNode* aObject);
 
   void nodeAssociated(CDA_RDFNode* aNode);
   void nodeDissociated(CDA_RDFNode* aNode);
@@ -112,6 +113,11 @@ public:
     throw(std::exception&);
   already_AddRefd<iface::rdf_api::Container> findOrMakeContainer(iface::rdf_api::Resource* aPredicate,
 								 iface::rdf_api::Resource* aContainerType)
+    throw(std::exception&);
+  bool hasTripleOutOfWithPredicateAndObject(iface::rdf_api::Resource* aPredicate, iface::rdf_api::Node* aObject)
+    throw(std::exception&);
+  already_AddRefd<iface::rdf_api::Triple> getTripleOutOfByPredicateAndObject
+  (iface::rdf_api::Resource* aPredicate, iface::rdf_api::Node* aObject)
     throw(std::exception&);
 };
 
@@ -363,6 +369,9 @@ public:
   bool unassert(CDA_Resource* aSubject,
                 CDA_Resource* aPredicate,
                 CDA_RDFNode* aObject);
+  bool exists(CDA_Resource* aSubject,
+              CDA_Resource* aPredicate,
+              CDA_RDFNode* aObject);
   void enumeratorDeleted(CDA_AllTriplesEnumerator* aEnum);
 
   struct RealTriple

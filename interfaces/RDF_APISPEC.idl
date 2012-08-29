@@ -178,6 +178,27 @@ module rdf_api
      */
     Container findOrMakeContainer(in Resource aPredicate,
                                   in Resource aContainerType);
+
+    /**
+     * Returns true iff there is a triple where this node is subject and the
+     * parameters are predicate and object.
+     * @param aPredicate The predicate of the triple to find.
+     * @param aObject The object of the triple to find.
+     * @return A triple meeting the constraints.
+     * @exception RDFProcessingError if there was no matching triple found.
+     */
+    boolean hasTripleOutOfWithPredicateAndObject(in Resource aPredicate, in Node aObject);
+
+    /**
+     * Finds the triple for which this node is the subject and the
+     * parameters are predicate and object, if one exists.
+     * @param aPredicate The predicate of the triple to find.
+     * @param aObject The object of the triple to find.
+     * @return A triple meeting the constraints.
+     * @exception RDFProcessingError if there was no matching triple found.
+     */
+    Triple getTripleOutOfByPredicateAndObject(in Resource aPredicate, in Node aObject)
+      raises(RDFProcessingError);
   };
 
   /**

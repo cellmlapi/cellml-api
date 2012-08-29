@@ -1006,6 +1006,12 @@ RDFTest::testRDFAPIImplementation()
   DECLARE_QUERY_INTERFACE_OBJREF(pl, dcpo, rdf_api::PlainLiteral);
   RETURN_INTO_WSTRING(lf, pl->lexicalForm());
   CPPUNIT_ASSERT(lf == L"\n        The University of Auckland, Bioengineering Institute\n      ");
+
+  CPPUNIT_ASSERT_THROW(modur->getTripleOutOfByPredicateAndObject(dcpublisher, dcpublisher), iface::rdf_api::RDFProcessingError);
+  ObjRef<iface::rdf_api::Triple> dcp2(modur->getTripleOutOfByPredicateAndObject(dcpublisher, pl));
+  CPPUNIT_ASSERT(dcp2);
+  ObjRef<iface::rdf_api::Node> dcp2o(dcp2->object());
+  CPPUNIT_ASSERT_EQUAL(0, CDA_objcmp(dcp2o, dcpo));
 }
 
 void

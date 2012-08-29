@@ -181,6 +181,17 @@ CDA_DataSource::unassert
   }
 }
 
+bool
+CDA_DataSource::exists
+(
+ CDA_Resource* aSubject,
+ CDA_Resource* aPredicate,
+ CDA_RDFNode* aObject
+)
+{
+  return mTripleSet->exists(aSubject, aPredicate, aObject);
+}
+
 void
 CDA_DataSource::nodeAssociated(CDA_RDFNode* aNode)
 {
@@ -302,6 +313,41 @@ CDA_Resource::getTripleOutOfByPredicate(iface::rdf_api::Resource* aPredicate)
 
   t->add_ref();
   return t.getPointer();
+}
+
+bool
+CDA_Resource::hasTripleOutOfWithPredicateAndObject(iface::rdf_api::Resource* aPredicate,
+                                                  iface::rdf_api::Node* aObject)
+  throw(std::exception&)
+{
+  CDA_Resource* pred = dynamic_cast<CDA_Resource*>(aPredicate);
+  if (pred == NULL)
+    throw iface::rdf_api::RDFProcessingError();
+
+  CDA_RDFNode* obj = dynamic_cast<CDA_RDFNode*>(aObject);
+  if (obj == NULL)
+    throw iface::rdf_api::RDFProcessingError();
+
+  return mDataSource->exists(this, pred, obj);
+}
+
+already_AddRefd<iface::rdf_api::Triple>
+CDA_Resource::getTripleOutOfByPredicateAndObject(iface::rdf_api::Resource* aPredicate,
+                                                 iface::rdf_api::Node* aObject)
+  throw(std::exception&)
+{
+  CDA_Resource* pred = dynamic_cast<CDA_Resource*>(aPredicate);
+  if (pred == NULL)
+    throw iface::rdf_api::RDFProcessingError();
+
+  CDA_RDFNode* obj = dynamic_cast<CDA_RDFNode*>(aObject);
+  if (obj == NULL)
+    throw iface::rdf_api::RDFProcessingError();
+
+  if (!mDataSource->exists(this, pred, obj))
+    throw iface::rdf_api::RDFProcessingError();
+
+  return new CDA_Triple(mDataSource, this, pred, obj);
 }
 
 bool
@@ -1034,6 +1080,21 @@ CDA_AllTriplesSet::unassert
   mRealTriples.erase(i);
 
   return true;
+}
+
+bool
+CDA_AllTriplesSet::exists
+(
+ CDA_Resource* aSubject,
+ CDA_Resource* aPredicate,
+ CDA_RDFNode* aObject
+)
+{
+  RealTriple rt(aSubject, aPredicate, aObject);
+
+  std::set<RealTriple>::iterator i(mRealTriples.find(rt));
+
+  return mRealTriples.count(rt) > 0;
 }
 
 void
