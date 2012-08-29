@@ -66,13 +66,24 @@ AnnoToolsTest::testObjectAnnotation()
   CPPUNIT_ASSERT_NO_THROW(mAS->setObjectAnnotation(m, L"theloader", ml));
 
   iface::XPCOM::IObject* oa = mAS->getObjectAnnotation(m, L"theloader");
-
-  CPPUNIT_ASSERT(oa);
-  std::string o1 = oa->objid();
-  std::string o2 = ml->objid();
-  CPPUNIT_ASSERT(o1 == o2);
-
+  {
+    CPPUNIT_ASSERT(oa);
+    std::string o1 = oa->objid();
+    std::string o2 = ml->objid();
+    CPPUNIT_ASSERT(o1 == o2);
+  }
   oa->release_ref();
+
+  oa = mAS->getObjectAnnotationWithDefault(m, L"theloader", NULL);
+  {
+    CPPUNIT_ASSERT(oa);
+    std::string o1 = oa->objid();
+    std::string o2 = ml->objid();
+    CPPUNIT_ASSERT(o1 == o2);
+  }
+  oa->release_ref();
+  oa = mAS->getObjectAnnotationWithDefault(m, L"theloaderno", NULL);
+  CPPUNIT_ASSERT(!oa);
 
   std::wstring fstr = mAS->prefixURI();
   fstr += L"theloader";
@@ -103,6 +114,12 @@ AnnoToolsTest::testStringAnnotation()
 
   std::wstring anno = mAS->getStringAnnotation(m, L"thestring");
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"hello"), anno);
+
+  std::wstring anno2 = mAS->getStringAnnotationWithDefault(m, L"thestring", L"mystring");
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"hello"), anno2);
+  std::wstring anno3 = mAS->getStringAnnotationWithDefault(m, L"thestringno", L"mystring");
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"mystring"), anno3);
+
 
   std::wstring fstr = mAS->prefixURI();
   fstr += L"thestring";

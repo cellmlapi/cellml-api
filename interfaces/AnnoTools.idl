@@ -82,6 +82,17 @@ module cellml_services
                                 in wstring key);
 
     /**
+     * Retrieves a string annotation or a default value if the annotation can't
+     * be found.
+     * @param element The element to get the annotation from.
+     * @param key The key to get.
+     * @param defval The default value.
+     */
+    wstring getStringAnnotationWithDefault(in cellml_api::CellMLElement element,
+                                           in wstring key, in wstring defval);
+
+
+    /**
      * Saves an object on an object. The annotation is specific to this
      *   AnnotationSet, and will be removed when the annotation set is
      *   destroyed.
@@ -102,6 +113,17 @@ module cellml_services
      */
     XPCOM::IObject getObjectAnnotation(in cellml_api::CellMLElement element,
                                        in wstring key);
+
+    /**
+     * Retrieves an object annotation or a default value if the annotation
+     * can't be found.
+     * @param element The element to get the annotation from.
+     * @param key The key to get.
+     * @param defval The default value.
+     */
+    XPCOM::IObject getObjectAnnotationWithDefault
+    (in cellml_api::CellMLElement element, in wstring key,
+     in XPCOM::IObject defval);
   };
 
   /**

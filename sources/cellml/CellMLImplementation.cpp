@@ -877,6 +877,23 @@ CDA_CellMLElement::getUserData(const std::wstring& key)
   throw iface::cellml_api::CellMLException();
 }
 
+already_AddRefd<iface::cellml_api::UserData>
+CDA_CellMLElement::getUserDataWithDefault(const std::wstring& key, iface::cellml_api::UserData* defval)
+  throw(std::exception&)
+{
+  std::map<std::wstring,iface::cellml_api::UserData*>::iterator i;
+  i = userData.find(key);
+  if (i != userData.end())
+  {
+    (*i).second->add_ref();
+    return (*i).second;
+  }
+
+  if (defval != NULL)
+    defval->add_ref();
+  return defval;
+}
+
 already_AddRefd<iface::cellml_api::CellMLElement>
 CDA_CellMLElement::clone(bool aDeep)
   throw(std::exception&)

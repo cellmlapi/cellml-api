@@ -63,6 +63,10 @@ public:
   std::wstring getStringAnnotation(iface::cellml_api::CellMLElement* aElement,
 				   const std::wstring& aKey)
      throw(std::exception&);
+  std::wstring getStringAnnotationWithDefault(iface::cellml_api::CellMLElement* aElement,
+                                              const std::wstring& aKey,
+                                              const std::wstring& aDefVal)
+    throw(std::exception&);
   void setObjectAnnotation(iface::cellml_api::CellMLElement* aElement,
                            const std::wstring& aKey,
                            iface::XPCOM::IObject* aValue)
@@ -70,6 +74,10 @@ public:
   already_AddRefd<iface::XPCOM::IObject> getObjectAnnotation(iface::cellml_api::CellMLElement* aElement,
 							     const std::wstring& aKey)
      throw(std::exception&);
+  already_AddRefd<iface::XPCOM::IObject> getObjectAnnotationWithDefault
+  (iface::cellml_api::CellMLElement* aElement, const std::wstring& aKey,
+   iface::XPCOM::IObject* aDefVal) throw(std::exception&);
+
 private:
   std::wstring mPrefixURI;
   std::list<std::pair<std::wstring, iface::cellml_api::CellMLElement*> >

@@ -188,6 +188,7 @@ public:
   already_AddRefd<iface::cellml_api::Model> modelElement() throw(std::exception&);
   void setUserData(const std::wstring& key, iface::cellml_api::UserData* data) throw(std::exception&);
   already_AddRefd<iface::cellml_api::UserData> getUserData(const std::wstring& key) throw(std::exception&);
+  already_AddRefd<iface::cellml_api::UserData> getUserDataWithDefault(const std::wstring& key, iface::cellml_api::UserData* defval) throw(std::exception&);
   
   void addEventListener(const std::wstring& aType,
                         iface::events::EventListener* aListener,

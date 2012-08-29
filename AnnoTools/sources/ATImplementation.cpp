@@ -99,22 +99,38 @@ CDAAnnotationSetImpl::getStringAnnotation
   std::wstring key = mPrefixURI;
   key += aKey;
 
-  try
-  {
-    RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
-                       aElement->getUserData(key.c_str()));
-    DECLARE_QUERY_INTERFACE_OBJREF(sa, ud, cellml_services::StringAnnotation);
+  RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
+                     aElement->getUserDataWithDefault(key.c_str(), NULL));
+  DECLARE_QUERY_INTERFACE_OBJREF(sa, ud, cellml_services::StringAnnotation);
     
-    if (sa == NULL)
-      return L"";
+  if (sa == NULL)
+    return L"";
     
     return sa->value();
-  }
-  catch (...)
-  {
-    return L"";
-  }
 }
+
+std::wstring
+CDAAnnotationSetImpl::getStringAnnotationWithDefault
+(
+ iface::cellml_api::CellMLElement* aElement,
+ const std::wstring& aKey,
+ const std::wstring& aDefault
+)
+  throw(std::exception&)
+{
+  std::wstring key = mPrefixURI;
+  key += aKey;
+
+  RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
+                     aElement->getUserDataWithDefault(key.c_str(), NULL));
+  DECLARE_QUERY_INTERFACE_OBJREF(sa, ud, cellml_services::StringAnnotation);
+    
+  if (sa == NULL)
+    return aDefault;
+    
+  return sa->value();
+}
+
 
 void
 CDAAnnotationSetImpl::setStringAnnotation
@@ -148,21 +164,40 @@ CDAAnnotationSetImpl::getObjectAnnotation
   std::wstring key = mPrefixURI;
   key += aKey;
 
-  try
-  {
-    RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
-                       aElement->getUserData(key.c_str()));
-    DECLARE_QUERY_INTERFACE_OBJREF(oa, ud, cellml_services::ObjectAnnotation);
+  RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
+                     aElement->getUserDataWithDefault(key.c_str(), NULL));
+  DECLARE_QUERY_INTERFACE_OBJREF(oa, ud, cellml_services::ObjectAnnotation);
     
-    if (oa == NULL)
-      return NULL;
-    
-    return oa->value();
-  }
-  catch (...)
-  {
+  if (oa == NULL)
     return NULL;
+    
+  return oa->value();
+}
+
+already_AddRefd<iface::XPCOM::IObject>
+CDAAnnotationSetImpl::getObjectAnnotationWithDefault
+(
+ iface::cellml_api::CellMLElement* aElement,
+ const std::wstring& aKey,
+ iface::XPCOM::IObject* aDefault
+)
+  throw(std::exception&)
+{
+  std::wstring key = mPrefixURI;
+  key += aKey;
+
+  RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
+                     aElement->getUserDataWithDefault(key.c_str(), NULL));
+  DECLARE_QUERY_INTERFACE_OBJREF(oa, ud, cellml_services::ObjectAnnotation);
+
+  if (oa == NULL)
+  {
+    if (aDefault != NULL)
+      aDefault->add_ref();
+    return aDefault;
   }
+
+  return oa->value();
 }
 
 void
