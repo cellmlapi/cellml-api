@@ -335,7 +335,7 @@
   )
   {
     // Firstly, we try to merge into the left-hand expression...
-    if (foldLeft && aPropList.size() == 0)
+    if (foldLeft && !aLHS.mIndirect && aPropList.size() == 0)
     {
       DECLARE_QUERY_INTERFACE_OBJREF(apply, aLHS.math(), mathml_dom::MathMLApplyElement);
       if (apply != NULL)
