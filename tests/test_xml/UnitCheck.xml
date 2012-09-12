@@ -1,0 +1,364 @@
+<?xml version="1.1"?>
+<model xmlns="http://www.cellml.org/cellml/1.1#" xmlns:cellml="http://www.cellml.org/cellml/1.1#" xmlns:m="http://www.w3.org/1998/Math/MathML" name="UnitsCheck">
+  <component name="main">
+    <!-- Firstly a series of examples of valid units... -->
+    <m:math>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="becquerel">0</m:cn><m:cn cellml:units="hertz">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="celsius">0</m:cn><m:cn cellml:units="mycelsius">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="coulomb">0</m:cn><m:cn cellml:units="mycoulomb">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="farad">0</m:cn><m:cn cellml:units="myfarad">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="gram">0</m:cn><m:cn cellml:units="mygram">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="gray">0</m:cn><m:cn cellml:units="mygray">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="henry">0</m:cn><m:cn cellml:units="myhenry">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="hertz">0</m:cn><m:cn cellml:units="myhertz">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="joule">0</m:cn><m:cn cellml:units="myjoule">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="katal">0</m:cn><m:cn cellml:units="mykatal">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="litre">0</m:cn><m:cn cellml:units="mylitre">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="liter">0</m:cn><m:cn cellml:units="mylitre">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="lux">0</m:cn><m:cn cellml:units="mylux">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="metre">0</m:cn><m:cn cellml:units="meter">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="newton">0</m:cn><m:cn cellml:units="mynewton">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="ohm">0</m:cn><m:cn cellml:units="myohm">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="pascal">0</m:cn><m:cn cellml:units="mypascal">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="siemens">0</m:cn><m:cn cellml:units="mysiemens">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="sievert">0</m:cn><m:cn cellml:units="mysievert">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="tesla">0</m:cn><m:cn cellml:units="mytesla">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="volt">0</m:cn><m:cn cellml:units="myvolt">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="watt">0</m:cn><m:cn cellml:units="mywatt">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="weber">0</m:cn><m:cn cellml:units="myweber">0</m:cn>
+      </m:apply>
+    </m:math>
+  </component>
+
+  <component name="jc">
+    <m:math>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="jc1_a">0</m:cn><m:cn cellml:units="jc1_b">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="jc2_a">0</m:cn><m:cn cellml:units="jc2_b">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:apply><m:times/>
+          <m:cn cellml:units="jc3_a">0</m:cn>
+          <m:cn cellml:units="volt">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="coulomb">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="radian">0</m:cn>
+        <m:cn cellml:units="dimensionless">0</m:cn>
+      </m:apply>
+      <!-- Alan's JC tests 5 & 6 seem to duplicate other tests so are omitted.-->
+      <m:apply><m:eq/>
+        <m:apply><m:power/>
+          <m:cn cellml:units="litre">0</m:cn>
+          <m:cn cellml:units="dimensionless">2</m:cn>
+        </m:apply>
+        <m:cn cellml:units="jc7_b">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:cn cellml:units="jc7_a">0</m:cn>
+        <m:cn cellml:units="jc7_b">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:apply><m:times/>
+          <m:cn cellml:units="metre">0</m:cn>
+          <m:cn cellml:units="jc9_a">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="dimensionless">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/> <!-- JC 10 -->
+        <m:apply><m:times/>
+          <m:cn cellml:units="metre">0</m:cn>
+          <m:cn cellml:units="kilogram">0</m:cn>
+          <m:apply><m:power/><m:cn cellml:units="second">0</m:cn><m:cn cellml:units="dimensionless">-2</m:cn></m:apply>
+          <m:apply><m:power/><m:cn cellml:units="metre">0</m:cn><m:cn cellml:units="dimensionless">-2</m:cn></m:apply>
+        </m:apply>
+        <m:apply><m:times/>
+          <m:cn cellml:units="kilogram">0</m:cn>
+          <m:cn cellml:units="metre">0</m:cn>
+          <m:apply><m:power/><m:cn cellml:units="second">0</m:cn><m:cn cellml:units="dimensionless">-2</m:cn></m:apply>
+          <m:apply><m:power/><m:cn cellml:units="metre">0</m:cn><m:cn cellml:units="dimensionless">-2</m:cn></m:apply>
+        </m:apply>
+      </m:apply>
+
+      <m:apply><m:eq/> <!-- JC 11 -->
+        <m:apply><m:times/>
+          <m:cn cellml:units="jc11_a">0</m:cn>
+          <m:cn cellml:units="metre">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="jc11_b">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/> <!-- JC 12 -->
+        <m:apply><m:times/>
+          <m:cn cellml:units="jc11_a">0</m:cn>
+          <m:cn cellml:units="kilogram">0</m:cn>
+          <m:cn cellml:units="jc9_a">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="jc12_a">0</m:cn>
+      </m:apply>
+    </m:math>
+  </component>
+
+  <component name="etype">
+    <m:math>
+      <m:apply><m:eq/>
+        <m:apply><m:divide/>
+          <m:cn cellml:units="et07_a">0</m:cn>
+          <m:cn cellml:units="et07_b">0</m:cn>
+        </m:apply>
+        <m:apply><m:divide/>
+          <m:cn cellml:units="volt">0</m:cn>
+          <m:cn cellml:units="second">0</m:cn>
+        </m:apply>
+      </m:apply>
+    </m:math>
+  </component>
+
+  <component name="multiplication">
+    <m:math>
+      <m:apply><m:eq/>
+        <m:apply><m:times/>
+          <m:cn cellml:units="metre">0</m:cn>
+          <m:cn cellml:units="second">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="mu01_a">0</m:cn>
+      </m:apply>
+      <m:apply><m:eq/>
+        <m:apply><m:times/>
+          <m:cn cellml:units="metre">0</m:cn>
+          <m:cn cellml:units="celsius">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="mu02_a">0</m:cn>
+      </m:apply>
+
+      <m:apply><m:eq/>
+        <m:apply><m:times/>
+          <m:cn cellml:units="metre">0</m:cn>
+          <m:apply><m:power/><m:cn cellml:units="second">0</m:cn><m:cn cellml:units="dimensionless">5</m:cn></m:apply>
+          <m:cn cellml:units="celsius">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="mu03_a">0</m:cn>
+      </m:apply>
+
+      <m:apply><m:eq/>
+        <m:apply><m:times/>
+          <m:cn cellml:units="celsius">0</m:cn>
+          <m:cn cellml:units="celsius">0</m:cn>
+        </m:apply>
+        <m:cn cellml:units="mu04_a">0</m:cn>
+      </m:apply>
+    </m:math>
+  </component>
+
+  <units name="mycelsius">
+    <unit units="kelvin" offset="-273.15"/>
+  </units>
+  <units name="mycoulomb">
+    <unit units="ampere"/>
+    <unit units="second"/>
+  </units>
+  <units name="myfarad">
+    <unit units="ampere" exponent="2"/>
+    <unit units="kilogram" exponent="-1"/>
+    <unit units="metre" exponent="-2"/>
+    <unit units="second" exponent="4"/>
+  </units>
+  <units name="mygram">
+    <unit units="kilogram" multiplier="1000"/>
+  </units>
+  <units name="mygray">
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+  <units name="myhenry">
+    <unit units="ampere" exponent="-2"/>
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+  <units name="myhertz">
+    <unit units="second" exponent="-1"/>
+  </units>
+  <units name="myjoule">
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+  <units name="mykatal">
+    <unit units="mole" exponent="1"/>
+    <unit units="second" exponent="-1"/>
+  </units>
+  <units name="mylitre">
+    <unit units="metre" multiplier="1000" exponent="3"/>
+  </units>
+  <units name="mylux">
+    <unit units="candela"/>
+    <unit units="metre" exponent="-2"/>
+  </units>
+  <units name="mynewton">
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="1"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+  <units name="myohm">
+    <unit units="ampere" exponent="-2"/>
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-3"/>
+  </units>
+  <units name="mypascal">
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="-1"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+  <units name="mysiemens">
+    <unit units="ampere" exponent="2"/>
+    <unit units="kilogram" exponent="-1"/>
+    <unit units="metre" exponent="-2"/>
+    <unit units="second" exponent="3"/>
+  </units>
+  <units name="mysievert">
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+  <units name="mytesla">
+    <unit units="ampere" exponent="-1"/>
+    <unit units="kilogram" exponent="1"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+  <units name="myvolt">
+    <unit units="ampere" exponent="-1"/>
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-3"/>
+  </units>
+  <units name="mywatt">
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-3"/>
+  </units>
+  <units name="myweber">
+    <unit units="ampere" exponent="-1"/>
+    <unit units="kilogram" exponent="1"/>
+    <unit units="metre" exponent="2"/>
+    <unit units="second" exponent="-2"/>
+  </units>
+
+  <units name="jc1_a">
+    <unit units="second" multiplier="10" exponent="2"/>
+    <unit units="gram" multiplier="0.5" exponent="-1"/>
+  </units>
+
+  <units name="jc1_b">
+    <unit units="kilogram" multiplier="0.0005" exponent="-1"/>
+    <unit units="second" multiplier="10" exponent="2"/>
+  </units>
+
+  <units name="jc2_a">
+    <unit units="celsius" multiplier="1.8" offset="17"/>
+  </units>
+
+  <units name="jc2_b">
+    <unit units="kelvin" multiplier="1.8" offset="-256.15"/>
+  </units>
+  
+  <units name="jc3_a">
+    <unit units="coulomb"/>
+    <unit units="volt" exponent="-1"/>
+  </units>
+
+  <units name="jc7_a">
+    <unit units="litre" exponent="2"/>
+  </units>
+  <units name="jc7_b">
+    <unit units="metre" exponent="6" multiplier="1000000"/>
+  </units>
+  <units name="jc9_a">
+    <unit units="metre" exponent="-1"/>
+  </units>
+
+  <units name="jc11_a">
+    <unit prefix="centi" units="metre" exponent="2"/>
+  </units>
+  <units name="jc11_b">
+    <unit units="metre" multiplier="10000" exponent="3"/>
+  </units>
+
+  <units name="jc12_a">
+    <unit units="kilogram" multiplier="10000"/>
+    <unit units="metre"/>
+  </units>
+
+  <units name="et07_a">
+    <unit prefix="milli" units="volt"/>
+  </units>
+  <units name="et07_b">
+    <unit prefix="milli" units="second"/>
+  </units>
+
+  <units name="mu01_a">
+    <unit units="metre"/>
+    <unit units="second"/>
+  </units>
+
+  <units name="mu02_a">
+    <unit units="kelvin"/>
+    <unit units="metre"/>
+  </units>
+
+  <units name="mu03_a">
+    <unit units="kelvin"/>
+    <unit units="metre"/>
+    <unit units="second" exponent="5"/>
+  </units>
+  <units name="mu04_a">
+    <unit units="kelvin" exponent="2"/>
+  </units>
+</model>

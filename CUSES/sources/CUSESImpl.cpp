@@ -450,14 +450,14 @@ CDACanonicalUnitRepresentation::mergeWith
       }
 #endif
 
-      if (aOtherExponent == 1)
+      if (aOtherExponent == 1 && bu->offset() == 0)
         uNew->addBaseUnit(bu);
       else
       {
         RETURN_INTO_OBJREF(u, iface::cellml_services::BaseUnit, bu->unit());
         RETURN_INTO_OBJREF(bui, iface::cellml_services::BaseUnitInstance,
                            new CDABaseUnitInstance
-                           (u, pow(bu->prefix(), aOtherExponent), bu->offset(),
+                           (u, pow(bu->prefix(), aOtherExponent), 0,
                             bu->exponent() * aOtherExponent));
         uNew->addBaseUnit(bui);
       }
@@ -1114,7 +1114,7 @@ CDACUSES::ComputeUnits
           newPrefix = pow(bu->prefix(), u->exponent());
         double newOffset;
         if (i == 0)
-          newOffset = u->offset() + bu->offset();
+          newOffset = u->offset() * pow(bu->prefix(), u->exponent()) + bu->offset();
         else
           newOffset = bu->offset();
         
