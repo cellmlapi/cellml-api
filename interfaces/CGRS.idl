@@ -299,6 +299,7 @@ module CGRS
      */
     readonly attribute GenericType typeOfValue;
   };
+#pragma user-callback
 
   /**
    * Represents a string value.

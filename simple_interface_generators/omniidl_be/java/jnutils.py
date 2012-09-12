@@ -512,6 +512,8 @@ class Objref(Declared):
     def __init__(self, type):
         Declared.__init__(self, type)
         self.java_class_name = string.join(type.scopedName(), '/')
+        self.hasCallback = 0
+        for p in type.decl().pragmas(): self.hasCallback = self.hasCallback or (p.text() == "user-callback")
         self.p2j_type = 'p2j::' + string.join(type.scopedName(), '::')
         self.field_name = 'nativePtr_' + string.join(type.scopedName(), '_')
         self.wrap_name = 'wrap_' + string.join(type.scopedName(), '_')
@@ -534,6 +536,13 @@ class Objref(Declared):
         else:
             oname = pcmname
 
+        if self.hasCallback:
+            getCallback = "    env->ExceptionClear();\n" +\
+                "    // It's a native Java object, so wrap it...\n" +\
+                "    " + oname + " = new " + self.p2j_type + "(env, " + jniname + ");\n"
+        else:
+            getCallback = "    throw std::exception(); // Can't get Java object since callbacks not enabled on interface\n"
+
         return "if (" + jniname + " == NULL)\n" +\
                "  " + oname + " = NULL;\n" +\
                "else\n" +\
@@ -548,9 +557,7 @@ class Objref(Declared):
                "  }\n" +\
                "  else\n" +\
                "  {" +\
-               "    env->ExceptionClear();\n" +\
-               "    // It's a native Java object, so wrap it...\n" +\
-               "    " + oname + " = new " + self.p2j_type + "(env, " + jniname + ");\n" +\
+               getCallback +\
                "  }\n" +\
                "}\n"
 

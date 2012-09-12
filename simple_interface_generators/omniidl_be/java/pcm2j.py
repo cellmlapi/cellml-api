@@ -112,6 +112,12 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.hxx.out('class ' + jnutils.CppName(node.identifier()) + ';')
 
     def visitInterface(self, node):
+        # If it doesn't have the user-callback pragma, don't bother generating...
+        hasCallback = 0
+        for p in node.pragmas(): hasCallback = hasCallback or (p.text() == "user-callback")
+        if hasCallback == 0:
+            return
+
         self.syncNamespaces()
         self.hxx.out('PUBLIC_%s_PRE class PUBLIC_%s_POST %s' %
                      (self.defname, self.defname, jnutils.CppName(node.identifier())))

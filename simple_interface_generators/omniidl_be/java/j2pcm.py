@@ -125,12 +125,16 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppSup.inc_indent()
         self.cppSup.out('return NULL;')
         self.cppSup.dec_indent()
-        # If it is a p2j object, unwrap it...
-        self.cppSup.out('p2j::' + scopedn + ' * wrap = dynamic_cast<p2j::' + scopedn + '*>(obj);')
-        self.cppSup.out('if (wrap != NULL)')
-        self.cppSup.inc_indent()
-        self.cppSup.out('return env->NewLocalRef(wrap->unwrap());')
-        self.cppSup.dec_indent()
+
+        hasCallback = 0
+        for p in node.pragmas(): hasCallback = hasCallback or (p.text() == "user-callback")
+        if hasCallback != 0:
+            # If it is a p2j object, unwrap it...
+            self.cppSup.out('p2j::' + scopedn + ' * wrap = dynamic_cast<p2j::' + scopedn + '*>(obj);')
+            self.cppSup.out('if (wrap != NULL)')
+            self.cppSup.inc_indent()
+            self.cppSup.out('return env->NewLocalRef(wrap->unwrap());')
+            self.cppSup.dec_indent()
         
         # It is a non-Java C++ object, so make a Java wrapper for it...
         
