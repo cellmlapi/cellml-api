@@ -1288,7 +1288,6 @@ CDA_DOMImplementation::loadDocument
   
   xmlDocPtr xdp =
     xmlCtxtReadFile(ctxt, sURL.c_str(), NULL,
-                    XML_PARSE_DTDLOAD | XML_PARSE_DTDATTR |
                     XML_PARSE_NOXINCNODE);
   if (xdp == NULL)
   {
