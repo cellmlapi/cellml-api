@@ -12,8 +12,6 @@ OPTION(ENABLE_CORBA "Generate a two-way bridge between the C++ implementation an
 MARK_AS_ADVANCED(FORCE ENABLE_CORBA)
 OPTION(ENABLE_XPCOM "Generate XPIDL interfaces and a two-way bridge between the C++ implementation and XPCOM, allowing all parts of the API to be accessed from XPCOM. Note: this functionality is not widely tested; if you find a bug, we are only interested if you also provide a working patch to fix the problem")
 OPTION(ENABLE_JAVA_BUILD "Build Java interfaces and a bridge between the C++ implementation and Java, allowing all parts of the API to be accessed from Java.")
-OPTION(ENABLE_PYTHON "*** DEPRECATED *** Build Python interfaces and a bridge between the C++ implementation and Python, allowing all parts of the API to be accessed from Python. *** This interface will be removed in a future version of the API; new code should enable CGRS, and use the cgrspy Python module ***")
-MARK_AS_ADVANCED(FORCE ENABLE_PYTHON)
 
 MARK_AS_ADVANCED(FORCE ENABLE_XPCOM)
 SET(XULRUNNER_SDK_PATH "/usr/local/xulrunner-sdk" CACHE PATH "This property is only used when XPCOM support has been enabled. It determines the path to the xulrunner SDK used to build the XPCOM bridge")
@@ -49,8 +47,6 @@ IF (ENABLE_EVERYTHING)
   SET(ENABLE_VACSS ON)
   SET(ENABLE_TELICEMS ON)
   SET(ENABLE_JAVA_BUILD ON)
-  # This Python interface is deprecated, so don't turn it on.
-  # SET(ENABLE_PYTHON ON)
   SET(ENABLE_RDF ON)
   SET(ENABLE_CGRS ON)
 ENDIF()
@@ -169,10 +165,6 @@ ENDIF()
 
 IF (ENABLE_JAVA_BUILD)
   INCLUDE(build/java.cmake)
-ENDIF()
-
-IF (ENABLE_PYTHON)
-  INCLUDE(build/python.cmake)
 ENDIF()
 
 IF (ENABLE_EXAMPLES)
