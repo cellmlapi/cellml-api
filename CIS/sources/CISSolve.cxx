@@ -32,6 +32,7 @@
 #include <sundials/sundials_nvector.h>
 #include <sundials/sundials_types.h>
 #include <cvode/cvode_dense.h>
+#include <cvode/cvode_dense.h>
 
 #ifdef _MSC_VER
 #include <float.h>
@@ -39,13 +40,11 @@
 #define INFINITY (double)(0x7FF0000000000000L)
 #endif
 
-#include "levmar/lm.h"
+#include <kinsol/kinsol.h>
+#include <kinsol/kinsol_spgmr.h>
 
 // It would be good to one day make this configurable by the user.
 #define SUBSOL_TOLERANCE 1E-6
-
-// Unfortunately, the Levenberg-Marquardt code has static variables, so it is non-reentrant.
-static CDAMutex gLevmarMutex;
 
 struct EvaluationInformation
 {
@@ -503,7 +502,7 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   if (rateSize != 0)
   {
     CVodeFree(&solver);
-    N_VDestroy_Serial(y);
+    N_VDestroy(y);
   }
 }
 
@@ -549,9 +548,9 @@ extern "C"
   CDA_EXPORT_PRE double safe_quotient(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double safe_remainder(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double safe_factorof(double num, double den) CDA_EXPORT_POST;
-  CDA_EXPORT_PRE void do_levmar(void (*)(double *p, double *hx, int m, int n,
-                                         void *adata),
-                                double* params, double* bp, double* work, int* pret,
+  CDA_EXPORT_PRE void do_nonlinearsolve(void (*)(double *p, double *hx, 
+                                                 void *adata),
+                                double* params, int* pret,
                                 uint32_t size, void* adata) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double defint(double (*f)(double VOI,double *C,double *R,double *S,double *A, int* pret),
                                double VOI,double *C,double *R,double *S,double *A,double *V,
@@ -589,15 +588,13 @@ static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data
   return 0;
 }
 
-static void minfuncForPDF(double *p, double *hx, int m, int n, void *adata)
+static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
 {
   struct PDFInformation* info = (struct PDFInformation*)adata;
-  info->uplimit = *p;
+  info->uplimit = NV_Ith_S(pVec, 0);
 
   void* cv = CVodeCreate(CV_BDF, CV_NEWTON);
-  *hx = 0;
-  N_Vector y = N_VMake_Serial(1, hx);
-  CVodeInit(cv, integrandForPDF, -1.0 + 1E-6, y);
+  CVodeInit(cv, integrandForPDF, -1.0 + 1E-6, hxVec);
   CVodeSetMaxStep(cv, 1E-3);
   CVodeSetMaxNumSteps(cv, 2000);
   CVodeSStolerances(cv, 1E-6, 1E-6);
@@ -607,45 +604,56 @@ static void minfuncForPDF(double *p, double *hx, int m, int n, void *adata)
 #ifdef DEBUG_UNCERT
   printf("Running CVode to integrate between -inf and %f (transformed to -1.0 -> 0.0)\n", *p);
 #endif
-  CVode(cv, 0, y, &tret, CV_NORMAL);
+  CVode(cv, 0, hxVec, &tret, CV_NORMAL);
 #ifdef DEBUG_UNCERT
   printf("C.D.F.(%f) = %f\n", *p, *hx);
 #endif
-  N_VDestroy_Serial(y);
   CVodeFree(&cv);
+
+  return 0;
+}
+
+void
+ignoreKINSOLError(int code, const char *module,
+                  const char *function, char *msg,
+                  void *dat)
+{
 }
 
 double
 SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
                double* CONSTANTS, double* ALGEBRAIC)
 {
-  double opt[5] = { 1E-3, 1E-3, 1E-3, 1E-3, 1E-3 };
-  double info[10];
   struct PDFInformation pdfi;
   pdfi.constants = CONSTANTS;
   pdfi.algebraic = ALGEBRAIC;
   pdfi.pdf = pdf;
   double x = (rand() + 0.0) / RAND_MAX;
   double p;
+  double one = 1.0;
+
+  void* kin_mem = KINCreate();
+  N_Vector pVec = N_VMake_Serial(1, &p);
+  N_Vector oneVec = N_VMake_Serial(1, &one);
+
+  KINInit(kin_mem, minfuncForPDF, pVec);
+  KINSpgmr(kin_mem, 0);
+  KINSetErrHandlerFn(kin_mem, ignoreKINSOLError, NULL);
+  KINSetUserData(kin_mem, &pdfi);
+
   for (int attempt = 0; attempt < 26; attempt++)
   {
     p = (attempt % 2 ? -1.0 : 1.0) * pow(10.0, attempt / 2.0 - 3.0);
-    CDALock l(gLevmarMutex);
-#ifdef DEBUG_UNCERT
-    printf("Entering dlevmar_dif call with x=%f, p0 = %f\n", x, p);
-#endif
-    dlevmar_dif(minfuncForPDF, &p, &x, 1, 1, 10000, NULL, info, NULL, NULL, &pdfi);
-#ifdef DEBUG_UNCERT
-    printf("dlevmar_dif error = %f\n", info[1]);
-#endif
-    // Mainly to weed out the case where we get all zeros because the starting estimate is so far from
-    // the centre of the distribution.
-    if (info[3] != 0 && info[1] < 1E-2)
+
+    int ret = KINSol(kin_mem, pVec, KIN_LINESEARCH, oneVec, oneVec);
+    if (ret == KIN_SUCCESS)
       break;
   }
-#ifdef DEBUG_UNCERT
-  printf("Result: p = %f\n", p);
-#endif
+
+  KINFree(&kin_mem);
+  N_VDestroy(pVec);
+  N_VDestroy(oneVec);
+
   return p;
 }
 
@@ -805,20 +813,21 @@ static void DetermineRateOrStateSensitivity(double * hx, int n, DAEIVFindingInfo
   }
 }
 
-static void levmar_dae_iv_paramfinder(double * p, double * hx, int m, int n, void *adata)
+static int dae_iv_paramfinder(N_Vector p, N_Vector hx, void *adata)
 {
   DAEIVFindingInformation * info = reinterpret_cast<DAEIVFindingInformation*>(adata);
 
   MergeParametersICInfoIntoRatesStates(info->n, info->rates, info->states,
-                                       info->icinfo, p);
-  DetermineRateOrStateSensitivity(hx, n, info);
+                                       info->icinfo, NV_DATA_S(p));
+  DetermineRateOrStateSensitivity(NV_DATA_S(hx), info->n, info);
 
   info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->oldrates,
                                    info->states, info->oldstates, info->algebraic,
                                    info->condvars);
   info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                          info->states, info->oldstates,
-                         info->algebraic, info->condvars, hx);
+                         info->algebraic, info->condvars, NV_DATA_S(hx));
+  return 0;
 }
 
 void
@@ -831,7 +840,9 @@ CDA_DAESolverRun::SolveDAEProblem
 )
 {
   double* icinfo = new double[stateSize];
-  double* params = new double[stateSize];
+  N_Vector params = N_VNew_Serial(stateSize);
+  N_Vector ones = N_VNew_Serial(stateSize);
+  N_VConst(1.0, ones);
 
   void* idamem = IDACreate();
   double voi = mStartBvar;
@@ -885,6 +896,12 @@ CDA_DAESolverRun::SolveDAEProblem
   int * roots = new int[condVarSize];
   memset(roots, 0, sizeof(int) * condVarSize);
 
+  void* kin_mem = KINCreate();
+  KINInit(kin_mem, dae_iv_paramfinder, params);
+  KINSpgmr(kin_mem, 0);
+  KINSetErrHandlerFn(kin_mem, ignoreKINSOLError, NULL);
+  KINSetUserData(kin_mem, &ivf);
+  
   f->SetupStateInfo(icinfo);
 
   if (rateSize > 0)
@@ -905,26 +922,11 @@ CDA_DAESolverRun::SolveDAEProblem
       // printf("Just determined sensitivity array:\n");
       // for (uint32_t i = 0; i < stateSize; i++)
       //   printf("  sens[%u] = %g\n", i, icinfo[i]);
-      RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, params);
+      RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, NV_DATA_S(params));
       
-      double info[LM_INFO_SZ];
-      {
-        CDALock l(gLevmarMutex);
-        dlevmar_dif(levmar_dae_iv_paramfinder,
-                    params,
-                    NULL, /* Target: Make all residuals 0. */
-                    stateSize, /* There are stateSize unknowns. */
-                    stateSize, /* There are stateSize residuals. */
-                    1000, /* Max 1000 iterations (TODO - make configurable?). */
-                    NULL, /* Default options (TODO - make configurable?). */
-                    info, /* Information returned. */
-                    NULL, /* Allocate work memory as required. */
-                    NULL, /* Don't return covariance matrix. */
-                    reinterpret_cast<void*>(&ivf)
-                    );
-      }
+      KINSol(kin_mem, params, KIN_LINESEARCH, ones, ones);
       MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
-                                           icinfo, params);
+                                           icinfo, NV_DATA_S(params));
       
       f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
                                 algebraic, condvars);
@@ -1031,9 +1033,11 @@ CDA_DAESolverRun::SolveDAEProblem
 
   delete [] hx;
   delete [] icinfo;
-  delete [] params;
   delete [] ivf.hxtmp;
   delete [] roots;
+  KINFree(&kin_mem);
+  N_VDestroy(ones);
+  N_VDestroy(params);
 
   if (storageSize != 0 && mObserver != NULL)
   {
@@ -1109,7 +1113,7 @@ defint(
   }
 
   CVodeFree(&subsolver);
-  N_VDestroy_Serial(y);
+  N_VDestroy(y);
 
   return ret;
 }
@@ -1318,62 +1322,70 @@ random_double_logUniform()
   return X.asDouble;
 }
 
-// XXX TODO make this configurable?
-static const double levMarOpts[] =
-  {
-    1E-3, /* tau */
-    1E-17, /* epsilon1 */
-    1E-17, /* epsilon2 */
-    1E-17, /* epsilon3 */
-    1E-8 /* delta */
-  };
+struct Adapt_NLS_Data {
+  void * adata;
+  int n;
+  void (*f)(double* p, double* hx, void *adata);
+};
+
+static int
+adaptNonlinearsolve(N_Vector p, N_Vector hx, void* adata)
+{
+  struct Adapt_NLS_Data* adapt = reinterpret_cast<struct Adapt_NLS_Data*>(adata);
+  adapt->f(NV_DATA_S(p), NV_DATA_S(hx), adapt->adata);
+  for (int i = 0; i < adapt->n; i++)
+    if (!isfinite(NV_Ith_S(hx, i)))
+      return 1;
+  return 0;
+}
 
 void
-do_levmar
+do_nonlinearsolve
 (
- void (*f)(double *p, double *hx, int m, int n,
-           void *adata),
- double* params,
- double* bp,
- double* work,
+ void (*f)(double* p, double* hx, void *adata),
+ double* ioParams,
  int* pret,
  uint32_t size,
  void* adata
 )
 {
-  double info[9], best = INFINITY;
-  uint32_t i = 0, k;
-  double tolerance = SUBSOL_TOLERANCE * size;
+  uint32_t i = 0, k, noSuccess = 1;
+  struct Adapt_NLS_Data adapt;
 
-  memset(work, 0, LM_DIF_WORKSZ(size, size) * sizeof(double));
-  memcpy(bp, params, sizeof(double) * size);
+  adapt.adata = adata;
+  adapt.f = f;
+  adapt.n = size;
+
+  N_Vector params = N_VMake_Serial(size, ioParams);
+  N_Vector ones = N_VNew_Serial(size);
+  N_VConst(1.0, ones);
 
   srand(RANDOM_SEED);
+  void* kin_mem = KINCreate();
+  KINInit(kin_mem, adaptNonlinearsolve, params);
+  KINSpgmr(kin_mem, 0);
+  KINSetErrHandlerFn(kin_mem, ignoreKINSOLError, NULL);
+  KINSetUserData(kin_mem, &adapt);
 
   do
   {
-    /* XXX casting away constness is bad, but it seems in this case dlevmar_dif is
-     *     just missing a const specifier.
-     */
-    const int levmarReturnCode = dlevmar_dif(f, bp, NULL, size, size, 1000, const_cast<double*>(levMarOpts),
-                info, work, NULL, adata);
-    if ( (levmarReturnCode != LM_ERROR) && isfinite(info[1]) && (info[1] < best))
+    const int returnCode = KINSol(kin_mem, params, KIN_LINESEARCH, ones, ones);
+    if (returnCode == KIN_SUCCESS)
     {
-      memcpy(params, bp, sizeof(double) * size);
-      best = info[1];
-      if (best < tolerance) {
-        // Found a solution that is good enough, no need to keep searching.
-        break;
-      }
+      noSuccess = 0;
+      break;
     }
 
     for (k = 0; k < size; k++)
-      bp[k] = random_double_logUniform();
+      NV_Ith_S(params, k) = random_double_logUniform();
   }
-  while ((i++ < NR_RANDOM_STARTS_MIN) ||
-         (best > tolerance && i <= NR_RANDOM_STARTS_MAX));
+  while (i <= NR_RANDOM_STARTS_MAX);
+
+  KINFree(&kin_mem);
+  N_VDestroy(ones);
+  N_VDestroy(params);
 
   /* XXX we shouldn't hard-code the tolerance... */
-  if (best > tolerance)
+  if (noSuccess)
     *pret = 1;
 }

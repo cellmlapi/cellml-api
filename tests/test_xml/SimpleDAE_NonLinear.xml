@@ -6,6 +6,13 @@
 		<variable name="c" units="dimensionless"/>
 		<variable name="t" units="dimensionless"/>
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
+                        <!-- Note: This model is an obfuscated form of
+                                da/dt = a, a(0) = 1.
+                             Analytic solution is:
+                               a(t) = exp(t).
+                               d(t) = (3/4 exp(t)) ** (1/3)
+                               c(t) = 1/4 exp(t)
+                          -->
 			<apply>
 				<eq/>
 				<apply>

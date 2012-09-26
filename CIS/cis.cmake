@@ -53,16 +53,17 @@ ELSE()
     CIS/sources/ida/ida_io.c
     CIS/sources/ida/ida_band.c
     CIS/sources/ida/ida_spils.c
-    CIS/sources/ida/ida_spgmr
+    CIS/sources/ida/ida_spgmr.c
+    CIS/sources/kinsol/kinsol.c
+    CIS/sources/kinsol/kinsol_io.c
+    CIS/sources/kinsol/kinsol_spils.c
+    CIS/sources/kinsol/kinsol_spgmr.c
   )
 ENDIF()
 
 ADD_LIBRARY(cis
   CIS/sources/CISImplementation.cxx
   CIS/sources/CISSolve.cxx
-  CIS/sources/levmar/Axb.c
-  CIS/sources/levmar/lm.c
-  CIS/sources/levmar/misc.c
   ${SUNDIALS_SOURCES}
   )
 INSTALL(TARGETS cis DESTINATION lib)

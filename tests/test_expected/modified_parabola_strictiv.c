@@ -31,7 +31,7 @@
  * * * Variable index: 1
  * * * Variable storage: CONSTANTS[1]
  */
-void objfunc_0(double *p, double *hx, int m, int n, void *adata)
+void objfunc_0(double* p, double* hx, void *adata)
 {
   struct rootfind_info* rfi = (struct rootfind_info*)adata;
 #define VOI rfi->aVOI
@@ -52,7 +52,6 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)
 {
   static double val = -2.8;
-  double bp, work[LM_DIF_WORKSZ(1, 1)];
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;
@@ -60,7 +59,7 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
   rfi.aSTATES = STATES;
   rfi.aALGEBRAIC = ALGEBRAIC;
   rfi.aPRET = pret;
-  do_levmar(objfunc_0, &val, &bp, work, pret, 1, &rfi);
+  do_nonlinearsolve(objfunc_0, &val, pret, 1, &rfi);
   CONSTANTS[0] = val;
 }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)

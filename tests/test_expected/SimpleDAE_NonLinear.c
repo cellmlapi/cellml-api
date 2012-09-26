@@ -29,7 +29,7 @@
  * * * Variable index: 0
  * * * Variable storage: VOI
  */
-void objfunc_0(double *p, double *hx, int m, int n, void *adata)
+void objfunc_0(double* p, double* hx, void *adata)
 {
   struct rootfind_info* rfi = (struct rootfind_info*)adata;
 #define VOI rfi->aVOI
@@ -52,7 +52,6 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)
 {
   static double p[2] = {0.1,0.1};
-  double bp[2], work[LM_DIF_WORKSZ(2, 2)];
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;
@@ -60,7 +59,7 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
   rfi.aSTATES = STATES;
   rfi.aALGEBRAIC = ALGEBRAIC;
   rfi.aPRET = pret;
-  do_levmar(objfunc_0, p, bp, work, pret, 2, &rfi);
+  do_nonlinearsolve(objfunc_0, p, pret, 2, &rfi);
   ALGEBRAIC[0] = p[0];
   ALGEBRAIC[1] = p[1];
 }
@@ -74,5 +73,5 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);
-RATES[0] = (4.00000/7.00000)*( 2.00000*pow(ALGEBRAIC[0], 3.00000)+ALGEBRAIC[1]);
+RATES[0] =  (4.00000/7.00000)*( 2.00000*pow(ALGEBRAIC[0], 3.00000)+ALGEBRAIC[1]);
 }

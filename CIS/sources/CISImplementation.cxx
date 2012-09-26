@@ -707,8 +707,8 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
         "double* CONSTANTS, double* ALGEBRAIC);" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
     "(nmeas)*(npar) + (npar)*(npar))" << std::endl
-     << "extern void do_levmar(void (*)(double *, double *, int, int, void*), "
-    "double*, double*, double*, int*, unsigned long, void*);" << std::endl;
+     << "extern void do_nonlinearsolve(void (*)(double *, double *, void*), "
+    "double*, int*, unsigned long, void*);" << std::endl;
 
   std::wstring frag = cci->functionsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;

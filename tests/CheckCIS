@@ -3,7 +3,7 @@
 BINDIR=`pwd`
 BASEDIR=`dirname $0`/..
 cd $BASEDIR
-DIFF="./tests/ndiff -t 0.0000001"
+DIFF="./tests/ndiff -t 1%"
 RUNCELLML=$BINDIR/RunCellML
 TEMPFILE=test_output.$$
 
@@ -30,7 +30,7 @@ function runtest()
 {
   name=$1;
   rm -f $TEMPFILE;
-  $RUNCELLML ./tests/test_xml/$name.xml step_type AM_1_12 | tr -d "\r" >$TEMPFILE
+  $RUNCELLML ./tests/test_xml/$name.xml tabulation 0.1,true step_size_control 1E-6,1E-6 step_type AM_1_12 | tr -d "\r" >$TEMPFILE
   FAIL=0
   $DIFF -bu $TEMPFILE ./tests/test_expected/$name.csv
   if [[ $? -ne 0 ]]; then
