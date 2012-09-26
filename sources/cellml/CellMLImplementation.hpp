@@ -311,7 +311,7 @@ public:
 };
 
 class CDA_Model
-  : public virtual iface::cellml_api::Model,
+  : public iface::cellml_api::Model,
     public CDA_NamedCellMLElement,
     public WeakReferenceTarget<CDA_Model>
 {
@@ -580,7 +580,7 @@ private:
 };
 
 class CDA_ImportComponent
-  : public virtual iface::cellml_api::ImportComponent,
+  : public iface::cellml_api::ImportComponent,
     public CDA_CellMLComponentGroupMixin,
     public virtual iface::cellml_api::MathContainer
 {
@@ -860,7 +860,7 @@ private:
 };
 
 class CDA_VariableRef
-  : public virtual iface::cellml_api::VariableRef,
+  : public iface::cellml_api::VariableRef,
     public CDA_CellMLElement
 {
 public:
@@ -886,8 +886,7 @@ private:
 };
 
 class CDA_Role
-  : public virtual iface::cellml_api::Role,
-    public virtual CDA_CellMLElement,
+  : public iface::cellml_api::Role,
     public CDA_MathContainer
 {
 public:
@@ -1086,8 +1085,7 @@ public:
 };
 
 class CDA_CellMLElementSet
-  : public virtual iface::cellml_api::CellMLElementSet,
-    public CDA_CellMLElementSetUseIteratorMixin
+  : public CDA_CellMLElementSetUseIteratorMixin
 {
 public:
   CDA_CellMLElementSet(CDA_CellMLElement* parent, iface::dom::Element* parentEl);
@@ -1146,8 +1144,7 @@ private:
 };
 
 class CDA_CellMLElementSetOuter
-  : public virtual iface::cellml_api::CellMLElementSet,
-    public CDA_CellMLElementSetUseIteratorMixin
+  : public CDA_CellMLElementSetUseIteratorMixin
 {
 public:
   CDA_CellMLElementSetOuter(CDA_CellMLElement* aParent,
@@ -1385,7 +1382,7 @@ public:
 };
 
 class CDA_ImportComponentSet
-  : public virtual iface::cellml_api::ImportComponentSet,
+  : public iface::cellml_api::ImportComponentSet,
     public CDA_CellMLComponentSetBase
 {
 public:
@@ -1461,7 +1458,7 @@ private:
 };
 
 class CDA_CellMLVariableIterator
-  : public virtual iface::cellml_api::CellMLVariableIterator,
+  : public iface::cellml_api::CellMLVariableIterator,
     public CDA_CellMLElementIteratorOuter
 {
 public:
@@ -1479,7 +1476,7 @@ public:
 };
 
 class CDA_CellMLVariableSet
-  : public virtual iface::cellml_api::CellMLVariableSet,
+  : public iface::cellml_api::CellMLVariableSet,
     public CDA_NamedCellMLElementSetBase
 {
 public:
@@ -1953,7 +1950,7 @@ public:
 };
 
 class CDA_ReactionIterator
-  : public virtual iface::cellml_api::ReactionIterator,
+  : public iface::cellml_api::ReactionIterator,
     public CDA_CellMLElementIteratorOuter
 {
 public:
@@ -1969,7 +1966,7 @@ public:
 };
 
 class CDA_ReactionSet
-  : public virtual iface::cellml_api::ReactionSet,
+  : public iface::cellml_api::ReactionSet,
     public CDA_CellMLElementSetOuter
 {
 public:
@@ -1985,7 +1982,7 @@ public:
 };
 
 class CDA_VariableRefIterator
-  : public virtual iface::cellml_api::VariableRefIterator,
+  : public iface::cellml_api::VariableRefIterator,
     public CDA_CellMLElementIteratorOuter
 {
 public:
@@ -2001,7 +1998,7 @@ public:
 };
 
 class CDA_VariableRefSet
-  : public virtual iface::cellml_api::VariableRefSet,
+  : public iface::cellml_api::VariableRefSet,
     public CDA_CellMLElementSetOuter
 {
 public:
@@ -2018,7 +2015,7 @@ public:
 };
 
 class CDA_RoleIterator
-  : public virtual iface::cellml_api::RoleIterator,
+  : public iface::cellml_api::RoleIterator,
     public CDA_CellMLElementIteratorOuter
 {
 public:
@@ -2034,7 +2031,7 @@ public:
 };
 
 class CDA_RoleSet
-  : public virtual iface::cellml_api::RoleSet,
+  : public iface::cellml_api::RoleSet,
     public CDA_CellMLElementSetOuter
 {
 public:
