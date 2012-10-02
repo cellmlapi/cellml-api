@@ -7351,7 +7351,7 @@ CDA_CellMLElementSet::searchDescendents(iface::dom::Element* aEl)
     descendentSerial = gCDAChangeSerial;
   }
 
-  std::map<iface::dom::Element*, CDA_CellMLElement*>::iterator
+  std::map<iface::dom::Element*, CDA_CellMLElement*,XPCOMComparator>::iterator
     i(descendentMap.find(aEl));
   if (i == descendentMap.end())
     return NULL;
