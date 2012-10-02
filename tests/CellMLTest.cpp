@@ -1002,7 +1002,7 @@ CellMLTest::testCellMLElement()
   els->release_ref();
   el->release_ref();
 
-  newunits->release_ref();  
+  newunits->release_ref();
 }
 //   };
 
@@ -1037,7 +1037,28 @@ CellMLTest::testCellMLDOMElement()
   CPPUNIT_ASSERT(el);
   std::wstring str = el->getAttribute(L"name");
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"reaction19"), str);
+
+//    /**
+//     * Retrieves the CellMLElement corresponding to a dom::Element, if one
+//     * exists. Otherwise, returns null.
+//     * @param x The DOM element to look up.
+//     * @return The corresponding CellML element, or null.
+//     */
+//    CellMLElement findCellMLElementFromDOMElement(in dom::Element x);
+  ObjRef<iface::cellml_api::CellMLDOMElement> acde(QueryInterface(mAchCascade));
+  ObjRef<iface::cellml_api::CellMLElement> recoveredCE = acde->findCellMLElementFromDOMElement(el);
+  CPPUNIT_ASSERT(CDA_objcmp(recoveredCE, dcc) == 0);
+  ObjRef<iface::dom::Node> ns(el->nextSibling()); // The whitespace...
+  ns = ns->nextSibling(); // Should be the connection...
+  ObjRef<iface::dom::Element> nsAsEl(QueryInterface(ns));
+  recoveredCE = acde->findCellMLElementFromDOMElement(nsAsEl);
+  ObjRef<iface::cellml_api::Connection> recoveredConn(QueryInterface(recoveredCE));
+  ObjRef<iface::cellml_api::MapComponents> recoveredMC(recoveredConn->componentMapping());
+  CPPUNIT_ASSERT_EQUAL(std::wstring(L"ACh1"), recoveredMC->firstComponentName());
+
   el->release_ref();
+
+
 
   dcc->release_ref();
 //  };

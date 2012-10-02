@@ -27,7 +27,7 @@
 #define XLINK_NS L"http://www.w3.org/1999/xlink"
 
 static already_AddRefd<CDA_CellMLElement>
-WrapCellMLElement(iface::XPCOM::IObject* newParent,
+WrapCellMLElement(CDA_CellMLElement* newParent,
                   iface::dom::Element* el) throw(std::exception&);
 
 /*
@@ -367,7 +367,7 @@ CDA_URI::asText(const std::wstring& attr)
 
 CDA_CellMLElement::CDA_CellMLElement
 (
- iface::XPCOM::IObject* parent,
+ CDA_CellMLElement* parent,
  iface::dom::Element* idata
 )
   : mParent(parent), datastore(idata),
@@ -383,6 +383,7 @@ CDA_CellMLElement::CDA_CellMLElement
     targ->addEventListener(L"DOMSubtreeModified",
                            &gCDAChangeListener, false);
   }
+
   datastore->add_ref();
 }
 
@@ -462,6 +463,19 @@ CDA_Model::getRDFRepresentation(const std::wstring& type)
 #endif
 
   throw iface::cellml_api::CellMLException();
+}
+
+already_AddRefd<iface::cellml_api::CellMLElement>
+CDA_CellMLElement::findCellMLElementFromDOMElement(iface::dom::Element* aEl)
+  throw(std::exception&)
+{
+  if (mParent != NULL)
+    return mParent->findCellMLElementFromDOMElement(aEl);
+
+  if (children == NULL)
+    children = new CDA_CellMLElementSet(this, datastore);
+
+  return children->searchDescendents(aEl);
 }
 
 already_AddRefd<iface::cellml_api::ExtensionElementList>
@@ -651,6 +665,8 @@ CDA_CellMLElement::addElement(iface::cellml_api::CellMLElement* x)
 
     // Add to our local CellML wrapping...
     children->addChildToWrapper(el);
+    if (el->children)
+      el->children->dumpRootCaches();
 
     // Add the element's backing datastore to our datastore...
     datastore->appendChild(el->datastore)->release_ref();
@@ -815,28 +831,17 @@ already_AddRefd<iface::cellml_api::Model>
 CDA_CellMLElement::modelElement()
   throw(std::exception&)
 {
-  CDA_CellMLElement* cand = this;
-
-  while (true)
+  for (ObjRef<iface::cellml_api::CellMLElement> cand(this); cand != NULL;
+       cand = cand->parentElement())
   {
-    iface::cellml_api::Model* m =
-      dynamic_cast<iface::cellml_api::Model*>(cand);
+    ObjRef<iface::cellml_api::Model> m(QueryInterface(cand));
     if (m != NULL)
     {
       m->add_ref();
-      return m;
+      return m.getPointer();
     }
-
-    if (cand->mParent == NULL)
-    {
-      // We have reached a point where no parent can be found, and we did not
-      // hit a model on the way. Therefore, we are looking at a fragment which
-      // does not have a modelElement.
-      return NULL;
-    }
-
-    cand = dynamic_cast<CDA_CellMLElement*>(cand->mParent);
   }
+  return NULL;
 }
 
 void
@@ -1168,7 +1173,7 @@ CDA_CellMLElement::domElement()
 
 CDA_NamedCellMLElement::CDA_NamedCellMLElement
 (
- iface::XPCOM::IObject* parent,
+ CDA_CellMLElement* parent,
  iface::dom::Element* idata
 )
   : CDA_CellMLElement(parent, idata)
@@ -2188,7 +2193,7 @@ CDA_Model::serialisedText()
   return str;
 }
 
-CDA_MathContainer::CDA_MathContainer(iface::XPCOM::IObject* parent,
+CDA_MathContainer::CDA_MathContainer(CDA_CellMLElement* parent,
                                      iface::dom::Element* modelElement)
   : CDA_CellMLElement(parent, modelElement)
 {
@@ -3678,7 +3683,7 @@ CDA_CellMLImport::instantiate()
     if (modName != L"model")
       throw iface::cellml_api::CellMLException();
 
-    CDA_Model* cm = new CDA_Model(rootModel->mLoader, dd, modelEl);
+    ObjRef<CDA_Model> cm = already_AddRefd<CDA_Model>(new CDA_Model(rootModel->mLoader, dd, modelEl));
     RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, cm->xmlBase());
     RETURN_INTO_WSTRING(base, bu->asText());
     if (base == L"")
@@ -3690,10 +3695,11 @@ CDA_CellMLImport::instantiate()
     cm->mParent = this;
     // We increment our refcount(and our other ancestors') by one...
     add_ref();
-    // This will decrement cm's(and its ancestors', which includes us, as we
-    // are cm's parent), refcount by 1. cm's refcount is now 0, and our/our
-    // ancestors' refcounts are back to what they were before the add_ref().
-    cm->release_ref();
+
+    // As cm goes out of scope, cm's(and its ancestors', which includes us, as we
+    // are cm's parent), refcount is decremented by 1. cm's refcount is now 0,
+    // and our/our ancestors' refcounts are back to what they were before the
+    // add_ref().
   }
   catch (iface::dom::DOMException& de)
   {
@@ -3834,7 +3840,7 @@ public:
       
       // Adjust the refcounts to leave the importedModel completely dependent on
       // the rest of the tree...
-      cm->mParent = this;
+      cm->mParent = unsafe_dynamic_cast<CDA_CellMLImport*>(mImport);
       // We increment our refcount(and our other ancestors') by one...
       add_ref();
       // This will decrement cm's(and its ancestors', which includes us, as we
@@ -5756,7 +5762,7 @@ void CDA_VariableRef::variable(iface::cellml_api::CellMLVariable* v) throw(std::
   CDA_CellMLVariable* cv = dynamic_cast<CDA_CellMLVariable*>(v);
   if (cv == NULL)
     throw iface::cellml_api::CellMLException();
-  iface::XPCOM::IObject* o1 = cv->mParent;
+  CDA_CellMLElement* o1 = cv->mParent;
   CDA_Reaction* r = dynamic_cast<CDA_Reaction*>(mParent);
 
   if (o1 == NULL || r == NULL)
@@ -6946,7 +6952,7 @@ CDA_CellMLElementIterator::~CDA_CellMLElementIterator()
 }
 
 static already_AddRefd<CDA_CellMLElement>
-WrapCellMLElement(iface::XPCOM::IObject* newParent,
+WrapCellMLElement(CDA_CellMLElement* newParent,
                   iface::dom::Element* el)
   throw(std::exception&)
 {
@@ -7045,7 +7051,7 @@ CDA_CellMLElementIterator::next()
   }
 
   // We have an element. Now go back to the set, and look in the map...
-  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*, XPCOMComparator>
+  std::map<iface::dom::Element*,CDA_CellMLElement*, XPCOMComparator>
      ::iterator i = parentSet->childMap.find(el);
   if (i != parentSet->childMap.end())
   {
@@ -7079,7 +7085,7 @@ CDA_CellMLElementIterator::next(const std::wstring& aWantEl)
   }
 
   // We have an element. Now go back to the set, and look in the map...
-  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*, XPCOMComparator>
+  std::map<iface::dom::Element*,CDA_CellMLElement*, XPCOMComparator>
      ::iterator i = parentSet->childMap.find(el);
   if (i != parentSet->childMap.end())
   {
@@ -7283,7 +7289,7 @@ CDA_CellMLElementSet::CDA_CellMLElementSet
  CDA_CellMLElement* parent,
  iface::dom::Element* parentEl
 )
-  : mParent(parent), mElement(parentEl)
+  : mParent(parent), mElement(parentEl), descendentSerial(0)
 {
   // Note: The reference count starts at zero, because an Element is
   // permanently part of an Element, and so needs no refcount when it is
@@ -7297,7 +7303,7 @@ CDA_CellMLElementSet::~CDA_CellMLElementSet()
     printf("Warning: release_ref called too few times on %s.\n",
            typeid(this).name());
 
-  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*,XPCOMComparator>::iterator
+  std::map<iface::dom::Element*,CDA_CellMLElement*,XPCOMComparator>::iterator
     i;
 
   for (i = childMap.begin(); i != childMap.end(); i++)
@@ -7317,7 +7323,7 @@ CDA_CellMLElementSet::addChildToWrapper(CDA_CellMLElement* el)
   DECLARE_QUERY_INTERFACE_OBJREF(targ, el->datastore, events::EventTarget);
   targ->removeEventListener(L"DOMSubtreeModified", &gCDAChangeListener, false);
   childMap.insert(std::pair<iface::dom::Element*,
-                            iface::cellml_api::CellMLElement*>
+                            CDA_CellMLElement*>
                   (el->datastore, el));
 }
 
@@ -7327,6 +7333,51 @@ CDA_CellMLElementSet::removeChildFromWrapper(CDA_CellMLElement* el)
   DECLARE_QUERY_INTERFACE_OBJREF(targ, el->datastore, events::EventTarget);
   targ->addEventListener(L"DOMSubtreeModified", &gCDAChangeListener, false);
   childMap.erase(el->datastore);
+}
+
+void
+CDA_CellMLElementSet::dumpRootCaches()
+{
+  descendentMap.clear();
+}
+
+iface::cellml_api::CellMLElement*
+CDA_CellMLElementSet::searchDescendents(iface::dom::Element* aEl)
+{
+  if (descendentSerial != gCDAChangeSerial)
+  {
+    dumpRootCaches();
+    populateDescendentCache(descendentMap);
+    descendentSerial = gCDAChangeSerial;
+  }
+
+  std::map<iface::dom::Element*, CDA_CellMLElement*>::iterator
+    i(descendentMap.find(aEl));
+  if (i == descendentMap.end())
+    return NULL;
+
+  i->second->add_ref();
+  return i->second;
+}
+
+void
+CDA_CellMLElementSet::populateDescendentCache(std::map<iface::dom::Element*,CDA_CellMLElement*,XPCOMComparator>& aMap)
+{
+  ObjRef<iface::cellml_api::CellMLElementIterator> it(iterate());
+  ObjRef<iface::cellml_api::CellMLElement> el;
+  do
+  {
+    el = it->next();
+  } while (el);
+
+  std::map<iface::dom::Element*,CDA_CellMLElement*,XPCOMComparator>::iterator i;
+  for (i = childMap.begin(); i != childMap.end(); i++)
+  {
+    aMap.insert(*i);
+    if (i->second->children == NULL)
+      i->second->children = new CDA_CellMLElementSet(i->second, i->first);
+    i->second->children->populateDescendentCache(aMap);
+  }
 }
 
 already_AddRefd<iface::cellml_api::NamedCellMLElement>

@@ -365,6 +365,14 @@ module cellml_api
      * The DOM element corresponding to this CellML element.
      */
     readonly attribute dom::Element domElement;
+
+    /**
+     * Retrieves the CellMLElement corresponding to a dom::Element, if one
+     * exists. Otherwise, returns null.
+     * @param x The DOM element to look up.
+     * @return The corresponding CellML element, or null.
+     */
+    CellMLElement findCellMLElementFromDOMElement(in dom::Element x);
   };
 
   /**

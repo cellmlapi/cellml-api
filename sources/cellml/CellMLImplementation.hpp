@@ -127,7 +127,7 @@ class CDA_CellMLElement
     public iface::events::EventTarget
 {
 public:
-  CDA_CellMLElement(iface::XPCOM::IObject* parent, iface::dom::Element* idata);
+  CDA_CellMLElement(CDA_CellMLElement* parent, iface::dom::Element* idata);
   virtual ~CDA_CellMLElement();
 
   CDA_IMPL_ID;
@@ -215,8 +215,10 @@ public:
     throw(std::exception&);
   already_AddRefd<iface::cellml_api::ExtensionAttributeSet> extensionAttributes()
     throw(std::exception&);
+  already_AddRefd<iface::cellml_api::CellMLElement> findCellMLElementFromDOMElement
+    (iface::dom::Element* aEl) throw(std::exception&);
 
-  iface::XPCOM::IObject* mParent;
+  CDA_CellMLElement* mParent;
   iface::dom::Element* datastore;
 protected:
   friend class CDA_CellMLElementSet;
@@ -303,7 +305,7 @@ class CDA_NamedCellMLElement
     public virtual CDA_CellMLElement
 {
 public:
-  CDA_NamedCellMLElement(iface::XPCOM::IObject* parent, iface::dom::Element* idata);
+  CDA_NamedCellMLElement(CDA_CellMLElement* parent, iface::dom::Element* idata);
   virtual ~CDA_NamedCellMLElement();
 
   std::wstring name() throw(std::exception&);
@@ -393,6 +395,7 @@ public:
 
   already_AddRefd<iface::cellml_api::Model> cloneAcrossImports()
     throw(std::exception&);
+
 private:
   CDA_ConnectionSet* mConnectionSet;
   CDA_GroupSet* mGroupSet;
@@ -408,7 +411,7 @@ class CDA_MathContainer
     public virtual CDA_CellMLElement
 {
 public:
-  CDA_MathContainer(iface::XPCOM::IObject* parent,
+  CDA_MathContainer(CDA_CellMLElement* parent,
                     iface::dom::Element* element);
   virtual ~CDA_MathContainer() {};
 
@@ -428,7 +431,7 @@ class CDA_CellMLComponentGroupMixin
     public CDA_NamedCellMLElement
 {
 public:
-  CDA_CellMLComponentGroupMixin(iface::XPCOM::IObject* parent,
+  CDA_CellMLComponentGroupMixin(CDA_CellMLElement* parent,
                                 iface::dom::Element* compElement)
     : CDA_CellMLElement(parent, compElement),
       CDA_NamedCellMLElement(parent, compElement)
@@ -448,7 +451,7 @@ class CDA_CellMLComponent
     public CDA_MathContainer
 {
 public:
-  CDA_CellMLComponent(iface::XPCOM::IObject* parent,
+  CDA_CellMLComponent(CDA_CellMLElement* parent,
                       iface::dom::Element* compElement)
     :CDA_CellMLElement(parent, compElement),
      CDA_CellMLComponentGroupMixin(parent, compElement),
@@ -479,7 +482,7 @@ class CDA_UnitsBase
     public CDA_NamedCellMLElement
 {
 public:
-  CDA_UnitsBase(iface::XPCOM::IObject* parent,
+  CDA_UnitsBase(CDA_CellMLElement* parent,
                 iface::dom::Element* unitsElement)
     : CDA_CellMLElement(parent, unitsElement),
       CDA_NamedCellMLElement(parent, unitsElement),
@@ -498,7 +501,7 @@ class CDA_Units
   : public CDA_UnitsBase
 {
 public:
-  CDA_Units(iface::XPCOM::IObject* parent,
+  CDA_Units(CDA_CellMLElement* parent,
             iface::dom::Element* unitsElement)
     : CDA_CellMLElement(parent, unitsElement),
       CDA_UnitsBase(parent, unitsElement) {}
@@ -515,7 +518,7 @@ class CDA_Unit
     public virtual CDA_CellMLElement
 {
 public:
-  CDA_Unit(iface::XPCOM::IObject* parent, iface::dom::Element* unitElement)
+  CDA_Unit(CDA_CellMLElement* parent, iface::dom::Element* unitElement)
     : CDA_CellMLElement(parent, unitElement) {}
   virtual ~CDA_Unit() {};
 
@@ -539,7 +542,7 @@ class CDA_CellMLImport
     public virtual CDA_CellMLElement
 {
 public:
-  CDA_CellMLImport(iface::XPCOM::IObject* parent,
+  CDA_CellMLImport(CDA_CellMLElement* parent,
                    iface::dom::Element* importElement)
     : CDA_CellMLElement(parent, importElement), mImportedModel(NULL),
       mImportConnectionSet(NULL), mImportComponentSet(NULL),
@@ -585,7 +588,7 @@ class CDA_ImportComponent
     public virtual iface::cellml_api::MathContainer
 {
 public:
-  CDA_ImportComponent(iface::XPCOM::IObject* parent,
+  CDA_ImportComponent(CDA_CellMLElement* parent,
                       iface::dom::Element* importComponent)
     : CDA_CellMLElement(parent, importComponent),
       CDA_CellMLComponentGroupMixin(parent, importComponent){}
@@ -622,7 +625,7 @@ class CDA_ImportUnits
     public CDA_UnitsBase
 {
 public:
-  CDA_ImportUnits(iface::XPCOM::IObject* parent,
+  CDA_ImportUnits(CDA_CellMLElement* parent,
                   iface::dom::Element* importUnits)
     : CDA_CellMLElement(parent, importUnits),
       CDA_UnitsBase(parent, importUnits) {}
@@ -656,7 +659,7 @@ class CDA_CellMLVariable
     public CDA_NamedCellMLElement
 {
 public:
-  CDA_CellMLVariable(iface::XPCOM::IObject* parent,
+  CDA_CellMLVariable(CDA_CellMLElement* parent,
                      iface::dom::Element* cellmlVar)
     : CDA_CellMLElement(parent, cellmlVar),
       CDA_NamedCellMLElement(parent, cellmlVar),
@@ -695,7 +698,7 @@ class CDA_ComponentRef
     public CDA_CellMLElement
 {
 public:
-  CDA_ComponentRef(iface::XPCOM::IObject* parent,
+  CDA_ComponentRef(CDA_CellMLElement* parent,
                    iface::dom::Element* componentRef)
     : CDA_CellMLElement(parent, componentRef), mCRSet(NULL) {}
   virtual ~CDA_ComponentRef();
@@ -718,7 +721,7 @@ class CDA_RelationshipRef
     public CDA_CellMLElement
 {
 public:
-  CDA_RelationshipRef(iface::XPCOM::IObject* parent,
+  CDA_RelationshipRef(CDA_CellMLElement* parent,
                    iface::dom::Element* relationshipRef)
     : CDA_CellMLElement(parent, relationshipRef) {}
   virtual ~CDA_RelationshipRef() {}
@@ -739,7 +742,7 @@ class CDA_Group
     public CDA_CellMLElement
 {
 public:
-  CDA_Group(iface::XPCOM::IObject* parent,
+  CDA_Group(CDA_CellMLElement* parent,
             iface::dom::Element* group)
     : CDA_CellMLElement(parent, group), mRRSet(NULL), mCRSet(NULL) {}
   virtual ~CDA_Group();
@@ -766,7 +769,7 @@ class CDA_Connection
     public CDA_CellMLElement
 {
 public:
-  CDA_Connection(iface::XPCOM::IObject* parent,
+  CDA_Connection(CDA_CellMLElement* parent,
                  iface::dom::Element* connection)
     : CDA_CellMLElement(parent, connection), mMVS(NULL), mCacheSerial(0) {};
   virtual ~CDA_Connection();
@@ -788,7 +791,7 @@ class CDA_MapComponents
     public CDA_CellMLElement
 {
 public:
-  CDA_MapComponents(iface::XPCOM::IObject* parent,
+  CDA_MapComponents(CDA_CellMLElement* parent,
                  iface::dom::Element* mapComponents)
     : CDA_CellMLElement(parent, mapComponents), mCacheSerial(0) {};
   virtual ~CDA_MapComponents() {}
@@ -813,7 +816,7 @@ class CDA_MapVariables
     public CDA_CellMLElement
 {
 public:
-  CDA_MapVariables(iface::XPCOM::IObject* parent,
+  CDA_MapVariables(CDA_CellMLElement* parent,
                    iface::dom::Element* mapVariables)
     : CDA_CellMLElement(parent, mapVariables) {}
   virtual ~CDA_MapVariables() {}
@@ -835,7 +838,7 @@ class CDA_Reaction
     public CDA_CellMLElement
 {
 public:
-  CDA_Reaction(iface::XPCOM::IObject* parent,
+  CDA_Reaction(CDA_CellMLElement* parent,
                    iface::dom::Element* reaction)
     : CDA_CellMLElement(parent, reaction),
       mVariableRefSet(NULL) {}
@@ -864,7 +867,7 @@ class CDA_VariableRef
     public CDA_CellMLElement
 {
 public:
-  CDA_VariableRef(iface::XPCOM::IObject* parent,
+  CDA_VariableRef(CDA_CellMLElement* parent,
                    iface::dom::Element* variableRef)
     : CDA_CellMLElement(parent, variableRef), mRoleSet(NULL) {}
 
@@ -890,7 +893,7 @@ class CDA_Role
     public CDA_MathContainer
 {
 public:
-  CDA_Role(iface::XPCOM::IObject* parent,
+  CDA_Role(CDA_CellMLElement* parent,
            iface::dom::Element* role)
     : CDA_CellMLElement(parent, role), CDA_MathContainer(parent, role) {}
   virtual ~CDA_Role() {}
@@ -1132,11 +1135,19 @@ public:
   void addChildToWrapper(CDA_CellMLElement*);
   void removeChildFromWrapper(CDA_CellMLElement*);
 
-  iface::XPCOM::IObject* mParent;
+  CDA_CellMLElement* mParent;
+  
+  void dumpRootCaches();
+  void buildRootCaches();
+  void populateDescendentCache(std::map<iface::dom::Element*,CDA_CellMLElement*,XPCOMComparator>& aMap);
+
+  iface::cellml_api::CellMLElement* searchDescendents(iface::dom::Element* aEl);
 private:
   friend class CDA_CellMLElementIterator;
   iface::dom::Element* mElement;
-  std::map<iface::dom::Element*,iface::cellml_api::CellMLElement*,XPCOMComparator> childMap;
+  std::map<iface::dom::Element*,CDA_CellMLElement*,XPCOMComparator> childMap;
+  std::map<iface::dom::Element*,CDA_CellMLElement*,XPCOMComparator> descendentMap;
+  cda_serial_t descendentSerial;
 
   // This is used only when ownerModel is null. When ownerModel is assigned,
   // add_ref() must be called on ownerModel the correct number of times.
