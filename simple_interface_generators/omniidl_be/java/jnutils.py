@@ -618,9 +618,10 @@ class Enum(Declared):
         
         code = "{\n"+\
                "  jclass eclazz = env->FindClass(\"" + self.java_class_name + "\");\n"+\
-               "  jmethodID vmeth = env->GetStaticMethodID(eclazz, \"values\", \"()V\");\n"+\
+               "  jclass classclazz = env->FindClass(\"java/lang/Class\");\n"+\
+               "  jmethodID vmeth = env->GetMethodID(classclazz, \"getEnumConstants\", \"()[Ljava/lang/Object;\");\n"+\
                "  " + xname + " = env->GetObjectArrayElement(static_cast" +\
-               "<jobjectArray>(env->CallStaticObjectMethod(eclazz, vmeth)), static_cast<jsize>("+\
+               "<jobjectArray>(env->CallObjectMethod(eclazz, vmeth)), static_cast<jsize>("+\
                iname + "));\n" +\
                "}\n"
         

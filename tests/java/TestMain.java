@@ -37,7 +37,10 @@ public class TestMain
         var1.setUnitsElement(units);
         var1.setInitialValue("10");
         var1.setPublicInterface(VariableInterface.INTERFACE_OUT);
-        
+        VariableInterface pubi = var1.getPublicInterface();
+        VariableInterface privi = var1.getPrivateInterface();
+        System.out.println("Private interface " +
+                           privi.toString());
         //creating component 2
         CellMLComponent comp2 = m.createComponent();
         m.addElement(comp2);
