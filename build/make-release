@@ -76,8 +76,7 @@ mkdir mac
 END
 
 # As a side effect of the linux-x86 build, release the source code...
-if [[ $SYSTEM == linux-x86 ]];
-then
+if [[ $SYSTEM == linux-x86 ]]; then
     cd /tmp
     rm -fr package-src
     mkdir package-src
@@ -91,7 +90,6 @@ fi
 echo $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
 $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
 
-if [[ $SYSTEM == win32 ]];
-then
+if [[ $SYSTEM == win32 ]]; then
     $SCP "$BINFULL2" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY2"
 fi
