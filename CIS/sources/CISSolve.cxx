@@ -1379,7 +1379,7 @@ do_nonlinearsolve
     for (k = 0; k < size; k++)
       NV_Ith_S(params, k) = random_double_logUniform();
   }
-  while (i <= NR_RANDOM_STARTS_MAX);
+  while (++i <= NR_RANDOM_STARTS_MAX);
 
   KINFree(&kin_mem);
   N_VDestroy(ones);
