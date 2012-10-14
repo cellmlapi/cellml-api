@@ -1328,8 +1328,7 @@ CDA_DOMImplementation::loadDocumentFromText
   
   xmlDocPtr xdp =
     xmlCtxtReadMemory(ctxt, text, strlen(text), NULL, NULL,
-                    XML_PARSE_DTDLOAD | XML_PARSE_DTDATTR |
-                    XML_PARSE_NOXINCNODE);
+                      XML_PARSE_NOXINCNODE | XML_PARSE_NONET);
   free(text);
   if (xdp == NULL)
   {
