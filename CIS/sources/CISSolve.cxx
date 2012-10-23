@@ -567,6 +567,7 @@ struct PDFInformation
 {
   double (*pdf)(double bvar, double* constants, double* algebraic);
   double* constants, * algebraic, uplimit;
+  double target;
 };
 
 static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data)
@@ -587,14 +588,23 @@ static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data
 
   return 0;
 }
+void
+ignoreKINSOLError(int code, const char *module,
+                  const char *function, char *msg,
+                  void *dat)
+{
+}
 
 static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
 {
+  int ret;
   struct PDFInformation* info = (struct PDFInformation*)adata;
   info->uplimit = NV_Ith_S(pVec, 0);
+  NV_Ith_S(hxVec, 0) = 0;
 
   void* cv = CVodeCreate(CV_BDF, CV_NEWTON);
   CVodeInit(cv, integrandForPDF, -1.0 + 1E-6, hxVec);
+  CVodeSetErrHandlerFn(cv, ignoreKINSOLError, NULL);
   CVodeSetMaxStep(cv, 1E-3);
   CVodeSetMaxNumSteps(cv, 2000);
   CVodeSStolerances(cv, 1E-6, 1E-6);
@@ -604,20 +614,15 @@ static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
 #ifdef DEBUG_UNCERT
   printf("Running CVode to integrate between -inf and %f (transformed to -1.0 -> 0.0)\n", *p);
 #endif
-  CVode(cv, 0, hxVec, &tret, CV_NORMAL);
+  ret = CVode(cv, 0, hxVec, &tret, CV_NORMAL);
 #ifdef DEBUG_UNCERT
   printf("C.D.F.(%f) = %f\n", *p, *hx);
 #endif
   CVodeFree(&cv);
 
-  return 0;
-}
+  NV_Ith_S(hxVec, 0) = info->target - NV_Ith_S(hxVec, 0);
 
-void
-ignoreKINSOLError(int code, const char *module,
-                  const char *function, char *msg,
-                  void *dat)
-{
+  return (ret == 0) ? 0 : 1;
 }
 
 double
@@ -628,7 +633,7 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   pdfi.constants = CONSTANTS;
   pdfi.algebraic = ALGEBRAIC;
   pdfi.pdf = pdf;
-  double x = (rand() + 0.0) / RAND_MAX;
+  pdfi.target = (rand() + 0.0) / RAND_MAX;
   double p;
   double one = 1.0;
 
@@ -641,9 +646,9 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   KINSetErrHandlerFn(kin_mem, ignoreKINSOLError, NULL);
   KINSetUserData(kin_mem, &pdfi);
 
-  for (int attempt = 0; attempt < 26; attempt++)
+  for (int attempt = 0; attempt < 1000; attempt++)
   {
-    p = (attempt % 2 ? -1.0 : 1.0) * pow(10.0, attempt / 2.0 - 3.0);
+    p = (attempt % 2 ? -1.0 : 1.0) * pow(2.0, attempt / 1.5 - 250.0);
 
     int ret = KINSol(kin_mem, pVec, KIN_LINESEARCH, oneVec, oneVec);
     if (ret == KIN_SUCCESS)
