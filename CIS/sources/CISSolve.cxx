@@ -960,6 +960,18 @@ CDA_DAESolverRun::SolveDAEProblem
       if (mTabulationStepSize == 0.0)
         nextStopPoint = mStopBvar;
       
+      if (voi >= mStopBvar) // Handle the corner case where we are starting at the end point...
+      {
+        // Add to storage...
+        storage[storageSize] = voi;
+        memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+        memcpy(storage + storageSize + 1 + rateSize, rates,
+               rateSize * sizeof(double));
+        memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+               algSize * sizeof(double));
+        storageSize += recsize;
+      }
+
       while (voi < mStopBvar)
       {
         if (restart)
