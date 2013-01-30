@@ -162,6 +162,10 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
   if (rates != ei->rates)
     memcpy(rates, ei->rates, ei->rateSizeBytes);
 
+  for (int i = 0; i < NV_LENGTH_S(ratesV); i++)
+    if (!isfinite(NV_Ith_S(ratesV, i)))
+      return 1;
+
   return ret;
 }
 
@@ -559,8 +563,8 @@ extern "C"
     CDA_EXPORT_POST;
 
   CDA_EXPORT_PRE double SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
+                                       int nroots, double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
                                        double* CONSTANTS, double* ALGEBRAIC) CDA_EXPORT_POST;
-
 }
 
 struct PDFInformation
@@ -602,6 +606,9 @@ static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
   info->uplimit = NV_Ith_S(pVec, 0);
   NV_Ith_S(hxVec, 0) = 0;
 
+  if (!isfinite(info->uplimit))
+    return 1;
+
   void* cv = CVodeCreate(CV_BDF, CV_NEWTON);
   CVodeInit(cv, integrandForPDF, -1.0 + 1E-6, hxVec);
   CVodeSetErrHandlerFn(cv, ignoreKINSOLError, NULL);
@@ -627,6 +634,8 @@ static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
 
 double
 SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
+               int nroots,
+               double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
                double* CONSTANTS, double* ALGEBRAIC)
 {
   struct PDFInformation pdfi;
@@ -646,14 +655,37 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   KINSetErrHandlerFn(kin_mem, ignoreKINSOLError, NULL);
   KINSetUserData(kin_mem, &pdfi);
 
-  for (int attempt = 0; attempt < 1000; attempt++)
-  {
-    p = (attempt % 2 ? -1.0 : 1.0) * pow(2.0, attempt / 1.5 - 250.0);
+  int ret;
 
-    int ret = KINSol(kin_mem, pVec, KIN_LINESEARCH, oneVec, oneVec);
+  for (int attempt = 0; attempt < 512; attempt++)
+  {
+    double a2 = attempt / 2.0;
+    double p2a = pow(2.0, a2);
+    double p2ma = pow(2.0, -a2);
+
+    p = p2a;
+    ret = KINSol(kin_mem, pVec, KIN_NONE, oneVec, oneVec);
+    if (ret == KIN_SUCCESS)
+      break;
+
+    p = -p2a;
+    ret = KINSol(kin_mem, pVec, KIN_NONE, oneVec, oneVec);
+    if (ret == KIN_SUCCESS)
+      break;
+
+    p = p2ma;
+    ret = KINSol(kin_mem, pVec, KIN_NONE, oneVec, oneVec);
+    if (ret == KIN_SUCCESS)
+      break;
+
+    p = -p2ma;
+    ret = KINSol(kin_mem, pVec, KIN_NONE, oneVec, oneVec);
     if (ret == KIN_SUCCESS)
       break;
   }
+
+  if (ret != KIN_SUCCESS)
+    p = strtod("NAN", NULL);
 
   KINFree(&kin_mem);
   N_VDestroy(pVec);
@@ -702,9 +734,18 @@ ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
   if (ret != 0)
     return ret;
 
-  return d->ComputeResiduals(t, d->constants, rates, d->oldrates,
-                             states, d->oldstates,
-                             d->algebraic, d->condvars, resids);
+  ret = d->ComputeResiduals(t, d->constants, rates, d->oldrates,
+                            states, d->oldstates,
+                            d->algebraic, d->condvars, resids);
+  if (ret == 0)
+  {
+    for (unsigned int i = 0; i < NV_LENGTH_S(resval); i++)
+      if (!(resids[i] < 1E200)) // Clip the data to deal with NaN / inf / -inf.
+        resids[i] = 1E200;
+      else if (!(resids[i] > -1E200))
+        resids[i] = -1E200;
+  }
+  return ret;
 }
 
 static int
@@ -832,6 +873,14 @@ static int dae_iv_paramfinder(N_Vector p, N_Vector hx, void *adata)
   info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                          info->states, info->oldstates,
                          info->algebraic, info->condvars, NV_DATA_S(hx));
+  for (unsigned int i = 0; i < info->n; i++)
+  {
+    for (unsigned int i = 0; i < NV_LENGTH_S(hx); i++)
+      if (!(NV_Ith_S(hx, i) < 1E200)) // Clip the data to deal with NaN / inf / -inf.
+        NV_Ith_S(hx, i) = 1E200;
+      else if (!(NV_Ith_S(hx, i) > -1E200))
+        NV_Ith_S(hx, i) = -1E200;
+  }
   return 0;
 }
 
@@ -904,7 +953,7 @@ CDA_DAESolverRun::SolveDAEProblem
   void* kin_mem = KINCreate();
   KINInit(kin_mem, dae_iv_paramfinder, params);
   KINSpgmr(kin_mem, 0);
-  KINSetErrHandlerFn(kin_mem, ignoreKINSOLError, NULL);
+  KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, this);
   KINSetUserData(kin_mem, &ivf);
   
   f->SetupStateInfo(icinfo);
@@ -929,7 +978,15 @@ CDA_DAESolverRun::SolveDAEProblem
       //   printf("  sens[%u] = %g\n", i, icinfo[i]);
       RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, NV_DATA_S(params));
       
-      KINSol(kin_mem, params, KIN_LINESEARCH, ones, ones);
+      int ret = KINSol(kin_mem, params, KIN_NONE, ones, ones);
+      if (ret < 0)
+      {
+        sendFailure = true;
+        // Apparently IDAFree after IDACreate but before IDAInit fails, so lets IDAInit...
+        IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
+        break;
+      }
+        
       MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
                                            icinfo, NV_DATA_S(params));
       
@@ -1386,7 +1443,7 @@ do_nonlinearsolve
 
   do
   {
-    const int returnCode = KINSol(kin_mem, params, KIN_LINESEARCH, ones, ones);
+    const int returnCode = KINSol(kin_mem, params, KIN_NONE, ones, ones);
     if (returnCode == KIN_SUCCESS)
     {
       noSuccess = 0;

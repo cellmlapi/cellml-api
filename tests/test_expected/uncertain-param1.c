@@ -37,7 +37,7 @@
  * * * Variable index: 0
  * * * Variable storage: STATES[0]
  * * Target x in component main
- * * * Variable type: constant
+ * * * Variable type: locally bound
  * * * Variable index: 0
  * * * Variable storage: CONSTANTS[0]
  */
@@ -45,6 +45,7 @@ double pdf_0(double bvar, double* CONSTANTS, double* ALGEBRAIC)
 {
   return ( (1.00000/ pow(( 2.00000* 3.14159265358979*CONSTANTS[3]), 1.0 / 2))*exp(- (pow(bvar - CONSTANTS[4], 2.00000)/( 2.00000*CONSTANTS[3]))));
 }
+double (*pdf_roots_0[])(double bvar, double*, double*) = {};
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
 STATES[0] = 0;
@@ -4054,7 +4055,7 @@ break;
 }
 CONSTANTS[3] = 1.00000;
 CONSTANTS[4] = 0.00000;
-CONSTANTS[5] = SampleUsingPDF(&pdf_0, CONSTANTS, ALGEBRAIC);
+CONSTANTS[5] = SampleUsingPDF(&pdf_0, 0, pdf_roots_0, CONSTANTS, ALGEBRAIC);
 CONSTANTS[6] = CONSTANTS[5];
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

@@ -703,7 +703,8 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
      << "extern double defint(double (*f)(double VOI,double *C,double *R,double *S,"
      << "double *A, int* pret), double VOI,double *C,double *R,double *S,double *A,double *V,"
      << "double lowV, double highV, int* pret);" << std::endl
-     << "extern double SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),"
+     << "extern double SampleUsingPDF(double (*pdf)(double bvar,"
+     << "double* CONSTANTS, double* ALGEBRAIC), int, double (**pdf_roots)(double bvar, double*, double*),"
         "double* CONSTANTS, double* ALGEBRAIC);" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
     "(nmeas)*(npar) + (npar)*(npar))" << std::endl

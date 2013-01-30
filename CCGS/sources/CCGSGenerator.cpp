@@ -2146,6 +2146,64 @@ CodeGenerationState::FirstPassTargetClassification()
       }
     }
   }
+  // We also need to ensure that bvars on distributions are treated as locally bound...
+  for (std::list<ptr_tag<MathStatement> >::iterator i =  mMathStatements.begin();
+       i != mMathStatements.end();
+       i++)
+  {
+    if ((*i)->mType != MathStatement::SAMPLE_FROM_DIST)
+      continue;
+
+    SampleFromDistribution* sfd = static_cast<SampleFromDistribution*>(static_cast<MathStatement*>(*i));
+    ObjRef<iface::mathml_dom::MathMLApplyElement> mae = QueryInterface(sfd->mDistrib);
+    if (mae == NULL)
+      continue; // This case will result in an error later in GenerateCodeForSampleFromDist
+    ObjRef<iface::mathml_dom::MathMLElement> op = mae->_cxx_operator();
+    ObjRef<iface::mathml_dom::MathMLCsymbolElement> csop = QueryInterface(op);
+    if (csop == NULL)
+      continue;
+    std::wstring du = csop->definitionURL();
+    if (du != L"http://www.cellml.org/uncertainty-1#distributionFromDensity")
+      continue;
+    ObjRef<iface::mathml_dom::MathMLLambdaElement> lambda = QueryInterface(mae->getArgument(2));
+    if (lambda == NULL)
+      continue;
+
+    for (unsigned int bvIdx = lambda->nBoundVariables(); bvIdx > 0; bvIdx--)
+    {
+      ObjRef<iface::mathml_dom::MathMLBvarElement> bv(lambda->getBoundVariable(bvIdx));
+      ObjRef<iface::mathml_dom::MathMLElement> bvci(bv->getArgument(1));
+      ObjRef<iface::mathml_dom::MathMLCiElement> bvcici(QueryInterface(bvci));
+      if (bvcici == NULL)
+        continue;
+      ObjRef<iface::dom::Node> n = bvcici->getArgument(1);
+
+      ObjRef<iface::dom::Text> tn(QueryInterface(n));
+      if (tn == NULL)
+        continue;
+      std::wstring txt = tn->data();
+
+      int i = 0, j = txt.length() - 1;
+      wchar_t c;
+      while ((c = txt[i]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+        i++;
+      while ((c = txt[j]) == ' ' || c == '\t' || c == '\r' || c == '\n')
+        j--;
+      if (j < i)
+        ContextError(L"CI element with only spaces inside.", bvci, sfd->mContext);
+      txt = txt.substr(i, j - i + 1);
+      ObjRef<iface::cellml_api::CellMLVariableSet> vs(sfd->mContext->variables());
+      ObjRef<iface::cellml_api::CellMLVariable> bvarV(vs->getVariable(txt));
+      if (bvarV == NULL)
+        continue;
+
+      std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >::iterator
+        tbs(mTargetsBySource.find(bvarV));
+      if (tbs == mTargetsBySource.end())
+        continue;
+      tbs->second->mEvaluationType = iface::cellml_services::LOCALLY_BOUND;
+    }
+  }
 }
 
 void
@@ -2398,6 +2456,8 @@ CodeGenerationState::BuildFloatingAndConstantLists()
     switch ((*i)->mEvaluationType)
     {
     case iface::cellml_services::CONSTANT:
+    // Treat as constant for the purposes of the algorithm
+    case iface::cellml_services::LOCALLY_BOUND:
       mKnown.insert(*i);
       break;
     case iface::cellml_services::FLOATING:
@@ -2430,6 +2490,8 @@ CodeGenerationState::BuildStateAndConstantLists()
       mFloating.insert(*i);
       break;
     case iface::cellml_services::CONSTANT:
+    // Treat as constant for the purposes of the algorithm
+    case iface::cellml_services::LOCALLY_BOUND:
       mKnown.insert(*i);
       break;
     default:
@@ -2446,8 +2508,6 @@ CodeGenerationState::BuildFloatingAndKnownLists(bool aIncludeRates)
   for (; i != mCodeInfo->mTargets.end(); i++)
     switch ((*i)->mEvaluationType)
     {
-    case iface::cellml_services::LOCALLY_BOUND:
-      break;
     case iface::cellml_services::FLOATING:
       if (!aIncludeRates && (*i)->mDegree > 0)
       {
@@ -2852,6 +2912,7 @@ CodeGenerationState::RecursivelyTestSmallSystem
   {
     if ((*i)->mType == MathStatement::SAMPLE_FROM_DIST)
     {
+      // Sampling cannot be part of a set of simultaneous equation, but can appear by itself.
       if (aNeedToAdd > 0 || aSystem.size() > 0)
       {
         i++;
@@ -2898,6 +2959,25 @@ CodeGenerationState::RecursivelyTestSmallSystem
         }
       
       uint32_t nEqns = ComputeSystemSize(aSystem), nUnknowns = targets.size();
+
+#if 0
+      if ((*targets.begin())->mVariable->name() == L"GK1_scal_rv")
+      {
+        for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator i = targets.begin();
+             i != targets.end(); i++)
+        {
+          assert((*i)->mEvaluationType != iface::cellml_services::LOCALLY_BOUND);
+        }
+        asm("int $3");
+      }
+#endif
+
+      if ((*aSystem.begin())->mType == MathStatement::SAMPLE_FROM_DIST &&
+          static_cast<SampleFromDistribution*>(static_cast<MathStatement*>(*aSystem.begin()))->mOutSet != targets)
+      {
+        aSystem.erase(sysEq);
+        continue;
+      }
 
       // printf("In this case, nEqns = %u, nUnknowns = %u\n", nEqns, nUnknowns);
 
@@ -3460,6 +3540,87 @@ SubstituteVariableForStringEverywhere(iface::mathml_dom::MathMLElement* aExpr,
   }
 }
 
+static void
+ExtractPiecewiseConditionsFromExpression(iface::mathml_dom::MathMLElement* aEl,
+                                         std::list<iface::mathml_dom::MathMLElement*>&aList)
+{
+  ObjRef<iface::mathml_dom::MathMLPiecewiseElement> pwel(QueryInterface(aEl));
+  if (pwel != NULL)
+  {
+    ObjRef<iface::mathml_dom::MathMLNodeList> pcs(pwel->pieces());
+    unsigned long nPieces = pcs->length();
+    for (unsigned long i = 0; i < nPieces; i++)
+    {
+      ObjRef<iface::dom::Node> pieceEl(pcs->item(i));
+      ObjRef<iface::mathml_dom::MathMLCaseElement> piece(QueryInterface(pieceEl));
+      aList.push_back(piece->caseCondition());
+    }
+  }
+
+  ObjRef<iface::mathml_dom::MathMLContainer> cel(QueryInterface(aEl));
+  if (cel == NULL)
+    return;
+
+  unsigned int nargs = cel->nArguments();
+  for (unsigned int i = 1; i <= nargs; i++)
+  {
+    ObjRef<iface::mathml_dom::MathMLElement> mel(cel->getArgument(i));
+    ExtractPiecewiseConditionsFromExpression(mel, aList);
+  }
+}
+
+static void
+TryMakeAPiecewiseConditionIntoRoot(iface::mathml_dom::MathMLElement* aInput,
+                                   std::list<iface::mathml_dom::MathMLElement*>& aOutput)
+{
+  ObjRef<iface::mathml_dom::MathMLApplyElement> ap(QueryInterface(aInput));
+  if (ap == NULL)
+    return;
+  
+  ObjRef<iface::mathml_dom::MathMLPredefinedSymbol> opel(QueryInterface(ap->_cxx_operator()));
+  if (opel == NULL)
+    return;
+  
+  std::wstring sn = opel->symbolName();
+  if (sn == L"and" || sn == L"or")
+  {
+    unsigned long nargs = ap->nArguments();
+    for (unsigned long i = 1; i <= nargs; i++)
+    {
+      ObjRef<iface::mathml_dom::MathMLElement> arg(ap->getArgument(i));
+      TryMakeAPiecewiseConditionIntoRoot(arg, aOutput);
+    }
+  }
+  else if (sn == L"eq" || sn == L"lt" || sn == L"gt" || sn == L"leq" || sn == L"geq")
+  {
+    if (ap->nArguments() >= 3)
+    {
+      ObjRef<iface::mathml_dom::MathMLElement> mel1 = ap->getArgument(2);
+      ObjRef<iface::mathml_dom::MathMLElement> mel2 = ap->getArgument(3);
+      ObjRef<iface::dom::Node> cmel1 = mel1->cloneNode(true);
+      ObjRef<iface::dom::Node> cmel2 = mel2->cloneNode(true);
+      ObjRef<iface::dom::Document> d(ap->ownerDocument());
+      ObjRef<iface::mathml_dom::MathMLElement> newapply(QueryInterface(d->createElementNS(MATHML_NS, L"apply")));
+      ObjRef<iface::dom::Element> minusop(d->createElementNS(MATHML_NS, L"minus"));
+      newapply->appendChild(minusop)->release_ref();
+      newapply->appendChild(cmel1)->release_ref();
+      newapply->appendChild(cmel2)->release_ref();
+      newapply->add_ref();
+      aOutput.push_back(newapply.getPointer());
+    }
+  }
+}
+
+static void
+TryMakePiecewiseConditionsIntoRoots(const std::list<iface::mathml_dom::MathMLElement*>& aInput,
+                                    std::list<iface::mathml_dom::MathMLElement*>& aOutput)
+{
+  for (std::list<iface::mathml_dom::MathMLElement*>::const_iterator i = aInput.begin();
+       i != aInput.end();
+       i++)
+    TryMakeAPiecewiseConditionIntoRoot(*i, aOutput);
+}
+
 void
 CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, SampleFromDistribution* aSFD)
 {
@@ -3529,6 +3690,74 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
       mCodeInfo->mFuncsStr += sup;
     }
     RETURN_INTO_WSTRING(exprStr, mr->expression());
+
+    std::list<iface::mathml_dom::MathMLElement*> pwCondList;
+    scoped_destroy<std::list<iface::mathml_dom::MathMLElement*> >
+      (pwCondList, new container_destructor<std::list<iface::mathml_dom::MathMLElement*> >
+       (new objref_destructor<iface::mathml_dom::MathMLElement>()));
+    ExtractPiecewiseConditionsFromExpression(expr, pwCondList);
+    std::list<iface::mathml_dom::MathMLElement*> pwRootList;
+    scoped_destroy<std::list<iface::mathml_dom::MathMLElement*> >
+      (pwRootList, new container_destructor<std::list<iface::mathml_dom::MathMLElement*> >
+       (new objref_destructor<iface::mathml_dom::MathMLElement>()));
+    TryMakePiecewiseConditionsIntoRoots(pwCondList, pwRootList);
+    std::list<std::wstring> pwRootStrs;
+    for (std::list<iface::mathml_dom::MathMLElement*>::iterator rit = pwRootList.begin();
+         rit != pwRootList.end(); rit++)
+    {
+      ObjRef<iface::cellml_services::MaLaESResult> mrpw
+        (mTransform->transform(mCeVAS, mCUSES, mAnnoSet, *rit,
+                               aSFD->mContext, NULL,
+                               NULL, 0));
+      for (uint32_t si = 0, sl = mrpw->supplementariesLength(); si < sl; si++)
+      {
+        RETURN_INTO_WSTRING(sup, mrpw->getSupplementary(si));
+        mCodeInfo->mFuncsStr += sup;
+      }
+      pwRootStrs.push_back(mrpw->expression());
+    }
+
+
+    wchar_t rcBuf[30];
+    any_swprintf(rcBuf, 30, L"%u", pwRootStrs.size());
+    pos = 0;
+    while ((pos = t.find(L"<ROOTCOUNT>", pos)) != std::wstring::npos)
+      t.replace(pos, 11, rcBuf);
+
+    pos = 0;
+    for (pos = t.find(L"<FOREACH_ROOT>", pos); pos != std::wstring::npos; pos = t.find(L"<FOREACH_ROOT>", pos))
+    {
+      size_t posEnd = t.find(L"</FOREACH_ROOT>", pos);
+      if (posEnd == std::wstring::npos)
+        break;
+      std::wstring templ = t.substr(pos + 14, posEnd - pos - 14);
+      std::wstring rootStr;
+      int rootID = 0;
+      for (std::list<std::wstring>::iterator rootIt = pwRootStrs.begin(); rootIt != pwRootStrs.end(); rootIt++)
+      {
+        std::wstring thisRootStr = templ;
+        wchar_t buf[30];
+        any_swprintf(buf, 30, L"%u", rootID++);
+
+        size_t rsPos = 0;
+        while ((rsPos = thisRootStr.find(L"<EXPR>", rsPos)) != std::wstring::npos)
+          thisRootStr.replace(rsPos, 6, *rootIt);
+        rsPos = 0;
+        while ((rsPos = thisRootStr.find(L"<ROOTID>", rsPos)) != std::wstring::npos)
+          thisRootStr.replace(rsPos, 8, buf);
+
+        rsPos = thisRootStr.find(L"<ROOTSUP>");
+        if (rsPos == std::wstring::npos)
+          rootStr += thisRootStr;
+        else
+        {
+          rootStr += thisRootStr.substr(0, rsPos);
+          mCodeInfo->mFuncsStr += thisRootStr.substr(rsPos + 9);
+        }
+      }
+      t.replace(pos, posEnd - pos + 15, rootStr);
+      pos++;
+    }
 
     pos = 0;
     while ((pos = t.find(L"<EXPR>", pos)) != std::wstring::npos)
