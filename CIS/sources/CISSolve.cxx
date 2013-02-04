@@ -46,6 +46,8 @@
 // It would be good to one day make this configurable by the user.
 #define SUBSOL_TOLERANCE 1E-6
 
+#define DEBUG_UNCERT
+
 struct EvaluationInformation
 {
   double* constants, * rates, * algebraic, * states;
@@ -572,6 +574,8 @@ struct PDFInformation
   double (*pdf)(double bvar, double* constants, double* algebraic);
   double* constants, * algebraic, uplimit;
   double target;
+  int nroots;
+  double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC);
 };
 
 static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data)
@@ -587,17 +591,40 @@ static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data
     info->pdf(tprime, info->constants, info->algebraic) * (1.0 / (tp1 * tp1));
 
 #ifdef DEBUG_UNCERT
-  printf("PDF' at %f = %f\n", t, *N_VGetArrayPointer_Serial(ratesV));
+  printf("PDF' at %.100g = %.100g (tprime = %.100g)\n", t, *N_VGetArrayPointer_Serial(ratesV), tprime);
 #endif
 
   return 0;
 }
-void
+
+static int rootfuncForPDF(double t, N_Vector varsV, double *gout, void* data)
+{
+  struct PDFInformation* info = (struct PDFInformation*)data;
+  double tp1 = 1.0 + t;
+  // We transform the integral from a limit between -infinity and uplimit into
+  // one between -1 and 0...
+  double tprime = info->uplimit + t / tp1;
+
+  for (int i = 0; i < info->nroots; i++)
+  {
+    gout[i] = info->rootFuncs[i](tprime, info->constants, info->algebraic);
+#ifdef DEBUG_UNCERT
+    printf("gout[%d] = %g at t = %g, t' = %g\n", i, gout[i], t, tprime);
+#endif
+  }
+
+  return 0;
+}
+
+static void
 ignoreKINSOLError(int code, const char *module,
                   const char *function, char *msg,
                   void *dat)
 {
 }
+
+#define BUMPFLOATUP(x) (x > 0) ? x*(1+1E-15) : x*(1-1E-15)
+#define MAX(x,y) (x>y)?x:y
 
 static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
 {
@@ -610,26 +637,43 @@ static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
     return 1;
 
   void* cv = CVodeCreate(CV_BDF, CV_NEWTON);
-  CVodeInit(cv, integrandForPDF, -1.0 + 1E-6, hxVec);
+  CVodeInit(cv, integrandForPDF, BUMPFLOATUP(-1.0), hxVec);
   CVodeSetErrHandlerFn(cv, ignoreKINSOLError, NULL);
   CVodeSetMaxStep(cv, 1E-3);
-  CVodeSetMaxNumSteps(cv, 2000);
-  CVodeSStolerances(cv, 1E-6, 1E-6);
+  CVodeSetMaxNumSteps(cv, 1000);
+  CVodeSStolerances(cv, 1E-10, 1E-10);
   CVodeSetUserData(cv, info);
   CVDense(cv, 1);
+
+  if (info->nroots != 0)
+    CVodeRootInit(cv, info->nroots, rootfuncForPDF);
+
   double tret;
 #ifdef DEBUG_UNCERT
-  printf("Running CVode to integrate between -inf and %f (transformed to -1.0 -> 0.0)\n", *p);
+  printf("Running CVode to integrate between -inf and %f (transformed to -1.0 -> 0.0)\n", NV_Ith_S(pVec, 0));
 #endif
-  ret = CVode(cv, 0, hxVec, &tret, CV_NORMAL);
+  while (true)
+  {
+    ret = CVode(cv, 0, hxVec, &tret, CV_NORMAL);
+    if (ret != CV_ROOT_RETURN)
+      break;
+    double tprime = tret / (1 + tret) + info->uplimit;
+    double tprimeup = BUMPFLOATUP(tprime);
+    tret = MAX(BUMPFLOATUP(tret),
+               (tprimeup - info->uplimit) / (1 - tprimeup)); // TODO adjust this based on error tolerance.
 #ifdef DEBUG_UNCERT
-  printf("C.D.F.(%f) = %f\n", *p, *hx);
+    printf("Reinitialising at %g (%g)\n", tret, info->uplimit + tret/(1.0+tret));
+#endif
+    CVodeReInit(cv, tret, hxVec);
+  }
+#ifdef DEBUG_UNCERT
+  printf("C.D.F.(%f) = %f, ret = %d\n", NV_Ith_S(pVec, 0), NV_Ith_S(hxVec, 0), ret);
 #endif
   CVodeFree(&cv);
 
-  NV_Ith_S(hxVec, 0) = info->target - NV_Ith_S(hxVec, 0);
+  NV_Ith_S(hxVec, 0) -= info->target;
 
-  return (ret == 0) ? 0 : 1;
+  return (ret < 0) ? 1 : 0;
 }
 
 double
@@ -643,11 +687,15 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   pdfi.algebraic = ALGEBRAIC;
   pdfi.pdf = pdf;
   pdfi.target = (rand() + 0.0) / RAND_MAX;
+  pdfi.nroots = nroots;
+  pdfi.rootFuncs = rootFuncs;
   double p;
+  N_Vector pVec = N_VMake_Serial(1, &p);
+
+#ifdef PDF_SAMPLE_KINSOL
   double one = 1.0;
 
   void* kin_mem = KINCreate();
-  N_Vector pVec = N_VMake_Serial(1, &p);
   N_Vector oneVec = N_VMake_Serial(1, &one);
 
   KINInit(kin_mem, minfuncForPDF, pVec);
@@ -688,8 +736,38 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
     p = strtod("NAN", NULL);
 
   KINFree(&kin_mem);
-  N_VDestroy(pVec);
   N_VDestroy(oneVec);
+#else
+  // Note: We cannot hold a very large range here because we transform numbers to allow an integral from -inf to 0.
+  double lowlim = -1E6, uplim = 1E6;
+  double hx;
+  N_Vector hxVec = N_VMake_Serial(1, &hx);
+
+  for (p = (lowlim + uplim) / 2.0; (uplim - lowlim) > 1E-6; p = (lowlim + uplim) / 2.0)
+  {
+    printf("Trying p = %g (in (%g, %g)): ", p, lowlim, uplim);
+    if (minfuncForPDF(pVec, hxVec, (void*)&pdfi))
+    {
+      printf("minfunc failed!\n");
+      p = strtod("NAN", NULL);
+      break;
+    }
+
+    printf("hx = %g\n", hx);
+
+    if (fabs(hx) < 1E-6)
+      break;
+
+    if (hx < 0)
+      lowlim = p;
+    else
+      uplim = p;
+  }
+
+  N_VDestroy(hxVec);
+#endif
+
+  N_VDestroy(pVec);
 
   return p;
 }

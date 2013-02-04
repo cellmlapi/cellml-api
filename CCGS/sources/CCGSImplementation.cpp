@@ -314,7 +314,7 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    mAlgebraicVariableNamePattern(L"ALGEBRAIC[%]"),
    mRateNamePattern(L"RATES[%]"),
    mVOIPattern(L"VOI"),
-   mSampleDensityFunctionPattern(L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\n  return (<EXPR>);\r\n}\r\ndouble (*pdf_roots_<ID>[])(double bvar, double*, double*) = {<FOREACH_ROOT>root_<ROOTID>,<ROOTSUP>double pdf_<ID>_root_<ROOTID>(double bvar, double CONSTANTS, double* ALGEBRAIC)\r\n{\r\nreturn (<EXPR>);\r\n}\r\n</FOREACH_ROOT>};\r\n"),
+   mSampleDensityFunctionPattern(L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\n  return (<EXPR>);\r\n}\r\ndouble (*pdf_roots_<ID>[])(double bvar, double*, double*) = {<FOREACH_ROOT>pdf_<ID>_root_<ROOTID>,<ROOTSUP>double pdf_<ID>_root_<ROOTID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\nreturn (<EXPR>);\r\n}\r\n</FOREACH_ROOT>};\r\n"),
    mSampleRealisationsPattern(L"switch (rand() % <numChoices>)\r\n{\n<eachChoice>case <choiceNumber>:\r\n<choiceAssignments>break;\r\n</eachChoice>}\r\n"),
    mBoundVariableName(L"bvar"),
    mAssignPattern(L"<LHS> = <RHS>;\r\n"),
