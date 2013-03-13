@@ -199,10 +199,10 @@ CHECK_TYPE_SIZE(uint16_t SIZE_UINT16_T)
 CHECK_TYPE_SIZE(int8_t SIZE_INT16_T)
 CHECK_TYPE_SIZE(uint8_t SIZE_UINT16_T)
 
-INCLUDE(CheckCSourceCompiles)
+INCLUDE(CheckCXXSourceCompiles)
 IF(NOT WIN32)
   SET(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fvisibility=hidden")
-  CHECK_C_SOURCE_COMPILES("int main(int,char**) __attribute__((visibility(\"default\"))); int main(int argc, char** argv) { return 0; }"
+  CHECK_CXX_SOURCE_COMPILES("class __attribute__((visibility(\"default\"))) MyClass { MyClass() __attribute__((visibility(\"default\"))); }; int main(int,char**) __attribute__((visibility(\"default\"))); int main(int argc, char** argv) { return 0; }"
                           HAVE_VISIBILITY_ATTRIBUTE)
   SET(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
   IF(HAVE_VISIBILITY_ATTRIBUTE)
