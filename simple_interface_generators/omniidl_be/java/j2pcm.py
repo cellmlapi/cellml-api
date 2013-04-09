@@ -139,7 +139,8 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         # It is a non-Java C++ object, so make a Java wrapper for it...
         
         self.cppSup.out('jclass clazz = env->FindClass("pjm2pcm/' + classsig + '");')
-        self.cppSup.out('jobject wrapper = env->AllocObject(clazz);')
+        self.cppSup.out('jmethodID constr = env->GetMethodID(clazz, "<init>", "()V");')
+        self.cppSup.out('jobject wrapper = env->NewObject(clazz, constr);')
         self.cppSup.out('jfieldID fid = env->GetFieldID(clazz, "nativePtr", "J");')
         self.cppSup.out('obj->add_ref();')
         self.cppSup.out('jlong field = reinterpret_cast<int64_t>(obj);')
