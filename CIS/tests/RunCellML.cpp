@@ -587,10 +587,7 @@ main(int argc, char** argv)
   if (PeekForIDA(argc, argv))
     ret = IDAMain(cis, mod, argc, argv);
   else
-  {
-    for (int i = 0; i < 10; i++)
-      ret = ODEMain(cis, mod, argc, argv);
-  }
+    ret = ODEMain(cis, mod, argc, argv);
 
   return ret;
 }
