@@ -10,6 +10,8 @@
 extern void UnloadCIS(void);
 #endif
 
+class CompiledModule;
+
 struct CompiledModelFunctions
 {
   int (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES);
@@ -45,7 +47,7 @@ class CDA_CellMLCompiledModel
 {
 public:
   CDA_CellMLCompiledModel(
-                           void* aModule,
+                           CompiledModule* aModule,
                            iface::cellml_api::Model* aModel,
                            iface::cellml_services::CodeInformation* aCCI,
                            std::string& aDirname
@@ -59,21 +61,21 @@ public:
     throw(std::exception&)
   {
     mModel->add_ref();
-    return mModel;
+    return mModel.getPointer();
   }
 
   already_AddRefd<iface::cellml_services::CodeInformation> codeInformation()
     throw(std::exception&)
   {
     mCCI->add_ref();
-    return mCCI;
+    return mCCI.getPointer();
   }
 
   // These are not available directly across CORBA, but read-only access is
   // allowed within the same module...
-  void* mModule;
-  iface::cellml_api::Model* mModel;
-  iface::cellml_services::CodeInformation* mCCI;
+  CompiledModule* mModule;
+  ObjRef<iface::cellml_api::Model> mModel;
+  ObjRef<iface::cellml_services::CodeInformation> mCCI;
   std::string mDirname;
 };
 
@@ -83,7 +85,7 @@ class CDA_ODESolverModel
 public:
   CDA_ODESolverModel
   (
-   void* aModule, CompiledModelFunctions* aCMF,
+   CompiledModule* aModule, CompiledModelFunctions* aCMF,
    iface::cellml_api::Model* aModel,
    iface::cellml_services::CodeInformation* aCCI,
    std::string& aDirname
@@ -103,7 +105,7 @@ class CDA_DAESolverModel
 public:
   CDA_DAESolverModel
   (
-   void* aModule, IDACompiledModelFunctions* aCMF,
+   CompiledModule* aModule, IDACompiledModelFunctions* aCMF,
    iface::cellml_api::Model* aModel,
    iface::cellml_services::CodeInformation* aCCI,
    std::string& aDirname
@@ -299,6 +301,8 @@ public:
 #endif
 
 private:
+  CompiledModule* CompileSource(std::string& destDir, std::string& sourceFile,
+                                std::wstring& lastError);
   std::wstring mLastError;
 #ifdef ENABLE_CONTEXT
   void (*mUnload)();

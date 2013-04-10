@@ -41,7 +41,7 @@ CodeGenerationState::~CodeGenerationState()
     (*i).second->release_ref();
 }
 
-iface::cellml_services::CustomGenerator*
+already_AddRefd<iface::cellml_services::CustomGenerator>
 CodeGenerationState::CreateCustomGenerator()
 {
   // Create a new code information object...
@@ -75,10 +75,10 @@ CodeGenerationState::CreateCustomGenerator()
   mCodeInfo->mTargets.clear();
 
   cg->add_ref();
-  return cg;
+  return already_AddRefd<iface::cellml_services::CustomGenerator>(cg);
 }
 
-iface::cellml_services::CustomCodeInformation*
+already_AddRefd<iface::cellml_services::CustomCodeInformation>
 CodeGenerationState::GenerateCustomCode
 (
  std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aTargetSet,
@@ -184,7 +184,7 @@ CodeGenerationState::GenerateCustomCode
   mCodeInfo->mTargets.clear();
 
   cci->add_ref();
-  return cci;
+  return already_AddRefd<iface::cellml_services::CustomCodeInformation>(cci);
 }
 
 void
@@ -301,7 +301,7 @@ CodeGenerationState::MapExternalTargetsToInternal
 }
 
 
-iface::cellml_services::IDACodeInformation*
+already_AddRefd<iface::cellml_services::IDACodeInformation>
 CodeGenerationState::GenerateCode()
 {
   // Create a new code information object...
@@ -442,7 +442,7 @@ CodeGenerationState::GenerateCode()
   }
     
   mCodeInfo->add_ref();
-  return mCodeInfo;
+  return already_AddRefd<iface::cellml_services::IDACodeInformation>(mCodeInfo);
 }
 
 #define HINTS_NS L"http://www.cellml.org/metadata/simulation/solverhints/1.0#"
@@ -1357,8 +1357,12 @@ CodeGenerationState::SplitPiecewiseByResetRule()
       {
         RETURN_INTO_OBJREF(pieceEl, iface::dom::Element,
                            doc->createElementNS(MATHML_NS, L"piece"));
-        pieceEl->appendChild((*j).first->mMaths)->release_ref();
-        pieceEl->appendChild((*j).second->mMaths)->release_ref();
+        ObjRef<iface::dom::Node> vNode =
+          (*j).first->mMaths->cloneNode(true);
+        ObjRef<iface::dom::Node> cNode =
+          (*j).second->mMaths->cloneNode(true);
+        pieceEl->appendChild(vNode)->release_ref();
+        pieceEl->appendChild(cNode)->release_ref();
         pwEl->appendChild(pieceEl)->release_ref();
 
         pwreset->mPieces.push_back(*j);
@@ -1724,14 +1728,14 @@ CodeGenerationState::CreateMathStatements()
         if (mn == NULL)
           continue;
         
-        ptr_tag<MathMLMathStatement> mms;
+        std::auto_ptr<MathMLMathStatement> mms;
 
         // See if it is a piecewise...
         DECLARE_QUERY_INTERFACE_OBJREF(mpw, n, mathml_dom::MathMLPiecewiseElement);
         if (mpw != NULL)
         {
           Piecewise* pw = new Piecewise;
-          mms = pw;
+          mms.reset(pw);
 
           RETURN_INTO_OBJREF(pnl, iface::mathml_dom::MathMLNodeList, mpw->pieces());
           for (uint32_t pl = pnl->length(), pi = 1; pi <= pl + 1; pi++)
@@ -1844,7 +1848,7 @@ CodeGenerationState::CreateMathStatements()
             }
 
             SampleFromDistribution* sfd = new SampleFromDistribution();
-            mms = sfd;
+            mms.reset(sfd);
             if (mae->nArguments() != 3)
             {
               delete sfd;
@@ -1907,7 +1911,7 @@ CodeGenerationState::CreateMathStatements()
                            op, c);
             
             ptr_tag<Equation> eq(new Equation());
-            mms = eq;
+            mms.reset(eq);
             
             if (mae->nArguments() != 3)
             {
@@ -1923,8 +1927,9 @@ CodeGenerationState::CreateMathStatements()
           }
         }
 
-        SetupMathMLMathStatement(mms, mn, c);
-        mMathStatements.push_back(ptr_tag<MathStatement>(mms));
+        ptr_tag<MathMLMathStatement> ptmms(mms.release());
+        SetupMathMLMathStatement(ptmms, mn, c);
+        mMathStatements.push_back(ptmms);
       }
     }
   }

@@ -201,14 +201,14 @@ public:
 
   ~CodeGenerationState();
 
-  iface::cellml_services::IDACodeInformation* GenerateCode();
+  already_AddRefd<iface::cellml_services::IDACodeInformation> GenerateCode();
   void IDAStyleCodeGeneration();
   void ODESolverStyleCodeGeneration();
 
   void ResetGenerator();
 
-  iface::cellml_services::CustomGenerator* CreateCustomGenerator();
-  iface::cellml_services::CustomCodeInformation* GenerateCustomCode
+  already_AddRefd<iface::cellml_services::CustomGenerator> CreateCustomGenerator();
+  already_AddRefd<iface::cellml_services::CustomCodeInformation> GenerateCustomCode
   (std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aTargetSet,
    std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserWanted,
    std::set<iface::cellml_services::ComputationTarget*, XPCOMComparator>& aUserKnown,

@@ -59,6 +59,12 @@
 /* Define TESTDIR to path of test sources. */
 #define TESTDIR8 "${CMAKE_CURRENT_SOURCE_DIR}/tests"
 
+/* Is LLVM found? */
+#cmakedefine LLVM_FOUND
+#ifdef LLVM_FOUND
+#define ENABLE_CLANG
+#endif
+
 #define SIZE_INT64_T ${SIZE_INT64_T}
 #if ! (SIZE_INT64_T + 0)
 #undef int64_t

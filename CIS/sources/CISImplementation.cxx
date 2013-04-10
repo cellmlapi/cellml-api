@@ -1,5 +1,7 @@
 #define IN_CIS_MODULE
 #define MODULE_CONTAINS_CIS
+#define __STDC_LIMIT_MACROS
+#define __STDC_CONSTANT_MACROS
 #include "Utilities.hxx"
 #include <stdlib.h>
 #include <string>
@@ -23,6 +25,82 @@
 #include <dirent.h>
 #endif
 #include "CCGSBootstrap.hpp"
+
+#ifdef ENABLE_CLANG
+#include "llvm/LLVMContext.h"
+#include "llvm/Module.h"
+#include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/ADT/OwningPtr.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/JIT.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/Host.h"
+#include "llvm/Support/Path.h"
+#include "llvm/Support/raw_ostream.h"
+
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/DiagnosticIDs.h"
+#include "clang/Basic/DiagnosticOptions.h"
+#include "clang/CodeGen/CodeGenAction.h"
+#include "clang/Driver/Compilation.h"
+#include "clang/Driver/Driver.h"
+#include "clang/Driver/Job.h"
+#include "clang/Driver/Tool.h"
+#include "clang/Driver/Util.h"
+#include "clang/Frontend/CompilerInvocation.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
+#include <clang/CodeGen/CodeGenAction.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <sstream>
+#endif
+
+class CompiledModule {
+public:
+#ifdef ENABLE_CLANG
+  llvm::OwningPtr<llvm::Module> mModule;
+  llvm::OwningPtr<llvm::ExecutionEngine> mExecutionEngine;
+  std::list<llvm::Function*> mFunctions;
+
+  void*
+  getSymbol(const char* aName)
+  {
+    llvm::Function* f = mModule->getFunction(aName);
+    // mFunctions.push_back(f);
+    return mExecutionEngine->getPointerToFunction(f);
+  }
+
+  ~CompiledModule()
+  {
+    for (std::list<llvm::Function*>::iterator i = mFunctions.begin();
+         i != mFunctions.end(); i++)
+      delete (*i);
+  }
+#else
+  void* mModule;
+
+  void*
+  getSymbol(const char* aName)
+  {
+#ifdef WIN32
+#define getsym(m,s) GetProcAddress((HMODULE)m, s)
+#else
+#define getsym(m,s) dlsym(m,s)
+#endif
+    return getsym(aName);
+#undef getsym
+  }
+
+  ~CompiledModule() {
+#ifdef WIN32
+    FreeLibrary((HMODULE)mModule);
+#else
+    dlclose(mModule);
+#endif
+  }
+#endif
+};
 
 char*
 attempt_make_tempdir(const char* parentDir)
@@ -57,46 +135,153 @@ attempt_make_tempdir(const char* parentDir)
 }
 
 CompiledModelFunctions*
-SetupCompiledModelFunctions(void* module)
+SetupCompiledModelFunctions(CompiledModule* module)
 {
   CompiledModelFunctions* cmf = new CompiledModelFunctions;
-#ifdef WIN32
-#define getsym(m,s) GetProcAddress((HMODULE)m, s)
-#else
-#define getsym(m,s) dlsym(m,s)
-#endif
   cmf->SetupConstants = (int (*)(double*, double*, double*))
-    getsym(module, "SetupConstants");
+    module->getSymbol("SetupConstants");
   cmf->ComputeRates = (int (*)(double,double*,double*,double*,double*))
-    getsym(module, "ComputeRates");
+    module->getSymbol("ComputeRates");
   cmf->ComputeVariables = (int (*)(double,double*,double*,double*,double*))
-    getsym(module, "ComputeVariables");
+    module->getSymbol("ComputeVariables");
   return cmf;
 }
 
 IDACompiledModelFunctions*
-SetupIDACompiledModelFunctions(void* module)
+SetupIDACompiledModelFunctions(CompiledModule* module)
 {
   IDACompiledModelFunctions* cmf = new IDACompiledModelFunctions;
   cmf->SetupFixedConstants = (int (*)(double*, double*, double*))
-    getsym(module, "SetupFixedConstants");
+    module->getSymbol("SetupFixedConstants");
   cmf->EvaluateVariables = (int (*)(double, double*, double*, double*, double*, double*))
-    getsym(module, "EvaluateVariables");
+    module->getSymbol("EvaluateVariables");
   cmf->EvaluateEssentialVariables = (int (*)(double, double*, double*, double*, double*, double*, double*, double*))
-    getsym(module, "EvaluateEssentialVariables");
+    module->getSymbol("EvaluateEssentialVariables");
   cmf->ComputeResiduals = (int (*)(double, double*, double*, double*, double*, double*, double*, double*, double*))
-    getsym(module, "ComputeResiduals");
+    module->getSymbol("ComputeResiduals");
   cmf->ComputeRootInformation = (int (*)(double, double*, double*, double*, double*, double*, double*, double*))
-    getsym(module, "ComputeRootInformation");
+    module->getSymbol("ComputeRootInformation");
   cmf->SetupStateInfo = (void (*)(double*))
-    getsym(module, "SetupStateInfo");
+    module->getSymbol("SetupStateInfo");
   return cmf;
 }
 
-void*
-CompileSource(std::string& destDir, std::string& sourceFile,
-              std::wstring& lastError)
+CompiledModule*
+CDA_CellMLIntegrationService::CompileSource
+(
+ std::string& destDir, std::string& sourceFile, std::wstring& lastError
+)
 {
+#ifdef ENABLE_CLANG
+  LLVMLinkInJIT();
+  // This code is modified from the code in OpenCOR.
+
+  // Firstly use the driver as if we were going to do a compilation, but don't
+  // actually run the compilation (we just do this to get the arguments we need).
+  clang::DiagnosticsEngine diagnosticsEngine
+    (
+     llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs>(new clang::DiagnosticIDs()),
+     NULL
+    );
+  clang::driver::Driver driver(
+                               "internal code compilation",
+                               llvm::sys::getDefaultTargetTriple(),
+                               "", true, diagnosticsEngine);
+
+  const char* args[] = { "internal code compilation", "-fsyntax-only", "-Wno-implicit-function-declaration", "-O3", sourceFile.c_str()
+                       };
+  llvm::OwningPtr<clang::driver::Compilation> compilation
+    (driver.BuildCompilation(llvm::ArrayRef<const char*>(args, sizeof(args)/sizeof(char*))));
+
+  if (!compilation)
+  {
+    mLastError = L"Cannot create an LLVM compiler driver.";
+    throw iface::cellml_api::CellMLException();
+  }
+
+  const clang::driver::JobList &jobList =
+    compilation->getJobs();
+  const clang::driver::Command* command =
+    llvm::cast<clang::driver::Command>(*(compilation->getJobs().begin()));
+  const clang::driver::ArgStringList &commandArguments = command->getArguments();
+  llvm::OwningPtr<clang::CompilerInvocation> compilerInvocation(new clang::CompilerInvocation());
+
+  clang::CompilerInvocation::CreateFromArgs(*compilerInvocation.get(),
+                                            const_cast<const char **>(commandArguments.data()),
+                                            const_cast<const char **>(commandArguments.data())+
+                                            commandArguments.size(),
+                                            diagnosticsEngine);
+
+  // By default, Clang deliberately leaks memory so it is faster if it is
+  // just going to exit anyway. Tell it not to do that.
+  compilerInvocation->getFrontendOpts().DisableFree = 0;
+
+    // Create a compiler instance to handle the actual work
+
+    clang::CompilerInstance compilerInstance;
+
+    compilerInstance.setInvocation(compilerInvocation.take());
+
+    // Create the compiler instance's diagnostics engine
+
+#ifdef DEBUG_LLVM
+    llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diagnosticOptions = new clang::DiagnosticOptions();
+#endif
+    compilerInstance.createDiagnostics(int(commandArguments.size()),
+                                       const_cast<char **>(commandArguments.data()),
+#ifdef DEBUG_LLVM
+                                       new clang::TextDiagnosticPrinter(llvm::outs(), &*diagnosticOptions)
+#else
+                                       NULL
+#endif
+                                      );
+    // Create an LLVM module
+
+    llvm::OwningPtr<CompiledModule> clangData(new CompiledModule());
+
+    clangData->mModule.reset
+      (new llvm::Module(sourceFile, llvm::getGlobalContext()));
+
+    // Initialise the native target, so not only can we then create a JIT
+    // execution engine, but more importantly its data layout will match that of
+    // our target platform...
+
+    llvm::InitializeNativeTarget();
+
+    // Create an execution engine
+
+    std::string whyFail;
+    clangData->mExecutionEngine.reset
+      (llvm::ExecutionEngine::createJIT(clangData->mModule.get(), &whyFail));
+
+    if (!clangData->mExecutionEngine)
+    {
+      wchar_t buffer[1024];
+      mbstowcs(buffer, whyFail.c_str(), 1024);
+      buffer[1023] = 0;
+      mLastError = std::wstring(L"Cannot create LLVM execution engine: ") + buffer;
+      throw iface::cellml_api::CellMLException();
+    }
+
+    // Create and execute the frontend to generate the LLVM assembly code,
+    // making sure that all added functions end up in the same module
+
+    llvm::OwningPtr<clang::CodeGenAction> codeGenerationAction
+      (new clang::EmitLLVMOnlyAction(&clangData->mModule->getContext()));
+
+    codeGenerationAction->setLinkModule(clangData->mModule.take());
+
+    if (!compilerInstance.ExecuteAction(*codeGenerationAction))
+    {
+      mLastError = L"Error generating code with LLVM.";
+      throw iface::cellml_api::CellMLException();
+    }
+
+    // Switch from the source module to the linked module.
+    clangData->mModule.reset(codeGenerationAction->takeModule());
+
+    return clangData.take();
+#else // ENABLE_CLANG
   setvbuf(stdout, NULL, _IONBF, 0);
   std::string targ = destDir;
 #ifdef WIN32
@@ -272,12 +457,15 @@ CompileSource(std::string& destDir, std::string& sourceFile,
     throw iface::cellml_api::CellMLException();
   }
 
-  return t;
+  CompiledModule *mod = new CompiledModule();
+  mod->mModule = t;
+  return mod;
+#endif // !ENABLE_CLANG
 }
 
 CDA_CellMLCompiledModel::CDA_CellMLCompiledModel
 (
- void* aModule,
+ CompiledModule* aModule,
  iface::cellml_api::Model* aModel,
  iface::cellml_services::CodeInformation* aCCI,
  std::string& aDirname
@@ -285,19 +473,11 @@ CDA_CellMLCompiledModel::CDA_CellMLCompiledModel
   : mModule(aModule), mModel(aModel), mCCI(aCCI),
     mDirname(aDirname)
 {
-  mModel->add_ref();
-  mCCI->add_ref();
 }
 
 CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
 {
-#ifdef WIN32
-  FreeLibrary((HMODULE)mModule);
-#else
-  dlclose(mModule);
-#endif
-  mModel->release_ref();
-  mCCI->release_ref();
+  delete mModule;
 #ifdef WIN32
   struct _finddata_t d;
   intptr_t hd;
@@ -531,7 +711,7 @@ CDA_ODESolverRun::runthread()
   if (buffer != NULL)
     delete [] buffer;
 
-  release_ref();
+  release_ref(); // Thread is finishing, cancel the add_ref call before startthread.
 }
 
 void
@@ -600,7 +780,7 @@ CDA_DAESolverRun::runthread()
   if (buffer != NULL)
     delete [] buffer;
 
-  release_ref();
+  release_ref(); // Thread is finishing, cancel the add_ref call before startthread.
 }
 
 void
@@ -737,6 +917,7 @@ CDA_CellMLIntegrationService::compileModelODE
   {
     cci = already_AddRefd<iface::cellml_services::CodeInformation>
       (cg->generateCode(aModel));
+
     std::wstring msg = cci->errorMessage();
     if (msg != L"")
     {
@@ -751,6 +932,7 @@ CDA_CellMLIntegrationService::compileModelODE
   }
 
   std::ofstream ss;
+
   std::string dirname, sourcename;
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
@@ -796,9 +978,10 @@ CDA_CellMLIntegrationService::compileModelODE
      << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
+
   ss.close();
 
-  void* mod = CompileSource(dirname, sourcename, mLastError);
+  CompiledModule* mod = CompileSource(dirname, sourcename, mLastError);
   CompiledModelFunctions* cmf = SetupCompiledModelFunctions(mod);
   
   return new CDA_ODESolverModel(mod, cmf, aModel, cci, dirname);
@@ -836,6 +1019,7 @@ CDA_CellMLIntegrationService::compileModelDAE
   }
 
   std::ofstream ss;
+
   std::string dirname, sourcename;
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
@@ -917,9 +1101,10 @@ CDA_CellMLIntegrationService::compileModelDAE
      << frag8 << std::endl
      << "}" << std::endl;
   delete [] frag8;
+
   ss.close();
 
-  void* mod = CompileSource(dirname, sourcename, mLastError);
+  CompiledModule* mod = CompileSource(dirname, sourcename, mLastError);
   IDACompiledModelFunctions* cmf = SetupIDACompiledModelFunctions(mod);
   
   return new CDA_DAESolverModel(mod, cmf, aModel, cci, dirname);

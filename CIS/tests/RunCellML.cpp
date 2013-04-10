@@ -21,6 +21,7 @@
 #include <fenv.h>
 #endif
 
+CDAMutex gFinishedMutex;
 bool gFinished = false;
 double gStart = 0.0, gStop = 10.0, gDensity = 1000.0;
 double gTabStep = 0.0;
@@ -41,15 +42,15 @@ public:
     : mRefcount(1)
   {
     mCCM = aCCM;
-    mCCM->add_ref();
     mCI = mCCM->codeInformation();
 
-    iface::cellml_services::ComputationTargetIterator* cti =
+    ObjRef<iface::cellml_services::ComputationTargetIterator> cti =
       mCI->iterateTargets();
     bool first = true;
+
     while (true)
     {
-      iface::cellml_services::ComputationTarget* ct = cti->nextComputationTarget();
+      ObjRef<iface::cellml_services::ComputationTarget> ct = cti->nextComputationTarget();
       if (ct == NULL)
         break;
       if ((ct->type() == iface::cellml_services::STATE_VARIABLE ||
@@ -57,36 +58,49 @@ public:
            ct->type() == iface::cellml_services::VARIABLE_OF_INTEGRATION) &&
           ct->degree() == 0)
       {
-        iface::cellml_api::CellMLVariable* source = ct->variable();
+        ObjRef<iface::cellml_api::CellMLVariable> source = ct->variable();
 	std::wstring n = source->name();
-        source->release_ref();
         printf(first ? "\"%S\"" : ",\"%S\"", n.c_str());
         first = false;
       }
-      ct->release_ref();
     }
     printf("\n");
-    cti->release_ref();
   }
 
   ~TestProgressObserver()
   {
-    mCCM->release_ref();
-    mCI->release_ref();
   }
 
   void add_ref()
     throw(std::exception&)
   {
+#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
+    __sync_fetch_and_add(&mRefcount, 1);
+#elif defined(WIN32)
+    InterlockedIncrement((volatile long int*)&mRefcount);
+#else
+    // If you reuse this code, lock a mutex here or use some other atomic
+    // modify and get mechanism.
     mRefcount++;
+#endif
   }
 
   void release_ref()
     throw(std::exception&)
   {
+#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
+    if (__sync_sub_and_fetch(&mRefcount, 1) == 0)
+      delete this;
+#elif defined(WIN32)
+    if (InterlockedDecrement((volatile long int*)&mRefcount) == 0)
+      delete this;
+#else
+    // If you reuse this code, lock a mutex here or use some other atomic
+    // modify and get mechanism.
     mRefcount--;
     if (mRefcount == 0)
       delete this;
+#endif
   }
 
   std::string objid()
@@ -98,6 +112,7 @@ public:
   void* query_interface(const std::string& iface)
     throw (std::exception&)
   {
+    add_ref();
     if (iface == "XPCOM::IObject")
       return static_cast< ::iface::XPCOM::IObject* >(this);
     else if (iface == "cellml_services::IntegrationProgressObserver")
@@ -118,24 +133,21 @@ public:
   void computedConstants(const std::vector<double>& values)
     throw (std::exception&)
   {
-    iface::cellml_services::ComputationTargetIterator* cti =
+    ObjRef<iface::cellml_services::ComputationTargetIterator> cti =
       mCI->iterateTargets();
     while (true)
     {
-      iface::cellml_services::ComputationTarget* ct = cti->nextComputationTarget();
+      ObjRef<iface::cellml_services::ComputationTarget> ct = cti->nextComputationTarget();
       if (ct == NULL)
         break;
       if (ct->type() == iface::cellml_services::CONSTANT &&
           ct->degree() == 0)
       {
-        iface::cellml_api::CellMLVariable* source = ct->variable();
+        ObjRef<iface::cellml_api::CellMLVariable> source = ct->variable();
 	std::wstring n = source->name();
-        source->release_ref();
         printf("# Computed constant: %S = %e\n", n.c_str(), values[ct->assignedIndex()]);
       }
-      ct->release_ref();
     }
-    cti->release_ref();
   }
 
   void results(const std::vector<double>& values)
@@ -152,19 +164,16 @@ public:
     for (i = 0; i < values.size(); i += recsize)
     {
       bool first = true;
-      iface::cellml_services::ComputationTargetIterator* cti =
+      ObjRef<iface::cellml_services::ComputationTargetIterator> cti =
         mCI->iterateTargets();
       while (true)
       {
-        iface::cellml_services::ComputationTarget* ct = cti->nextComputationTarget();
+        ObjRef<iface::cellml_services::ComputationTarget> ct = cti->nextComputationTarget();
         if (ct == NULL)
           break;
 
         if (ct->degree() != 0)
-        {
-          ct->release_ref();
           continue;
-        }
 
         iface::cellml_services::VariableEvaluationType et = ct->type();
         uint32_t varOff = 0;
@@ -181,17 +190,13 @@ public:
           varOff = 1 + 2 * ric + ct->assignedIndex();
           break;
         default:
-          ct->release_ref();
           continue;
         }
 
         printf(first ? "\"%g\"" : ",\"%g\"", values[i + varOff]);
         first = false;
-
-        ct->release_ref();
       }
       printf("\n");
-      cti->release_ref();
     }
   }
 
@@ -199,6 +204,7 @@ public:
     throw (std::exception&)
   {
     printf("# Run completed.\n");
+    CDALock l(gFinishedMutex);
     gFinished = true;
   }
 
@@ -206,11 +212,12 @@ public:
     throw (std::exception&)
   {
     printf("# Integration failed (%s)\n", errmsg.c_str());
+    CDALock l(gFinishedMutex);
     gFinished = true;
   }
 private:
-  iface::cellml_services::CellMLCompiledModel* mCCM;
-  iface::cellml_services::CodeInformation* mCI;
+  ObjRef<iface::cellml_services::CellMLCompiledModel> mCCM;
+  ObjRef<iface::cellml_services::CodeInformation> mCI;
   uint32_t mRefcount;
 };
 
@@ -397,7 +404,7 @@ int
 IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
         iface::cellml_api::Model* mod, int argc, char** argv)
 {
-  iface::cellml_services::DAESolverCompiledModel* ccm = NULL;
+  ObjRef<iface::cellml_services::DAESolverCompiledModel> ccm;
   try
   {
     printf("# Compiling model...\n");
@@ -412,17 +419,15 @@ IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
   catch (...)
   {
     printf("Unexpected exception calling compileModel!\n");
-    // this is a leak, but it should also never happen :)
     return -1;
   }
 
   printf("# Creating run...\n");
-  iface::cellml_services::DAESolverRun* cir =
+  ObjRef<iface::cellml_services::DAESolverRun> cir =
     cis->createDAEIntegrationRun(ccm);
 
-  TestProgressObserver* tpo = new TestProgressObserver(ccm);
+  ObjRef<TestProgressObserver> tpo = already_AddRefd<TestProgressObserver>(new TestProgressObserver(ccm));
   cir->setProgressObserver(tpo);
-  tpo->release_ref();
 
   ProcessKeywords(argc, argv, cir);
 
@@ -431,11 +436,15 @@ IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
 #endif
 
   cir->start();
-  cir->release_ref();
-  ccm->release_ref();
 
-  while (!gFinished)
+  while (1)
+  {
+    {
+      CDALock l(gFinishedMutex);
+      if (gFinished) break;
+    }
     sleep(1);
+  }
 
   if (gSleepTime)
     sleep(gSleepTime);
@@ -447,7 +456,7 @@ int
 ODEMain(iface::cellml_services::CellMLIntegrationService* cis,
         iface::cellml_api::Model* mod, int argc, char** argv)
 {
-  iface::cellml_services::ODESolverCompiledModel* ccm = NULL;
+  ObjRef<iface::cellml_services::ODESolverCompiledModel> ccm;
   try
   {
     printf("# Compiling model...\n");
@@ -462,17 +471,15 @@ ODEMain(iface::cellml_services::CellMLIntegrationService* cis,
   catch (...)
   {
     printf("Unexpected exception calling compileModel!\n");
-    // this is a leak, but it should also never happen :)
     return -1;
   }
 
   printf("# Creating run...\n");
-  iface::cellml_services::ODESolverRun* cir =
+  ObjRef<iface::cellml_services::ODESolverRun> cir =
     cis->createODEIntegrationRun(ccm);
 
-  TestProgressObserver* tpo = new TestProgressObserver(ccm);
+  ObjRef<TestProgressObserver> tpo = already_AddRefd<TestProgressObserver>(new TestProgressObserver(ccm));
   cir->setProgressObserver(tpo);
-  tpo->release_ref();
 
   ProcessKeywords(argc, argv, cir);
 
@@ -481,11 +488,15 @@ ODEMain(iface::cellml_services::CellMLIntegrationService* cis,
 #endif
 
   cir->start();
-  cir->release_ref();
-  ccm->release_ref();
 
-  while (!gFinished)
+  while (1)
+  {
+    {
+      CDALock l(gFinishedMutex);
+      if (gFinished) break;
+    }
     sleep(1);
+  }
 
   if (gSleepTime)
     sleep(gSleepTime);
@@ -544,14 +555,13 @@ main(int argc, char** argv)
   const char* mbrurl = argv[1];
   mbsrtowcs(URL, &mbrurl, l, NULL);
 
-  iface::cellml_api::CellMLBootstrap* cb =
+  ObjRef<iface::cellml_api::CellMLBootstrap> cb =
     CreateCellMLBootstrap();
 
-  iface::cellml_api::ModelLoader* ml =
+  ObjRef<iface::cellml_api::DOMModelLoader> ml =
     cb->modelLoader();
-  cb->release_ref();
 
-  iface::cellml_api::Model* mod;
+  ObjRef<iface::cellml_api::Model> mod;
   printf("# Loading model...\n");
   try
   {
@@ -563,15 +573,13 @@ main(int argc, char** argv)
     // Well, a leak on exit wouldn't be so bad, but someone might reuse this
     // code, so...
     delete [] URL;
-    ml->release_ref();
     return -1;
   }
 
-  ml->release_ref();
   delete [] URL;
 
   printf("# Creating integration service...\n");
-  iface::cellml_services::CellMLIntegrationService* cis =
+  ObjRef<iface::cellml_services::CellMLIntegrationService> cis =
     CreateIntegrationService();
 
   int ret;
@@ -579,10 +587,10 @@ main(int argc, char** argv)
   if (PeekForIDA(argc, argv))
     ret = IDAMain(cis, mod, argc, argv);
   else
-    ret = ODEMain(cis, mod, argc, argv);
-
-  cis->release_ref();
-  mod->release_ref();
+  {
+    for (int i = 0; i < 10; i++)
+      ret = ODEMain(cis, mod, argc, argv);
+  }
 
   return ret;
 }

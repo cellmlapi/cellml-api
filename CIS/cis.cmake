@@ -5,6 +5,69 @@ DECLARE_EXTENSION_END(cis)
 
 INCLUDE_DIRECTORIES(CIS/sources)
 
+# Find clang and LLVM...
+IF(LLVM_INCLUDE_DIR)
+  # Already in cache, be silent
+  SET(LLVM_FIND_QUIETLY TRUE)
+ENDIF(LLVM_INCLUDE_DIR)
+
+FIND_PATH(LLVM_INCLUDE_DIR llvm/Constants.h
+  /usr/local/include
+  /usr/include
+)
+FIND_PATH(CLANG_INCLUDE_DIR clang/Basic/SourceLocation.h
+  /usr/local/include
+  /usr/include
+)
+
+SET(LLVM_LIBPATH /usr/local/lib /usr/lib)
+MARK_AS_ADVANCED(LLVM_LIBPATH)
+
+FIND_LIBRARY(LLVM_CORE_LIBRARY
+  NAMES LLVMCore
+  PATHS ${LLVM_LIBPATH}
+)
+FIND_LIBRARY(CLANG_BASIC_LIBRARY
+  NAMES clangBasic
+  PATHS ${LLVM_LIBPATH}
+)
+
+IF (LLVM_INCLUDE_DIR AND LLVM_CORE_LIBRARY AND CLANG_INCLUDE_DIR AND CLANG_BASIC_LIBRARY)
+   SET(LLVM_FOUND TRUE)
+
+   IF (NOT LLVM_FIND_QUIETLY)
+      MESSAGE(STATUS "Found LLVM: ${LLVM_CORE_LIBRARY}")
+   ENDIF (NOT LLVM_FIND_QUIETLY)
+
+   SET(LLVM_LIBRARIES)
+
+   SET(LLVM_PLAT_LIBS)
+   FOREACH(plat ARM CellSPU Hexagon MBlaze Mips MSP430 NVPTX PowerPC Sparc X86 XCore)
+     LIST(APPEND LLVM_PLAT_LIBS LLVM${plat}Desc LLVM${plat}CodeGen LLVM${plat}Info LLVM${plat}AsmPrinter LLVM${plat}Utils)
+   ENDFOREACH()
+
+   FOREACH(extraLLVM clangARCMigrate clangASTMatchers clangCodeGen clangDriver clangFrontend clangFrontendTool clangLex clangParse clangRewriteCore clangRewriteFrontend clangSerialization clangStaticAnalyzerCheckers clangStaticAnalyzerCore clangStaticAnalyzerFrontend clangTooling clangSema clangEdit clangAnalysis clangAST clangBasic ${LLVM_PLAT_LIBS} LLVMExecutionEngine LLVMArchive LLVMAsmPrinter LLVMBitReader LLVMBitWriter LLVMCodeGen LLVMCppBackendCodeGen LLVMCppBackendInfo LLVMDebugInfo LLVMInstCombine LLVMInstrumentation LLVMInterpreter LLVMJIT LLVMLinker LLVMMBlazeAsmParser LLVMMBlazeAsmPrinter LLVMMBlazeCodeGen LLVMMBlazeDesc LLVMMBlazeDisassembler LLVMMBlazeInfo LLVMMCDisassembler LLVMMCJIT LLVMObject LLVMRuntimeDyld LLVMScalarOpts LLVMSelectionDAG LLVMTableGen LLVMTarget LLVMTransformUtils LLVMVectorize LLVMXCoreCodeGen LLVMXCoreDesc LLVMXCoreInfo LLVMipa LLVMipo LLVMMC LLVMAnalysis LLVMMCParser LLVMAsmParser LLVMSupport)
+     FIND_LIBRARY(LLVM_${extraLLVM}_LIBRARY
+       NAMES ${extraLLVM}
+       PATHS ${LLVM_LIBPATH}
+       )
+     IF (${LLVM_${extraLLVM}_LIBRARY} STREQUAL "LLVM_${extraLLVM}_LIBRARY-NOTFOUND")
+       SET(${LLVM_${extraLLVM}_LIBRARY})
+     ELSE()
+       LIST(APPEND LLVM_LIBRARIES ${LLVM_${extraLLVM}_LIBRARY})
+     ENDIF()
+   ENDFOREACH()
+   SET(LLVM_LIBRARIES ${LLVM_LIBRARIES} ${LLVM_CORE_LIBRARY})
+ELSE(LLVM_INCLUDE_DIR AND LLVM_CORE_LIBRARY AND CLANG_INCLUDE_DIR AND CLANG_BASIC_LIBRARY)
+   SET(LLVM_FOUND FALSE)
+   SET(LLVM_LIBRARIES )
+ENDIF(LLVM_INCLUDE_DIR AND LLVM_CORE_LIBRARY AND CLANG_INCLUDE_DIR AND CLANG_BASIC_LIBRARY)
+
+MARK_AS_ADVANCED(
+  CLANG_INCLUDE_DIR
+  LLVM_INCLUDE_DIR
+  )
+
 OPTION(USE_SYSTEM_SUNDIALS "Use the SUNDIALS libraries found on the system, rather than the sources distributed with the API.")
 MARK_AS_ADVANCED(USE_SYSTEM_SUNDIALS)
 
@@ -84,7 +147,7 @@ IF(NOT PTHREADS STREQUAL "PTHREADS-NOTFOUND")
   LIST(APPEND THREADLIBRARY pthreads)
 ENDIF()
 
-TARGET_LINK_LIBRARIES(cis ccgs malaes cuses cevas cellml ${MAYBEGSL} ${THREADLIBRARY} ${CMAKE_DL_LIBS} ${SYSTEM_SUNDIALS})
+TARGET_LINK_LIBRARIES(cis ccgs malaes cuses cevas cellml ${MAYBEGSL} ${THREADLIBRARY} ${CMAKE_DL_LIBS} ${SYSTEM_SUNDIALS} ${CLANG_LIBRARIES} ${LLVM_LIBRARIES})
 SET_TARGET_PROPERTIES(cis PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CIS_SOVERSION})
 
 DECLARE_BOOTSTRAP("CISBootstrap" "CIS" "CellMLIntegrationService" "cellml_services" "createIntegrationService" "CreateIntegrationService" "CISBootstrap.hpp" "CIS/sources" "cis")

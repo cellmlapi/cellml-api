@@ -74,10 +74,11 @@ public class TestMain
         long row =
             vc.getPositionInXML(pjm2pcm.cellml_api.CellMLDOMElement.queryInterface((pjm.XPCOMDerived)comp1).getDomElement(), 0, col);
         if (col.get() != 56)
-        {
-            System.out.println("Read column " + col.get() + ", expected 56 - possible problem with out params.");
-            return false;
-        }
+          {
+              System.out.println("Read column " + col.get() + ", expected 56 - possible problem with out params.");
+              return false;
+          }
+        System.gc();
         return true;
     }
 

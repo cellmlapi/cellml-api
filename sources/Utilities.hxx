@@ -55,6 +55,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+#include <assert.h>
 
 // Register a destructor that is called at the termination of every thread
 // created by the API.
@@ -769,6 +770,7 @@ public:
 
   bool operator--()
   {
+    assert(mRefcount > 0);
 #if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
     return __sync_sub_and_fetch(&mRefcount, 1) != 0;
 #elif defined(WIN32)
