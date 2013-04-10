@@ -88,7 +88,7 @@ public:
 #else
 #define getsym(m,s) dlsym(m,s)
 #endif
-    return getsym(mModule, aName);
+    return (void*)getsym(mModule, aName);
 #undef getsym
   }
 
