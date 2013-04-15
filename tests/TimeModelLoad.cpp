@@ -38,7 +38,7 @@ int main(int argc, char**argv)
   std::wstring wmodelURL(buf);
 
 #ifdef WIN32
-  struct FILETIME ft1, ft2;
+  FILETIME ft1, ft2;
 
   GetSystemTimeAsFileTime(&ft1);
 #else
