@@ -275,6 +275,7 @@ public class CreateModelTest {
 	}
 
 }
+\endcode
 
 \section java_concepts General concepts when using the CellML API Reference Implementation from Java
 Every language-independent interface defined in this operation is mapped to a Java interface. Operations defined on the interfaces map to interface methods of the same name. Attributes map to a getter and a setter (or just a getter in the case of readonly attributes). The getter is named by pre-pending 'get' to the attribute name, capitalising the first letter of the attribute name. The setter is named similarly, except with a prefix of 'set'.
@@ -308,5 +309,4 @@ Here are some of the bootstrap methods available in the CellML API:
   <tr><td>VACSS</td><td>cellml_bootstrap.VACSSBootstrap.createVACSService</td><td>cellml_services.VACSService</td><td>java_vacss</td></tr>
 </table>
 
-\endcode
 */
