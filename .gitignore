@@ -95,5 +95,9 @@ test_output*
 docs/Doxyfile
 docs/html
 docs/man
-
+TimeModelLoad
+hs_err*
+nohup.out
+test_celeds_*
 docs/Doxyfile.norev
+*.class
