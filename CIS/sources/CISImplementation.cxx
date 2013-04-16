@@ -26,6 +26,9 @@
 #endif
 #include "CCGSBootstrap.hpp"
 
+// Ensure these symbols are available for llvm to use:
+#undef min
+#undef max
 #ifdef ENABLE_CLANG
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
