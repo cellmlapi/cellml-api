@@ -352,7 +352,9 @@ module cellml_services
      * The pattern which is used to set variables by assignment.
      * &lt;LHS> is replaced by the variable name.
      * &lt;RHS> is replaced by the expression for the right-hand side.
-     * Default: &lt;LHS> = &lt;RHS>;\\r\\n
+     * &lt;XMLID> is replaced by the ID attribute value of the equation
+     *   (or variable in the case of an initial_value assignment).
+     * Default: /* &lt;XMLID> *\/\r\n&lt;LHS> = &lt;RHS>;\\r\\n
      */
     attribute wstring assignPattern;
     
@@ -367,7 +369,8 @@ module cellml_services
      *          array instead of the main code list.
      * &lt;VAR> gives the name to the variable to compute.
      * &lt;ID> is replaced with a numeric ID unique to this equation.
-     * Default: rootfind_&lt;ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);\\r\\n&lt;SUP>void objfunc_&lt;ID>(double *p, double *hx, int m, int n, void *adata)\\r\\n{\\r\\n  struct rootfind_info* rfi = (struct rootfind_info*)adata;\\r\\n#define VOI rfi->aVOI\\r\\n#define CONSTANTS rfi->aCONSTANTS\\r\\n#define RATES rfi->aRATES\\r\\n#define STATES rfi->aSTATES\\r\\n#define ALGEBRAIC rfi->aALGEBRAIC\\r\\n#define pret rfi->aPRET\\r\\n  &lt;VAR> = *p;\\r\\n  *hx = (&lt;LHS>) - (&lt;RHS>);\\r\\n#undef VOI\\r\\n#undef CONSTANTS\\r\\n#undef RATES\\r\\n#undef STATES\\r\\n#undef ALGEBRAIC\\r\\n#undef pret\\r\\n}\\r\\nvoid rootfind_&lt;ID>(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)\\r\\n{\\r\\n  static double val = &lt;IV>;\\r\\n  double bp, work[LM_DIF_WORKSZ(1, 1)];\\r\\n  struct rootfind_info rfi;\\r\\n  rfi.aVOI = VOI;\\r\\n  rfi.aCONSTANTS = CONSTANTS;\\r\\n  rfi.aRATES = RATES;\\r\\n  rfi.aSTATES = STATES;\\r\\n  rfi.aALGEBRAIC = ALGEBRAIC;\\r\\n  rfi.aPRET = pret;\\r\\n  do_levmar(objfunc_&lt;ID>, &val, &bp, work, pret, 1, &rfi);\\r\\n  &lt;VAR> = val;\\r\\n}\\r\\n
+     * &lt;XMLID> is replaced by the ID attribute value of the equation.
+     * Default: rootfind_&lt;ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);\\r\\n&lt;SUP>void objfunc_&lt;ID>(double *p, double *hx, int m, int n, void *adata)\\r\\n{\\r\\n  /* Solver for equation: &lt;XMLID> *\/\\r\\n  struct rootfind_info* rfi = (struct rootfind_info*)adata;\\r\\n#define VOI rfi->aVOI\\r\\n#define CONSTANTS rfi->aCONSTANTS\\r\\n#define RATES rfi->aRATES\\r\\n#define STATES rfi->aSTATES\\r\\n#define ALGEBRAIC rfi->aALGEBRAIC\\r\\n#define pret rfi->aPRET\\r\\n  &lt;VAR> = *p;\\r\\n  *hx = (&lt;LHS>) - (&lt;RHS>);\\r\\n#undef VOI\\r\\n#undef CONSTANTS\\r\\n#undef RATES\\r\\n#undef STATES\\r\\n#undef ALGEBRAIC\\r\\n#undef pret\\r\\n}\\r\\nvoid rootfind_&lt;ID>(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)\\r\\n{\\r\\n  static double val = &lt;IV>;\\r\\n  double bp, work[LM_DIF_WORKSZ(1, 1)];\\r\\n  struct rootfind_info rfi;\\r\\n  rfi.aVOI = VOI;\\r\\n  rfi.aCONSTANTS = CONSTANTS;\\r\\n  rfi.aRATES = RATES;\\r\\n  rfi.aSTATES = STATES;\\r\\n  rfi.aALGEBRAIC = ALGEBRAIC;\\r\\n  rfi.aPRET = pret;\\r\\n  do_levmar(objfunc_&lt;ID>, &val, &bp, work, pret, 1, &rfi);\\r\\n  &lt;VAR> = val;\\r\\n}\\r\\n
      */
     attribute wstring solvePattern;
     
@@ -379,6 +382,14 @@ module cellml_services
      *          array instead of the main code list.
      * &lt;VAR> gives the name to the variable to compute.
      * &lt;ID> is replaced with a numeric ID unique to this equation.
+     * &lt;COUNT> is replaced with the number of equations / unknowns.
+     * &lt;EQUATIONS> per equation text <JOIN> separator text &lt;/EQUATIONS>
+     *   allows text to be generated per equation. Inside the per equation text,
+     *   you can use the following:
+     *     &VAR> - the code variable unknown associated with this index.
+     *     &XMLID> - the MathML ID on the equation.
+     *     &INDEX> - the index of the equation / unknown.
+     *     &IV> - an initial value to use when solving for the variable.
      */
     attribute wstring solveNLSystemPattern;
 
@@ -648,7 +659,8 @@ interface CustomGenerator
     * &lt;RNO> is replaced with the index of the residual.
     * &lt;LHS> is replaced with the left-hand side of the equation.
     * &lt;RHS> is replaced with the right-hand side of the equation.
-    * Default: resid[&lt;RNO>] = &lt;LHS> - &lt;RHS>;\\r\\n
+    * &lt;XMLID> is replaced by the ID attribute value of the equation.
+    * Default: \/* &lt;XMLID> *\/\\r\\nresid[&lt;RNO>] = &lt;LHS> - &lt;RHS>;\\r\\n
     */
    attribute wstring residualPattern;
 

@@ -15,7 +15,9 @@
  */
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* x */
 CONSTANTS[0] = 0;
+/* actual_sin */
 CONSTANTS[1] =  sin(CONSTANTS[0]);
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

@@ -11,6 +11,7 @@
  */
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* units_test_calculation */
 CONSTANTS[0] = 0.100000;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

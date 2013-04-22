@@ -31,15 +31,20 @@
  */
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* offset */
 main_offset = 3;
+/* Element with no id */
 main_z = (main_offset>1.00000&&main_offset<=3.00000 ?  sin(main_offset) : main_offset>3.00000 ? 3.00000 : 1.00000);
+/* y */
 main_y = main_offset;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
+/* Element with no id */
 main_x = pow(main_time, 2.00000)+main_offset;
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
+/* Element with no id */
 rate_main_y =  2.00000*main_time;
 }

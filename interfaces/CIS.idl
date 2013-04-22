@@ -158,6 +158,22 @@ module cellml_services
      * Requests that the integration stop immediately.
      */
     void stop();
+
+    /**
+     * Requests that the integration be paused; no further results will be
+     * delivered until resume() is called. It is the responsibility of the
+     * caller to ensure that resume() is called for every call to pause(),
+     * even if 
+     * operation other than resume() on the CellMLIntegrationRun after
+     * pause has been called.
+     */
+    void pause();
+
+    /**
+     * Requests that the integration, which has previously been stopped with
+     * pause, be resumed.
+     **/
+    void resume();
   };
 
   interface ODESolverRun
@@ -210,9 +226,24 @@ module cellml_services
      * @param aModel The model to compile.
      * @note Reference Implementation Specific Note: The CellML API Reference
      *       Implementation requires that gcc be present in the path for this
-     *       call to succeed.
+     *       call to succeed unless it was compiled with LLVM / Clang support.
      */
     ODESolverCompiledModel compileModelODE(in cellml_api::Model aModel)
+      raises(cellml_api::CellMLException);
+
+    /**
+     * Called to compile the model for use with an ODE-style solver. The
+     * compiled model will be instrumented with checks that identify a wider
+     * range of numerical problems at the expression where the problem first
+     * arises. For example, numerical overflow, division by zero, and taking
+     * the log of a negative number can be caught. This additional
+     * error checking will slow down the simulation.
+     * @param aModel The model to compile.
+     * @note Reference Implementation Specific Note: The CellML API Reference
+     *       Implementation requires that gcc be present in the path for this
+     *       call to succeed unless it was compiled with LLVM / Clang support.
+     */
+    ODESolverCompiledModel compileDebugModelODE(in cellml_api::Model aModel)
       raises(cellml_api::CellMLException);
 
     /**
@@ -220,9 +251,24 @@ module cellml_services
      * @param aModel The model to compile.
      * @note Reference Implementation Specific Note: The CellML API Reference
      *       Implementation requires that gcc be present in the path for this
-     *       call to succeed.
+     *       call to succeed unless it was compiled with LLVM / Clang support.
      */
     DAESolverCompiledModel compileModelDAE(in cellml_api::Model aModel)
+      raises(cellml_api::CellMLException);
+
+    /**
+     * Called to compile the model for use with a DAE-style solver like IDA. The
+     * compiled model will be instrumented with checks that identify a wider
+     * range of numerical problems at the expression where the problem first
+     * arises. For example, numerical overflow, division by zero, and taking
+     * the log of a negative number can be caught. This additional
+     * error checking will slow down the simulation.
+     * @param aModel The model to compile.
+     * @note Reference Implementation Specific Note: The CellML API Reference
+     *       Implementation requires that gcc be present in the path for this
+     *       call to succeed unless it was compiled with LLVM / Clang support.
+     */
+    DAESolverCompiledModel compileDebugModelDAE(in cellml_api::Model aModel)
       raises(cellml_api::CellMLException);
 
     /**

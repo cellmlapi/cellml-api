@@ -317,13 +317,15 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    mSampleDensityFunctionPattern(L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC)<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\n  return (<EXPR>);\r\n}\r\ndouble (*pdf_roots_<ID>[])(double bvar, double*, double*) = {<FOREACH_ROOT>pdf_<ID>_root_<ROOTID>,<ROOTSUP>double pdf_<ID>_root_<ROOTID>(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n{\r\nreturn (<EXPR>);\r\n}\r\n</FOREACH_ROOT>};\r\n"),
    mSampleRealisationsPattern(L"switch (rand() % <numChoices>)\r\n{\n<eachChoice>case <choiceNumber>:\r\n<choiceAssignments>break;\r\n</eachChoice>}\r\n"),
    mBoundVariableName(L"bvar"),
-   mAssignPattern(L"<LHS> = <RHS>;\r\n"),
+   mAssignPattern(L"/* <XMLID> */\r\n"
+                  L"<LHS> = <RHS>;\r\n"),
    mSolvePattern
    (
     L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);\r\n"
     L"<SUP>"
     L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
     L"{\r\n"
+    L"  /* Solver for equation: <XMLID> */\r\n"
     L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
     L"#define VOI rfi->aVOI\r\n"
     L"#define CONSTANTS rfi->aCONSTANTS\r\n"
@@ -382,6 +384,7 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
     L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
     L"double* STATES, double* ALGEBRAIC, int* pret)\r\n"
     L"{\r\n"
+    L"  /* Solver for equations: <EQUATIONS><XMLID><JOIN>, </EQUATIONS> */\r\n"
     L"  static double p[<COUNT>] = {<EQUATIONS><IV><JOIN>,</EQUATIONS>};\r\n"
     L"  struct rootfind_info rfi;\r\n"
     L"  rfi.aVOI = VOI;\r\n"
@@ -411,6 +414,7 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    ),
    mResidualPattern
    (
+    L"/* <XMLID> */\r\n"
     L"resid[<RNO>] = (<LHS>) - (<RHS>);\r\n"
    ),
    mConstrainedRateStateInfoPattern

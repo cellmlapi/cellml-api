@@ -19,6 +19,7 @@
  */
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* x */
 STATES[0] = 0;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -26,13 +27,16 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
+/* x */
 ALGEBRAIC[0] = STATES[0];
 if (!(STATES[0]>=10.0000))
 {
-  RATES[0] = 1.00000;
+  /* time_rate */
+RATES[0] = 1.00000;
 }
 if (ALGEBRAIC[0]>=10.0000)
 {
-  STATES[0] = 1.00000;
+  /* reset_x */
+STATES[0] = 1.00000;
 }
 }

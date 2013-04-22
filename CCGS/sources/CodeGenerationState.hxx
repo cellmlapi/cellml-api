@@ -275,7 +275,8 @@ public:
   void CloneNamesIntoDelayedNames();
   void AppendAssign(std::wstring& aAppendTo,
                     const std::wstring& aLHS,
-                    const std::wstring& aRHS);
+                    const std::wstring& aRHS,
+                    const std::wstring& aXMLId);
   void BuildFloatingAndConstantLists();
   void BuildFloatingAndKnownLists(bool includeRates = true);
   void WriteForcedInitialVariables();
@@ -362,7 +363,8 @@ public:
   (
    std::wstring& aCodeTo,
    ptr_tag<CDA_ComputationTarget> aTarget,
-   iface::cellml_services::MaLaESResult* aMR
+   iface::cellml_services::MaLaESResult* aMR,
+   const std::wstring& aXMLId
   );
   void GenerateSolveCode
   (
@@ -415,7 +417,7 @@ public:
   void GenerateResiduals(std::wstring& aCode);
   void GenerateResidualForEquation(std::wstring& aCode, uint32_t aResidNo, Equation* aEq);
   void GenerateResidualForString(std::wstring& aCode, uint32_t aResidNo,
-                                 const std::wstring& e1, const std::wstring& e2);
+                                 const std::wstring& e1, const std::wstring& e2, const std::wstring& aXmlId);
   void TransformPiecewiseConditions();
   void TransformPiecewiseStatement(MathStatement* aStatement);
   void TransformPiecewisesInMaths(iface::mathml_dom::MathMLElement* aChange,
@@ -461,7 +463,18 @@ public:
   std::list<std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> > mRateNameBackup;
   std::list<ptr_tag<CDA_ComputationTarget> > mInfDelayedTargets;
   bool mIDAStyle;
-  std::list<std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>, iface::mathml_dom::MathMLContentElement*> > mRootInformation;
+  struct RootInformation {
+    RootInformation(const std::wstring& aStorageName,
+                    iface::cellml_api::CellMLComponent* aComponent,
+                    iface::mathml_dom::MathMLContentElement* aMathEl)
+      : storageName(aStorageName), component(aComponent),
+        mathEl(aMathEl) {}
+    std::wstring storageName;
+    iface::cellml_api::CellMLComponent* component;
+    ObjRef<iface::mathml_dom::MathMLContentElement> mathEl;
+  };
+
+  std::list<RootInformation> mRootInformation;
   bool mDryRun;
 };
 

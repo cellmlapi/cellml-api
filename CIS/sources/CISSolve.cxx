@@ -46,14 +46,42 @@
 // It would be good to one day make this configurable by the user.
 #define SUBSOL_TOLERANCE 1E-6
 
+void clearFailure(struct fail_info* aFail)
+{
+  aFail->failtype = 0;
+  aFail->failmsg = "";
+}
+
+void setFailure(struct fail_info* aFail, const char* aMsg, int type)
+{
+  aFail->failtype = type;
+  aFail->failmsg = aMsg;
+}
+
+void failAddCause(struct fail_info* aFail, const char* aCause)
+{
+  if (!aFail->failtype)
+  {
+    setFailure(aFail, aCause, -1);
+    return;
+  }
+  aFail->failmsg = aCause + (", caused by " + aFail->failmsg);
+}
+
+int getFailType(struct fail_info* aFail)
+{
+  return aFail->failtype;
+}
+
 struct EvaluationInformation
 {
   double* constants, * rates, * algebraic, * states;
   uint32_t rateSizeBytes, rateSize;
-  int (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
-                      double* STATES, double* ALGEBRAIC);
-  int (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
-                          double* STATES, double* ALGEBRAIC);
+  struct fail_info* failInfo;
+  void (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
+                       double* STATES, double* ALGEBRAIC, struct fail_info*);
+  void (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
+                           double* STATES, double* ALGEBRAIC, struct fail_info*);
 };
 
 #ifdef ENABLE_GSL_INTEGRATORS
@@ -155,18 +183,25 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
   
   // Update variables that change based on bound/other vars...
-  int ret = ei->ComputeRates(bound, ei->constants, ei->rates, N_VGetArrayPointer_Serial(varsV),
-                             ei->algebraic);
+  ei->ComputeRates(bound, ei->constants, ei->rates, N_VGetArrayPointer_Serial(varsV),
+                   ei->algebraic, ei->failInfo);
 
   double* rates = N_VGetArrayPointer_Serial(ratesV);
   if (rates != ei->rates)
     memcpy(rates, ei->rates, ei->rateSizeBytes);
 
   for (int i = 0; i < NV_LENGTH_S(ratesV); i++)
+  {
     if (!isfinite(NV_Ith_S(ratesV, i)))
-      return 1;
+    {
+      if (!ei->failInfo->failtype)
+        setFailure(ei->failInfo, "One of the rates cannot be represented as a valid finite number", -1);
+    }
+    if (ei->failInfo->failtype)
+      break;
+  }
 
-  return ret;
+  return ei->failInfo->failtype;
 }
 
 // Don't cache more than 2MB of variables (assuming 8 bytes per variable). This
@@ -339,26 +374,15 @@ void
 cda_cvode_error_handler(int error_code, const char* module,
                         const char* function, char* msg, void* eh_data)
 {
-  reinterpret_cast<CDA_CellMLIntegrationRun*>(eh_data)->CVODEError(error_code, module,
-                                                                   function, msg);
-}
-
-void
-CDA_CellMLIntegrationRun::CVODEError
-(
- int error_code, const char* module, const char* function, const char* msg
-)
-{
-  if (error_code < 0)
-    mWhyFailure = msg;
+  struct fail_info* failInfo = reinterpret_cast<struct fail_info*>(eh_data);
+  setFailure(failInfo, msg, -1);
 }
 
 void
 cda_ida_error_handler(int error_code, const char* module,
                         const char* function, char* msg, void* eh_data)
 {
-  reinterpret_cast<CDA_CellMLIntegrationRun*>(eh_data)->CVODEError(error_code, module,
-                                                                   function, msg);
+  setFailure(reinterpret_cast<struct fail_info*>(eh_data), msg, -1);
 }
 
 void
@@ -373,9 +397,10 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   if (rateSize != 0)
     y = N_VMake_Serial(rateSize, states);
   void* solver = NULL;
+  struct fail_info failInfo;
 
   if (rateSize != 0)
-  {  
+  {
     switch (mStepType)
     {
     case iface::cellml_services::ADAMS_MOULTON_1_12:
@@ -387,10 +412,11 @@ CDA_ODESolverRun::SolveODEProblemCVODE
       break;
     }
 
-    CVodeSetErrHandlerFn(solver, cda_cvode_error_handler, this);
+    CVodeSetErrHandlerFn(solver, cda_cvode_error_handler, &failInfo);
   }
 
   EvaluationInformation ei;
+  ei.failInfo = &failInfo;
 
   if (rateSize != 0)
   {
@@ -423,7 +449,6 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
   uint32_t tabStepNumber = 1;
   double nextStopPoint = mTabulationStepSize + voi;
-  bool sendFailure = false;
 
   if (mTabulationStepSize == 0.0)
     nextStopPoint = mStopBvar;
@@ -441,7 +466,8 @@ CDA_ODESolverRun::SolveODEProblemCVODE
       CVodeSetStopTime(solver, bhl);
       if (CVode(solver, bhl, y, &voi, CV_ONE_STEP) < 0)
       {
-        sendFailure = true;
+        if (!failInfo.failtype)
+          setFailure(&failInfo, "CVODE failure", -1);
         break;
       }
       
@@ -461,8 +487,8 @@ CDA_ODESolverRun::SolveODEProblemCVODE
 
       lastVOI = voi;
 
-      f->    ComputeRates(voi, constants, rates, states, algebraic);
-      f->ComputeVariables(voi, constants, rates, states, algebraic);
+      f->    ComputeRates(voi, constants, rates, states, algebraic, &failInfo);
+      f->ComputeVariables(voi, constants, rates, states, algebraic, &failInfo);
 
       // Add to storage...
       storage[storageSize] = voi;
@@ -495,8 +521,8 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   }
   if (mObserver != NULL)
   {
-    if (sendFailure)
-      mObserver->failed(mWhyFailure.c_str());
+    if (failInfo.failtype)
+      mObserver->failed(failInfo.failmsg);
     else
       mObserver->done();
   }
@@ -553,27 +579,32 @@ extern "C"
   CDA_EXPORT_PRE double safe_remainder(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE double safe_factorof(double num, double den) CDA_EXPORT_POST;
   CDA_EXPORT_PRE void do_nonlinearsolve(void (*)(double *p, double *hx, 
-                                                 void *adata),
-                                double* params, int* pret,
+                                                 void *adata, struct fail_info*),
+                                double* params, struct fail_info*,
                                 uint32_t size, void* adata) CDA_EXPORT_POST;
-  CDA_EXPORT_PRE double defint(double (*f)(double VOI,double *C,double *R,double *S,double *A, int* pret),
+  CDA_EXPORT_PRE double defint(double (*f)(double VOI,double *C,double *R,double *S,double *A, struct fail_info*),
                                double VOI,double *C,double *R,double *S,double *A,double *V,
                                double lowV, double highV,
-                               int* pret)
+                               struct fail_info*)
     CDA_EXPORT_POST;
 
-  CDA_EXPORT_PRE double SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
-                                       int nroots, double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
-                                       double* CONSTANTS, double* ALGEBRAIC) CDA_EXPORT_POST;
+  CDA_EXPORT_PRE double SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC,
+                                                     struct fail_info*),
+                                       int nroots, double (**rootFuncs)(double bvar, double* CONSTANTS,
+                                                                        double* ALGEBRAIC, struct fail_info*),
+                                       double* CONSTANTS, double* ALGEBRAIC, struct fail_info*) CDA_EXPORT_POST;
 }
 
 struct PDFInformation
 {
-  double (*pdf)(double bvar, double* constants, double* algebraic);
+  double (*pdf)(double bvar, double* constants, double* algebraic,
+                struct fail_info*);
   double* constants, * algebraic, uplimit;
   double target;
   int nroots;
-  double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC);
+  struct fail_info* failInfo;
+  double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC,
+                       struct fail_info*);
   double lowBoundary, highBoundary;
 };
 
@@ -587,13 +618,13 @@ static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data
 
   // The first rate is the integrand...
   *N_VGetArrayPointer_Serial(ratesV) =
-    info->pdf(t, info->constants, info->algebraic);
+    info->pdf(t, info->constants, info->algebraic, info->failInfo);
 
 #ifdef DEBUG_UNCERT
   printf("PDF' at %.100g = %.100g\n", t, *N_VGetArrayPointer_Serial(ratesV));
 #endif
 
-  return 0;
+  return info->failInfo->failtype;
 }
 
 static int rootfuncForPDF(double t, N_Vector varsV, double *gout, void* data)
@@ -606,7 +637,10 @@ static int rootfuncForPDF(double t, N_Vector varsV, double *gout, void* data)
 
   for (int i = 0; i < info->nroots; i++)
   {
-    gout[i] = info->rootFuncs[i](tprime, info->constants, info->algebraic);
+    gout[i] = info->rootFuncs[i](tprime, info->constants, info->algebraic, info->failInfo);
+
+    if (info->failInfo->failtype)
+      return info->failInfo->failtype;
 #ifdef DEBUG_UNCERT
     printf("gout[%d] = %g at t = %g, t' = %g\n", i, gout[i], t, tprime);
 #endif
@@ -616,10 +650,11 @@ static int rootfuncForPDF(double t, N_Vector varsV, double *gout, void* data)
 }
 
 static void
-ignoreKINSOLError(int code, const char *module,
+recordKINSOLError(int code, const char *module,
                   const char *function, char *msg,
                   void *dat)
 {
+  setFailure(reinterpret_cast<struct fail_info*>(dat), msg, -1);
 }
 
 static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
@@ -634,7 +669,7 @@ static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
 
   void* cv = CVodeCreate(CV_BDF, CV_NEWTON);
   CVodeInit(cv, integrandForPDF, info->lowBoundary, hxVec);
-  CVodeSetErrHandlerFn(cv, ignoreKINSOLError, NULL);
+  CVodeSetErrHandlerFn(cv, recordKINSOLError, info->failInfo);
   CVodeSetMaxStep(cv, (info->highBoundary - info->lowBoundary) / 1000);
   CVodeSetMaxNumSteps(cv, 10000);
   CVodeSStolerances(cv, 1E-10, 1E-10);
@@ -680,10 +715,11 @@ static double samplePoints[2048] = {
 };
 
 double
-SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
+SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC, struct fail_info*),
                int nroots,
-               double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
-               double* CONSTANTS, double* ALGEBRAIC)
+               double (**rootFuncs)(double bvar, double* CONSTANTS, double* ALGEBRAIC, struct fail_info*),
+               double* CONSTANTS, double* ALGEBRAIC,
+               struct fail_info* failInfo)
 {
   struct PDFInformation pdfi;
   pdfi.constants = CONSTANTS;
@@ -698,34 +734,49 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   int lowestNonZero = 2048, highestNonZero = -1;
   for (int attempt = 0; attempt < 2048; attempt++)
   {
-    if (pdfi.pdf(samplePoints[attempt], CONSTANTS, ALGEBRAIC) >= 1E-100)
+    clearFailure(failInfo);
+    if (pdfi.pdf(samplePoints[attempt], CONSTANTS, ALGEBRAIC, failInfo) >= 1E-100)
     {
       lowestNonZero = attempt;
       break;
     }
   }
+  if (failInfo->failtype)
+    return strtod("NAN", NULL);
 
   if (lowestNonZero == 2048)
+  {
+    setFailure(failInfo, "Could not find any point where p.d.f. is non-zero.", -1);
     return strtod("NAN", NULL); // Zero everywhere...
+  }
   if (lowestNonZero == 0)
+  {
+    setFailure(failInfo, "The p.d.f. value is non-negligible at a range too low for the solver to handle.", -1);
     return strtod("NAN", NULL); // We didn't find a number below which it is zero.
+  }
 
   for (int attempt = 2047; attempt >= 0; attempt--)
   {
-    if (pdfi.pdf(samplePoints[attempt], CONSTANTS, ALGEBRAIC) >= 1E-100)
+    if (pdfi.pdf(samplePoints[attempt], CONSTANTS, ALGEBRAIC, failInfo) >= 1E-100)
     {
+      clearFailure(failInfo);
       highestNonZero = attempt;
       break;
     }
   }
+  if (failInfo->failtype)
+    return strtod("NAN", NULL);
   if (highestNonZero == 2047)
+  {
+    setFailure(failInfo, "The p.d.f. value is non-negligible at a range too high for the solver to handle.", -1);
     return strtod("NAN", NULL); // We didn't find a number above which it is zero.
+  }
 
   double lowlim = samplePoints[lowestNonZero - 1], uplim = samplePoints[lowestNonZero];
   for (p = (lowlim + uplim) / 2.0; (uplim - lowlim) / (MAX(1E-6, MAX(fabs(uplim), fabs(lowlim)))) > 1E-6;
        p = (lowlim + uplim) / 2.0)
   {
-    if (pdfi.pdf(p, CONSTANTS, ALGEBRAIC) >= 1E-100)
+    if (pdfi.pdf(p, CONSTANTS, ALGEBRAIC, failInfo) >= 1E-100)
       uplim = p;
     else
       lowlim = p;
@@ -739,7 +790,7 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
   for (p = (lowlim + uplim) / 2.0; (uplim - lowlim) / (MAX(1E-6, MAX(fabs(uplim), fabs(lowlim)))) > 1E-6;
        p = (lowlim + uplim) / 2.0)
   {
-    if (pdfi.pdf(p, CONSTANTS, ALGEBRAIC) >= 1E-100)
+    if (pdfi.pdf(p, CONSTANTS, ALGEBRAIC, failInfo) >= 1E-100)
       lowlim = p;
     else
       uplim = p;
@@ -768,6 +819,7 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC),
       printf("minfunc failed!\n");
 #endif
       p = strtod("NAN", NULL);
+      failAddCause(failInfo, "Error finding valid range for p.d.f.");
       break;
     }
 
@@ -794,24 +846,28 @@ struct DefintInformation
 {
   double voi;
   double* constants, * rates, * algebraic, * states, * var;
-  double (*f)(double VOI,double *C,double *R,double *S,double *A, int*);
+  double (*f)(double VOI,double *C,double *R,double *S,double *A, struct fail_info*);
+  struct fail_info* failInfo;
 };
 
 struct DAEEvaluationInformation
 {
   double* constants, * rates, * oldrates, * algebraic, * states, * oldstates, * condvars;
   uint32_t condVarSize;
-  int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
+  void (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                           double* STATES, double* OLDSTATES, double* ALGEBRAIC,
-                          double* CONDVAR, double* resids);
-  int (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES,
+                           double* CONDVAR, double* resids, struct fail_info* failInfo);
+  void (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES,
                                 double* OLDRATES, double* STATES,
                                 double* OLDSTATES, double* ALGEBRAIC,
-                                double* CONDVAR);
-  int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
-                                    double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR);
-  int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
-                           double* STATES, double* ALGEBRAIC, double* CONDVAR);
+                                double* CONDVAR, struct fail_info* failInfo);
+  void (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
+                                     double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR,
+                                     struct fail_info* failInfo);
+  void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
+                            double* STATES, double* ALGEBRAIC, double* CONDVAR,
+                            struct fail_info* failInfo);
+  struct fail_info* failInfo;
 
   ~DAEEvaluationInformation()
   {
@@ -825,15 +881,15 @@ ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
   double *states = N_VGetArrayPointer(yy);
   double * rates = N_VGetArrayPointer(yp);
   double * resids = N_VGetArrayPointer(resval);
-  int ret = d->EvaluateEssentialVariables(t, d->constants, rates, d->oldrates, states,
-                                          d->oldstates, d->algebraic, d->condvars);
-  if (ret != 0)
-    return ret;
+  d->EvaluateEssentialVariables(t, d->constants, rates, d->oldrates, states,
+                                d->oldstates, d->algebraic, d->condvars, d->failInfo);
+  if (d->failInfo->failtype != 0)
+    return d->failInfo->failtype;
 
-  ret = d->ComputeResiduals(t, d->constants, rates, d->oldrates,
-                            states, d->oldstates,
-                            d->algebraic, d->condvars, resids);
-  if (ret == 0)
+  d->ComputeResiduals(t, d->constants, rates, d->oldrates,
+                      states, d->oldstates,
+                      d->algebraic, d->condvars, resids, d->failInfo);
+  if (d->failInfo->failtype == 0)
   {
     for (unsigned int i = 0; i < NV_LENGTH_S(resval); i++)
       if (!(resids[i] < 1E200)) // Clip the data to deal with NaN / inf / -inf.
@@ -841,7 +897,7 @@ ida_resfn(double t, N_Vector yy, N_Vector yp, N_Vector resval, void* userdata)
       else if (!(resids[i] > -1E200))
         resids[i] = -1E200;
   }
-  return ret;
+  return d->failInfo->failtype;
 }
 
 static int
@@ -850,10 +906,10 @@ ida_rootfn(double t, N_Vector y, N_Vector yp, double *gout, void *userdata)
   DAEEvaluationInformation * d = reinterpret_cast<DAEEvaluationInformation*>(userdata);
   double *states = N_VGetArrayPointer(y);
   double *rates = N_VGetArrayPointer(y);
-  int ret = d->ComputeRootInformation(t, d->constants, rates, d->oldrates, states, d->oldstates,
-                                      d->algebraic, gout);
+  d->ComputeRootInformation(t, d->constants, rates, d->oldrates, states, d->oldstates,
+                            d->algebraic, gout, d->failInfo);
 
-  return ret;
+  return d->failInfo->failtype;
 }
 
 static void
@@ -884,15 +940,16 @@ struct DAEIVFindingInformation
   size_t n;
   double voi0;
   double* constants, * rates, * oldrates, * algebraic, * states, * oldstates, * condvars, * hxtmp, * icinfo;
-  int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
+  void (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                           double* STATES, double* OLDSTATES,
-                          double* ALGEBRAIC, double* CONDOUT, double* resids);
-  int (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
+                          double* ALGEBRAIC, double* CONDOUT, double* resids, struct fail_info*);
+  void (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                                 double* STATES, double* OLDSTATES,
-                                double* ALGEBRAIC, double* CONDOUT);
-  int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
+                                double* ALGEBRAIC, double* CONDOUT, struct fail_info*);
+  void (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES,
                                     double* STATES, double* OLDSTATES, double* ALGEBRAIC,
-                                    double* CONDVAR);
+                                    double* CONDVAR, struct fail_info*);
+  struct fail_info* failInfo;
 };
 
 static void DetermineRateOrStateSensitivity(double * hx, int n, DAEIVFindingInformation* info)
@@ -902,19 +959,21 @@ static void DetermineRateOrStateSensitivity(double * hx, int n, DAEIVFindingInfo
   {
     double oldrate = info->rates[i];
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->oldrates, info->states,
-                                     info->oldstates, info->algebraic, info->condvars);
+                                     info->oldstates, info->algebraic, info->condvars, info->failInfo);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
-                           info->algebraic, info->condvars, hx);
+                           info->algebraic, info->condvars, hx, info->failInfo);
     info->rates[i] = oldrate * (1 + 1E-6);
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->oldrates, info->states,
-                                     info->oldstates, info->algebraic, info->condvars);
+                                     info->oldstates, info->algebraic, info->condvars,
+                                     info->failInfo);
     info->ComputeRootInformation(info->voi0, info->constants, info->rates, info->oldrates,
                                  info->states, info->oldstates,
-                                 info->algebraic, info->condvars);
+                                 info->algebraic, info->condvars, info->failInfo);
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
-                           info->algebraic, info->condvars, info->hxtmp);
+                           info->algebraic, info->condvars, info->hxtmp,
+                           info->failInfo);
     double gap1 = 0;
     for (int j = 0; j < n; j++)
     {
@@ -965,10 +1024,11 @@ static int dae_iv_paramfinder(N_Vector p, N_Vector hx, void *adata)
 
   info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->oldrates,
                                    info->states, info->oldstates, info->algebraic,
-                                   info->condvars);
+                                   info->condvars, info->failInfo);
   info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                          info->states, info->oldstates,
-                         info->algebraic, info->condvars, NV_DATA_S(hx));
+                         info->algebraic, info->condvars, NV_DATA_S(hx),
+                         info->failInfo);
   for (unsigned int i = 0; i < info->n; i++)
   {
     for (unsigned int i = 0; i < NV_LENGTH_S(hx); i++)
@@ -989,6 +1049,7 @@ CDA_DAESolverRun::SolveDAEProblem
  double* algebraic, uint32_t condVarSize, double* condvars
 )
 {
+  struct fail_info failInfo;
   double* icinfo = new double[stateSize];
   N_Vector params = N_VNew_Serial(stateSize);
   N_Vector ones = N_VNew_Serial(stateSize);
@@ -1012,6 +1073,8 @@ CDA_DAESolverRun::SolveDAEProblem
   }
 
   DAEEvaluationInformation ei;
+
+  ei.failInfo = &failInfo;
   ei.constants = constants;
   ei.states = states;
   ei.rates = rates;
@@ -1049,7 +1112,7 @@ CDA_DAESolverRun::SolveDAEProblem
   void* kin_mem = KINCreate();
   KINInit(kin_mem, dae_iv_paramfinder, params);
   KINSpgmr(kin_mem, 0);
-  KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, this);
+  KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, &failInfo);
   KINSetUserData(kin_mem, &ivf);
   
   f->SetupStateInfo(icinfo);
@@ -1062,7 +1125,7 @@ CDA_DAESolverRun::SolveDAEProblem
       restart = false;
       
       f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
-                                algebraic, condvars);
+                                algebraic, condvars, &failInfo);
       for (uint32_t i = 0; i < condVarSize; i++)
       {
         if (condvars[i] == 0 && roots[i] != 0)
@@ -1087,7 +1150,7 @@ CDA_DAESolverRun::SolveDAEProblem
                                            icinfo, NV_DATA_S(params));
       
       f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
-                                algebraic, condvars);
+                                algebraic, condvars, &failInfo);
       for (uint32_t i = 0; i < condVarSize; i++)
       {
         if (condvars[i] == 0 && roots[i] != 0)
@@ -1173,7 +1236,7 @@ CDA_DAESolverRun::SolveDAEProblem
       
         lastVOI = voi;
       
-        f->EvaluateVariables(voi, constants, rates, states, algebraic, condvars);
+        f->EvaluateVariables(voi, constants, rates, states, algebraic, condvars, &failInfo);
       
         // Add to storage...
         storage[storageSize] = voi;
@@ -1217,7 +1280,7 @@ CDA_DAESolverRun::SolveDAEProblem
   if (mObserver != NULL)
   {
     if (sendFailure)
-      mObserver->failed(mWhyFailure.c_str());
+      mObserver->failed(failInfo.failmsg.c_str());
     else
       mObserver->done();
   }
@@ -1236,18 +1299,17 @@ EvaluateDefintCVODE(double x, N_Vector varsV, N_Vector ratesV, void* params)
 {
   DefintInformation* ei = reinterpret_cast<DefintInformation*>(params);
   *(ei->var) = x;
-  int ret = 0;
   *N_VGetArrayPointer_Serial(ratesV) = ei->f(ei->voi, ei->constants, ei->rates, ei->states,
-                                             ei->algebraic, &ret);
-  return ret;
+                                             ei->algebraic, ei->failInfo);
+  return ei->failInfo->failtype;
 }
 
 double
 defint(
-       double (*f)(double VOI,double *C,double *R,double *S,double *A, int* pret),
+       double (*f)(double VOI,double *C,double *R,double *S,double *A, struct fail_info*),
        double VOI,double *C,double *R,double *S,double *A,double *V,
        double lowV, double highV,
-       int* pret
+       struct fail_info* failInfo
       )
 {
   if (lowV == highV)
@@ -1261,6 +1323,7 @@ defint(
   CVodeSStolerances(subsolver, SUBSOL_TOLERANCE, epsAbs);
 
   DefintInformation ei;
+  ei.failInfo = failInfo;
   ei.voi = VOI;
   ei.constants = C;
   ei.rates = R;
@@ -1274,7 +1337,7 @@ defint(
   double ret, tret;
   if (CVode(subsolver, highV, y, &tret, CV_NORMAL) < 0)
   {
-    *pret = -1;
+    failAddCause(failInfo, "CVODE solver failure");
     ret = 0.0;
   }
   else
@@ -1495,14 +1558,15 @@ random_double_logUniform()
 struct Adapt_NLS_Data {
   void * adata;
   int n;
-  void (*f)(double* p, double* hx, void *adata);
+  void (*f)(double* p, double* hx, void *adata, struct fail_info*);
+  struct fail_info* failInfo;
 };
 
 static int
 adaptNonlinearsolve(N_Vector p, N_Vector hx, void* adata)
 {
   struct Adapt_NLS_Data* adapt = reinterpret_cast<struct Adapt_NLS_Data*>(adata);
-  adapt->f(NV_DATA_S(p), NV_DATA_S(hx), adapt->adata);
+  adapt->f(NV_DATA_S(p), NV_DATA_S(hx), adapt->adata, adapt->failInfo);
   for (int i = 0; i < adapt->n; i++)
     if (!isfinite(NV_Ith_S(hx, i)))
       return 1;
@@ -1512,9 +1576,9 @@ adaptNonlinearsolve(N_Vector p, N_Vector hx, void* adata)
 void
 do_nonlinearsolve
 (
- void (*f)(double* p, double* hx, void *adata),
+ void (*f)(double* p, double* hx, void *adata, struct fail_info*),
  double* ioParams,
- int* pret,
+ struct fail_info* failInfo,
  uint32_t size,
  void* adata
 )
@@ -1525,6 +1589,7 @@ do_nonlinearsolve
   adapt.adata = adata;
   adapt.f = f;
   adapt.n = size;
+  adapt.failInfo = failInfo;
 
   N_Vector params = N_VMake_Serial(size, ioParams);
   N_Vector ones = N_VNew_Serial(size);
@@ -1534,7 +1599,7 @@ do_nonlinearsolve
   void* kin_mem = KINCreate();
   KINInit(kin_mem, adaptNonlinearsolve, params);
   KINSpgmr(kin_mem, 0);
-  KINSetErrHandlerFn(kin_mem, ignoreKINSOLError, NULL);
+  KINSetErrHandlerFn(kin_mem, recordKINSOLError, failInfo);
   KINSetUserData(kin_mem, &adapt);
 
   do
@@ -1543,6 +1608,7 @@ do_nonlinearsolve
     if (returnCode == KIN_SUCCESS)
     {
       noSuccess = 0;
+      clearFailure(failInfo);
       break;
     }
 
@@ -1557,5 +1623,5 @@ do_nonlinearsolve
 
   /* XXX we shouldn't hard-code the tolerance... */
   if (noSuccess)
-    *pret = 1;
+    failAddCause(failInfo, "Problem solving non-linear system");
 }

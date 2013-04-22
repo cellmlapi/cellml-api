@@ -25,6 +25,7 @@
 #include <dirent.h>
 #endif
 #include "CCGSBootstrap.hpp"
+#include "MaLaESBootstrap.hpp"
 
 // Ensure these symbols are available for llvm to use:
 #undef min
@@ -141,11 +142,11 @@ CompiledModelFunctions*
 SetupCompiledModelFunctions(CompiledModule* module)
 {
   CompiledModelFunctions* cmf = new CompiledModelFunctions;
-  cmf->SetupConstants = (int (*)(double*, double*, double*))
+  cmf->SetupConstants = (void (*)(double*, double*, double*, struct fail_info*))
     module->getSymbol("SetupConstants");
-  cmf->ComputeRates = (int (*)(double,double*,double*,double*,double*))
+  cmf->ComputeRates = (void (*)(double,double*,double*,double*,double*, struct fail_info*))
     module->getSymbol("ComputeRates");
-  cmf->ComputeVariables = (int (*)(double,double*,double*,double*,double*))
+  cmf->ComputeVariables = (void (*)(double,double*,double*,double*,double*,struct fail_info*))
     module->getSymbol("ComputeVariables");
   return cmf;
 }
@@ -154,15 +155,15 @@ IDACompiledModelFunctions*
 SetupIDACompiledModelFunctions(CompiledModule* module)
 {
   IDACompiledModelFunctions* cmf = new IDACompiledModelFunctions;
-  cmf->SetupFixedConstants = (int (*)(double*, double*, double*))
+  cmf->SetupFixedConstants = (void (*)(double*, double*, double*, struct fail_info*))
     module->getSymbol("SetupFixedConstants");
-  cmf->EvaluateVariables = (int (*)(double, double*, double*, double*, double*, double*))
+  cmf->EvaluateVariables = (void (*)(double, double*, double*, double*, double*, double*, struct fail_info*))
     module->getSymbol("EvaluateVariables");
-  cmf->EvaluateEssentialVariables = (int (*)(double, double*, double*, double*, double*, double*, double*, double*))
+  cmf->EvaluateEssentialVariables = (void (*)(double, double*, double*, double*, double*, double*, double*, double*, struct fail_info*))
     module->getSymbol("EvaluateEssentialVariables");
-  cmf->ComputeResiduals = (int (*)(double, double*, double*, double*, double*, double*, double*, double*, double*))
+  cmf->ComputeResiduals = (void (*)(double, double*, double*, double*, double*, double*, double*, double*, double*, struct fail_info*))
     module->getSymbol("ComputeResiduals");
-  cmf->ComputeRootInformation = (int (*)(double, double*, double*, double*, double*, double*, double*, double*))
+  cmf->ComputeRootInformation = (void (*)(double, double*, double*, double*, double*, double*, double*, double*, struct fail_info*))
     module->getSymbol("ComputeRootInformation");
   cmf->SetupStateInfo = (void (*)(double*))
     module->getSymbol("SetupStateInfo");
@@ -643,9 +644,25 @@ CDA_CellMLIntegrationRun::stop()
 }
 
 void
+CDA_CellMLIntegrationRun::pause()
+  throw (std::exception&)
+{
+  // Not yet implemented.
+  throw iface::cellml_api::CellMLException();
+}
+
+void
+CDA_CellMLIntegrationRun::resume()
+  throw (std::exception&)
+{
+  // Not yet implemented.
+  throw iface::cellml_api::CellMLException();
+}
+
+void
 CDA_ODESolverRun::runthread()
 {
-  std::string emsg = "Unknown error";
+  struct fail_info failInfo;
   double* constants = NULL, * buffer = NULL, * algebraic, * rates, * states;
 
   try
@@ -657,16 +674,18 @@ CDA_ODESolverRun::runthread()
 
     constants = new double[constSize];
     buffer = new double[2 * rateSize + algSize + 1];
-    
+
     buffer[0] = mStartBvar;
     states = buffer + 1;
     rates = states + rateSize;
     algebraic = rates + rateSize;
-    
 
     memset(rates, 0, rateSize * sizeof(double));
 
-    f->SetupConstants(constants, rates, states);
+    struct fail_info failInfo;
+    f->SetupConstants(constants, rates, states, &failInfo);
+    if (failInfo.failtype)
+      throw iface::cellml_api::CellMLException(); // Caught below.
 
     // Now apply overrides...
     OverrideList::iterator oli;
@@ -685,8 +704,10 @@ CDA_ODESolverRun::runthread()
       mObserver->computedConstants(constantsVec);
     }
 
-    f->ComputeRates(mStartBvar, constants, rates, states, algebraic);
-    f->ComputeVariables(mStartBvar, constants, rates, states, algebraic);
+    f->ComputeRates(mStartBvar, constants, rates, states, algebraic, &failInfo);
+    f->ComputeVariables(mStartBvar, constants, rates, states, algebraic, &failInfo);
+    if (failInfo.failtype)
+      throw iface::cellml_api::CellMLException(); // Caught below.
 
     if (mObserver != NULL)
     {
@@ -702,7 +723,7 @@ CDA_ODESolverRun::runthread()
     try
     {
       if (mObserver != NULL)
-        mObserver->failed(emsg.c_str());
+        mObserver->failed(failInfo.failmsg.c_str());
     }
     catch (...)
     {
@@ -744,7 +765,8 @@ CDA_DAESolverRun::runthread()
     memset(rates, 0, rateSize * sizeof(double));
     memset(condvars, 0, condVarSize * sizeof(double));
 
-    f->SetupFixedConstants(constants, rates, states);
+    struct fail_info failInfo;
+    f->SetupFixedConstants(constants, rates, states, &failInfo);
 
     // Now apply overrides...
     OverrideList::iterator oli;
@@ -878,21 +900,28 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
      << "extern double multi_min(unsigned int size, ...);" << std::endl
      << "extern double multi_max(unsigned int size, ...);" << std::endl
      << "static double fixnans(double x) { return finite(x) ? x : 1E100; }" << std::endl
+     << "struct fail_info;" << std::endl
+     << "void clearFailure(struct fail_info*);" << std::endl
+     << "void setFailure(struct fail_info*, const char*, int);" << std::endl
+     << "void prependFailExplanation(struct fail_info*, const char*);" << std::endl
+     << "int getFailType(struct fail_info*);" << std::endl
      << "struct rootfind_info" << std::endl
      << "{" << std::endl
      << "  double aVOI, * aCONSTANTS, * aRATES, * aSTATES, * aALGEBRAIC;" << std::endl
-     << "  int* aPRET;" << std::endl
+     << "  struct fail_info* aFail;" << std::endl
      << "};" << std::endl
      << "extern double defint(double (*f)(double VOI,double *C,double *R,double *S,"
-     << "double *A, int* pret), double VOI,double *C,double *R,double *S,double *A,double *V,"
-     << "double lowV, double highV, int* pret);" << std::endl
+     << "double *A, struct fail_info* aFail), double VOI,double *C,double *R,"
+     << "double *S,double *A,double *V,"
+     << "double lowV, double highV, struct fail_info* aFail);" << std::endl
      << "extern double SampleUsingPDF(double (*pdf)(double bvar,"
-     << "double* CONSTANTS, double* ALGEBRAIC), int, double (**pdf_roots)(double bvar, double*, double*),"
-        "double* CONSTANTS, double* ALGEBRAIC);" << std::endl
+     << "double* CONSTANTS, double* ALGEBRAIC, struct fail_info* aFail), int,"
+        "double (**pdf_roots)(double bvar, double*, double*, struct fail_info*),"
+        "double* CONSTANTS, double* ALGEBRAIC, struct fail_info*);" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
     "(nmeas)*(npar) + (npar)*(npar))" << std::endl
      << "extern void do_nonlinearsolve(void (*)(double *, double *, void*), "
-    "double*, int*, unsigned long, void*);" << std::endl;
+    "double*, struct fail_info*, unsigned long, void*);" << std::endl;
 
   std::wstring frag = cci->functionsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
@@ -909,10 +938,216 @@ CDA_CellMLIntegrationService::compileModelODE
 )
   throw(std::exception&)
 {
+  return compileModelODEInternal(aModel, false);
+}
+
+already_AddRefd<iface::cellml_services::ODESolverCompiledModel>
+CDA_CellMLIntegrationService::compileDebugModelODE
+(
+ iface::cellml_api::Model* aModel
+)
+  throw(std::exception&)
+{
+  return compileModelODEInternal(aModel, true);
+}
+
+void
+CDA_CellMLIntegrationService::SetupCodeGenStrings(iface::cellml_services::CodeGenerator* aCGS, bool aIsDebug)
+{
+  ObjRef<iface::cellml_services::MaLaESBootstrap> mb(CreateMaLaESBootstrap());
+  ObjRef<iface::cellml_services::MaLaESTransform> transform
+    (
+     mb->compileTransformer(
+L"opengroup: (\r\n"
+L"closegroup: )\r\n"
+L"abs: #prec[H]fabs(#expr1)\r\n"
+L"and: #prec[20]#exprs[&&]\r\n"
+L"arccos: #prec[H]acos(#expr1)\r\n"
+L"arccosh: #prec[H]acosh(#expr1)\r\n"
+L"arccot: #prec[1000(900)]atan(1.0/#expr1)\r\n"
+L"arccoth: #prec[1000(900)]atanh(1.0/#expr1)\r\n"
+L"arccsc: #prec[1000(900)]asin(1/#expr1)\r\n"
+L"arccsch: #prec[1000(900)]asinh(1/#expr1)\r\n"
+L"arcsec: #prec[1000(900)]acos(1/#expr1)\r\n"
+L"arcsech: #prec[1000(900)]acosh(1/#expr1)\r\n"
+L"arcsin: #prec[H]asin(#expr1)\r\n"
+L"arcsinh: #prec[H]asinh(#expr1)\r\n"
+L"arctan: #prec[H]atan(#expr1)\r\n"
+L"arctanh: #prec[H]atanh(#expr1)\r\n"
+L"ceiling: #prec[H]ceil(#expr1)\r\n"
+L"cos: #prec[H]cos(#expr1)\r\n"
+L"cosh: #prec[H]cosh(#expr1)\r\n"
+L"cot: #prec[900(0)]1.0/tan(#expr1)\r\n"
+L"coth: #prec[900(0)]1.0/tanh(#expr1)\r\n"
+L"csc: #prec[900(0)]1.0/sin(#expr1)\r\n"
+L"csch: #prec[900(0)]1.0/sinh(#expr1)\r\n"
+L"diff: #lookupDiffVariable\r\n"
+L"divide: #prec[900]#expr1/#expr2\r\n"
+L"eq: #prec[30]#exprs[==]\r\n"
+L"exp: #prec[H]exp(#expr1)\r\n"
+L"factorial: #prec[H]factorial(#expr1)\r\n"
+L"factorof: #prec[30(900)]#expr1 % #expr2 == 0\r\n"
+L"floor: #prec[H]floor(#expr1)\r\n"
+L"gcd: #prec[H]gcd_multi(#count, #exprs[, ])\r\n"
+L"geq: #prec[30]#exprs[>=]\r\n"
+L"gt: #prec[30]#exprs[>]\r\n"
+L"implies: #prec[10(950)] !#expr1 || #expr2\r\n"
+L"int: #prec[H]defint(func#unique1, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &#bvarIndex, #lowlimit, #uplimit, "
+L"failInfo)#supplement double func#unique1(double VOI, "
+L"double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, struct fail_info* failInfo) { return #expr1; }\r\n"
+L"lcm: #prec[H]lcm_multi(#count, #exprs[, ])\r\n"
+L"leq: #prec[30]#exprs[<=]\r\n"
+L"ln: #prec[H]log(#expr1)\r\n"
+L"log: #prec[H]arbitrary_log(#expr1, #logbase)\r\n"
+L"lt: #prec[30]#exprs[<]\r\n"
+L"max: #prec[H]multi_max(#count, #exprs[, ])\r\n"
+L"min: #prec[H]multi_min(#count, #exprs[, ])\r\n"
+L"minus: #prec[500]#expr1 - #expr2\r\n"
+L"neq: #prec[30]#expr1 != #expr2\r\n"
+L"not: #prec[950]!#expr1\r\n"
+L"or: #prec[10]#exprs[||]\r\n"
+L"plus: #prec[500]#exprs[+]\r\n"
+L"power: #prec[H]pow(#expr1, #expr2)\r\n"
+L"quotient: #prec[1000(0)] (double)(((int)#expr2) == 0 ? #expr1 / 0.0 : (int)(#expr1) / (int)(#expr2))\r\n"
+L"rem: #prec[1000(0)] (double)(((int)#expr2) == 0 ? (#expr1) / 0.0 : (int)(#expr1) % (int)(#expr2))\r\n"
+L"root: #prec[1000(900)] pow(#expr1, 1.0 / #degree)\r\n"
+L"sec: #prec[900(0)]1.0 / cos(#expr1)\r\n"
+L"sech: #prec[900(0)]1.0 / cosh(#expr1)\r\n"
+L"sin: #prec[H] sin(#expr1)\r\n"
+L"sinh: #prec[H] sinh(#expr1)\r\n"
+L"tan: #prec[H] tan(#expr1)\r\n"
+L"tanh: #prec[H] tanh(#expr1)\r\n"
+L"times: #prec[900] #exprs[*]\r\n"
+L"unary_minus: #prec[950]- #expr1\r\n"
+L"units_conversion: #prec[500(900)]#expr1*#expr2 + #expr3\r\n"
+L"units_conversion_factor: #prec[900]#expr1*#expr2\r\n"
+L"units_conversion_offset: #prec[500]#expr1+#expr2\r\n"
+L"xor: #prec[25(30)] (#expr1 != 0) ^ (#expr2 != 0)\r\n"
+L"piecewise_first_case: #prec[1000(5)](#expr1 ? #expr2 : \r\n"
+L"piecewise_extra_case: #prec[1000(5)]#expr1 ? #expr2 : \r\n"
+L"piecewise_otherwise: #prec[1000(5)]#expr1)\r\n"
+L"piecewise_no_otherwise: #prec[1000(5)]0.0/0.0)\r\n"
+L"eulergamma: #prec[999]0.577215664901533\r\n"
+L"exponentiale: #prec[999]2.71828182845905\r\n"
+L"false: #prec[999]0.0\r\n"
+L"infinity: #prec[900]1.0/0.0\r\n"
+L"notanumber: #prec[999]0.0/0.0\r\n"
+L"pi: #prec[999] 3.14159265358979\r\n"
+L"true: #prec[999]1.0\r\n"
+                            )
+    );
+  aCGS->transform(transform);
+
+  aCGS->sampleDensityFunctionPattern
+    (
+     L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC, failInfo)"
+     L"<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+     L"{\r\nreturn (<EXPR>);\r\n}\r\n"
+     L"double (*pdf_roots_<ID>[])(double bvar, double*, double*, struct fail_info* failInfo) = "
+     L"{<FOREACH_ROOT>pdf_<ID>_root_<ROOTID>,<ROOTSUP>double pdf_<ID>_root_<ROOTID>"
+     L"(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n"
+     L"{\r\nreturn (<EXPR>);\r\n}\r\n</FOREACH_ROOT>};\r\n");
+  aCGS->solvePattern
+    (
+     L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
+     L"<SUP>"
+     L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
+     L"{\r\n"
+     L"  /* Solver for equation: <XMLID> */\r\n"
+     L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+     L"#define VOI rfi->aVOI\r\n"
+     L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+     L"#define RATES rfi->aRATES\r\n"
+     L"#define STATES rfi->aSTATES\r\n"
+     L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+     L"  <VAR> = *p;\r\n"
+     L"  *hx = (<LHS>) - (<RHS>);\r\n"
+     L"#undef VOI\r\n"
+     L"#undef CONSTANTS\r\n"
+     L"#undef RATES\r\n"
+     L"#undef STATES\r\n"
+     L"#undef ALGEBRAIC\r\n"
+     L"}\r\n"
+     L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
+     L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+     L"{\r\n"
+     L"  static double val = <IV>;\r\n"
+     L"  struct rootfind_info rfi;\r\n"
+     L"  rfi.aVOI = VOI;\r\n"
+     L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+     L"  rfi.aRATES = RATES;\r\n"
+     L"  rfi.aSTATES = STATES;\r\n"
+     L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+     L"  rfi.aFail = failInfo;\r\n"
+     L"  do_nonlinearsolve(objfunc_<ID>, &val, failInfo, 1, &rfi);\r\n"
+     L"  <VAR> = val;\r\n"
+     L"}\r\n"
+     );
+  aCGS->solveNLSystemPattern(
+    L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
+    L"<SUP>"
+    L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
+    L"{\r\n"
+    L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+    L"#define VOI rfi->aVOI\r\n"
+    L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+    L"#define RATES rfi->aRATES\r\n"
+    L"#define STATES rfi->aSTATES\r\n"
+    L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+    L"#define failInfo rfi->aFail\r\n"
+    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"  <EQUATIONS>hx[<INDEX>] = <EXPR>;<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"#undef VOI\r\n"
+    L"#undef CONSTANTS\r\n"
+    L"#undef RATES\r\n"
+    L"#undef STATES\r\n"
+    L"#undef ALGEBRAIC\r\n"
+    L"#undef failInfo\r\n"
+    L"}\r\n"
+    L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
+    L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+    L"{\r\n"
+    L"  /* Solver for equations: <EQUATIONS><XMLID><JOIN>, </EQUATIONS> */\r\n"
+    L"  static double p[<COUNT>] = {<EQUATIONS><IV><JOIN>,</EQUATIONS>};\r\n"
+    L"  struct rootfind_info rfi;\r\n"
+    L"  rfi.aVOI = VOI;\r\n"
+    L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+    L"  rfi.aRATES = RATES;\r\n"
+    L"  rfi.aSTATES = STATES;\r\n"
+    L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+    L"  rfi.aFail = failInfo;\r\n"
+    L"  do_nonlinearsolve(objfunc_<ID>, p, failInfo, <COUNT>, &rfi);\r\n"
+    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"}\r\n"
+    );
+  if (aIsDebug)
+  {
+    aCGS->assignPattern(L"TryAssign(&(<LHS>), <RHS>, \"<XMLID>\", failInfo);\r\nif (getFailType(failInfo)) return FAIL_RETURN;\r\n");
+    // aCGS->
+  }
+  else
+  {
+    aCGS->assignPattern(L"<LHS>= <RHS>;\r\n");
+  }
+}
+
+already_AddRefd<iface::cellml_services::ODESolverCompiledModel>
+CDA_CellMLIntegrationService::compileModelODEInternal
+(
+ iface::cellml_api::Model* aModel,
+ bool aIsDebug
+)
+  throw(std::exception&)
+{
   RETURN_INTO_OBJREF(cgb, iface::cellml_services::CodeGeneratorBootstrap,
                      CreateCodeGeneratorBootstrap());
   RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator,
                      cgb->createCodeGenerator());
+
+  SetupCodeGenStrings(cg, aIsDebug);
 
   // Generate code information...
   ObjRef<iface::cellml_services::CodeInformation> cci;
@@ -939,46 +1174,40 @@ CDA_CellMLIntegrationService::compileModelODE
   std::string dirname, sourcename;
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
-  ss << "int SetupConstants(double* CONSTANTS, double* RATES, "
-    "double *STATES)" << std::endl;
+  ss << "void SetupConstants(double* CONSTANTS, double* RATES, "
+    "double *STATES, struct fail_info* failInfo)" << std::endl;
   std::wstring frag = cci->initConstsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << "  double ALGEBRAIC[" << cci->algebraicIndexCount() << "];" << std::endl
      << "#define VOI 0.0" << std::endl
      << frag8 << std::endl
      << "#undef VOI" << std::endl
      << "#undef ALGEBRAIC" << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
-  ss << "int ComputeRates(double VOI, double* CONSTANTS, double* RATES, "
-     << "double* STATES, double* ALGEBRAIC)" << std::endl;
+  ss << "void ComputeRates(double VOI, double* CONSTANTS, double* RATES, "
+     << "double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)" << std::endl;
   frag = cci->ratesString();
   fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
-  ss << "int ComputeVariables(double VOI, double* CONSTANTS, double* RATES, "
-    "double* STATES, double* ALGEBRAIC)" << std::endl;
+  ss << "void ComputeVariables(double VOI, double* CONSTANTS, double* RATES, "
+    "double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)" << std::endl;
   frag = cci->variablesString();
   fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
@@ -997,10 +1226,33 @@ CDA_CellMLIntegrationService::compileModelDAE
 )
   throw(std::exception&)
 {
+  return compileModelDAEInternal(aModel, false);
+}
+
+already_AddRefd<iface::cellml_services::DAESolverCompiledModel>
+CDA_CellMLIntegrationService::compileDebugModelDAE
+(
+ iface::cellml_api::Model* aModel
+)
+  throw(std::exception&)
+{
+  return compileModelDAEInternal(aModel, true);
+}
+
+already_AddRefd<iface::cellml_services::DAESolverCompiledModel>
+CDA_CellMLIntegrationService::compileModelDAEInternal
+(
+ iface::cellml_api::Model* aModel,
+ bool aIsDebug
+)
+  throw(std::exception&)
+{
   RETURN_INTO_OBJREF(cgb, iface::cellml_services::CodeGeneratorBootstrap,
                      CreateCodeGeneratorBootstrap());
   RETURN_INTO_OBJREF(cg, iface::cellml_services::IDACodeGenerator,
                      cgb->createIDACodeGenerator());
+
+  SetupCodeGenStrings(cg, aIsDebug);
 
   // Generate code information...
   ObjRef<iface::cellml_services::IDACodeInformation> cci;
@@ -1026,72 +1278,65 @@ CDA_CellMLIntegrationService::compileModelDAE
   std::string dirname, sourcename;
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
-  ss << "int SetupFixedConstants(double* CONSTANTS, double* RATES, "
-    "double *STATES)" << std::endl;
+  ss << "void SetupFixedConstants(double* CONSTANTS, double* RATES, "
+    "double *STATES, struct fail_info* failInfo)" << std::endl;
   std::wstring frag = cci->initConstsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << "#define VOI 0.0" << std::endl
      << "#define ALGEBRAIC NULL" << std::endl
      << frag8 << std::endl
      << "#undef VOI" << std::endl
      << "#undef ALGEBRAIC" << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
-  ss << "int EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, "
-     << "double* STATES, double* ALGEBRAIC, double* CONDVAR)" << std::endl;
+  ss << "void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, "
+     << "double* STATES, double* ALGEBRAIC, double* CONDVAR, struct fail_info* failInfo)" << std::endl;
   frag = cci->variablesString();
   fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
-  ss << "int EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, "
-     << "double* OLDRATES, double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR)" << std::endl;
+  ss << "void EvaluateEssentialVariables(double VOI, double* CONSTANTS, double* RATES, "
+     << "double* OLDRATES, double* STATES, double* OLDSTATES, double* ALGEBRAIC, "
+     << "double* CONDVAR, struct fail_info* failInfo)" << std::endl;
   frag = cci->essentialVariablesString();
   fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
-  ss << "int ComputeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
-    "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR, double* resid)" << std::endl;
+  ss << "void ComputeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
+    "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR, double* resid,"
+    "struct fail_info* failInfo)" << std::endl;
   frag = cci->ratesString();
   fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
-  ss << "int ComputeRootInformation(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
-    "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR)" << std::endl;
+  ss << "void ComputeRootInformation(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, "
+    "double* STATES, double* OLDSTATES, double* ALGEBRAIC, double* CONDVAR, "
+    "struct fail_info* failInfo)" << std::endl;
   frag = cci->rootInformationString();
   fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
-     << "  int ret = 0, *pret = &ret;" << std::endl
      << frag8 << std::endl
-     << "  return ret;" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 

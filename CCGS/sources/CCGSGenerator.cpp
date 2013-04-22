@@ -33,12 +33,6 @@ CodeGenerationState::~CodeGenerationState()
   for (std::list<System*>::iterator i = mSystems.begin();
        i != mSystems.end(); i++)
     delete *i;
-
-  for (std::list<std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>, iface::mathml_dom::MathMLContentElement*> >::iterator i =
-         mRootInformation.begin();
-       i != mRootInformation.end();
-       i++)
-    (*i).second->release_ref();
 }
 
 already_AddRefd<iface::cellml_services::CustomGenerator>
@@ -583,9 +577,8 @@ CodeGenerationState::TransformCaseCondition(iface::mathml_dom::MathMLElement* aE
     mCodeInfo->mConditionVariableCount++;
 
     withMinus->add_ref();
-    mRootInformation.push_back(std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>,
-                                         iface::mathml_dom::MathMLContentElement*>
-                               (std::pair<std::wstring, iface::cellml_api::CellMLComponent*>(str, aContext), withMinus));
+    mRootInformation.push_back(RootInformation
+                               (str, aContext, withMinus));
 
     // Make a passthrough csymbol for the allocated symbol.
     RETURN_INTO_OBJREF(ptEl, iface::dom::Element,
@@ -615,15 +608,19 @@ CodeGenerationState::GenerateRootInformation()
 {
   while (!mRootInformation.empty())
   {
-    std::pair<std::pair<std::wstring, iface::cellml_api::CellMLComponent*>, iface::mathml_dom::MathMLContentElement*> p = mRootInformation.front();
+    RootInformation p = mRootInformation.front();
     mRootInformation.pop_front();
-    RETURN_INTO_OBJREF(math, iface::mathml_dom::MathMLContentElement, p.second);
+    RETURN_INTO_OBJREF(math, iface::mathml_dom::MathMLContentElement, p.mathEl);
 
     RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
-                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, math, p.first.second,
+                       mTransform->transform(mCeVAS, mCUSES, mAnnoSet, math, p.component,
                                              NULL, NULL, 0));
     RETURN_INTO_WSTRING(exp, mr->expression());
-    AppendAssign(mCodeInfo->mRootInformationStr, p.first.first, exp);
+    std::wstring elName = p.mathEl->getAttribute(L"id");
+    if (elName == L"")
+      elName = L"unnamed element";
+    AppendAssign(mCodeInfo->mRootInformationStr, p.storageName, exp,
+                 L"piecewise condition for " + elName);
     uint32_t l = mr->supplementariesLength(), i;
     for (i = 0; i < l; i++)
     {
@@ -752,7 +749,7 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
       wchar_t ivv[30];
       any_swprintf(ivv, 30, L"%g", iv);
       RETURN_INTO_WSTRING(n, (*i)->name());
-      AppendAssign(aCode, n, ivv);
+      AppendAssign(aCode, n, ivv, (*i)->mVariable->name());
     }
 }
 
@@ -1062,7 +1059,7 @@ CodeGenerationState::GenerateResiduals
 
     uint32_t index = p.first->assignedIndex();
 
-    GenerateResidualForString(aCode, residNumber++, p.second, constName);
+    GenerateResidualForString(aCode, residNumber++, p.second, constName, p.first->mVariable->name());
     p.first->setNameAndIndex(index, p.second.c_str());
   }
 
@@ -1088,6 +1085,22 @@ CodeGenerationState::GenerateResiduals
     throw UnderconstrainedError();
 }
 
+static std::wstring describeMaths(MathStatement* ms)
+{
+  if (ms == NULL)
+    return L"null math statement";
+  if (ms->mType == MathStatement::INITIAL_ASSIGNMENT)
+    return ms->mTargets.front()->name();
+  MathMLMathStatement* mms =
+    static_cast<MathMLMathStatement*>(static_cast<MathStatement*>(ms));
+  if (mms->mMaths == NULL)
+    return L"null maths";
+  std::wstring idAttr = mms->mMaths->getAttribute(L"id");
+  if (idAttr == L"")
+    return L"Element with no id";
+  return idAttr;
+}
+
 void
 CodeGenerationState::GenerateResidualForEquation
 (
@@ -1105,43 +1118,62 @@ CodeGenerationState::GenerateResidualForEquation
   RETURN_INTO_WSTRING(e1, mr1->expression());
   RETURN_INTO_WSTRING(e2, mr2->expression());
 
-  GenerateResidualForString(aCode, aResidNo, e1, e2);
+  GenerateResidualForString(aCode, aResidNo, e1, e2,
+                            describeMaths(aEq));
 }
 
 void
 CodeGenerationState::GenerateResidualForString
 (
- std::wstring& aCode,
+ std::wstring& aAppendTo,
  uint32_t aResidNo,
- const std::wstring& e1,
- const std::wstring& e2
+ const std::wstring& aLHS,
+ const std::wstring& aRHS,
+ const std::wstring& aXmlId
 )
 {
-  std::wstring r(mResidualPattern);
+  wchar_t residNo[30];
+  any_swprintf(residNo, 30, L"%lu", aResidNo);
+
+  size_t curIdx = 0;
+
   while (true)
   {
-    size_t pos = r.find(L"<RNO>");
-
-    if (pos == std::wstring::npos)
-      break;
-
-    wchar_t buf[30];
-    any_swprintf(buf, 30, L"%lu", aResidNo);
-    
-    r.replace(pos, 5, buf);
+    size_t lIdx = mResidualPattern.find(L"<LHS>", curIdx),
+      rIdx = mResidualPattern.find(L"<RHS>", curIdx),
+      rnIdx = mResidualPattern.find(L"<RNO>", curIdx),
+      iIdx = mResidualPattern.find(L"<XMLID>", curIdx);
+    if ((lIdx == rIdx) && (lIdx == rnIdx) && (lIdx == iIdx) &&
+        (lIdx == std::string::npos))
+    {
+      aAppendTo += mResidualPattern.substr(curIdx);
+      return;
+    }
+    if (lIdx <= rIdx && lIdx <= rnIdx && lIdx <= iIdx)
+    {
+      aAppendTo += mResidualPattern.substr(curIdx, lIdx - curIdx);
+      aAppendTo += aLHS;
+      curIdx = lIdx + sizeof("<LHS>") - 1;
+    }
+    else if (rIdx <= rnIdx && rIdx <= iIdx)
+    {
+      aAppendTo += mResidualPattern.substr(curIdx, rIdx - curIdx);
+      aAppendTo += aRHS;
+      curIdx = rIdx + sizeof("<RHS>") - 1;
+    }
+    else if (rnIdx <= iIdx)
+    {
+      aAppendTo += mResidualPattern.substr(curIdx, rnIdx - curIdx);
+      aAppendTo += residNo;
+      curIdx = rnIdx + sizeof("<RNO>") - 1;
+    }
+    else
+    {
+      aAppendTo += mResidualPattern.substr(curIdx, iIdx - curIdx);
+      aAppendTo += aXmlId;
+      curIdx = iIdx + sizeof("<XMLID>") - 1;
+    }
   }
-
-
-  size_t pos = r.find(L"<LHS>");
-  if (pos != std::wstring::npos)
-    r.replace(pos, 5, e1);
-
-  // XXX this is wrong if e1 can contain the string <LHS>
-  pos = r.find(L"<RHS>");
-  if (pos != std::wstring::npos)
-    r.replace(pos, 5, e2);
-
-  aCode += r;
 }
 
 void
@@ -2126,12 +2158,12 @@ CodeGenerationState::FirstPassTargetClassification()
         if (tct == ct && hasImmedIV)
         {
           tct->mStateHasIV = true;
-          AppendAssign(mCodeInfo->mInitConstsStr, cname, iv);
+          AppendAssign(mCodeInfo->mInitConstsStr, cname, iv, ct->mVariable->name());
         }
         else if (tct != ct)
         {
           tct->mStateHasIV = true;
-          AppendAssign(mCodeInfo->mInitConstsStr, cname, L"0.0");
+          AppendAssign(mCodeInfo->mInitConstsStr, cname, L"0.0", tct->mVariable->name());
         }
         tct = tct->mUpDegree;
         tct->mEvaluationType = iface::cellml_services::FLOATING;
@@ -2147,7 +2179,7 @@ CodeGenerationState::FirstPassTargetClassification()
       else if (ct->mEvaluationType == iface::cellml_services::CONSTANT)
       {
         AllocateConstant(ct, cname);
-        AppendAssign(mCodeInfo->mInitConstsStr, cname, iv);
+        AppendAssign(mCodeInfo->mInitConstsStr, cname, iv, ct->mVariable->name());
       }
     }
   }
@@ -2355,7 +2387,7 @@ CodeGenerationState::RestoreSavedRates(std::wstring& aCodeTo)
 
     uint32_t index = p.first->assignedIndex();
 
-    AppendAssign(aCodeTo, p.second, constName);
+    AppendAssign(aCodeTo, p.second, constName, L"Rate Restore");
     p.first->setNameAndIndex(index, p.second.c_str());
   }
 }
@@ -2407,48 +2439,41 @@ CodeGenerationState::AppendAssign
 (
  std::wstring& aAppendTo,
  const std::wstring& aLHS,
- const std::wstring& aRHS
+ const std::wstring& aRHS,
+ const std::wstring& aXmlID
 )
 {
-  size_t idx1 = mAssignPattern.find(L"<LHS>");
-  size_t idx2 = mAssignPattern.find(L"<RHS>");
-  if (idx1 == std::wstring::npos && idx2 == std::wstring::npos)
-  {
-    aAppendTo.append(mAssignPattern);
-    return;
-  }
+  size_t curIdx = 0;
 
-  if (idx1 == std::wstring::npos)
+  while (true)
   {
-    aAppendTo.append(mAssignPattern.substr(0, idx2));
-    aAppendTo.append(aRHS);
-    aAppendTo.append(mAssignPattern.substr(idx2 + 5));
-    return;
+    size_t lIdx = mAssignPattern.find(L"<LHS>", curIdx),
+      rIdx = mAssignPattern.find(L"<RHS>", curIdx),
+      iIdx = mAssignPattern.find(L"<XMLID>", curIdx);
+    if ((lIdx == rIdx) && (lIdx == iIdx) && (lIdx == std::string::npos))
+    {
+      aAppendTo += mAssignPattern.substr(curIdx);
+      return;
+    }
+    if (lIdx <= rIdx && lIdx <= iIdx)
+    {
+      aAppendTo += mAssignPattern.substr(curIdx, lIdx - curIdx);
+      aAppendTo += aLHS;
+      curIdx = lIdx + sizeof("<LHS>") - 1;
+    }
+    else if (rIdx <= iIdx)
+    {
+      aAppendTo += mAssignPattern.substr(curIdx, rIdx - curIdx);
+      aAppendTo += aRHS;
+      curIdx = rIdx + sizeof("<RHS>") - 1;
+    }
+    else
+    {
+      aAppendTo += mAssignPattern.substr(curIdx, iIdx - curIdx);
+      aAppendTo += aXmlID;
+      curIdx = iIdx + sizeof("<XMLID>") - 1;
+    }
   }
-
-  if (idx2 == std::wstring::npos)
-  {
-    aAppendTo.append(mAssignPattern.substr(0, idx1));
-    aAppendTo.append(aLHS);
-    aAppendTo.append(mAssignPattern.substr(idx1 + 5));
-    return;
-  }
-
-  if (idx1 < idx2)
-  {
-    aAppendTo.append(mAssignPattern.substr(0, idx1));
-    aAppendTo.append(aLHS);
-    aAppendTo.append(mAssignPattern.substr(idx1 + 5, idx2 - idx1 - 5));
-    aAppendTo.append(aRHS);
-    aAppendTo.append(mAssignPattern.substr(idx2 + 5));
-    return;
-  }
-
-  aAppendTo.append(mAssignPattern.substr(0, idx2));
-  aAppendTo.append(aRHS);
-  aAppendTo.append(mAssignPattern.substr(idx2 + 5, idx1 - idx2 - 5));
-  aAppendTo.append(aLHS);
-  aAppendTo.append(mAssignPattern.substr(idx1 + 5));
 }
 
 void
@@ -3461,7 +3486,7 @@ CodeGenerationState::GenerateCodeForSystem
                        mTransform->transform(mCeVAS, mCUSES, mAnnoSet, ci,
                                              ms->mContext, localVarLHS,
                                              NULL, 0));
-    GenerateAssignmentMaLaESResult(aCodeTo, t1, mr);
+    GenerateAssignmentMaLaESResult(aCodeTo, t1, mr, t1->mVariable->name());
     return;
   }
 
@@ -3783,7 +3808,7 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
       mCodeInfo->mFuncsStr += sup;
 
     RETURN_INTO_WSTRING(lhs, aSFD->mOutTargets.front()->name());
-    AppendAssign(aCodeTo, lhs, main);
+    AppendAssign(aCodeTo, lhs, main, describeMaths(aSFD));
   }
   else if (du == L"http://www.cellml.org/uncertainty-1#distributionFromRealisations")
   {
@@ -3838,7 +3863,7 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
                                  mTransform->transform(mCeVAS, mCUSES, mAnnoSet, mel,
                                                        aSFD->mContext, localVar,
                                                        NULL, 0));
-              GenerateAssignmentMaLaESResult(assignments, *k, mr);
+              GenerateAssignmentMaLaESResult(assignments, *k, mr, describeMaths(aSFD));
             }
           }
           else if (aSFD->mOutTargets.size() != 1)
@@ -3853,7 +3878,7 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
                                mTransform->transform(mCeVAS, mCUSES, mAnnoSet, ce,
                                                      aSFD->mContext, localVar,
                                                      NULL, 0));
-            GenerateAssignmentMaLaESResult(assignments, ct, mr);
+            GenerateAssignmentMaLaESResult(assignments, ct, mr, describeMaths(aSFD));
           }
 
           any_swprintf(buf, 30, L"%u", i - 1);
@@ -4050,7 +4075,7 @@ CodeGenerationState::GenerateCodeForEquation
 
     // We have the variable we want by itself on one side of the equation. A
     // straight assignment will suffice.
-    GenerateAssignmentMaLaESResult(aCodeTo, aComputedTarget, mr);
+    GenerateAssignmentMaLaESResult(aCodeTo, aComputedTarget, mr, describeMaths(aEq));
     return;
   }
   while (true);
@@ -4080,7 +4105,7 @@ CodeGenerationState::GenerateStateToRateCascades()
       GenerateVariableName(rateN, mRateNamePattern,
                            ct->mAssignedIndex - 1);
 
-      AppendAssign(mCodeInfo->mRatesStr, rateN, stateN);
+      AppendAssign(mCodeInfo->mRatesStr, rateN, stateN, ct->mVariable->name());
       ct = ct->mUpDegree;
     }
   }
@@ -4103,7 +4128,7 @@ CodeGenerationState::GenerateInfDelayUpdates()
     ComputeInfDelayedName(*i, delname);
     RETURN_INTO_WSTRING(name, (*i)->name());
 
-    AppendAssign(mCodeInfo->mRatesStr, delname, name);
+    AppendAssign(mCodeInfo->mRatesStr, delname, name, (*i)->mVariable->name());
   }
 
   mCodeInfo->mRatesStr += oldRates;
@@ -4140,7 +4165,8 @@ CodeGenerationState::GenerateAssignmentMaLaESResult
 (
  std::wstring& aCodeTo,
  ptr_tag<CDA_ComputationTarget> aTarget,
- iface::cellml_services::MaLaESResult* aMR
+ iface::cellml_services::MaLaESResult* aMR,
+ const std::wstring& aXMLId
 )
 {
   RETURN_INTO_WSTRING(lhs, aTarget->name());
@@ -4154,7 +4180,7 @@ CodeGenerationState::GenerateAssignmentMaLaESResult
       mCodeInfo->mFuncsStr += s + L"\r\n";
   }
 
-  AppendAssign(aCodeTo, lhs, rhs);
+  AppendAssign(aCodeTo, lhs, rhs, aXMLId);
 }
 
 void
@@ -4224,6 +4250,8 @@ CodeGenerationState::GenerateSolveCode
         state = 5;
       else if (c == L'S')
         state = 13;
+      else if (c == L'X')
+        state = 17;
       else
       {
         *dest += L'<';
@@ -4399,6 +4427,20 @@ CodeGenerationState::GenerateSolveCode
         *dest += L"<IV";
         *dest += c;
         state = 0;
+      }
+      break;
+    case 17: // Seen <X
+      if (mSolvePattern.substr(idx, 5) == L"MLID>")
+      {
+        *dest += describeMaths(aEq);
+        idx += 4;
+        state = 0;
+      }
+      else
+      {
+        state = 0;
+        *dest += L"<X";
+        *dest += c;
       }
       break;
     }
@@ -4654,6 +4696,8 @@ CodeGenerationState::GenerateMultivariateSolveCodeEq
         state = 4;
       else if (c == L'V')
         state = 5;
+      else if (c == L'X')
+        state = 18;
       else
       {
         aCodeTo += L'<';
@@ -4823,6 +4867,20 @@ CodeGenerationState::GenerateMultivariateSolveCodeEq
         aCodeTo += L"<IV";
         aCodeTo += c;
         state = 0;
+      }
+      break;
+    case 18: // Seen <X
+      if (aPattern.substr(idx, 5) == L"MLID>")
+      {
+        aCodeTo += describeMaths(aEq);
+        idx += 4;
+        state = 0;
+      }
+      else
+      {
+        state = 0;
+        aCodeTo += L"<X";
+        aCodeTo += c;
       }
       break;
     }

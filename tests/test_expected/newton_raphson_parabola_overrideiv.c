@@ -31,8 +31,9 @@
  * * * Variable index: 1
  * * * Variable storage: CONSTANTS[1]
  */
-void objfunc_0(double *p, double *hx, int m, int n, void *adata)
+void objfunc_0(double* p, double* hx, void *adata)
 {
+  /* Solver for equation: Element with no id */
   struct rootfind_info* rfi = (struct rootfind_info*)adata;
 #define VOI rfi->aVOI
 #define CONSTANTS rfi->aCONSTANTS
@@ -51,8 +52,7 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 }
 void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)
 {
-  static double val = 1.234;
-  double bp, work[LM_DIF_WORKSZ(1, 1)];
+  static double val = 0.1;
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
   rfi.aCONSTANTS = CONSTANTS;
@@ -60,13 +60,16 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
   rfi.aSTATES = STATES;
   rfi.aALGEBRAIC = ALGEBRAIC;
   rfi.aPRET = pret;
-  do_levmar(objfunc_0, &val, &bp, work, pret, 1, &rfi);
+  do_nonlinearsolve(objfunc_0, &val, pret, 1, &rfi);
   ALGEBRAIC[0] = val;
 }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* offset */
 CONSTANTS[0] = 3;
-CONSTANTS[1] = (CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ? ( sin(CONSTANTS[0])) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000);
+/* Element with no id */
+CONSTANTS[1] = (CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ? sin(CONSTANTS[0]) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000);
+/* y */
 STATES[0] = CONSTANTS[0];
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -75,5 +78,6 @@ rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
+/* Element with no id */
 RATES[0] =  2.00000*VOI;
 }

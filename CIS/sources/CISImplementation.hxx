@@ -12,32 +12,48 @@ extern void UnloadCIS(void);
 
 class CompiledModule;
 
+// This is used opaquely from generated C code, which uses the C API to fail_info
+// below.
+struct fail_info {
+  fail_info() { failtype = 0; }
+  int failtype;
+  std::string failmsg;
+};
+void clearFailure(struct fail_info* aFail);
+void setFailure(struct fail_info* aFail, const char* aMsg, int type);
+void failAddCause(struct fail_info* aFail, const char* aCause);
+int getFailType(struct fail_info* aFail);
+
 struct CompiledModelFunctions
 {
-  int (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES);
-  int (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
-                       double* STATES, double* ALGEBRAIC);
-  int (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
-                           double* STATES, double* ALGEBRAIC);
+  void (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES, struct fail_info*);
+  void (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
+                      double* STATES, double* ALGEBRAIC, struct fail_info*);
+  void (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
+                          double* STATES, double* ALGEBRAIC, struct fail_info*);
 
 };
 
 struct IDACompiledModelFunctions
 {
-  int (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES);
-  int (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
-                           double *STATES, double* ALGEBRAIC, double* CONDVAR);
-  int (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
+  void (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES,
+                             struct fail_info*);
+  void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
+                           double *STATES, double* ALGEBRAIC, double* CONDVAR,
+                           struct fail_info*);
+  void (*EvaluateEssentialVariables)(double VOI, double* CONSTANTS, double* RATES,
                                     double* OLDRATES, double* STATES,
                                     double* OLDSTATES, double* ALGEBRAIC,
-                                    double* CONDVARS);
+                                    double* CONDVARS, struct fail_info*);
 
-  int (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
+  void (*ComputeResiduals)(double VOI, double* CONSTANTS, double* RATES,
                           double* OLDRATES, double* STATES, double* OLDSTATES,
-                          double* ALGEBRAIC, double* CONDVAR, double* resids);
-  int (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES,
+                          double* ALGEBRAIC, double* CONDVAR, double* resids,
+                          struct fail_info*);
+  void (*ComputeRootInformation)(double VOI, double* CONSTANTS, double* RATES,
                                 double* OLDRATES, double* STATES, double* OLDSTATES,
-                                double* ALGEBRAIC, double* CONDVAR);
+                                double* ALGEBRAIC, double* CONDVAR,
+                                struct fail_info*);
   void (*SetupStateInfo)(double * SI);
 };
 
@@ -152,9 +168,8 @@ public:
     throw (std::exception&);
   void start() throw (std::exception&);
   void stop() throw (std::exception&);
-
-  void CVODEError(int error_code, const char* module, const char* function,
-                  const char* msg);
+  void pause() throw (std::exception&);
+  void resume() throw (std::exception&);
 
 protected:
   virtual void runthread() = 0;
@@ -168,7 +183,6 @@ protected:
   OverrideList mConstantOverrides, mIVOverrides;
   volatile bool mCancelIntegration;
   bool mStrictTabulation;
-  std::string mWhyFailure;
 };
 
 class CDA_ODESolverRun
@@ -248,6 +262,12 @@ public:
   already_AddRefd<iface::cellml_services::DAESolverCompiledModel>
   compileModelDAE(iface::cellml_api::Model* aModel)
     throw(std::exception&);
+  already_AddRefd<iface::cellml_services::ODESolverCompiledModel>
+  compileDebugModelODE(iface::cellml_api::Model* aModel)
+    throw(std::exception&);
+  already_AddRefd<iface::cellml_services::DAESolverCompiledModel>
+  compileDebugModelDAE(iface::cellml_api::Model* aModel)
+    throw(std::exception&);
 
   already_AddRefd<iface::cellml_services::ODESolverRun>
   createODEIntegrationRun(iface::cellml_services::ODESolverCompiledModel* aModel)
@@ -301,8 +321,16 @@ public:
 #endif
 
 private:
+  already_AddRefd<iface::cellml_services::ODESolverCompiledModel>
+  compileModelODEInternal(iface::cellml_api::Model* aModel, bool aIsDebug)
+    throw(std::exception&);
+  already_AddRefd<iface::cellml_services::DAESolverCompiledModel>
+  compileModelDAEInternal(iface::cellml_api::Model* aModel, bool aIsDebug)
+    throw(std::exception&);
+
   CompiledModule* CompileSource(std::string& destDir, std::string& sourceFile,
                                 std::wstring& lastError);
+  void SetupCodeGenStrings(iface::cellml_services::CodeGenerator* aCGS, bool aIsDebug);
   std::wstring mLastError;
 #ifdef ENABLE_CONTEXT
   void (*mUnload)();

@@ -19,6 +19,7 @@
  */
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* distance */
 STATES[0] = 5;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -26,5 +27,6 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
+/* Element with no id */
 RATES[0] = -1.00000 -  - -1.00000*VOI;
 }

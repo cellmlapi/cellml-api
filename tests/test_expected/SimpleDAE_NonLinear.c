@@ -51,6 +51,7 @@ void objfunc_0(double* p, double* hx, void *adata)
 }
 void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)
 {
+  /* Solver for equations: Element with no id, Element with no id */
   static double p[2] = {0.1,0.1};
   struct rootfind_info rfi;
   rfi.aVOI = VOI;
@@ -65,6 +66,7 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
 }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* a */
 STATES[0] = 1;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -73,5 +75,6 @@ void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STA
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
 rootfind_0(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);
+/* Element with no id */
 RATES[0] =  (4.00000/7.00000)*( 2.00000*pow(ALGEBRAIC[0], 3.00000)+ALGEBRAIC[1]);
 }

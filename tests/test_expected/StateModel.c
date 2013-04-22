@@ -19,6 +19,7 @@
  */
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* x */
 STATES[0] = 0;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
@@ -28,10 +29,12 @@ void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, 
 {
 if (STATES[0]<100.000)
 {
-  RATES[0] = 1.00000;
+  /* Element with no id */
+RATES[0] = 1.00000;
 }
 else if (1.0)
 {
-  RATES[0] = -1.00000;
+  /* Element with no id */
+RATES[0] = -1.00000;
 }
 }

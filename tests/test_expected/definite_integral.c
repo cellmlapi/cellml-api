@@ -40,17 +40,24 @@
  double func1(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret) { return  (1.00000/ pow(( 2.00000* 3.14159265358979*pow(CONSTANTS[1], 2.00000)), 1.0 / 2))*exp( (-0.500000/pow(CONSTANTS[1], 2.00000))*pow(ALGEBRAIC[0] - CONSTANTS[0], 2.00000)); }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
+/* meanHeight */
 CONSTANTS[0] = 1.7;
+/* heightStdDev */
 CONSTANTS[1] = 0.1;
+/* height */
 STATES[0] = 1.7;
+/* growthRate */
 CONSTANTS[2] = 0.01;
+/* Element with no id */
 CONSTANTS[3] = CONSTANTS[2];
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)
 {
+/* Element with no id */
 ALGEBRAIC[1] = 1.00000 - defint(func1, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &ALGEBRAIC[0],  2.00000*CONSTANTS[0] - STATES[0], STATES[0], pret);
 }
 void ComputeRates(double VOI, double* STATES, double* RATES, double* CONSTANTS, double* ALGEBRAIC)
 {
+/* Rate Restore */
 RATES[0] = CONSTANTS[3];
 }
