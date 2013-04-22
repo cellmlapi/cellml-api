@@ -310,6 +310,11 @@ CDA_ODESolverRun::SolveODEProblemGSL
       bhl = voi + mStepSizeMax;
     if(bhl > nextStopPoint)
       bhl = nextStopPoint;
+    if (floatsEqual(bhl, mStopBvar, tabulationRelativeTolerance))
+    {
+      nextStopPoint = mStopBvar;
+      bhl = mStopBvar;
+    }
 
     gsl_odeiv_evolve_apply(e, c, s, &sys, &voi, bhl,
                            &stepSize, states);
@@ -963,7 +968,7 @@ static void DetermineRateOrStateSensitivity(double * hx, int n, DAEIVFindingInfo
     info->ComputeResiduals(info->voi0, info->constants, info->rates, info->oldrates,
                            info->states, info->oldstates,
                            info->algebraic, info->condvars, hx, info->failInfo);
-    info->rates[i] = oldrate * (1 + 1E-6);
+    info->rates[i] = oldrate * 1000 + 1;
     info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->oldrates, info->states,
                                      info->oldstates, info->algebraic, info->condvars,
                                      info->failInfo);
@@ -1020,7 +1025,6 @@ static int dae_iv_paramfinder(N_Vector p, N_Vector hx, void *adata)
 
   MergeParametersICInfoIntoRatesStates(info->n, info->rates, info->states,
                                        info->icinfo, NV_DATA_S(p));
-  DetermineRateOrStateSensitivity(NV_DATA_S(hx), info->n, info);
 
   info->EvaluateEssentialVariables(info->voi0, info->constants, info->rates, info->oldrates,
                                    info->states, info->oldstates, info->algebraic,
@@ -1054,6 +1058,7 @@ CDA_DAESolverRun::SolveDAEProblem
   N_Vector params = N_VNew_Serial(stateSize);
   N_Vector ones = N_VNew_Serial(stateSize);
   N_VConst(1.0, ones);
+  bool isFirst = true;
 
   void* idamem = IDACreate();
   double voi = mStartBvar;
@@ -1063,7 +1068,6 @@ CDA_DAESolverRun::SolveDAEProblem
   double* storage = new double[storageCapacity];
   uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
-  bool sendFailure = false;
   N_Vector y0 = NULL, dy0 = NULL;
 
   if (rateSize != 0)
@@ -1117,6 +1121,12 @@ CDA_DAESolverRun::SolveDAEProblem
   
   f->SetupStateInfo(icinfo);
 
+  double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
+  
+  double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
+  uint32_t tabStepNumber = 0;
+  double nextStopPoint = mTabulationStepSize == 0.0 ? mStopBvar : voi;
+
   if (rateSize > 0)
   {
     bool restart = true;
@@ -1136,11 +1146,11 @@ CDA_DAESolverRun::SolveDAEProblem
       // for (uint32_t i = 0; i < stateSize; i++)
       //   printf("  sens[%u] = %g\n", i, icinfo[i]);
       RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, NV_DATA_S(params));
-      
+
       int ret = KINSol(kin_mem, params, KIN_NONE, ones, ones);
       if (ret < 0)
       {
-        sendFailure = true;
+        failAddCause(&failInfo, "Failure solving for initial values");
         // Apparently IDAFree after IDACreate but before IDAInit fails, so lets IDAInit...
         IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
         break;
@@ -1156,6 +1166,7 @@ CDA_DAESolverRun::SolveDAEProblem
         if (condvars[i] == 0 && roots[i] != 0)
           condvars[i] = roots[i] * 1E-100;
       }
+      DetermineRateOrStateSensitivity(hx, stateSize, &ivf);
 
       IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
       IDARootInit(idamem, condVarSize, ida_rootfn);
@@ -1163,34 +1174,33 @@ CDA_DAESolverRun::SolveDAEProblem
       // IDASpgmr(idamem, 0);
       // IDASptfqmr(idamem, 0);
       IDADense(idamem, stateSize);
-      IDASetErrHandlerFn(idamem, cda_ida_error_handler, this);
+      IDASetErrHandlerFn(idamem, cda_ida_error_handler, &failInfo);
       IDASetUserData(idamem, &ei);
-      
-      double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
-      bool isFirst = true;
-      
-      double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
-      uint32_t tabStepNumber = 1;
-      double nextStopPoint = mTabulationStepSize + voi;
-      
-      if (mTabulationStepSize == 0.0)
-        nextStopPoint = mStopBvar;
-      
-      if (voi >= mStopBvar) // Handle the corner case where we are starting at the end point...
-      {
-        // Add to storage...
-        storage[storageSize] = voi;
-        memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
-        memcpy(storage + storageSize + 1 + rateSize, rates,
-               rateSize * sizeof(double));
-        memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
-               algSize * sizeof(double));
-        storageSize += recsize;
-      }
 
-      while (voi < mStopBvar)
+      bool firstAfterRestart = true;
+
+      while (1)
       {
-        if (restart)
+        if (firstAfterRestart &&
+            (isFirst || mTabulationStepSize == 0.0 ||
+             floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance) ||
+             voi >= nextStopPoint || voi >= mStopBvar))
+        {
+          f->EvaluateVariables(voi, constants, rates, states, algebraic, condvars, &failInfo);
+          storage[storageSize] = voi;
+          memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+          memcpy(storage + storageSize + 1 + rateSize, rates,
+                 rateSize * sizeof(double));
+          memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+                 algSize * sizeof(double));
+          storageSize += recsize;
+          
+          nextStopPoint = mTabulationStepSize == 0.0 ? mStopBvar :
+            (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
+        }
+        firstAfterRestart = false;
+
+        if (restart || voi >= mStopBvar)
           break;
         
         double bhl = mStopBvar;
@@ -1198,14 +1208,14 @@ CDA_DAESolverRun::SolveDAEProblem
           bhl = voi + mStepSizeMax;
         if(bhl > nextStopPoint)
           bhl = nextStopPoint;
-      
+        
         IDASetStopTime(idamem, bhl);
 
         int ret = IDASolve(idamem, bhl, &voi, y0, dy0, IDA_ONE_STEP);
 
         if (ret < 0)
         {
-          sendFailure = true;
+          failAddCause(&failInfo, "Failure solving model with IDA");
           break;
         }
 
@@ -1238,15 +1248,17 @@ CDA_DAESolverRun::SolveDAEProblem
       
         f->EvaluateVariables(voi, constants, rates, states, algebraic, condvars, &failInfo);
       
-        // Add to storage...
-        storage[storageSize] = voi;
-        memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
-        memcpy(storage + storageSize + 1 + rateSize, rates,
-               rateSize * sizeof(double));
-        memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
-               algSize * sizeof(double));
-      
-        storageSize += recsize;
+        if (!restart)
+        {
+          // Add to storage...
+          storage[storageSize] = voi;
+          memcpy(storage + storageSize + 1, states, rateSize * sizeof(double));
+          memcpy(storage + storageSize + 1 + rateSize, rates,
+                 rateSize * sizeof(double));
+          memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
+                 algSize * sizeof(double));
+          storageSize += recsize;
+        }
       
         // Are we ready to send?
         uint32_t timeNow = time(0);
@@ -1277,13 +1289,7 @@ CDA_DAESolverRun::SolveDAEProblem
     std::vector<double> resultsVector(storage, storage + storageSize);
     mObserver->results(resultsVector);
   }
-  if (mObserver != NULL)
-  {
-    if (sendFailure)
-      mObserver->failed(failInfo.failmsg.c_str());
-    else
-      mObserver->done();
-  }
+
   delete [] storage;
 
   if (rateSize != 0)
@@ -1291,6 +1297,14 @@ CDA_DAESolverRun::SolveDAEProblem
     IDAFree(&idamem);
     N_VDestroy(y0);
     N_VDestroy(dy0);
+  }
+
+  if (mObserver != NULL)
+  {
+    if (failInfo.failtype)
+      mObserver->failed(failInfo.failmsg.c_str());
+    else
+      mObserver->done();
   }
 }
 

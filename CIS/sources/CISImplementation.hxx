@@ -37,7 +37,7 @@ struct CompiledModelFunctions
 struct IDACompiledModelFunctions
 {
   void (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES,
-                             struct fail_info*);
+                              double* ALGEBRAIC, struct fail_info*);
   void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
                            double *STATES, double* ALGEBRAIC, double* CONDVAR,
                            struct fail_info*);

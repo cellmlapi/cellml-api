@@ -26,6 +26,7 @@ bool gFinished = false;
 double gStart = 0.0, gStop = 10.0, gDensity = 1000.0;
 double gTabStep = 0.0;
 bool gTStrict = false;
+bool gDebugSim = false;
 uint32_t gSleepTime = 0;
 
 
@@ -54,6 +55,7 @@ public:
       if (ct == NULL)
         break;
       if ((ct->type() == iface::cellml_services::STATE_VARIABLE ||
+           ct->type() == iface::cellml_services::PSEUDOSTATE_VARIABLE ||
            ct->type() == iface::cellml_services::ALGEBRAIC ||
            ct->type() == iface::cellml_services::VARIABLE_OF_INTEGRATION) &&
           ct->degree() == 0)
@@ -157,7 +159,7 @@ public:
     uint32_t ric = mCI->rateIndexCount();
     uint32_t recsize = 2 * ric + aic + 1;
 
-    if (recsize == 0)
+    if (recsize == 1)
       return;
 
     uint32_t i;
@@ -181,6 +183,7 @@ public:
         switch (et)
         {
         case iface::cellml_services::STATE_VARIABLE:
+        case iface::cellml_services::PSEUDOSTATE_VARIABLE:
           varOff = 1 + ct->assignedIndex();
           break;
         case iface::cellml_services::VARIABLE_OF_INTEGRATION:
@@ -194,9 +197,11 @@ public:
         }
 
         printf(first ? "\"%g\"" : ",\"%g\"", values[i + varOff]);
+        // if (et == iface::cellml_services::STATE_VARIABLE)
+        //   printf("(\"%g\")", values[i + varOff + ric]);
         first = false;
       }
-      printf("\n");
+      puts("");
     }
   }
 
@@ -382,6 +387,15 @@ ProcessKeywords(int argc, char** argv,
     {
       gSleepTime = strtoul(value, NULL, 10);
     }
+    else if (!strcasecmp(command, "debug"))
+    {
+      if (!strcasecmp(value, "true"))
+        gDebugSim = true;
+      else if (!strcasecmp(value, "false"))
+        gDebugSim = false;
+      else
+        printf("# Warning: debug command given unrecognised value - true and false accepted.\n");
+    }
     else
       printf("# Warning: Unrecognised command %s. Ignored.\n",
              command);
@@ -408,7 +422,7 @@ IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
   try
   {
     printf("# Compiling model...\n");
-    ccm = cis->compileModelDAE(mod);
+    ccm = gDebugSim ? cis->compileDebugModelDAE(mod) : cis->compileModelDAE(mod);
   }
   catch (iface::cellml_api::CellMLException& ce)
   {
@@ -460,7 +474,7 @@ ODEMain(iface::cellml_services::CellMLIntegrationService* cis,
   try
   {
     printf("# Compiling model...\n");
-    ccm = cis->compileModelODE(mod);
+    ccm = gDebugSim ? cis->compileDebugModelODE(mod) : cis->compileModelODE(mod);
   }
   catch (iface::cellml_api::CellMLException& ce)
   {
@@ -544,6 +558,8 @@ main(int argc, char** argv)
            "    => Sets the interval in the bound variable for guaranteed values in other variables,\n"
            "       and whether to only tabulate values at points that are thus guaranteed.\n"
            "       step_size: A floating point tabulation step size.\n"
+           "  debug true|false\n"
+           "    => Specifies whether or not to use debug mode.\n"
           );
     return -1;
   }

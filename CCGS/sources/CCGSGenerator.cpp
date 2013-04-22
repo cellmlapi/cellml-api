@@ -731,7 +731,7 @@ CodeGenerationState::GetPseudoStateIV(ptr_tag<CDA_ComputationTarget> aCT)
 
   if (i == mInitialOverrides.end())
     // Default to this (non-zero and positive is often best for many real-world models).
-    return 0.1;
+    return 0.1001;
 
   return (*i).second;
 }
@@ -742,8 +742,8 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
          mCodeInfo->mTargets.begin();
        i != mCodeInfo->mTargets.end(); i++)
-    if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE ||
-        (*i)->mDegree > 0)
+    if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE &&
+        (*i)->mDegree == 0)
     {
       double iv = GetPseudoStateIV(*i);
       wchar_t ivv[30];

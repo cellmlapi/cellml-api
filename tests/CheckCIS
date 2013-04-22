@@ -29,8 +29,9 @@ fi
 function runtest()
 {
   name=$1;
+  args=$2
   rm -f $TEMPFILE;
-  $RUNCELLML ./tests/test_xml/$name.xml tabulation 0.1,true step_size_control 1E-6,1E-6 step_type AM_1_12 | tr -d "\r" >$TEMPFILE
+  $RUNCELLML ./tests/test_xml/$name.xml tabulation 0.1,true step_size_control 1E-6,1E-6 $args | tr -d "\r" >$TEMPFILE
   FAIL=0
   $DIFF -bu $TEMPFILE ./tests/test_expected/$name.csv
   if [[ $? -ne 0 ]]; then
@@ -64,25 +65,33 @@ function runtest()
   rm -f $TEMPFILE
 }
 
-runtest cellml_simple_test
-runtest modified_parabola
-runtest underconstrained_1
-runtest overconstrained_1
-runtest newton_raphson_parabola
-runtest import_eqn
-runtest number-minus
-runtest units
-runtest units-import
-runtest units-import-import
-runtest units-in-imported-component
-runtest SimpleDAE_NonLinear
-#runtest_rdf newton_raphson_parabola_overrideiv
-#runtest_usenames modified_parabola
-runtest StateModel
-runtest reset_rule
-runtest definite_integral
-runtest TestParameterIVAmbiguity
-runtest IVComputation
-runtest defint-constant
+function runWithArgs()
+{
+  args="$1"
+  runtest cellml_simple_test "$args"
+  runtest modified_parabola "$args"
+  runtest underconstrained_1 "$args"
+  runtest overconstrained_1 "$args"
+  runtest newton_raphson_parabola "$args"
+  runtest import_eqn "$args"
+  runtest number-minus "$args"
+  runtest units "$args"
+  runtest units-import "$args"
+  runtest units-import-import "$args"
+  runtest units-in-imported-component "$args"
+  runtest SimpleDAE_NonLinear "$args"
+  #runtest_rdf newton_raphson_parabola_overrideiv $args
+  #runtest_usenames modified_parabola $args
+  runtest StateModel "$args"
+  runtest reset_rule "$args"
+  runtest definite_integral "$args"
+  runtest TestParameterIVAmbiguity "$args"
+  runtest IVComputation "$args"
+  runtest defint-constant "$args"
+}
+
+runWithArgs "step_type IDA debug true"
+runWithArgs "step_type AM_1_12 debug true"
+runWithArgs "step_type AM_1_12"
 
 exit 0

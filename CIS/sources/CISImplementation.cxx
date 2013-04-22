@@ -155,7 +155,7 @@ IDACompiledModelFunctions*
 SetupIDACompiledModelFunctions(CompiledModule* module)
 {
   IDACompiledModelFunctions* cmf = new IDACompiledModelFunctions;
-  cmf->SetupFixedConstants = (void (*)(double*, double*, double*, struct fail_info*))
+  cmf->SetupFixedConstants = (void (*)(double*, double*, double*, double*, struct fail_info*))
     module->getSymbol("SetupFixedConstants");
   cmf->EvaluateVariables = (void (*)(double, double*, double*, double*, double*, double*, struct fail_info*))
     module->getSymbol("EvaluateVariables");
@@ -766,7 +766,8 @@ CDA_DAESolverRun::runthread()
     memset(condvars, 0, condVarSize * sizeof(double));
 
     struct fail_info failInfo;
-    f->SetupFixedConstants(constants, rates, states, &failInfo);
+    // Algebraic is needed for locally bound variables (e.g. for definite integrals).
+    f->SetupFixedConstants(constants, rates, states, algebraic, &failInfo);
 
     // Now apply overrides...
     OverrideList::iterator oli;
@@ -1183,7 +1184,9 @@ CDA_CellMLIntegrationService::compileModelODEInternal
   ss << "{" << std::endl
      << "  double ALGEBRAIC[" << cci->algebraicIndexCount() << "];" << std::endl
      << "#define VOI 0.0" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "#undef VOI" << std::endl
      << "#undef ALGEBRAIC" << std::endl
      << "}" << std::endl;
@@ -1196,7 +1199,9 @@ CDA_CellMLIntegrationService::compileModelODEInternal
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
@@ -1207,7 +1212,9 @@ CDA_CellMLIntegrationService::compileModelODEInternal
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
@@ -1279,17 +1286,17 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
   ss << "void SetupFixedConstants(double* CONSTANTS, double* RATES, "
-    "double *STATES, struct fail_info* failInfo)" << std::endl;
+    "double *STATES, double *ALGEBRAIC, struct fail_info* failInfo)" << std::endl;
   std::wstring frag = cci->initConstsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
      << "#define VOI 0.0" << std::endl
-     << "#define ALGEBRAIC NULL" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "#undef VOI" << std::endl
-     << "#undef ALGEBRAIC" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
@@ -1300,7 +1307,9 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
@@ -1312,7 +1321,9 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
@@ -1324,7 +1335,9 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
@@ -1336,7 +1349,9 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
   frag8 = new char[fragLen];
   wcstombs(frag8, frag.c_str(), fragLen);
   ss << "{" << std::endl
+     << "#define FAIL_RETURN" << std::endl
      << frag8 << std::endl
+     << "#undef FAIL_RETURN" << std::endl
      << "}" << std::endl;
   delete [] frag8;
 
