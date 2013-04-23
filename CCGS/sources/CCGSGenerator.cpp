@@ -742,8 +742,9 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
          mCodeInfo->mTargets.begin();
        i != mCodeInfo->mTargets.end(); i++)
-    if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE &&
-        (*i)->mDegree == 0)
+    if ((*i)->mEvaluationType == iface::cellml_services::PSEUDOSTATE_VARIABLE ||
+        ((*i)->mEvaluationType != iface::cellml_services::CONSTANT &&
+         (*i)->mDegree > 0))
     {
       double iv = GetPseudoStateIV(*i);
       wchar_t ivv[30];

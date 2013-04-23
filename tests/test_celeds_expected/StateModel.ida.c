@@ -13,7 +13,7 @@ void
 initConsts(double* CONSTANTS, double* RATES, double *STATES)
 {
 STATES[0] = 0;
-RATES[0] = 0.1;
+RATES[0] = 0.1001;
 }
 void
 computeResiduals(double VOI, double* CONSTANTS, double* RATES, double* OLDRATES, double* STATES,
