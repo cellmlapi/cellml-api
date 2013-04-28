@@ -275,6 +275,7 @@ public:
                               iface::mathml_dom::MathMLElement* aEl);
   void WriteConversion(CDAMaLaESResult* aResult,
                        iface::mathml_dom::MathMLCiElement* ci);
+  std::wstring wrapNumber(const std::wstring& aValue) throw();
 private:
   typedef std::pair<std::wstring, std::wstring> stringpair;
   typedef std::list<stringpair> stringpairlist;
@@ -299,10 +300,12 @@ private:
   };
 
   std::map<std::wstring, Operator> operMap;
+  std::wstring wrapValuePre, wrapValuePost;
 
   void GetTagsForSpec(const std::wstring& aSpec, stringpairlist& aTags);
   void ParseError(const std::wstring& msg, size_t lineno);
   void OpError(const std::wstring& msg, const std::wstring& op);
+  void SetupWrapValue(const std::wstring& aString);
   void AddOperator(const std::wstring& aOpName, const std::wstring& aOpValue);
   void AppendCommandToProgram(commandlist& aProgram, const std::wstring& aCmd,
                               const std::wstring& aArg, int& maxarg);

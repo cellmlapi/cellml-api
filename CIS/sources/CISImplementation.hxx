@@ -19,10 +19,6 @@ struct fail_info {
   int failtype;
   std::string failmsg;
 };
-void clearFailure(struct fail_info* aFail);
-void setFailure(struct fail_info* aFail, const char* aMsg, int type);
-void failAddCause(struct fail_info* aFail, const char* aCause);
-int getFailType(struct fail_info* aFail);
 
 struct CompiledModelFunctions
 {

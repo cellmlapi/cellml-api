@@ -213,6 +213,12 @@ module cellml_services
      *       and changes the in-memory version of imported models recursively.
      */
     void stripPassthrough(in cellml_api::Model aModel);
+
+    /**
+     * Transforms an expression that evaluates to a number into the corresponding
+     * expression used by MaLaES, as defined by the MAL input.
+     */
+    wstring wrapNumber(in wstring rawExpression);
   };
 
   /**

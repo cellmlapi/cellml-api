@@ -449,7 +449,7 @@ CDAMaLaESResult::writeConvertedVariable()
     any_swprintf(buf, bufferSize, infdelayed ? L"delayed_expression_d%d" : L"expression_d%d", degree);
     RETURN_INTO_WSTRING(expr,
                         mAnnos->getStringAnnotation(processingVariable, buf));
-    mActive += expr;
+    mActive += mTransform->wrapNumber(expr);
     degree = 0;
   }
   else
@@ -457,7 +457,7 @@ CDAMaLaESResult::writeConvertedVariable()
     RETURN_INTO_WSTRING(expr,
                         mAnnos->getStringAnnotation(processingVariable,
                                                     infdelayed ? L"delayed_expression" : L"expression"));
-    mActive += expr;
+    mActive += mTransform->wrapNumber(expr);
   }
 
   return true;
@@ -565,7 +565,7 @@ CDAMaLaESResult::appendDegree
 )
 {
   if (mq.degree == NULL)
-    mActive += L"2";
+    mActive += mTransform->wrapNumber(L"2");
   else
     mTransform->RunTransformOnOperator(this, mq.degree);
 }
@@ -580,7 +580,7 @@ CDAMaLaESResult::appendLogbase
 )
 {
   if (mq.logbase == NULL)
-    mActive += L"10";
+    mActive += mTransform->wrapNumber(L"10");
   else
     mTransform->RunTransformOnOperator(this, mq.logbase);
 }
@@ -886,7 +886,7 @@ CDAMaLaESResult::appendConstant
   double v = parseConstant(cnEl);
   wchar_t buf[30];
   any_swprintf(buf, 30, L"%#g", v);
-  mActive += buf;
+  mActive += mTransform->wrapNumber(buf);
 }
 
 void
@@ -933,6 +933,8 @@ CDAMaLaESTransform::CDAMaLaESTransform(const std::wstring& aSpec)
       openGroup = (*i).second;
     else if ((*i).first == L"closegroup")
       closeGroup = (*i).second;
+    else if ((*i).first == L"wrapvalue")
+      SetupWrapValue((*i).second);
     else if ((*i).first == L"locally_annotated")
       mVariablesFromSource = true;
     else
@@ -1110,6 +1112,25 @@ CDAMaLaESTransform::transform
   r->finishTransform();
   r->add_ref();
   return r.getPointer();
+}
+
+void
+CDAMaLaESTransform::SetupWrapValue(const std::wstring& aString)
+{
+  size_t pos = aString.find(L"#expr");
+  if (pos == std::wstring::npos)
+  {
+    wrapValuePre = aString;
+    return;
+  }
+  wrapValuePre = aString.substr(0, pos);
+  wrapValuePost = aString.substr(pos + 5);
+}
+
+std::wstring
+CDAMaLaESTransform::wrapNumber(const std::wstring& aValue) throw()
+{
+  return wrapValuePre + aValue + wrapValuePost;
 }
 
 void

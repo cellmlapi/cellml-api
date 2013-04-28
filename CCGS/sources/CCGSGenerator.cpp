@@ -585,6 +585,7 @@ CodeGenerationState::TransformCaseCondition(iface::mathml_dom::MathMLElement* aE
                        doc->createElementNS(MATHML_NS, L"csymbol"));
     DECLARE_QUERY_INTERFACE_OBJREF(pt, ptEl, mathml_dom::MathMLCsymbolElement);
     pt->definitionURL(L"http://www.cellml.org/tools/api#passthrough");
+    str = mTransform->wrapNumber(str);
     RETURN_INTO_OBJREF(pttn, iface::dom::Text, doc->createTextNode(str.c_str()));
     pt->appendChild(pttn)->release_ref();
 
@@ -750,7 +751,7 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
       wchar_t ivv[30];
       any_swprintf(ivv, 30, L"%g", iv);
       RETURN_INTO_WSTRING(n, (*i)->name());
-      AppendAssign(aCode, n, ivv, (*i)->mVariable->name());
+      AppendAssign(aCode, n, mTransform->wrapNumber(ivv), (*i)->mVariable->name());
     }
 }
 
@@ -1060,7 +1061,10 @@ CodeGenerationState::GenerateResiduals
 
     uint32_t index = p.first->assignedIndex();
 
-    GenerateResidualForString(aCode, residNumber++, p.second, constName, p.first->mVariable->name());
+    GenerateResidualForString(aCode, residNumber++,
+                              mTransform->wrapNumber(p.second),
+                              mTransform->wrapNumber(constName),
+                              p.first->mVariable->name());
     p.first->setNameAndIndex(index, p.second.c_str());
   }
 
@@ -2159,12 +2163,15 @@ CodeGenerationState::FirstPassTargetClassification()
         if (tct == ct && hasImmedIV)
         {
           tct->mStateHasIV = true;
-          AppendAssign(mCodeInfo->mInitConstsStr, cname, iv, ct->mVariable->name());
+          AppendAssign(mCodeInfo->mInitConstsStr, cname,
+                       mTransform->wrapNumber(iv), ct->mVariable->name());
         }
         else if (tct != ct)
         {
           tct->mStateHasIV = true;
-          AppendAssign(mCodeInfo->mInitConstsStr, cname, L"0.0", tct->mVariable->name());
+          AppendAssign(mCodeInfo->mInitConstsStr, cname,
+                       mTransform->wrapNumber(L"0.0"),
+                       tct->mVariable->name());
         }
         tct = tct->mUpDegree;
         tct->mEvaluationType = iface::cellml_services::FLOATING;
@@ -2180,7 +2187,8 @@ CodeGenerationState::FirstPassTargetClassification()
       else if (ct->mEvaluationType == iface::cellml_services::CONSTANT)
       {
         AllocateConstant(ct, cname);
-        AppendAssign(mCodeInfo->mInitConstsStr, cname, iv, ct->mVariable->name());
+        AppendAssign(mCodeInfo->mInitConstsStr, cname,
+                     mTransform->wrapNumber(iv), ct->mVariable->name());
       }
     }
   }
@@ -2388,7 +2396,8 @@ CodeGenerationState::RestoreSavedRates(std::wstring& aCodeTo)
 
     uint32_t index = p.first->assignedIndex();
 
-    AppendAssign(aCodeTo, p.second, constName, L"Rate Restore");
+    AppendAssign(aCodeTo, p.second, mTransform->wrapNumber(constName),
+                 L"Rate Restore");
     p.first->setNameAndIndex(index, p.second.c_str());
   }
 }
@@ -4106,7 +4115,8 @@ CodeGenerationState::GenerateStateToRateCascades()
       GenerateVariableName(rateN, mRateNamePattern,
                            ct->mAssignedIndex - 1);
 
-      AppendAssign(mCodeInfo->mRatesStr, rateN, stateN, ct->mVariable->name());
+      AppendAssign(mCodeInfo->mRatesStr, rateN, mTransform->wrapNumber(stateN),
+                   ct->mVariable->name());
       ct = ct->mUpDegree;
     }
   }
@@ -4129,7 +4139,9 @@ CodeGenerationState::GenerateInfDelayUpdates()
     ComputeInfDelayedName(*i, delname);
     RETURN_INTO_WSTRING(name, (*i)->name());
 
-    AppendAssign(mCodeInfo->mRatesStr, delname, name, (*i)->mVariable->name());
+    AppendAssign(mCodeInfo->mRatesStr, delname,
+                 mTransform->wrapNumber(name),
+                 (*i)->mVariable->name());
   }
 
   mCodeInfo->mRatesStr += oldRates;

@@ -868,7 +868,11 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
      << std::endl
      << " * deleted. Don't edit it or changes will be lost. */" << std::endl
      << "#define NULL ((void*)0)" << std::endl;
-  ss << "extern double fabs(double x);" << std::endl
+  ss << 
+#include "CISModelSupportString.h"
+     << std::endl
+    // C library...
+     << "extern double fabs(double x);" << std::endl
      << "extern double acos(double x);" << std::endl
      << "extern double acosh(double x);" << std::endl
      << "extern double atan(double x);" << std::endl
@@ -891,38 +895,14 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
      << "extern double exp(double x);" << std::endl
      << "extern double floor(double x);" << std::endl
      << "extern double pow(double x, double y);" << std::endl
-     << "extern double factorial(double x);" << std::endl
      << "extern double log(double x);" << std::endl
-     << "extern double arbitrary_log(double x, double base);" << std::endl
-     << "extern double gcd_pair(double a, double b);" << std::endl
-     << "extern double lcm_pair(double a, double b);" << std::endl
-     << "extern double gcd_multi(unsigned int size, ...);" << std::endl
-     << "extern double lcm_multi(unsigned int size, ...);" << std::endl
-     << "extern double multi_min(unsigned int size, ...);" << std::endl
-     << "extern double multi_max(unsigned int size, ...);" << std::endl
-     << "static double fixnans(double x) { return finite(x) ? x : 1E100; }" << std::endl
-     << "struct fail_info;" << std::endl
-     << "void clearFailure(struct fail_info*);" << std::endl
-     << "void setFailure(struct fail_info*, const char*, int);" << std::endl
-     << "void prependFailExplanation(struct fail_info*, const char*);" << std::endl
-     << "int getFailType(struct fail_info*);" << std::endl
      << "struct rootfind_info" << std::endl
      << "{" << std::endl
      << "  double aVOI, * aCONSTANTS, * aRATES, * aSTATES, * aALGEBRAIC;" << std::endl
      << "  struct fail_info* aFail;" << std::endl
      << "};" << std::endl
-     << "extern double defint(double (*f)(double VOI,double *C,double *R,double *S,"
-     << "double *A, struct fail_info* aFail), double VOI,double *C,double *R,"
-     << "double *S,double *A,double *V,"
-     << "double lowV, double highV, struct fail_info* aFail);" << std::endl
-     << "extern double SampleUsingPDF(double (*pdf)(double bvar,"
-     << "double* CONSTANTS, double* ALGEBRAIC, struct fail_info* aFail), int,"
-        "double (**pdf_roots)(double bvar, double*, double*, struct fail_info*),"
-        "double* CONSTANTS, double* ALGEBRAIC, struct fail_info*);" << std::endl
      << "#define LM_DIF_WORKSZ(npar, nmeas) (4*(nmeas) + 4*(npar) + "
-    "(nmeas)*(npar) + (npar)*(npar))" << std::endl
-     << "extern void do_nonlinearsolve(void (*)(double *, double *, void*), "
-    "double*, struct fail_info*, unsigned long, void*);" << std::endl;
+    "(nmeas)*(npar) + (npar)*(npar))" << std::endl;
 
   std::wstring frag = cci->functionsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
@@ -956,9 +936,294 @@ void
 CDA_CellMLIntegrationService::SetupCodeGenStrings(iface::cellml_services::CodeGenerator* aCGS, bool aIsDebug)
 {
   ObjRef<iface::cellml_services::MaLaESBootstrap> mb(CreateMaLaESBootstrap());
+
+  if (aIsDebug)
+  {
+    aCGS->assignPattern(L"TryAssign(&(<LHS>), <RHS>, \"<XMLID>\", failInfo);\r\nif (getFailType(failInfo)) return FAIL_RETURN;\r\n");
+  aCGS->sampleDensityFunctionPattern
+    (
+     L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC, failInfo)"
+     L"<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+     L"{\r\ndouble value;\r\n"
+     L"TryAssign(&value, <EXPR>, \"probability density function\", failInfo);\r\n"
+     L"if (getFailType(failInfo)) return FAIL_RETURN;\r\n"
+     L"return value;\r\n}\r\n"
+     L"double (*pdf_roots_<ID>[])(double bvar, double*, double*, struct fail_info* failInfo) = "
+     L"{<FOREACH_ROOT>pdf_<ID>_root_<ROOTID>,<ROOTSUP>double pdf_<ID>_root_<ROOTID>"
+     L"(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n"
+     L"{\r\ndouble value; TryAssign(&value, <EXPR>, \"roots of probability density function\", failInfo);\r\n"
+     L"if (getFailType(failInfo)) return FAIL_RETURN;\r\n"
+     L"return (<EXPR>);\r\n}\r\n</FOREACH_ROOT>};\r\n");
+  aCGS->solvePattern
+    (
+     L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
+     L"<SUP>"
+     L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
+     L"{\r\n"
+     L"  /* Solver for equation: <XMLID> */\r\n"
+     L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+     L"#define VOI rfi->aVOI\r\n"
+     L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+     L"#define RATES rfi->aRATES\r\n"
+     L"#define STATES rfi->aSTATES\r\n"
+     L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+     L"  <VAR> = *p;\r\n"
+     L"  TryAssign(hx, TryMinus(<LHS>, <RHS>), \"<XMLID>\", rfi->aFail);\r\n"
+     L"  if (getFailType(rfi->aFail)) return;\r\n"
+     L"#undef VOI\r\n"
+     L"#undef CONSTANTS\r\n"
+     L"#undef RATES\r\n"
+     L"#undef STATES\r\n"
+     L"#undef ALGEBRAIC\r\n"
+     L"}\r\n"
+     L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
+     L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+     L"{\r\n"
+     L"  static double val = <IV>;\r\n"
+     L"  struct rootfind_info rfi;\r\n"
+     L"  rfi.aVOI = VOI;\r\n"
+     L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+     L"  rfi.aRATES = RATES;\r\n"
+     L"  rfi.aSTATES = STATES;\r\n"
+     L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+     L"  rfi.aFail = failInfo;\r\n"
+     L"  do_nonlinearsolve(objfunc_<ID>, &val, failInfo, 1, &rfi);\r\n"
+     L"  <VAR> = val;\r\n"
+     L"}\r\n"
+     );
+  aCGS->solveNLSystemPattern(
+    L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
+    L"<SUP>"
+    L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
+    L"{\r\n"
+    L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+    L"#define VOI rfi->aVOI\r\n"
+    L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+    L"#define RATES rfi->aRATES\r\n"
+    L"#define STATES rfi->aSTATES\r\n"
+    L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+    L"#define failInfo rfi->aFail\r\n"
+    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"  <EQUATIONS>TryAssign(hx + <INDEX>, <EXPR>, \"<XMLID>\", rfi->aFail);<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"#undef VOI\r\n"
+    L"#undef CONSTANTS\r\n"
+    L"#undef RATES\r\n"
+    L"#undef STATES\r\n"
+    L"#undef ALGEBRAIC\r\n"
+    L"#undef failInfo\r\n"
+    L"}\r\n"
+    L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
+    L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+    L"{\r\n"
+    L"  /* Solver for equations: <EQUATIONS><XMLID><JOIN>, </EQUATIONS> */\r\n"
+    L"  static double p[<COUNT>] = {<EQUATIONS><IV><JOIN>,</EQUATIONS>};\r\n"
+    L"  struct rootfind_info rfi;\r\n"
+    L"  rfi.aVOI = VOI;\r\n"
+    L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+    L"  rfi.aRATES = RATES;\r\n"
+    L"  rfi.aSTATES = STATES;\r\n"
+    L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+    L"  rfi.aFail = failInfo;\r\n"
+    L"  do_nonlinearsolve(objfunc_<ID>, p, failInfo, <COUNT>, &rfi);\r\n"
+    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+    L"  </EQUATIONS>\r\n"
+    L"}\r\n"
+    );
+  aCGS->conditionalAssignmentPattern
+    (
+     L"if (UseEDouble(<CONDITION>, failInfo, \"top-level piecewise condition\") != 0)\r\n"
+     L"{\r\n"
+     L"  <STATEMENT>\r\n"
+     L"}\r\n"
+     L"<CASES>else if (UseEDouble(<CONDITION>, failInfo, \"top-level piecewise condition\") != 0.0)\r\n"
+     L"{\r\n"
+     L"  <STATEMENT>\r\n"
+     L"}\r\n"
+     L"</CASES>");
+    ObjRef<iface::cellml_services::IDACodeGenerator> idaCG(QueryInterface(aCGS));
+    if (idaCG)
+    {
+      idaCG->residualPattern(L"TryAssign(resid+<RNO>, TryMinus(<LHS>, <RHS>), \"<XMLID>\", failInfo);\r\nif (getFailType(failInfo)) return FAIL_RETURN;\r\n");
+    }
+
   ObjRef<iface::cellml_services::MaLaESTransform> transform
     (
      mb->compileTransformer(
+L"opengroup: (\r\n"
+L"closegroup: )\r\n"
+L"wrapvalue: CreateEDouble(#expr)\r\n"
+L"abs: #prec[H]TryAbs(#expr1)\r\n"
+L"and: #prec[H]TryAnd(#count, #exprs[,])\r\n"
+L"arccos: #prec[H]TryACos(#expr1)\r\n"
+L"arccosh: #prec[H]TryACosh(#expr1)\r\n"
+L"arccot: #prec[H]TryATan(#expr1)\r\n"
+L"arccoth: #prec[H]TryATanh(#expr1)\r\n"
+L"arccsc: #prec[H]TryASin(#expr1)\r\n"
+L"arccsch: #prec[H]TryASinh(#expr1)\r\n"
+L"arcsec: #prec[H]TryACos(#expr1)\r\n"
+L"arcsech: #prec[H]TryACosh(#expr1)\r\n"
+L"arcsin: #prec[H]TryASin(#expr1)\r\n"
+L"arcsinh: #prec[H]TryASinh(#expr1)\r\n"
+L"arctan: #prec[H]TryATan(#expr1)\r\n"
+L"arctanh: #prec[H]TryATanh(#expr1)\r\n"
+L"ceiling: #prec[H]TryCeil(#expr1)\r\n"
+L"cos: #prec[H]TryCos(#expr1)\r\n"
+L"cosh: #prec[H]TryCosh(#expr1)\r\n"
+L"cot: #prec[H]TryCot(#expr1)\r\n"
+L"coth: #prec[H]TryCoth(#expr1)\r\n"
+L"csc: #prec[H]TryCosec(#expr1)\r\n"
+L"csch: #prec[H]TrySinh(#expr1)\r\n"
+L"diff: #lookupDiffVariable\r\n"
+L"divide: #prec[H]TryDivide(#expr1, #expr2)\r\n"
+L"eq: #prec[H]TryEq(#count, #exprs[,])\r\n"
+L"exp: #prec[H]TryExp(#expr1)\r\n"
+L"factorial: #prec[H]TryFactorial(#expr1)\r\n"
+L"factorof: #prec[H]TryFactorOf(#expr1, #expr2)\r\n"
+L"floor: #prec[H]TryFloor(#expr1)\r\n"
+L"gcd: #prec[H]TryGCD(#count, #exprs[, ])\r\n"
+L"geq: #prec[H]TryGeq(#count, #exprs[, ])\r\n"
+L"gt: #prec[H]TryGt(#count, #exprs[, ])\r\n"
+L"implies: #prec[H]TryImplies(#expr1, #expr2)\r\n"
+L"int: #prec[H]TryDefint(func#unique1, VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, &#bvarIndex, #lowlimit, #uplimit"
+L", failInfo)#supplement EDouble func#unique1(double VOI, "
+L"double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, struct fail_info* failInfo) { return #expr1; }\r\n"
+L"lcm: #prec[H]TryLCM(#count, #exprs[, ])\r\n"
+L"leq: #prec[H]TryLeq(#count, #exprs[, ])\r\n"
+L"ln: #prec[H]TryLn(#expr1)\r\n"
+L"log: #prec[H]TryLogBase(#expr1, #logbase)\r\n"
+L"lt: #prec[H]TryLt(#count, #exprs[, ])\r\n"
+L"max: #prec[H]TryMax(#count, #exprs[, ])\r\n"
+L"min: #prec[H]TryMin(#count, #exprs[, ])\r\n"
+L"minus: #prec[H]TryMinus(#expr1, #expr2)\r\n"
+L"neq: #prec[H]TryNeq(#expr1, #expr2)\r\n"
+L"not: #prec[H]TryNot(#expr1)\r\n"
+L"or: #prec[H]TryOr(#count, #exprs[,])\r\n"
+L"plus: #prec[H]TryPlus(#count, #exprs[,])\r\n"
+L"power: #prec[H]TryPower(#expr1, #expr2)\r\n"
+L"quotient: #prec[H]TryQuotient(#expr1, #expr2)\r\n"
+L"rem: #prec[H]TryRem(#expr1, #expr2)\r\n"
+L"root: #prec[H]TryRoot(#expr1, #degree)\r\n"
+L"sec: #prec[H]TrySec(#expr1)\r\n"
+L"sech: #prec[900(0)]TrySech(#expr1)\r\n"
+L"sin: #prec[H]TrySin(#expr1)\r\n"
+L"sinh: #prec[H]TrySinh(#expr1)\r\n"
+L"tan: #prec[H]TryTan(#expr1)\r\n"
+L"tanh: #prec[H]TryTanh(#expr1)\r\n"
+L"times: #prec[H]TryTimes(#count, #exprs[,])\r\n"
+L"unary_minus: #prec[H]TryUnaryMinus(#expr1)\r\n"
+L"units_conversion: #prec[H]TryUnitsConversion(#expr1, #expr2, #expr3)\r\n"
+L"units_conversion_factor: #prec[H]TryUnitsConversion(#expr1, #expr2, 0.0)\r\n"
+L"units_conversion_offset: #prec[H]TryUnitsConversion(#expr1, 1.0, #expr2)\r\n"
+L"xor: #prec[H]TryXor(#expr1, #expr2)\r\n"
+L"piecewise_first_case: #prec[H]TryPiecewise(#expr1, #expr2, \r\n"
+L"piecewise_extra_case: #prec[H]1, #expr1, #expr2, \r\n"
+L"piecewise_otherwise: #prec[H]2, #expr1)\r\n"
+L"piecewise_no_otherwise: #prec[H]0)\r\n"
+L"eulergamma: #prec[H]CreateEDouble(0.577215664901533)\r\n"
+L"exponentiale: #prec[H]CreateEDouble(2.71828182845905)\r\n"
+L"false: #prec[H]CreateEDouble(0.0)\r\n"
+L"infinity: #prec[H]TryInfinity()\r\n"
+L"notanumber: #prec[H]TryNaN()\r\n"
+L"pi: #prec[H]CreateEDouble(3.14159265358979)\r\n"
+L"true: #prec[H]CreateEDouble(1.0)\r\n"
+                            )
+    );
+    aCGS->transform(transform);
+  }
+  else
+  {
+    aCGS->sampleDensityFunctionPattern
+    (
+     L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC, failInfo)"
+     L"<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+     L"{\r\nreturn (<EXPR>);\r\n}\r\n"
+     L"double (*pdf_roots_<ID>[])(double bvar, double*, double*, struct fail_info* failInfo) = "
+     L"{<FOREACH_ROOT>pdf_<ID>_root_<ROOTID>,<ROOTSUP>double pdf_<ID>_root_<ROOTID>"
+     L"(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n"
+     L"{\r\nreturn (<EXPR>);\r\n}\r\n</FOREACH_ROOT>};\r\n");
+    aCGS->solvePattern
+    (
+     L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
+     L"<SUP>"
+     L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
+     L"{\r\n"
+     L"  /* Solver for equation: <XMLID> */\r\n"
+     L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+     L"#define VOI rfi->aVOI\r\n"
+     L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+     L"#define RATES rfi->aRATES\r\n"
+     L"#define STATES rfi->aSTATES\r\n"
+     L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+     L"  <VAR> = *p;\r\n"
+     L"  *hx = (<LHS>) - (<RHS>);\r\n"
+     L"#undef VOI\r\n"
+     L"#undef CONSTANTS\r\n"
+     L"#undef RATES\r\n"
+     L"#undef STATES\r\n"
+     L"#undef ALGEBRAIC\r\n"
+     L"}\r\n"
+     L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
+     L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+     L"{\r\n"
+     L"  static double val = <IV>;\r\n"
+     L"  struct rootfind_info rfi;\r\n"
+     L"  rfi.aVOI = VOI;\r\n"
+     L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+     L"  rfi.aRATES = RATES;\r\n"
+     L"  rfi.aSTATES = STATES;\r\n"
+     L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+     L"  rfi.aFail = failInfo;\r\n"
+     L"  do_nonlinearsolve(objfunc_<ID>, &val, failInfo, 1, &rfi);\r\n"
+     L"  <VAR> = val;\r\n"
+     L"}\r\n"
+     );
+    aCGS->solveNLSystemPattern
+      (
+       L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
+       L"<SUP>"
+       L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
+       L"{\r\n"
+       L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
+       L"#define VOI rfi->aVOI\r\n"
+       L"#define CONSTANTS rfi->aCONSTANTS\r\n"
+       L"#define RATES rfi->aRATES\r\n"
+       L"#define STATES rfi->aSTATES\r\n"
+       L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
+       L"#define failInfo rfi->aFail\r\n"
+       L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+       L"  </EQUATIONS>\r\n"
+       L"  <EQUATIONS>hx[<INDEX>] = <EXPR>;<JOIN>\r\n"
+       L"  </EQUATIONS>\r\n"
+       L"#undef VOI\r\n"
+       L"#undef CONSTANTS\r\n"
+       L"#undef RATES\r\n"
+       L"#undef STATES\r\n"
+       L"#undef ALGEBRAIC\r\n"
+       L"#undef failInfo\r\n"
+       L"}\r\n"
+       L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
+       L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
+       L"{\r\n"
+       L"  /* Solver for equations: <EQUATIONS><XMLID><JOIN>, </EQUATIONS> */\r\n"
+       L"  static double p[<COUNT>] = {<EQUATIONS><IV><JOIN>,</EQUATIONS>};\r\n"
+       L"  struct rootfind_info rfi;\r\n"
+       L"  rfi.aVOI = VOI;\r\n"
+       L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
+       L"  rfi.aRATES = RATES;\r\n"
+       L"  rfi.aSTATES = STATES;\r\n"
+       L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
+       L"  rfi.aFail = failInfo;\r\n"
+       L"  do_nonlinearsolve(objfunc_<ID>, p, failInfo, <COUNT>, &rfi);\r\n"
+       L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
+       L"  </EQUATIONS>\r\n"
+       L"}\r\n"
+       );
+    aCGS->assignPattern(L"<LHS>= <RHS>;\r\n");
+    ObjRef<iface::cellml_services::MaLaESTransform> transform
+      (
+       mb->compileTransformer(
 L"opengroup: (\r\n"
 L"closegroup: )\r\n"
 L"abs: #prec[H]fabs(#expr1)\r\n"
@@ -1037,101 +1302,7 @@ L"pi: #prec[999] 3.14159265358979\r\n"
 L"true: #prec[999]1.0\r\n"
                             )
     );
-  aCGS->transform(transform);
-
-  aCGS->sampleDensityFunctionPattern
-    (
-     L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC, failInfo)"
-     L"<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
-     L"{\r\nreturn (<EXPR>);\r\n}\r\n"
-     L"double (*pdf_roots_<ID>[])(double bvar, double*, double*, struct fail_info* failInfo) = "
-     L"{<FOREACH_ROOT>pdf_<ID>_root_<ROOTID>,<ROOTSUP>double pdf_<ID>_root_<ROOTID>"
-     L"(double bvar, double* CONSTANTS, double* ALGEBRAIC)\r\n"
-     L"{\r\nreturn (<EXPR>);\r\n}\r\n</FOREACH_ROOT>};\r\n");
-  aCGS->solvePattern
-    (
-     L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
-     L"<SUP>"
-     L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
-     L"{\r\n"
-     L"  /* Solver for equation: <XMLID> */\r\n"
-     L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
-     L"#define VOI rfi->aVOI\r\n"
-     L"#define CONSTANTS rfi->aCONSTANTS\r\n"
-     L"#define RATES rfi->aRATES\r\n"
-     L"#define STATES rfi->aSTATES\r\n"
-     L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
-     L"  <VAR> = *p;\r\n"
-     L"  *hx = (<LHS>) - (<RHS>);\r\n"
-     L"#undef VOI\r\n"
-     L"#undef CONSTANTS\r\n"
-     L"#undef RATES\r\n"
-     L"#undef STATES\r\n"
-     L"#undef ALGEBRAIC\r\n"
-     L"}\r\n"
-     L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
-     L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
-     L"{\r\n"
-     L"  static double val = <IV>;\r\n"
-     L"  struct rootfind_info rfi;\r\n"
-     L"  rfi.aVOI = VOI;\r\n"
-     L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
-     L"  rfi.aRATES = RATES;\r\n"
-     L"  rfi.aSTATES = STATES;\r\n"
-     L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
-     L"  rfi.aFail = failInfo;\r\n"
-     L"  do_nonlinearsolve(objfunc_<ID>, &val, failInfo, 1, &rfi);\r\n"
-     L"  <VAR> = val;\r\n"
-     L"}\r\n"
-     );
-  aCGS->solveNLSystemPattern(
-    L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, failInfo);\r\n"
-    L"<SUP>"
-    L"void objfunc_<ID>(double* p, double* hx, void *adata)\r\n"
-    L"{\r\n"
-    L"  struct rootfind_info* rfi = (struct rootfind_info*)adata;\r\n"
-    L"#define VOI rfi->aVOI\r\n"
-    L"#define CONSTANTS rfi->aCONSTANTS\r\n"
-    L"#define RATES rfi->aRATES\r\n"
-    L"#define STATES rfi->aSTATES\r\n"
-    L"#define ALGEBRAIC rfi->aALGEBRAIC\r\n"
-    L"#define failInfo rfi->aFail\r\n"
-    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
-    L"  </EQUATIONS>\r\n"
-    L"  <EQUATIONS>hx[<INDEX>] = <EXPR>;<JOIN>\r\n"
-    L"  </EQUATIONS>\r\n"
-    L"#undef VOI\r\n"
-    L"#undef CONSTANTS\r\n"
-    L"#undef RATES\r\n"
-    L"#undef STATES\r\n"
-    L"#undef ALGEBRAIC\r\n"
-    L"#undef failInfo\r\n"
-    L"}\r\n"
-    L"void rootfind_<ID>(double VOI, double* CONSTANTS, double* RATES, "
-    L"double* STATES, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
-    L"{\r\n"
-    L"  /* Solver for equations: <EQUATIONS><XMLID><JOIN>, </EQUATIONS> */\r\n"
-    L"  static double p[<COUNT>] = {<EQUATIONS><IV><JOIN>,</EQUATIONS>};\r\n"
-    L"  struct rootfind_info rfi;\r\n"
-    L"  rfi.aVOI = VOI;\r\n"
-    L"  rfi.aCONSTANTS = CONSTANTS;\r\n"
-    L"  rfi.aRATES = RATES;\r\n"
-    L"  rfi.aSTATES = STATES;\r\n"
-    L"  rfi.aALGEBRAIC = ALGEBRAIC;\r\n"
-    L"  rfi.aFail = failInfo;\r\n"
-    L"  do_nonlinearsolve(objfunc_<ID>, p, failInfo, <COUNT>, &rfi);\r\n"
-    L"  <EQUATIONS><VAR> = p[<INDEX>];<JOIN>\r\n"
-    L"  </EQUATIONS>\r\n"
-    L"}\r\n"
-    );
-  if (aIsDebug)
-  {
-    aCGS->assignPattern(L"TryAssign(&(<LHS>), <RHS>, \"<XMLID>\", failInfo);\r\nif (getFailType(failInfo)) return FAIL_RETURN;\r\n");
-    // aCGS->
-  }
-  else
-  {
-    aCGS->assignPattern(L"<LHS>= <RHS>;\r\n");
+    aCGS->transform(transform);
   }
 }
 

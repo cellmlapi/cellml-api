@@ -226,6 +226,32 @@ private:
   uint32_t mRefcount;
 };
 
+void ProcessInitialKeywords(int argc, char** argv)
+{
+  // Scoped locale change.
+  CNumericLocale locobj;
+
+  argc -= 2;
+  argv += 2;
+  while (argc >= 2)
+  {
+    const char* command = argv[0];
+    char* value = argv[1];
+    argc -= 2;
+    argv += 2;
+
+    if (!strcasecmp(command, "debug"))
+    {
+      if (!strcasecmp(value, "true"))
+        gDebugSim = true;
+      else if (!strcasecmp(value, "false"))
+        gDebugSim = false;
+      else
+        printf("# Warning: debug command given unrecognised value - true and false accepted.\n");
+    }
+  }
+}
+
 void
 ProcessKeywords(int argc, char** argv,
                 iface::cellml_services::CellMLIntegrationRun* run)
@@ -388,14 +414,7 @@ ProcessKeywords(int argc, char** argv,
       gSleepTime = strtoul(value, NULL, 10);
     }
     else if (!strcasecmp(command, "debug"))
-    {
-      if (!strcasecmp(value, "true"))
-        gDebugSim = true;
-      else if (!strcasecmp(value, "false"))
-        gDebugSim = false;
-      else
-        printf("# Warning: debug command given unrecognised value - true and false accepted.\n");
-    }
+      ; // ProcessInitialKeywords
     else
       printf("# Warning: Unrecognised command %s. Ignored.\n",
              command);
@@ -419,6 +438,7 @@ IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
         iface::cellml_api::Model* mod, int argc, char** argv)
 {
   ObjRef<iface::cellml_services::DAESolverCompiledModel> ccm;
+
   try
   {
     printf("# Compiling model...\n");
@@ -563,6 +583,8 @@ main(int argc, char** argv)
           );
     return -1;
   }
+
+  ProcessInitialKeywords(argc, argv);
 
   wchar_t* URL;
   size_t l = strlen(argv[1]);
