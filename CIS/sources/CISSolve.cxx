@@ -223,6 +223,39 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 // Don't cache for more than 1 second...
 #define VARIABLE_TIME_LIMIT 1
 
+bool
+CDA_CellMLIntegrationRun::checkPauseOrCancellation()
+{
+  fd_set pipeset;
+  FD_ZERO(&pipeset);
+  FD_SET(mThreadPipes[0], &pipeset);
+  struct timeval to;
+  while (true)
+  {
+    to.tv_sec = 0;
+    to.tv_usec = 0;
+    if (select(1, &pipeset, NULL, NULL, &to) == 0)
+      return false;
+
+    int command;
+    read(mThreadPipes[0], &command, sizeof(command));
+
+    if (command == 1) // Cancel
+      return true;
+    else if (command == 2) // Pause
+    {
+      while (command == 2)
+      {
+        read(mThreadPipes[0], &command, sizeof(command));
+        if (command == 1) // Cancel
+          return true;
+        else if (command == 3) // Resume
+          break;
+      }
+    }
+  }
+}
+
 #ifdef ENABLE_GSL_INTEGRATORS
 void
 CDA_ODESolverRun::SolveODEProblemGSL
@@ -331,8 +364,7 @@ CDA_ODESolverRun::SolveODEProblemGSL
 
     gsl_odeiv_evolve_apply(e, c, s, &sys, &voi, bhl,
                            &stepSize, states);
-
-    if (mCancelIntegration)
+    if (checkPauseOrCancellation())
       break;
 
     if (isFirst)
@@ -489,7 +521,7 @@ CDA_ODESolverRun::SolveODEProblemCVODE
         break;
       }
       
-      if (mCancelIntegration)
+      if (checkPauseOrCancellation())
         break;
       
       if (isFirst)
@@ -1340,7 +1372,7 @@ CDA_DAESolverRun::SolveDAEProblem
         memcpy(ei.oldrates, rates, rateSize * sizeof(double));
         memcpy(ei.oldstates, states, stateSize * sizeof(double));
       
-        if (mCancelIntegration)
+        if (checkPauseOrCancellation())
           break;
       
         if (isFirst)

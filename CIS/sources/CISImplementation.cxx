@@ -11,6 +11,10 @@
 #include <sys/errno.h>
 #include <dlfcn.h>
 #include <sys/utsname.h>
+#include <unistd.h>
+#else
+#include <io.h>
+#define pipe _pipe
 #endif
 #ifdef _MSC_VER
 #include <errno.h>
@@ -515,10 +519,13 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
 CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
 (
 )
-  : mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
-    mEpsAbs(1E-6), mEpsRel(1E-6), mScalVar(1.0), mScalRate(0.0),
-    mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mMaxPointDensity(10000.0),
-    mTabulationStepSize(0.0), mObserver(NULL), mCancelIntegration(false), mStrictTabulation(false)
+  : 
+  mIsStarted(false),
+  mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
+  mEpsAbs(1E-6), mEpsRel(1E-6), mScalVar(1.0), mScalRate(0.0),
+  mStepSizeMax(1.0), mStartBvar(0.0), mStopBvar(10.0), mMaxPointDensity(10000.0),
+  mTabulationStepSize(0.0), mObserver(NULL), mCancelIntegration(false),
+  mPauseIntegration(false), mStrictTabulation(false)
 {
 #ifndef WIN32
   struct timeval tv;
@@ -529,6 +536,11 @@ CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
 
 CDA_CellMLIntegrationRun::~CDA_CellMLIntegrationRun()
 {
+  if (mIsStarted)
+  {
+    close(mThreadPipes[0]);
+    close(mThreadPipes[1]);
+  }
   if (mObserver != NULL)
     mObserver->release_ref();
 }
@@ -630,6 +642,12 @@ void
 CDA_CellMLIntegrationRun::start()
   throw (std::exception&)
 {
+  if (mIsStarted)
+    throw iface::cellml_api::CellMLException();
+  mIsStarted = true;
+
+  pipe(mThreadPipes);
+
   // The new thread accesses this, so must add_ref. Thread will release itself
   // before returning.
   add_ref();
@@ -640,23 +658,36 @@ void
 CDA_CellMLIntegrationRun::stop()
   throw (std::exception&)
 {
+  if (!mIsStarted || mCancelIntegration)
+    return;
   mCancelIntegration = true;
+
+  int stop = 1;
+  write(mThreadPipes[1], &stop, sizeof(stop));
 }
 
 void
 CDA_CellMLIntegrationRun::pause()
   throw (std::exception&)
 {
-  // Not yet implemented.
-  throw iface::cellml_api::CellMLException();
+  if (!mIsStarted || mCancelIntegration || mPauseIntegration)
+    return;
+  mPauseIntegration = true;
+
+  int pause = 2;
+  write(mThreadPipes[1], &pause, sizeof(pause));
 }
 
 void
 CDA_CellMLIntegrationRun::resume()
   throw (std::exception&)
 {
-  // Not yet implemented.
-  throw iface::cellml_api::CellMLException();
+  if (!mIsStarted || mCancelIntegration || !mPauseIntegration)
+    return;
+
+  mPauseIntegration = false;
+  int resume = 3;
+  write(mThreadPipes[1], &resume, sizeof(resume));
 }
 
 void

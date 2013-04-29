@@ -177,14 +177,18 @@ protected:
   virtual void runthread() = 0;
 
 protected:
+  bool mIsStarted;
+  int mThreadPipes[2];
   iface::cellml_services::ODEIntegrationStepType mStepType;
   double mEpsAbs, mEpsRel, mScalVar, mScalRate, mStepSizeMax;
   double mStartBvar, mStopBvar, mMaxPointDensity, mTabulationStepSize;
   iface::cellml_services::IntegrationProgressObserver* mObserver;
   typedef std::list<std::pair<uint32_t,double> > OverrideList;
   OverrideList mConstantOverrides, mIVOverrides;
-  volatile bool mCancelIntegration;
+  bool mCancelIntegration, mPauseIntegration;
   bool mStrictTabulation;
+
+  bool checkPauseOrCancellation();
 };
 
 class CDA_ODESolverRun

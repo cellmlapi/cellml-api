@@ -27,6 +27,7 @@ double gStart = 0.0, gStop = 10.0, gDensity = 1000.0;
 double gTabStep = 0.0;
 bool gTStrict = false;
 bool gDebugSim = false;
+double gRealTimeFactor = 0.0;
 uint32_t gSleepTime = 0;
 
 
@@ -39,8 +40,9 @@ class TestProgressObserver
   : public iface::cellml_services::IntegrationProgressObserver
 {
 public:
-  TestProgressObserver(iface::cellml_services::CellMLCompiledModel* aCCM)
-    : mRefcount(1)
+  TestProgressObserver(iface::cellml_services::CellMLCompiledModel* aCCM,
+                       iface::cellml_services::CellMLIntegrationRun* aRun)
+    : mRefcount(1), mFirstResult(true), mRun(aRun)
   {
     mCCM = aCCM;
     mCI = mCCM->codeInformation();
@@ -165,6 +167,30 @@ public:
     uint32_t i;
     for (i = 0; i < values.size(); i += recsize)
     {
+      if (gRealTimeFactor != 0.0)
+      {
+        if (mFirstResult)
+        {
+          mFirstTime = time(0);
+          mFirstResult = false;
+        }
+        else
+        {
+          int aheadBy =
+            (int)((values[i] - gStart) * gRealTimeFactor) -
+            (time(0) - mFirstTime);
+          if (aheadBy > 0)
+          {
+            // Technically, pause and resume are unnecessary because the simulation
+            // thread is blocked while in results. However, this provides a useful
+            // test that at least the process doesn't hang after this.
+            mRun->pause();
+            sleep(aheadBy);
+            mRun->resume();
+          }
+        }
+      }
+
       bool first = true;
       ObjRef<iface::cellml_services::ComputationTargetIterator> cti =
         mCI->iterateTargets();
@@ -224,6 +250,9 @@ private:
   ObjRef<iface::cellml_services::CellMLCompiledModel> mCCM;
   ObjRef<iface::cellml_services::CodeInformation> mCI;
   uint32_t mRefcount;
+  bool mFirstResult;
+  time_t mFirstTime;
+  iface::cellml_services::CellMLIntegrationRun* mRun;
 };
 
 void ProcessInitialKeywords(int argc, char** argv)
@@ -413,6 +442,10 @@ ProcessKeywords(int argc, char** argv,
     {
       gSleepTime = strtoul(value, NULL, 10);
     }
+    else if (!strcasecmp(command, "real_time_factor"))
+    {
+      gRealTimeFactor = strtod(value, NULL);
+    }
     else if (!strcasecmp(command, "debug"))
       ; // ProcessInitialKeywords
     else
@@ -460,7 +493,7 @@ IDAMain(iface::cellml_services::CellMLIntegrationService* cis,
   ObjRef<iface::cellml_services::DAESolverRun> cir =
     cis->createDAEIntegrationRun(ccm);
 
-  ObjRef<TestProgressObserver> tpo = already_AddRefd<TestProgressObserver>(new TestProgressObserver(ccm));
+  ObjRef<TestProgressObserver> tpo = already_AddRefd<TestProgressObserver>(new TestProgressObserver(ccm, cir));
   cir->setProgressObserver(tpo);
 
   ProcessKeywords(argc, argv, cir);
@@ -512,7 +545,7 @@ ODEMain(iface::cellml_services::CellMLIntegrationService* cis,
   ObjRef<iface::cellml_services::ODESolverRun> cir =
     cis->createODEIntegrationRun(ccm);
 
-  ObjRef<TestProgressObserver> tpo = already_AddRefd<TestProgressObserver>(new TestProgressObserver(ccm));
+  ObjRef<TestProgressObserver> tpo = already_AddRefd<TestProgressObserver>(new TestProgressObserver(ccm, cir));
   cir->setProgressObserver(tpo);
 
   ProcessKeywords(argc, argv, cir);
@@ -578,6 +611,9 @@ main(int argc, char** argv)
            "    => Sets the interval in the bound variable for guaranteed values in other variables,\n"
            "       and whether to only tabulate values at points that are thus guaranteed.\n"
            "       step_size: A floating point tabulation step size.\n"
+           "  real_time_factor number\n"
+           "    => Slows the simulation so that number real seconds elapse for \n"
+           "       each unit of time in the simulation.\n" 
            "  debug true|false\n"
            "    => Specifies whether or not to use debug mode.\n"
           );
