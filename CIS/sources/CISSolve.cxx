@@ -38,7 +38,22 @@
 #ifdef _MSC_VER
 #include <float.h>
 #define isfinite _finite
+#define isnan _isnan
+#define isinf(x) (_fpclass(x) & (_FPCLASS_PINF | _FPCLASS_NINF) != 0)
 #define INFINITY (double)(0x7FF0000000000000L)
+double asinh(double input)
+{
+  return log(input + sqrt(input*input + 1.0));
+}
+double acosh(double input)
+{
+  return log(input +
+             sqrt((input + 1.0) * (input - 1.0)));
+}
+double atanh(double input)
+{
+  return 0.5 * log((1 + input) / (1 - input));
+}
 #endif
 
 #include <kinsol/kinsol.h>
@@ -1371,8 +1386,8 @@ CDA_DAESolverRun::SolveDAEProblem
     }
   }
 
-  delete ei.oldstates;
-  delete ei.oldrates;
+  delete [] ei.oldstates;
+  delete [] ei.oldrates;
   delete [] hx;
   delete [] icinfo;
   delete [] ivf.hxtmp;
