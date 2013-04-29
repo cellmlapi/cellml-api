@@ -356,7 +356,8 @@ CDA_CellMLIntegrationService::CompileSource
     si.dwFlags = STARTF_USESTDHANDLES;
     si.hStdOutput = stdoutForNewProc;
 
-    if (!CreateProcess(NULL, dumpstring, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+    if (!CreateProcess(NULL, const_cast<char*>(dumpstring), NULL, NULL, TRUE,
+                       CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
     {
       CloseHandle(stdoutForNewProc);
       need_no_cygwin = -1;
