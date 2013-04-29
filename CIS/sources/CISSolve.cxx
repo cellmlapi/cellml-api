@@ -2190,7 +2190,7 @@ EDouble TryMax(int count, ...)
 {
   if (count == 0)
   {
-    EDouble ret = new EDoubleStruct(0.0/0.0);
+    EDouble ret = new EDoubleStruct(strtod("NAN", NULL));
     ret->addCause("maximum of zero expressions");
     return ret;
   }
@@ -2249,7 +2249,7 @@ EDouble TryMin(int count, ...)
 {
   if (count == 0)
   {
-    EDouble ret = new EDoubleStruct(0.0/0.0);
+    EDouble ret = new EDoubleStruct(strtod("NAN", NULL));
     ret->addCause("maximum of zero expressions");
     return ret;
   }
@@ -2712,7 +2712,7 @@ EDouble TryPiecewise(EDouble firstCond, EDouble firstValue, ...)
       int command = va_arg(val, int);
       if (command == 0)
       {
-        EDouble ret = new EDoubleStruct(0.0/0.0);
+        EDouble ret = new EDoubleStruct(strtod("NAN", NULL));
         ret->addCause("no conditions matched on piecewise with no otherwise");
         return ret;
       }
@@ -2764,14 +2764,14 @@ EDouble TryPiecewise(EDouble firstCond, EDouble firstValue, ...)
 
 EDouble TryInfinity()
 {
-  EDouble ret = new EDoubleStruct(0.0/0.0);
+  EDouble ret = new EDoubleStruct(INFINITY);
   ret->mWhyError = "MathML predefined symbol infinity used";
   return ret;
 }
 
 EDouble TryNaN()
 {
-  EDouble ret = new EDoubleStruct(0.0/0.0);
+  EDouble ret = new EDoubleStruct(strtod("NAN", NULL));
   ret->mWhyError = "MathML predefined symbol notanumber used";
   return ret;
 }
