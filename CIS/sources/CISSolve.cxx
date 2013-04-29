@@ -1500,6 +1500,43 @@ void TryAssign(double* aDest, EDouble aValue, const char* aContext, struct fail_
   delete aValue;
 }
 
+void TryOverrideAssign(double* aDest, EDouble aValue, const char* aContext,
+                       struct Override* aOverride, struct fail_info* aFail)
+{
+  if (aDest >= aOverride->constants)
+  {
+    size_t idx = aDest - aOverride->constants;
+    if (idx < aOverride->nConstants)
+    {
+      if (aOverride->isOverriden[idx])
+        return;
+    }
+  }
+
+  if (!isfinite(aValue->mValue))
+  {
+    aValue->addCause(std::string("Computed value for ") + aContext + " is not finite");
+    setFailure(aFail, aValue->mWhyError.c_str(), -1);
+  }
+  
+  *aDest = aValue->mValue;
+  delete aValue;
+}
+
+void OverrideAssign(double* aDest, double aValue, struct Override* aOverride)
+{
+  if (aDest >= aOverride->constants)
+  {
+    size_t idx = aDest - aOverride->constants;
+    if (idx < aOverride->nConstants)
+    {
+      if (aOverride->isOverriden[idx])
+        return;
+    }
+  }
+  *aDest = aValue;
+}
+
 void putIth(int i, std::ostream& aStr)
 {
   aStr << i;

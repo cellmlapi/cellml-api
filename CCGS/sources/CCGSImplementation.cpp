@@ -319,6 +319,7 @@ CDA_CodeGenerator::CDA_CodeGenerator(bool aIDAStyle)
    mBoundVariableName(L"bvar"),
    mAssignPattern(L"/* <XMLID> */\r\n"
                   L"<LHS> = <RHS>;\r\n"),
+   mAssignConstantPattern(L"/* Constant <XMLID> */\r\n<LHS> = <RHS>;\r\n"),
    mSolvePattern
    (
     L"rootfind_<ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);\r\n"
@@ -556,6 +557,18 @@ void
 CDA_CodeGenerator::assignPattern(const std::wstring& aPattern) throw()
 {
   mAssignPattern = aPattern;
+}
+
+std::wstring
+CDA_CodeGenerator::assignConstantPattern() throw()
+{
+  return mAssignConstantPattern;
+}
+
+void
+CDA_CodeGenerator::assignConstantPattern(const std::wstring& aPattern) throw()
+{
+  mAssignConstantPattern = aPattern;
 }
 
 std::wstring
@@ -829,7 +842,7 @@ CDA_CodeGenerator::makeCodeGenerationState(int aCompat, iface::cellml_api::Model
       mAlgebraicVariableNamePattern,
       mRateNamePattern, mVOIPattern, mSampleDensityFunctionPattern,
       mSampleRealisationsPattern, mBoundVariableName,
-      mAssignPattern, mSolvePattern,
+      mAssignPattern, mAssignConstantPattern, mSolvePattern,
       mSolveNLSystemPattern, mTemporaryVariablePattern,
       mDeclareTemporaryPattern, mConditionalAssignmentPattern,
       mResidualPattern, mConstrainedRateStateInfoPattern,
@@ -970,6 +983,7 @@ CDA_CustomGenerator::CDA_CustomGenerator
  iface::cellml_services::AnnotationSet* aAnnoSet,
  std::wstring& aStateVariableNamePattern,
  std::wstring& aAssignPattern,
+ std::wstring& aAssignConstantPattern,
  std::wstring& aSolvePattern,
  std::wstring& aSolveNLSystemPattern,
  uint32_t aArrayOffset
@@ -977,6 +991,7 @@ CDA_CustomGenerator::CDA_CustomGenerator
   : mModel(aModel),
     mTransform(aTransform), mCeVAS(aCeVAS), mCUSES(aCUSES), mAnnoSet(aAnnoSet),
     mStateVariableNamePattern(aStateVariableNamePattern), mAssignPattern(aAssignPattern),
+    mAssignConstantPattern(aAssignConstantPattern),
     mSolvePattern(aSolvePattern), mSolveNLSystemPattern(aSolveNLSystemPattern),
     mArrayOffset(aArrayOffset)
 {
@@ -1041,7 +1056,7 @@ CDA_CustomGenerator::generateCode()
   std::wstring emp;
 
   CodeGenerationState cgs(1, mModel, emp, mStateVariableNamePattern, emp, emp, emp,
-                          emp, emp, emp, mAssignPattern,
+                          emp, emp, emp, mAssignPattern, mAssignConstantPattern,
                           mSolvePattern, mSolveNLSystemPattern,
                           emp, emp, emp, emp, emp, emp, emp, emp, emp, false,
                           mArrayOffset, mTransform, mCeVAS, mCUSES, mAnnoSet, false);

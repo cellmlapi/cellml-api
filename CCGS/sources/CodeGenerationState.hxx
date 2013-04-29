@@ -143,6 +143,7 @@ public:
                       std::wstring& aSampleRealisationsPattern,
                       std::wstring& aBoundVariableName,
                       std::wstring& aAssignPattern,
+                      std::wstring& aAssignConstantPattern,
                       std::wstring& aSolvePattern,
                       std::wstring& aSolveNLSystemPattern,
                       std::wstring& aTemporaryVariablePattern,
@@ -171,6 +172,7 @@ public:
       mSampleRealisationsPattern(aSampleRealisationsPattern),
       mBoundVariableName(aBoundVariableName),
       mAssignPattern(aAssignPattern),
+      mAssignConstantPattern(aAssignConstantPattern),
       mSolvePattern(aSolvePattern),
       mSolveNLSystemPattern(aSolveNLSystemPattern),
       mTemporaryVariablePattern(aTemporaryVariablePattern),
@@ -195,6 +197,7 @@ public:
       mNextConditionVariable(aArrayOffset),
       mNextSolveId(0),
       mIDAStyle(aIDAStyle),
+      mIsConstant(false),
       mDryRun(false)
   {
   }
@@ -277,6 +280,10 @@ public:
                     const std::wstring& aLHS,
                     const std::wstring& aRHS,
                     const std::wstring& aXMLId);
+  void AppendConstantAssign(std::wstring& aAppendTo,
+                            const std::wstring& aLHS,
+                            const std::wstring& aRHS,
+                            const std::wstring& aXMLId);
   void BuildFloatingAndConstantLists();
   void BuildFloatingAndKnownLists(bool includeRates = true);
   void WriteForcedInitialVariables();
@@ -434,7 +441,7 @@ public:
     & mAlgebraicVariableNamePattern, & mRateNamePattern,
     & mVOIPattern, & mSampleDensityFunctionPattern,
     & mSampleRealisationsPattern,  & mBoundVariableName,
-    & mAssignPattern, & mSolvePattern,
+    & mAssignPattern, & mAssignConstantPattern, & mSolvePattern,
     & mSolveNLSystemPattern, & mTemporaryVariablePattern,
     & mDeclareTemporaryPattern, & mConditionalAssignmentPattern, & mResidualPattern,
     & mConstrainedRateStateInfoPattern, & mUnconstrainedRateStateInfoPattern,
@@ -463,6 +470,7 @@ public:
   std::list<std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring> > mRateNameBackup;
   std::list<ptr_tag<CDA_ComputationTarget> > mInfDelayedTargets;
   bool mIDAStyle;
+  bool mIsConstant;
   struct RootInformation {
     RootInformation(const std::wstring& aStorageName,
                     iface::cellml_api::CellMLComponent* aComponent,

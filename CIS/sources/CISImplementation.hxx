@@ -20,20 +20,26 @@ struct fail_info {
   std::string failmsg;
 };
 
+struct Override
+{
+  double* constants;
+  int nConstants;
+  bool* isOverriden;
+};
+
 struct CompiledModelFunctions
 {
-  void (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES, struct fail_info*);
+  void (*SetupConstants)(double* CONSTANTS, double* RATES, double* STATES, struct Override*, struct fail_info*);
   void (*ComputeRates)(double VOI, double* CONSTANTS, double* RATES,
                       double* STATES, double* ALGEBRAIC, struct fail_info*);
   void (*ComputeVariables)(double VOI, double* CONSTANTS, double* RATES,
                           double* STATES, double* ALGEBRAIC, struct fail_info*);
-
 };
 
 struct IDACompiledModelFunctions
 {
   void (*SetupFixedConstants)(double* CONSTANTS, double* RATES, double *STATES,
-                              double* ALGEBRAIC, struct fail_info*);
+                              double* ALGEBRAIC, struct Override*, struct fail_info*);
   void (*EvaluateVariables)(double VOI, double* CONSTANTS, double* RATES,
                            double *STATES, double* ALGEBRAIC, double* CONDVAR,
                            struct fail_info*);

@@ -357,7 +357,17 @@ module cellml_services
      * Default: /* &lt;XMLID> *\/\r\n&lt;LHS> = &lt;RHS>;\\r\\n
      */
     attribute wstring assignPattern;
-    
+
+    /**
+     * The pattern which is used to set constants by assignment.
+     * &lt;LHS> is replaced by the variable name.
+     * &lt;RHS> is replaced by the expression for the right-hand side.
+     * &lt;XMLID> is replaced by the ID attribute value of the equation
+     *   (or variable in the case of an initial_value assignment).
+     * Default: /* &lt;XMLID> *\/\r\n&lt;LHS> = &lt;RHS>;\\r\\n
+     */
+    attribute wstring assignConstantPattern;
+
     /**
      * The pattern which is used to compute variables which cannot be set by
      * assignment.

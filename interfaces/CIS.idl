@@ -134,8 +134,8 @@ module cellml_services
      * which have been modified since the model was compiled, without forcing
      * a recompilation.
      * @param type The type of variable to set. Can be CONSTANT (sets the
-     *   value of the constant) or DIFFERENTIAL (sets the initial value of the
-     *   the differential).
+     *   value of the constant) or STATE_VARIABLE (sets the initial value of the
+     *   the state variable).
      * @param variableIndex The index into the relevant array, as provided by
      *                      the CCGS VariableInformation structures. When
      *                      working with second or higher differentials, you

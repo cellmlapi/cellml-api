@@ -214,6 +214,7 @@ public:
                       iface::cellml_services::AnnotationSet* aAnnoSet,
                       std::wstring& aStateVariableNamePattern,
                       std::wstring& aAssignPattern,
+                      std::wstring& aConstantAssignPattern,
                       std::wstring& aSolvePattern,
                       std::wstring& aSolveNLSystemPattern,
                       uint32_t aArrayOffset
@@ -235,7 +236,7 @@ private:
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;
   ObjRef<iface::cellml_services::CUSES> mCUSES;
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
-  std::wstring mStateVariableNamePattern, mAssignPattern, mSolvePattern,
+  std::wstring mStateVariableNamePattern, mAssignPattern, mAssignConstantPattern, mSolvePattern,
                mSolveNLSystemPattern;
   uint32_t mArrayOffset;
 };
@@ -273,6 +274,8 @@ public:
   void arrayOffset(uint32_t offset) throw();
   std::wstring assignPattern() throw();
   void assignPattern(const std::wstring& aPattern) throw();
+  std::wstring assignConstantPattern() throw();
+  void assignConstantPattern(const std::wstring& aPattern) throw();
   std::wstring solvePattern() throw();
   void solvePattern(const std::wstring& aPattern) throw();
   std::wstring solveNLSystemPattern() throw();
@@ -329,7 +332,7 @@ private:
   std::wstring mConstantPattern, mStateVariableNamePattern,
     mAlgebraicVariableNamePattern, mRateNamePattern, mVOIPattern,
     mSampleDensityFunctionPattern, mSampleRealisationsPattern, mBoundVariableName,
-    mAssignPattern, mSolvePattern, mSolveNLSystemPattern,
+    mAssignPattern, mAssignConstantPattern, mSolvePattern, mSolveNLSystemPattern,
     mTemporaryVariablePattern, mDeclareTemporaryPattern,
     mConditionalAssignmentPattern, mResidualPattern, mConstrainedRateStateInfoPattern,
     mUnconstrainedRateStateInfoPattern, mInfDelayedRatePattern, mInfDelayedStatePattern,

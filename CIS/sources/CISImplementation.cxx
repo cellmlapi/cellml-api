@@ -142,7 +142,7 @@ CompiledModelFunctions*
 SetupCompiledModelFunctions(CompiledModule* module)
 {
   CompiledModelFunctions* cmf = new CompiledModelFunctions;
-  cmf->SetupConstants = (void (*)(double*, double*, double*, struct fail_info*))
+  cmf->SetupConstants = (void (*)(double*, double*, double*, struct Override*, struct fail_info*))
     module->getSymbol("SetupConstants");
   cmf->ComputeRates = (void (*)(double,double*,double*,double*,double*, struct fail_info*))
     module->getSymbol("ComputeRates");
@@ -155,7 +155,7 @@ IDACompiledModelFunctions*
 SetupIDACompiledModelFunctions(CompiledModule* module)
 {
   IDACompiledModelFunctions* cmf = new IDACompiledModelFunctions;
-  cmf->SetupFixedConstants = (void (*)(double*, double*, double*, double*, struct fail_info*))
+  cmf->SetupFixedConstants = (void (*)(double*, double*, double*, double*, struct Override*, struct fail_info*))
     module->getSymbol("SetupFixedConstants");
   cmf->EvaluateVariables = (void (*)(double, double*, double*, double*, double*, double*, struct fail_info*))
     module->getSymbol("EvaluateVariables");
@@ -682,17 +682,29 @@ CDA_ODESolverRun::runthread()
 
     memset(rates, 0, rateSize * sizeof(double));
 
-    struct fail_info failInfo;
-    f->SetupConstants(constants, rates, states, &failInfo);
-    if (failInfo.failtype)
-      throw iface::cellml_api::CellMLException(); // Caught below.
-
-    // Now apply overrides...
+    struct Override overrides;
+    overrides.isOverriden = new bool[constSize];
+    overrides.constants = constants;
+    overrides.nConstants = constSize;
+    for (int i = 0; i < constSize; i++)
+      overrides.isOverriden[i] = false;
     OverrideList::iterator oli;
     for (oli = mConstantOverrides.begin(); oli != mConstantOverrides.end();
          oli++)
       if ((*oli).first < constSize)
+      {
+        overrides.isOverriden[(*oli).first] = true;
         constants[(*oli).first] = (*oli).second;
+      }
+
+    struct fail_info failInfo;
+    f->SetupConstants(constants, rates, states, &overrides, &failInfo);
+    if (failInfo.failtype)
+      throw iface::cellml_api::CellMLException(); // Caught below.
+
+    delete [] overrides.isOverriden;
+
+    // Now apply overrides...
     for (oli = mIVOverrides.begin(); oli != mIVOverrides.end();
          oli++)
       if ((*oli).first < rateSize)
@@ -765,20 +777,32 @@ CDA_DAESolverRun::runthread()
     memset(rates, 0, rateSize * sizeof(double));
     memset(condvars, 0, condVarSize * sizeof(double));
 
-    struct fail_info failInfo;
-    // Algebraic is needed for locally bound variables (e.g. for definite integrals).
-    f->SetupFixedConstants(constants, rates, states, algebraic, &failInfo);
-
-    // Now apply overrides...
+    struct Override overrides;
+    overrides.isOverriden = new bool[constSize];
+    overrides.constants = constants;
+    overrides.nConstants = constSize;
+    for (int i = 0; i < constSize; i++)
+      overrides.isOverriden[i] = false;
     OverrideList::iterator oli;
     for (oli = mConstantOverrides.begin(); oli != mConstantOverrides.end();
          oli++)
       if ((*oli).first < constSize)
+      {
+        overrides.isOverriden[(*oli).first] = true;
         constants[(*oli).first] = (*oli).second;
+      }
+
+    struct fail_info failInfo;
+    // Algebraic is needed for locally bound variables (e.g. for definite integrals).
+    f->SetupFixedConstants(constants, rates, states, algebraic, &overrides, &failInfo);
+
+    // Now apply overrides...
     for (oli = mIVOverrides.begin(); oli != mIVOverrides.end();
          oli++)
       if ((*oli).first < rateSize)
         states[(*oli).first] = (*oli).second;
+
+    delete [] overrides.isOverriden;
 
     if (mObserver != NULL)
     {
@@ -940,7 +964,8 @@ CDA_CellMLIntegrationService::SetupCodeGenStrings(iface::cellml_services::CodeGe
   if (aIsDebug)
   {
     aCGS->assignPattern(L"TryAssign(&(<LHS>), <RHS>, \"<XMLID>\", failInfo);\r\nif (getFailType(failInfo)) return FAIL_RETURN;\r\n");
-  aCGS->sampleDensityFunctionPattern
+    aCGS->assignConstantPattern(L"TryOverrideAssign(&(<LHS>), <RHS>, \"<XMLID>\", OVERRIDES, failInfo);\r\nif (getFailType(failInfo)) return FAIL_RETURN;\r\n");
+    aCGS->sampleDensityFunctionPattern
     (
      L"SampleUsingPDF(&pdf_<ID>, <ROOTCOUNT>, pdf_roots_<ID>, CONSTANTS, ALGEBRAIC, failInfo)"
      L"<SUP>double pdf_<ID>(double bvar, double* CONSTANTS, double* ALGEBRAIC, struct fail_info* failInfo)\r\n"
@@ -1220,6 +1245,7 @@ L"true: #prec[H]CreateEDouble(1.0)\r\n"
        L"  </EQUATIONS>\r\n"
        L"}\r\n"
        );
+    aCGS->assignConstantPattern(L"OverrideAssign(&(<LHS>), <RHS>, OVERRIDES);\r\n");
     aCGS->assignPattern(L"<LHS>= <RHS>;\r\n");
     ObjRef<iface::cellml_services::MaLaESTransform> transform
       (
@@ -1347,7 +1373,7 @@ CDA_CellMLIntegrationService::compileModelODEInternal
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
   ss << "void SetupConstants(double* CONSTANTS, double* RATES, "
-    "double *STATES, struct fail_info* failInfo)" << std::endl;
+    "double *STATES, struct Override* OVERRIDES, struct fail_info* failInfo)" << std::endl;
   std::wstring frag = cci->initConstsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];
@@ -1457,7 +1483,8 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
   setupCodeEnvironment(cci, dirname, sourcename, ss);
 
   ss << "void SetupFixedConstants(double* CONSTANTS, double* RATES, "
-    "double *STATES, double *ALGEBRAIC, struct fail_info* failInfo)" << std::endl;
+    "double *STATES, double *ALGEBRAIC, struct Override* OVERRIDES, "
+    "struct fail_info* failInfo)" << std::endl;
   std::wstring frag = cci->initConstsString();
   size_t fragLen = wcstombs(NULL, frag.c_str(), 0) + 1;
   char* frag8 = new char[fragLen];

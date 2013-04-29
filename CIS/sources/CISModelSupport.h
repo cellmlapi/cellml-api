@@ -16,12 +16,15 @@ CDA_EXPORT_PRE void setFailure(struct fail_info*, const char*, int) CDA_EXPORT_P
 CDA_EXPORT_PRE void failAddCause(struct fail_info*, const char*) CDA_EXPORT_POST;
 CDA_EXPORT_PRE int getFailType(struct fail_info* aFail) CDA_EXPORT_POST;
 
+struct Override;
 struct EDoubleStruct;
 typedef struct EDoubleStruct* EDouble;
 
 CDA_EXPORT_PRE EDouble CreateEDouble(double aValue) CDA_EXPORT_POST;
 CDA_EXPORT_PRE double UseEDouble(EDouble aValue, struct fail_info* aFail, const char* aContext) CDA_EXPORT_POST;
 CDA_EXPORT_PRE void TryAssign(double* aDest, EDouble aValue, const char* aContext, struct fail_info* aFail) CDA_EXPORT_POST;
+CDA_EXPORT_PRE void TryOverrideAssign(double* aDest, EDouble aValue, const char* aContext, struct Override* aOverrides, struct fail_info* aFail) CDA_EXPORT_POST;
+CDA_EXPORT_PRE void OverrideAssign(double* aDest, double aValue, struct Override* aOverrides) CDA_EXPORT_POST;
 CDA_EXPORT_PRE EDouble TryAbs(double aInput, struct fail_info* aFail) CDA_EXPORT_POST;
 CDA_EXPORT_PRE EDouble TryAnd(int count, ...) CDA_EXPORT_POST;
 CDA_EXPORT_PRE EDouble TryACos(EDouble aInput) CDA_EXPORT_POST;

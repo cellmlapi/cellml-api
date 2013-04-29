@@ -66,7 +66,7 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
 }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
-/* a */
+/* Constant a */
 STATES[0] = 1;
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

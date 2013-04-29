@@ -65,11 +65,11 @@ void rootfind_0(double VOI, double* CONSTANTS, double* RATES, double* STATES, do
 }
 void SetupFixedConstants(double* CONSTANTS, double* RATES, double* STATES)
 {
-/* offset */
+/* Constant offset */
 CONSTANTS[0] = 3;
-/* Element with no id */
+/* Constant Element with no id */
 CONSTANTS[1] = (CONSTANTS[0]>1.00000&&CONSTANTS[0]<=3.00000 ?  sin(CONSTANTS[0]) : CONSTANTS[0]>3.00000 ? 3.00000 : 1.00000);
-/* y */
+/* Constant y */
 STATES[0] = CONSTANTS[0];
 }
 void EvaluateVariables(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC)

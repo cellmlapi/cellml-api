@@ -59,6 +59,7 @@ CodeGenerationState::CreateCustomGenerator()
                      new CDA_CustomGenerator
                      (mModel, mTransform, mCeVAS, mCUSES, mAnnoSet,
                       mStateVariableNamePattern, mAssignPattern,
+                      mAssignConstantPattern,
                       mSolvePattern, mSolveNLSystemPattern, mArrayOffset));
 
   // Now copy mCodeInfo->mTargets
@@ -358,7 +359,9 @@ CodeGenerationState::GenerateCode()
     
     // Write evaluations for all constants we just worked out how to compute...
     std::wstring tmp;
+    mIsConstant = true;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
+    mIsConstant = false;
     mCodeInfo->mInitConstsStr += tmp;
     
     // Also we need to initialise state variable IVs...
@@ -371,7 +374,9 @@ CodeGenerationState::GenerateCode()
     CheckStateVariableIVConstraints(systems);
     
     tmp = L"";
+    mIsConstant = true;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
+    mIsConstant = false;
     mCodeInfo->mInitConstsStr += tmp;
       
     if (mIDAStyle)
@@ -751,7 +756,7 @@ CodeGenerationState::InitialisePseudoStates(std::wstring& aCode)
       wchar_t ivv[30];
       any_swprintf(ivv, 30, L"%g", iv);
       RETURN_INTO_WSTRING(n, (*i)->name());
-      AppendAssign(aCode, n, mTransform->wrapNumber(ivv), (*i)->mVariable->name());
+      AppendConstantAssign(aCode, n, mTransform->wrapNumber(ivv), (*i)->mVariable->name());
     }
 }
 
@@ -2163,15 +2168,17 @@ CodeGenerationState::FirstPassTargetClassification()
         if (tct == ct && hasImmedIV)
         {
           tct->mStateHasIV = true;
-          AppendAssign(mCodeInfo->mInitConstsStr, cname,
-                       mTransform->wrapNumber(iv), ct->mVariable->name());
+          AppendConstantAssign(mCodeInfo->mInitConstsStr, cname,
+                               mTransform->wrapNumber(iv), ct->mVariable->name());
         }
         else if (tct != ct)
         {
           tct->mStateHasIV = true;
-          AppendAssign(mCodeInfo->mInitConstsStr, cname,
-                       mTransform->wrapNumber(L"0.0"),
-                       tct->mVariable->name());
+          AppendConstantAssign
+            (
+             mCodeInfo->mInitConstsStr, cname,
+             mTransform->wrapNumber(L"0.0"),
+             tct->mVariable->name());
         }
         tct = tct->mUpDegree;
         tct->mEvaluationType = iface::cellml_services::FLOATING;
@@ -2187,8 +2194,8 @@ CodeGenerationState::FirstPassTargetClassification()
       else if (ct->mEvaluationType == iface::cellml_services::CONSTANT)
       {
         AllocateConstant(ct, cname);
-        AppendAssign(mCodeInfo->mInitConstsStr, cname,
-                     mTransform->wrapNumber(iv), ct->mVariable->name());
+        AppendConstantAssign(mCodeInfo->mInitConstsStr, cname,
+                             mTransform->wrapNumber(iv), ct->mVariable->name());
       }
     }
   }
@@ -2485,6 +2492,49 @@ CodeGenerationState::AppendAssign
     }
   }
 }
+
+void
+CodeGenerationState::AppendConstantAssign
+(
+ std::wstring& aAppendTo,
+ const std::wstring& aLHS,
+ const std::wstring& aRHS,
+ const std::wstring& aXmlID
+)
+{
+  size_t curIdx = 0;
+
+  while (true)
+  {
+    size_t lIdx = mAssignConstantPattern.find(L"<LHS>", curIdx),
+      rIdx = mAssignConstantPattern.find(L"<RHS>", curIdx),
+      iIdx = mAssignConstantPattern.find(L"<XMLID>", curIdx);
+    if ((lIdx == rIdx) && (lIdx == iIdx) && (lIdx == std::string::npos))
+    {
+      aAppendTo += mAssignConstantPattern.substr(curIdx);
+      return;
+    }
+    if (lIdx <= rIdx && lIdx <= iIdx)
+    {
+      aAppendTo += mAssignConstantPattern.substr(curIdx, lIdx - curIdx);
+      aAppendTo += aLHS;
+      curIdx = lIdx + sizeof("<LHS>") - 1;
+    }
+    else if (rIdx <= iIdx)
+    {
+      aAppendTo += mAssignConstantPattern.substr(curIdx, rIdx - curIdx);
+      aAppendTo += aRHS;
+      curIdx = rIdx + sizeof("<RHS>") - 1;
+    }
+    else
+    {
+      aAppendTo += mAssignConstantPattern.substr(curIdx, iIdx - curIdx);
+      aAppendTo += aXmlID;
+      curIdx = iIdx + sizeof("<XMLID>") - 1;
+    }
+  }
+}
+
 
 void
 CodeGenerationState::BuildFloatingAndConstantLists()
@@ -3818,7 +3868,10 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
       mCodeInfo->mFuncsStr += sup;
 
     RETURN_INTO_WSTRING(lhs, aSFD->mOutTargets.front()->name());
-    AppendAssign(aCodeTo, lhs, main, describeMaths(aSFD));
+    if (mIsConstant)
+      AppendConstantAssign(aCodeTo, lhs, main, describeMaths(aSFD));
+    else
+      AppendAssign(aCodeTo, lhs, main, describeMaths(aSFD));
   }
   else if (du == L"http://www.cellml.org/uncertainty-1#distributionFromRealisations")
   {
@@ -4193,7 +4246,10 @@ CodeGenerationState::GenerateAssignmentMaLaESResult
       mCodeInfo->mFuncsStr += s + L"\r\n";
   }
 
-  AppendAssign(aCodeTo, lhs, rhs, aXMLId);
+  if (mIsConstant)
+    AppendConstantAssign(aCodeTo, lhs, rhs, aXMLId);
+  else
+    AppendAssign(aCodeTo, lhs, rhs, aXMLId);
 }
 
 void
