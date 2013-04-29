@@ -83,12 +83,12 @@ CDA_GenericsService::loadGenericModule(const std::string& aModulePath)
     }
   }
 #else
-  void* s = dlopen(aModulePath.c_str(), RTLD_LAZY);
+  void* s = dlopen(aModulePath.c_str(), RTLD_LAZY | RTLD_GLOBAL);
   if (s == NULL)
   {
     std::string tmp;
     tmp = "lib" + aModulePath + ".so";
-    s = dlopen(tmp.c_str(), RTLD_LAZY);
+    s = dlopen(tmp.c_str(), RTLD_LAZY | RTLD_GLOBAL);
   }
 #endif
 
