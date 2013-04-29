@@ -14,7 +14,6 @@
 #include <unistd.h>
 #else
 #include <io.h>
-#define pipe _pipe
 #endif
 #ifdef _MSC_VER
 #include <errno.h>
@@ -336,7 +335,7 @@ CDA_CellMLIntegrationService::CompileSource
   static int need_no_cygwin = 0;
   if (need_no_cygwin == 0)
   {
-    char* dumpstring = "gcc -dumpspecs";
+    const char* dumpstring = "gcc -dumpspecs";
     SECURITY_ATTRIBUTES sa; 
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -646,7 +645,11 @@ CDA_CellMLIntegrationRun::start()
     throw iface::cellml_api::CellMLException();
   mIsStarted = true;
 
+#ifdef WIN32
+  _pipe(mThreadPipes, 1024, _O_BINARY);
+#else
   pipe(mThreadPipes);
+#endif
 
   // The new thread accesses this, so must add_ref. Thread will release itself
   // before returning.
