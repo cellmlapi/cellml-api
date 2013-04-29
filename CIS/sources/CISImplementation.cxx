@@ -14,6 +14,7 @@
 #include <unistd.h>
 #else
 #include <io.h>
+#include <fcntl.h>
 #endif
 #ifdef _MSC_VER
 #include <errno.h>
