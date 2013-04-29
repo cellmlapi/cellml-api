@@ -18,6 +18,7 @@
 #include <gsl/gsl_multiroots.h>
 #endif
 #ifdef WIN32
+#include <io.h>
 #include <time.h>
 #endif
 

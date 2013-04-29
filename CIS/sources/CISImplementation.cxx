@@ -24,7 +24,6 @@
 #include "CISBootstrap.hpp"
 #ifdef _MSC_VER
 #include <direct.h>
-#include <io.h>
 #else
 #include <dirent.h>
 #endif
