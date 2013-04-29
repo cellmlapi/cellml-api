@@ -92,6 +92,8 @@
   <ccgs:mapping keyname="arrayOffset">0</ccgs:mapping>
   <ccgs:mapping keyname="assignPattern">    &lt;LHS&gt; = &lt;RHS&gt;
 </ccgs:mapping>
+  <ccgs:mapping keyname="assignConstantPattern">    &lt;LHS&gt; = &lt;RHS&gt;
+</ccgs:mapping>
   <ccgs:mapping keyname="solvePattern"><![CDATA[    algebraic = rootfind_<ID>(voi, constants, states, algebraic)
 <SUP>initialGuess<ID> = None
 def rootfind_<ID>(voi, constants, states, algebraic):

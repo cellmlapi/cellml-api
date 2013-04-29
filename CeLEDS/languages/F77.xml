@@ -94,6 +94,8 @@
   <ccgs:mapping keyname="arrayOffset">1</ccgs:mapping>
   <ccgs:mapping keyname="assignPattern">      &lt;LHS&gt; = &lt;RHS&gt;
 </ccgs:mapping>
+  <ccgs:mapping keyname="assignConstantPattern">      &lt;LHS&gt; = &lt;RHS&gt;
+</ccgs:mapping>
   <ccgs:mapping keyname="solvePattern"><![CDATA[CALL minimize(minfunc_<ID>, CONSTS, VARIABLES, <VAR>)
 <SUP>REAL FUNCTION minfunc_<ID>(CONSTS, VARIABLES)
             REAL CONSTS(*), VARIABLES(*) 

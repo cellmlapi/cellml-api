@@ -89,6 +89,8 @@
   <ccgs:mapping keyname="arrayOffset">1</ccgs:mapping>
   <ccgs:mapping keyname="assignPattern">    &lt;LHS&gt; = &lt;RHS&gt;;
 </ccgs:mapping>
+  <ccgs:mapping keyname="assignConstantPattern">    &lt;LHS&gt; = &lt;RHS&gt;;
+</ccgs:mapping>
   <ccgs:mapping keyname="solvePattern"><![CDATA[    [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS, STATES, ALGEBRAIC);
 <SUP>% Functions required for solving differential algebraic equation
 function [CONSTANTS, STATES, ALGEBRAIC] = rootfind_<ID>(VOI, CONSTANTS_IN, STATES_IN, ALGEBRAIC_IN)

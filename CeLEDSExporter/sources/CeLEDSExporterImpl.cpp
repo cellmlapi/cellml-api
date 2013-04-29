@@ -552,6 +552,7 @@ CDA_CodeExporter::transferCommonCodeAttributes
   TRANSFER_ATTRIBUTE(L"algebraicVariableNamePattern", algebraicVariableNamePattern);
   TRANSFER_ATTRIBUTE(L"rateNamePattern", rateNamePattern);
   TRANSFER_ATTRIBUTE(L"assignPattern", assignPattern);
+  TRANSFER_ATTRIBUTE(L"assignConstantPattern", assignConstantPattern);
   TRANSFER_ATTRIBUTE(L"solvePattern", solvePattern);
   TRANSFER_ATTRIBUTE(L"solveNLSystemPattern", solveNLSystemPattern);
   TRANSFER_ATTRIBUTE(L"temporaryVariablePattern", temporaryVariablePattern);
