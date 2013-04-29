@@ -51,7 +51,7 @@ static int gettimeofday(struct timeval* tv, struct timezone* tz)
     ((static_cast<uint64_t>(ft.dwLowDateTime) |
      (static_cast<uint64_t>(ft.dwHighDateTime) << 32)) -
      116444736000000000) / 10;
-  tv->tv_usec = static_cast<suseconds_t>(rawus % 1000000);
+  tv->tv_usec = static_cast<unsigned int>(rawus % 1000000);
   tv->tv_sec = static_cast<time_t>(rawus / 1000000);
 
   return 0;
