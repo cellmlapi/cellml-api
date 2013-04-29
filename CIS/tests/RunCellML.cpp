@@ -6,13 +6,16 @@
 #include "CISBootstrap.hpp"
 #include "CCGSBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <cstring>
 #include <wchar.h>
-#ifndef _MSC_VER
+#ifndef WIN32
+#include <sys/time.h>
 #include <unistd.h>
-#else
+#endif
+#ifdef _MSC_VER
 #define strcasecmp _stricmp
 #endif
 #include "Utilities.hxx"
@@ -33,7 +36,26 @@ uint32_t gSleepTime = 0;
 
 #ifdef WIN32
 #include <windows.h>
-#define sleep(x) Sleep(x * 1000)
+#include <io.h> // timeval
+#define sleep(x) Sleep((x) * 1000)
+#define usleep(x) Sleep((x) / 1000)
+
+static int gettimeofday(struct timeval* tv, struct timezone* tz)
+{
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft);
+  // Convert from hundreds of nanoseconds since
+  // 1961-01-01 00:00:00 UTC to microseconds since
+  // 1970-01-01 00:00:00 UTC.
+  uint64_t rawus =
+    ((static_cast<uint64_t>(ft.dwLowDateTime) |
+     (static_cast<uint64_t>(ft.dwHighDateTime) << 32)) -
+     116444736000000000) / 10;
+  tv->tv_usec = static_cast<suseconds_t>(rawus % 1000000);
+  tv->tv_sec = static_cast<time_t>(rawus / 1000000);
+
+  return 0;
+}
 #endif
 
 class TestProgressObserver
@@ -171,21 +193,24 @@ public:
       {
         if (mFirstResult)
         {
-          mFirstTime = time(0);
+          gettimeofday(&mFirstTime, NULL);
           mFirstResult = false;
         }
         else
         {
+          struct timeval tnow;
+          gettimeofday(&tnow, NULL);
           int aheadBy =
-            (int)((values[i] - gStart) * gRealTimeFactor) -
-            (time(0) - mFirstTime);
+            static_cast<int>((values[i] - gStart) * gRealTimeFactor * 1000000.0) -
+            ((tnow.tv_usec - mFirstTime.tv_usec) +
+             (tnow.tv_sec - mFirstTime.tv_sec) * 1000000);
           if (aheadBy > 0)
           {
             // Technically, pause and resume are unnecessary because the simulation
             // thread is blocked while in results. However, this provides a useful
             // test that at least the process doesn't hang after this.
             mRun->pause();
-            sleep(aheadBy);
+            usleep(aheadBy);
             mRun->resume();
           }
         }
@@ -251,7 +276,7 @@ private:
   ObjRef<iface::cellml_services::CodeInformation> mCI;
   uint32_t mRefcount;
   bool mFirstResult;
-  time_t mFirstTime;
+  struct timeval mFirstTime;
   iface::cellml_services::CellMLIntegrationRun* mRun;
 };
 
