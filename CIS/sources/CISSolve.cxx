@@ -228,7 +228,7 @@ bool
 CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 {
 #ifdef WIN32
-  struct COMMTIMEOUTS timeouts;
+  COMMTIMEOUTS timeouts;
 #else
   fd_set pipeset;
   FD_ZERO(&pipeset);
