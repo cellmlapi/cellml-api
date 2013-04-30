@@ -252,7 +252,10 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 
     int command;
 #ifdef WIN32
-    ReadFile(mThreadPipes[0], &command, sizeof(command), NULL, NULL);
+    DWORD readBytes;
+    ReadFile(mThreadPipes[0], &command, sizeof(command), &readBytes, NULL);
+    if (readBytes != sizeof(command))
+      return false;
 #else
     read(mThreadPipes[0], &command, sizeof(command));
 #endif
