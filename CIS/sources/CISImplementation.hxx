@@ -178,7 +178,12 @@ protected:
 
 protected:
   bool mIsStarted;
-  int mThreadPipes[2];
+#ifdef WIN32
+  HANDLE
+#else
+  int
+#endif
+    mThreadPipes[2];
   iface::cellml_services::ODEIntegrationStepType mStepType;
   double mEpsAbs, mEpsRel, mScalVar, mScalRate, mStepSizeMax;
   double mStartBvar, mStopBvar, mMaxPointDensity, mTabulationStepSize;
