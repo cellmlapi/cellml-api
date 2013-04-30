@@ -903,11 +903,9 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
   if (mcl != iface::cellml_services::CORRECTLY_CONSTRAINED)
   {
     if (mcl == iface::cellml_services::OVERCONSTRAINED)
-      mLastError = L"Model is overconstrained. Run CellML2C for more "
-        L"information.";
+      mLastError = L"Model is overconstrained.";
     else
-      mLastError = L"Model is underconstrained. Run CellML2C for more "
-        L"information.";
+      mLastError = L"Model is underconstrained.";
     throw iface::cellml_api::CellMLException();
   }
 
