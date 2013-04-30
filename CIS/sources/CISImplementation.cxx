@@ -672,7 +672,11 @@ CDA_CellMLIntegrationRun::stop()
   mCancelIntegration = true;
 
   int stop = 1;
+#ifdef WIN32
+  WriteFile(mThreadPipes[1], &stop, sizeof(stop), NULL, NULL);
+#else
   write(mThreadPipes[1], &stop, sizeof(stop));
+#endif
 }
 
 void
@@ -684,7 +688,11 @@ CDA_CellMLIntegrationRun::pause()
   mPauseIntegration = true;
 
   int pause = 2;
+#ifdef WIN32
+  WriteFile(mThreadPipes[1], &pause, sizeof(pause), NULL, NULL);
+#else
   write(mThreadPipes[1], &pause, sizeof(pause));
+#endif
 }
 
 void
@@ -696,7 +704,11 @@ CDA_CellMLIntegrationRun::resume()
 
   mPauseIntegration = false;
   int resume = 3;
+#ifdef WIN32
+  WriteFile(mThreadPipes[1], &resume, sizeof(resume), NULL, NULL);
+#else
   write(mThreadPipes[1], &resume, sizeof(resume));
+#endif
 }
 
 void
