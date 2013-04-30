@@ -239,7 +239,7 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
   {
 #ifdef WIN32
     // Don't block...
-    timeouts.ReadIntervalTimeouts = MAXDWORD;
+    timeouts.ReadIntervalTimeout = MAXDWORD;
     timeouts.ReadTotalTimeoutConstant = 0;
     timeouts.ReadTotalTimeoutMultiplier = 0;
     SetCommTimeouts(mThreadPipes[0], &timeouts);
@@ -265,7 +265,7 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
       {
 #ifdef WIN32
         // Do block...
-        timeouts.ReadIntervalTimeouts = 0;
+        timeouts.ReadIntervalTimeout = 0;
         timeouts.ReadTotalTimeoutConstant = 0;
         timeouts.ReadTotalTimeoutMultiplier = 0;
         SetCommTimeouts(mThreadPipes[0], &timeouts);
