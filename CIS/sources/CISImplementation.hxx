@@ -179,11 +179,12 @@ protected:
 protected:
   bool mIsStarted;
 #ifdef WIN32
-  HANDLE
+  HANDLE mThreadPipes[2];
+  HANDLE mThreadSemaphore;
 #else
-  int
+  int mThreadPipes[2];
 #endif
-    mThreadPipes[2];
+
   iface::cellml_services::ODEIntegrationStepType mStepType;
   double mEpsAbs, mEpsRel, mScalVar, mScalRate, mStepSizeMax;
   double mStartBvar, mStopBvar, mMaxPointDensity, mTabulationStepSize;

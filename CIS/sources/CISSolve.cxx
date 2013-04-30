@@ -227,9 +227,7 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 bool
 CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 {
-#ifdef WIN32
-  COMMTIMEOUTS timeouts;
-#else
+#ifndef WIN32
   fd_set pipeset;
   FD_ZERO(&pipeset);
   FD_SET(mThreadPipes[0], &pipeset);
@@ -238,11 +236,8 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
   while (true)
   {
 #ifdef WIN32
-    // Don't block...
-    timeouts.ReadIntervalTimeout = MAXDWORD;
-    timeouts.ReadTotalTimeoutConstant = 0;
-    timeouts.ReadTotalTimeoutMultiplier = 0;
-    SetCommTimeouts(mThreadPipes[0], &timeouts);
+    if (WaitForSingleObject(mThreadSemaphore, 0) != WAIT_OBJECT_0)
+      return false;
 #else
     to.tv_sec = 0;
     to.tv_usec = 0;
@@ -252,10 +247,7 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 
     int command;
 #ifdef WIN32
-    DWORD readBytes;
-    ReadFile(mThreadPipes[0], &command, sizeof(command), &readBytes, NULL);
-    if (readBytes != sizeof(command))
-      return false;
+    ReadFile(mThreadPipes[0], &command, sizeof(command), NULL, NULL);
 #else
     read(mThreadPipes[0], &command, sizeof(command));
 #endif
@@ -267,11 +259,8 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
       while (command == 2)
       {
 #ifdef WIN32
-        // Do block...
-        timeouts.ReadIntervalTimeout = 0;
-        timeouts.ReadTotalTimeoutConstant = 0;
-        timeouts.ReadTotalTimeoutMultiplier = 0;
-        SetCommTimeouts(mThreadPipes[0], &timeouts);
+        if (WaitForSingleObject(mThreadSemaphore, INFINITE) != WAIT_OBJECT_0)
+          return false;
         ReadFile(mThreadPipes[0], &command, sizeof(command),
                  NULL, NULL);
 #else

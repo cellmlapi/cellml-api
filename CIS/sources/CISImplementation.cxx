@@ -541,6 +541,7 @@ CDA_CellMLIntegrationRun::~CDA_CellMLIntegrationRun()
 #ifdef WIN32
     CloseHandle(mThreadPipes[0]);
     CloseHandle(mThreadPipes[1]);
+    CloseHandle(mThreadSemaphore);
 #else
     close(mThreadPipes[0]);
     close(mThreadPipes[1]);
@@ -653,6 +654,7 @@ CDA_CellMLIntegrationRun::start()
 
 #ifdef WIN32
   CreatePipe(mThreadPipes, mThreadPipes + 1, NULL, 0);
+  mThreadSemaphore = CreateSemaphore(NULL, 0, 0x7FFFFFFF, NULL);
 #else
   pipe(mThreadPipes);
 #endif
@@ -674,6 +676,7 @@ CDA_CellMLIntegrationRun::stop()
   int stop = 1;
 #ifdef WIN32
   WriteFile(mThreadPipes[1], &stop, sizeof(stop), NULL, NULL);
+  ReleaseSemaphore(mThreadSemaphore, 1, NULL);
 #else
   write(mThreadPipes[1], &stop, sizeof(stop));
 #endif
@@ -690,6 +693,7 @@ CDA_CellMLIntegrationRun::pause()
   int pause = 2;
 #ifdef WIN32
   WriteFile(mThreadPipes[1], &pause, sizeof(pause), NULL, NULL);
+  ReleaseSemaphore(mThreadSemaphore, 1, NULL);
 #else
   write(mThreadPipes[1], &pause, sizeof(pause));
 #endif
@@ -706,6 +710,7 @@ CDA_CellMLIntegrationRun::resume()
   int resume = 3;
 #ifdef WIN32
   WriteFile(mThreadPipes[1], &resume, sizeof(resume), NULL, NULL);
+  ReleaseSemaphore(mThreadSemaphore, 1, NULL);
 #else
   write(mThreadPipes[1], &resume, sizeof(resume));
 #endif
