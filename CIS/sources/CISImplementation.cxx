@@ -538,8 +538,13 @@ CDA_CellMLIntegrationRun::~CDA_CellMLIntegrationRun()
 {
   if (mIsStarted)
   {
+#ifdef WIN32
+    CloseHandle(mThreadPipes[0]);
+    CloseHandle(mThreadPipes[1]);
+#else
     close(mThreadPipes[0]);
     close(mThreadPipes[1]);
+#endif
   }
   if (mObserver != NULL)
     mObserver->release_ref();
@@ -647,7 +652,7 @@ CDA_CellMLIntegrationRun::start()
   mIsStarted = true;
 
 #ifdef WIN32
-  _pipe(mThreadPipes, 1024, _O_BINARY);
+  CreatePipe(mThreadPipes, mThreadPipes + 1, NULL, 0);
 #else
   pipe(mThreadPipes);
 #endif

@@ -227,19 +227,35 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 bool
 CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 {
+#ifdef WIN32
+  struct COMMTIMEOUTS timeouts;
+#else
   fd_set pipeset;
   FD_ZERO(&pipeset);
   FD_SET(mThreadPipes[0], &pipeset);
   struct timeval to;
+#endif
   while (true)
   {
+#ifdef WIN32
+    // Don't block...
+    timeouts.ReadIntervalTimeouts = MAXDWORD;
+    timeouts.ReadTotalTimeoutConstant = 0;
+    timeouts.ReadTotalTimeoutMultiplier = 0;
+    SetCommTimeouts(mThreadPipes[0], &timeouts);
+#else
     to.tv_sec = 0;
     to.tv_usec = 0;
     if (select(1, &pipeset, NULL, NULL, &to) == 0)
       return false;
+#endif
 
     int command;
+#ifdef WIN32
+    ReadFile(mThreadPipes[0], &command, sizeof(command), NULL, NULL);
+#else
     read(mThreadPipes[0], &command, sizeof(command));
+#endif
 
     if (command == 1) // Cancel
       return true;
@@ -247,7 +263,17 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
     {
       while (command == 2)
       {
+#ifdef WIN32
+        // Do block...
+        timeouts.ReadIntervalTimeouts = 0;
+        timeouts.ReadTotalTimeoutConstant = 0;
+        timeouts.ReadTotalTimeoutMultiplier = 0;
+        SetCommTimeouts(mThreadPipes[0], &timeouts);
+        ReadFile(mThreadPipes[0], &command, sizeof(command),
+                 NULL, NULL);
+#else
         read(mThreadPipes[0], &command, sizeof(command));
+#endif
         if (command == 1) // Cancel
           return true;
         else if (command == 3) // Resume
