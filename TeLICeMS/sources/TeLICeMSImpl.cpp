@@ -868,11 +868,20 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
             RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
             DECLARE_QUERY_INTERFACE_OBJREF(content, arg, mathml_dom::MathMLContentElement);
             RETURN_INTO_OBJREF(bvar, iface::mathml_dom::MathMLElement, mae->getBoundVariable(1));
-            DECLARE_QUERY_INTERFACE_OBJREF(bcontent, bvar, mathml_dom::MathMLContentElement);
-            
-            txt += std::wstring(op->telicemName) + L"(" + ShowMathExpression(aIndent, content, op->argPrec) +
-              L")/" + op->telicemName + L"(" + ShowMathExpression(aIndent, bcontent, op->argPrec) + L")";
-            txt += attrStr;
+            DECLARE_QUERY_INTERFACE_OBJREF(bcontent, bvar, mathml_dom::MathMLContentContainer);
+            if (bcontent != NULL)
+            {
+              ObjRef<iface::mathml_dom::MathMLElement> bci(bcontent->getArgument(1));
+              ObjRef<iface::mathml_dom::MathMLContentElement> bcicontent
+                (QueryInterface(bci));
+
+              if (bcicontent != NULL)
+              {
+                txt += std::wstring(op->telicemName) + L"(" + ShowMathExpression(aIndent, content, op->argPrec) +
+                  L")/" + op->telicemName + L"(" + ShowMathExpression(aIndent, bcicontent, op->argPrec) + L")";
+                txt += attrStr;
+              }
+            }
           }
           break;
         }
@@ -882,7 +891,6 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
       }
     }
   }
-
   return txt;
 }
 
