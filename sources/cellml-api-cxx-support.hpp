@@ -5,6 +5,9 @@
 #include "Ifacexpcom.hxx"
 #include <stdlib.h>
 #include <cstring>
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 HEADER_INLINE int
 CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
