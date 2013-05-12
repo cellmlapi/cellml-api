@@ -371,7 +371,7 @@ CDA_ODESolverRun::SolveODEProblemGSL
   while (voi < mStopBvar)
   {
     double bhl = mStopBvar;
-    if (bhl - voi > mStepSizeMax)
+    if (mStepSizeMax != 0.0 && bhl - voi > mStepSizeMax)
       bhl = voi + mStepSizeMax;
     if(bhl > nextStopPoint)
       bhl = nextStopPoint;
@@ -527,7 +527,7 @@ CDA_ODESolverRun::SolveODEProblemCVODE
     while (voi < mStopBvar)
     {
       double bhl = mStopBvar;
-      if (bhl - voi > mStepSizeMax)
+      if (mStepSizeMax != 0.0 && bhl - voi > mStepSizeMax)
         bhl = voi + mStepSizeMax;
       if(bhl > nextStopPoint)
         bhl = nextStopPoint;
@@ -1365,7 +1365,7 @@ CDA_DAESolverRun::SolveDAEProblem
           break;
         
         double bhl = mStopBvar;
-        if (bhl - voi > mStepSizeMax)
+        if (mStepSizeMax != 0.0 && bhl - voi > mStepSizeMax)
           bhl = voi + mStepSizeMax;
         if(bhl > nextStopPoint)
           bhl = nextStopPoint;
