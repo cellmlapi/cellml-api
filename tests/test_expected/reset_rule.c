@@ -13,7 +13,7 @@
  * * * Variable index: 0
  * * * Variable storage: VOI
  * * Target x in component main
- * * * Variable type: algebraic variable
+ * * * Variable type: state variable
  * * * Variable index: 0
  * * * Variable storage: STATES[0]
  */

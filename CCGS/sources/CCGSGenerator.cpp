@@ -2351,10 +2351,12 @@ CodeGenerationState::AllocateVariablesInSet
   {
     for (j = (*i)->mUnknowns.begin(); j != (*i)->mUnknowns.end(); j++)
     {
-      (*j)->mEvaluationType = aET;
-
       // Don't rename it if it is already assigned...
       RETURN_INTO_WSTRING(n, (*j)->name());
+      if (n == L"" ||
+          (*j)->mEvaluationType !=
+          iface::cellml_services::STATE_VARIABLE)
+        (*j)->mEvaluationType = aET;
       if (n == L"")
       {
         AllocateVariable(*j, str, aPattern, aNextIndex, aCountVar);
