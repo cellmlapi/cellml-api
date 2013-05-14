@@ -241,7 +241,7 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 #else
     to.tv_sec = 0;
     to.tv_usec = 0;
-    if (select(1, &pipeset, NULL, NULL, &to) == 0)
+    if (select(mThreadPipes[0] + 1, &pipeset, NULL, NULL, &to) == 0)
       return false;
 #endif
 
