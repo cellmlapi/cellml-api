@@ -378,5 +378,14 @@ CONFIGURE_FILE(cda_config.h.in cda_config.h)
 CONFIGURE_FILE(extdep/libxml/xml2_config.h.in extdep/libxml/xml2_config.h)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/extdep/libxml/)
 
+# uninstall target
+CONFIGURE_FILE(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+
+ADD_CUSTOM_TARGET(uninstall
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+
 INCLUDE(build/python.cmake)
 INCLUDE(build/docs.cmake)

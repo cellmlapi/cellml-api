@@ -101,3 +101,4 @@ nohup.out
 test_celeds_*
 docs/Doxyfile.norev
 *.class
+cmake_uninstall.cmake
