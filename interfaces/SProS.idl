@@ -8,59 +8,76 @@
 
 module SProS
 {
+  interface AbstractTask;
+  interface AddXML;
   interface Base;
-  interface BaseSet;
   interface BaseIterator;
-  interface SEDMLElement;
-  interface NamedElement;
-  interface NamedElementSet;
-  interface NamedElementIterator;
-  interface NamedIdentifiedElement;
-  interface NamedIdentifiedElementSet;
-  interface NamedIdentifiedElementIterator;
-  interface Model;
-  interface ModelSet;
-  interface ModelIterator;
-  interface Simulation;
-  interface SimulationSet;
-  interface SimulationIterator;
-  interface UniformTimeCourse;
-  interface Task;
-  interface TaskSet;
-  interface TaskIterator;
+  interface BaseSet;
+  interface Change;
+  interface ChangeAttribute;
+  interface ChangeIterator;
+  interface ChangeSet;
+  interface ChangeXML;
+  interface ComputeChange;
+  interface Curve;
+  interface CurveIterator;
+  interface CurveSet;
   interface DataGenerator;
-  interface DataGeneratorSet;
   interface DataGeneratorIterator;
+  interface DataGeneratorSet;
+  interface DataSet;
+  interface DataSetIterator;
+  interface DataSetSet;
+  interface FunctionalRange;
+  interface IdentifiedElement;
+  interface IdentifiedElementIterator;
+  interface IdentifiedElementSet;
+  interface Model;
+  interface ModelIterator;
+  interface ModelSet;
+  interface NamedElement;
+  interface NamedElementIterator;
+  interface NamedElementSet;
+  interface NamedIdentifiedElement;
+  interface NamedIdentifiedElementIterator;
+  interface NamedIdentifiedElementSet;
   interface Output;
-  interface OutputSet;
   interface OutputIterator;
+  interface OutputSet;
+  interface Parameter;
+  interface ParameterIterator;
+  interface ParameterSet;
   interface Plot2D;
   interface Plot3D;
-  interface Report;
-  interface Change;
-  interface ChangeSet;
-  interface ChangeIterator;
-  interface ComputeChange;
-  interface ChangeAttribute;
-  interface AddXML;
-  interface ChangeXML;
+  interface Range;
+  interface RangeSet;
+  interface RangeIterator;
   interface RemoveXML;
-  interface Variable;
-  interface VariableSet;
-  interface VariableIterator;
-  interface Parameter;
-  interface ParameterSet;
-  interface ParameterIterator;
-  interface Curve;
-  interface CurveSet;
-  interface CurveIterator;
-  interface Surface;
-  interface SurfaceSet;
-  interface SurfaceIterator;
-  interface DataSet;
-  interface DataSetSet;
-  interface DataSetIterator;
   interface RepeatedAnalysis;
+  interface RepeatedTask;
+  interface Report;
+  interface SetValue;
+  interface SetValueIterator;
+  interface SetValueSet;
+  interface SEDMLElement;
+  interface Simulation;
+  interface SimulationIterator;
+  interface SimulationSet;
+  interface SubTask;
+  interface SubTaskSet;
+  interface SubTaskIterator;
+  interface Surface;
+  interface SurfaceIterator;
+  interface SurfaceSet;
+  interface Task;
+  interface TaskIterator;
+  interface TaskSet;
+  interface UniformRange;
+  interface UniformTimeCourse;
+  interface Variable;
+  interface VariableIterator;
+  interface VariableSet;
+  interface VectorRange;
 
   interface Bootstrap
     : XPCOM::IObject
@@ -220,6 +237,12 @@ module SProS
     RepeatedAnalysis createRepeatedAnalysis();
 
     /**
+     * Creates a new RepeatedTask. It is created with no parent
+     * and must be explicitly added.
+     */
+    RepeatedTask createRepeatedTask();
+
+    /**
      * Creates a new Task. It is created with no parent and must be
      * explicitly added.
      */
@@ -310,6 +333,36 @@ module SProS
     DataSet createDataSet();
 
     /**
+     * Creates a new FunctionalRange. It is created with no parent and must be
+     * explicitly added.
+     */
+    FunctionalRange createFunctionalRange();
+
+    /**
+     * Creates a new VectorRange. It is created with no parent and must be
+     * explicitly added.
+     */
+    VectorRange createVectorRange();
+
+    /**
+     * Creates a new UniformRange. It is created with no parent and must be
+     * explicitly added.
+     */
+    UniformRange createUniformRange();
+
+    /**
+     * Creates a new SetValue. It is created with no parent and must be
+     * explicitly added.
+     */
+    SetValue createSetValue();
+
+    /**
+     * Creates a new SubTask. It is created with no parent and must be
+     * explicitly added.
+     */
+    SubTask createSubTask();
+
+    /**
      * The original URL the document was loaded from, if known.
      */
     attribute wstring originalURL;
@@ -395,6 +448,48 @@ module SProS
      * such elements.
      */
     NamedIdentifiedElement nextNamedIdentifiedElement();
+  };
+
+  /**
+   * The base interface for all elements with an id attribute but no name.
+   */
+  interface IdentifiedElement
+    : Base
+  {
+    /**
+     * The unique identifier for the element.
+     */
+    attribute wstring id;
+  };
+
+  /**
+   * The base type for all sets of named, identified elements.
+   */
+  interface IdentifiedElementSet
+    : BaseSet
+  {
+    /**
+     * Iterates through all the named, identified elements...
+     */
+    IdentifiedElementIterator iterateIdentifiedElements();
+
+    /**
+     * Finds an element by identifier
+     */
+    IdentifiedElement getIdentifiedElementByIdentifier(in wstring idMatch);
+  };
+
+  /**
+   * Allows named, identified elements to be iterated.
+   */
+  interface IdentifiedElementIterator
+    : BaseIterator
+  {
+    /**
+     * Fetches the identified element, or null if there are no more
+     * such elements.
+     */
+    IdentifiedElement nextIdentifiedElement();
   };
 
   /**
@@ -524,10 +619,18 @@ module SProS
   };
 
   /**
+   * A SEDML AbstractTask
+   */
+  interface AbstractTask
+    : NamedIdentifiedElement
+  {
+  };
+
+  /**
    * A SEDML task.
    */
   interface Task
-    : NamedIdentifiedElement
+    : AbstractTask
   {
     /**
      * The referenced simulation, as an identifier.
@@ -551,6 +654,43 @@ module SProS
   };
 
   /**
+   * A SEDML RepeatedTask.
+   */
+  interface RepeatedTask
+    : AbstractTask
+  {
+    /**
+     * The referenced range, as an identifier.
+     */
+    attribute wstring rangeIdentifier;
+
+    /**
+     * The referenced range object.
+     */
+    attribute Range rangeReference;
+
+    /**
+     * Whether or not to reset the model.
+     */
+    attribute boolean resetModel;
+
+    /**
+     * The list of ranges over which to repeat.
+     */
+    readonly attribute RangeSet ranges;
+
+    /**
+     * The list of subTasks to perform.
+     */
+    readonly attribute SubTaskSet subTasks;
+
+    /**
+     * The list of SetValue changes to apply.
+     */
+    readonly attribute SetValueSet changes;
+  };
+
+  /**
    * A set of SEDML tasks.
    */
   interface TaskSet
@@ -564,7 +704,7 @@ module SProS
     /**
      * Find a task in the set by the identifier.
      */
-    Task getTaskByIdentifier(in wstring idMatch);
+    AbstractTask getTaskByIdentifier(in wstring idMatch);
   };
 
   /**
@@ -576,7 +716,122 @@ module SProS
     /**
      * Fetch the next task, or null if there are no more.
      */
-    Task nextTask();
+    AbstractTask nextTask();
+  };
+
+  /**
+   * The abstract type for a SED-ML Range.
+   */
+  interface Range
+    : IdentifiedElement
+  {
+  };
+
+  /**
+   * A set of SED-ML Ranges.
+   */
+  interface RangeSet
+    : IdentifiedElementSet
+  {
+    /**
+     * Iterate through the ranges in this set.
+     */
+    RangeIterator iterateRanges();
+
+    /**
+     * Find a range in the set by the identifier.
+     */
+    Range getRangeByIdentifier(in wstring idMatch);
+  };
+
+  /**
+   * An iterator through SED-ML ranges.
+   */
+  interface RangeIterator
+    : IdentifiedElementIterator
+  {
+    /**
+     * Fetch the next range, or null if there are no more.
+     */
+    Range nextRange();
+  };
+
+  /**
+   * A SED-ML functional range.
+   */
+  interface FunctionalRange
+    : Range
+  {
+    /**
+     * The name to make available in the MathML as the index.
+     */
+    attribute wstring indexName;
+
+    /**
+     * The list of all variables to make available to the MathML.
+     */
+    readonly attribute VariableSet listOfVariables;
+    
+    /**
+     * The MathML math element defining the next value from the range.
+     */
+    attribute mathml_dom::MathMLMathElement function;
+  };
+
+  /**
+   * A SED-ML vector range.
+   */
+  interface VectorRange
+    : Range
+  {
+    /**
+     * Retrieves the number of values in the range.
+     */
+    readonly attribute long numberOfValues;
+
+    /**
+     * Gets the value of the VectorRange at the specified index.
+     * Indices start at zero. Returns 0 if index out of range.
+     */
+    double valueAt(in long index);
+
+    /**
+     * Sets the value of the VectorRange at the specified index.
+     * Indices start at zero.
+     */
+    void setValueAt(in long index, in double value);
+
+    /**
+     * Inserts a value before the index specified. If index is <= 0, inserts at
+     * the beginning; if index is >= numberOfValues, inserts at the end of the
+     * list.
+     */
+    void insertValueBefore(in long index, in double value);
+    
+    /**
+     * Removes the value at the index specified, or does nothing if the index is
+     * out of range.
+     */
+    void removeValueAt(in long index);
+  };
+
+  interface UniformRange
+    : Range
+  {
+    /**
+     * The point at which to start the simulation.
+     */
+    attribute double start;
+
+    /**
+     * The point at which to end the simulation.
+     */
+    attribute double end;
+
+    /**
+     * The number of points between start and end.
+     */
+    attribute long numberOfPoints;
   };
 
   /**
@@ -824,7 +1079,7 @@ module SProS
      * A reference to the task (as a task object) from which this variable is
      * sourced (variables in DataGenerators only).
      */
-    attribute Task taskReference;
+    attribute AbstractTask taskReference;
   };
 
   /**
@@ -1045,5 +1300,97 @@ module SProS
      * Fetches the next DataSet, or null if there are no more.
      */
     DataSet nextDataSet();
+  };
+
+  /**
+   * A SED-ML SetValue element.
+   */
+  interface SetValue
+    : Base
+  {
+    /**
+     * The XPath expression describing the variable target.
+     */
+    attribute wstring target;
+
+    /**
+     * The referenced model, as an identifier.
+     */
+    attribute wstring modelReferenceIdentifier;
+
+    /**
+     * The referenced model object.
+     */
+    attribute Model modelReference;
+  };
+
+  /**
+   * A set of SetValues.
+   */
+  interface SetValueSet
+    : BaseSet
+  {
+    /**
+     * Iterate through all the SetValues in the set.
+     */
+    SetValueIterator iterateSetValues();
+  };
+
+  /**
+   * An iterator of SetValues
+   */
+  interface SetValueIterator
+    : BaseIterator
+  {
+    /**
+     * Fetch the next SetValue, or null if there are no more.
+     */
+    SetValue nextSetValue();
+  };
+
+  /**
+   * A SED-ML SubTask
+   */
+  interface SubTask
+    : Base
+  {
+    /**
+     * The referenced task, as an identifier string.
+     */
+    attribute wstring taskIdentifier;
+
+    /**
+     * The referenced task.
+     */
+    attribute AbstractTask taskReference;
+
+    /**
+     * The order value of this SubTask.
+     */
+    attribute long order;
+  };
+
+  /**
+   * A set of SubTasks.
+   */
+  interface SubTaskSet
+    : BaseSet
+  {
+    /**
+     * Iterate through all the SubTasks in the set.
+     */
+    SubTaskIterator iterateSubTasks();
+  };
+
+  /**
+   * An iterator of SubTasks
+   */
+  interface SubTaskIterator
+    : BaseIterator
+  {
+    /**
+     * Fetch the next SubTask, or null if there are no more.
+     */
+    SubTask nextSubTask();
   };
 };

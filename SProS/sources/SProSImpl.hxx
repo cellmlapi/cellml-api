@@ -133,7 +133,7 @@ private:
     CDA_SProSDOMIteratorBase* mIterator;
   };
   IteratorChildrenModificationListener icml;
-  friend class IteratorChildrenModificationListener;  
+  friend class IteratorChildrenModificationListener;
 };
 
 class CDA_SProSIteratorBase
@@ -312,7 +312,87 @@ public:
   CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator, SProS::NamedIdentifiedElementIterator);
 };
 
-#define SomeSProSSet(whatUpper) \
+class CDA_SProSIdentifiedElement
+  : public CDA_SProSBase,
+    public virtual iface::SProS::IdentifiedElement
+{
+public:
+  CDA_SProSIdentifiedElement(CDA_SProSBase* aParent,
+                             iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl) {}
+  ~CDA_SProSIdentifiedElement() {}
+
+  std::wstring
+  id() throw()
+  {
+    return mDomEl->getAttribute(L"id");
+  }
+
+  void
+  id(const std::wstring& aValue) throw()
+  {
+    mDomEl->setAttribute(L"id", aValue);
+  }
+};
+
+class CDA_SProSIdentifiedElementSet
+  : public CDA_SomeSet,
+    public virtual iface::SProS::IdentifiedElementSet
+{
+public:
+  CDA_SProSIdentifiedElementSet(CDA_SProSBase* aParent,
+                                const wchar_t* aListName,
+                                const wchar_t** aElNames)
+    : CDA_SomeSet(aParent, aListName, aElNames)
+  {
+  }
+
+  ~CDA_SProSIdentifiedElementSet()
+  {
+  }
+
+  already_AddRefd<iface::SProS::IdentifiedElementIterator>
+  iterateIdentifiedElements() throw();
+
+  already_AddRefd<iface::SProS::IdentifiedElement>
+  getIdentifiedElementByIdentifier(const std::wstring& aIdMatch)
+    throw();
+};
+
+#include <assert.h>
+
+class CDA_SProSIdentifiedElementIteratorBase
+  : public CDA_SProSIteratorBase, public virtual iface::SProS::IdentifiedElementIterator
+{
+public:
+  CDA_SProSIdentifiedElementIteratorBase(CDA_SomeSet* aS)
+    : CDA_SProSIteratorBase(aS)
+  {}
+  ~CDA_SProSIdentifiedElementIteratorBase() {}
+
+  already_AddRefd<iface::SProS::IdentifiedElement>
+  nextIdentifiedElement() throw()
+  {
+    RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
+    DECLARE_QUERY_INTERFACE(ret, el, SProS::IdentifiedElement);
+    assert(el == NULL || ret != NULL);
+    return ret;
+  }
+};
+
+class CDA_SProSIdentifiedElementIterator
+  : public CDA_SProSIdentifiedElementIteratorBase
+{
+public:
+  CDA_SProSIdentifiedElementIterator(CDA_SomeSet* aS)
+    : CDA_SProSIdentifiedElementIteratorBase(aS)
+  {}
+  ~CDA_SProSIdentifiedElementIterator() {}
+
+  CDA_IMPL_QI2(SProS::BaseIterator, SProS::IdentifiedElementIterator);
+};
+
+#define SomeSProSSetEx(whatUpper, whatUpperReturn) \
 class CDA_SProS##whatUpper##Set \
   : public CDA_SProSNamedIdentifiedElementSet, public iface::SProS::whatUpper##Set \
 { \
@@ -323,7 +403,7 @@ public: \
   CDA_IMPL_QI4(SProS::BaseSet, SProS::NamedElementSet, SProS::NamedIdentifiedElementSet, SProS::whatUpper##Set); \
   \
   already_AddRefd<iface::SProS::whatUpper##Iterator> iterate##whatUpper##s() throw(); \
-  already_AddRefd<iface::SProS::whatUpper> get##whatUpper##ByIdentifier(const std::wstring& aId) \
+  already_AddRefd<iface::SProS::whatUpperReturn> get##whatUpper##ByIdentifier(const std::wstring& aId) \
     throw() \
   { \
     RETURN_INTO_OBJREF(el, iface::SProS::NamedIdentifiedElement, getNamedIdentifiedElementByIdentifier(aId)); \
@@ -342,13 +422,16 @@ public: \
   CDA_IMPL_QI4(SProS::BaseIterator, SProS::NamedElementIterator, \
                SProS::NamedIdentifiedElementIterator, SProS::whatUpper##Iterator); \
   \
-  already_AddRefd<iface::SProS::whatUpper> next##whatUpper() throw()    \
+  already_AddRefd<iface::SProS::whatUpperReturn> next##whatUpper() throw()    \
   { \
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());  \
-    DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpper); \
+    DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpperReturn); \
     return ret; \
   } \
 };
+
+#define SomeSProSSet(whatUpper) SomeSProSSetEx(whatUpper, whatUpper)
+
 #define SomeAnonSProSSet(whatUpper) \
 class CDA_SProS##whatUpper##Set \
   : public CDA_SomeSet, public iface::SProS::whatUpper##Set \
@@ -389,7 +472,7 @@ class CDA_SProSParameter;
 class CDA_SProSChange;
 class CDA_SProSCurve;
 SomeSProSSet(Model);
-SomeSProSSet(Task);
+SomeSProSSetEx(Task, AbstractTask);
 SomeSProSSet(Simulation);
 SomeSProSSet(DataGenerator);
 SomeSProSSet(Output);
@@ -436,6 +519,13 @@ public:
   already_AddRefd<iface::SProS::Curve> createCurve() throw();
   already_AddRefd<iface::SProS::Surface> createSurface() throw();
   already_AddRefd<iface::SProS::DataSet> createDataSet() throw();
+  already_AddRefd<iface::SProS::FunctionalRange> createFunctionalRange() throw();
+  already_AddRefd<iface::SProS::RepeatedTask> createRepeatedTask() throw();
+  already_AddRefd<iface::SProS::SetValue> createSetValue() throw();
+  already_AddRefd<iface::SProS::SubTask> createSubTask() throw();
+  already_AddRefd<iface::SProS::UniformRange> createUniformRange() throw();
+  already_AddRefd<iface::SProS::VectorRange> createVectorRange() throw();
+
   std::wstring originalURL() throw();
   void originalURL(const std::wstring& aURL) throw();
 
@@ -553,19 +643,56 @@ public:
   }
 };
 
-class CDA_SProSTask
-  : public iface::SProS::Task,
-    public CDA_SProSNamedIdentifiedElement
+class CDA_SProSSetValue
+  : public iface::SProS::SetValue,
+    public CDA_SProSBase
 {
 public:
-  CDA_SProSTask(CDA_SProSBase* aParent,
+  CDA_SProSSetValue(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl) {}
+  ~CDA_SProSSetValue() {}
+
+  CDA_IMPL_QI2(SProS::Base, SProS::SetValue);
+
+  std::wstring target() throw();
+  void target(const std::wstring& aTarget) throw();
+
+  std::wstring modelReferenceIdentifier() throw();
+  void modelReferenceIdentifier(const std::wstring& aReference) throw();
+  already_AddRefd<iface::SProS::Model> modelReference() throw();
+  void modelReference(iface::SProS::Model* aModel) throw();
+};
+
+SomeAnonSProSSet(SetValue);
+
+class CDA_SProSAbstractTask
+  : public virtual iface::SProS::AbstractTask,
+    public virtual CDA_SProSNamedIdentifiedElement
+{
+public:
+  CDA_SProSAbstractTask(CDA_SProSBase* aParent,
                 iface::dom::Element* aEl)
     : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl)
   {
   }
+  ~CDA_SProSAbstractTask() {}
+};
+
+class CDA_SProSTask
+  : public iface::SProS::Task,
+    public CDA_SProSAbstractTask
+{
+public:
+  CDA_SProSTask(CDA_SProSBase* aParent,
+                iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl),
+      CDA_SProSAbstractTask(aParent, aEl)
+  {
+  }
   ~CDA_SProSTask() {}
 
-  CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Task);
+  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
+               SProS::AbstractTask, SProS::Task);
 
   std::wstring simulationReferenceIdentifier() throw();
   void simulationReferenceIdentifier(const std::wstring& aId) throw();
@@ -576,6 +703,115 @@ public:
   void modelReferenceIdentifier(const std::wstring& aId) throw();
   already_AddRefd<iface::SProS::Model> modelReference() throw();
   void modelReference(iface::SProS::Model* aModel) throw();
+};
+
+class CDA_SProSSubTask
+  : public iface::SProS::SubTask,
+    public CDA_SProSBase
+{
+public:
+  CDA_SProSSubTask(CDA_SProSBase* aParent,
+                   iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl)
+  {
+  }
+
+  ~CDA_SProSSubTask() {}
+
+  CDA_IMPL_QI2(SProS::Base, SProS::SubTask);
+
+  std::wstring taskIdentifier() throw();
+  void taskIdentifier(const std::wstring&) throw();
+  already_AddRefd<iface::SProS::AbstractTask> taskReference() throw();
+  void taskReference(iface::SProS::AbstractTask*) throw();
+
+  int32_t order() throw();
+  void order(int32_t aOrder) throw();
+};
+
+SomeAnonSProSSet(SubTask);
+
+class CDA_SProSRange
+  : public CDA_SProSIdentifiedElement, public virtual iface::SProS::Range
+{
+public:
+  CDA_SProSRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    : CDA_SProSIdentifiedElement(aParent, aEl) {}
+  ~CDA_SProSRange() {}
+};
+
+class CDA_SProSRangeSet
+  : public CDA_SProSIdentifiedElementSet, public iface::SProS::RangeSet
+{
+public:
+  CDA_SProSRangeSet(CDA_SProSBase* aParent);
+  ~CDA_SProSRangeSet() {}
+
+  CDA_IMPL_QI3(SProS::BaseSet, SProS::IdentifiedElementSet, SProS::RangeSet);
+  
+  already_AddRefd<iface::SProS::RangeIterator> iterateRanges() throw();
+  already_AddRefd<iface::SProS::Range> getRangeByIdentifier(const std::wstring& aId)
+    throw()
+  {
+    ObjRef<iface::SProS::Range> range
+      (QueryInterface(getIdentifiedElementByIdentifier(aId)));
+    range->add_ref();
+    return range.getPointer();
+  }
+};
+class CDA_SProSRangeIterator
+  : public CDA_SProSIdentifiedElementIteratorBase,
+    public virtual iface::SProS::RangeIterator
+{
+public:
+  CDA_SProSRangeIterator(CDA_SomeSet* aParent) :
+    CDA_SProSIdentifiedElementIteratorBase(aParent) {};
+  ~CDA_SProSRangeIterator() {}
+  
+  CDA_IMPL_QI3(SProS::BaseIterator, SProS::IdentifiedElementIterator,
+               SProS::RangeIterator);
+  
+  already_AddRefd<iface::SProS::Range> nextRange() throw()
+  {
+    ObjRef<iface::SProS::Range> el(QueryInterface(nextElement()));
+    el->add_ref();
+    return el.getPointer();
+  }
+};
+
+class CDA_SProSRepeatedTask
+  : public iface::SProS::RepeatedTask,
+    public CDA_SProSAbstractTask
+{
+public:
+  CDA_SProSRepeatedTask(CDA_SProSBase* aParent,
+                        iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl),
+      CDA_SProSAbstractTask(aParent, aEl), mRangeSet(this), mSubTaskSet(this),
+      mChangeSet(this)
+  {
+  }
+  ~CDA_SProSRepeatedTask() {}
+
+  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
+               SProS::AbstractTask, SProS::RepeatedTask);
+  
+  std::wstring rangeIdentifier() throw();
+  void rangeIdentifier(const std::wstring& aId) throw();
+
+  already_AddRefd<iface::SProS::Range> rangeReference() throw();
+  void rangeReference(iface::SProS::Range* aRange) throw();
+
+  bool resetModel() throw();
+  void resetModel(bool aValue) throw();
+  already_AddRefd<iface::SProS::RangeSet> ranges() throw();
+  already_AddRefd<iface::SProS::SubTaskSet> subTasks() throw();
+  already_AddRefd<iface::SProS::SetValueSet> changes() throw();
+
+private:
+  CDA_SProSRangeSet mRangeSet;
+  CDA_SProSSubTaskSet mSubTaskSet;
+  CDA_SProSSetValueSet mChangeSet;
 };
 
 class CDA_SProSDataGenerator
@@ -915,8 +1151,8 @@ public:
   void symbol(const std::wstring& aTarget) throw();
   std::wstring taskReferenceID() throw();
   void taskReferenceID(const std::wstring& aTarget) throw();
-  already_AddRefd<iface::SProS::Task> taskReference() throw();
-  void taskReference(iface::SProS::Task* aTask) throw(std::exception&);
+  already_AddRefd<iface::SProS::AbstractTask> taskReference() throw();
+  void taskReference(iface::SProS::AbstractTask* aTask) throw(std::exception&);
 };
 
 class CDA_SProSParameter
@@ -997,6 +1233,64 @@ public:
   void dataGeneratorID(const std::wstring&) throw();
   already_AddRefd<iface::SProS::DataGenerator> dataGen() throw();
   void dataGen(iface::SProS::DataGenerator*) throw();
+};
+
+class CDA_SProSFunctionalRange
+  : public CDA_SProSRange, public iface::SProS::FunctionalRange
+{
+public:
+  CDA_SProSFunctionalRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    :  CDA_SProSRange(aParent, aEl), mListOfVariables(this) {}
+  ~CDA_SProSFunctionalRange() {}
+
+  CDA_IMPL_QI4(SProS::Base, SProS::IdentifiedElement, SProS::Range, SProS::FunctionalRange);
+
+  std::wstring indexName() throw();
+  void indexName(const std::wstring& aName) throw();
+  
+  already_AddRefd<iface::SProS::VariableSet> listOfVariables() throw();
+  already_AddRefd<iface::mathml_dom::MathMLMathElement> function() throw();
+  void function(iface::mathml_dom::MathMLMathElement*) throw();
+
+private:
+  already_AddRefd<iface::dom::Element> findOrCreateFunction() throw();
+
+  CDA_SProSVariableSet mListOfVariables;
+};
+
+class CDA_SProSUniformRange
+  : public CDA_SProSRange, public iface::SProS::UniformRange
+{
+public:
+  CDA_SProSUniformRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    : CDA_SProSRange(aParent, aEl) {}
+  ~CDA_SProSUniformRange() {}
+
+  CDA_IMPL_QI4(SProS::Base, SProS::IdentifiedElement, SProS::Range, SProS::UniformRange);
+
+  double start() throw();
+  void start(double aValue) throw();
+  double end() throw();
+  void end(double aValue) throw();
+  int32_t numberOfPoints() throw();
+  void numberOfPoints(int32_t aValue) throw();
+};
+
+class CDA_SProSVectorRange
+  : public CDA_SProSRange, public iface::SProS::VectorRange
+{
+public:
+  CDA_SProSVectorRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    : CDA_SProSRange(aParent, aEl) {}
+  ~CDA_SProSVectorRange() {}
+
+  CDA_IMPL_QI4(SProS::Base, SProS::IdentifiedElement, SProS::Range, SProS::VectorRange);
+
+  int32_t numberOfValues() throw();
+  double valueAt(int32_t aIndex) throw();
+  void setValueAt(int32_t aIndex, double aValue) throw();
+  void insertValueBefore(int32_t aIndex, double aValue) throw();
+  void removeValueAt(int32_t aIndex) throw();
 };
 
 #if 0

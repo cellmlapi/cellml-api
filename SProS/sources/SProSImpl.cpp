@@ -1196,6 +1196,66 @@ CDA_SProSSEDMLElement::createDataSet()
   return new CDA_SProSDataSet(NULL, el);
 }
 
+already_AddRefd<iface::SProS::FunctionalRange>
+CDA_SProSSEDMLElement::createFunctionalRange()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"functionalRange"));
+
+  return new CDA_SProSFunctionalRange(NULL, el);
+}
+
+already_AddRefd<iface::SProS::RepeatedTask>
+CDA_SProSSEDMLElement::createRepeatedTask()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"repeatedTask"));
+
+  return new CDA_SProSRepeatedTask(NULL, el);
+}
+
+already_AddRefd<iface::SProS::SetValue>
+CDA_SProSSEDMLElement::createSetValue()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"setValue"));
+
+  return new CDA_SProSSetValue(NULL, el);
+}
+
+already_AddRefd<iface::SProS::SubTask>
+CDA_SProSSEDMLElement::createSubTask()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"subTask"));
+
+  return new CDA_SProSSubTask(NULL, el);
+}
+
+already_AddRefd<iface::SProS::UniformRange>
+CDA_SProSSEDMLElement::createUniformRange()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"uniformRange"));
+
+  return new CDA_SProSUniformRange(NULL, el);
+}
+
+already_AddRefd<iface::SProS::VectorRange>
+CDA_SProSSEDMLElement::createVectorRange()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"vectorRange"));
+
+  return new CDA_SProSVectorRange(NULL, el);
+}
+
 std::wstring CDA_SProSSEDMLElement::originalURL()
   throw()
 {
@@ -1234,6 +1294,35 @@ CDA_SProSNamedIdentifiedElementSet::getNamedIdentifiedElementByIdentifier(const 
   {
     RETURN_INTO_OBJREF(el, iface::SProS::NamedIdentifiedElement,
                        it->nextNamedIdentifiedElement());
+    if (el == NULL)
+      return NULL;
+
+    if (el->id() == aIdMatch)
+    {
+      el->add_ref();
+      return el.getPointer();
+    }
+  }
+}
+
+already_AddRefd<iface::SProS::IdentifiedElementIterator>
+CDA_SProSIdentifiedElementSet::iterateIdentifiedElements()
+  throw()
+{
+  findOrCreateListElement();
+  return new CDA_SProSIdentifiedElementIterator(this);
+}
+
+already_AddRefd<iface::SProS::IdentifiedElement>
+CDA_SProSIdentifiedElementSet::getIdentifiedElementByIdentifier(const std::wstring& aIdMatch)
+  throw()
+{
+  RETURN_INTO_OBJREF(it, iface::SProS::IdentifiedElementIterator,
+                     iterateIdentifiedElements());
+  while (true)
+  {
+    RETURN_INTO_OBJREF(el, iface::SProS::IdentifiedElement,
+                       it->nextIdentifiedElement());
     if (el == NULL)
       return NULL;
 
@@ -1434,6 +1523,51 @@ CDA_SProSUniformTimeCourseBase::numberOfPoints()
 SomeSProSSet(Task, L"listOfTasks", L"task");
 
 std::wstring
+CDA_SProSSetValue::target() throw()
+{
+  return mDomEl->getAttribute(L"target");
+}
+
+void
+CDA_SProSSetValue::target(const std::wstring& aTarget)
+  throw()
+{
+  mDomEl->setAttribute(L"target", aTarget);
+}
+
+std::wstring
+CDA_SProSSetValue::modelReferenceIdentifier()
+  throw()
+{
+  return mDomEl->getAttribute(L"modelReference");
+}
+
+void
+CDA_SProSSetValue::modelReferenceIdentifier(const std::wstring& aReference)
+  throw()
+{
+  mDomEl->setAttribute(L"modelReference", aReference);
+}
+
+already_AddRefd<iface::SProS::Model>
+CDA_SProSSetValue::modelReference() throw()
+{
+  if (!mParent || !mParent->mParent || !mParent->mParent->mParent)
+    return NULL;
+
+  ObjRef<iface::SProS::ModelSet>
+    models(static_cast<CDA_SProSSEDMLElement*>(mParent->mParent->mParent)->models());
+
+  return models->getModelByIdentifier(modelReferenceIdentifier());
+}
+
+void
+CDA_SProSSetValue::modelReference(iface::SProS::Model* aModel) throw()
+{
+  modelReferenceIdentifier(aModel->id());
+}
+
+std::wstring
 CDA_SProSTask::simulationReferenceIdentifier()
   throw()
 {
@@ -1497,6 +1631,136 @@ CDA_SProSTask::modelReference(iface::SProS::Model* aSim) throw()
 {
   RETURN_INTO_WSTRING(ident, aSim->id());
   modelReferenceIdentifier(ident.c_str());
+}
+
+std::wstring
+CDA_SProSSubTask::taskIdentifier()
+  throw()
+{
+  return mDomEl->getAttribute(L"task");
+}
+
+void
+CDA_SProSSubTask::taskIdentifier(const std::wstring& aTask)
+  throw()
+{
+  mDomEl->setAttribute(L"task", aTask);
+}
+
+already_AddRefd<iface::SProS::AbstractTask>
+CDA_SProSSubTask::taskReference()
+  throw()
+{
+  if (!mParent || !mParent->mParent)
+    return NULL;
+
+  ObjRef<iface::SProS::TaskSet>
+    tasks(static_cast<CDA_SProSSEDMLElement*>(mParent->mParent)->tasks());
+
+  return tasks->getTaskByIdentifier(taskIdentifier());
+}
+
+void
+CDA_SProSSubTask::taskReference(iface::SProS::AbstractTask* aTask) throw()
+{
+  taskIdentifier(aTask->id());
+}
+
+int32_t
+CDA_SProSSubTask::order() throw()
+{
+  return wcstol(mDomEl->getAttribute(L"order").c_str(), NULL, 10);
+}
+
+void
+CDA_SProSSubTask::order(int32_t aOrder) throw()
+{
+  wchar_t buf[64];
+  any_swprintf(buf, 64, L"%d", aOrder);
+  mDomEl->setAttribute(L"order", buf);
+}
+
+#define SetValueTypes L"setValue"
+SomeAnonSProSSet(SetValue, L"listOfChanges", SetValueTypes);
+
+#define SubTaskTypes L"subTask"
+SomeAnonSProSSet(SubTask, L"listOfSubTasks", SubTaskTypes);
+
+const wchar_t* sRangeElNames[] = {L"functionalRange", L"uniformRange", L"vectorRange", NULL};
+
+CDA_SProSRangeSet::CDA_SProSRangeSet(CDA_SProSBase* aParent)
+  : CDA_SProSIdentifiedElementSet(aParent, L"listOf", sRangeElNames) {}
+
+already_AddRefd<iface::SProS::RangeIterator>
+CDA_SProSRangeSet::iterateRanges() throw()
+{
+  findOrCreateListElement();
+  return new CDA_SProSRangeIterator(this);
+}
+
+
+std::wstring
+CDA_SProSRepeatedTask::rangeIdentifier() throw()
+{
+  return mDomEl->getAttribute(L"range");
+}
+
+void
+CDA_SProSRepeatedTask::rangeIdentifier(const std::wstring& aId) throw()
+{
+  mDomEl->setAttribute(L"range", aId);
+}
+
+already_AddRefd<iface::SProS::Range>
+CDA_SProSRepeatedTask::rangeReference() throw()
+{
+  if (mParent == NULL)
+    return NULL;
+
+  RETURN_INTO_WSTRING(sr, rangeIdentifier());
+  RETURN_INTO_OBJREF(ss, iface::SProS::RangeSet,
+                     ranges());
+  return ss->getRangeByIdentifier(sr);
+}
+
+void
+CDA_SProSRepeatedTask::rangeReference(iface::SProS::Range* aRange) throw()
+{
+  RETURN_INTO_WSTRING(ident, aRange->id());
+  rangeIdentifier(ident);
+}
+
+bool
+CDA_SProSRepeatedTask::resetModel() throw()
+{
+  return mDomEl->getAttribute(L"resetModel") == L"true";
+}
+
+void
+CDA_SProSRepeatedTask::resetModel(bool aValue) throw()
+{
+  mDomEl->setAttribute(L"resetModel", aValue ? L"true" : L"false");
+}
+
+already_AddRefd<iface::SProS::RangeSet>
+CDA_SProSRepeatedTask::ranges() throw()
+{
+  add_ref();
+  return &mRangeSet;
+}
+
+already_AddRefd<iface::SProS::SubTaskSet>
+CDA_SProSRepeatedTask::subTasks() throw()
+{
+  add_ref();
+  return &mSubTaskSet;
+}
+
+already_AddRefd<iface::SProS::SetValueSet>
+CDA_SProSRepeatedTask::changes() throw()
+{
+  add_ref();
+  return &mChangeSet;
 }
 
 already_AddRefd<iface::SProS::ParameterSet>
@@ -1700,7 +1964,7 @@ CDA_SProSVariable::taskReferenceID(const std::wstring& aRefID)
   mDomEl->setAttribute(L"taskReference", aRefID);
 }
 
-already_AddRefd<iface::SProS::Task>
+already_AddRefd<iface::SProS::AbstractTask>
 CDA_SProSVariable::taskReference()
   throw()
 {
@@ -1723,7 +1987,7 @@ CDA_SProSVariable::taskReference()
 }
 
 void
-CDA_SProSVariable::taskReference(iface::SProS::Task* aTask)
+CDA_SProSVariable::taskReference(iface::SProS::AbstractTask* aTask)
   throw(std::exception&)
 {
   if (mParent == NULL || mParent->mParent == NULL)
@@ -1736,7 +2000,7 @@ CDA_SProSVariable::taskReference(iface::SProS::Task* aTask)
   if (sedml == NULL)
     throw iface::SProS::SProSException();
 
-  if (CDA_objcmp(static_cast<CDA_SProSTask*>(aTask)->mParent, sedml))
+  if (CDA_objcmp(dynamic_cast<CDA_SProSAbstractTask*>(aTask)->mParent, sedml))
     throw iface::SProS::SProSException();
 
   RETURN_INTO_WSTRING(tid, aTask->id());
@@ -1988,6 +2252,265 @@ CDA_SProSDataSetSet::iterateDataSets()
 {
   findOrCreateListElement();
   return new CDA_SProSDataSetIterator(this);
+}
+
+std::wstring
+CDA_SProSFunctionalRange::indexName()
+  throw()
+{
+  return mDomEl->getAttribute(L"index");
+}
+
+void
+CDA_SProSFunctionalRange::indexName(const std::wstring& aName)
+  throw()
+{
+  mDomEl->setAttribute(L"index", aName);
+}
+
+already_AddRefd<iface::SProS::VariableSet>
+CDA_SProSFunctionalRange::listOfVariables()
+  throw()
+{
+  add_ref();
+  return &mListOfVariables;
+}
+
+already_AddRefd<iface::dom::Element>
+CDA_SProSFunctionalRange::findOrCreateFunction()
+  throw()
+{
+  for (ObjRef<iface::dom::Node> cn = mDomEl->firstChild(); cn; cn = cn->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(cn));
+    if (el == NULL)
+      continue;
+
+    if (el->namespaceURI() != SEDML_NS ||
+        el->localName() != L"function")
+      continue;
+    
+    el->add_ref();
+    return el.getPointer();
+  }
+
+  ObjRef<iface::dom::Document> doc(mDomEl->ownerDocument());
+  ObjRef<iface::dom::Element> el(doc->createElementNS(SEDML_NS, L"function"));
+
+  mDomEl->appendChild(el)->release_ref();
+
+  el->add_ref();
+  return el.getPointer();
+}
+
+already_AddRefd<iface::mathml_dom::MathMLMathElement>
+CDA_SProSFunctionalRange::function()
+  throw()
+{
+  ObjRef<iface::dom::Element> functionEl(findOrCreateFunction());
+
+  for (ObjRef<iface::dom::Node> cn = functionEl->firstChild(); cn;
+       cn = cn->nextSibling())
+  {
+    ObjRef<iface::mathml_dom::MathMLMathElement> mel(QueryInterface(cn));
+    if (mel == NULL)
+      continue;
+    mel->add_ref();
+    return mel.getPointer();
+  }
+
+  return NULL;
+}
+
+void
+CDA_SProSFunctionalRange::function(iface::mathml_dom::MathMLMathElement* aMathEl)
+  throw()
+{
+  ObjRef<iface::dom::Element> functionEl(findOrCreateFunction());
+  ObjRef<iface::dom::Node> cnNext;
+  for (ObjRef<iface::dom::Node> cn = functionEl->firstChild(); cn;
+       cn = cnNext)
+  {
+    cnNext = cn->nextSibling();
+    ObjRef<iface::mathml_dom::MathMLMathElement> mel(QueryInterface(cn));
+    if (mel != NULL)
+      functionEl->removeChild(mel)->release_ref();
+  }
+  functionEl->appendChild(aMathEl);
+}
+
+double
+CDA_SProSUniformRange::start() throw()
+{
+  return wcstod(mDomEl->getAttribute(L"start").c_str(), NULL);
+}
+
+void
+CDA_SProSUniformRange::start(double aValue) throw()
+{
+  wchar_t buf[64];
+  any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%g", aValue);
+  mDomEl->setAttribute(L"start", buf);
+}
+
+double
+CDA_SProSUniformRange::end()
+  throw()
+{
+  return wcstod(mDomEl->getAttribute(L"end").c_str(), NULL);
+}
+
+void
+CDA_SProSUniformRange::end(double aValue)
+  throw()
+{
+  wchar_t buf[64];
+  any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%g", aValue);
+  mDomEl->setAttribute(L"end", buf);
+}
+
+int32_t
+CDA_SProSUniformRange::numberOfPoints()
+  throw()
+{
+  return wcstol(mDomEl->getAttribute(L"numberOfPoints").c_str(), NULL, 10);
+}
+
+void
+CDA_SProSUniformRange::numberOfPoints(int32_t aPoints)
+  throw()
+{
+  wchar_t buf[64];
+  any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%d", aPoints);
+  mDomEl->setAttribute(L"numberOfPoints", buf);
+}
+
+int32_t
+CDA_SProSVectorRange::numberOfValues()
+  throw()
+{
+  int32_t count = 0;
+  for (ObjRef<iface::dom::Node> n = mDomEl->firstChild(); n; n = n->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(n));
+    if (el == NULL)
+      continue;
+    if (el->namespaceURI() != SEDML_NS || el->localName() != L"value")
+      continue;
+    count++;
+  }
+
+  return count;
+}
+
+double
+CDA_SProSVectorRange::valueAt(int32_t aIndex) throw()
+{
+  uint32_t count = 0;
+  for (ObjRef<iface::dom::Node> n = mDomEl->firstChild(); n; n = n->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(n));
+    if (el == NULL)
+      continue;
+    if (el->namespaceURI() != SEDML_NS || el->localName() != L"value")
+      continue;
+    if (count == aIndex)
+    {
+      std::wstring text;
+      for (ObjRef<iface::dom::Node> n2 = el->firstChild(); n2; n2 = n2->nextSibling())
+      {
+        ObjRef<iface::dom::Text> t(QueryInterface(n2));
+        if (t)
+          text += t->data();
+      }
+      const wchar_t* textCStr = text.c_str();
+      while (*textCStr == L' ' || *textCStr == L'\t' ||
+             *textCStr == L'\n' || *textCStr == L'\r')
+        textCStr++;
+      return wcstod(textCStr, NULL);
+    }
+    count++;
+  }
+
+  return 0.0;
+}
+
+void
+CDA_SProSVectorRange::setValueAt(int32_t aIndex, double aValue) throw()
+{
+  uint32_t count = 0;
+  for (ObjRef<iface::dom::Node> n = mDomEl->firstChild(); n; n = n->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(n));
+    if (el == NULL)
+      continue;
+    if (el->namespaceURI() != SEDML_NS || el->localName() != L"value")
+      continue;
+    if (count == aIndex)
+    {
+      for (ObjRef<iface::dom::Node> n2 = el->firstChild(); n2; n2 = n2->nextSibling())
+      {
+        ObjRef<iface::dom::Text> t(QueryInterface(n2));
+        if (t)
+          el->removeChild(t)->release_ref();
+      }
+      ObjRef<iface::dom::Document> doc(el->ownerDocument());
+      wchar_t buf[64];
+      any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%g", aValue);
+      ObjRef<iface::dom::Text> newText(doc->createTextNode(buf));
+      el->appendChild(newText);
+      return;
+    }
+    count++;
+  }
+}
+
+void
+CDA_SProSVectorRange::insertValueBefore(int32_t aIndex, double aValue) throw()
+{
+  ObjRef<iface::dom::Document> doc(mDomEl->ownerDocument());
+
+  wchar_t buf[64];
+  any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%g", aValue);
+  ObjRef<iface::dom::Text> newText(doc->createTextNode(buf));
+  ObjRef<iface::dom::Element> valueEl(doc->createElementNS(SEDML_NS, L"value"));
+  valueEl->appendChild(newText)->release_ref();
+
+  uint32_t count = 0;
+  for (ObjRef<iface::dom::Node> n = mDomEl->firstChild(); n; n = n->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(n));
+    if (el == NULL)
+      continue;
+    if (el->namespaceURI() != SEDML_NS || el->localName() != L"value")
+      continue;
+    if (count < aIndex)
+    {
+      mDomEl->insertBefore(valueEl, el)->release_ref();
+      return;
+    }
+    count++;
+  }
+  mDomEl->appendChild(valueEl)->release_ref();
+}
+
+void
+CDA_SProSVectorRange::removeValueAt(int32_t aIndex) throw()
+{
+  uint32_t count = 0;
+  for (ObjRef<iface::dom::Node> n = mDomEl->firstChild(); n; n = n->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(n));
+    if (el == NULL)
+      continue;
+    if (el->namespaceURI() != SEDML_NS || el->localName() != L"value")
+      continue;
+    if (count == aIndex)
+    {
+      mDomEl->removeChild(el)->release_ref();
+      return;
+    }
+  }
 }
 
 #include "IfaceCellML_APISPEC.hxx"
