@@ -1257,6 +1257,13 @@ public:
     return mPtr;
   }
 
+  T* returnNewReference()
+  {
+    if (mPtr)
+      mPtr->add_ref();
+    return mPtr;
+  }
+
   T* getPointer() const
   {
     return mPtr;

@@ -174,11 +174,20 @@ main(int argc, char** argv)
   RETURN_INTO_OBJREF(ti, iface::SProS::TaskIterator, ts->iterateTasks());
   while (true)
   {
-    RETURN_INTO_OBJREF(t, iface::SProS::Task, ti->nextTask());
-    if (t == NULL)
+    RETURN_INTO_OBJREF(at, iface::SProS::AbstractTask, ti->nextTask());
+    if (at == NULL)
       break;
+
+    ObjRef<iface::SProS::Task> t(QueryInterface(at));
+    if (t == NULL)
+    {
+      taskCount++;
+      continue;
+    }
+
     RETURN_INTO_OBJREF(s, iface::SProS::Simulation, t->simulationReference());
     DECLARE_QUERY_INTERFACE_OBJREF(ssi, s, SProS::RepeatedAnalysis);
+
     if (ssi == NULL)
       taskCount++;
     else
@@ -202,7 +211,9 @@ main(int argc, char** argv)
     printf("Failure processing the model; exception was raised.\n");
     exit(1);
   }
+
   while (monitor.tasksFinished < taskCount)
     sleep(1);
+
   monitor.printResults();
 }

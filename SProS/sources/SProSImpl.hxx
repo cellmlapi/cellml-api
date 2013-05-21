@@ -407,7 +407,7 @@ public: \
     throw() \
   { \
     RETURN_INTO_OBJREF(el, iface::SProS::NamedIdentifiedElement, getNamedIdentifiedElementByIdentifier(aId)); \
-    DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpper); \
+    DECLARE_QUERY_INTERFACE(ret, el, SProS::whatUpperReturn); \
     return ret; \
   } \
 }; \
@@ -651,16 +651,23 @@ public:
   CDA_SProSSetValue(CDA_SProSBase* aParent, iface::dom::Element* aEl)
     : CDA_SProSBase(aParent, aEl) {}
   ~CDA_SProSSetValue() {}
-
+  
   CDA_IMPL_QI2(SProS::Base, SProS::SetValue);
-
+  
   std::wstring target() throw();
   void target(const std::wstring& aTarget) throw();
-
+  
   std::wstring modelReferenceIdentifier() throw();
   void modelReferenceIdentifier(const std::wstring& aReference) throw();
+  
   already_AddRefd<iface::SProS::Model> modelReference() throw();
   void modelReference(iface::SProS::Model* aModel) throw();
+  
+  std::wstring rangeIdentifier() throw();
+  void rangeIdentifier(const std::wstring& aRangeReference) throw();
+  
+  already_AddRefd<iface::SProS::Range> rangeReference() throw();
+  void rangeReference(iface::SProS::Range*) throw();
 };
 
 SomeAnonSProSSet(SetValue);
@@ -755,8 +762,7 @@ public:
   {
     ObjRef<iface::SProS::Range> range
       (QueryInterface(getIdentifiedElementByIdentifier(aId)));
-    range->add_ref();
-    return range.getPointer();
+    return range.returnNewReference();
   }
 };
 class CDA_SProSRangeIterator
@@ -774,8 +780,7 @@ public:
   already_AddRefd<iface::SProS::Range> nextRange() throw()
   {
     ObjRef<iface::SProS::Range> el(QueryInterface(nextElement()));
-    el->add_ref();
-    return el.getPointer();
+    return el.returnNewReference();
   }
 };
 
@@ -1248,7 +1253,7 @@ public:
   std::wstring indexName() throw();
   void indexName(const std::wstring& aName) throw();
   
-  already_AddRefd<iface::SProS::VariableSet> listOfVariables() throw();
+  already_AddRefd<iface::SProS::VariableSet> variables() throw();
   already_AddRefd<iface::mathml_dom::MathMLMathElement> function() throw();
   void function(iface::mathml_dom::MathMLMathElement*) throw();
 

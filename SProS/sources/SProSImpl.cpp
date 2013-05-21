@@ -60,8 +60,7 @@ static already_AddRefd<CDA_SProSPrecomputedNodeList> allNodesFromNamedElements(i
     }
   }
 
-  pnl->add_ref();
-  return pnl.getPointer();
+  return pnl.returnNewReference();
 }
 
 CDA_SProSPrecomputedNodeList::~CDA_SProSPrecomputedNodeList()
@@ -151,8 +150,7 @@ CDA_SProSBase::reparent(CDA_SProSBase* aParent)
 already_AddRefd<iface::dom::Element>
 CDA_SProSBase::domElement() throw()
 {
-  mDomEl->add_ref();
-  return mDomEl.getPointer();
+  return mDomEl.returnNewReference();
 }
 
 already_AddRefd<iface::dom::NodeList>
@@ -482,6 +480,41 @@ makevariable(CDA_SProSBase* aParent, iface::dom::Element* aEl)
   return new CDA_SProSVariable(aParent, aEl);
 }
 
+static already_AddRefd<CDA_SProSBase>
+makefunctionalRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSFunctionalRange(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
+makerepeatedTask(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSRepeatedTask(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
+makesetValue(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSSetValue(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
+makesubTask(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSSubTask(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
+makeuniformRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSUniformRange(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
+makevectorRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSVectorRange(aParent, aEl);
+}
 
 // Assumed to be sorted.
 static BaseElementConstructors sBaseConstructors[] = {
@@ -492,20 +525,26 @@ static BaseElementConstructors sBaseConstructors[] = {
   {L"curve", makecurve},
   {L"dataGenerator", makedataGenerator},
   {L"dataSet", makedataSet},
+  {L"functionalRange", makefunctionalRange},
   {L"model", makemodel},
   {L"parameter", makeparameter},
   {L"plot2D", makeplot2D},
   {L"plot3D", makeplot3D},
   {L"removeXML", makeremoveXML},
   {L"repeatedAnalysis", makerepeatedAnalysis},
+  {L"repeatedTask", makerepeatedTask},
   {L"report", makereport},
   // Old name for repeatedAnalysis. Will be removed in the future.
   {L"samplingSensitivityAnalysis", makerepeatedAnalysis},
   {L"sedML", makesedML},
+  {L"setValue", makesetValue},
+  {L"subTask", makesubTask},
   {L"surface", makesurface},
   {L"task", maketask},
+  {L"uniformRange", makeuniformRange},
   {L"uniformTimeCourse", makeuniformTimeCourse},
-  {L"variable", makevariable}
+  {L"variable", makevariable},
+  {L"vectorRange", makevectorRange}
 };
 
 already_AddRefd<CDA_SProSBase>
@@ -642,8 +681,7 @@ CDA_SProSDOMIteratorBase::fetchNextElement()
       nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
     }
     
-    mPrevElement->add_ref();
-    return mPrevElement.getPointer();
+    return mPrevElement.returnNewReference();
 }
 
 already_AddRefd<iface::dom::Element>
@@ -709,8 +747,7 @@ CDA_SProSDOMIteratorBase::fetchNextElement(const std::wstring& aWantEl)
       nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
     }
 
-    mPrevElement->add_ref();
-    return mPrevElement.getPointer();
+    return mPrevElement.returnNewReference();
 }
 
 void
@@ -1299,8 +1336,7 @@ CDA_SProSNamedIdentifiedElementSet::getNamedIdentifiedElementByIdentifier(const 
 
     if (el->id() == aIdMatch)
     {
-      el->add_ref();
-      return el.getPointer();
+      return el.returnNewReference();
     }
   }
 }
@@ -1328,8 +1364,7 @@ CDA_SProSIdentifiedElementSet::getIdentifiedElementByIdentifier(const std::wstri
 
     if (el->id() == aIdMatch)
     {
-      el->add_ref();
-      return el.getPointer();
+      return el.returnNewReference();
     }
   }
 }
@@ -1520,7 +1555,9 @@ CDA_SProSUniformTimeCourseBase::numberOfPoints()
   RETURN_INTO_WSTRING(it, mDomEl->getAttribute(L"numberOfPoints"));
   return wcstoul(it.c_str(), NULL, 10);
 }
-SomeSProSSet(Task, L"listOfTasks", L"task");
+
+#define TaskTypes L"task", L"repeatedTask"
+SomeSProSSet(Task, L"listOfTasks", TaskTypes);
 
 std::wstring
 CDA_SProSSetValue::target() throw()
@@ -1552,11 +1589,11 @@ CDA_SProSSetValue::modelReferenceIdentifier(const std::wstring& aReference)
 already_AddRefd<iface::SProS::Model>
 CDA_SProSSetValue::modelReference() throw()
 {
-  if (!mParent || !mParent->mParent || !mParent->mParent->mParent)
+  if (!mParent || !mParent->mParent)
     return NULL;
 
   ObjRef<iface::SProS::ModelSet>
-    models(static_cast<CDA_SProSSEDMLElement*>(mParent->mParent->mParent)->models());
+    models(static_cast<CDA_SProSSEDMLElement*>(mParent->mParent)->models());
 
   return models->getModelByIdentifier(modelReferenceIdentifier());
 }
@@ -1566,6 +1603,41 @@ CDA_SProSSetValue::modelReference(iface::SProS::Model* aModel) throw()
 {
   modelReferenceIdentifier(aModel->id());
 }
+
+//
+
+std::wstring
+CDA_SProSSetValue::rangeIdentifier()
+  throw()
+{
+  return mDomEl->getAttribute(L"range");
+}
+
+void
+CDA_SProSSetValue::rangeIdentifier(const std::wstring& aReference)
+  throw()
+{
+  mDomEl->setAttribute(L"range", aReference);
+}
+
+already_AddRefd<iface::SProS::Range>
+CDA_SProSSetValue::rangeReference() throw()
+{
+  if (!mParent)
+    return NULL;
+
+  ObjRef<iface::SProS::RangeSet>
+    ranges(unsafe_dynamic_cast<CDA_SProSRepeatedTask*>(mParent)->ranges());
+
+  return ranges->getRangeByIdentifier(rangeIdentifier());
+}
+
+void
+CDA_SProSSetValue::rangeReference(iface::SProS::Range* aRange) throw()
+{
+  rangeIdentifier(aRange->id());
+}
+
 
 std::wstring
 CDA_SProSTask::simulationReferenceIdentifier()
@@ -1689,7 +1761,7 @@ SomeAnonSProSSet(SubTask, L"listOfSubTasks", SubTaskTypes);
 const wchar_t* sRangeElNames[] = {L"functionalRange", L"uniformRange", L"vectorRange", NULL};
 
 CDA_SProSRangeSet::CDA_SProSRangeSet(CDA_SProSBase* aParent)
-  : CDA_SProSIdentifiedElementSet(aParent, L"listOf", sRangeElNames) {}
+  : CDA_SProSIdentifiedElementSet(aParent, L"listOfRanges", sRangeElNames) {}
 
 already_AddRefd<iface::SProS::RangeIterator>
 CDA_SProSRangeSet::iterateRanges() throw()
@@ -1786,8 +1858,7 @@ CDA_SProSDataGenerator::math() throw()
     DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
     if (el == NULL)
       continue;
-    el->add_ref();
-    return el.getPointer();
+    return el.returnNewReference();
   }
   return NULL;
 }
@@ -1880,8 +1951,7 @@ CDA_SProSComputeChange::math() throw()
     DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
     if (el == NULL)
       continue;
-    el->add_ref();
-    return el.getPointer();
+    return el.returnNewReference();
   }
   return NULL;
 }
@@ -2227,8 +2297,7 @@ CDA_SProSDataSet::dataGen(void) throw()
   RETURN_INTO_OBJREF(dgs, iface::SProS::DataGeneratorSet, model->generators());
   RETURN_INTO_OBJREF(dg, iface::SProS::DataGenerator, dgs->getDataGeneratorByIdentifier(dgid.c_str()));
 
-  dg->add_ref();
-  return dg.getPointer();
+  return dg.returnNewReference();
 }
 
 void
@@ -2269,7 +2338,7 @@ CDA_SProSFunctionalRange::indexName(const std::wstring& aName)
 }
 
 already_AddRefd<iface::SProS::VariableSet>
-CDA_SProSFunctionalRange::listOfVariables()
+CDA_SProSFunctionalRange::variables()
   throw()
 {
   add_ref();
@@ -2290,8 +2359,7 @@ CDA_SProSFunctionalRange::findOrCreateFunction()
         el->localName() != L"function")
       continue;
     
-    el->add_ref();
-    return el.getPointer();
+    return el.returnNewReference();
   }
 
   ObjRef<iface::dom::Document> doc(mDomEl->ownerDocument());
@@ -2299,8 +2367,7 @@ CDA_SProSFunctionalRange::findOrCreateFunction()
 
   mDomEl->appendChild(el)->release_ref();
 
-  el->add_ref();
-  return el.getPointer();
+  return el.returnNewReference();
 }
 
 already_AddRefd<iface::mathml_dom::MathMLMathElement>
@@ -2315,8 +2382,8 @@ CDA_SProSFunctionalRange::function()
     ObjRef<iface::mathml_dom::MathMLMathElement> mel(QueryInterface(cn));
     if (mel == NULL)
       continue;
-    mel->add_ref();
-    return mel.getPointer();
+
+    return mel.returnNewReference();
   }
 
   return NULL;
@@ -2458,7 +2525,7 @@ CDA_SProSVectorRange::setValueAt(int32_t aIndex, double aValue) throw()
       wchar_t buf[64];
       any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%g", aValue);
       ObjRef<iface::dom::Text> newText(doc->createTextNode(buf));
-      el->appendChild(newText);
+      el->appendChild(newText)->release_ref();
       return;
     }
     count++;
@@ -2484,7 +2551,7 @@ CDA_SProSVectorRange::insertValueBefore(int32_t aIndex, double aValue) throw()
       continue;
     if (el->namespaceURI() != SEDML_NS || el->localName() != L"value")
       continue;
-    if (count < aIndex)
+    if (count >= aIndex)
     {
       mDomEl->insertBefore(valueEl, el)->release_ref();
       return;
@@ -2510,6 +2577,7 @@ CDA_SProSVectorRange::removeValueAt(int32_t aIndex) throw()
       mDomEl->removeChild(el)->release_ref();
       return;
     }
+    count++;
   }
 }
 

@@ -283,7 +283,7 @@ SProSTest::testSProSSEDMLElement()
   RETURN_INTO_OBJREF(ts, iface::SProS::TaskSet, es->tasks());
   CPPUNIT_ASSERT(ts);
   RETURN_INTO_OBJREF(tsi, iface::SProS::TaskIterator, ts->iterateTasks());
-  RETURN_INTO_OBJREF(t, iface::SProS::Task, tsi->nextTask());
+  RETURN_INTO_OBJREF(t, iface::SProS::AbstractTask, tsi->nextTask());
   CPPUNIT_ASSERT(t);
   RETURN_INTO_WSTRING(taskId, t->id());
   CPPUNIT_ASSERT(taskId == L"task1");
@@ -918,9 +918,13 @@ SProSTest::testSProSTaskSet()
 //     /**
 //      * Find a task in the set by the identifier.
 //      */
-//     Task getTaskByIdentifier(in wstring idMatch);
-  RETURN_INTO_OBJREF(t1, iface::SProS::Task, ts->getTaskByIdentifier(L"task1"));
-  CPPUNIT_ASSERT(t1 != NULL);
+//     AbstractTask getTaskByIdentifier(in wstring idMatch);
+  RETURN_INTO_OBJREF(at1, iface::SProS::AbstractTask, ts->getTaskByIdentifier(L"task1"));
+  CPPUNIT_ASSERT(at1 != NULL);
+
+  RETURN_INTO_OBJREF(at2, iface::SProS::AbstractTask, ts->getTaskByIdentifier(L"task2"));
+  CPPUNIT_ASSERT(at2 != NULL);
+
 //   };
 // 
 //   /**
@@ -932,9 +936,12 @@ SProSTest::testSProSTaskSet()
 //     /**
 //      * Fetch the next task, or null if there are no more.
 //      */
-//     Task nextTask();
-  RETURN_INTO_OBJREF(t2, iface::SProS::Task, ti->nextTask());
-  CPPUNIT_ASSERT(!CDA_objcmp(t1, t2));
+//     AbstractTask nextTask();
+  RETURN_INTO_OBJREF(t3, iface::SProS::AbstractTask, ti->nextTask());
+  RETURN_INTO_OBJREF(t4, iface::SProS::AbstractTask, ti->nextTask());
+  CPPUNIT_ASSERT(!CDA_objcmp(at1, t3));
+  CPPUNIT_ASSERT(!CDA_objcmp(at2, t4));
+
   CPPUNIT_ASSERT(ti->nextTask().getPointer() == NULL);
 
 //   };
@@ -943,7 +950,8 @@ SProSTest::testSProSTaskSet()
 //    * A SEDML task.
 //    */
 //   interface Task
-//     : NamedIdentifiedElement
+//     : AbstractTask
+  ObjRef<iface::SProS::Task> t1(QueryInterface(at1));
 //   {
 //     /**
 //      * The referenced simulation, as an identifier.
@@ -960,7 +968,7 @@ SProSTest::testSProSTaskSet()
   RETURN_INTO_OBJREF(sr, iface::SProS::Simulation, t1->simulationReference());
   CPPUNIT_ASSERT(sr);
   RETURN_INTO_WSTRING(sri2, sr->id());
-  CPPUNIT_ASSERT(sri2 == L"simulation1");  
+  CPPUNIT_ASSERT(sri2 == L"simulation1");
 
   t1->simulationReferenceIdentifier(L"simulation2");
   CPPUNIT_ASSERT(!t1->simulationReference().getPointer());
@@ -991,8 +999,352 @@ SProSTest::testSProSTaskSet()
   t1->modelReference(mr);
   RETURN_INTO_WSTRING(mri3, t1->modelReferenceIdentifier());
   CPPUNIT_ASSERT(mri3 == L"model1");
-}
+
 //   };
+
+  ObjRef<iface::SProS::RepeatedTask> t2(QueryInterface(at2));
+  CPPUNIT_ASSERT(t2 != NULL);
+//  /**
+//   * A SEDML RepeatedTask.
+//   */
+//  interface RepeatedTask
+//    : AbstractTask
+//  {
+//    /**
+//     * The referenced range, as an identifier.
+//     */
+//    attribute wstring rangeIdentifier;
+  CPPUNIT_ASSERT(t2->rangeIdentifier() == L"index");
+
+//
+//    /**
+//     * The referenced range object.
+//     */
+//    attribute Range rangeReference;
+  ObjRef<iface::SProS::Range> indexRange(t2->rangeReference());
+  CPPUNIT_ASSERT(indexRange != NULL);
+  CPPUNIT_ASSERT(indexRange->id() == L"index");
+
+  t2->rangeIdentifier(L"current");
+  CPPUNIT_ASSERT(t2->rangeIdentifier() == L"current");
+  ObjRef<iface::SProS::Range> funRange(t2->rangeReference());
+  CPPUNIT_ASSERT(funRange->id() == L"current");
+  t2->rangeIdentifier(L"invalid");
+  CPPUNIT_ASSERT(t2->rangeIdentifier() == L"invalid");
+  ObjRef<iface::SProS::Range> shouldBeNull(t2->rangeReference());
+  CPPUNIT_ASSERT(shouldBeNull == NULL);
+  t2->rangeReference(indexRange);
+  CPPUNIT_ASSERT(t2->rangeIdentifier() == L"index");
+
+//
+//    /**
+//     * Whether or not to reset the model.
+//     */
+//    attribute boolean resetModel;
+  CPPUNIT_ASSERT_EQUAL(false, t2->resetModel());
+  t2->resetModel(true);
+  CPPUNIT_ASSERT_EQUAL(true, t2->resetModel());
+  t2->resetModel(false);
+  CPPUNIT_ASSERT_EQUAL(false, t2->resetModel());
+
+//
+//    /**
+//     * The list of ranges over which to repeat.
+//     */
+//    readonly attribute RangeSet ranges;
+  ObjRef<iface::SProS::RangeSet> allRanges(t2->ranges());
+  CPPUNIT_ASSERT(allRanges != NULL);
+
+  ObjRef<iface::SProS::Range> lookedUpRange(allRanges->getRangeByIdentifier(L"current"));
+  CPPUNIT_ASSERT(!CDA_objcmp(lookedUpRange, funRange));
+
+  ObjRef<iface::SProS::RangeIterator> rangeIt(allRanges->iterateRanges());
+  ObjRef<iface::SProS::Range> range1(rangeIt->nextRange());
+  CPPUNIT_ASSERT(range1 != NULL);
+  ObjRef<iface::SProS::Range> range2(rangeIt->nextRange());
+  CPPUNIT_ASSERT(range2 != NULL);
+  ObjRef<iface::SProS::Range> range3(rangeIt->nextRange());
+  CPPUNIT_ASSERT(range3 != NULL);
+  ObjRef<iface::SProS::Range> shouldBeNullRange(rangeIt->nextRange());
+  CPPUNIT_ASSERT(shouldBeNullRange == NULL);
+  CPPUNIT_ASSERT(!CDA_objcmp(range1, indexRange));
+  CPPUNIT_ASSERT(!CDA_objcmp(range2, funRange));
+
+//
+//    /**
+//     * The list of subTasks to perform.
+//     */
+//    readonly attribute SubTaskSet subTasks;
+  ObjRef<iface::SProS::SubTaskSet> subTasks(t2->subTasks());
+  ObjRef<iface::SProS::SubTaskIterator> subTaskIt(subTasks->iterateSubTasks());
+  ObjRef<iface::SProS::SubTask> firstSubTask(subTaskIt->nextSubTask());
+  CPPUNIT_ASSERT(firstSubTask != NULL);
+  ObjRef<iface::SProS::SubTask> shouldBeNullSubTask(subTaskIt->nextSubTask());
+  CPPUNIT_ASSERT(shouldBeNullSubTask == NULL);
+  
+  CPPUNIT_ASSERT(firstSubTask->taskIdentifier() == L"task1");
+  
+//
+//    /**
+//     * The list of SetValue changes to apply.
+//     */
+//    readonly attribute SetValueSet changes;
+  ObjRef<iface::SProS::SetValueSet> taskChanges(t2->changes());
+  ObjRef<iface::SProS::SetValueIterator> setValIt(taskChanges->iterateSetValues());
+  ObjRef<iface::SProS::SetValue> firstSetValue(setValIt->nextSetValue());
+  CPPUNIT_ASSERT(firstSetValue != NULL);
+  CPPUNIT_ASSERT(firstSetValue->rangeIdentifier() == L"current");
+  ObjRef<iface::SProS::SetValue> shouldBeNullSetValue(setValIt->nextSetValue());
+  CPPUNIT_ASSERT(shouldBeNullSetValue == NULL);
+
+//  };
+
+//  /**
+//   * A SED-ML functional range.
+//   */
+//  interface FunctionalRange
+//    : Range
+//  {
+//    /**
+//     * The name to make available in the MathML as the index.
+//     */
+//    attribute wstring indexName;
+  ObjRef<iface::SProS::FunctionalRange> funcRange(QueryInterface(funRange));
+  CPPUNIT_ASSERT(funcRange->indexName() == L"index");
+  funcRange->indexName(L"test");
+  CPPUNIT_ASSERT(funcRange->indexName() == L"test");
+
+//
+//    /**
+//     * The list of all variables to make available to the MathML.
+//     */
+//    readonly attribute VariableSet variables;
+  ObjRef<iface::SProS::VariableSet> funRangeVars(funcRange->variables());
+  ObjRef<iface::SProS::VariableIterator> funRangeVarIt(funRangeVars->iterateVariables());
+  ObjRef<iface::SProS::Variable> funRangeVar(funRangeVarIt->nextVariable());
+  CPPUNIT_ASSERT(funRangeVar != NULL);
+  ObjRef<iface::SProS::Variable> shouldBeNullVar(funRangeVarIt->nextVariable());
+  CPPUNIT_ASSERT(shouldBeNullVar == NULL);
+
+  CPPUNIT_ASSERT(funRangeVar->id() == L"val");
+
+//    
+//    /**
+//     * The MathML math element defining the next value from the range.
+//     */
+//    attribute mathml_dom::MathMLMathElement function;
+  ObjRef<iface::mathml_dom::MathMLMathElement> frFunction(funcRange->function());
+  CPPUNIT_ASSERT(frFunction != NULL);
+  ObjRef<iface::mathml_dom::MathMLElement> frFuncContents(frFunction->getArgument(1));
+  CPPUNIT_ASSERT(frFuncContents != NULL);
+  CPPUNIT_ASSERT(frFuncContents->localName() == L"piecewise");
+//  };
+//
+//  /**
+//   * A SED-ML vector range.
+//   */
+//  interface VectorRange
+//    : Range
+  ObjRef<iface::SProS::VectorRange> vecRange(QueryInterface(range3));
+//  {
+//    /**
+//     * Retrieves the number of values in the range.
+//     */
+//    readonly attribute long numberOfValues;
+  CPPUNIT_ASSERT_EQUAL(3, vecRange->numberOfValues());
+
+//
+//    /**
+//     * Gets the value of the VectorRange at the specified index.
+//     * Indices start at zero. Returns 0 if index out of range.
+//     */
+//    double valueAt(in long index);
+  CPPUNIT_ASSERT_EQUAL(1.0, vecRange->valueAt(0));
+  CPPUNIT_ASSERT_EQUAL(4.0, vecRange->valueAt(1));
+  CPPUNIT_ASSERT_EQUAL(10.0, vecRange->valueAt(2));
+
+//
+//    /**
+//     * Sets the value of the VectorRange at the specified index.
+//     * Indices start at zero.
+//     */
+//    void setValueAt(in long index, in double value);
+  vecRange->setValueAt(0, 2.0);
+  CPPUNIT_ASSERT_EQUAL(2.0, vecRange->valueAt(0));
+  CPPUNIT_ASSERT_EQUAL(3, vecRange->numberOfValues());
+
+//
+//    /**
+//     * Inserts a value before the index specified. If index is <= 0, inserts at
+//     * the beginning; if index is >= numberOfValues, inserts at the end of the
+//     * list.
+//     */
+//    void insertValueBefore(in long index, in double value);
+  vecRange->insertValueBefore(0, 0.0);
+  CPPUNIT_ASSERT_EQUAL(4, vecRange->numberOfValues());
+  CPPUNIT_ASSERT_EQUAL(0.0, vecRange->valueAt(0));
+  CPPUNIT_ASSERT_EQUAL(2.0, vecRange->valueAt(1));
+  vecRange->insertValueBefore(1, 0.5);
+  vecRange->insertValueBefore(100, 100.0);
+  CPPUNIT_ASSERT_EQUAL(6, vecRange->numberOfValues());
+  CPPUNIT_ASSERT_EQUAL(0.0, vecRange->valueAt(0));
+  CPPUNIT_ASSERT_EQUAL(0.5, vecRange->valueAt(1));
+  CPPUNIT_ASSERT_EQUAL(2.0, vecRange->valueAt(2));
+  CPPUNIT_ASSERT_EQUAL(4.0, vecRange->valueAt(3));
+  CPPUNIT_ASSERT_EQUAL(10.0, vecRange->valueAt(4));
+  CPPUNIT_ASSERT_EQUAL(100.0, vecRange->valueAt(5));
+
+//    
+//    /**
+//     * Removes the value at the index specified, or does nothing if the index is
+//     * out of range.
+//     */
+//    void removeValueAt(in long index);
+  vecRange->removeValueAt(0);
+  vecRange->removeValueAt(2);
+  CPPUNIT_ASSERT_EQUAL(4, vecRange->numberOfValues());
+  CPPUNIT_ASSERT_EQUAL(0.5, vecRange->valueAt(0));
+  CPPUNIT_ASSERT_EQUAL(2.0, vecRange->valueAt(1));
+  CPPUNIT_ASSERT_EQUAL(10.0, vecRange->valueAt(2));
+  CPPUNIT_ASSERT_EQUAL(100.0, vecRange->valueAt(3));
+//  };
+//
+
+//  interface UniformRange
+  ObjRef<iface::SProS::UniformRange> uniRange(QueryInterface(range1));
+  CPPUNIT_ASSERT(uniRange != NULL);
+//    : Range
+//  {
+//    /**
+//     * The point at which to start the simulation.
+//     */
+//    attribute double start;
+  CPPUNIT_ASSERT_EQUAL(0.0, uniRange->start());
+  uniRange->start(1.0);
+  CPPUNIT_ASSERT_EQUAL(1.0, uniRange->start());
+
+//
+//    /**
+//     * The point at which to end the simulation.
+//     */
+//    attribute double end;
+  CPPUNIT_ASSERT_EQUAL(10.0, uniRange->end());
+  uniRange->end(9.5);
+  CPPUNIT_ASSERT_EQUAL(9.5, uniRange->end());
+  
+//
+//    /**
+//     * The number of points between start and end.
+//     */
+//    attribute long numberOfPoints;
+  CPPUNIT_ASSERT_EQUAL(100, uniRange->numberOfPoints());
+  uniRange->numberOfPoints(101);
+  CPPUNIT_ASSERT_EQUAL(101, uniRange->numberOfPoints());
+//  };
+//
+//  /**
+//   * A SED-ML SetValue element.
+//   */
+//  interface SetValue
+//    : Base
+//  {
+//    /**
+//     * The XPath expression describing the variable target.
+//     */
+//    attribute wstring target;
+  CPPUNIT_ASSERT(L"/sbml:sbml/sbml:model/sbml:listOfParameters/sbml:parameter[@id='J0_v0']" ==
+                       firstSetValue->target());
+  firstSetValue->target(L"/sbml:sbml/sbml:model/sbml:listOfParameters/sbml:parameter[@id='J0_v1']");
+  CPPUNIT_ASSERT(L"/sbml:sbml/sbml:model/sbml:listOfParameters/sbml:parameter[@id='J0_v1']" ==
+                       firstSetValue->target());
+
+//
+//    /**
+//     * The referenced model, as an identifier.
+//     */
+//    attribute wstring modelReferenceIdentifier;
+  CPPUNIT_ASSERT(firstSetValue->modelReferenceIdentifier() == L"");
+  firstSetValue->modelReferenceIdentifier(L"model1");
+  CPPUNIT_ASSERT(firstSetValue->modelReferenceIdentifier() == L"model1");
+
+//
+//    /**
+//     * The referenced model object.
+//     */
+//    attribute Model modelReference;
+  ObjRef<iface::SProS::Model> refModel(firstSetValue->modelReference());
+  CPPUNIT_ASSERT(refModel != NULL);
+  CPPUNIT_ASSERT(refModel->id() == L"model1");
+  firstSetValue->modelReferenceIdentifier(L"");
+  CPPUNIT_ASSERT(firstSetValue->modelReferenceIdentifier() == L"");
+  ObjRef<iface::SProS::Model> nullRefModel(firstSetValue->modelReference());
+  CPPUNIT_ASSERT(nullRefModel == NULL);
+  firstSetValue->modelReference(refModel);
+  ObjRef<iface::SProS::Model> refModel2(firstSetValue->modelReference());
+  CPPUNIT_ASSERT(!CDA_objcmp(refModel, refModel2));
+
+//
+//    /**
+//     * The referenced range, as an identifier.
+//     */
+//    attribute wstring rangeIdentifier;
+  CPPUNIT_ASSERT(firstSetValue->rangeIdentifier() == L"current");
+  firstSetValue->rangeIdentifier(L"index");
+  CPPUNIT_ASSERT(firstSetValue->rangeIdentifier() == L"index");
+
+//
+//    /**
+//     * The referenced range object.
+//     */
+//    attribute Range rangeReference;
+  ObjRef<iface::SProS::Range> referencedRange(firstSetValue->rangeReference());
+  CPPUNIT_ASSERT(!CDA_objcmp(referencedRange, uniRange));
+  firstSetValue->rangeReference(vecRange);
+  CPPUNIT_ASSERT(firstSetValue->rangeIdentifier() == L"vecrange");
+
+//  };
+//
+//  /**
+//   * A SED-ML SubTask
+//   */
+//  interface SubTask
+//    : Base
+//  {
+//    /**
+//     * The referenced task, as an identifier string.
+//     */
+//    attribute wstring taskIdentifier;
+
+  CPPUNIT_ASSERT(firstSubTask->taskIdentifier() == L"task1");
+  firstSubTask->taskIdentifier(L"task2");
+  CPPUNIT_ASSERT(firstSubTask->taskIdentifier() == L"task2");
+  firstSubTask->taskIdentifier(L"task1");
+
+//
+//    /**
+//     * The referenced task.
+//     */
+//    attribute AbstractTask taskReference;
+
+  ObjRef<iface::SProS::AbstractTask> refTask(firstSubTask->taskReference());
+  CPPUNIT_ASSERT(refTask != NULL);
+  CPPUNIT_ASSERT(refTask->id() == L"task1");
+  firstSubTask->taskIdentifier(L"");
+  ObjRef<iface::SProS::AbstractTask> nullRefTask(firstSubTask->taskReference());
+  CPPUNIT_ASSERT(nullRefTask == NULL);
+  firstSubTask->taskReference(refTask);
+  ObjRef<iface::SProS::AbstractTask> refTask2(firstSubTask->taskReference());
+  CPPUNIT_ASSERT(!CDA_objcmp(refTask, refTask2));
+
+//
+//    /**
+//     * The order value of this SubTask.
+//     */
+//    attribute long order;
+  firstSubTask->order(10);
+  CPPUNIT_ASSERT_EQUAL(10, firstSubTask->order());
+//  };
+}
 //   /**
 //    * A set of DataGenerators.
 //    */

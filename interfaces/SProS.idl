@@ -770,7 +770,7 @@ module SProS
     /**
      * The list of all variables to make available to the MathML.
      */
-    readonly attribute VariableSet listOfVariables;
+    readonly attribute VariableSet variables;
     
     /**
      * The MathML math element defining the next value from the range.
@@ -1322,6 +1322,16 @@ module SProS
      * The referenced model object.
      */
     attribute Model modelReference;
+
+    /**
+     * The referenced range, as an identifier.
+     */
+    attribute wstring rangeIdentifier;
+
+    /**
+     * The referenced range object.
+     */
+    attribute Range rangeReference;
   };
 
   /**

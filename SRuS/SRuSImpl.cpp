@@ -41,6 +41,19 @@ private:
   already_AddRefd<iface::cellml_api::CellMLElement> xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Node* aNode)
     throw();
   uint32_t mRecursionDepth;
+
+  void doBasicTask(std::map<std::wstring, iface::SRuS::TransformedModel*>& modelsById,
+                   std::multimap<std::wstring, std::wstring>& dataGeneratorIdsByTaskId,
+                   std::map<std::wstring, iface::SProS::DataGenerator*>& dataGeneratorsById,
+                   iface::cellml_services::CellMLIntegrationService* is,
+                   iface::SProS::Task* t,
+                   iface::SRuS::GeneratedDataMonitor* aMonitor);
+  void doRepeatedTask(std::map<std::wstring, iface::SRuS::TransformedModel*>& modelsById,
+                      std::multimap<std::wstring, std::wstring>& dataGeneratorIdsByTaskId,
+                      std::map<std::wstring, iface::SProS::DataGenerator*>& dataGeneratorsById,
+                      iface::cellml_services::CellMLIntegrationService* is,
+                      iface::SProS::RepeatedTask* t,
+                      iface::SRuS::GeneratedDataMonitor* aMonitor);
 };
 
 template<typename C> class XPCOMContainerRAII
@@ -1627,8 +1640,8 @@ CDA_SRuSProcessor::generateData
 
   std::map<std::wstring, iface::SRuS::TransformedModel*> modelsById;
   XPCOMContainerSecondRAII<std::map<std::wstring, iface::SRuS::TransformedModel*> > modelsByIdRAII(modelsById);
-  std::map<std::wstring, iface::SProS::Task*> tasksById;
-  XPCOMContainerSecondRAII<std::map<std::wstring, iface::SProS::Task*> > tasksByIdRAII(tasksById);
+  std::map<std::wstring, iface::SProS::AbstractTask*> tasksById;
+  XPCOMContainerSecondRAII<std::map<std::wstring, iface::SProS::AbstractTask*> > tasksByIdRAII(tasksById);
   
   std::set<std::wstring> activeTasks;
   std::multimap<std::wstring, std::wstring> dataGeneratorIdsByTaskId;
@@ -1637,12 +1650,12 @@ CDA_SRuSProcessor::generateData
   RETURN_INTO_OBJREF(ti, iface::SProS::TaskIterator, ts->iterateTasks());
   while (true)
   {
-    RETURN_INTO_OBJREF(t, iface::SProS::Task, ti->nextTask());
+    RETURN_INTO_OBJREF(t, iface::SProS::AbstractTask, ti->nextTask());
     if (t == NULL)
       break;
     std::wstring idStr = t->id();
     t->add_ref();
-    tasksById.insert(std::pair<std::wstring, iface::SProS::Task*>(idStr, t));
+    tasksById.insert(std::pair<std::wstring, iface::SProS::AbstractTask*>(idStr, t));
   }
 
   for (uint32_t i = 0, l = aSet->length(); i < l; i++)
@@ -1684,7 +1697,7 @@ CDA_SRuSProcessor::generateData
       if (v == NULL)
         break;
 
-      RETURN_INTO_OBJREF(t, iface::SProS::Task, v->taskReference());
+      RETURN_INTO_OBJREF(t, iface::SProS::AbstractTask, v->taskReference());
       std::wstring idS = t->id();
       activeTasks.insert(idS);
       if (!didAdd)
@@ -1699,7 +1712,33 @@ CDA_SRuSProcessor::generateData
   for (std::set<std::wstring>::iterator i = activeTasks.begin();
        i != activeTasks.end(); i++)
   {
-    iface::SProS::Task* t = tasksById[(*i)];
+    iface::SProS::AbstractTask* at = tasksById[(*i)];
+
+    ObjRef<iface::SProS::Task> t(QueryInterface(at));
+    if (t != NULL)
+      doBasicTask(modelsById, dataGeneratorIdsByTaskId, dataGeneratorsById, is,
+                  t, aMonitor);
+    else
+    {
+      ObjRef<iface::SProS::RepeatedTask> rt(QueryInterface(at));
+      if (rt != NULL)
+        doRepeatedTask(modelsById, dataGeneratorIdsByTaskId, dataGeneratorsById, is,
+                       rt, aMonitor);
+    }
+  }
+}
+
+void
+CDA_SRuSProcessor::doBasicTask
+(
+ std::map<std::wstring, iface::SRuS::TransformedModel*>& modelsById,
+ std::multimap<std::wstring, std::wstring>& dataGeneratorIdsByTaskId,
+ std::map<std::wstring, iface::SProS::DataGenerator*>& dataGeneratorsById,
+ iface::cellml_services::CellMLIntegrationService* is,
+ iface::SProS::Task* t,
+ iface::SRuS::GeneratedDataMonitor* aMonitor
+)
+{
     RETURN_INTO_OBJREF(sm, iface::SProS::Model, t->modelReference());
     if (sm == NULL)
       throw iface::SRuS::SRuSException();
@@ -1742,7 +1781,6 @@ CDA_SRuSProcessor::generateData
 
       ci = already_AddRefd<iface::cellml_services::CodeInformation>(cmODE->codeInformation());
     }
-
 
     std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > > variableInfoIdxByDataGeneratorId;
     // For each DataGenerator...
@@ -1897,7 +1935,19 @@ CDA_SRuSProcessor::generateData
       cir1->setProgressObserver(cast);
       cir1->start();
     }
-  }
+}
+
+void
+CDA_SRuSProcessor::doRepeatedTask
+(
+ std::map<std::wstring, iface::SRuS::TransformedModel*>& modelsById,
+ std::multimap<std::wstring, std::wstring>& dataGeneratorIdsByTaskId,
+ std::map<std::wstring, iface::SProS::DataGenerator*>& dataGeneratorsById,
+ iface::cellml_services::CellMLIntegrationService* is,
+ iface::SProS::RepeatedTask* t,
+ iface::SRuS::GeneratedDataMonitor* aMonitor
+)
+{
 }
 
 class CDA_SRuSBootstrap
