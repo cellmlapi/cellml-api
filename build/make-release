@@ -88,7 +88,11 @@ if test $SYSTEM = linux-x86; then
 fi
 
 echo "SHA1 sum follows:"
-$(which sha1sum || which shasum) $BINFULL
+if test $SYSTEM = win32; then
+    $(which sha1sum || which shasum) $BINFULL2
+else
+    $(which sha1sum || which shasum) $BINFULL
+fi
 
 echo $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
 $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
