@@ -180,7 +180,7 @@ private:
 struct CDA_SRuSModelSimulationState
 {
   std::vector<double> mInitialData, mCurrentData, mCurrentConstants;
-  
+  double mCurrentBvar, mInitialBvar;
   std::map<int, double> mOverrideConstants;
   std::map<int, double> mOverrideData;
   ObjRef<iface::cellml_services::CodeInformation> mCodeInfo;
@@ -206,6 +206,8 @@ public:
   std::map<std::wstring, CDA_SRuSModelSimulationState>
     mPerModelState;
 };
+
+class SEDMLMathEvaluator;
 
 /*
  * The abstract class for generating code for a step that has to be done for a
@@ -243,6 +245,19 @@ public:
 
   ObjRef<CDA_SRuSSimulationState> mState;
   ObjRef<CDA_SRuSSimulationStep> mSuccessor;
+
+protected:
+  int
+  getIndexAndTypeAndModelForVariable
+  (
+   iface::SProS::Variable* aVariable,
+   iface::cellml_services::VariableEvaluationType& aType,
+   CDA_SRuSModelSimulationState** aState
+  );
+  double& findVariable
+  (
+   iface::SProS::Variable* aVariable
+  );
 };
 
 class CDA_SRuSSimulationStepLoop

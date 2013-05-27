@@ -665,6 +665,97 @@ CDA_SRuSSimulationStep::performNext()
     mSuccessor->perform();
 }
 
+int
+CDA_SRuSSimulationStep::getIndexAndTypeAndModelForVariable
+(
+ iface::SProS::Variable* aVariable,
+ iface::cellml_services::VariableEvaluationType& aType,
+ CDA_SRuSModelSimulationState** aState
+)
+{
+  ObjRef<iface::SRuS::TransformedModel> tm
+    (mState->mTMS->getItemByID(aVariable->modelReferenceIdentifier()));
+  if (tm == NULL)
+    throw iface::SRuS::SRuSException();
+
+  ObjRef<iface::xpath::XPathEvaluator> xe(CreateXPathEvaluator());
+  ObjRef<iface::dom::Document> doc(tm->xmlDocument());
+  ObjRef<iface::dom::Element> de(doc->documentElement());
+  ObjRef<iface::xpath::XPathNSResolver> resolver
+    (xe->createNSResolver(de));
+  ObjRef<iface::xpath::XPathResult> xr
+    (xe->evaluate(aVariable->target(), doc, resolver,
+                  iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE,
+                  NULL));
+  ObjRef<iface::dom::Node> n(xr->singleNodeValue());
+  if (n == NULL)
+    throw iface::SRuS::SRuSException();
+
+  ObjRef<iface::cellml_api::Model> m(QueryInterface(tm->modelDocument()));
+  ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
+  ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
+  if (cv == NULL)
+    throw iface::SRuS::SRuSException();
+
+  std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
+    (mState->mPerModelState.find(aVariable->modelReferenceIdentifier()));
+
+  *aState = &modelState->second;
+
+  ObjRef<iface::cellml_services::ComputationTargetIterator>
+    cti(modelState->second.mCodeInfo->iterateTargets());
+
+  bool foundCT = false;
+  double ctValue = 0.0;
+  int idx;
+
+  for (ObjRef<iface::cellml_services::ComputationTarget> ct =
+         cti->nextComputationTarget(); ct != NULL;
+       ct = cti->nextComputationTarget())
+  {
+    ObjRef<iface::cellml_api::CellMLVariable> ctv(ct->variable());
+    if (!CDA_objcmp(ctv, cv))
+    {
+      idx = ct->assignedIndex();
+      aType = ct->type();
+      foundCT = true;
+      break;
+    }
+  }
+
+  if (!foundCT)
+    throw iface::SRuS::SRuSException();
+
+  return idx;
+}
+
+double&
+CDA_SRuSSimulationStep::findVariable
+(
+ iface::SProS::Variable* aVariable
+)
+{
+  iface::cellml_services::VariableEvaluationType type;
+  CDA_SRuSModelSimulationState* state;
+  int index = getIndexAndTypeAndModelForVariable(aVariable, type, &state);
+  
+  switch (type)
+  {
+  case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+    return state->mCurrentBvar;
+  case iface::cellml_services::CONSTANT:
+    return state->mCurrentConstants[index];
+  case iface::cellml_services::STATE_VARIABLE:
+  case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+    return state->mCurrentData[index + 1];
+  case iface::cellml_services::ALGEBRAIC:
+    return state->mCurrentData[index + 1 + 
+                                state->mCodeInfo->rateIndexCount() * 2];
+  default:
+    throw iface::SRuS::SRuSException();
+  }
+}
+
 static int countPointsInRange(iface::SProS::Range* aRange)
 {
   if (aRange == NULL)
@@ -767,7 +858,6 @@ CDA_SRuSSimulationStepLoop::CDA_SRuSSimulationStepLoop
     (*it)->add_ref();
 }
 
-
 double
 CDA_SRuSSimulationStepLoop::getRangeValueFor
 (
@@ -798,85 +888,7 @@ CDA_SRuSSimulationStepLoop::getRangeValueFor
   ObjRef<iface::SProS::VariableIterator> varIt(variables->iterateVariables());
   for (ObjRef<iface::SProS::Variable> var = varIt->nextVariable();
        var != NULL; var = varIt->nextVariable())
-  {
-    std::wstring expr = var->target();
-
-    ObjRef<iface::SRuS::TransformedModel> tm
-      (mState->mTMS->getItemByID(var->modelReferenceIdentifier()));
-    if (tm == NULL)
-      throw iface::SRuS::SRuSException();
-
-    ObjRef<iface::xpath::XPathEvaluator> xe(CreateXPathEvaluator());
-    ObjRef<iface::dom::Document> doc(tm->xmlDocument());
-    ObjRef<iface::dom::Element> de(doc->documentElement());
-    ObjRef<iface::xpath::XPathNSResolver> resolver
-      (xe->createNSResolver(de));
-    ObjRef<iface::xpath::XPathResult> xr
-      (xe->evaluate(expr, doc, resolver,
-                    iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE,
-                    NULL));
-    RETURN_INTO_OBJREF(n, iface::dom::Node, xr->singleNodeValue());
-    if (n == NULL)
-      throw iface::SRuS::SRuSException();
-
-    ObjRef<iface::cellml_api::Model> m(QueryInterface(tm->modelDocument()));
-    ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
-    ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
-    if (cv == NULL)
-      throw iface::SRuS::SRuSException();
-
-    std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
-      (mState->mPerModelState.find(var->modelReferenceIdentifier()));
-
-    ObjRef<iface::cellml_services::ComputationTargetIterator>
-      cti(modelState->second.mCodeInfo->iterateTargets());
-
-    bool foundCT = false;
-    double ctValue = 0.0;
-
-    for (ObjRef<iface::cellml_services::ComputationTarget> ct =
-           cti->nextComputationTarget(); ct != NULL;
-         ct = cti->nextComputationTarget())
-    {
-      ObjRef<iface::cellml_api::CellMLVariable> ctv(ct->variable());
-      if (!CDA_objcmp(ctv, cv))
-      {
-        int32_t idx = ct->assignedIndex();
-        iface::cellml_services::VariableEvaluationType t(ct->type());
-        switch (t)
-        {
-        case iface::cellml_services::VARIABLE_OF_INTEGRATION:
-          idx = 0;
-          break;
-        case iface::cellml_services::CONSTANT:
-          idx = -1 - idx;
-          break;
-        case iface::cellml_services::STATE_VARIABLE:
-        case iface::cellml_services::PSEUDOSTATE_VARIABLE:
-          idx++;
-          break;
-        case iface::cellml_services::ALGEBRAIC:
-          idx += 1 + modelState->second.mCodeInfo->rateIndexCount() * 2;
-          break;
-        default:
-          throw iface::SRuS::SRuSException();
-        }
-        if (idx < 0)
-          ctValue = modelState->second.mCurrentConstants.size() > (-1-idx) ?
-            modelState->second.mCurrentConstants[-1-idx] : 0.0;
-        else
-          ctValue = modelState->second.mCurrentData.size() > idx ?
-            modelState->second.mCurrentData[idx] : 0.0;
-        foundCT = true;
-        break;
-      }
-    }
-
-    if (!foundCT)
-      throw iface::SRuS::SRuSException();
-
-    eval.setVariable(var->id(), ctValue);
-  }
+    eval.setVariable(var->id(), findVariable(var));
 
   return eval.eval(mathFunc);
 }
@@ -912,85 +924,37 @@ CDA_SRuSSimulationStepLoop::perform()
       ObjRef<iface::SProS::VariableIterator> svvi(svvs->iterateVariables());
       for (ObjRef<iface::SProS::Variable> svv(svvi->nextVariable()); svv;
            svv = svvi->nextVariable())
-      {
-        
-      }
+        eval.setVariable(svv->id(), findVariable(svv));
       
-      double setToValue;
+      ObjRef<iface::mathml_dom::MathMLMathElement> mathel(sv->math());
+      double setToValue = eval.eval(mathel);
 
-      ObjRef<iface::SRuS::TransformedModel> tm
-        (mState->mTMS->getItemByID(sv->modelReferenceIdentifier()));
-      if (tm == NULL)
-        throw iface::SRuS::SRuSException();
-
-      ObjRef<iface::xpath::XPathEvaluator> xe(CreateXPathEvaluator());
-      ObjRef<iface::dom::Document> doc(tm->xmlDocument());
-      ObjRef<iface::dom::Element> de(doc->documentElement());
-      ObjRef<iface::xpath::XPathNSResolver> resolver
-        (xe->createNSResolver(de));
-      ObjRef<iface::xpath::XPathResult> xr
-        (xe->evaluate(sv->target(), doc, resolver,
-                      iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE,
-                      NULL));
-      RETURN_INTO_OBJREF(n, iface::dom::Node, xr->singleNodeValue());
-      if (n == NULL)
-        throw iface::SRuS::SRuSException();
-
-      ObjRef<iface::cellml_api::Model> m(QueryInterface(tm->modelDocument()));
-      ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
-      ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
-      if (cv == NULL)
-        throw iface::SRuS::SRuSException();
-
-      std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
-        (mState->mPerModelState.find(sv->modelReferenceIdentifier()));
-
-      ObjRef<iface::cellml_services::ComputationTargetIterator>
-        cti(modelState->second.mCodeInfo->iterateTargets());
-
-      bool foundCT = false;
-      double ctValue = 0.0;
-      
-      for (ObjRef<iface::cellml_services::ComputationTarget> ct =
-             cti->nextComputationTarget(); ct != NULL;
-           ct = cti->nextComputationTarget())
+      // Finally add the override:
+      iface::cellml_services::VariableEvaluationType type;
+      CDA_SRuSModelSimulationState* state;
+      int index = getIndexAndTypeAndModelForVariable(sv, type, &state);
+      switch (type)
       {
-        ObjRef<iface::cellml_api::CellMLVariable> ctv(ct->variable());
-        if (!CDA_objcmp(ctv, cv))
-        {
-          int32_t idx = ct->assignedIndex();
-          iface::cellml_services::VariableEvaluationType t(ct->type());
-          switch (t)
-          {
-          case iface::cellml_services::VARIABLE_OF_INTEGRATION:
-            idx = 0;
-            break;
-          case iface::cellml_services::CONSTANT:
-            idx = -1 - idx;
-            break;
-          case iface::cellml_services::STATE_VARIABLE:
-          case iface::cellml_services::PSEUDOSTATE_VARIABLE:
-            idx++;
-            break;
-          case iface::cellml_services::ALGEBRAIC:
-            idx += 1 + modelState->second.mCodeInfo->rateIndexCount() * 2;
-            break;
-          default:
-            throw iface::SRuS::SRuSException();
-          }
-          if (idx < 0)
-            modelState->second.mOverrideConstants.insert
-              (std::pair<int, double>(-1-idx, setToValue));
-          else
-            modelState->second.mOverrideData.insert
-              (std::pair<int, double>(idx, setToValue));
-          foundCT = true;
-          break;
-        }
-      }
-
-      if (!foundCT)
+      case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+        state->mCurrentBvar = setToValue;
+        break;
+      case iface::cellml_services::CONSTANT:
+        state->mOverrideConstants.insert(std::pair<int, double>(index, setToValue));
+        break;
+      case iface::cellml_services::STATE_VARIABLE:
+      case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+        state->mOverrideData.insert(std::pair<int, double>(index + 1, setToValue));
+        break;
+      case iface::cellml_services::ALGEBRAIC:
+        state->mOverrideData.insert(std::pair<int, double>
+                                    (index + 1 + 
+                                     state->mCodeInfo->rateIndexCount() * 2,
+                                     setToValue)
+                                   );
+        break;
+      default:
         throw iface::SRuS::SRuSException();
+      }
     }
 
     // We now have all the range values.
