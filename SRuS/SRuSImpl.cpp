@@ -1863,7 +1863,7 @@ CDA_SRuSSimulationStepLoop::getRangeValueFor
     ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
     ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
     if (cv == NULL)
-      throw iface::SProS::SProSException();
+      throw iface::SRuS::SRuSException();
 
     std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
       (mState->mPerModelState.find(var->modelReferenceIdentifier()));
@@ -1913,7 +1913,7 @@ CDA_SRuSSimulationStepLoop::getRangeValueFor
     }
 
     if (!foundCT)
-      throw iface::SProS::SProSException();
+      throw iface::SRuS::SRuSException();
 
     eval.setVariable(var->id(), ctValue);
   }
@@ -1971,7 +1971,7 @@ CDA_SRuSSimulationStepLoop::perform()
       ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
       ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
       if (cv == NULL)
-        throw iface::SProS::SProSException();
+        throw iface::SRuS::SRuSException();
 
       std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
         (mState->mPerModelState.find(sv->modelReferenceIdentifier()));
@@ -2021,7 +2021,7 @@ CDA_SRuSSimulationStepLoop::perform()
       }
 
       if (!foundCT)
-        throw iface::SProS::SProSException();
+        throw iface::SRuS::SRuSException();
     }
 
     // We now have all the range values.
