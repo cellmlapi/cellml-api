@@ -465,6 +465,8 @@ public: \
 class CDA_SProSModel;
 class CDA_SProSTask;
 class CDA_SProSSimulation;
+class CDA_SProSOneStep;
+class CDA_SProSSteadyState;
 class CDA_SProSDataGenerator;
 class CDA_SProSOutput;
 class CDA_SProSVariable;
@@ -503,6 +505,8 @@ public:
 
   already_AddRefd<iface::SProS::Model> createModel() throw();
   already_AddRefd<iface::SProS::UniformTimeCourse> createUniformTimeCourse() throw();
+  already_AddRefd<iface::SProS::OneStep> createOneStep() throw();
+  already_AddRefd<iface::SProS::SteadyState> createSteadyState() throw();
   already_AddRefd<iface::SProS::RepeatedAnalysis> createRepeatedAnalysis() throw();
   already_AddRefd<iface::SProS::Task> createTask() throw();
   already_AddRefd<iface::SProS::DataGenerator> createDataGenerator() throw();
@@ -613,6 +617,39 @@ public:
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
                SProS::UniformTimeCourse);
+};
+
+class CDA_SProSOneStep
+  : public CDA_SProSSimulation, public virtual iface::SProS::OneStep
+{
+public:
+  CDA_SProSOneStep(CDA_SProSBase* aParent,
+                   iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSSimulation(aParent, aEl)
+  {
+  }
+  ~CDA_SProSOneStep() {}
+
+  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
+               SProS::OneStep);
+
+  double step() throw();
+  void step(double aValue) throw();
+};
+
+class CDA_SProSSteadyState
+  : public CDA_SProSSimulation, public virtual iface::SProS::SteadyState
+{
+public:
+  CDA_SProSSteadyState(CDA_SProSBase* aParent,
+                       iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSSimulation(aParent, aEl)
+  {
+  }
+  ~CDA_SProSSteadyState() {}
+
+  CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::Simulation,
+               SProS::SteadyState);
 };
 
 class CDA_SProSRepeatedAnalysis
@@ -1158,6 +1195,10 @@ public:
   void taskReferenceID(const std::wstring& aTarget) throw();
   already_AddRefd<iface::SProS::AbstractTask> taskReference() throw();
   void taskReference(iface::SProS::AbstractTask* aTask) throw(std::exception&);
+  std::wstring modelReferenceIdentifier() throw();
+  void modelReferenceIdentifier(const std::wstring& aTarget) throw();
+  already_AddRefd<iface::SProS::Model> modelReference() throw();
+  void modelReference(iface::SProS::Model* aModel) throw();
 };
 
 class CDA_SProSParameter

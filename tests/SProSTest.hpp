@@ -25,6 +25,7 @@ class SProSTest : public CppUnit::TestFixture
   CPPUNIT_TEST(testSProSCurve);
   CPPUNIT_TEST(testSProSSurface);
   CPPUNIT_TEST(testSProSDataSet);
+  CPPUNIT_TEST(testSProSOneStepSteadyState);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -48,6 +49,7 @@ public:
   void testSProSCurve();
   void testSProSSurface();
   void testSProSDataSet();
+  void testSProSOneStepSteadyState();
 };
 
 #endif // SPROSTEST_H

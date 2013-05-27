@@ -2133,3 +2133,24 @@ SProSTest::testSProSDataSet()
 //   };
 // 
 }
+
+void
+SProSTest::testSProSOneStepSteadyState()
+{
+  RETURN_INTO_OBJREF(sb, iface::SProS::Bootstrap,
+                     CreateSProSBootstrap());
+  RETURN_INTO_OBJREF(sedml, iface::SProS::SEDMLElement,
+                     sb->createEmptySEDML());
+
+  RETURN_INTO_OBJREF(oneStep, iface::SProS::OneStep,
+                     sedml->createOneStep());
+  oneStep->step(1.0);
+  CPPUNIT_ASSERT_EQUAL(1.0, oneStep->step());
+  oneStep->step(2.5);
+  CPPUNIT_ASSERT_EQUAL(2.5, oneStep->step());
+  CPPUNIT_ASSERT(oneStep != NULL);
+
+  RETURN_INTO_OBJREF(steadyState, iface::SProS::SteadyState,
+                     sedml->createSteadyState());
+  CPPUNIT_ASSERT(steadyState != NULL);
+}

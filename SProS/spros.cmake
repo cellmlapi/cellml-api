@@ -1,5 +1,5 @@
 DECLARE_EXTENSION(spros)
-DECLARE_IDL(SProS) # Interface set version: 2
+DECLARE_IDL(SProS) # Interface set version: 3
 DECLARE_IDL_DEPENDENCY(MathML_content_APISPEC)
 DECLARE_EXTENSION_END(spros)
 

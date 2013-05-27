@@ -38,8 +38,6 @@ public:
                     iface::SRuS::GeneratedDataMonitor* aMonitor) throw(std::exception&);
 
 private:
-  already_AddRefd<iface::cellml_api::CellMLElement> xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Node* aNode)
-    throw();
   uint32_t mRecursionDepth;
 
   void doBasicTask(std::map<std::wstring, iface::SRuS::TransformedModel*>& modelsById,
@@ -98,8 +96,8 @@ private:
 
 
 // Find the CellMLElement corresponding to a given DOM node.
-already_AddRefd<iface::cellml_api::CellMLElement>
-CDA_SRuSProcessor::xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Node* aNode) throw()
+static already_AddRefd<iface::cellml_api::CellMLElement>
+xmlToCellML(iface::cellml_api::Model* aModel, iface::dom::Node* aNode) throw()
 {
   RETURN_INTO_OBJREF(doc, iface::dom::Document, aNode->ownerDocument());
   std::list<iface::dom::Node*> l;
@@ -1055,7 +1053,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
     if (cm != NULL && mRecursionDepth <= 50)
     {
       RETURN_INTO_OBJREF(ms, iface::SProS::ModelSet, cm->models());
-      RETURN_INTO_OBJREF(refmod, iface::SProS::Model, ms->getModelByIdentifier(uri.c_str()));
+      RETURN_INTO_OBJREF(refmod, iface::SProS::Model, ms->getModelByIdentifier(uri));
       if (refmod != NULL)
       {
         RETURN_INTO_OBJREF(tmrefmod, iface::SRuS::TransformedModel, buildOneModel(refmod));
@@ -1067,16 +1065,16 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
       RETURN_INTO_OBJREF(seb, iface::SProS::Base, aModel->parent());
       DECLARE_QUERY_INTERFACE_OBJREF(se, seb, SProS::SEDMLElement);
       RETURN_INTO_WSTRING(baseURL, se->originalURL());
-      RETURN_INTO_WSTRING(absURI, cb->makeURLAbsolute(baseURL.c_str(), uri.c_str()));
+      RETURN_INTO_WSTRING(absURI, cb->makeURLAbsolute(baseURL, uri));
       uri = absURI;
 
       // Load it...
       RETURN_INTO_OBJREF(ml, iface::cellml_api::DOMURLLoader, cb->localURLLoader());
-      doc = already_AddRefd<iface::dom::Document>(ml->loadDocument(uri.c_str()));
+      doc = already_AddRefd<iface::dom::Document>(ml->loadDocument(uri));
       if (doc != NULL)
       {
         RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
-        de->setAttributeNS(L"http://www.w3.org/XML/1998/namespace", L"base", uri.c_str());
+        de->setAttributeNS(L"http://www.w3.org/XML/1998/namespace", L"base", uri);
       }
     }
     
@@ -1097,7 +1095,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
 
       RETURN_INTO_WSTRING(targ, c->target());
       RETURN_INTO_OBJREF(xr, iface::xpath::XPathResult,
-                         xe->evaluate(targ.c_str(), doc, resolver,
+                         xe->evaluate(targ, doc, resolver,
                                       iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE,
                                       NULL));
       
@@ -1116,7 +1114,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
         if (at == NULL) // XPath target is not an attribute?
           throw iface::SRuS::SRuSException();
         RETURN_INTO_WSTRING(v, ca->newValue());
-        at->value(v.c_str());
+        at->value(v);
         continue;
       }
 
@@ -1174,7 +1172,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
 
           RETURN_INTO_WSTRING(targ, v->target());
           RETURN_INTO_OBJREF(xr, iface::xpath::XPathResult,
-                             xe->evaluate(targ.c_str(), doc, resolver,
+                             xe->evaluate(targ, doc, resolver,
                                           iface::xpath::XPathResult::NUMBER_TYPE, NULL));
           RETURN_INTO_WSTRING(vid, v->id());
           sme.setVariable(vid, xr->numberValue());
@@ -1185,7 +1183,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
 
         RETURN_INTO_WSTRING(targ, cc->target());
         RETURN_INTO_OBJREF(xr, iface::xpath::XPathResult,
-                           xe->evaluate(targ.c_str(), doc, resolver,
+                           xe->evaluate(targ, doc, resolver,
                                         iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE, NULL));
         RETURN_INTO_OBJREF(n, iface::dom::Node, xr->singleNodeValue());
         wchar_t vstr[30];
@@ -1346,6 +1344,690 @@ public:
 private:
   XPCOMContainerRAII<std::vector<iface::SRuS::GeneratedData*> > mDataRAII;
 };
+
+/*
+ * This class receives all the raw results emitted from simulations (but only
+ * at 'time' points that the SED-ML has requested, no intermediate steps),
+ * and applies the data generators to that raw data to get the final results.
+ */
+class CDA_SRuSRawResultProcessor
+  : public iface::cellml_services::IntegrationProgressObserver
+{
+public:
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+  CDA_IMPL_QI1(cellml_services::IntegrationProgressObserver);
+
+  CDA_SRuSRawResultProcessor
+  (
+   iface::SRuS::GeneratedDataMonitor* aMonitor,
+   iface::cellml_services::CodeInformation* aCodeInfo,
+   const std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >&
+     aVarInfoByDataGeneratorId,
+   const std::map<std::wstring, iface::SProS::DataGenerator*>& aDataGeneratorsById
+  );
+
+  ~CDA_SRuSRawResultProcessor() {}
+
+  void computedConstants(const std::vector<double>& aValues) throw();
+  void done() throw(std::exception&);
+  void failed(const std::string& aErrorMessage) throw(std::exception&);
+  void results(const std::vector<double>& state) throw(std::exception&);
+
+private:
+  ObjRef<iface::SRuS::GeneratedDataMonitor> mMonitor;
+  ObjRef<iface::cellml_services::CodeInformation> mCodeInfo;
+  // 0: Unknown. 1: Need aggregate. -1: Don't need aggregate.
+  int mAggregateMode;
+  std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >
+    mVarInfoByDataGeneratorId;
+  std::vector<double> mConstants;
+  std::map<std::wstring, std::map<std::wstring, std::vector<double> > > mAggregateData;
+  std::map<std::wstring, iface::SProS::DataGenerator*> mDataGeneratorsById;
+  XPCOMContainerSecondRAII<std::map<std::wstring, iface::SProS::DataGenerator*> > mDataGeneratorsByIdRAII;
+  uint32_t mRecSize, mTotalN;
+};
+
+struct CDA_SRuSModelSimulationState
+{
+  std::vector<double> mInitialData, mCurrentData, mCurrentConstants;
+  
+  std::map<int, double> mOverrideConstants;
+  std::map<int, double> mOverrideData;
+  ObjRef<iface::cellml_services::CodeInformation> mCodeInfo;
+};
+
+/**
+ * Stores information about the current state of a model that is shared between
+ * steps and therefore updated as the simulation experiment proceeds.
+ */
+class CDA_SRuSSimulationState
+  : public iface::XPCOM::IObject
+{
+public:
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+  CDA_IMPL_QI0;
+  
+  void resetToInitial()
+  {
+    for (std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator it
+           = mPerModelState.begin(); it != mPerModelState.end(); it++)
+    {
+      it->second.mCurrentData = it->second.mInitialData;
+      it->second.mOverrideConstants.clear();
+    }
+  }
+
+  ObjRef<iface::SRuS::TransformedModelSet> mTMS;
+  ObjRef<CDA_SRuSRawResultProcessor> mResultsTo;
+
+  std::map<std::wstring, CDA_SRuSModelSimulationState>
+    mPerModelState;
+};
+
+/*
+ * The abstract class for generating code for a step that has to be done for a
+ * simulation experiment.
+ */
+class CDA_SRuSSimulationStep
+  : public iface::XPCOM::IObject
+{
+public:
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+
+  CDA_SRuSSimulationStep(CDA_SRuSSimulationState* aState,
+                         CDA_SRuSSimulationStep* aSuccessor)
+    : mState(aState), mSuccessor(aSuccessor) {}
+
+  /*
+   * Performs the simulation. The implementation calls performNext when it is
+   * finished. May be called on any thread.
+   */
+  virtual void perform() = 0;
+
+  /*
+   * Makes a shallow clone of this simulation step.
+   */
+  virtual already_AddRefd<CDA_SRuSSimulationStep> shallowClone() = 0;
+
+  /*
+   * Makes another simulation step that is identical to this one except that a
+   * deep clone is made of each part of the simulation and the argument is
+   * put in place of the last successor in the chain.
+   */
+  already_AddRefd<CDA_SRuSSimulationStep> cloneChangingLastSuccessor(CDA_SRuSSimulationStep* aNewEnd);
+
+  void performNext();
+
+  ObjRef<CDA_SRuSSimulationState> mState;
+  ObjRef<CDA_SRuSSimulationStep> mSuccessor;
+};
+
+class CDA_SRuSSimulationStepLoop
+  : public CDA_SRuSSimulationStep
+{
+public:
+  CDA_IMPL_QI0;
+
+  CDA_SRuSSimulationStepLoop(CDA_SRuSSimulationState* aState,
+                             CDA_SRuSSimulationStep* aSuccessor,
+                             const std::wstring& aMainRange,
+                             std::list<iface::SProS::Range*>& aRanges,
+                             iface::SProS::SetValueSet* aSetValues,
+                             CDA_SRuSSimulationStep* aLoopChain);
+  ~CDA_SRuSSimulationStepLoop() {};
+
+  void perform();
+
+  already_AddRefd<CDA_SRuSSimulationStep>
+  shallowClone()
+  {
+    return new CDA_SRuSSimulationStepLoop(mState, mSuccessor, mNumPoints, mCurrentIndex,
+                                          mRanges, mSetValues, mLoopChain);
+  }
+
+private:
+  CDA_SRuSSimulationStepLoop(CDA_SRuSSimulationState* aState,
+                             CDA_SRuSSimulationStep* aSuccessor,
+                             int aNumPoints, int aCurrentIndex,
+                             std::list<iface::SProS::Range*>& aRanges,
+                             iface::SProS::SetValueSet* aSetValues,
+                             CDA_SRuSSimulationStep* aLoopChain);
+
+  int mNumPoints, mCurrentIndex;
+  std::list<iface::SProS::Range*> mRanges;
+  XPCOMContainerRAII<std::list<iface::SProS::Range*> > mRangesRAII;
+  ObjRef<iface::SProS::SetValueSet> mSetValues;
+  ObjRef<CDA_SRuSSimulationStep> mLoopChain;
+
+  double getRangeValueFor
+  (
+   iface::SProS::Range* aRange,
+   std::map<std::wstring, double>& aCurrentRangeValues
+  );
+};
+
+class CDA_SRuSSimulationStepDropUntil
+  : public CDA_SRuSSimulationStep
+{
+public:
+  CDA_SRuSSimulationStepDropUntil(CDA_SRuSSimulationState* aState,
+                                  CDA_SRuSSimulationStep* aSuccessor)
+    : CDA_SRuSSimulationStep(aState, aSuccessor) {}
+};
+
+CDA_SRuSRawResultProcessor::CDA_SRuSRawResultProcessor
+(
+ iface::SRuS::GeneratedDataMonitor* aMonitor,
+ iface::cellml_services::CodeInformation* aCodeInfo,
+ const std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >&
+ aVarInfoByDataGeneratorId,
+ const std::map<std::wstring, iface::SProS::DataGenerator*>& aDataGeneratorsById
+)
+  : mMonitor(aMonitor), mCodeInfo(aCodeInfo),
+    mAggregateMode(0), mVarInfoByDataGeneratorId(aVarInfoByDataGeneratorId),
+    mDataGeneratorsById(aDataGeneratorsById),
+    mDataGeneratorsByIdRAII(mDataGeneratorsById), mTotalN(0)
+{
+  uint32_t aic = mCodeInfo->algebraicIndexCount();
+  uint32_t ric = mCodeInfo->rateIndexCount();
+  mRecSize = 2 * ric + aic + 1;
+  
+  for (std::map<std::wstring, iface::SProS::DataGenerator*>::iterator i =
+         mDataGeneratorsById.begin(); i != mDataGeneratorsById.end(); i++)
+    (*i).second->add_ref();
+}
+
+void
+CDA_SRuSRawResultProcessor::computedConstants(const std::vector<double>& aValues)
+  throw()
+{
+  mConstants = aValues;
+}
+
+void
+CDA_SRuSRawResultProcessor::done()
+  throw(std::exception&)
+{
+  try
+  {
+    if (mAggregateMode == 1)
+    {
+      RETURN_INTO_OBJREF(gds, CDA_SRuSGeneratedDataSet, new CDA_SRuSGeneratedDataSet());
+      for (std::map<std::wstring, std::map<std::wstring, std::vector<double> > >::iterator i =
+             mAggregateData.begin(); i != mAggregateData.end(); i++)
+      {
+        iface::SProS::DataGenerator* dg = mDataGeneratorsById[(*i).first];
+        RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLMathElement, dg->math());
+        
+        SEDMLMathEvaluatorWithAggregate smea((*i).second);
+        // Set parameters too...
+        RETURN_INTO_OBJREF(ps, iface::SProS::ParameterSet, dg->parameters());
+        RETURN_INTO_OBJREF(pi, iface::SProS::ParameterIterator, ps->iterateParameters());
+        while (true)
+        {
+          RETURN_INTO_OBJREF(p, iface::SProS::Parameter, pi->nextParameter());
+          if (p == NULL)
+            break;
+          
+          RETURN_INTO_WSTRING(pid, p->id());
+          smea.setVariable(pid, p->value());
+        }
+        
+        RETURN_INTO_OBJREF(gd, CDA_SRuSGeneratedData, new CDA_SRuSGeneratedData(dg));
+        for (uint32_t j = 0; j < mTotalN; j++)
+        {
+          for (std::map<std::wstring, std::vector<double> >::iterator vi = (*i).second.begin();
+               vi != (*i).second.end(); vi++)
+            smea.setVariable((*vi).first, (*vi).second[j]);
+          gd->mData.push_back(smea.eval(m));
+        }
+        
+        gd->add_ref();
+        gds->mData.push_back(gd);
+      }
+    }
+    mMonitor->done();
+  }
+  catch (...) {}
+}
+
+void
+CDA_SRuSRawResultProcessor::failed(const std::string& aErrorMessage)
+  throw(std::exception&)
+{
+  try
+  {
+    mMonitor->failure(aErrorMessage);
+  }
+  catch (...)
+  {
+  }
+}
+
+void
+CDA_SRuSRawResultProcessor::results(const std::vector<double>& state)
+  throw(std::exception&)
+{
+  uint32_t n = state.size() / mRecSize;
+  mTotalN += n;
+  if (mAggregateMode == 1)
+  {
+    for (std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >::iterator i =
+           mVarInfoByDataGeneratorId.begin(); i != mVarInfoByDataGeneratorId.end(); i++)
+      for (std::list<std::pair<std::wstring, int32_t> >::iterator li = (*i).second.begin();
+           li != (*i).second.end(); li++)
+      {
+        int32_t idx = (*li).second;
+        std::vector<double>& l = mAggregateData[(*i).first][(*li).first];
+        for (uint32_t j = 0; j < n; j++)
+          l.push_back(idx < 0 ? mConstants[-1 - idx] : state[j * mRecSize + idx]);
+      }
+    return;
+  }
+
+  SEDMLMathEvaluator sme;
+  if (mAggregateMode == 0)
+    sme.setExploreEverything(true);
+  
+  RETURN_INTO_OBJREF(gds, CDA_SRuSGeneratedDataSet, new CDA_SRuSGeneratedDataSet());
+  
+  for (std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >::iterator i =
+         mVarInfoByDataGeneratorId.begin(); i != mVarInfoByDataGeneratorId.end(); i++)
+  {
+    iface::SProS::DataGenerator* dg = mDataGeneratorsById[(*i).first];
+    // Set parameters too...
+    RETURN_INTO_OBJREF(ps, iface::SProS::ParameterSet, dg->parameters());
+    RETURN_INTO_OBJREF(pi, iface::SProS::ParameterIterator, ps->iterateParameters());
+    while (true)
+    {
+      RETURN_INTO_OBJREF(p, iface::SProS::Parameter, pi->nextParameter());
+      if (p == NULL)
+        break;
+      
+      RETURN_INTO_WSTRING(pid, p->id());
+      sme.setVariable(pid, p->value());
+    }
+    
+    RETURN_INTO_OBJREF(gd, CDA_SRuSGeneratedData, new CDA_SRuSGeneratedData(dg));
+    
+    for (uint32_t j = 0; j < n; j++)
+    {
+      for (std::list<std::pair<std::wstring, int32_t> >::iterator li = (*i).second.begin();
+           li != (*i).second.end(); li++)
+        sme.setVariable((*li).first, (*li).second < 0 ?
+                        mConstants[-1 - (*li).second] :
+                        state[j * mRecSize + (*li).second]);
+      
+      try
+      {
+        RETURN_INTO_OBJREF(m, iface::mathml_dom::MathMLMathElement, dg->math());
+        double v = sme.eval(m);
+        gd->mData.push_back(v);
+      }
+      catch (NeedsAggregate&)
+      {
+        mAggregateMode = 1;
+        results(state);
+        return;
+      }
+    }
+    
+    gd->add_ref();
+    gds->mData.push_back(gd);
+  }
+  
+  mMonitor->progress(gds);
+}
+
+already_AddRefd<CDA_SRuSSimulationStep>
+CDA_SRuSSimulationStep::cloneChangingLastSuccessor(CDA_SRuSSimulationStep* aNewEnd)
+{
+  CDA_SRuSSimulationStep* cur = this;
+  ObjRef<CDA_SRuSSimulationStep> firstNewStep(cur->shallowClone());
+  CDA_SRuSSimulationStep* newStep = firstNewStep;
+
+  while (newStep->mSuccessor)
+  {
+    cur = cur->mSuccessor;
+    newStep->mSuccessor = cur->shallowClone();
+    newStep = newStep->mSuccessor;
+  }
+  newStep->mSuccessor = aNewEnd;
+
+  return firstNewStep.returnNewReference();
+}
+
+void
+CDA_SRuSSimulationStep::performNext()
+{
+  if (mSuccessor == NULL)
+    mState->mResultsTo->done();
+  else
+    mSuccessor->perform();
+}
+
+static int countPointsInRange(iface::SProS::Range* aRange)
+{
+  if (aRange == NULL)
+    return -1;
+  ObjRef<iface::SProS::VectorRange> vRange(QueryInterface(aRange));
+  if (vRange != NULL)
+    return static_cast<int>(vRange->numberOfValues());
+
+  ObjRef<iface::SProS::UniformRange> uRange(QueryInterface(aRange));
+  if (uRange != NULL)
+    return static_cast<int>(uRange->numberOfPoints());
+  
+  return -1;
+}
+
+CDA_SRuSSimulationStepLoop::CDA_SRuSSimulationStepLoop
+(
+ CDA_SRuSSimulationState* aState,
+ CDA_SRuSSimulationStep* aSuccessor,
+ const std::wstring& aMasterRangeId,
+ std::list<iface::SProS::Range*>& aRanges,
+ iface::SProS::SetValueSet* aSetValues,
+ CDA_SRuSSimulationStep* aLoopChain
+)
+  : 
+  CDA_SRuSSimulationStep(aState, aSuccessor),
+  mCurrentIndex(0), mRanges(aRanges.begin(), aRanges.end()),
+  mRangesRAII(mRanges), mSetValues(aSetValues), mLoopChain(aLoopChain)
+{
+  for (std::list<iface::SProS::Range*>::iterator it = mRanges.begin();
+       it != mRanges.end();
+       it++)
+    (*it)->add_ref();
+
+  if (mRanges.empty())
+    throw iface::SRuS::SRuSException();
+
+  mNumPoints = countPointsInRange(mRanges.front());
+
+  if (mNumPoints == -1) // All ranges are functionalRange? Not valid.
+    throw iface::SRuS::SRuSException();
+
+  bool foundMasterRange = false;
+  std::map<std::wstring, iface::SProS::Range*> rangeByName;
+  for (std::list<iface::SProS::Range*>::iterator it = mRanges.begin();
+       it != mRanges.end();
+       it++)
+    rangeByName.insert(std::pair<std::wstring, iface::SProS::Range*>((*it)->id(), *it));
+  std::wstring sizeDeterminingName = aMasterRangeId;
+  
+  while (true)
+  {
+    std::map<std::wstring, iface::SProS::Range*>::iterator it =
+      rangeByName.find(sizeDeterminingName);
+    if (it == rangeByName.end())
+      throw iface::SRuS::SRuSException();
+
+    mNumPoints = countPointsInRange(it->second);
+    if (mNumPoints != -1)
+      break;
+
+    ObjRef<iface::SProS::FunctionalRange> fRange(QueryInterface(it->second));
+    sizeDeterminingName = fRange->indexName();
+  }
+
+  for (std::list<iface::SProS::Range*>::iterator it = mRanges.begin();
+       it != mRanges.end();
+       it++)
+  {
+    int count = countPointsInRange(*it);
+    // It's invalid to have less points than the range named in the 'range'
+    // attribute in any range.
+    if (count != -1 && count < mNumPoints)
+      throw iface::SRuS::SRuSException();
+  }
+}
+
+CDA_SRuSSimulationStepLoop::CDA_SRuSSimulationStepLoop
+(
+ CDA_SRuSSimulationState* aState,
+ CDA_SRuSSimulationStep* aSuccessor,
+ int aNumPoints, int aCurrentIndex,
+ std::list<iface::SProS::Range*>& aRanges,
+ iface::SProS::SetValueSet* aSetValues,
+ CDA_SRuSSimulationStep* aLoopChain
+)
+ : CDA_SRuSSimulationStep(aState, aSuccessor),
+   mNumPoints(aNumPoints),
+   mCurrentIndex(aCurrentIndex), mRanges(aRanges.begin(), aRanges.end()),
+   mRangesRAII(mRanges), mSetValues(aSetValues), mLoopChain(aLoopChain)
+
+{
+  for (std::list<iface::SProS::Range*>::iterator it = mRanges.begin();
+       it != mRanges.end();
+       it++)
+    (*it)->add_ref();
+}
+
+
+double
+CDA_SRuSSimulationStepLoop::getRangeValueFor
+(
+ iface::SProS::Range* aRange,
+ std::map<std::wstring, double>& aCurrentRangeValues
+)
+{
+  ObjRef<iface::SProS::VectorRange> vRange(QueryInterface(aRange));
+  if (vRange != NULL)
+    return (vRange->valueAt(mCurrentIndex));
+
+  ObjRef<iface::SProS::UniformRange> uRange(QueryInterface(aRange));
+  if (uRange != NULL)
+    return uRange->start() +
+      ((uRange->end() - uRange->start()) / (uRange->numberOfPoints() - 1)) *
+      mCurrentIndex;
+  
+  ObjRef<iface::SProS::FunctionalRange> fRange(QueryInterface(aRange));
+  assert(fRange != NULL);
+  ObjRef<iface::mathml_dom::MathMLMathElement> mathFunc(fRange->function());
+
+  SEDMLMathEvaluator eval;
+  for (std::map<std::wstring, double>::iterator it = aCurrentRangeValues.begin();
+       it != aCurrentRangeValues.end(); it++)
+    eval.setVariable(it->first, it->second);
+  
+  ObjRef<iface::SProS::VariableSet> variables(fRange->variables());
+  ObjRef<iface::SProS::VariableIterator> varIt(variables->iterateVariables());
+  for (ObjRef<iface::SProS::Variable> var = varIt->nextVariable();
+       var != NULL; var = varIt->nextVariable())
+  {
+    std::wstring expr = var->target();
+
+    ObjRef<iface::SRuS::TransformedModel> tm
+      (mState->mTMS->getItemByID(var->modelReferenceIdentifier()));
+    if (tm == NULL)
+      throw iface::SRuS::SRuSException();
+
+    ObjRef<iface::xpath::XPathEvaluator> xe(CreateXPathEvaluator());
+    ObjRef<iface::dom::Document> doc(tm->xmlDocument());
+    ObjRef<iface::dom::Element> de(doc->documentElement());
+    ObjRef<iface::xpath::XPathNSResolver> resolver
+      (xe->createNSResolver(de));
+    ObjRef<iface::xpath::XPathResult> xr
+      (xe->evaluate(expr, doc, resolver,
+                    iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE,
+                    NULL));
+    RETURN_INTO_OBJREF(n, iface::dom::Node, xr->singleNodeValue());
+    if (n == NULL)
+      throw iface::SRuS::SRuSException();
+
+    ObjRef<iface::cellml_api::Model> m(QueryInterface(tm->modelDocument()));
+    ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
+    ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
+    if (cv == NULL)
+      throw iface::SProS::SProSException();
+
+    std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
+      (mState->mPerModelState.find(var->modelReferenceIdentifier()));
+
+    ObjRef<iface::cellml_services::ComputationTargetIterator>
+      cti(modelState->second.mCodeInfo->iterateTargets());
+
+    bool foundCT = false;
+    double ctValue = 0.0;
+
+    for (ObjRef<iface::cellml_services::ComputationTarget> ct =
+           cti->nextComputationTarget(); ct != NULL;
+         ct = cti->nextComputationTarget())
+    {
+      ObjRef<iface::cellml_api::CellMLVariable> ctv(ct->variable());
+      if (!CDA_objcmp(ctv, cv))
+      {
+        int32_t idx = ct->assignedIndex();
+        iface::cellml_services::VariableEvaluationType t(ct->type());
+        switch (t)
+        {
+        case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+          idx = 0;
+          break;
+        case iface::cellml_services::CONSTANT:
+          idx = -1 - idx;
+          break;
+        case iface::cellml_services::STATE_VARIABLE:
+        case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+          idx++;
+          break;
+        case iface::cellml_services::ALGEBRAIC:
+          idx += 1 + modelState->second.mCodeInfo->rateIndexCount() * 2;
+          break;
+        default:
+          throw iface::SRuS::SRuSException();
+        }
+        if (idx < 0)
+          ctValue = modelState->second.mCurrentConstants.size() > (-1-idx) ?
+            modelState->second.mCurrentConstants[-1-idx] : 0.0;
+        else
+          ctValue = modelState->second.mCurrentData.size() > idx ?
+            modelState->second.mCurrentData[idx] : 0.0;
+        foundCT = true;
+        break;
+      }
+    }
+
+    if (!foundCT)
+      throw iface::SProS::SProSException();
+
+    eval.setVariable(var->id(), ctValue);
+  }
+
+  return eval.eval(mathFunc);
+}
+
+void
+CDA_SRuSSimulationStepLoop::perform()
+{
+  if (mCurrentIndex == mNumPoints)
+    performNext();
+  else
+  {
+    std::map<std::wstring, double> currentRangeValues;
+    for (std::list<iface::SProS::Range*>::iterator it = mRanges.begin();
+         it != mRanges.end();
+         it++)
+      currentRangeValues[(*it)->id()] = getRangeValueFor(*it, currentRangeValues);
+
+    ObjRef<iface::SProS::SetValueIterator> svi(mSetValues->iterateSetValues());
+    for (ObjRef<iface::SProS::SetValue> sv(svi->nextSetValue()); sv; sv = sv->nextSetValue())
+    {
+      SEDMLMathEvaluator eval;
+      if (sv->range() != L"" && currentRangeValues.contains(sv->range()))
+        eval.setVariable(sv->range(), currentRangeValues[sv->range()]);
+
+      
+      double setToValue;
+
+      ObjRef<iface::SRuS::TransformedModel> tm
+        (mState->mTMS->getItemByID(sv->modelReferenceIdentifier()));
+      if (tm == NULL)
+        throw iface::SRuS::SRuSException();
+
+      ObjRef<iface::xpath::XPathEvaluator> xe(CreateXPathEvaluator());
+      ObjRef<iface::dom::Document> doc(tm->xmlDocument());
+      ObjRef<iface::dom::Element> de(doc->documentElement());
+      ObjRef<iface::xpath::XPathNSResolver> resolver
+        (xe->createNSResolver(de));
+      ObjRef<iface::xpath::XPathResult> xr
+        (xe->evaluate(sv->target(), doc, resolver,
+                      iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE,
+                      NULL));
+      RETURN_INTO_OBJREF(n, iface::dom::Node, xr->singleNodeValue());
+      if (n == NULL)
+        throw iface::SRuS::SRuSException();
+
+      ObjRef<iface::cellml_api::Model> m(QueryInterface(tm->modelDocument()));
+      ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
+      ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
+      if (cv == NULL)
+        throw iface::SProS::SProSException();
+
+      std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
+        (mState->mPerModelState.find(var->modelReferenceIdentifier()));
+
+      ObjRef<iface::cellml_services::ComputationTargetIterator>
+        cti(modelState->second.mCodeInfo->iterateTargets());
+
+      bool foundCT = false;
+      double ctValue = 0.0;
+      
+      for (ObjRef<iface::cellml_services::ComputationTarget> ct =
+             cti->nextComputationTarget(); ct != NULL;
+           ct = cti->nextComputationTarget())
+      {
+        ObjRef<iface::cellml_api::CellMLVariable> ctv(ct->variable());
+        if (!CDA_objcmp(ctv, cv))
+        {
+          int32_t idx = ct->assignedIndex();
+          iface::cellml_services::VariableEvaluationType t(ct->type());
+          switch (t)
+          {
+          case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+            idx = 0;
+            break;
+          case iface::cellml_services::CONSTANT:
+            idx = -1 - idx;
+            break;
+          case iface::cellml_services::STATE_VARIABLE:
+          case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+            idx++;
+            break;
+          case iface::cellml_services::ALGEBRAIC:
+            idx += 1 + modelState->second.mCodeInfo->rateIndexCount() * 2;
+            break;
+          default:
+            throw iface::SRuS::SRuSException();
+          }
+          if (idx < 0)
+            modelState->second.mOverrideConstants.insert(-1-idx, setToValue);
+          else
+            modelState->second.mOverrideData.insert(idx, setToValue);
+          foundCT = true;
+          break;
+        }
+      }
+
+      if (!foundCT)
+        throw iface::SProS::SProSException();
+    }
+
+    // We now have all the range values.
+    mCurrentIndex++;
+    
+    // We make a new chain where we do all the subtask steps and then come
+    // back to recheck the loop at the end.
+    ObjRef<CDA_SRuSSimulationStep> realSuccessor
+      (mLoopChain->cloneChangingLastSuccessor(mCurrentIndex == mNumPoints ?
+                                              this->mSuccessor : this));
+    realSuccessor->performNext();
+  }
+}
 
 class CDA_SRuSResultBridge
   : public iface::cellml_services::IntegrationProgressObserver
@@ -1803,7 +2485,7 @@ CDA_SRuSProcessor::doBasicTask
                            xe->createNSResolver(de));
         RETURN_INTO_WSTRING(expr, sv->target());
         RETURN_INTO_OBJREF(xr, iface::xpath::XPathResult,
-                           xe->evaluate(expr.c_str(), doc, resolver,
+                           xe->evaluate(expr, doc, resolver,
                                         iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE,
                                         NULL));
         RETURN_INTO_OBJREF(n, iface::dom::Node, xr->singleNodeValue());
@@ -1948,6 +2630,59 @@ CDA_SRuSProcessor::doRepeatedTask
  iface::SRuS::GeneratedDataMonitor* aMonitor
 )
 {
+  std::list<iface::SProS::Range*> orderedRanges;
+  std::multimap<std::wstring, iface::SProS::FunctionalRange*> rangeDependencies;
+  XPCOMContainerRAII<std::list<iface::SProS::Range*> > orderedRangesRAII(orderedRanges);
+  XPCOMContainerSecondRAII<std::multimap<std::wstring, iface::SProS::FunctionalRange*> >
+    rangeDependenciesRAII(rangeDependencies);
+
+  ObjRef<iface::SProS::RangeSet> ranges(t->ranges());
+  ObjRef<iface::SProS::RangeIterator> rangeIt(ranges->iterateRanges());
+
+  std::list<std::wstring> doneQueue;
+
+  for (ObjRef<iface::SProS::Range> range = rangeIt->nextRange(); range;
+       range = rangeIt->nextRange())
+  {
+    ObjRef<iface::SProS::FunctionalRange> funcRange(QueryInterface(range));
+    if (funcRange == NULL)
+    {
+      orderedRanges.push_back(range.returnNewReference());
+      doneQueue.push_back(range->id());
+    }
+    else
+      rangeDependencies.insert(std::pair<std::wstring, iface::SProS::FunctionalRange*>
+                               (funcRange->indexName(), funcRange.returnNewReference()));
+  }
+
+  while (!doneQueue.empty())
+  {
+    std::wstring ident(doneQueue.front());
+    doneQueue.pop_front();
+
+    std::multimap<std::wstring, iface::SProS::FunctionalRange*>::iterator it, itNext;
+
+    for (it = rangeDependencies.find(ident);
+         it != rangeDependencies.end() && it->first == ident;
+         it = itNext)
+    {
+      itNext = it;
+      itNext++;
+      iface::SProS::FunctionalRange* funcRange = it->second;
+      orderedRanges.push_back(funcRange);
+      rangeDependencies.erase(it);
+      doneQueue.push_back(funcRange->id());
+    }
+  }
+
+  if (!rangeDependencies.empty())
+  {
+    // If this happens, there was a functionalRange with an index that wasn't a
+    // valid range name.
+    throw iface::SRuS::SRuSException();
+  }
+  
+  #error TODO Set up repeated task to run using new data structures.
 }
 
 class CDA_SRuSBootstrap

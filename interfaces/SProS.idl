@@ -41,6 +41,7 @@ module SProS
   interface NamedIdentifiedElement;
   interface NamedIdentifiedElementIterator;
   interface NamedIdentifiedElementSet;
+  interface OneStep;
   interface Output;
   interface OutputIterator;
   interface OutputSet;
@@ -63,6 +64,7 @@ module SProS
   interface Simulation;
   interface SimulationIterator;
   interface SimulationSet;
+  interface SteadyState;
   interface SubTask;
   interface SubTaskSet;
   interface SubTaskIterator;
@@ -235,6 +237,18 @@ module SProS
      * and must be explicitly added.
      */
     RepeatedAnalysis createRepeatedAnalysis();
+
+    /**
+     * Creates a new OneStep. It is created with no parent
+     * and must be explicitly added.
+     */
+    OneStep createOneStep();
+
+    /**
+     * Creates a new SteadyState. It is created with no parent
+     * and must be explicitly added.
+     */
+    SteadyState createSteadyState();
 
     /**
      * Creates a new RepeatedTask. It is created with no parent
@@ -581,6 +595,27 @@ module SProS
   };
 
   /**
+   * A simulation that proceeds a fixed amount and produces output at one
+   * value of the overall bound variable.
+   */
+  interface OneStep
+    : Simulation
+  {
+    /**
+     * The size of the step to take.
+     */
+    attribute double step;
+  };
+
+  /**
+   * A simulation to run until steady state.
+   */
+  interface SteadyState
+    : Simulation
+  {
+  };
+
+  /**
    * A Uniform Time Course simulation.
    */
   interface UniformTimeCourse
@@ -763,7 +798,7 @@ module SProS
     : Range
   {
     /**
-     * The name to make available in the MathML as the index.
+     * The name of the range which indexes this range.
      */
     attribute wstring indexName;
 
@@ -1080,6 +1115,16 @@ module SProS
      * sourced (variables in DataGenerators only).
      */
     attribute AbstractTask taskReference;
+
+    /**
+     * A reference to a model, as the identifier string.
+     */
+    attribute wstring modelReferenceIdentifier;
+
+    /**
+     * A reference to a model.
+     */
+    attribute Model modelReference;
   };
 
   /**

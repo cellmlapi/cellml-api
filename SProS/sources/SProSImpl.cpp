@@ -475,6 +475,18 @@ makerepeatedAnalysis(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 }
 
 static already_AddRefd<CDA_SProSBase>
+makeoneStep(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSOneStep(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
+makesteadyState(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSSteadyState(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
 makevariable(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 {
   return new CDA_SProSVariable(aParent, aEl);
@@ -527,6 +539,7 @@ static BaseElementConstructors sBaseConstructors[] = {
   {L"dataSet", makedataSet},
   {L"functionalRange", makefunctionalRange},
   {L"model", makemodel},
+  {L"oneStep", makeoneStep},
   {L"parameter", makeparameter},
   {L"plot2D", makeplot2D},
   {L"plot3D", makeplot3D},
@@ -538,6 +551,7 @@ static BaseElementConstructors sBaseConstructors[] = {
   {L"samplingSensitivityAnalysis", makerepeatedAnalysis},
   {L"sedML", makesedML},
   {L"setValue", makesetValue},
+  {L"steadyState", makesteadyState},
   {L"subTask", makesubTask},
   {L"surface", makesurface},
   {L"task", maketask},
@@ -1083,6 +1097,26 @@ CDA_SProSSEDMLElement::createRepeatedAnalysis()
   return new CDA_SProSRepeatedAnalysis(NULL, el);
 }
 
+already_AddRefd<iface::SProS::OneStep>
+CDA_SProSSEDMLElement::createOneStep()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"oneStep"));
+
+  return new CDA_SProSOneStep(NULL, el);
+}
+
+already_AddRefd<iface::SProS::SteadyState>
+CDA_SProSSEDMLElement::createSteadyState()
+  throw()
+{
+  RETURN_INTO_OBJREF(doc, iface::dom::Document, mDomEl->ownerDocument());
+  RETURN_INTO_OBJREF(el, iface::dom::Element, doc->createElementNS(SEDML_NS, L"steadyState"));
+
+  return new CDA_SProSSteadyState(NULL, el);
+}
+
 already_AddRefd<iface::SProS::Task>
 CDA_SProSSEDMLElement::createTask()
   throw()
@@ -1485,7 +1519,7 @@ CDA_SProSSimulation::algorithmKisaoID(const std::wstring& aID) throw()
   }
 }
 
-#define SimulationTypes L"uniformTimeCourse", L"repeatedAnalysis"
+#define SimulationTypes L"uniformTimeCourse", L"repeatedAnalysis", L"steadyState", L"oneStep"
 SomeSProSSet(Simulation, L"listOfSimulations", SimulationTypes);
 
 double
@@ -1556,6 +1590,22 @@ CDA_SProSUniformTimeCourseBase::numberOfPoints()
   return wcstoul(it.c_str(), NULL, 10);
 }
 
+double
+CDA_SProSOneStep::step()
+  throw()
+{
+  return wcstod(mDomEl->getAttribute(L"step").c_str(), NULL);
+}
+
+void
+CDA_SProSOneStep::step(double aValue)
+  throw()
+{
+  wchar_t buf[32];
+  any_swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"%g", aValue);
+  mDomEl->setAttribute(L"step", buf);
+}
+
 #define TaskTypes L"task", L"repeatedTask"
 SomeSProSSet(Task, L"listOfTasks", TaskTypes);
 
@@ -1592,8 +1642,14 @@ CDA_SProSSetValue::modelReference() throw()
   if (!mParent || !mParent->mParent)
     return NULL;
 
+  CDA_SProSBase* p = mParent->mParent;
+  while (p->mParent)
+    p = p->mParent;
+
+  ObjRef<iface::SProS::SEDMLElement> sedml(QueryInterface(p));
+
   ObjRef<iface::SProS::ModelSet>
-    models(static_cast<CDA_SProSSEDMLElement*>(mParent->mParent)->models());
+    models(sedml->models());
 
   return models->getModelByIdentifier(modelReferenceIdentifier());
 }
@@ -2075,6 +2131,44 @@ CDA_SProSVariable::taskReference(iface::SProS::AbstractTask* aTask)
 
   RETURN_INTO_WSTRING(tid, aTask->id());
   taskReferenceID(tid.c_str());
+}
+
+std::wstring
+CDA_SProSVariable::modelReferenceIdentifier()
+  throw()
+{
+  return mDomEl->getAttribute(L"modelReference");
+}
+
+void
+CDA_SProSVariable::modelReferenceIdentifier(const std::wstring& aReference)
+  throw()
+{
+  mDomEl->setAttribute(L"modelReference", aReference);
+}
+
+already_AddRefd<iface::SProS::Model>
+CDA_SProSVariable::modelReference() throw()
+{
+  if (!mParent || !mParent->mParent)
+    return NULL;
+
+  CDA_SProSBase* p = mParent->mParent;
+  while (p->mParent)
+    p = p->mParent;
+
+  ObjRef<iface::SProS::SEDMLElement> sedml(QueryInterface(p));
+
+  ObjRef<iface::SProS::ModelSet>
+    models(sedml->models());
+
+  return models->getModelByIdentifier(modelReferenceIdentifier());
+}
+
+void
+CDA_SProSVariable::modelReference(iface::SProS::Model* aModel) throw()
+{
+  modelReferenceIdentifier(aModel->id());
 }
 
 SomeSProSSet(Variable, L"listOfVariables", L"variable");
