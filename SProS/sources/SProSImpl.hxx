@@ -38,6 +38,7 @@ public:
   already_AddRefd<iface::dom::NodeList> notes() throw();
   already_AddRefd<iface::dom::NodeList> annotations() throw();
   already_AddRefd<iface::SProS::Base> parent() throw();
+  already_AddRefd<iface::SProS::SEDMLElement> sedml() throw();
 
   // Semi-private: for use within SProSImpl only.
   void reparent(CDA_SProSBase* aParent);
@@ -680,31 +681,69 @@ public:
   }
 };
 
+class CDA_SProSVariableBase
+  : public virtual iface::SProS::Variable,
+    public CDA_SProSNamedIdentifiedElement
+{
+public:
+  CDA_SProSVariableBase(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl)
+  {
+  }
+  ~CDA_SProSVariableBase() {}
+
+  std::wstring target() throw();
+  void target(const std::wstring& aTarget) throw();
+  std::wstring symbol() throw();
+  void symbol(const std::wstring& aTarget) throw();
+  std::wstring taskReferenceID() throw();
+  void taskReferenceID(const std::wstring& aTarget) throw();
+  already_AddRefd<iface::SProS::AbstractTask> taskReference() throw();
+  void taskReference(iface::SProS::AbstractTask* aTask) throw(std::exception&);
+  std::wstring modelReferenceIdentifier() throw();
+  void modelReferenceIdentifier(const std::wstring& aTarget) throw();
+  already_AddRefd<iface::SProS::Model> modelReference() throw();
+  void modelReference(iface::SProS::Model* aModel) throw();
+};
+
+class CDA_SProSVariable
+  : public CDA_SProSVariableBase
+{
+public:
+  CDA_SProSVariable(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    : CDA_SProSVariableBase(aParent, aEl), CDA_SProSBase(aParent, aEl)
+  {
+  }
+
+  CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
+               SProS::Variable);
+};
+
 class CDA_SProSSetValue
   : public iface::SProS::SetValue,
-    public CDA_SProSBase
+    public CDA_SProSVariableBase
 {
 public:
   CDA_SProSSetValue(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl) {}
+    : CDA_SProSVariableBase(aParent, aEl), CDA_SProSBase(aParent, aEl),
+      mVariableSet(this) {}
   ~CDA_SProSSetValue() {}
   
   CDA_IMPL_QI2(SProS::Base, SProS::SetValue);
-  
-  std::wstring target() throw();
-  void target(const std::wstring& aTarget) throw();
-  
-  std::wstring modelReferenceIdentifier() throw();
-  void modelReferenceIdentifier(const std::wstring& aReference) throw();
-  
-  already_AddRefd<iface::SProS::Model> modelReference() throw();
-  void modelReference(iface::SProS::Model* aModel) throw();
   
   std::wstring rangeIdentifier() throw();
   void rangeIdentifier(const std::wstring& aRangeReference) throw();
   
   already_AddRefd<iface::SProS::Range> rangeReference() throw();
   void rangeReference(iface::SProS::Range*) throw();
+
+  already_AddRefd<iface::SProS::VariableSet> variables() throw();
+
+  already_AddRefd<iface::mathml_dom::MathMLMathElement> math() throw();
+  void math(iface::mathml_dom::MathMLMathElement* aMath) throw();
+
+private:
+  CDA_SProSVariableSet mVariableSet;
 };
 
 SomeAnonSProSSet(SetValue);
@@ -1171,34 +1210,6 @@ public:
   ~CDA_SProSRemoveXML() {}
 
   CDA_IMPL_QI3(SProS::Base, SProS::Change, SProS::RemoveXML);
-};
-
-class CDA_SProSVariable
-  : public iface::SProS::Variable,
-    public CDA_SProSNamedIdentifiedElement
-{
-public:
-  CDA_SProSVariable(CDA_SProSBase* aParent, iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl)
-  {
-  }
-  ~CDA_SProSVariable() {}
-
-  CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
-               SProS::Variable);
-
-  std::wstring target() throw();
-  void target(const std::wstring& aTarget) throw();
-  std::wstring symbol() throw();
-  void symbol(const std::wstring& aTarget) throw();
-  std::wstring taskReferenceID() throw();
-  void taskReferenceID(const std::wstring& aTarget) throw();
-  already_AddRefd<iface::SProS::AbstractTask> taskReference() throw();
-  void taskReference(iface::SProS::AbstractTask* aTask) throw(std::exception&);
-  std::wstring modelReferenceIdentifier() throw();
-  void modelReferenceIdentifier(const std::wstring& aTarget) throw();
-  already_AddRefd<iface::SProS::Model> modelReference() throw();
-  void modelReference(iface::SProS::Model* aModel) throw();
 };
 
 class CDA_SProSParameter

@@ -175,6 +175,17 @@ CDA_SProSBase::parent() throw()
   return mParent;
 }
 
+already_AddRefd<iface::SProS::SEDMLElement>
+CDA_SProSBase::sedml() throw()
+{
+  CDA_SProSBase* p = this;
+  while (p->mParent)
+    p = p->mParent;
+  ObjRef<iface::SProS::SEDMLElement> sedmlEl(QueryInterface(p));
+  return sedmlEl.returnNewReference();
+}
+
+
 CDA_SomeSet::CDA_SomeSet(CDA_SProSBase* aParent,
                          const wchar_t* aListName,
                          const wchar_t** aElNames)
@@ -1610,59 +1621,6 @@ CDA_SProSOneStep::step(double aValue)
 SomeSProSSet(Task, L"listOfTasks", TaskTypes);
 
 std::wstring
-CDA_SProSSetValue::target() throw()
-{
-  return mDomEl->getAttribute(L"target");
-}
-
-void
-CDA_SProSSetValue::target(const std::wstring& aTarget)
-  throw()
-{
-  mDomEl->setAttribute(L"target", aTarget);
-}
-
-std::wstring
-CDA_SProSSetValue::modelReferenceIdentifier()
-  throw()
-{
-  return mDomEl->getAttribute(L"modelReference");
-}
-
-void
-CDA_SProSSetValue::modelReferenceIdentifier(const std::wstring& aReference)
-  throw()
-{
-  mDomEl->setAttribute(L"modelReference", aReference);
-}
-
-already_AddRefd<iface::SProS::Model>
-CDA_SProSSetValue::modelReference() throw()
-{
-  if (!mParent || !mParent->mParent)
-    return NULL;
-
-  CDA_SProSBase* p = mParent->mParent;
-  while (p->mParent)
-    p = p->mParent;
-
-  ObjRef<iface::SProS::SEDMLElement> sedml(QueryInterface(p));
-
-  ObjRef<iface::SProS::ModelSet>
-    models(sedml->models());
-
-  return models->getModelByIdentifier(modelReferenceIdentifier());
-}
-
-void
-CDA_SProSSetValue::modelReference(iface::SProS::Model* aModel) throw()
-{
-  modelReferenceIdentifier(aModel->id());
-}
-
-//
-
-std::wstring
 CDA_SProSSetValue::rangeIdentifier()
   throw()
 {
@@ -1694,6 +1652,45 @@ CDA_SProSSetValue::rangeReference(iface::SProS::Range* aRange) throw()
   rangeIdentifier(aRange->id());
 }
 
+already_AddRefd<iface::SProS::VariableSet>
+CDA_SProSSetValue::variables() throw()
+{
+  mVariableSet.add_ref();
+  return &mVariableSet;
+}
+
+already_AddRefd<iface::mathml_dom::MathMLMathElement>
+CDA_SProSSetValue::math() throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  for (; cn; cn = already_AddRefd<iface::dom::Node>(cn->nextSibling()))
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    if (el == NULL)
+      continue;
+    return el.returnNewReference();
+  }
+  return NULL;
+}
+
+void
+CDA_SProSSetValue::math(iface::mathml_dom::MathMLMathElement* aMath)
+  throw()
+{
+  RETURN_INTO_OBJREF(cn, iface::dom::Node, mDomEl->firstChild());
+  while (cn)
+  {
+    DECLARE_QUERY_INTERFACE_OBJREF(el, cn, mathml_dom::MathMLMathElement);
+    cn = already_AddRefd<iface::dom::Node>(cn->nextSibling());
+
+    if (el == NULL)
+      continue;
+
+    mDomEl->removeChild(el)->release_ref();
+  }
+
+  mDomEl->appendChild(aMath)->release_ref();
+}
 
 std::wstring
 CDA_SProSTask::simulationReferenceIdentifier()
@@ -2052,68 +2049,60 @@ CDA_SProSAddXML::anyXML()
 }
 
 std::wstring
-CDA_SProSVariable::target() throw()
+CDA_SProSVariableBase::target() throw()
 {
   return mDomEl->getAttribute(L"target");
 }
 
 void
-CDA_SProSVariable::target(const std::wstring& aTarget) throw()
+CDA_SProSVariableBase::target(const std::wstring& aTarget) throw()
 {
   mDomEl->setAttribute(L"target", aTarget);
 }
 
 std::wstring
-CDA_SProSVariable::symbol() throw()
+CDA_SProSVariableBase::symbol() throw()
 {
   return mDomEl->getAttribute(L"symbol");
 }
 
 void
-CDA_SProSVariable::symbol(const std::wstring& aSymbol)
+CDA_SProSVariableBase::symbol(const std::wstring& aSymbol)
   throw()
 {
   mDomEl->setAttribute(L"symbol", aSymbol);
 }
 
 std::wstring
-CDA_SProSVariable::taskReferenceID()
+CDA_SProSVariableBase::taskReferenceID()
   throw()
 {
   return mDomEl->getAttribute(L"taskReference");
 }
 
 void
-CDA_SProSVariable::taskReferenceID(const std::wstring& aRefID)
+CDA_SProSVariableBase::taskReferenceID(const std::wstring& aRefID)
   throw()
 {
   mDomEl->setAttribute(L"taskReference", aRefID);
 }
 
 already_AddRefd<iface::SProS::AbstractTask>
-CDA_SProSVariable::taskReference()
+CDA_SProSVariableBase::taskReference()
   throw()
 {
-  if (mParent == NULL || mParent->mParent == NULL)
+  ObjRef<iface::SProS::SEDMLElement> sedmlEl(sedml());
+
+  if (sedmlEl == NULL)
     return NULL;
 
-  // Hierarchy can either be Variable -> ComputeChange -> Model -> SEDML or
-  //   Variable -> DataGenerator -> SEDML. The former is invalid, but we
-  // should make sure we don't crash on that case...
-  CDA_SProSSEDMLElement* sedml = static_cast<CDA_SProSSEDMLElement*>(mParent->mParent);
-  if (sedml == NULL)
-    return NULL;
-
-  RETURN_INTO_WSTRING(trid, taskReferenceID());
-
-  RETURN_INTO_OBJREF(ts, iface::SProS::TaskSet,
-                     static_cast<CDA_SProSSEDMLElement*>(mParent->mParent)->tasks());
-
+  std::wstring trid = taskReferenceID();
+  ObjRef<iface::SProS::TaskSet> ts(sedmlEl->tasks());
   return ts->getTaskByIdentifier(trid.c_str());
 }
 
 void
-CDA_SProSVariable::taskReference(iface::SProS::AbstractTask* aTask)
+CDA_SProSVariableBase::taskReference(iface::SProS::AbstractTask* aTask)
   throw(std::exception&)
 {
   if (mParent == NULL || mParent->mParent == NULL)
@@ -2134,21 +2123,21 @@ CDA_SProSVariable::taskReference(iface::SProS::AbstractTask* aTask)
 }
 
 std::wstring
-CDA_SProSVariable::modelReferenceIdentifier()
+CDA_SProSVariableBase::modelReferenceIdentifier()
   throw()
 {
   return mDomEl->getAttribute(L"modelReference");
 }
 
 void
-CDA_SProSVariable::modelReferenceIdentifier(const std::wstring& aReference)
+CDA_SProSVariableBase::modelReferenceIdentifier(const std::wstring& aReference)
   throw()
 {
   mDomEl->setAttribute(L"modelReference", aReference);
 }
 
 already_AddRefd<iface::SProS::Model>
-CDA_SProSVariable::modelReference() throw()
+CDA_SProSVariableBase::modelReference() throw()
 {
   if (!mParent || !mParent->mParent)
     return NULL;
@@ -2166,7 +2155,7 @@ CDA_SProSVariable::modelReference() throw()
 }
 
 void
-CDA_SProSVariable::modelReference(iface::SProS::Model* aModel) throw()
+CDA_SProSVariableBase::modelReference(iface::SProS::Model* aModel) throw()
 {
   modelReferenceIdentifier(aModel->id());
 }

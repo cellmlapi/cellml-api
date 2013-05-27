@@ -135,6 +135,11 @@ module SProS
      * The parent of this element, or null.
      */
     readonly attribute Base parent;
+
+    /**
+     * The ancestral SEDMLElement, or null if none.
+     */
+    readonly attribute SEDMLElement sedml;
   };
 
   exception SProSException
@@ -1351,23 +1356,8 @@ module SProS
    * A SED-ML SetValue element.
    */
   interface SetValue
-    : Base
+    : Variable
   {
-    /**
-     * The XPath expression describing the variable target.
-     */
-    attribute wstring target;
-
-    /**
-     * The referenced model, as an identifier.
-     */
-    attribute wstring modelReferenceIdentifier;
-
-    /**
-     * The referenced model object.
-     */
-    attribute Model modelReference;
-
     /**
      * The referenced range, as an identifier.
      */
@@ -1377,6 +1367,16 @@ module SProS
      * The referenced range object.
      */
     attribute Range rangeReference;
+
+    /**
+     * Variables that may be referred to in the math.
+     */
+    readonly attribute VariableSet variables;
+
+    /**
+     * The MathML math element to compute the value to set.
+     */
+    attribute mathml_dom::MathMLMathElement math;
   };
 
   /**

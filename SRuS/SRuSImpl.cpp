@@ -1935,12 +1935,17 @@ CDA_SRuSSimulationStepLoop::perform()
       currentRangeValues[(*it)->id()] = getRangeValueFor(*it, currentRangeValues);
 
     ObjRef<iface::SProS::SetValueIterator> svi(mSetValues->iterateSetValues());
-    for (ObjRef<iface::SProS::SetValue> sv(svi->nextSetValue()); sv; sv = sv->nextSetValue())
+    for (ObjRef<iface::SProS::SetValue> sv(svi->nextSetValue()); sv; sv = svi->nextSetValue())
     {
       SEDMLMathEvaluator eval;
-      if (sv->range() != L"" && currentRangeValues.contains(sv->range()))
-        eval.setVariable(sv->range(), currentRangeValues[sv->range()]);
-
+      std::wstring range(sv->rangeIdentifier());
+      if (range != L"")
+      {
+        std::map<std::wstring, double>::iterator it =
+          currentRangeValues.find(range);
+        if (it != currentRangeValues.end())
+          eval.setVariable(range, it->second);
+      }
       
       double setToValue;
 
@@ -1969,7 +1974,7 @@ CDA_SRuSSimulationStepLoop::perform()
         throw iface::SProS::SProSException();
 
       std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
-        (mState->mPerModelState.find(var->modelReferenceIdentifier()));
+        (mState->mPerModelState.find(sv->modelReferenceIdentifier()));
 
       ObjRef<iface::cellml_services::ComputationTargetIterator>
         cti(modelState->second.mCodeInfo->iterateTargets());
@@ -2005,9 +2010,11 @@ CDA_SRuSSimulationStepLoop::perform()
             throw iface::SRuS::SRuSException();
           }
           if (idx < 0)
-            modelState->second.mOverrideConstants.insert(-1-idx, setToValue);
+            modelState->second.mOverrideConstants.insert
+              (std::pair<int, double>(-1-idx, setToValue));
           else
-            modelState->second.mOverrideData.insert(idx, setToValue);
+            modelState->second.mOverrideData.insert
+              (std::pair<int, double>(idx, setToValue));
           foundCT = true;
           break;
         }
@@ -2682,7 +2689,7 @@ CDA_SRuSProcessor::doRepeatedTask
     throw iface::SRuS::SRuSException();
   }
   
-  #error TODO Set up repeated task to run using new data structures.
+  // TODO Set up repeated task to run using new data structures.
 }
 
 class CDA_SRuSBootstrap
