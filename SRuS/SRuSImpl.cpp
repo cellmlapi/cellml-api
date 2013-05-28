@@ -461,18 +461,6 @@ CDA_SRuSSimulationStep::CDA_SRuSSimulationStep
 (CDA_SRuSSimulationState* aState, CDA_SRuSSimulationStep* aSuccessor)
   : mState(aState), mSuccessor(aSuccessor) {}
 
-already_AddRefd<CDA_SRuSSimulationStep>
-CDA_SRuSSimulationStepLoop::shallowClone()
-{
-  return new CDA_SRuSSimulationStepLoop(mState, mSuccessor, mNumPoints, mCurrentIndex,
-                                        mRanges, mSetValues, mLoopChain);
-}
-
-CDA_SRuSSimulationStepDropUntil::CDA_SRuSSimulationStepDropUntil
-(CDA_SRuSSimulationState* aState,
- CDA_SRuSSimulationStep* aSuccessor)
-  : CDA_SRuSSimulationStep(aState, aSuccessor) {}
-
 CDA_SRuSRawResultProcessor::CDA_SRuSRawResultProcessor
 (
  iface::SRuS::GeneratedDataMonitor* aMonitor,
@@ -858,6 +846,13 @@ CDA_SRuSSimulationStepLoop::CDA_SRuSSimulationStepLoop
     (*it)->add_ref();
 }
 
+already_AddRefd<CDA_SRuSSimulationStep>
+CDA_SRuSSimulationStepLoop::shallowClone()
+{
+  return new CDA_SRuSSimulationStepLoop(mState, mSuccessor, mNumPoints, mCurrentIndex,
+                                        mRanges, mSetValues, mLoopChain);
+}
+
 double
 CDA_SRuSSimulationStepLoop::getRangeValueFor
 (
@@ -967,6 +962,36 @@ CDA_SRuSSimulationStepLoop::perform()
                                               this->mSuccessor : this));
     realSuccessor->performNext();
   }
+}
+
+CDA_SRuSSimulationStepDropUntil::CDA_SRuSSimulationStepDropUntil
+(std::wstring aModelId,
+ double aTargetBvar, CDA_SRuSSimulationState* aState,
+ CDA_SRuSSimulationStep* aSuccessor)
+  : CDA_SRuSSimulationStep(aState, aSuccessor), mModelId(aModelId),
+    mTargetBvar(aTargetBvar)
+{
+}
+
+void
+CDA_SRuSSimulationStepDropUntil::perform()
+{
+  std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator
+    modelState(mState->mPerModelState.find(mModelId));
+  if (modelState == mState->mPerModelState.end())
+  {
+    performNext();
+    return;
+  }
+
+  // TODO - we need some way of passing in the algorithm parameters.
+  // StartSimulation(this, &modelState->second);
+}
+
+already_AddRefd<CDA_SRuSSimulationStep>
+CDA_SRuSSimulationStepDropUntil::shallowClone()
+{
+  return new CDA_SRuSSimulationStepDropUntil(mModelId, mTargetBvar, mState, mSuccessor);
 }
 
 // TODO: Replace this with something based on the SRuSSimulationStep interface.

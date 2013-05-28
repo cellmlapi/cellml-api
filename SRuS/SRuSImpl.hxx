@@ -303,8 +303,20 @@ class CDA_SRuSSimulationStepDropUntil
   : public CDA_SRuSSimulationStep
 {
 public:
-  CDA_SRuSSimulationStepDropUntil(CDA_SRuSSimulationState* aState,
-                                  CDA_SRuSSimulationStep* aSuccessor);
+  CDA_IMPL_QI0;
+
+  CDA_SRuSSimulationStepDropUntil
+  (
+   std::wstring aModelId,
+   double aTargetBvar,
+   CDA_SRuSSimulationState* aState,
+   CDA_SRuSSimulationStep* aSuccessor);
+  void perform();
+  already_AddRefd<CDA_SRuSSimulationStep> shallowClone();
+
+private:
+  std::wstring mModelId;
+  double mTargetBvar;
 };
 
 class CDA_SRuSBootstrap
