@@ -1803,7 +1803,7 @@ CodeGenerationState::CreateMathStatements()
               }
             }
 
-            Equation* eq = new Equation;
+            ptr_tag<Equation> eq(new Equation);
 
             DECLARE_QUERY_INTERFACE_OBJREF(mae, val, mathml_dom::MathMLApplyElement);
             if (mae == NULL)
@@ -1851,11 +1851,11 @@ CodeGenerationState::CreateMathStatements()
 
             DECLARE_QUERY_INTERFACE_OBJREF(cme, cond, mathml_dom::MathMLElement);
 
-            MathMLMathStatement* cms = new MathMLMathStatement(MathStatement::UNCLASSIFIED_MATHML);
+            ptr_tag<MathMLMathStatement> cms(new MathMLMathStatement(MathStatement::UNCLASSIFIED_MATHML));
             cms->mContext = c;
             cms->mMaths = cme;
 
-            pw->mPieces.push_back(std::pair<Equation*, MathMLMathStatement*>(eq, cms));
+            pw->mPieces.push_back(std::pair<ptr_tag<Equation>, ptr_tag<MathMLMathStatement> >(eq, cms));
           }
         }
         else
