@@ -3,7 +3,11 @@
   <!-- From libsedml by Frank Bergmann, apparently licensed under the BSD license. Changed to make a better test, but probably not useful for actual simulations anymore. -->
   <listOfSimulations>
     <uniformTimeCourse id="simulation1" initialTime="0" outputStartTime="0" outputEndTime="200" numberOfPoints="1000">
-      <algorithm kisaoID="KISAO:0000019"/>
+      <algorithm kisaoID="KISAO:0000019">
+        <listOfAlgorithmParameters>
+          <algorithmParameter kisaoID="KISAO:0000211" value="23"/>
+        </listOfAlgorithmParameters>
+      </algorithm>
     </uniformTimeCourse>
   </listOfSimulations>
   <listOfModels>

@@ -10,6 +10,9 @@ module SProS
 {
   interface AbstractTask;
   interface AddXML;
+  interface AlgorithmParameter;
+  interface AlgorithmParameterIterator;
+  interface AlgorithmParameterSet;
   interface Base;
   interface BaseIterator;
   interface BaseSet;
@@ -568,6 +571,11 @@ module SProS
      * The KISAO identifier for the corresponding algorithm.
      */
     attribute wstring algorithmKisaoID;
+
+    /**
+     * The list of algorithm parameters.
+     */
+    readonly attribute AlgorithmParameterSet algorithmParameters;
   };
 
   /**
@@ -1447,5 +1455,43 @@ module SProS
      * Fetch the next SubTask, or null if there are no more.
      */
     SubTask nextSubTask();
+  };
+
+  /**
+   * An algorithm parameter
+   */
+  interface AlgorithmParameter
+    : Base
+  {
+    /**
+     * The KISAO ID of the parameter.
+     */
+    attribute wstring kisaoID;
+
+    /**
+     * The value of the parameter.
+     */
+    attribute wstring value;
+  };
+
+  /**
+   * A set of AlgorithmParameters.
+   */
+  interface AlgorithmParameterSet
+    : BaseSet
+  {
+    /**
+     * Iterate through all the AlgorithmParameters in the set.
+     */
+    AlgorithmParameterIterator iterateAlgorithmParameters();
+  };
+
+  /**
+   * An iterator of AlgorithmParameters
+   */
+  interface AlgorithmParameterIterator
+    : BaseIterator
+  {
+    AlgorithmParameter nextAlgorithmParameter();
   };
 };

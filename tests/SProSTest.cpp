@@ -843,7 +843,48 @@ SProSTest::testSProSSimulationSet()
     RETURN_INTO_WSTRING(ksid, s1->algorithmKisaoID());
     CPPUNIT_ASSERT(ksid == L"KISAO:12345");
   }
+
+//    /**
+//     * The list of algorithm parameters.
+//     */
+//    readonly attribute AlgorithmParameterSet algorithmParameters;
+  ObjRef<iface::SProS::AlgorithmParameterSet> params(s1->algorithmParameters());
+  CPPUNIT_ASSERT(params != NULL);
+
+  ObjRef<iface::SProS::AlgorithmParameterIterator> paramIt
+    (params->iterateAlgorithmParameters());
+  ObjRef<iface::SProS::AlgorithmParameter> firstParam(paramIt->nextAlgorithmParameter());
+  CPPUNIT_ASSERT(firstParam != NULL);
+  ObjRef<iface::SProS::AlgorithmParameter> nullParam(paramIt->nextAlgorithmParameter());
+  CPPUNIT_ASSERT(nullParam == NULL);
+  
 //   };
+
+//  /**
+//   * An algorithm parameter
+//   */
+//  interface AlgorithmParameter
+//    : Base
+//  {
+//    /**
+//     * The KISAO ID of the parameter.
+//     */
+//    attribute wstring kisaoID;
+  CPPUNIT_ASSERT(firstParam->kisaoID() == L"KISAO:0000211");
+  firstParam->kisaoID(L"KISAO:0000212");
+  CPPUNIT_ASSERT(firstParam->kisaoID() == L"KISAO:0000212");
+
+//
+//    /**
+//     * The value of the parameter.
+//     */
+//    attribute wstring value;
+  CPPUNIT_ASSERT(firstParam->value() == L"23");
+  firstParam->value(L"24");
+  CPPUNIT_ASSERT(firstParam->value() == L"24");  
+
+//  };
+
 // 
 //   /**
 //    * A Uniform Time Course simulation.

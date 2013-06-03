@@ -84,6 +84,7 @@ public:
 
   const wchar_t* mListName, ** mElNames;
   CDA_SProSBase* mParent;
+  ObjRef<iface::dom::Element> mParentEl;
   ObjRef<iface::dom::Element> mListElement;
   std::map<std::string, CDA_SProSBase*> mElCache;
 };
@@ -474,6 +475,7 @@ class CDA_SProSVariable;
 class CDA_SProSParameter;
 class CDA_SProSChange;
 class CDA_SProSCurve;
+class CDA_SProSAlgorithmParameter;
 SomeSProSSet(Model);
 SomeSProSSetEx(Task, AbstractTask);
 SomeSProSSet(Simulation);
@@ -482,6 +484,7 @@ SomeSProSSet(Output);
 SomeSProSSet(Variable);
 SomeSProSSet(Parameter);
 SomeAnonSProSSet(Change);
+SomeAnonSProSSet(AlgorithmParameter);
 
 class CDA_SProSSEDMLElement
   : public CDA_SProSBase, public iface::SProS::SEDMLElement
@@ -566,20 +569,38 @@ private:
   CDA_SProSChangeSet mChangeSet;
 };
 
+class CDA_SProSAlgorithmParameter 
+  : public CDA_SProSBase, public iface::SProS::AlgorithmParameter
+{
+public:
+  CDA_IMPL_QI2(SProS::Base, SProS::AlgorithmParameter);
+
+  CDA_SProSAlgorithmParameter(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+    : CDA_SProSBase(aParent, aEl) {}
+  ~CDA_SProSAlgorithmParameter() {}
+
+  std::wstring kisaoID() throw();
+  void kisaoID(const std::wstring& aValue) throw();
+
+  std::wstring value() throw();
+  void value(const std::wstring& aValue) throw();
+};
 
 class CDA_SProSSimulation
   : public CDA_SProSNamedIdentifiedElement, public virtual iface::SProS::Simulation
 {
 public:
-  CDA_SProSSimulation(CDA_SProSBase* aParent,
-                      iface::dom::Element* aEl)
-    : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl)
-  {
-  }
+  CDA_SProSSimulation(CDA_SProSBase* aParent, iface::dom::Element* aEl);
   ~CDA_SProSSimulation() {}
 
   std::wstring algorithmKisaoID() throw();
   void algorithmKisaoID(const std::wstring& aID) throw();
+
+  already_AddRefd<iface::SProS::AlgorithmParameterSet> algorithmParameters() throw();
+
+private:
+  CDA_SProSAlgorithmParameterSet mParamSet;
+  iface::dom::Element* findOrCreateAlgorithmNoAddRef(iface::dom::Element* aParent);
 };
 
 class CDA_SProSUniformTimeCourseBase

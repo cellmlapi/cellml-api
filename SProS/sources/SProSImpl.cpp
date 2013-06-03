@@ -189,7 +189,8 @@ CDA_SProSBase::sedml() throw()
 CDA_SomeSet::CDA_SomeSet(CDA_SProSBase* aParent,
                          const wchar_t* aListName,
                          const wchar_t** aElNames)
-  : mListName(aListName), mElNames(aElNames), mParent(aParent)
+  : mListName(aListName), mElNames(aElNames), mParent(aParent),
+    mParentEl(mParent->mDomEl)
 {
 }
 
@@ -310,7 +311,7 @@ CDA_SomeSet::checkListParentAndInvalidateIfWrong()
 
   RETURN_INTO_OBJREF(p, iface::dom::Node,
                      mListElement->parentNode());
-  if (CDA_objcmp(p, mParent->mDomEl))
+  if (CDA_objcmp(p, mParentEl))
   {
     emptyElementCache();
     mListElement = NULL;
@@ -324,7 +325,7 @@ CDA_SomeSet::tryFindListElement()
   if (mListElement != NULL)
     return mListElement;
 
-  RETURN_INTO_OBJREF(n, iface::dom::Node, mParent->mDomEl->firstChild());
+  RETURN_INTO_OBJREF(n, iface::dom::Node, mParentEl->firstChild());
   while (n != NULL)
   {
     DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
@@ -355,10 +356,10 @@ CDA_SomeSet::findOrCreateListElement()
     return el;
   
   RETURN_INTO_OBJREF(doc, iface::dom::Document,
-                     mParent->mDomEl->ownerDocument());
+                     mParentEl->ownerDocument());
   RETURN_INTO_OBJREF(newel, iface::dom::Element,
                      doc->createElementNS(SEDML_NS, mListName));
-  mParent->mDomEl->appendChild(newel)->release_ref();
+  mParentEl->appendChild(newel)->release_ref();
   mListElement = newel;
 
   return mListElement;
@@ -381,6 +382,12 @@ static already_AddRefd<CDA_SProSBase>
 makeaddXML(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 {
   return new CDA_SProSAddXML(aParent, aEl);
+}
+
+static already_AddRefd<CDA_SProSBase>
+makealgorithmParameter(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+{
+  return new CDA_SProSAlgorithmParameter(aParent, aEl);
 }
 
 static already_AddRefd<CDA_SProSBase>
@@ -542,6 +549,7 @@ makevectorRange(CDA_SProSBase* aParent, iface::dom::Element* aEl)
 // Assumed to be sorted.
 static BaseElementConstructors sBaseConstructors[] = {
   {L"addXML", makeaddXML},
+  {L"algorithmParameter", makealgorithmParameter},
   {L"changeAttribute", makechangeAttribute},
   {L"changeXML", makechangeXML},
   {L"computeChange", makecomputeChange},
@@ -1471,6 +1479,57 @@ CDA_SProS##whatUpper##Set::iterate##whatUpper##s() throw() \
 SomeSProSSet(Model, L"listOfModels", L"model");
 
 std::wstring
+CDA_SProSAlgorithmParameter::kisaoID()
+  throw()
+{
+  return mDomEl->getAttribute(L"kisaoID");
+}
+
+void
+CDA_SProSAlgorithmParameter::kisaoID(const std::wstring& aValue)
+  throw()
+{
+  mDomEl->setAttribute(L"kisaoID", aValue);
+}
+
+std::wstring
+CDA_SProSAlgorithmParameter::value()
+  throw()
+{
+  return mDomEl->getAttribute(L"value");
+}
+
+void
+CDA_SProSAlgorithmParameter::value(const std::wstring& aValue)
+  throw()
+{
+  mDomEl->setAttribute(L"value", aValue);
+}
+
+CDA_SProSSimulation::CDA_SProSSimulation
+(CDA_SProSBase* aParent, iface::dom::Element* aEl)
+  : CDA_SProSBase(aParent, aEl), CDA_SProSNamedIdentifiedElement(aParent, aEl), mParamSet(this)
+{
+  for (ObjRef<iface::dom::Node> n(aEl->firstChild()); n != NULL; n = n->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(n));
+    if (el == NULL)
+      continue;
+    if (el->localName() == L"algorithm" && el->namespaceURI() == SEDML_NS)
+    {
+      mParamSet.mParentEl = el;
+      return;
+    }
+  }
+
+  ObjRef<iface::dom::Document> doc(aEl->ownerDocument());
+  ObjRef<iface::dom::Element> el(doc->createElementNS(SEDML_NS, L"algorithm"));
+  aEl->appendChild(el)->release_ref();
+  mParamSet.mParentEl = el;
+}
+
+
+std::wstring
 CDA_SProSSimulation::algorithmKisaoID() throw()
 {
   RETURN_INTO_OBJREF(n, iface::dom::Node, mDomEl->firstChild());
@@ -1529,6 +1588,37 @@ CDA_SProSSimulation::algorithmKisaoID(const std::wstring& aID) throw()
     n = already_AddRefd<iface::dom::Node>(n->nextSibling());
   }
 }
+
+already_AddRefd<iface::SProS::AlgorithmParameterSet>
+CDA_SProSSimulation::algorithmParameters()
+  throw()
+{
+  mParamSet.add_ref();
+  return &mParamSet;
+}
+
+iface::dom::Element*
+CDA_SProSSimulation::findOrCreateAlgorithmNoAddRef(iface::dom::Element* aParent)
+{
+  for (ObjRef<iface::dom::Node> n(aParent->firstChild()); n != NULL; n = n->nextSibling())
+  {
+    ObjRef<iface::dom::Element> el(QueryInterface(n));
+    if (el == NULL)
+      continue;
+    if (el->localName() == L"algorithm" && el->namespaceURI() == SEDML_NS)
+    {
+      // Note that we don't add_ref(), but because of the behaviour of Elements,
+      // a child Node is not destroyed once created until it is either removed
+      // from the parent or the parent is also about to be deleted.
+      return el.getPointer();
+    }
+  }
+
+  ObjRef<iface::dom::Document> doc(aParent->ownerDocument());
+  ObjRef<iface::dom::Element> el(doc->createElementNS(SEDML_NS, L"algorithm"));
+  aParent->appendChild(el)->release_ref();
+}
+
 
 #define SimulationTypes L"uniformTimeCourse", L"repeatedAnalysis", L"steadyState", L"oneStep"
 SomeSProSSet(Simulation, L"listOfSimulations", SimulationTypes);
@@ -1810,6 +1900,9 @@ SomeAnonSProSSet(SetValue, L"listOfChanges", SetValueTypes);
 
 #define SubTaskTypes L"subTask"
 SomeAnonSProSSet(SubTask, L"listOfSubTasks", SubTaskTypes);
+
+#define AlgorithmParameterTypes L"algorithmParameter"
+SomeAnonSProSSet(AlgorithmParameter, L"listOfAlgorithmParameters", AlgorithmParameterTypes);
 
 const wchar_t* sRangeElNames[] = {L"functionalRange", L"uniformRange", L"vectorRange", NULL};
 
