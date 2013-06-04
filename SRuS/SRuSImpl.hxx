@@ -179,11 +179,16 @@ private:
 
 struct CDA_SRuSModelSimulationState
 {
+  // Indexed according to the ODE solver scheme (mCodeInfo) - these indices need
+  // translation before they can be set as overrides on an IDA solve.
   std::vector<double> mInitialData, mCurrentData, mCurrentConstants;
+  ObjRef<iface::cellml_services::ODESolverCompiledModel> mODECompiledModel;
+  ObjRef<iface::cellml_services::DAESolverCompiledModel> mDAECompiledModel;
   double mCurrentBvar, mInitialBvar;
   std::map<int, double> mOverrideConstants;
   std::map<int, double> mOverrideData;
   ObjRef<iface::cellml_services::CodeInformation> mCodeInfo;
+  ObjRef<iface::cellml_services::CodeInformation> mCodeInfoDAE;
 };
 
 /**
@@ -214,12 +219,9 @@ class SEDMLMathEvaluator;
  * simulation experiment.
  */
 class CDA_SRuSSimulationStep
-  : public iface::XPCOM::IObject
+  : public virtual iface::XPCOM::IObject
 {
 public:
-  CDA_IMPL_REFCOUNT;
-  CDA_IMPL_ID;
-
   CDA_SRuSSimulationStep(CDA_SRuSSimulationState* aState,
                          CDA_SRuSSimulationStep* aSuccessor);
 
@@ -247,6 +249,10 @@ public:
   ObjRef<CDA_SRuSSimulationStep> mSuccessor;
 
 protected:
+  bool mIsIDA;
+
+  void computeIsIDA(iface::SProS::Simulation* aSimulation);
+
   int
   getIndexAndTypeAndModelForVariable
   (
@@ -254,16 +260,23 @@ protected:
    iface::cellml_services::VariableEvaluationType& aType,
    CDA_SRuSModelSimulationState** aState
   );
+
   double& findVariable
   (
    iface::SProS::Variable* aVariable
   );
+
+  already_AddRefd<iface::cellml_services::CellMLIntegrationRun>
+  setupRunWithKISAOParameters(CDA_SRuSModelSimulationState* aModelState,
+                              iface::SProS::Simulation* aSimulation);
 };
 
 class CDA_SRuSSimulationStepLoop
   : public CDA_SRuSSimulationStep
 {
 public:
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
   CDA_IMPL_QI0;
 
   CDA_SRuSSimulationStepLoop(CDA_SRuSSimulationState* aState,
@@ -300,23 +313,87 @@ private:
 };
 
 class CDA_SRuSSimulationStepDropUntil
-  : public CDA_SRuSSimulationStep
+  : public CDA_SRuSSimulationStep, public iface::cellml_services::IntegrationProgressObserver
 {
 public:
-  CDA_IMPL_QI0;
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+  CDA_IMPL_QI1(cellml_services::IntegrationProgressObserver);
 
   CDA_SRuSSimulationStepDropUntil
   (
+   iface::SProS::Simulation* aSimulation,
    std::wstring aModelId,
    double aTargetBvar,
    CDA_SRuSSimulationState* aState,
-   CDA_SRuSSimulationStep* aSuccessor);
+   CDA_SRuSSimulationStep* aSuccessor
+  );
+
   void perform();
   already_AddRefd<CDA_SRuSSimulationStep> shallowClone();
 
+  void computedConstants(const std::vector<double>& aValue) throw();
+  void results(const std::vector<double>& aValue) throw();
+  void done() throw();
+  void failed(const std::string& aMsg) throw();
+
 private:
+  ObjRef<iface::SProS::Simulation> mSimulation;
   std::wstring mModelId;
   double mTargetBvar;
+};
+
+class CDA_SRuSSimulationStepUniformTimeCourse
+  : public CDA_SRuSSimulationStep, public iface::cellml_services::IntegrationProgressObserver
+{
+public:
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+  CDA_IMPL_QI1(cellml_services::IntegrationProgressObserver);
+
+  CDA_SRuSSimulationStepUniformTimeCourse
+  (
+   iface::SProS::Simulation* aSimulation,
+   std::wstring aModelId,
+   double aTargetBvar,
+   double aPointSpacing,
+   bool aExcludeFirstPoint,
+   CDA_SRuSSimulationState* aState,
+   CDA_SRuSSimulationStep* aSuccessor
+  );
+
+  void perform();
+  already_AddRefd<CDA_SRuSSimulationStep> shallowClone();
+
+  void computedConstants(const std::vector<double>& aValue) throw();
+  void results(const std::vector<double>& aValue) throw();
+  void done() throw();
+  void failed(const std::string& aMsg) throw();
+  
+private:
+  ObjRef<iface::SProS::Simulation> mSimulation;
+  std::wstring mModelId;
+  double mTargetBvar;
+  double mPointSpacing;
+  bool mExcludeFirstPoint;
+  bool mSkipNext;
+};
+
+class CDA_SRuSSimulationStepSendDone
+  : public CDA_SRuSSimulationStep
+{
+public:
+  CDA_IMPL_REFCOUNT;
+  CDA_IMPL_ID;
+  CDA_IMPL_QI0;
+
+  CDA_SRuSSimulationStepSendDone(CDA_SRuSSimulationState* aState,
+                                 CDA_SRuSSimulationStep* aSuccessor);
+  ~CDA_SRuSSimulationStepSendDone() {};
+
+  void perform();
+
+  already_AddRefd<CDA_SRuSSimulationStep> shallowClone();
 };
 
 class CDA_SRuSBootstrap
