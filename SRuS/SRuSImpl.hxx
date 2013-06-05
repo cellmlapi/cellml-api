@@ -150,7 +150,6 @@ public:
   CDA_SRuSRawResultProcessor
   (
    iface::SRuS::GeneratedDataMonitor* aMonitor,
-   iface::cellml_services::CodeInformation* aCodeInfo,
    const std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >&
      aVarInfoByDataGeneratorId,
    const std::map<std::wstring, iface::SProS::DataGenerator*>& aDataGeneratorsById
@@ -158,6 +157,7 @@ public:
 
   ~CDA_SRuSRawResultProcessor() {}
 
+  void setActiveCodeInformation(iface::cellml_services::CodeInformation* aCodeInfo) throw();
   void computedConstants(const std::vector<double>& aValues) throw();
   void done() throw(std::exception&);
   void failed(const std::string& aErrorMessage) throw(std::exception&);
@@ -377,6 +377,7 @@ private:
   double mPointSpacing;
   bool mExcludeFirstPoint;
   bool mSkipNext;
+  std::map<std::pair<bool, int>, std::pair<bool, int> > mDAEIdxToODEIdx;
 };
 
 class CDA_SRuSSimulationStepSendDone

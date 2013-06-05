@@ -464,24 +464,30 @@ CDA_SRuSSimulationStep::CDA_SRuSSimulationStep
 CDA_SRuSRawResultProcessor::CDA_SRuSRawResultProcessor
 (
  iface::SRuS::GeneratedDataMonitor* aMonitor,
- iface::cellml_services::CodeInformation* aCodeInfo,
  const std::map<std::wstring, std::list<std::pair<std::wstring, int32_t> > >&
  aVarInfoByDataGeneratorId,
  const std::map<std::wstring, iface::SProS::DataGenerator*>& aDataGeneratorsById
 )
-  : mMonitor(aMonitor), mCodeInfo(aCodeInfo),
+  : mMonitor(aMonitor),
     mAggregateMode(0), mVarInfoByDataGeneratorId(aVarInfoByDataGeneratorId),
     mDataGeneratorsById(aDataGeneratorsById),
     mDataGeneratorsByIdRAII(mDataGeneratorsById,
                             new container_destructor<std::map<std::wstring, iface::SProS::DataGenerator*> >(new pair_both_destructor<const std::wstring, iface::SProS::DataGenerator*>(new void_destructor<const std::wstring>, new objref_destructor<iface::SProS::DataGenerator>()))), mTotalN(0)
 {
-  uint32_t aic = mCodeInfo->algebraicIndexCount();
-  uint32_t ric = mCodeInfo->rateIndexCount();
-  mRecSize = 2 * ric + aic + 1;
-  
   for (std::map<std::wstring, iface::SProS::DataGenerator*>::iterator i =
          mDataGeneratorsById.begin(); i != mDataGeneratorsById.end(); i++)
     (*i).second->add_ref();
+}
+
+void
+CDA_SRuSRawResultProcessor::setActiveCodeInformation(iface::cellml_services::CodeInformation* aCodeInfo)
+  throw()
+{
+  mCodeInfo = aCodeInfo;
+
+  uint32_t aic = mCodeInfo->algebraicIndexCount();
+  uint32_t ric = mCodeInfo->rateIndexCount();
+  mRecSize = 2 * ric + aic + 1;
 }
 
 void
@@ -760,16 +766,10 @@ CDA_SRuSSimulationStep::setupRunWithKISAOParameters
  iface::SProS::Simulation* aSimulation
 )
 {
-  bool isIDA = 
-    (aSimulation->algorithmKisaoID() == L"KISAO:0000283" ||
-     aSimulation->algorithmKisaoID() ==
-     // Deprecated placeholder for IDA used until KISAO added a term for it.
-     L"https://computation.llnl.gov/casc/sundials/documentation/ida_guide/");
-  
   ObjRef<iface::cellml_services::CellMLIntegrationService> cis(CreateIntegrationService());
 
   ObjRef<iface::cellml_services::CellMLIntegrationRun> run;
-  if (isIDA)
+  if (mIsIDA)
     run = cis->createDAEIntegrationRun(aModelState->mDAECompiledModel);
   else
     run = cis->createODEIntegrationRun(aModelState->mODECompiledModel);
@@ -797,7 +797,7 @@ CDA_SRuSSimulationStep::setupRunWithKISAOParameters
 
   run->setStepSizeControl(epsAbs, epsRel, scalVar, scalRate, maxStep);
   
-  if (isIDA)
+  if (mIsIDA)
   {
     std::map<std::pair<bool, int>, std::pair<std::string, int> > odeIdxToVarDeg;
     std::map<std::pair<std::string, int>, std::pair<bool, int> > varDegToDAEIdx;
@@ -1242,6 +1242,84 @@ CDA_SRuSSimulationStepUniformTimeCourse::CDA_SRuSSimulationStepUniformTimeCourse
     mExcludeFirstPoint(aExcludeFirstPoint)
 {
   computeIsIDA(aSimulation);
+
+  std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator
+    modelState(mState->mPerModelState.find(mModelId));
+
+  if (mIsIDA)
+  {
+    std::map<std::pair<bool, int>, std::pair<std::string, int> > daeIdxToVarDeg;
+    std::map<std::pair<std::string, int>, std::pair<bool, int> > varDegToODEIdx;
+
+    ObjRef<iface::cellml_services::ComputationTargetIterator>
+      cti(modelState->second.mCodeInfoDAE->iterateTargets());
+    for (ObjRef<iface::cellml_services::ComputationTarget> ct(cti->nextComputationTarget());
+         ct; ct = cti->nextComputationTarget())
+    {
+      ObjRef<iface::cellml_api::CellMLVariable> var(ct->variable());
+      bool type;
+      int overallIndex;
+      switch (ct->type())
+      {
+      case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+      case iface::cellml_services::ALGEBRAIC:
+      case iface::cellml_services::FLOATING:
+      case iface::cellml_services::LOCALLY_BOUND:
+        continue;
+      case iface::cellml_services::CONSTANT:
+        type = false;
+        overallIndex = ct->assignedIndex();
+        break;
+      case iface::cellml_services::STATE_VARIABLE:
+      case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+        type = true;
+        overallIndex = ct->assignedIndex() + 1;
+        break;
+      }
+      daeIdxToVarDeg.insert(std::pair<std::pair<bool, int>, std::pair<std::string, int> >
+                            (std::pair<bool, int>(type, overallIndex),
+                             std::pair<std::string, int>(var->objid(), ct->degree())));
+    }
+    
+    cti = modelState->second.mCodeInfo->iterateTargets();
+    for (ObjRef<iface::cellml_services::ComputationTarget> ct(cti->nextComputationTarget());
+         ct; ct = cti->nextComputationTarget())
+    {
+      ObjRef<iface::cellml_api::CellMLVariable> var(ct->variable());
+      bool type;
+      int overallIndex;
+      switch (ct->type())
+      {
+      case iface::cellml_services::VARIABLE_OF_INTEGRATION:
+      case iface::cellml_services::ALGEBRAIC:
+      case iface::cellml_services::FLOATING:
+      case iface::cellml_services::LOCALLY_BOUND:
+        continue;
+      case iface::cellml_services::CONSTANT:
+        type = false;
+        overallIndex = ct->assignedIndex();
+        break;
+      case iface::cellml_services::STATE_VARIABLE:
+      case iface::cellml_services::PSEUDOSTATE_VARIABLE:
+        type = true;
+        overallIndex = ct->assignedIndex() + 1;
+        break;
+      }
+
+      varDegToODEIdx.insert(std::pair<std::pair<std::string, int>, std::pair<bool, int> >
+                            (std::pair<std::string, int>(var->objid(), ct->degree()),
+                             std::pair<bool, int>(type, overallIndex)));
+    }
+    for (std::map<std::pair<bool, int>, std::pair<std::string, int> >::iterator it
+           (daeIdxToVarDeg.begin()); it != daeIdxToVarDeg.end(); it++)
+    {
+      std::map<std::pair<std::string, int>, std::pair<bool, int> >::iterator it2
+        (varDegToODEIdx.find(it->second));
+      if (it2 != varDegToODEIdx.end())
+        mDAEIdxToODEIdx.insert(std::pair<std::pair<bool, int>, std::pair<bool, int> >
+                               (it->first, it2->second));
+    }
+  }
 }
 
 void
@@ -1281,7 +1359,22 @@ CDA_SRuSSimulationStepUniformTimeCourse::computedConstants(const std::vector<dou
   std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator
     modelState(mState->mPerModelState.find(mModelId));
 
-  modelState->second.mCurrentConstants = aValue;
+  if (mIsIDA)
+  {
+    for (uint32_t idx = 0; idx < aValue.size(); idx++)
+    {
+      std::map<std::pair<bool, int>, std::pair<bool, int> >::iterator it
+        (mDAEIdxToODEIdx.find(std::pair<bool, int>(false, idx)));
+      if (it != mDAEIdxToODEIdx.end())
+        if (it->second.first)
+          modelState->second.mCurrentConstants[it->second.second] = aValue[idx];
+        else
+          modelState->second.mCurrentData[it->second.second] = aValue[idx];
+    }
+  }
+  else
+    modelState->second.mCurrentConstants = aValue;
+
   mState->mResultsTo->computedConstants(aValue);
 }
 
@@ -1292,8 +1385,26 @@ CDA_SRuSSimulationStepUniformTimeCourse::results(const std::vector<double>& aVal
   std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator
     modelState(mState->mPerModelState.find(mModelId));
 
-  modelState->second.mCurrentBvar = aValue[0];
-  modelState->second.mCurrentData = aValue;
+  if (mIsIDA)
+  {
+    modelState->second.mCurrentBvar = aValue[0];
+    modelState->second.mCurrentData[0] = aValue[0];
+    for (uint32_t idx = 1; idx < aValue.size(); idx++)
+    {
+      std::map<std::pair<bool, int>, std::pair<bool, int> >::iterator it
+        (mDAEIdxToODEIdx.find(std::pair<bool, int>(true, idx)));
+      if (it != mDAEIdxToODEIdx.end())
+        if (it->second.first)
+          modelState->second.mCurrentConstants[it->second.second] = aValue[idx];
+        else
+          modelState->second.mCurrentData[it->second.second] = aValue[idx];
+    }
+  }
+  else
+  {
+    modelState->second.mCurrentBvar = aValue[0];
+    modelState->second.mCurrentData = aValue;
+  }
 
   if (mSkipNext)
   {
@@ -1301,7 +1412,8 @@ CDA_SRuSSimulationStepUniformTimeCourse::results(const std::vector<double>& aVal
     return;
   }
 
-  mState->mResultsTo->results(aValue);
+  mState->mResultsTo->setActiveCodeInformation(modelState->second.mCodeInfo);
+  mState->mResultsTo->results(modelState->second.mCurrentData);
 }
 
 void
@@ -1732,6 +1844,13 @@ CDA_SRuSProcessor::generateData
        i != activeTasks.end(); i++)
   {
     iface::SProS::AbstractTask* at = tasksById[(*i)];
+
+#ifdef USE_RAW_RESULT_PROCESSOR
+    ObjRef<CDA_SRuSSimulationState> state = new CDA_SRuSSimulationState();
+    state->mTMS = aSet;
+    state->mResultsTo = new CDA_SRuSRawResultProcessor(aMonitor, variableInfoIdxByDataGeneratorId,
+                                                       dataGeneratorsById);
+#endif
 
     ObjRef<iface::SProS::Task> t(QueryInterface(at));
     if (t != NULL)
