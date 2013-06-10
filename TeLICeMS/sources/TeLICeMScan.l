@@ -2,6 +2,8 @@
 #define YY_NO_UNISTD_H
 #include <iostream>
 #define IN_LEXER
+class TeLICeMStateScan;
+class TeLICeMSParseTarget;
 #include "TeLICeMParse.gen.hpp"
 }
 
