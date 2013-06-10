@@ -877,6 +877,7 @@ SampleUsingPDF(double (*pdf)(double bvar, double* CONSTANTS, double* ALGEBRAIC, 
   pdfi.target = (rand() + 0.0) / RAND_MAX;
   pdfi.nroots = nroots;
   pdfi.rootFuncs = rootFuncs;
+  pdfi.failInfo = failInfo;
   double p;
 
   // We assume that the p.d.f. is zero except in a finite range. Find that range:
