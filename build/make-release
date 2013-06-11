@@ -31,24 +31,19 @@ case $UNAME in
 
         case $BUILD in
             Deb*)
-                BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-$MSVC_DESCRIPTIVE-Debug.exe
-                BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-$MSVC_DESCRIPTIVE-Debug.zip
+                BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-$MSVC_DESCRIPTIVE-Debug.zip
                 ;;
             *)
-                BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-$MSVC_DESCRIPTIVE.exe
-                BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-$MSVC_DESCRIPTIVE.zip
+                BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-$MSVC_DESCRIPTIVE.zip
                 ;;
         esac
         BINFULL=$(cygpath "$BINDIR/$BINARY")
-        BINFULL2=$(cygpath "$BINDIR/$BINARY2")
 
         ;;
     *Msys*)
         SYSTEM=win32
-        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.exe
+        BINARY=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.zip
         BINFULL=$(/bin/cygpath "$BINDIR/$BINARY")
-        BINARY2=cellml-sdk-$VERSION_MAJOR.$VERSION_MINOR-Win32-MingW.zip
-        BINFULL2=$(/bin/cygpath "$BINDIR/$BINARY2")
         SCP=/bin/scp.exe
         SFTP=/bin/sftp.exe
         ;;
@@ -89,15 +84,7 @@ if test $SYSTEM = linux-x86; then
 fi
 
 echo "SHA1 sum follows:"
-if test $SYSTEM = win32; then
-    $(which sha1sum || which shasum) $BINFULL2
-else
-    $(which sha1sum || which shasum) $BINFULL
-fi
+$(which sha1sum || which shasum) $BINFULL
 
 echo $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
 $SCP "$BINFULL" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY"
-
-if test $SYSTEM = win32; then
-    $SCP "$BINFULL2" "cellml-buildbot,cellml-api@frs.sourceforge.net:/home/frs/project/c/ce/cellml-api/CellML-API-Nightly/$VERSION_MAJOR.$VERSION_MINOR/$RELEASE/$SYSTEM/$BINARY2"
-fi
