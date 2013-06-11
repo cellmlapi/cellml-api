@@ -1,0 +1,12 @@
+DECLARE_EXTENSION(mofs)
+DECLARE_IDL(MoFS)
+DECLARE_EXTENSION_END(mofs)
+
+INCLUDE_DIRECTORIES(MoFS)
+
+ADD_LIBRARY(mofs MoFS/MoFSImpl.cpp)
+TARGET_LINK_LIBRARIES(mofs cellml)
+SET_TARGET_PROPERTIES(mofs PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${MOFS_SOVERSION})
+INSTALL(TARGETS srus DESTINATION lib)
+
+DECLARE_BOOTSTRAP("MoFSBootstrap" "MoFS" "ModelFlatteningService" "mofs" "createModelFlatteningService" "CreateModelFlatteningService" "MoFSBootstrap.hpp" "MoFS" "mofs")

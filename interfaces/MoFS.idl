@@ -1,0 +1,22 @@
+/**
+ * @file
+ * The MoFS, or Model Flattening Service, allows CellML 1.1 models with imports
+ * to be 'flattened' to a CellML 1.0 model where all the content from the
+ * imports is placed in one file.
+ */
+module mofs
+{
+
+  interface ModelFlatteningService
+    : XPCOM::IObject
+  {
+    /**
+     * Flattens a CellML 1.1 model into a CellML 1.0 model with all imported
+     * components and their dependencies in one file.
+     * @param aModel The model to flatten.
+     * @raises cellml_api::CellMLException if an error in the model prevents
+     *                                     flattening.
+     */
+    cellml_api::Model flattenModel(in cellml_api::Model aModel);
+  };
+};

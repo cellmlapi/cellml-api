@@ -1,12 +1,11 @@
-/*!
-\page license License / Warranty Disclaimer
+#include "MoFSImpl.hxx"
 
-\section license_sect The license
-\verbinclude ../../COPYING
+/*
+This file includes software derived from software by Jonathan Cooper and David
+Nickerson. David Nickerson has agreed for his code to be licensed under the same
+terms as the rest of the CellML API. Jonathan Cooper's code was licensed under the
+following terms:
 
-Some parts of the code are derived from software which was licensed under the
-following license:
-\verbatim
 Copyright (c) 2010, The Chancellor, Masters and Scholars of the University of Oxford
 All rights reserved.
 
@@ -36,6 +35,10 @@ BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-\endverbatim
-
 */
+
+CDA_ModelFlatteningService::flattenModel(iface::cellml_api::Model* aModel)
+  : throw(iface::cellml_api::CellMLException)
+{
+  
+}
