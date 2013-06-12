@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<model xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#" cmeta:id="sin_approximations_import" name="sin_approximations_import"><component cmeta:id="main" name="main"><variable cmeta:id="x" initial_value="0" name="x" private_interface="out" public_interface="out" units="dimensionless"/><variable cmeta:id="sin" name="sin1" private_interface="in" public_interface="out" units="dimensionless"/></component><component cmeta:id="actual_sin" name="actual_sin"><variable name="x" private_interface="out" public_interface="in" units="dimensionless"/><variable cmeta:id="actual_sin" name="sin" private_interface="out" public_interface="out" units="dimensionless"/><math xmlns="http://www.w3.org/1998/Math/MathML" cmeta:id="sin_calculation">
+      <apply id="actual_sin"><eq/>
+        <ci>sin</ci>
+        <apply><sin/>
+          <ci>x</ci>
+        </apply>
+      </apply>
+    </math></component><connection><map_components component_1="actual_sin" component_2="main"/><map_variables variable_1="sin" variable_2="sin1"/><map_variables variable_1="x" variable_2="x"/></connection><group><relationship_ref relationship="encapsulation"/><component_ref component="main"><component_ref component="actual_sin"/></component_ref></group></model>

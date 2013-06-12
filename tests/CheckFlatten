@@ -1,0 +1,40 @@
+#!/bin/bash
+
+BINDIR=`pwd`
+BASEDIR=`dirname $0`
+DIFF=diff
+FlattenModel=$BINDIR/FlattenModel
+TEMPFILE=test_output.$$
+
+if [[ ! -f "$FlattenModel" ]]; then
+        echo FlattenModel not found. Not testing it.
+        exit 77
+fi
+
+FlattenModel="$TESTS_ENVIRONMENT $FlattenModel"
+
+function runtest()
+{
+  name=$1;
+  rm -f $TEMPFILE;
+  $FlattenModel $BASEDIR/test_xml/$name.xml | tr -d "\r" >$TEMPFILE
+  FAIL=0
+  $DIFF -bu $TEMPFILE $BASEDIR/test_expected_flatten/$name.xml
+  if [[ $? -ne 0 ]]; then
+    FAIL=1
+  fi
+  if [[ $FAIL -ne 0 ]]; then
+    echo FAIL: flatten $name generated wrong output.
+    rm -f $TEMPFILE
+    exit 1
+  fi
+  echo PASS: flatten $name generated correct output.
+  rm -f $TEMPFILE
+}
+
+runtest import_eqn
+runtest units-import
+runtest units-import-import
+runtest units-in-imported-component
+
+exit 0

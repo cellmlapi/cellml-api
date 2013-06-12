@@ -84,6 +84,7 @@ interfaces/mathml_dom
 interfaces/pjm2pcm
 interfaces/rdf_api
 interfaces/xpath
+interfaces/mofs
 TestTeLICeMParser
 TestTeLICeMSerialiser
 examples/RDFContainers
@@ -102,3 +103,4 @@ test_celeds_*
 docs/Doxyfile.norev
 *.class
 cmake_uninstall.cmake
+FlattenModel
