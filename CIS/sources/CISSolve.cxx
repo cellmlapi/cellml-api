@@ -65,6 +65,8 @@ double atanh(double input)
 // It would be good to one day make this configurable by the user.
 #define SUBSOL_TOLERANCE 1E-6
 
+#define RANDOM_SEED 0x7ce4176c
+
 void clearFailure(struct fail_info* aFail)
 {
   aFail->failtype = 0;
@@ -273,6 +275,47 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
       }
     }
   }
+}
+
+#define NR_RANDOM_STARTS_MAX 100000
+#define NR_MAX_STEPS 1000
+#define NR_MAX_STEPS_INITIAL 10
+
+static double
+random_double_logUniform()
+{
+  union
+  {
+    double asDouble;
+#ifdef WIN32
+    uint16_t asIntegers[4];
+#else
+    uint32_t asIntegers[2];
+#endif
+  } X;
+
+#ifdef WIN32
+  uint16_t spareRand;
+#else
+  uint32_t spareRand;
+#endif
+
+  do
+  {
+    spareRand = rand();
+#ifdef WIN32
+    X.asIntegers[0] = rand() | ((spareRand & 0x1) << 15);
+    X.asIntegers[1] = rand() | ((spareRand & 0x2) << 14);
+    X.asIntegers[2] = rand() | ((spareRand & 0x4) << 13);
+    X.asIntegers[3] = rand() | ((spareRand & 0x8) << 12);
+#else
+    X.asIntegers[0] = rand() | ((spareRand & 0x1) << 31);
+    X.asIntegers[1] = rand() | ((spareRand & 0x2) << 30);
+#endif
+  }
+  while (!isfinite(X.asDouble));
+
+  return X.asDouble;
 }
 
 #ifdef ENABLE_GSL_INTEGRATORS
@@ -1278,8 +1321,9 @@ CDA_DAESolverRun::SolveDAEProblem
   void* kin_mem = KINCreate();
   KINInit(kin_mem, dae_iv_paramfinder, params);
   KINSpgmr(kin_mem, 0);
-  KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, &failInfo);
+  KINSetNumMaxIters(kin_mem, 10000);
   KINSetUserData(kin_mem, &ivf);
+  KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, &failInfo);
   
   f->SetupStateInfo(icinfo);
 
@@ -1288,6 +1332,7 @@ CDA_DAESolverRun::SolveDAEProblem
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
   uint32_t tabStepNumber = 0;
   double nextStopPoint = mTabulationStepSize == 0.0 ? mStopBvar : voi;
+  srand(RANDOM_SEED);
 
   if (rateSize > 0)
   {
@@ -1309,10 +1354,41 @@ CDA_DAESolverRun::SolveDAEProblem
       //   printf("  sens[%u] = %g\n", i, icinfo[i]);
       RatesStatesICInfoToParameters(stateSize, rates, states, icinfo, NV_DATA_S(params));
 
-      int ret = KINSol(kin_mem, params, KIN_NONE, ones, ones);
-      if (ret < 0)
+      int kinFailureCount = 0;
+      bool kinRestart = true, kinOverallFailure = false;
+      fail_info lastKINFail;
+      while (kinRestart)
       {
-        failAddCause(&failInfo, "Failure solving for initial values");
+        kinRestart = false;
+        KINSetMaxNewtonStep(kin_mem, 0.0);
+        int ret = KINSol(kin_mem, params, KIN_NONE, ones, ones);
+        if (ret != KIN_SUCCESS)
+        {
+          failAddCause(&failInfo, "Failure in initial value solver");
+          lastKINFail.failtype = failInfo.failtype;
+          lastKINFail.failmsg = failInfo.failmsg;
+          failInfo.failtype = 0;
+          failInfo.failmsg = "";
+          if (++kinFailureCount >= NR_RANDOM_STARTS_MAX)
+          {
+            kinOverallFailure = true;
+            break;
+          }
+          else
+          {
+            for (int k = 0; k < NV_LENGTH_S(params); k++)
+              NV_Ith_S(params, k) = random_double_logUniform();
+            kinRestart = true;
+          }
+        }
+      }
+      
+      if (kinOverallFailure)
+      {
+        failInfo.failtype = lastKINFail.failtype;
+        failInfo.failmsg = lastKINFail.failmsg;
+        failAddCause(&failInfo, "Could not find a starting point where the initial value solver converges");
+
         // Apparently IDAFree after IDACreate but before IDAInit fails, so lets IDAInit...
         IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
         break;
@@ -1331,6 +1407,7 @@ CDA_DAESolverRun::SolveDAEProblem
       DetermineRateOrStateSensitivity(hx, stateSize, &ivf);
 
       IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
+      IDASetMaxConvFails(idamem, 10000);
       IDARootInit(idamem, condVarSize, ida_rootfn);
       IDASStolerances(idamem, mEpsRel, mEpsAbs);
       // IDASpgmr(idamem, 0);
@@ -3140,49 +3217,6 @@ safe_factorof(double num, double den)
   return ((inum % iden) == 0) ? 1.0 : 0.0;
 }
 
-#define NR_RANDOM_STARTS_MIN 100
-#define NR_RANDOM_STARTS_MAX 10000000
-#define NR_MAX_STEPS 1000
-#define NR_MAX_STEPS_INITIAL 10
-#define RANDOM_SEED 0x7ce4176c
-
-static double
-random_double_logUniform()
-{
-  union
-  {
-    double asDouble;
-#ifdef WIN32
-    uint16_t asIntegers[4];
-#else
-    uint32_t asIntegers[2];
-#endif
-  } X;
-
-#ifdef WIN32
-  uint16_t spareRand;
-#else
-  uint32_t spareRand;
-#endif
-
-  do
-  {
-    spareRand = rand();
-#ifdef WIN32
-    X.asIntegers[0] = rand() | ((spareRand & 0x1) << 15);
-    X.asIntegers[1] = rand() | ((spareRand & 0x2) << 14);
-    X.asIntegers[2] = rand() | ((spareRand & 0x4) << 13);
-    X.asIntegers[3] = rand() | ((spareRand & 0x8) << 12);
-#else
-    X.asIntegers[0] = rand() | ((spareRand & 0x1) << 31);
-    X.asIntegers[1] = rand() | ((spareRand & 0x2) << 30);
-#endif
-  }
-  while (!isfinite(X.asDouble));
-
-  return X.asDouble;
-}
-
 struct Adapt_NLS_Data {
   void * adata;
   int n;
@@ -3226,12 +3260,14 @@ do_nonlinearsolve
   srand(RANDOM_SEED);
   void* kin_mem = KINCreate();
   KINInit(kin_mem, adaptNonlinearsolve, params);
+  KINSetNumMaxIters(kin_mem, 10000);
   KINSpgmr(kin_mem, 0);
   KINSetErrHandlerFn(kin_mem, recordKINSOLError, failInfo);
   KINSetUserData(kin_mem, &adapt);
 
   do
   {
+    KINSetMaxNewtonStep(kin_mem, 0.0);
     const int returnCode = KINSol(kin_mem, params, KIN_NONE, ones, ones);
     if (returnCode == KIN_SUCCESS)
     {
