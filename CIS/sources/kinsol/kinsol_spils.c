@@ -594,6 +594,11 @@ int KINSpilsDQJtimes(N_Vector v, N_Vector Jv,
 
   vtv = N_VDotProd(vtemp1, vtemp1);
 
+  if (vtv == 0.0) {
+    N_VConst(0, Jv);
+    return(0);
+  }
+
   sq1norm = N_VL1Norm(vtemp1);
 
   sign = (sutsv >= ZERO) ? ONE : -ONE ;
