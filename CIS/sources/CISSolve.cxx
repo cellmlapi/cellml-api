@@ -1768,6 +1768,8 @@ EDouble TryAnd(int count, ...)
     ssError << " argument to an 'and' operation is not finite";
     badInput->addCause(ssError.str());
     result->mWhyError = badInput->mWhyError;
+    result->mValue =
+      std::numeric_limits<double>::quiet_NaN();
     delete badInput;
   }
 
@@ -2587,6 +2589,8 @@ EDouble TryOr(int count, ...)
     ssError << " argument to an 'or' operation is not finite";
     badInput->addCause(ssError.str());
     result->mWhyError = badInput->mWhyError;
+    result->mValue =
+      std::numeric_limits<double>::quiet_NaN();
     delete badInput;
   }
 
@@ -2604,6 +2608,7 @@ EDouble TryPlus(int count, ...)
   for (int i = 0; i < count; i++)
   {
     EDouble v = va_arg(val, EDouble);
+    result->mValue += v->mValue;
     if (!isfinite(v->mValue))
     {
       if (badidx == -1)
@@ -2615,10 +2620,7 @@ EDouble TryPlus(int count, ...)
         delete v;
     }
     else
-    {
-      result->mValue = (result->mValue + v->mValue);
       delete v;
-    }
   }
   va_end(val);
 
@@ -2804,6 +2806,7 @@ EDouble TryTimes(int count, ...)
   for (int i = 0; i < count; i++)
   {
     EDouble v = va_arg(val, EDouble);
+    result->mValue *= v->mValue;
     if (!isfinite(v->mValue))
     {
       if (badidx == -1)
@@ -2815,10 +2818,7 @@ EDouble TryTimes(int count, ...)
         delete v;
     }
     else
-    {
-      result->mValue = result->mValue * v->mValue;
       delete v;
-    }
   }
   va_end(val);
 
