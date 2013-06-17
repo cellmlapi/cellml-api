@@ -879,11 +879,7 @@ static int KINSolInit(KINMem kin_mem, int strategy)
 
   /* calculate the default value for mxnewtstep (maximum Newton step) */
 
-  /* Change by Andrew Miller - unconditionally set mxnewtstep; I believe this is a
-   * KINSOL bug, and have reported this to the SUNDIALS developers. For now we
-   * just patch our version of KINSOL until the official version version can be
-   * fixed. */
-  /* if (mxnewtstep == ZERO) */
+  if (mxnewtstep == ZERO)
     mxnewtstep = THOUSAND * N_VWL2Norm(uu, uscale);
   if (mxnewtstep < ONE) mxnewtstep = ONE;
 

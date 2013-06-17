@@ -282,6 +282,28 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 #define NR_MAX_STEPS_INITIAL 10
 
 static double
+random_double_stdnormal()
+{
+  // We use Box-Muller transform sampling (note; we actually get two independent
+  // samples - we could cache the second for the next call?)
+  double u, v, s;
+  do
+  {
+    u = ((rand()+0.0) / (RAND_MAX/2.0)) - 1.0;
+    v = ((rand() + 0.0) / (RAND_MAX/2.0)) - 1.0;
+    s = u * u + v * v;
+  }
+  while (s < 1E-50 || s > 1.0); // if s is too small we get NaNs.
+  return u * sqrt(-2.0 * log(s) / s);
+}
+
+static double
+random_double_normal(double mean, double stdev)
+{
+  return mean + random_double_stdnormal() * stdev;
+}
+
+static double
 random_double_logUniform()
 {
   union
@@ -1321,7 +1343,7 @@ CDA_DAESolverRun::SolveDAEProblem
   void* kin_mem = KINCreate();
   KINInit(kin_mem, dae_iv_paramfinder, params);
   KINSpgmr(kin_mem, 0);
-  KINSetNumMaxIters(kin_mem, 10000);
+  KINSetNumMaxIters(kin_mem, 100);
   KINSetUserData(kin_mem, &ivf);
   KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, &failInfo);
   
@@ -1361,7 +1383,7 @@ CDA_DAESolverRun::SolveDAEProblem
       {
         kinRestart = false;
         KINSetMaxNewtonStep(kin_mem, 0.0);
-        int ret = KINSol(kin_mem, params, KIN_NONE, ones, ones);
+        int ret = KINSol(kin_mem, params, KIN_LINESEARCH, ones, ones);
         if (ret != KIN_SUCCESS)
         {
           failAddCause(&failInfo, "Failure in initial value solver");
@@ -1369,6 +1391,7 @@ CDA_DAESolverRun::SolveDAEProblem
           lastKINFail.failmsg = failInfo.failmsg;
           failInfo.failtype = 0;
           failInfo.failmsg = "";
+
           if (++kinFailureCount >= NR_RANDOM_STARTS_MAX)
           {
             kinOverallFailure = true;
@@ -1377,7 +1400,9 @@ CDA_DAESolverRun::SolveDAEProblem
           else
           {
             for (int k = 0; k < NV_LENGTH_S(params); k++)
-              NV_Ith_S(params, k) = random_double_logUniform();
+              NV_Ith_S(params, k) = random_double_normal(NV_Ith_S(params, k),
+                                                         NV_Ith_S(params, k) == 0 ?
+                                                         1E-6 : NV_Ith_S(params, k));
             kinRestart = true;
           }
         }
@@ -1407,7 +1432,7 @@ CDA_DAESolverRun::SolveDAEProblem
       DetermineRateOrStateSensitivity(hx, stateSize, &ivf);
 
       IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
-      IDASetMaxConvFails(idamem, 10000);
+      IDASetMaxConvFails(idamem, 100);
       IDARootInit(idamem, condVarSize, ida_rootfn);
       IDASStolerances(idamem, mEpsRel, mEpsAbs);
       // IDASpgmr(idamem, 0);
@@ -3260,7 +3285,7 @@ do_nonlinearsolve
   srand(RANDOM_SEED);
   void* kin_mem = KINCreate();
   KINInit(kin_mem, adaptNonlinearsolve, params);
-  KINSetNumMaxIters(kin_mem, 10000);
+  KINSetNumMaxIters(kin_mem, 100);
   KINSpgmr(kin_mem, 0);
   KINSetErrHandlerFn(kin_mem, recordKINSOLError, failInfo);
   KINSetUserData(kin_mem, &adapt);
@@ -3268,7 +3293,7 @@ do_nonlinearsolve
   do
   {
     KINSetMaxNewtonStep(kin_mem, 0.0);
-    const int returnCode = KINSol(kin_mem, params, KIN_NONE, ones, ones);
+    const int returnCode = KINSol(kin_mem, params, KIN_LINESEARCH, ones, ones);
     if (returnCode == KIN_SUCCESS)
     {
       noSuccess = 0;
