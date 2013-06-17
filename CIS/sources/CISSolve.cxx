@@ -59,6 +59,7 @@ double atanh(double input)
 
 #include <kinsol/kinsol.h>
 #include <kinsol/kinsol_spgmr.h>
+#include <kinsol/kinsol_dense.h>
 
 #include "CISModelSupport.h"
 
@@ -1342,7 +1343,8 @@ CDA_DAESolverRun::SolveDAEProblem
 
   void* kin_mem = KINCreate();
   KINInit(kin_mem, dae_iv_paramfinder, params);
-  KINSpgmr(kin_mem, 0);
+  if (stateSize > 0)
+    KINDense(kin_mem, stateSize);
   KINSetNumMaxIters(kin_mem, 100);
   KINSetUserData(kin_mem, &ivf);
   KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, &failInfo);

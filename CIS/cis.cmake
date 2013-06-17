@@ -121,6 +121,9 @@ ELSE()
     CIS/sources/ida/ida_spgmr.c
     CIS/sources/kinsol/kinsol.c
     CIS/sources/kinsol/kinsol_io.c
+    CIS/sources/kinsol/kinsol_direct.c
+    CIS/sources/kinsol/kinsol_dense.c
+    CIS/sources/kinsol/kinsol_io.c
     CIS/sources/kinsol/kinsol_spils.c
     CIS/sources/kinsol/kinsol_spgmr.c
   )
