@@ -282,7 +282,7 @@ CDA_ModuleManager::requestModuleByName
   throw(std::exception&)
 {
   // This module manager currently doesn't support lazy loading.
-  throw iface::cellml_api::CellMLException();
+  throw iface::cellml_api::CellMLException(L"Lazy loading not supported.");
 }
 
 void
@@ -490,7 +490,7 @@ CDA_ModelNode::getWritable()
     already_AddRefd<iface::cellml_api::Model>(mModel->getAlternateVersion(cv.c_str()));
 
   if (modclone == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Cannot clone model.");
 
   ObjRef<iface::cellml_context::ModelNode> cmn =
     already_AddRefd<iface::cellml_context::ModelNode>(new CDA_ModelNode
@@ -585,7 +585,7 @@ CDA_ModelNode::model(iface::cellml_api::Model* aModel)
   throw(std::exception&)
 {
   if (aModel == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Model is null.");
 
   removeModelEventListener(mModel);
   installModelEventListener(aModel);
@@ -944,7 +944,7 @@ CDA_ModelList::makeNode(iface::cellml_api::Model* mod)
   throw(std::exception&)
 {
   if (mod == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Model is null.");
   return new CDA_ModelNode(mod);
 }
 
@@ -955,9 +955,9 @@ CDA_ModelList::addModel(iface::cellml_context::ModelNode* node)
   // Convert node...
   CDA_ModelNode* cnode = dynamic_cast<CDA_ModelNode*>(node);
   if (cnode == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"ModelNode is not from this implementation.");
   if (cnode->mParentList != NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Node is not a root.");
 
   cnode->setParentList(this);
   mModels.push_back(cnode);

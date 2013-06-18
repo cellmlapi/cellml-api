@@ -836,7 +836,7 @@ CDACeVAS::findVariableSet
   throw(std::exception&)
 {
   if (aVariable == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Attempt to find variable set for NULL variable");
   maptype::iterator i = mVariableSets.find(aVariable);
   if (i == mVariableSets.end())
     return NULL;

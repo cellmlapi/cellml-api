@@ -144,7 +144,13 @@ module cellml_api
    * attributes to this, but to support all implementations, these are not
    * required.
    */
-  exception CellMLException{};
+  exception CellMLException
+  {
+    /**
+     * Provides a plain text explanation of what went wrong.
+     */
+    wstring explanation;
+  };
 
   /**
    * Represents a uniform resource indicator, conforming to RFC2396

@@ -147,6 +147,10 @@ module SProS
 
   exception SProSException
   {
+    /**
+     * Provides an explanation of why the exception occurred.
+     */
+    wstring explanation;
   };
 
   /**

@@ -51,7 +51,7 @@ CDA_CellMLValidityErrorSet::getValidityError(uint32_t aIndex)
   throw(std::exception&)
 {
   if (aIndex >= mErrors.size())
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Index out of bounds on CellMLValidityErrorSet");
   
   iface::cellml_services::CellMLValidityError* e = mErrors[aIndex];
   

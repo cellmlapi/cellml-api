@@ -132,7 +132,7 @@ CDACanonicalUnitRepresentation::fetchBaseUnit(uint32_t aIndex)
   throw(std::exception&)
 {
   if (aIndex >= baseUnits.size())
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Attempt to fetch base unit at invalid index");
   iface::cellml_services::BaseUnitInstance* bui = baseUnits[aIndex];
   bui->add_ref();
   return bui;
@@ -395,7 +395,7 @@ CDACanonicalUnitRepresentation::mergeWith
                      new CDACanonicalUnitRepresentation(mStrict));
 
   if (aOtherExponent != 0 && aOther == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Attempt to merge NULL unit using non-zero exponent");
 
   if (aThisExponent != 0)
   {

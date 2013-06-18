@@ -113,6 +113,57 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
             self.firstEnumerator = 0
         self.out.out(prefix + jnutils.JavaName(node))
 
+    def visitMember(self, node):
+        alln = ''
+        needcomma = 0
+        for n in node.declarators():
+            if needcomma:
+                alln = alln + ', '
+            needcomma = 1
+            alln = alln + n.simplename
+            sa = n.sizes()
+            if sa != None:
+                for s in sa:
+                    alln = alln + '[%u]'%s
+        self.out.out('public ' +\
+                         jnutils.GetTypeInformation(node.memberType()).javaType(jnutils.Type.IN) +\
+                         ' ' + alln + ';')
+
+    def visitException(self, node):
+        setupOut = 0
+        if self.out == None:
+            if not node.mainFile():
+                return
+            self.out = output.Stream(open(self.directory + '/' + jnutils.JavaName(node) + ".java", 'w'))
+            self.out.out('package ' + self.directory + ';')
+            setupOut = 1
+
+        self.out.out('public class ' + jnutils.JavaName(node) + ' extends RuntimeException')
+        self.out.out('{')
+        self.out.inc_indent()
+
+        constructorArgs = ''
+        constructorSave = ''
+        for n in node.members():
+            if constructorArgs != '':
+                constructorArgs = constructorArgs + ', '
+            for dn in n.declarators():
+                constructorSave = constructorSave + ('%s = _%s;' % (jnutils.JavaName(dn), jnutils.JavaName(dn)))
+                constructorArgs = \
+                    constructorArgs + \
+                    jnutils.GetTypeInformation(n.memberType()).javaType(jnutils.Type.IN) +\
+                    ' _' + jnutils.JavaName(dn) + \
+                    ('' if dn.sizes()==None else ''.join(map(lambda x: '[%s]'%x, dn.sizes())))
+
+        self.out.out('  public ' + node.simplename + '(' + constructorArgs + '){ ' + constructorSave + ' }')
+        for n in node.members():
+            n.accept(self)
+        self.out.dec_indent()
+        self.out.out('};')
+
+        if setupOut:
+            self.out = None
+
 def run(tree):
     iv = InterfaceVisitor()
     tree.accept(iv)

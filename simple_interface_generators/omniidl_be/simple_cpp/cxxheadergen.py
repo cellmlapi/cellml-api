@@ -153,7 +153,7 @@ class Walker(idlvisitor.AstVisitor):
             if sa != None:
                 for s in sa:
                     alln = alln + '[%u]'%s
-        alln = simplecxx.typeToSimpleCXX(node.memberType()) +\
+        alln = simplecxx.typeToSimpleCXX(node.memberType(), is_ret=1) +\
                ' ' + alln + ';'
         self.cxxheader.out(alln)
 
@@ -177,12 +177,25 @@ class Walker(idlvisitor.AstVisitor):
         self.cxxheader.out('class  PUBLIC_' + self.masterGuard + '_POST ' + node.simplename + ' : public std::exception')
         self.cxxheader.out('{')
         self.cxxheader.out('public:')
-        self.cxxheader.out('  ' + node.simplename + '(){}')
+        self.cxxheader.inc_indent()
+        constructorArgs = ''
+        constructorSave = ''
+        for n in node.members():
+            if constructorArgs == '':
+                constructorSave = ' : '
+            else:
+                constructorArgs = constructorArgs + ', '
+            for dn in n.declarators():
+                constructorSave = constructorSave + ('%s(_%s)' % (dn.simplename, dn.simplename))
+                constructorArgs = constructorArgs + simplecxx.typeToSimpleCXX(n.memberType(), is_const=1) +\
+                    ' _' + dn.simplename + ('' if dn.sizes()==None else ''.join(map(lambda x: '[%s]'%x, dn.sizes())))
+
+        self.cxxheader.out('  ' + node.simplename + '(' + constructorArgs + ')' + constructorSave + '{}')
+        self.cxxheader.out('  ~' + node.simplename + '() throw() {}')
+        for n in node.members():
+            n.accept(self)
+        self.cxxheader.dec_indent()
         self.cxxheader.out('};')
-        # Exceptions have no members in this mapping, because that information
-        # cannot be transmitted into the C mapping.
-        # for n in node.members():
-        #     n.accept(self)
     
     def visitCaseLabel(self, node):
         return

@@ -282,7 +282,7 @@ public:
     throw(std::exception&)
   {
     if (idx >= mVector.size())
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
 
     mVector[idx]->add_ref();
 
@@ -1018,7 +1018,7 @@ CDA_CustomGenerator::requestComputation(iface::cellml_services::ComputationTarge
     iterator i = mTargetSet.find(aTarget);
 
   if (i == mTargetSet.end())
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Requesting computation of a target that isn't from this generator");
 
   mRequestComputation.insert(*i);
 }
@@ -1031,7 +1031,7 @@ CDA_CustomGenerator::markAsKnown(iface::cellml_services::ComputationTarget* aTar
     iterator i = mTargetSet.find(aTarget);
 
   if (i == mTargetSet.end())
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Trying to mark as known a target that isn't from this generator");
 
   mKnown.insert(*i);
 }
@@ -1044,7 +1044,7 @@ CDA_CustomGenerator::markAsUnwanted(iface::cellml_services::ComputationTarget* a
     iterator i = mTargetSet.find(aTarget);
 
   if (i == mTargetSet.end())
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Trying to mark as unwanted a target that isn't from this generator");
 
   mUnwanted.insert(*i);
 }

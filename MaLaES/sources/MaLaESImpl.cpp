@@ -2003,7 +2003,7 @@ CDAMaLaESTransform::stripPassthrough(iface::cellml_api::Model* aModel)
 {
   DECLARE_QUERY_INTERFACE_OBJREF(cde, aModel, cellml_api::CellMLDOMElement);
   if (cde == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Model doesn't support CellMLDOMElement interface");
 
   RETURN_INTO_OBJREF(el, iface::dom::Element, cde->domElement());
   DoSanitiseElem(el);

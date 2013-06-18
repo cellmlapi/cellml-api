@@ -74,7 +74,7 @@ DOMWriter::writeNode(DOMNamespaceContext* dnc, iface::dom::Node* n, std::wstring
   { \
     DECLARE_QUERY_INTERFACE_OBJREF(t, n, dom::ntn); \
     if (t == NULL) \
-      throw iface::dom::DOMException(); \
+      throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);    \
     write##ntn(dnc, t, appendTo); \
   } \
   break;

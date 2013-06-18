@@ -99,17 +99,17 @@ CDA_DOMImplementation::createDocument(const std::wstring& namespaceURI,
   if (colon != NULL)
   {
     if (namespaceURI == L"")
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
     if (colon-cqname == 3 &&
         !wcsncmp(cqname, L"xml", 3) &&
 	qualifiedName != L"http://www.w3.org/XML/1998/namespace")
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
   }
 
   CDA_DocumentType* doctype = dynamic_cast<CDA_DocumentType*>(idoctype);
 
   if (doctype && doctype->mDocument != NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::WRONG_DOCUMENT_ERR);
 
   RETURN_INTO_OBJREF(doc, CDA_Document, CDA_NewDocument(namespaceURI));
 
@@ -374,7 +374,7 @@ CDA_Node::insertBefore(iface::dom::Node* inewChild,
   throw(std::exception&)
 {
   if (inewChild == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   
   uint16_t type = inewChild->nodeType();
 
@@ -384,7 +384,7 @@ CDA_Node::insertBefore(iface::dom::Node* inewChild,
       type == iface::dom::Node::DOCUMENT_TYPE_NODE ||
       type == iface::dom::Node::NOTATION_NODE ||
       type == iface::dom::Node::ENTITY_NODE)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   CDA_Node* newChild = dynamic_cast<CDA_Node*>(inewChild);
   CDA_Node* refChild = dynamic_cast<CDA_Node*>(irefChild);
@@ -392,7 +392,7 @@ CDA_Node::insertBefore(iface::dom::Node* inewChild,
   if (type == iface::dom::Node::DOCUMENT_FRAGMENT_NODE)
   {
     if (newChild == NULL)
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
     // We skip the d.f. and recurse onto its children...
     std::list<CDA_Node*>::iterator i = newChild->mNodeList.begin();
@@ -412,14 +412,14 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
 {
   // Check the new child...
   if (newChild == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   // If there is a refchild, it must belong to us...
   if (refChild && refChild->mParent != this)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   if (newChild->mDocument != mDocument)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::WRONG_DOCUMENT_ERR);
   
   if (newChild == refChild)
   {
@@ -435,7 +435,7 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
     while (n)
     {
       if (n == newChild)
-        throw iface::dom::DOMException();
+        throw iface::dom::DOMException(iface::dom::INVALID_MODIFICATION_ERR);
       n = n->mParent;
     }
   }
@@ -451,7 +451,7 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
 
   // Just in case the remove failed.
   if (newChild->mParent != NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_MODIFICATION_ERR);
 
   if (refChild != NULL)
   {
@@ -461,7 +461,7 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
       // The child belongs to us, but isn't on the list!
       assert(refChild->mParent == this);
       assert(0);
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
     }
   }
   else
@@ -518,7 +518,7 @@ CDA_Node::replaceChild(iface::dom::Node* inewChild,
   }
 
   if (oldChild == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   insertBefore(newChild, oldChild)->release_ref();
   return removeChild(oldChild);
@@ -529,17 +529,17 @@ CDA_Node::removeChild(iface::dom::Node* ioldChild)
   throw(std::exception&)
 {
   if (ioldChild == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   uint16_t type = ioldChild->nodeType();
   if (type == iface::dom::Node::ATTRIBUTE_NODE ||
       type == iface::dom::Node::DOCUMENT_TYPE_NODE ||
       type == iface::dom::Node::NOTATION_NODE ||
       type == iface::dom::Node::ENTITY_NODE)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 
   CDA_Node* oldChild = dynamic_cast<CDA_Node*>(ioldChild);
   if (oldChild == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   return removeChildPrivate(oldChild);
 }
@@ -568,7 +568,7 @@ CDA_Node::removeChildPrivate(CDA_Node* oldChild)
   std::list<CDA_Node*>::iterator posit =
     std::find(mNodeList.begin(), mNodeList.end(), oldChild);
   if (posit == mNodeList.end())
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   mNodeList.erase(posit);
   oldChild->mParent = NULL;
@@ -718,18 +718,18 @@ CDA_Node::prefix(const std::wstring& attr)
   throw(std::exception&)
 {
   if (mNamespaceURI == L"")
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 
   if (attr == L"xml" &&
       mNamespaceURI != L"http://www.w3.org/XML/1998/namespace")
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
     
   if (mLocalName == L"xmlns" && attr != L"")
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
 
   if (attr == L"xmlns" &&
       mNamespaceURI != L"http://www.w3.org/2000/xmlns/")
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
 
   mNodeName = attr;
   mNodeName += L":";
@@ -750,7 +750,7 @@ CDA_Node::addEventListener(const std::wstring& type,
   throw(std::exception&)
 {
   if (listener == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_ACCESS_ERR);
   eventid p(type, useCapture);
   std::multimap<eventid, iface::events::EventListener*>
     ::iterator i = mListeners.lower_bound(p);
@@ -773,7 +773,7 @@ CDA_Node::removeEventListener(const std::wstring& type,
   throw(std::exception&)
 {
   if (listener == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_ACCESS_ERR);
   eventid p(type, useCapture);
   std::multimap<eventid,iface::events::EventListener*>
      ::iterator i =
@@ -816,7 +816,7 @@ CDA_Node::dispatchEvent(iface::events::Event* evt)
   // We can't dispatch just any event, so try a cast first.
   CDA_MutationEvent* me = dynamic_cast<CDA_MutationEvent*>(evt);
   if (me == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_ACCESS_ERR);
 
   // Build a list of all ancestors, in case it changes...
   std::list<ObjRef<CDA_Node> > nodeList;
@@ -1244,7 +1244,7 @@ CDA_NamedNodeMap::removeNamedItem(const std::wstring& name)
     i = mElement->attributeMap.find(CDA_Element::LocalName(name));
 
   if (i == mElement->attributeMap.end())
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
@@ -1350,7 +1350,7 @@ CDA_NamedNodeMap::removeNamedItemNS(const std::wstring& namespaceURI,
     (CDA_Element::QualifiedName(namespaceURI, localName));
 
   if (i == mElement->attributeMapNS.end())
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 
   // Remove the child(which sorts out the refcounting)...
   ObjRef<CDA_Attr> at = (*i).second;
@@ -1414,14 +1414,14 @@ already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMapDT::setNamedItem(iface::dom::Node* arg)
   throw(std::exception&)
 {
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 }
 
 already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMapDT::removeNamedItem(const std::wstring& name)
   throw(std::exception&)
 {
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
 }
 
 already_AddRefd<iface::dom::Node>
@@ -1484,7 +1484,7 @@ already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMapDT::setNamedItemNS(iface::dom::Node* arg)
   throw(std::exception&)
 {
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::NOT_SUPPORTED_ERR);
 }
 
 already_AddRefd<iface::dom::Node>
@@ -1492,7 +1492,7 @@ CDA_NamedNodeMapDT::removeNamedItemNS(const std::wstring& namespaceURI,
 				      const std::wstring& localName)
   throw(std::exception&)
 {
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::NOT_SUPPORTED_ERR);
 }
 
 
@@ -1538,7 +1538,7 @@ CDA_CharacterData::substringData(uint32_t offset, uint32_t count)
   }
   catch (std::out_of_range& oor)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_ACCESS_ERR);
   }
 }
 
@@ -1566,7 +1566,7 @@ CDA_CharacterData::insertData(uint32_t offset, const std::wstring& arg)
   }
   catch (std::out_of_range& oor)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_ACCESS_ERR);
   }
 }
 
@@ -1584,7 +1584,7 @@ CDA_CharacterData::deleteData(uint32_t offset, uint32_t count)
   }
   catch (std::out_of_range& oor)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_ACCESS_ERR);
   }
 }
 
@@ -1604,7 +1604,7 @@ CDA_CharacterData::replaceData(uint32_t offset, uint32_t count,
   }
   catch (std::out_of_range& oor)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_ACCESS_ERR);
   }
 }
 
@@ -1873,7 +1873,7 @@ CDA_Element::setAttributeNode(iface::dom::Attr* inewAttr)
 {
   CDA_Attr* newAttr = dynamic_cast<CDA_Attr*>(inewAttr);
   if (newAttr == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   std::wstring name = newAttr->name();
   std::map<LocalName, CDA_Attr*>::iterator
     i = attributeMap.find(LocalName(name));
@@ -1944,7 +1944,7 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
 {
   CDA_Attr* oldAttr = dynamic_cast<CDA_Attr*>(ioldAttr);
   if (oldAttr == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   std::wstring name = oldAttr->name();
   std::wstring lname = oldAttr->localName();
   std::wstring nsuri = oldAttr->namespaceURI();
@@ -1952,7 +1952,7 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
     i = attributeMap.find(LocalName(name));
   if (i == attributeMap.end())
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   }
   ObjRef<CDA_Attr> at = (*i).second;
   LocalName ln((*i).first);
@@ -2140,7 +2140,7 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
 {
   CDA_Attr* newAttr = dynamic_cast<CDA_Attr*>(inewAttr);
   if (newAttr == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   if (newAttr->mLocalName == L"")
     newAttr->mLocalName = newAttr->mNodeName;
   std::pair<std::wstring,std::wstring> p
@@ -2278,7 +2278,7 @@ CDA_TextBase::splitText(uint32_t offset)
   throw(std::exception&)
 {
   if (mParent == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 
   RETURN_INTO_OBJREF(n, CDA_Node, shallowCloneNode(mDocument));
   CDA_TextBase* tb = static_cast<CDA_TextBase*>(n.getPointer());
@@ -2542,7 +2542,7 @@ CDA_Document::CDA_Document
   mDocument->release_ref();
 
   if (doctype && doctype->mDocument != NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
   
   if (doctype)
   {
@@ -2700,7 +2700,7 @@ CDA_Document::importNode(iface::dom::Node* importedNode, bool deep)
 
   // It makes no sense to change the document associated with a document...
   if (n->nodeType() == iface::dom::Node::DOCUMENT_NODE)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_MODIFICATION_ERR);
 
   n->recursivelyChangeDocument(this);
   n->add_ref();
@@ -2766,7 +2766,7 @@ CDA_Document::createEvent(const std::wstring& domEventType)
       domEventType != L"DOMNodeInsertedIntoDocument" &&
       domEventType != L"DOMAttrModified" &&
       domEventType != L"DOMCharacterDataModified")
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 
   return new CDA_MutationEvent();
 }

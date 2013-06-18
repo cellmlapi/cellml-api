@@ -123,7 +123,7 @@ static void processSep(iface::dom::Node* n, double& v1, double& v2)
   }
 
   if (!seenSep)
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Expected a <sep/> in cn element but didn't find one.");
   
   v2 = stringToNumber(value);
 }
@@ -167,12 +167,12 @@ SEDMLMathEvaluator::eval(iface::mathml_dom::MathMLElement* aME)
   if (mme != NULL)
   {
     if (mme->nArguments() != 1)
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Found a MathML math element with the wrong number of children (i.e. not exactly one)");
     RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement, mme->getArgument(1));
     return eval(me);
   }
   
-  throw iface::SRuS::SRuSException();
+  throw iface::SRuS::SRuSException(L"Unhandled type of MathML element");
 }
 
 double
@@ -192,7 +192,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
   
   RETURN_INTO_WSTRING(opns, op->namespaceURI());
   if (opns != L"http://www.w3.org/1998/Math/MathML")
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Found a math operator not in the MathML namespace");
   
   RETURN_INTO_WSTRING(opln, op->localName());
   switch (opln[0])
@@ -204,11 +204,11 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
       if (opln == L"abs")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an abs with the wrong number of arguments.");
         return fabs(args[0]);
       }
       else
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Unknown operator");
       
     case L'n':
       if (opln == L"and")
@@ -219,177 +219,177 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
         return success ? 1.0 : 0.0;
       }
       else
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Unknown operator");
 
     case L'r':
       if (opln == L"arccos")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arccos with the wrong number of arguments.");
         return acos(args[0]);
       }
 #ifndef _MSC_VER
       else if (opln == L"arccosh")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arccosh with the wrong number of arguments.");
         return acosh(args[0]);
       }
 #endif
       else if (opln == L"arccot")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arccot with the wrong number of arguments.");
         return atan(1.0 / args[0]);
       }
 #ifndef _MSC_VER
       else if (opln == L"arccoth")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arccoth with the wrong number of arguments.");
         return atanh(1.0 / args[0]);
       }
 #endif
       else if (opln == L"arccsc")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arccsc with the wrong number of arguments.");
         return asin(1.0 / args[0]);
       }
 #ifndef _MSC_VER
       else if (opln == L"arccsch")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arccsch with the wrong number of arguments.");
         return asinh(1.0 / args[0]);
       }
 #endif
       else if (opln == L"arcsec")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arcsec with the wrong number of arguments.");
         return acos(1.0 / args[0]);
       }
 #ifndef _MSC_VER
       else if (opln == L"arcsech")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arcsech with the wrong number of arguments.");
         return acosh(1.0 / args[0]);
       }
 #endif
       else if (opln == L"arcsin")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arcsin with the wrong number of arguments.");
         return asin(args[0]);
       }
 #ifndef _MSC_VER
       else if (opln == L"arcsinh")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arcsinh with the wrong number of arguments.");
         return asinh(args[0]);
       }
 #endif
       else if (opln == L"arctan")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arctan with the wrong number of arguments.");
         return atan(args[0]);
       }
 #ifndef _MSC_VER
       else if (opln == L"arctanh")
       {
         if (args.size() != 1)
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an arctanh with the wrong number of arguments.");
         return atanh(args[0]);
       }
 #endif
       else
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Unknown operator.");
       
     default:
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     }
     
   case L'c':
     if (opln == L"ceiling")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a ceiling with the wrong number of arguments.");
       return ceil(args[0]);
     }
     else if (opln == L"cos")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a cos with the wrong number of arguments.");
       return cos(args[0]);
     }
     else if (opln == L"cosh")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a cosh with the wrong number of arguments.");
       return cosh(args[0]);
     }
     else if (opln == L"cot")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a cot with the wrong number of arguments.");
       return 1.0 / tan(args[0]);
     }
     else if (opln == L"coth")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a coth with the wrong number of arguments.");
       return 1.0 / tanh(args[0]);
     }
     else if (opln == L"csc")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a csc with the wrong number of arguments.");
       return 1.0 / sin(args[0]);
     }
     else if (opln == L"csch")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a csch with the wrong number of arguments.");
       return 1.0 / sinh(args[0]);
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'd':
     if (opln == L"divide")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a divide with the wrong number of arguments.");
       return args[0] / args[1];
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'e':
     if (opln == L"eq")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found an eq with the wrong number of arguments.");
       return (args[0] == args[1]) ? 1.0 : 0.0;
     }
     else if (opln == L"exp")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found an exp with the wrong number of arguments.");
       return exp(args[0]);
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'f':
     if (opln == L"factorial")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a factorial with the wrong number of arguments.");
       double v = 1.0;
       for (double m = args[0]; m > 0; m -= 1.0)
         v *= m;
@@ -398,45 +398,45 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     else if (opln == L"floor")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a floor with the wrong number of arguments.");
       return floor(args[0]);
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'g':
     if (opln == L"geq")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a geq with the wrong number of arguments.");
       return (args[0] >= args[1]) ? 1.0 : 0.0;
     }
     else if (opln == L"gt")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a gt with the wrong number of arguments.");
       return (args[0] > args[1]) ? 1.0 : 0.0;
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'l':
     if (opln == L"leq")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a leq with the wrong number of arguments.");
       return (args[0] <= args[1]) ? 1.0 : 0.0;
     }
     else if (opln == L"ln")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a ln with the wrong number of arguments.");
       return log(args[0]);
     }
     else if (opln == L"log")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a log with the wrong number of arguments.");
       RETURN_INTO_OBJREF(nl, iface::dom::NodeList, mae->childNodes());
       for (uint32_t i = 0, l = nl->length(); i < l; i++)
       {
@@ -448,7 +448,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
         if (ln == L"logbase")
         {
           if (el->nArguments() < 1)
-            throw iface::SRuS::SRuSException();
+            throw iface::SRuS::SRuSException(L"Found a logbase with the wrong number of arguments.");
           RETURN_INTO_OBJREF(arg1, iface::mathml_dom::MathMLElement, el->getArgument(1));
           double lb = eval(arg1);
           return log(args[0]) / log(lb);
@@ -459,11 +459,11 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     else if (opln == L"lt")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a lt with the wrong number of arguments.");
       return (args[0] < args[1]) ? 1.0 : 0.0;
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'm':
     if (opln == L"minus")
@@ -473,26 +473,26 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
       else if (args.size() == 2)
         return args[0] - args[1];
       else
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a minus with the wrong number of arguments.");
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'n':
     if (opln == L"neq")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found an neq with the wrong number of arguments.");
       return args[0] != args[1];
     }
     else if (opln == L"not")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a not with the wrong number of arguments.");
       return (args[0] == 0.0) ? 1.0 : 0.0;
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'o':
     if (opln == L"or")
@@ -503,7 +503,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
       return any ? 1.0 : 0.0;
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'p':
     if (opln == L"plus")
@@ -516,17 +516,17 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     else if (opln == L"power")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a power with the wrong number of arguments.");
       return pow(args[0], args[1]);
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'r':
     if (opln == L"root")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a root with the wrong number of arguments.");
       RETURN_INTO_OBJREF(nl, iface::dom::NodeList, mae->childNodes());
       for (uint32_t i = 0, l = nl->length(); i < l; i++)
       {
@@ -538,7 +538,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
         if (ln == L"degree")
         {
           if (el->nArguments() < 1)
-            throw iface::SRuS::SRuSException();
+            throw iface::SRuS::SRuSException(L"Found a degree with the wrong number of arguments.");
           RETURN_INTO_OBJREF(arg1, iface::mathml_dom::MathMLElement, el->getArgument(1));
           double deg = eval(arg1);
           return pow(args[0], 1.0 / deg);
@@ -547,47 +547,47 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
       return sqrt(args[0]);        
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L's':
     if (opln == L"sec")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a sec with the wrong number of arguments.");
       return 1.0 / cos(args[0]);
     }
     else if (opln == L"sech")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a sech with the wrong number of arguments.");
       return 1.0 / cosh(args[0]);
     }
     else if (opln == L"sin")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a sin with the wrong number of arguments.");
       return sin(args[0]);
     }
     else if (opln == L"sinh")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a sinh with the wrong number of arguments.");
       return sinh(args[0]);
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L't':
     if (opln == L"tan")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a tan with the wrong number of arguments.");
       return tan(args[0]);
     }
     else if (opln == L"tanh")
     {
       if (args.size() != 1)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found a tanh with the wrong number of arguments.");
       return tanh(args[0]);
     }
     else if (opln == L"times")
@@ -598,20 +598,20 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
       return prod;
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   case L'x':
     if (opln == L"xor")
     {
       if (args.size() != 2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Found an xor with the wrong number of arguments.");
       return ((args[0] == 0) != (args[1] == 0)) ? 1.0 : 0.0;
     }
     else
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unknown operator.");
     
   default:
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Unknown operator.");
   }
 }
 
@@ -620,7 +620,7 @@ SEDMLMathEvaluator::evalConstant(iface::mathml_dom::MathMLCnElement* mcne)
 {
   RETURN_INTO_WSTRING(b, mcne->base());
   if (b != L"" && b != L"10")
-    throw iface::SRuS::SRuSException(); // To do: bases other than 10.
+    throw iface::SRuS::SRuSException(L"Invalid radix for constant"); // To do: bases other than 10.
   
   RETURN_INTO_WSTRING(t, mcne->type());
   if (t == L"integer" || t == L"real")
@@ -641,7 +641,7 @@ SEDMLMathEvaluator::evalConstant(iface::mathml_dom::MathMLCnElement* mcne)
     return s1 / s2;
   }
   else
-    throw iface::SRuS::SRuSException(); // complex or constant not supported (yet).
+    throw iface::SRuS::SRuSException(L"Unknown / unsupported constant type."); // complex or constant not supported (yet).
 }
 
 double
@@ -650,7 +650,7 @@ SEDMLMathEvaluator::evalVariable(iface::mathml_dom::MathMLCiElement* mcie)
   std::wstring v(stringValueOf(mcie));
   std::map<std::wstring, double>::iterator i = mVariableValues.find(stringValueOf(mcie));
   if (i == mVariableValues.end())
-    throw iface::SRuS::SRuSException(); // variable not found.
+    throw iface::SRuS::SRuSException(L"Reference to variable that couldn't be found."); // variable not found.
     
   return (*i).second;
 }
@@ -705,7 +705,7 @@ SEDMLMathEvaluator::evalPredefined(iface::mathml_dom::MathMLPredefinedSymbol* mp
   else if (sn == L"exponentiale")
     return exp(1.0);
 
-  throw iface::SRuS::SRuSException(); // no such predefined symbol
+  throw iface::SRuS::SRuSException(L"Unknown predefined symbol."); // no such predefined symbol
 }
 
 double
@@ -735,7 +735,7 @@ SEDMLMathEvaluatorWithAggregate::evalAggregate
  iface::mathml_dom::MathMLApplyElement* aApply)
 {
   if (aApply->nArguments() != 2)
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Invalid number of arguments to aggregate operator");
   RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, aApply->getArgument(2));
 
   RETURN_INTO_WSTRING(du, aOp->definitionURL());
@@ -749,11 +749,11 @@ SEDMLMathEvaluatorWithAggregate::evalAggregate
   else if (du == L"http: //sed -ml.org/#product")
     ag.reset(new ProductAggregator());
   else
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Unknown aggregate operator.");
 
   std::map<std::wstring, double> vvback(mVariableValues.begin(), mVariableValues.end());
   if (mHistory.size() == 0)
-    throw iface::SRuS::SRuSException(); // Should be impossible?
+    throw iface::SRuS::SRuSException(L"No history found"); // Should be impossible?
   uint32_t nhist = (*mHistory.begin()).second.size();
 
   std::vector<double> vals;

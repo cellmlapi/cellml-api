@@ -188,7 +188,7 @@ public:
   {
     if (iface::xpath::XPathResult::ANY_UNORDERED_NODE_TYPE != mType &&
         iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE != mType)
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
 
     if (mNodes.begin() == mNodes.end())
       return NULL;
@@ -202,7 +202,7 @@ public:
   {
      if (!mIsInternal && iface::xpath::XPathResult::UNORDERED_NODE_SNAPSHOT_TYPE != mType &&
         iface::xpath::XPathResult::ORDERED_NODE_SNAPSHOT_TYPE != mType)
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
 
      return mNodes.size();
   }
@@ -217,7 +217,7 @@ public:
   {
     if (mType != iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE &&
         mType != iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE)
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
 
     if (mNodeIt == mNodes.end())
       return NULL;
@@ -233,7 +233,7 @@ public:
   {
     if (!mIsInternal && mType != iface::xpath::XPathResult::UNORDERED_NODE_SNAPSHOT_TYPE &&
         mType != iface::xpath::XPathResult::ORDERED_NODE_SNAPSHOT_TYPE)
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
 
     if (aIndex >= mNodes.size())
       return NULL;
@@ -307,7 +307,7 @@ public:
           mType != iface::xpath::XPathResult::ORDERED_NODE_SNAPSHOT_TYPE &&
           mType != iface::xpath::XPathResult::ANY_UNORDERED_NODE_TYPE &&
           mType != iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE)
-        throw iface::xpath::XPathException();
+        throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
       if (aNewType == ANY_UNORDERED_NODE_TYPE)
         mType = iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE;
       else
@@ -366,7 +366,7 @@ public:
         return;
       }
       // Unreachable? Should be - but just in case something changes.
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
     }
 
     if (aNewType == iface::xpath::XPathResult::BOOLEAN_TYPE)
@@ -395,7 +395,7 @@ public:
         return;
       }
       // Unreachable? Should be - but just in case something changes.
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
     }
 
     if (aNewType == iface::xpath::XPathResult::NUMBER_TYPE)
@@ -424,10 +424,10 @@ public:
         return;
       }
       // Unreachable? Should be - but just in case something changes.
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
     }
 
-    throw iface::xpath::XPathException();
+    throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
   }
 
   uint16_t mType;
@@ -442,7 +442,7 @@ public:
   ensureType(uint16_t match)
   {
     if (match != mType)
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
   }
 
 private:
@@ -1128,7 +1128,7 @@ public:
           r1->mType == iface::xpath::XPathResult::ORDERED_NODE_SNAPSHOT_TYPE ||
           r1->mType == iface::xpath::XPathResult::ANY_UNORDERED_NODE_TYPE ||
           r1->mType == iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE))
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
 
     if (!(r2->mType == iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE ||
           r2->mType == iface::xpath::XPathResult::ORDERED_NODE_ITERATOR_TYPE ||
@@ -1136,7 +1136,7 @@ public:
           r2->mType == iface::xpath::XPathResult::ORDERED_NODE_SNAPSHOT_TYPE ||
           r2->mType == iface::xpath::XPathResult::ANY_UNORDERED_NODE_TYPE ||
           r2->mType == iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE))
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
     
     for (std::vector<iface::dom::Node*>::iterator i = r2->mNodes.begin();
          i != r2->mNodes.end(); i++)
@@ -1251,7 +1251,7 @@ public:
   {
     // XXX this is host language independent, but this is a host language independent
     //     API, so we need to provide a way to set variable values.
-    throw new iface::xpath::XPathException();
+    throw new iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
   }
 
 private:
@@ -1358,14 +1358,14 @@ public:
 
     // Currently only the default functions (in the empty namespace) are implemented.
     if (mNSURI != L"")
-      throw iface::xpath::XPathException();
+      throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
     switch (mName[0])
     {
     case L'b':
       if (mName == L"boolean")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::BOOLEAN_TYPE);
         arg->add_ref();
@@ -1377,7 +1377,7 @@ public:
       if (mName == L"ceiling")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
         arg->mNumber = ceil(arg->mNumber);
@@ -1387,7 +1387,7 @@ public:
       else if (mName == L"concat")
       {
         if (args.size() < 2)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
         for (std::list<CDA_XPathResult*>::iterator i = ++args.begin(); i != args.end(); i++)
@@ -1401,7 +1401,7 @@ public:
       else if (mName == L"contains")
       {
         if (args.size() != 2)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* haystack(args.front()), * needle(*++args.begin());
         haystack->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
         needle->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
@@ -1415,7 +1415,7 @@ public:
       else if (mName == L"count")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE);
 
@@ -1441,7 +1441,7 @@ public:
       else if (mName == L"floor")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
         arg->mNumber = floor(arg->mNumber);
@@ -1454,7 +1454,7 @@ public:
       if (mName == L"id")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
         CDA_XPathResult* arg(args.front());
         std::list<std::wstring> ids;
@@ -1495,7 +1495,7 @@ public:
       if (mName == L"lang")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
@@ -1555,7 +1555,7 @@ public:
           n = r1->mNodes.front();
         }
         else if (args.size() > 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         else
           n = aContext.mNode;
 
@@ -1583,7 +1583,7 @@ public:
           n = r1->mNodes.front();
         }
         else if (args.size() > 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         else
           n = aContext.mNode;
 
@@ -1608,7 +1608,7 @@ public:
           n = r1->mNodes.front();
         }
         else if (args.size() > 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         else
           n = aContext.mNode;
 
@@ -1629,7 +1629,7 @@ public:
         else if (args.size() == 0)
           str = stringValueOf(aContext.mNode);
         else
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
         bool keep = false;
         std::wstring normalised;
@@ -1660,7 +1660,7 @@ public:
       else if (mName == L"not")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::BOOLEAN_TYPE);
         arg->mBoolean = !arg->mBoolean;
@@ -1680,7 +1680,7 @@ public:
           r->addNode(aContext.mNode);
         }
         else
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         
         r->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
         r->add_ref();
@@ -1702,7 +1702,7 @@ public:
       if (mName == L"round")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg(args.front());
         arg->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
         arg->mNumber = myround(arg->mNumber);
@@ -1715,7 +1715,7 @@ public:
       if (mName == L"starts-with")
       {
         if (args.size() != 2)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
         CDA_XPathResult* longs(args.front()), * shorts(*++args.begin());
         longs->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
@@ -1740,7 +1740,7 @@ public:
           r->addNode(aContext.mNode);
         }
         else
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         
         r->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
         r->add_ref();
@@ -1758,7 +1758,7 @@ public:
         else if (args.size() == 0)
           str = stringValueOf(aContext.mNode);
         else
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
         CDA_XPathResult* r = new CDA_XPathResult();
         r->mType = iface::xpath::XPathResult::NUMBER_TYPE;
@@ -1768,7 +1768,7 @@ public:
       else if (mName == L"substring")
       {
         if (args.size() < 2 || args.size() > 3)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
         std::list<CDA_XPathResult*>::iterator i = args.begin();
         CDA_XPathResult* strr = *i++;
@@ -1796,7 +1796,7 @@ public:
         }
         catch (std::exception&)
         {
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         }
 
         strr->add_ref();
@@ -1805,7 +1805,7 @@ public:
       else if (mName == L"substring-after")
       {
         if (args.size() != 2)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* haystack(args.front()), * needle(*++args.begin());
         needle->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
         haystack->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
@@ -1825,7 +1825,7 @@ public:
       else if (mName == L"substring-before")
       {
         if (args.size() != 2)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* haystack(args.front()), * needle(*++args.begin());
         needle->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
         haystack->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
@@ -1844,7 +1844,7 @@ public:
       else if (mName == L"sum")
       {
         if (args.size() != 1)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
         CDA_XPathResult* arg = args.front();
         arg->coerceTo(iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE);
         double sum = 0.0;
@@ -1866,7 +1866,7 @@ public:
       if (mName == L"translate")
       {
         if (args.size() != 3)
-          throw iface::xpath::XPathException();
+          throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
         std::list<CDA_XPathResult*>::iterator i = args.begin();
         CDA_XPathResult* strr = *i++;
@@ -1922,7 +1922,7 @@ public:
       ;
     }
     
-    throw iface::xpath::XPathException();
+    throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
   }
 
 private:
@@ -3730,7 +3730,7 @@ CDA_XPathEvaluator::evaluate(
   CDA_XPathParserContext pc(aExpr, aResolver);
   RETURN_INTO_OBJREF(cxe, CDA_XPathExpr, pc.parse());
   if (cxe == NULL)
-    throw iface::xpath::XPathException();
+    throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
 
   return cxe->evaluate(aContext, aType, aResult);
 }

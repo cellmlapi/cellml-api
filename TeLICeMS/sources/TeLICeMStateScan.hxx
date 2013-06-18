@@ -112,7 +112,7 @@ public:
   reactionRoleType() const
   {
     if (mDifferentiator != ReactionRoleType)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"expected a reaction role");
     return mData.mReactionRoleType;
   }
 
@@ -128,7 +128,7 @@ public:
   reactionDirectionType() const
   {
     if (mDifferentiator != ReactionDirectionType)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"expected a reaction direction");
     return mData.mReactionDirectionType;
   }
 
@@ -144,7 +144,7 @@ public:
   siPrefix() const
   {
     if (mDifferentiator != SIPrefix)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"expected an SIPrefix");
     return mData.mSIPrefix;
   }
 
@@ -159,7 +159,7 @@ public:
   double number() const
   {
     if (mDifferentiator != Number)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected a Number");
     return mData.mNumber;
   }
 
@@ -175,7 +175,7 @@ public:
   string() const
   {
     if (mDifferentiator != String)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected a String");
     return mString;
   }
 
@@ -183,7 +183,7 @@ public:
   widestring() const
   {
     if (mDifferentiator != String)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected a String");
     return convertStringToWString(mString);
   }
 
@@ -191,7 +191,7 @@ public:
   plusstring(char c)
   {
     if (mDifferentiator != String)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected a String");
     mString += c;
   }
 
@@ -199,7 +199,7 @@ public:
   variableInterfaceType() const
   {
     if (mDifferentiator != InterfaceDirection)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected an InterfaceDirection");
     return mData.mInterfaceType;
   }
 
@@ -215,7 +215,7 @@ public:
   boolean() const
   {
     if (mDifferentiator != Boolean)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected a boolean");
     return mData.mBoolean;
   }
 
@@ -231,7 +231,7 @@ public:
   propertyMap()
   {
     if (mDifferentiator != PropertyMap)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected a PropertyMap");
     return mPropertyMap;
   }
 
@@ -248,7 +248,7 @@ public:
   math()
   {
     if (mDifferentiator != Math)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected Math");
     return mMath;
   }
 
@@ -264,7 +264,7 @@ public:
   mathList()
   {
     if (mDifferentiator != MathList)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected a math list");
     return mMathList.mList;
   }
 
@@ -293,7 +293,7 @@ public:
   mathMath()
   {
     if (mDifferentiator != MathMath)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected math");
     return mMathMath;
   }
 
@@ -324,7 +324,7 @@ public:
   element()
   {
     if (mDifferentiator != Element)
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Expected an element");
     return mElement;
   }
 

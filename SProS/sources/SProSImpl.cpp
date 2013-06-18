@@ -82,7 +82,7 @@ CDA_SProSPrecomputedNodeList::item(uint32_t aIndex)
   throw(std::exception&)
 {
   if (aIndex >= mNodeList.size())
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
 
   iface::dom::Node* n = mNodeList[aIndex];
   n->add_ref();
@@ -217,13 +217,13 @@ CDA_SomeSet::insert(iface::SProS::Base* b)
 {
   CDA_SProSBase* sb = dynamic_cast<CDA_SProSBase*>(b);
   if (sb == NULL)
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Base is not from this implementation.");
 
   findOrCreateListElement();
 
   RETURN_INTO_WSTRING(ln, sb->mDomEl->localName());
   if (!checkLocalNameMatch(ln.c_str()))
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Unknown localname on element to insert.");
 
   try
   {
@@ -231,7 +231,7 @@ CDA_SomeSet::insert(iface::SProS::Base* b)
   }
   catch (...)
   {
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Unexpected exception caught in SProS.");
   }
 
   sb->reparent(mParent);
@@ -247,10 +247,10 @@ CDA_SomeSet::remove(iface::SProS::Base* b)
 {
   CDA_SProSBase* sb = dynamic_cast<CDA_SProSBase*>(b);
   if (sb == NULL)
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Attempt to remove a base element from a different implementation.");
 
   if (!tryFindListElement())
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Can't remove SED-ML element - no listOf element.");
 
   decache(sb);
 
@@ -2199,17 +2199,17 @@ CDA_SProSVariableBase::taskReference(iface::SProS::AbstractTask* aTask)
   throw(std::exception&)
 {
   if (mParent == NULL || mParent->mParent == NULL)
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Can't set taskReference unless task is ancestor of SEDML element.");
 
     // Hierarchy can either be Variable -> ComputeChange -> Model -> SEDML or
   //   Variable -> DataGenerator -> SEDML. The former is invalid, but we
   // should make sure we don't crash on that case...
   CDA_SProSSEDMLElement* sedml = static_cast<CDA_SProSSEDMLElement*>(mParent->mParent);
   if (sedml == NULL)
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Couldn't find SEDML element for task.");
 
   if (CDA_objcmp(dynamic_cast<CDA_SProSAbstractTask*>(aTask)->mParent, sedml))
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Task parent is not SEDML element.");
 
   RETURN_INTO_WSTRING(tid, aTask->id());
   taskReferenceID(tid.c_str());
@@ -2778,7 +2778,7 @@ CDA_SProSBootstrap::parseSEDMLFromURI(const std::wstring& uri, const std::wstrin
   }
   catch (...)
   {
-    throw iface::SProS::SProSException();
+    throw iface::SProS::SProSException(L"Unexpected exception caught in SProS.");
   }
 }
 

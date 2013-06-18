@@ -130,7 +130,7 @@ CDA_SRuSTransformedModel::ensureModelOrRaise()
   }
   
   if (mModel == NULL)
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Could not load CellML model");
 }
 
 class CDA_ScopedIncrement
@@ -163,7 +163,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
         lang != L"urn:sedml:language:cellml.1_1")
     {
       // To do: Support other languages here...
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Unsupported model language");
     }
 
     // Get the URI...
@@ -227,18 +227,18 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
       
       RETURN_INTO_OBJREF(n, iface::dom::Node, xr->iterateNext());
       if (n == NULL)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"No XPath matches for target found in model.");
       
       RETURN_INTO_OBJREF(n2, iface::dom::Node, xr->iterateNext());
       if (n2)
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Multiple XPath matches for target found in model.");
 
       DECLARE_QUERY_INTERFACE_OBJREF(ca, c, SProS::ChangeAttribute);
       if (ca != NULL)
       {
         DECLARE_QUERY_INTERFACE_OBJREF(at, n, dom::Attr);
         if (at == NULL) // XPath target is not an attribute?
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"XPath result is not an attribute.");
         RETURN_INTO_WSTRING(v, ca->newValue());
         at->value(v);
         continue;
@@ -322,7 +322,7 @@ CDA_SRuSProcessor::buildOneModel(iface::SProS::Model* aModel)
   }
   catch (...)
   {
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Unexpected exception encountered while running SED-ML model");
   }
 }
 
@@ -340,7 +340,7 @@ CDA_SRuSTransformedModelSet::item(uint32_t aIdx)
   throw(std::exception&)
 {
   if (aIdx >= length())
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Request for transformed model at invalid index.");
   
   iface::SRuS::TransformedModel* ret = mTransformed[aIdx];
   ret->add_ref();
@@ -417,7 +417,7 @@ CDA_SRuSGeneratedData::dataPoint(uint32_t idex)
   throw(std::exception&)
 {
   if (idex >= length())
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Request for data point at invalid index.");
   
   return mData[idex];
 }
@@ -439,7 +439,7 @@ CDA_SRuSGeneratedDataSet::item(uint32_t aIdx)
   throw(std::exception&)
 {
   if (aIdx >= length())
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Request for generated data set at invalid index.");
   
   iface::SRuS::GeneratedData* d = mData[aIdx];
   d->add_ref();
@@ -679,7 +679,7 @@ CDA_SRuSSimulationStep::getIndexAndTypeAndModelForVariable
   ObjRef<iface::SRuS::TransformedModel> tm
     (mState->mTMS->getItemByID(aVariable->modelReferenceIdentifier()));
   if (tm == NULL)
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"SED-ML variable references model that doesn't exist.");
 
   ObjRef<iface::xpath::XPathEvaluator> xe(CreateXPathEvaluator());
   ObjRef<iface::dom::Document> doc(tm->xmlDocument());
@@ -692,13 +692,13 @@ CDA_SRuSSimulationStep::getIndexAndTypeAndModelForVariable
                   NULL));
   ObjRef<iface::dom::Node> n(xr->singleNodeValue());
   if (n == NULL)
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"XPath expression didn't match anything in model.");
 
   ObjRef<iface::cellml_api::Model> m(QueryInterface(tm->modelDocument()));
   ObjRef<iface::cellml_api::CellMLElement> el(xmlToCellML(m, n));
   ObjRef<iface::cellml_api::CellMLVariable> cv(QueryInterface(el));
   if (cv == NULL)
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"XPath expression brought back a result but it wasn't a CellML variable as expected.");
 
   std::map<std::wstring, CDA_SRuSModelSimulationState>::iterator modelState
     (mState->mPerModelState.find(aVariable->modelReferenceIdentifier()));
@@ -727,7 +727,7 @@ CDA_SRuSSimulationStep::getIndexAndTypeAndModelForVariable
   }
 
   if (!foundCT)
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Could not find a computation target matching the variable.");
 
   return idx;
 }
@@ -755,7 +755,7 @@ CDA_SRuSSimulationStep::findVariable
     return state->mCurrentData[index + 1 + 
                                 state->mCodeInfo->rateIndexCount() * 2];
   default:
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Unhandled variable type found in simulation step.");
   }
 }
 
@@ -952,12 +952,12 @@ CDA_SRuSSimulationStepLoop::CDA_SRuSSimulationStepLoop
     (*it)->add_ref();
 
   if (mRanges.empty())
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Simulation step loop contains no ranges.");
 
   mNumPoints = countPointsInRange(mRanges.front());
 
   if (mNumPoints == -1) // All ranges are functionalRange? Not valid.
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"All ranges in task are functional.");
 
   bool foundMasterRange = false;
   std::map<std::wstring, iface::SProS::Range*> rangeByName;
@@ -972,7 +972,7 @@ CDA_SRuSSimulationStepLoop::CDA_SRuSSimulationStepLoop
     std::map<std::wstring, iface::SProS::Range*>::iterator it =
       rangeByName.find(sizeDeterminingName);
     if (it == rangeByName.end())
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Did not find range by name.");
 
     mNumPoints = countPointsInRange(it->second);
     if (mNumPoints != -1)
@@ -990,7 +990,7 @@ CDA_SRuSSimulationStepLoop::CDA_SRuSSimulationStepLoop
     // It's invalid to have less points than the range named in the 'range'
     // attribute in any range.
     if (count != -1 && count < mNumPoints)
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"A range in a task has less points than the range named in the range attribute");
   }
 }
 
@@ -1119,7 +1119,7 @@ CDA_SRuSSimulationStepLoop::perform()
                                    );
         break;
       default:
-        throw iface::SRuS::SRuSException();
+        throw iface::SRuS::SRuSException(L"Unkown type of computation target encountered.");
       }
     }
 
@@ -1879,7 +1879,7 @@ CDA_SRuSProcessor::doBasicTask
 {
     RETURN_INTO_OBJREF(sm, iface::SProS::Model, t->modelReference());
     if (sm == NULL)
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Could not find model referenced by task.");
 
     std::wstring idS = sm->id();
     iface::SRuS::TransformedModel* tm = modelsById[idS];
@@ -1888,19 +1888,19 @@ CDA_SRuSProcessor::doBasicTask
 
     RETURN_INTO_OBJREF(sim, iface::SProS::Simulation, t->simulationReference());
     if (sim == NULL)
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Could not find simulation referenced by task.");
 
     RETURN_INTO_WSTRING(ksid, sim->algorithmKisaoID());
     DECLARE_QUERY_INTERFACE_OBJREF(utc, sim, SProS::UniformTimeCourse);
     // To do: things other than uniform time course.
     if (utc == NULL)
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Found a simulation that isn't a UniformTimeCourse, which is currently unsupported.");
 
     // To do: other language support.
     RETURN_INTO_OBJREF(mo, iface::XPCOM::IObject, tm->modelDocument());
     DECLARE_QUERY_INTERFACE_OBJREF(m, mo, cellml_api::Model);
     if (m == NULL)
-      throw iface::SRuS::SRuSException();
+      throw iface::SRuS::SRuSException(L"Found a model that wasn't a CellML model, which is currently unsupported.");
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, tm->xmlDocument());
 
@@ -1983,7 +1983,7 @@ CDA_SRuSProcessor::doBasicTask
               idx += 1 + ci->rateIndexCount() * 2;
               break;
             default:
-              throw iface::SRuS::SRuSException();
+              throw iface::SRuS::SRuSException(L"Found an unsupported type of computation target.");
             }
             RETURN_INTO_WSTRING(svid, sv->id());
             
@@ -2058,7 +2058,7 @@ CDA_SRuSProcessor::doBasicTask
           ciro2->stepType(iface::cellml_services::GEAR_1);
         }
         else // it's a term we don't handle.
-          throw iface::SRuS::SRuSException();
+          throw iface::SRuS::SRuSException(L"Found an unsupported KISAO algorithm type.");
       }
 
       // Run a simulation to bring the system to the start time...
@@ -2139,7 +2139,7 @@ CDA_SRuSProcessor::doRepeatedTask
   {
     // If this happens, there was a functionalRange with an index that wasn't a
     // valid range name.
-    throw iface::SRuS::SRuSException();
+    throw iface::SRuS::SRuSException(L"Found a functionalRange with an index that isn't a valid range name.");
   }
   
   // TODO Set up repeated task to run using new data structures.

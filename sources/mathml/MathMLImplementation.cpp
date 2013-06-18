@@ -397,7 +397,7 @@ public:
     uint32_t pos;
     index++;
     if (index == 0)
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
 
     for (pos = 0; index != 0 && (pos < children->length()); pos++)
     {
@@ -593,7 +593,7 @@ CDA_MathMLContainer::getArgument(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_ARGUMENT);
   if (index == 0)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   return dynamic_cast<iface::mathml_dom::MathMLElement*>(mfnl.item(index - 1).getPointer());
 }
 
@@ -609,7 +609,7 @@ CDA_MathMLContainer::setArgument(iface::mathml_dom::MathMLElement* newArgument,
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLElement*>
@@ -643,7 +643,7 @@ CDA_MathMLContainer::insertArgument
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == 0 || index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLElement*>
@@ -667,7 +667,7 @@ CDA_MathMLContainer::deleteArgument(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_ARGUMENT);
   if (index < 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::dom::Node* old2 = removeChild(old);
   old->release_ref();
@@ -682,7 +682,7 @@ CDA_MathMLContainer::removeArgument(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_ARGUMENT);
   if (index < 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::dom::Node* old2 = removeChild(old);
   old->release_ref();
@@ -697,7 +697,7 @@ CDA_MathMLContainer::getDeclaration(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_DECLARATOR);
   if (index == 0)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   return dynamic_cast<iface::mathml_dom::MathMLDeclareElement*>(mfnl.item(index - 1).getPointer());
 }
 
@@ -716,7 +716,7 @@ CDA_MathMLContainer::setDeclaration
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLDeclareElement*>
@@ -748,7 +748,7 @@ CDA_MathMLContainer::insertDeclaration
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == 0 || index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLDeclareElement*>
@@ -772,7 +772,7 @@ CDA_MathMLContainer::removeDeclaration(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_DECLARATOR);
   if (index < 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::dom::Node* old2 = removeChild(old);
   old->release_ref();
@@ -787,7 +787,7 @@ CDA_MathMLContainer::deleteDeclaration(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_DECLARATOR);
   if (index < 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::dom::Node* old2 = removeChild(old);
   old->release_ref();
@@ -891,7 +891,7 @@ CDA_MathMLContentToken::getArgument(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_CONTENTARGUMENT);
   if (index == 0)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   return mfnl.item(index - 1);
 }
 
@@ -906,7 +906,7 @@ CDA_MathMLContentToken::insertArgument(iface::dom::Node* newArgument, uint32_t i
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == 0 || index == l + 1)
   {
     if (l != 0)
@@ -955,7 +955,7 @@ CDA_MathMLContentToken::setArgument(iface::dom::Node* newArgument, uint32_t inde
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == l + 1)
   {
     return appendChild(newArgument);
@@ -1376,7 +1376,7 @@ CDA_MathMLContentContainer::getBoundVariable(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_BVAR);
   if (index == 0)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   return dynamic_cast<iface::mathml_dom::MathMLBvarElement*>(mfnl.item(index - 1).getPointer());
 }
 
@@ -1391,7 +1391,7 @@ CDA_MathMLContentContainer::insertBoundVariable(iface::mathml_dom::MathMLBvarEle
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == 0 || index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLBvarElement*>
@@ -1418,7 +1418,7 @@ CDA_MathMLContentContainer::setBoundVariable(iface::mathml_dom::MathMLBvarElemen
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLBvarElement*>
@@ -1492,7 +1492,7 @@ CDA_MathMLApplyElement::_cxx_operator()
   nl->release_ref();
   // No operator defined, and we can't create one because we don't know what
   // type.
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -1911,7 +1911,7 @@ CDA_MathMLIntervalElement::start()
     throw e;
   }
   cn->release_ref();
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
 }
 
 void
@@ -1995,7 +1995,7 @@ CDA_MathMLIntervalElement::end()
     firstCandidate->add_ref();
     return firstCandidate.getPointer();
   }
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -2083,7 +2083,7 @@ CDA_MathMLConditionElement::condition()
     throw e;
   }
   cn->release_ref();
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -2238,7 +2238,7 @@ CDA_MathMLDeclareElement::identifier()
       return ce;
     }
   }
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -2297,7 +2297,7 @@ CDA_MathMLDeclareElement::constructor()
       return ce;
     }
   }
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -2330,7 +2330,7 @@ CDA_MathMLDeclareElement::constructor(iface::mathml_dom::MathMLElement* attr)
     }
   }
 
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 CDA_MathMLVectorElement::CDA_MathMLVectorElement(ELCONSARG)
@@ -2356,7 +2356,7 @@ CDA_MathMLVectorElement::getComponent(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_CONTENT);
   if (index == 0)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   RETURN_INTO_OBJREF(n, iface::dom::Node, mfnl.item(index - 1));
   DECLARE_QUERY_INTERFACE(ret, n, mathml_dom::MathMLContentElement);
   return ret;
@@ -2373,7 +2373,7 @@ CDA_MathMLVectorElement::insertComponent(iface::mathml_dom::MathMLContentElement
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == 0 || index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLContentElement*>
@@ -2400,7 +2400,7 @@ CDA_MathMLVectorElement::setComponent(iface::mathml_dom::MathMLContentElement* n
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLContentElement*>
@@ -2485,7 +2485,7 @@ CDA_MathMLMatrixElement::getRow(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_ROW);
   if (index == 0)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   return dynamic_cast<iface::mathml_dom::MathMLMatrixrowElement*>(mfnl.item(index - 1).getPointer());
 }
 
@@ -2501,7 +2501,7 @@ CDA_MathMLMatrixElement::insertRow
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == 0 || index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLMatrixrowElement*>
@@ -2528,7 +2528,7 @@ CDA_MathMLMatrixElement::setRow(iface::mathml_dom::MathMLMatrixrowElement* newRo
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLMatrixrowElement*>
@@ -2594,7 +2594,7 @@ CDA_MathMLMatrixrowElement::getEntry(uint32_t index)
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_CONTENT);
   if (index == 0)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   return dynamic_cast<iface::mathml_dom::MathMLContentElement*>(mfnl.item(index - 1).getPointer());
 }
 
@@ -2609,7 +2609,7 @@ CDA_MathMLMatrixrowElement::insertEntry(iface::mathml_dom::MathMLContentElement*
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == 0 || index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLContentElement*>
@@ -2636,7 +2636,7 @@ CDA_MathMLMatrixrowElement::setEntry(iface::mathml_dom::MathMLContentElement* ne
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INDEX_SIZE_ERR);
   if (index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLContentElement*>
@@ -2724,12 +2724,12 @@ CDA_MathMLPiecewiseElement::otherwise()
       }
 
       // No content in the otherwise yet...
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
     }
   }
 
   // There is no otherwise yet.
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -2769,7 +2769,7 @@ CDA_MathMLPiecewiseElement::otherwise(iface::mathml_dom::MathMLContentElement* a
   // There is no otherwise yet. Make one, and append attr as a child...
   RETURN_INTO_OBJREF(od, iface::dom::Document, attr->ownerDocument());
   if (od == NULL)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
   RETURN_INTO_OBJREF(el, iface::dom::Element,
                      od->createElementNS(MATHML_NS, L"otherwise"));
   el->appendChild(attr)->release_ref();
@@ -2806,7 +2806,7 @@ CDA_MathMLPiecewiseElement::setCase(uint32_t index, iface::mathml_dom::MathMLCas
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index < 1 || index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
   if (index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLCaseElement*>
@@ -2861,7 +2861,7 @@ CDA_MathMLPiecewiseElement::insertCase
   // XXX this isn't threadsafe, but the DOM provides no atomic approach.
   uint32_t l = mfnl.length();
   if (index > l + 1)
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
   if (index == 0 || index == l + 1)
   {
     return dynamic_cast<iface::mathml_dom::MathMLCaseElement*>
@@ -2940,7 +2940,7 @@ CDA_MathMLCaseElement::caseValue()
       return ce;
     }
   }
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -3009,7 +3009,7 @@ CDA_MathMLCaseElement::caseCondition()
     throw e;
   }
   cn->release_ref();
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 void
@@ -3043,7 +3043,7 @@ CDA_MathMLCaseElement::caseCondition(iface::mathml_dom::MathMLContentElement* at
     appendChild(attr)->release_ref();
     return;
   }
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
 #define C(x) static already_AddRefd<CDA_Element>	\

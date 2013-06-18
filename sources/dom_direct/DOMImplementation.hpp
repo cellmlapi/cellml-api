@@ -359,13 +359,13 @@ public:
   already_AddRefd<iface::dom::Node> setNamedItem(iface::dom::Node* arg)
     throw(std::exception&)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   }
 
   already_AddRefd<iface::dom::Node> removeNamedItem(const std::wstring& name)
     throw(std::exception&)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   }
 
   already_AddRefd<iface::dom::Node> item(uint32_t index)
@@ -390,14 +390,14 @@ public:
   already_AddRefd<iface::dom::Node> setNamedItemNS(iface::dom::Node* arg)
     throw(std::exception&)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   }
 
   already_AddRefd<iface::dom::Node> removeNamedItemNS(const std::wstring& namespaceURI,
 						      const std::wstring& localName)
     throw(std::exception&)
   {
-    throw iface::dom::DOMException();
+    throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
   }
 };
 

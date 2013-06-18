@@ -203,7 +203,7 @@ CDA_CellMLIntegrationService::CompileSource
   if (!compilation)
   {
     mLastError = L"Cannot create an LLVM compiler driver.";
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Cannot create an LLVM compiler driver.");
   }
 
   const clang::driver::JobList &jobList =
@@ -267,7 +267,7 @@ CDA_CellMLIntegrationService::CompileSource
       mbstowcs(buffer, whyFail.c_str(), 1024);
       buffer[1023] = 0;
       mLastError = std::wstring(L"Cannot create LLVM execution engine: ") + buffer;
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(std::wstring(L"Cannot create LLVM execution engine: ") + buffer);
     }
 
     // Create and execute the frontend to generate the LLVM assembly code,
@@ -281,7 +281,7 @@ CDA_CellMLIntegrationService::CompileSource
     if (!compilerInstance.ExecuteAction(*codeGenerationAction))
     {
       mLastError = L"Error generating code with LLVM.";
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Error generating code with LLVM.");
     }
 
     // Switch from the source module to the linked module.
@@ -409,7 +409,7 @@ CDA_CellMLIntegrationService::CompileSource
     {
       free(commandstring);
       printf( "CreateProcess failed (%d)\n", GetLastError() );
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"CreateProcess failed");
     }
     free(commandstring);
     // Wait until child process exits.
@@ -440,7 +440,7 @@ CDA_CellMLIntegrationService::CompileSource
   if (ret != 0)
   {
     lastError = L"Could not compile the model code.";
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Could not compile the model code.");
   }
 
 #ifdef WIN32
@@ -462,7 +462,7 @@ CDA_CellMLIntegrationService::CompileSource
 #else
     lastError += L".";
 #endif
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(lastError);
   }
 
   CompiledModule *mod = new CompiledModule();
@@ -641,7 +641,7 @@ CDA_CellMLIntegrationRun::setOverride
                            (variableIndex, newValue));
   }
   else
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Call to setOverride on a variable that is neither constant nor state variable");
 }
 
 void
@@ -649,7 +649,7 @@ CDA_CellMLIntegrationRun::start()
   throw (std::exception&)
 {
   if (mIsStarted)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Call to start() on an integration run that is already started.");
   mIsStarted = true;
 
 #ifdef WIN32
@@ -675,7 +675,7 @@ CDA_CellMLIntegrationRun::stop()
 
   int stop = 1;
 #ifdef WIN32
-  WriteFile(mThreadPipes[1], &stop, sizeof(stop), NULL, NULL);
+  WriteFile(mThreadPipes[1], &stop, sizeof(stop), &outCount, NULL);
   ReleaseSemaphore(mThreadSemaphore, 1, NULL);
 #else
   write(mThreadPipes[1], &stop, sizeof(stop));
@@ -757,7 +757,7 @@ CDA_ODESolverRun::runthread()
     struct fail_info failInfo;
     f->SetupConstants(constants, rates, states, &overrides, &failInfo);
     if (failInfo.failtype)
-      throw iface::cellml_api::CellMLException(); // Caught below.
+      throw iface::cellml_api::CellMLException(L"failInfo.failtype (internal)"); // Caught below.
 
     delete [] overrides.isOverriden;
 
@@ -776,7 +776,7 @@ CDA_ODESolverRun::runthread()
     f->ComputeRates(mStartBvar, constants, rates, states, algebraic, &failInfo);
     f->ComputeVariables(mStartBvar, constants, rates, states, algebraic, &failInfo);
     if (failInfo.failtype)
-      throw iface::cellml_api::CellMLException(); // Caught below.
+      throw iface::cellml_api::CellMLException(L"failInfo.failtype (internal)"); // Caught below.
 
     if (mObserver != NULL)
     {
@@ -903,10 +903,15 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
   if (mcl != iface::cellml_services::CORRECTLY_CONSTRAINED)
   {
     if (mcl == iface::cellml_services::OVERCONSTRAINED)
+    {
       mLastError = L"Model is overconstrained.";
+      throw iface::cellml_api::CellMLException(L"Model is overconstrained.");
+    }
     else
+    {
       mLastError = L"Model is underconstrained.";
-    throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(L"Model is underconstrained.");
+    }
   }
 
   // Create a temporary directory...
@@ -935,7 +940,7 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
     }
   }
   if (fn == NULL)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Could not make temporary directory");
   dirname = fn;
   free(fn);
 
@@ -1413,13 +1418,13 @@ CDA_CellMLIntegrationService::compileModelODEInternal
     if (msg != L"")
     {
       mLastError = msg;
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(msg);
     }
   }
   catch (...)
   {
     mLastError = L"Unexpected exception generating code";
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Unexpected exception generating code");
   }
 
   std::ofstream ss;
@@ -1523,13 +1528,13 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
     if (msg != L"")
     {
       mLastError = msg;
-      throw iface::cellml_api::CellMLException();
+      throw iface::cellml_api::CellMLException(msg);
     }
   }
   catch (...)
   {
     mLastError = L"Unexpected exception generating code";
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Unexpected exception generating code");
   }
 
   std::ofstream ss;

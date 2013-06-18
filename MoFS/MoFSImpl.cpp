@@ -85,7 +85,7 @@ CDA_ModelFlattener::flatten(iface::cellml_api::Model* aModel)
   catch (CDA_MoFSFailure& eFail)
   {
     mLastError = eFail.why();
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(eFail.why());
   }
 }
 

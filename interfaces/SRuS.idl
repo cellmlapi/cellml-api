@@ -13,7 +13,12 @@ module SRuS
   interface GeneratedDataSet;
   interface GeneratedDataMonitor;
 
-  exception SRuSException {};
+  exception SRuSException {
+    /**
+     * Provides a plain text explanation of what went wrong.
+     */
+    wstring explanation;
+  };
 
   /**
    * This interface represents the SEDMLProcessor. A SEDMLProcessor holds a

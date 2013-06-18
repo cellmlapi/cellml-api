@@ -222,7 +222,7 @@ public:
   {
     mType = aEventTypeArg;
     if (!aCanBubble || aCancelable)
-      throw iface::dom::DOMException();
+      throw iface::dom::DOMException(iface::dom::NOT_SUPPORTED_ERR);
   }
 
   std::wstring
@@ -310,7 +310,7 @@ CDA_CellMLElement::addEventListener
 {
   // Only bubbling is supported, as these events can't be cancelled.
   if (aUseCapture)
-    throw iface::cellml_api::CellMLException();
+    throw iface::cellml_api::CellMLException(L"Only bubbling events are supported.");
 
   int32_t event = FindEventByName(aType);
   // Unknown events are silently ignored, as per the DOM Events specification.
@@ -379,7 +379,7 @@ CDA_CellMLElement::dispatchEvent(iface::events::Event* aEvent)
 {
   // We don't have the infrastructure to dispatch arbitrary events at this
   // level.
-  throw iface::dom::DOMException();
+  throw iface::dom::DOMException(iface::dom::NOT_SUPPORTED_ERR);
 }
 
 void
