@@ -149,11 +149,13 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
                 constructorArgs = constructorArgs + ', '
             for dn in n.declarators():
                 constructorSave = constructorSave + ('%s = _%s;' % (jnutils.JavaName(dn), jnutils.JavaName(dn)))
+                
                 constructorArgs = \
                     constructorArgs + \
                     jnutils.GetTypeInformation(n.memberType()).javaType(jnutils.Type.IN) +\
-                    ' _' + jnutils.JavaName(dn) + \
-                    ('' if dn.sizes()==None else ''.join(map(lambda x: '[%s]'%x, dn.sizes())))
+                    ' _' + jnutils.JavaName(dn)
+                if dn.sizes() != None:
+                    constructorArgs = constructorArgs + ''.join(map(lambda x: '[%s]'%x, dn.sizes()))
 
         self.out.out('  public ' + node.simplename + '(' + constructorArgs + '){ ' + constructorSave + ' }')
         for n in node.members():

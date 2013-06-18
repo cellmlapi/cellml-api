@@ -188,7 +188,9 @@ class Walker(idlvisitor.AstVisitor):
             for dn in n.declarators():
                 constructorSave = constructorSave + ('%s(_%s)' % (dn.simplename, dn.simplename))
                 constructorArgs = constructorArgs + simplecxx.typeToSimpleCXX(n.memberType(), is_const=1) +\
-                    ' _' + dn.simplename + ('' if dn.sizes()==None else ''.join(map(lambda x: '[%s]'%x, dn.sizes())))
+                    ' _' + dn.simplename
+                if dn.sizes() != None:
+                    constructorArgs = constructorArgs + ''.join(map(lambda x: '[%s]'%x, dn.sizes()))
 
         self.cxxheader.out('  ' + node.simplename + '(' + constructorArgs + ')' + constructorSave + '{}')
         self.cxxheader.out('  ~' + node.simplename + '() throw() {}')
