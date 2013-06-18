@@ -155,7 +155,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
                     jnutils.GetTypeInformation(n.memberType()).javaType(jnutils.Type.IN) +\
                     ' _' + jnutils.JavaName(dn)
                 if dn.sizes() != None:
-                    constructorArgs = constructorArgs + ''.join(map(lambda x: '[%s]'%x, dn.sizes()))
+                    constructorArgs = constructorArgs + string.join(map(lambda x: '[%s]'%x, dn.sizes()), '')
 
         self.out.out('  public ' + node.simplename + '(' + constructorArgs + '){ ' + constructorSave + ' }')
         for n in node.members():

@@ -3,6 +3,7 @@
 from omniidl import idlvisitor, idlast;
 from omniidl import output;
 import os;
+import string;
 
 import simplecxx, identifier;
 
@@ -190,7 +191,7 @@ class Walker(idlvisitor.AstVisitor):
                 constructorArgs = constructorArgs + simplecxx.typeToSimpleCXX(n.memberType(), is_const=1) +\
                     ' _' + dn.simplename
                 if dn.sizes() != None:
-                    constructorArgs = constructorArgs + ''.join(map(lambda x: '[%s]'%x, dn.sizes()))
+                    constructorArgs = constructorArgs + string.join(map(lambda x: '[%s]'%x, dn.sizes()), '')
 
         self.cxxheader.out('  ' + node.simplename + '(' + constructorArgs + ')' + constructorSave + '{}')
         self.cxxheader.out('  ~' + node.simplename + '() throw() {}')
