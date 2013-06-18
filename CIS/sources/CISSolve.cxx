@@ -250,7 +250,8 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
 
     int command;
 #ifdef WIN32
-    ReadFile(mThreadPipes[0], &command, sizeof(command), NULL, NULL);
+    DWORD readLen;
+    ReadFile(mThreadPipes[0], &command, sizeof(command), &readLen, NULL);
 #else
     read(mThreadPipes[0], &command, sizeof(command));
 #endif
@@ -265,7 +266,7 @@ CDA_CellMLIntegrationRun::checkPauseOrCancellation()
         if (WaitForSingleObject(mThreadSemaphore, INFINITE) != WAIT_OBJECT_0)
           return false;
         ReadFile(mThreadPipes[0], &command, sizeof(command),
-                 NULL, NULL);
+                 &readLen, NULL);
 #else
         read(mThreadPipes[0], &command, sizeof(command));
 #endif
