@@ -12,13 +12,8 @@
 #include <map>
 #include <limits>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <assert.h>
-
-#ifdef _MSC_VER
-#define finite _finite
-#define isnan _isnan
-#endif
 
 template<typename C> class XPCOMContainerRAII
 {
@@ -337,13 +332,13 @@ public:
       else if (mType == iface::xpath::XPathResult::NUMBER_TYPE)
       {
         mType = iface::xpath::XPathResult::STRING_TYPE;
-        if (isnan(mNumber))
+        if (std::isnan(mNumber))
         {
           mString = L"NaN";
           return;
         }
 
-        if (!finite(mNumber))
+        if (!std::isfinite(mNumber))
         {
           if (mNumber < 0)
             mString = L"-Infinity";

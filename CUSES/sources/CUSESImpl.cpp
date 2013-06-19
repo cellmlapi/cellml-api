@@ -5,7 +5,7 @@
 #include "IfaceAnnoTools.hxx"
 #include "AnnoToolsBootstrap.hpp"
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #undef max
 
 CDAUserBaseUnit::CDAUserBaseUnit(iface::cellml_api::Units* aBaseUnits)

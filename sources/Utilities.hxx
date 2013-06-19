@@ -58,10 +58,6 @@
 #include <assert.h>
 #include <cmath>
 
-#ifdef _MSC_VER
-#define finite _finite
-#endif
-
 // Register a destructor that is called at the termination of every thread
 // created by the API.
 UTILS_PUBLIC_PRE void CDA_RegisterDestructorEveryThread(void* aData, void (*aFunc)(void*)) UTILS_PUBLIC_POST;
@@ -711,7 +707,7 @@ public:
       X.asIntegers[0] = randomUInt32();
       X.asIntegers[1] = randomUInt32();
     }
-    while (!finite(X.asDouble));
+    while (!std::isfinite(X.asDouble));
 
     return X.asDouble;
   }

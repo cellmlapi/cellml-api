@@ -3,7 +3,7 @@
 #include <map>
 #include <set>
 #include <iterator>
-#include <math.h>
+#include <cmath>
 #include "CodeGenerationState.hxx"
 #include <stdio.h>
 #include "CodeGenerationError.hxx"

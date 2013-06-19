@@ -2,7 +2,7 @@
 #define MODULE_CONTAINS_MaLaES
 #include "MaLaESImpl.hpp"
 #include "MaLaESBootstrap.hpp"
-#include <math.h>
+#include <cmath>
 #include <sstream>
 
 #define MATHML_NS L"http://www.w3.org/1998/Math/MathML"
