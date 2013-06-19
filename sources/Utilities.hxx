@@ -489,6 +489,44 @@ private:
   bool mRunning;
 };
 
+namespace cdamath
+{
+static double asinh(double input)
+{
+  return std::log(input + std::sqrt(input*input + 1.0));
+}
+static double acosh(double input)
+{
+  return std::log(input +
+                  sqrt((input + 1.0) * (input - 1.0)));
+}
+static double atanh(double input)
+{
+  return 0.5 * std::log((1 + input) / (1 - input));
+}
+static int isfinite(double value)
+{
+#ifndef WIN32
+  return ::finite(value);
+#else
+  return _finite(value);
+#endif
+}
+static int isnan(double value)
+{
+#ifndef WIN32
+  return ::isnan(value);
+#else
+  return _isnan(value);
+#endif
+}
+static int isinf(double value)
+{
+  return ::isinf(value);
+}
+};
+
+
 /* 
    The following license applies to the original Mersenne Twister code. My
    modifications are Copyright (C) 2006-2012, and are under the same license as the
@@ -707,7 +745,7 @@ public:
       X.asIntegers[0] = randomUInt32();
       X.asIntegers[1] = randomUInt32();
     }
-    while (!std::isfinite(X.asDouble));
+    while (!cdamath::isfinite(X.asDouble));
 
     return X.asDouble;
   }

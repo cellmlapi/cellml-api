@@ -332,13 +332,13 @@ public:
       else if (mType == iface::xpath::XPathResult::NUMBER_TYPE)
       {
         mType = iface::xpath::XPathResult::STRING_TYPE;
-        if (std::isnan(mNumber))
+        if (cdamath::isnan(mNumber))
         {
           mString = L"NaN";
           return;
         }
 
-        if (!std::isfinite(mNumber))
+        if (!cdamath::isfinite(mNumber))
         {
           if (mNumber < 0)
             mString = L"-Infinity";
@@ -369,7 +369,7 @@ public:
       if (mType == iface::xpath::XPathResult::NUMBER_TYPE)
       {
         mType = iface::xpath::XPathResult::BOOLEAN_TYPE;
-        mBoolean = !isnan(mNumber) && (mNumber != 0);
+        mBoolean = !cdamath::isnan(mNumber) && (mNumber != 0);
         return;
       }
       else if (mType == iface::xpath::XPathResult::UNORDERED_NODE_ITERATOR_TYPE ||

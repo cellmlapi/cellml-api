@@ -36,27 +36,6 @@
 #include <cvode/cvode_dense.h>
 #include <cvode/cvode_dense.h>
 
-#ifdef _MSC_VER
-#define INFINITY (double)(0x7FF0000000000000L)
-#endif
-
-namespace cismath
-{
-double asinh(double input)
-{
-  return std::log(input + std::sqrt(input*input + 1.0));
-}
-double acosh(double input)
-{
-  return std::log(input +
-                  sqrt((input + 1.0) * (input - 1.0)));
-}
-double atanh(double input)
-{
-  return 0.5 * std::log((1 + input) / (1 - input));
-}
-};
-
 #include <kinsol/kinsol.h>
 #include <kinsol/kinsol_spgmr.h>
 #include <kinsol/kinsol_dense.h>
@@ -716,7 +695,7 @@ static int minfuncForPDF(N_Vector pVec, N_Vector hxVec, void *adata)
   info->uplimit = NV_Ith_S(pVec, 0);
   NV_Ith_S(hxVec, 0) = 0;
 
-  if (!std::isfinite(info->uplimit))
+  if (!cdamath::isfinite(info->uplimit))
     return 1;
 
   void* cv = CVodeCreate(CV_BDF, CV_NEWTON);
@@ -1558,7 +1537,7 @@ EvaluateDefintDebugCVODE(double x, N_Vector varsV, N_Vector ratesV, void* params
   EDouble v = ei->f(ei->voi, ei->constants, ei->rates, ei->states,
                     ei->algebraic, ei->failInfo);
   *N_VGetArrayPointer_Serial(ratesV) = v->mValue;
-  if (!std::isfinite(v->mValue))
+  if (!cdamath::isfinite(v->mValue))
   {
     v->addCause("evaluating definite integral integrand");
     setFailure(ei->failInfo, v->mWhyError.c_str(), 1);
@@ -1576,7 +1555,7 @@ CreateEDouble(double aValue)
 double
 UseEDouble(EDouble aValue, struct fail_info* aFail, const char* aContext)
 {
-  if (!std::isfinite(aValue->mValue))
+  if (!cdamath::isfinite(aValue->mValue))
   {
     aValue->addCause(aContext);
     setFailure(aFail, aValue->mWhyError.c_str(), -1);
@@ -1590,7 +1569,7 @@ UseEDouble(EDouble aValue, struct fail_info* aFail, const char* aContext)
 
 void TryAssign(double* aDest, EDouble aValue, const char* aContext, struct fail_info* aFail)
 {
-  if (!std::isfinite(aValue->mValue))
+  if (!cdamath::isfinite(aValue->mValue))
   {
     aValue->addCause(std::string("Computed value for ") + aContext + " is not finite");
     setFailure(aFail, aValue->mWhyError.c_str(), -1);
@@ -1613,7 +1592,7 @@ void TryOverrideAssign(double* aDest, EDouble aValue, const char* aContext,
     }
   }
 
-  if (!std::isfinite(aValue->mValue))
+  if (!cdamath::isfinite(aValue->mValue))
   {
     aValue->addCause(std::string("Computed value for ") + aContext + " is not finite");
     setFailure(aFail, aValue->mWhyError.c_str(), -1);
@@ -1666,7 +1645,7 @@ void putIth(int i, std::ostream& aStr)
 
 EDouble TryAbs(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("taking absolute of a non-finite number");
   else
     aInput->noError();
@@ -1686,7 +1665,7 @@ EDouble TryAnd(int count, ...)
   for (int i = 0; i < count; i++)
   {
     EDouble v = va_arg(val, EDouble);
-    if (!std::isfinite(v->mValue))
+    if (!cdamath::isfinite(v->mValue))
     {
       if (badidx == -1)
       {
@@ -1722,7 +1701,7 @@ EDouble TryAnd(int count, ...)
 
 EDouble TryACos(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("argument to arccos is not finite");
   else if (aInput->mValue > 1.0)
     aInput->noError()->addCause("argument to arccos is >1");
@@ -1735,20 +1714,20 @@ EDouble TryACos(EDouble aInput)
 
 EDouble TryACosh(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("argument to arccosh is not finite");
   else if (aInput->mValue < 1.0)
     aInput->noError()->addCause("argument to arccosh is <1");
   else
     aInput->noError();
 
-  aInput->mValue = cismath::acosh(aInput->mValue);
+  aInput->mValue = cdamath::acosh(aInput->mValue);
   return aInput;
 }
 
 EDouble TryACot(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("argument to arccot is NaN");
   else
     aInput->noError();
@@ -1760,20 +1739,20 @@ EDouble TryACot(EDouble aInput)
 
 EDouble TryACoth(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to arccoth is not finite");
   else if (aInput->mValue == 0.0)
     aInput->noError()->addCause("input to arccoth is zero");
   else
     aInput->noError();
 
-  aInput->mValue = cismath::atanh(1.0/aInput->mValue);
+  aInput->mValue = cdamath::atanh(1.0/aInput->mValue);
   return aInput;
 }
 
 EDouble TryACsc(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to arccosec is NaN");
   else if (aInput->mValue > -1.0 && aInput->mValue < 1.0)
     aInput->noError()->addCause("input to arccosec is in (-1.0, 1.0)");
@@ -1784,20 +1763,20 @@ EDouble TryACsc(EDouble aInput)
 
 EDouble TryACsch(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to arccosech is NaN");
   else if (aInput->mValue > -1.488E-8 && aInput->mValue < 7.459E-155)
     aInput->noError()->addCause("input to arccosech is too close to zero - would overflow");
   else
     aInput->noError();
 
-  aInput->mValue = cismath::asinh(1.0/aInput->mValue);
+  aInput->mValue = cdamath::asinh(1.0/aInput->mValue);
   return aInput;
 }
 
 EDouble TryASec(EDouble aInput)
 {
-  if (!std::isnan(aInput->mValue))
+  if (!cdamath::isnan(aInput->mValue))
     aInput->addCause("input to arcsec is NaN");
   else if (aInput->mValue > -1.0 && aInput->mValue < 1.0)
     aInput->noError()->addCause("input to arcsec is in (-1.0, 1.0)");
@@ -1810,7 +1789,7 @@ EDouble TryASec(EDouble aInput)
 
 EDouble TryASech(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to arcsech is not finite");
   else if (aInput->mValue > 1)
     aInput->noError()->addCause("input to arcsech is >1");
@@ -1821,13 +1800,13 @@ EDouble TryASech(EDouble aInput)
   else
     aInput->noError();
 
-  aInput->mValue = cismath::acosh(1.0 / aInput->mValue);
+  aInput->mValue = cdamath::acosh(1.0 / aInput->mValue);
   return aInput;
 }
 
 EDouble TryASin(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to asin is not finite.");
   else if (aInput->mValue > 1.0 || aInput->mValue < -1.0)
     aInput->noError()->addCause("input to asin lies out [-1.0, 1.0]");
@@ -1840,7 +1819,7 @@ EDouble TryASin(EDouble aInput)
 
 EDouble TryASinh(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to asinh is not finite");
   else if (aInput->mValue < -6.710E7)
     aInput->noError()->addCause("input to asinh is too small, causing output to overflow");
@@ -1849,13 +1828,13 @@ EDouble TryASinh(EDouble aInput)
   else
     aInput->noError();
 
-  aInput->mValue = cismath::asinh(aInput->mValue);
+  aInput->mValue = cdamath::asinh(aInput->mValue);
   return aInput;
 }
 
 EDouble TryATan(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to atan is notanumber");
   else
     aInput->noError();
@@ -1866,7 +1845,7 @@ EDouble TryATan(EDouble aInput)
 
 EDouble TryATanh(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to atanh is not finite");
   else if (aInput->mValue <= -1.0)
     aInput->noError()->addCause("input to atanh is <= -1.0");
@@ -1881,7 +1860,7 @@ EDouble TryATanh(EDouble aInput)
 
 EDouble TryCeil(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to ceil is not finite.");
   else
     aInput->noError();
@@ -1892,7 +1871,7 @@ EDouble TryCeil(EDouble aInput)
 
 EDouble TryCos(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to cos is not finite.");
   else
     aInput->noError();
@@ -1903,7 +1882,7 @@ EDouble TryCos(EDouble aInput)
 
 EDouble TryCosh(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to cosh is not finite.");
   else if (aInput->mValue > 710.0)
     aInput->noError()->addCause("input to cosh is too large, output would overflow.");
@@ -1921,7 +1900,7 @@ EDouble TryCosh(EDouble aInput)
 EDouble TryCot(EDouble aInput)
 {
   double normInput = aInput->mValue - floor(aInput->mValue / PI) * PI;
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to cot is not finite.");
   else if (normInput == 0)
     aInput->noError()->addCause("input to cot is a multiple of pi");
@@ -1934,7 +1913,7 @@ EDouble TryCot(EDouble aInput)
 
 EDouble TryCoth(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to coth is not a number");
   else if (aInput->mValue > -5.563E-309 && aInput->mValue < 5.563E-309)
     aInput->noError()->
@@ -1949,7 +1928,7 @@ EDouble TryCoth(EDouble aInput)
 EDouble TryCsc(EDouble aInput)
 {
   double normInput = aInput->mValue - floor(aInput->mValue / PI) * PI;
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to cosec is not a number");
   else if (normInput == 0)
     aInput->noError()->addCause("input to cosec is multiple of pi");
@@ -1962,7 +1941,7 @@ EDouble TryCsc(EDouble aInput)
 
 EDouble TryCsch(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to cosech is not a number");
   else if (aInput->mValue > -5.563E-309 &&
            aInput->mValue < 5.563E-309)
@@ -1970,16 +1949,16 @@ EDouble TryCsch(EDouble aInput)
   else
     aInput->noError();
 
-  aInput->mValue = 1.0 / cismath::asinh(aInput->mValue);
+  aInput->mValue = 1.0 / cdamath::asinh(aInput->mValue);
   return aInput;
 }
 
 EDouble TryDivide(EDouble aInput1, EDouble aInput2)
 {
   double rawresult = aInput1->mValue / aInput2->mValue;
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("numerator to divide is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput2->addCause("denominator to divide is not finite");
     aInput1->mWhyError = aInput2->mWhyError;
@@ -1991,7 +1970,7 @@ EDouble TryDivide(EDouble aInput1, EDouble aInput2)
   }
   else if (rawresult == 0.0 && aInput1->mValue != 0.0)
     aInput1->addCause("result of divide was underflow");
-  else if (!std::isfinite(rawresult))
+  else if (!cdamath::isfinite(rawresult))
     aInput1->addCause("result of divide was overflow");
   else
     aInput1->noError();
@@ -2017,7 +1996,7 @@ EDouble TryEq(int count, ...)
       result->mValue = 0.0;
     else if (i == 0)
       allEqualTo = eval->mValue;
-    if (std::isnan(eval->mValue))
+    if (cdamath::isnan(eval->mValue))
     {
       result->mWhyError = eval->mWhyError;
       std::stringstream ssCause;
@@ -2037,7 +2016,7 @@ EDouble TryEq(int count, ...)
 
 EDouble TryExp(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to exp is not finite");
   else if (aInput->mValue > 7.097E2)
     aInput->noError()->addCause("input to exp is too big (overflow)");
@@ -2050,7 +2029,7 @@ EDouble TryExp(EDouble aInput)
 
 EDouble TryFactorial(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to factorial is not finite");
   else if (aInput->mValue > 170.6)
     aInput->noError()->addCause("input to factorial is too big (overflow)");
@@ -2063,9 +2042,9 @@ EDouble TryFactorial(EDouble aInput)
 
 EDouble TryFactorOf(EDouble aInput1, EDouble aInput2)
 {
-  if (!std::isfinite(aInput2->mValue))
+  if (!cdamath::isfinite(aInput2->mValue))
     aInput2->addCause("numerator to factorof is not finite");
-  else if (!std::isfinite(aInput1->mValue))
+  else if (!cdamath::isfinite(aInput1->mValue))
   {
     aInput2->mWhyError = aInput1->mWhyError;
     aInput2->addCause("denominator to factorof is not finite");
@@ -2085,7 +2064,7 @@ EDouble TryFactorOf(EDouble aInput1, EDouble aInput2)
 
 EDouble TryFloor(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to floor is not finite");
   else
     aInput->noError();
@@ -2103,7 +2082,7 @@ EDouble TryGCD(int count, ...)
 
   va_start(parameters, count);
   EDouble res = va_arg(parameters, EDouble);
-  if (!std::isfinite(res->mValue))
+  if (!cdamath::isfinite(res->mValue))
     res->addCause("input to GCD is not finite");
   else
     res->noError();
@@ -2111,7 +2090,7 @@ EDouble TryGCD(int count, ...)
   while (--count)
   {
     EDouble newRes = va_arg(parameters, EDouble);
-    if (!std::isfinite(newRes->mValue) && res->mWhyError == "")
+    if (!cdamath::isfinite(newRes->mValue) && res->mWhyError == "")
     {
       res->mWhyError = newRes->mWhyError;
       res->addCause("input to GCD is not finite");
@@ -2138,7 +2117,7 @@ EDouble TryGeq(int count, ...)
     if (i != 0 && allGt < eval->mValue)
       result->mValue = 0.0;
     allGt = eval->mValue;
-    if (std::isnan(eval->mValue))
+    if (cdamath::isnan(eval->mValue))
     {
       result->mWhyError = eval->mWhyError;
       std::stringstream ssCause;
@@ -2170,7 +2149,7 @@ EDouble TryGt(int count, ...)
     if (i != 0 && allGt <= eval->mValue)
       result->mValue = 0.0;
     allGt = eval->mValue;
-    if (std::isnan(eval->mValue))
+    if (cdamath::isnan(eval->mValue))
     {
       result->mWhyError = eval->mWhyError;
       std::stringstream ssCause;
@@ -2190,9 +2169,9 @@ EDouble TryGt(int count, ...)
 
 EDouble TryImplies(EDouble aInput1, EDouble aInput2)
 {
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("first input to implies is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
     aInput1->addCause("second input to implies is not finite");
     
   aInput1->mValue =
@@ -2211,7 +2190,7 @@ EDouble TryLCM(int count, ...)
 
   va_start(parameters, count);
   EDouble res = va_arg(parameters, EDouble);
-  if (!std::isfinite(res->mValue))
+  if (!cdamath::isfinite(res->mValue))
     res->addCause("input to LCM is not finite");
   else
     res->noError();
@@ -2219,7 +2198,7 @@ EDouble TryLCM(int count, ...)
   while (--count)
   {
     EDouble newRes = va_arg(parameters, EDouble);
-    if (!std::isfinite(newRes->mValue) && res->mWhyError == "")
+    if (!cdamath::isfinite(newRes->mValue) && res->mWhyError == "")
     {
       res->mWhyError = newRes->mWhyError;
       res->addCause("input to LCM is not finite");
@@ -2246,7 +2225,7 @@ EDouble TryLeq(int count, ...)
     if (i != 0 && allGt > eval->mValue)
       result->mValue = 0.0;
     allGt = eval->mValue;
-    if (std::isnan(eval->mValue))
+    if (cdamath::isnan(eval->mValue))
     {
       result->mWhyError = eval->mWhyError;
       std::stringstream ssCause;
@@ -2266,7 +2245,7 @@ EDouble TryLeq(int count, ...)
 
 EDouble TryLn(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to natural log is not finite");
   else if (aInput->mValue <= 0)
     aInput->addCause("input to natural log is not positive");
@@ -2276,9 +2255,9 @@ EDouble TryLn(EDouble aInput)
 
 EDouble TryLog(EDouble aInput1, EDouble aInput2)
 {
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("input to log is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("base to log is not finite");
@@ -2307,7 +2286,7 @@ EDouble TryLt(int count, ...)
     if (i != 0 && allGt >= eval->mValue)
       result->mValue = 0.0;
     allGt = eval->mValue;
-    if (std::isnan(eval->mValue))
+    if (cdamath::isnan(eval->mValue))
     {
       result->mWhyError = eval->mWhyError;
       std::stringstream ssCause;
@@ -2338,12 +2317,12 @@ EDouble TryMax(int count, ...)
   va_list val;
   va_start(val, count);
   EDouble value = va_arg(val, EDouble);
-  if (std::isnan(value->mValue))
+  if (cdamath::isnan(value->mValue))
   {
     value->addCause("first argument to max is not a number");
     hadErr = true;
   }
-  else if (std::isinf(value->mValue) && value->mValue > 0)
+  else if (cdamath::isinf(value->mValue) && value->mValue > 0)
   {
     value->addCause("first argument to max is +infinity");
     hadErr = true;
@@ -2352,7 +2331,7 @@ EDouble TryMax(int count, ...)
   for (int i = 1; i < count; i++)
   {
     EDouble nextVal = va_arg(val, EDouble);
-    if (std::isnan(nextVal->mValue) || (std::isinf(nextVal->mValue) && nextVal->mValue > 0))
+    if (cdamath::isnan(nextVal->mValue) || (cdamath::isinf(nextVal->mValue) && nextVal->mValue > 0))
     {
       value->mValue = nextVal->mValue;
       if (!hadErr)
@@ -2362,7 +2341,7 @@ EDouble TryMax(int count, ...)
         ssError << "the ";
         putIth(i + 1, ssError);
         ssError << " argument to max is ";
-        if (std::isnan(nextVal->mValue))
+        if (cdamath::isnan(nextVal->mValue))
           ssError << "not a number";
         else
           ssError << "+infinity";
@@ -2374,7 +2353,7 @@ EDouble TryMax(int count, ...)
     delete nextVal;
   }
 
-  if (!hadErr && std::isinf(value->mValue))
+  if (!hadErr && cdamath::isinf(value->mValue))
     value->addCause("all arguments to max are negative infinity");
   else
     value->noError();
@@ -2397,12 +2376,12 @@ EDouble TryMin(int count, ...)
   va_list val;
   va_start(val, count);
   EDouble value = va_arg(val, EDouble);
-  if (std::isnan(value->mValue))
+  if (cdamath::isnan(value->mValue))
   {
     value->addCause("first argument to min is not a number");
     hadErr = true;
   }
-  else if (std::isinf(value->mValue) && value->mValue < 0)
+  else if (cdamath::isinf(value->mValue) && value->mValue < 0)
   {
     value->addCause("first argument to min is negative infinity");
     hadErr = true;
@@ -2411,7 +2390,7 @@ EDouble TryMin(int count, ...)
   for (int i = 1; i < count; i++)
   {
     EDouble nextVal = va_arg(val, EDouble);
-    if (std::isnan(nextVal->mValue) || (std::isinf(nextVal->mValue) && nextVal->mValue < 0))
+    if (cdamath::isnan(nextVal->mValue) || (cdamath::isinf(nextVal->mValue) && nextVal->mValue < 0))
     {
       value->mValue = nextVal->mValue;
       if (!hadErr)
@@ -2421,7 +2400,7 @@ EDouble TryMin(int count, ...)
         ssError << "the ";
         putIth(i + 1, ssError);
         ssError << " argument to min is ";
-        if (std::isnan(nextVal->mValue))
+        if (cdamath::isnan(nextVal->mValue))
           ssError << "not a number";
         else
           ssError << "+infinity";
@@ -2433,7 +2412,7 @@ EDouble TryMin(int count, ...)
     delete nextVal;
   }
 
-  if (!hadErr && std::isinf(value->mValue))
+  if (!hadErr && cdamath::isinf(value->mValue))
     value->addCause("all arguments to min are +infinity");
   else
     value->noError();
@@ -2446,14 +2425,14 @@ EDouble TryMin(int count, ...)
 EDouble TryMinus(EDouble aInput1, EDouble aInput2)
 {
   double result = aInput1->mValue - aInput2->mValue;
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("the first operand to minus is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("the second operand to minus is not finite");
   }
-  else if (!std::isfinite(result))
+  else if (!cdamath::isfinite(result))
     aInput1->noError()->addCause("an overflow in the result of minus");
 
   aInput1->mValue = result;
@@ -2465,12 +2444,12 @@ EDouble TryNeq(EDouble aInput1, EDouble aInput2)
 {
   double result = (aInput1->mValue != aInput2->mValue) ? 1.0 : 0.0;
 
-  if (std::isnan(aInput1->mValue))
+  if (cdamath::isnan(aInput1->mValue))
   {
     aInput1->addCause("the first operand to neq is not a number");
     result = aInput1->mValue;
   }
-  else if (!std::isnan(aInput2->mValue))
+  else if (!cdamath::isnan(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("the second operand to neq is not a number");
@@ -2486,7 +2465,7 @@ EDouble TryNot(EDouble aInput)
 {
   double result = (aInput->mValue == 0.0) ? 1.0 : 0.0;
 
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
   {
     aInput->addCause("the operand to not is not finite");
     result = aInput->mValue;
@@ -2507,7 +2486,7 @@ EDouble TryOr(int count, ...)
   for (int i = 0; i < count; i++)
   {
     EDouble v = va_arg(val, EDouble);
-    if (!std::isfinite(v->mValue))
+    if (!cdamath::isfinite(v->mValue))
     {
       if (badidx == -1)
       {
@@ -2553,7 +2532,7 @@ EDouble TryPlus(int count, ...)
   {
     EDouble v = va_arg(val, EDouble);
     result->mValue += v->mValue;
-    if (!std::isfinite(v->mValue))
+    if (!cdamath::isfinite(v->mValue))
     {
       if (badidx == -1)
       {
@@ -2578,7 +2557,7 @@ EDouble TryPlus(int count, ...)
     result->mWhyError = badInput->mWhyError;
     delete badInput;
   }
-  else if (!std::isfinite(result->mValue))
+  else if (!cdamath::isfinite(result->mValue))
     result->noError()->addCause("plus operation overflowed");
 
   return result;
@@ -2587,14 +2566,14 @@ EDouble TryPlus(int count, ...)
 EDouble TryPower(EDouble aInput1, EDouble aInput2)
 {
   double result = pow(aInput1->mValue, aInput2->mValue);
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("the first operand to power is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("the second operand to power is not finite");
   }
-  else if (!std::isfinite(result))
+  else if (!cdamath::isfinite(result))
     aInput1->noError()->addCause("an overflow in the result of power");
 
   aInput1->mValue = result;
@@ -2605,16 +2584,16 @@ EDouble TryPower(EDouble aInput1, EDouble aInput2)
 EDouble TryQuotient(EDouble aInput1, EDouble aInput2)
 {
   double result = floor(aInput1->mValue / aInput2->mValue);
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("the first operand to quotient is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("the second operand to quotient is not finite");
   }
   else if (aInput2->mValue == 0.0)
     aInput1->noError()->addCause("the second operand to quotient is zero");
-  else if (!std::isfinite(result))
+  else if (!cdamath::isfinite(result))
     aInput1->noError()->addCause("an overflow in the result of quotient");
 
   aInput1->mValue = result;
@@ -2626,16 +2605,16 @@ EDouble TryRem(EDouble aInput1, EDouble aInput2)
 {
   double quo = floor(aInput1->mValue / aInput2->mValue);
   double result = aInput1->mValue - aInput2->mValue * quo;
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("the first operand to quotient is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("the second operand to quotient is not finite");
   }
   else if (aInput2->mValue == 0.0)
     aInput1->noError()->addCause("the second operand to quotient is zero");
-  else if (!std::isfinite(result))
+  else if (!cdamath::isfinite(result))
     aInput1->noError()->addCause("an overflow in the result of quotient");
 
   aInput1->mValue = result;
@@ -2646,9 +2625,9 @@ EDouble TryRem(EDouble aInput1, EDouble aInput2)
 EDouble TryRoot(EDouble aInput1, EDouble aInput2)
 {
   double result = pow(aInput1->mValue, 1.0 / aInput2->mValue);
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
     aInput1->addCause("the first operand to root is not finite");
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("the first operand to root is not finite");
@@ -2657,7 +2636,7 @@ EDouble TryRoot(EDouble aInput1, EDouble aInput2)
     aInput1->noError()->addCause("the first operand to root is negative");
   else if (aInput2->mValue == 0.0)
     aInput1->noError()->addCause("the second operand to root is zero");
-  else if (!std::isfinite(result))
+  else if (!cdamath::isfinite(result))
     aInput1->noError()->addCause("the second operand to root is zero");
   
   delete aInput2;
@@ -2668,7 +2647,7 @@ EDouble TryRoot(EDouble aInput1, EDouble aInput2)
 EDouble TrySec(EDouble aInput)
 {
   double normInput = aInput->mValue - floor(aInput->mValue / PI) * PI;
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to sec is not finite");
   else if (normInput == PI/2)
     aInput->noError()->addCause("input to sec is equal to pi/2 + n*pi for some n");
@@ -2681,7 +2660,7 @@ EDouble TrySec(EDouble aInput)
 
 EDouble TrySech(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to sech is not a number");
   aInput->mValue = 1.0 / cosh(aInput->mValue);
   return aInput;
@@ -2689,7 +2668,7 @@ EDouble TrySech(EDouble aInput)
 
 EDouble TrySin(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to sin is not finite");
   else
     aInput->noError();
@@ -2702,9 +2681,9 @@ EDouble TrySinh(EDouble aInput)
 {
   double result = sinh(aInput->mValue);
 
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to sinh is not finite");
-  else if (!std::isfinite(result))
+  else if (!cdamath::isfinite(result))
     aInput->noError()->addCause("result of sinh overflows");
   else
     aInput->noError();
@@ -2716,7 +2695,7 @@ EDouble TrySinh(EDouble aInput)
 EDouble TryTan(EDouble aInput)
 {
   double normInput = aInput->mValue - floor(aInput->mValue / PI) * PI;
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to tan is not finite");
   else if (normInput == PI/2)
     aInput->noError()->addCause("input to tan is equal to pi/2 + n*pi for some n");
@@ -2729,7 +2708,7 @@ EDouble TryTan(EDouble aInput)
 
 EDouble TryTanh(EDouble aInput)
 {
-  if (std::isnan(aInput->mValue))
+  if (cdamath::isnan(aInput->mValue))
     aInput->addCause("input to tanh is not a number");
   else
     aInput->noError();
@@ -2751,7 +2730,7 @@ EDouble TryTimes(int count, ...)
   {
     EDouble v = va_arg(val, EDouble);
     result->mValue *= v->mValue;
-    if (!std::isfinite(v->mValue))
+    if (!cdamath::isfinite(v->mValue))
     {
       if (badidx == -1)
       {
@@ -2776,7 +2755,7 @@ EDouble TryTimes(int count, ...)
     result->mWhyError = badInput->mWhyError;
     delete badInput;
   }
-  else if (!std::isfinite(result->mValue))
+  else if (!cdamath::isfinite(result->mValue))
     result->noError()->addCause("times operation overflowed");
 
   return result;
@@ -2784,7 +2763,7 @@ EDouble TryTimes(int count, ...)
 
 EDouble TryUnaryMinus(EDouble aInput)
 {
-  if (!std::isfinite(aInput->mValue))
+  if (!cdamath::isfinite(aInput->mValue))
     aInput->addCause("input to unary minus operator is not finite");
 
   aInput->mValue = -aInput->mValue;
@@ -2795,13 +2774,13 @@ EDouble TryUnitsConversion(EDouble value, EDouble mup, EDouble offset)
 {
   double result = value->mValue * mup->mValue + offset->mValue;
 
-  if (!std::isfinite(value->mValue))
+  if (!cdamath::isfinite(value->mValue))
     ;
-  else if (!std::isfinite(value->mValue))
+  else if (!cdamath::isfinite(value->mValue))
     value->addCause("invalid conversion multiplier");
-  else if (!std::isfinite(offset->mValue))
+  else if (!cdamath::isfinite(offset->mValue))
     value->addCause("invalid conversion offset");
-  else if (!std::isfinite(result))
+  else if (!cdamath::isfinite(result))
     value->noError()->addCause("overflow during units conversion");
   else
     value->noError();
@@ -2815,12 +2794,12 @@ EDouble TryUnitsConversion(EDouble value, EDouble mup, EDouble offset)
 EDouble TryXor(EDouble aInput1, EDouble aInput2)
 {
   double result = ((aInput1->mValue != 0) ^ (aInput2->mValue != 0)) ? 1.0 : 0.0;
-  if (!std::isfinite(aInput1->mValue))
+  if (!cdamath::isfinite(aInput1->mValue))
   {
     aInput1->addCause("first input to xor is not finite");
     result = aInput1->mValue;
   }
-  else if (!std::isfinite(aInput2->mValue))
+  else if (!cdamath::isfinite(aInput2->mValue))
   {
     aInput1->mWhyError = aInput2->mWhyError;
     aInput1->addCause("second input to xor is not finite");
@@ -2861,7 +2840,7 @@ EDouble TryPiecewise(EDouble firstCond, EDouble firstValue, ...)
       else if (command == 2)
       {
         EDouble otherwise = va_arg(val, EDouble);
-        if (!std::isfinite(otherwise->mValue))
+        if (!cdamath::isfinite(otherwise->mValue))
           otherwise->addCause("otherwise case on piecewise is not finite");
         else
           otherwise->noError();
@@ -2869,7 +2848,7 @@ EDouble TryPiecewise(EDouble firstCond, EDouble firstValue, ...)
       }
     }
     bool returnThis = cond->mValue != 0.0;
-    if (!std::isfinite(cond->mValue))
+    if (!cdamath::isfinite(cond->mValue))
     {
       value->mWhyError = cond->mWhyError;
       std::stringstream ssErr;
@@ -2879,7 +2858,7 @@ EDouble TryPiecewise(EDouble firstCond, EDouble firstValue, ...)
       value->addCause(ssErr.str());
       returnThis = true;
     }
-    else if (returnThis && !std::isfinite(value->mValue))
+    else if (returnThis && !cdamath::isfinite(value->mValue))
     {
       std::stringstream ssErr;
       ssErr << "the ";
@@ -2901,14 +2880,14 @@ EDouble TryPiecewise(EDouble firstCond, EDouble firstValue, ...)
 
 EDouble TryInfinity()
 {
-  EDouble ret = new EDoubleStruct(INFINITY);
+  EDouble ret = new EDoubleStruct(std::numeric_limits<double>::infinity());
   ret->mWhyError = "MathML predefined symbol infinity used";
   return ret;
 }
 
 EDouble TryNaN()
 {
-  EDouble ret = new EDoubleStruct(strtod("NAN", NULL));
+  EDouble ret = new EDoubleStruct(std::numeric_limits<double>::quiet_NaN());
   ret->mWhyError = "MathML predefined symbol notanumber used";
   return ret;
 }
@@ -2921,13 +2900,13 @@ TryDefint(
           struct fail_info* failInfo
          )
 {
-  if (!std::isfinite(lowEV->mValue))
+  if (!cdamath::isfinite(lowEV->mValue))
   {
     delete highEV;
     lowEV->addCause("evaluating lower limit for definite integral");
     return lowEV;
   }
-  if (!std::isfinite(highEV->mValue))
+  if (!cdamath::isfinite(highEV->mValue))
   {
     delete lowEV;
     highEV->addCause("evaluating upper limit for definite integral");
@@ -3155,7 +3134,7 @@ double multi_max(uint32_t count, ...)
 double
 safe_quotient(double num, double den)
 {
-  if (!std::isfinite(num) || !std::isfinite(den))
+  if (!cdamath::isfinite(num) || !cdamath::isfinite(den))
     return strtod("NAN", NULL);
   int inum = (int)num, iden = (int)den;
   if (iden == 0)
@@ -3167,7 +3146,7 @@ safe_quotient(double num, double den)
 double
 safe_remainder(double num, double den)
 {
-  if (!std::isfinite(num) || !std::isfinite(den))
+  if (!cdamath::isfinite(num) || !cdamath::isfinite(den))
     return strtod("NAN", NULL);
   int inum = (int)num, iden = (int)den;
   if (iden == 0)
@@ -3179,7 +3158,7 @@ safe_remainder(double num, double den)
 double
 safe_factorof(double num, double den)
 {
-  if (!std::isfinite(num) || !std::isfinite(den))
+  if (!cdamath::isfinite(num) || !cdamath::isfinite(den))
     return strtod("NAN", NULL);
   int inum = (int)num, iden = (int)den;
   if (iden == 0)
@@ -3201,7 +3180,7 @@ adaptNonlinearsolve(N_Vector p, N_Vector hx, void* adata)
   struct Adapt_NLS_Data* adapt = reinterpret_cast<struct Adapt_NLS_Data*>(adata);
   adapt->f(NV_DATA_S(p), NV_DATA_S(hx), adapt->adata);
   for (int i = 0; i < adapt->n; i++)
-    if (!std::isfinite(NV_Ith_S(hx, i)))
+    if (!cdamath::isfinite(NV_Ith_S(hx, i)))
       return 1;
   return 0;
 }
