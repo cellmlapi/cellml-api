@@ -490,6 +490,9 @@ private:
   bool mRunning;
 };
 
+#undef max
+#undef min
+
 namespace cdamath
 {
 static double asinh(double input)
