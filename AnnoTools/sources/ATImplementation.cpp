@@ -52,7 +52,7 @@ CDAAnnotationSetImpl::CDAAnnotationSetImpl()
 #define CHARS L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."
   for (i = 0; i < 10; i++)
   {
-    unsigned long r = mersenne_genrand_int32();
+    unsigned long r = sharedRandom()->randomUInt32();
     mPrefixURI += CHARS[r & 0x3F];
     r >>= 6;
     mPrefixURI += CHARS[r & 0x3F];

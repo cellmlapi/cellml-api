@@ -52,10 +52,11 @@
 #undef GetClassName
 #undef AddMonitor
 #endif
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <locale.h>
 #include <assert.h>
+#include <cmath>
 
 // Register a destructor that is called at the termination of every thread
 // created by the API.
@@ -535,132 +536,110 @@ private:
    email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
 */
 
-#define N 624
-#define M 397
-#define MATRIX_A 0x9908b0dfUL   /* constant vector a */
-#define UPPER_MASK 0x80000000UL /* most significant w-r bits */
-#define LOWER_MASK 0x7fffffffUL /* least significant r bits */
-
-static ThreadLocal<unsigned long>* mt;
-static ThreadLocal<int>* mti;
-
-/* initializes mt[N] with a seed */
-static void
-mersenne_init_genrand(unsigned long s)
+class MersenneTwister
 {
-    unsigned long* mtl = *mt;
-    mtl[0]= s & 0xffffffffUL;
-    unsigned long mtil;
-    for (mtil=1; mtil<N; mtil++) {
-        mtl[mtil] = 
-	    (1812433253UL * (mtl[mtil-1] ^ (mtl[mtil-1] >> 30)) + mtil);
+public:
+  MersenneTwister()
+  {
+    char key[200];
+    unsigned long *p;
+    memset(key, 0, sizeof(key));
+#ifndef WIN32
+    gethostname((char*)key, sizeof(key));
+    uint32_t l = strlen(key);
+    p = (unsigned long*)(key + l);
+    *p++ = getuid();
+    *p++ = getpid();
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    *p++ = tv.tv_sec;
+    *p++ = tv.tv_usec;
+    p += (l>>2) + ((l & 3) ? 1 : 0);
+#else
+    p = (unsigned long*)key;
+    GetSystemTimeAsFileTime((LPFILETIME)p);
+    p += 2;
+    *p++ = GetCurrentProcessId();
+#endif  
+    reseed((unsigned long*)key, p - (unsigned long*)key);
+  }
+
+  /* initializes mt[N] with a seed */
+  MersenneTwister(unsigned long aSeed)
+  {
+    mHaveSpareNormal = false;
+    reseed(aSeed);
+  }
+
+  MersenneTwister(unsigned long init_key[], int key_length)
+  {
+    reseed(init_key, key_length);
+  }
+
+  void reseed(unsigned long init_key[], int key_length)
+  {
+    int i, j, k;
+    reseed(19650218UL);
+    i=1; j=0;
+    k = (N>key_length ? N : key_length);
+    for (; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525UL))
+          + init_key[j] + j; /* non linear */
+        mt[i] = mt[i] & 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        i++; j++;
+        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+        if (j>=key_length) j=0;
+    }
+    for (k=N-1; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941UL))
+          - i; /* non linear */
+        mt[i] = mt[i] & 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        i++;
+        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+    }
+
+    mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */
+  }
+
+  void reseed(unsigned long s)
+  {
+    mt[0] = s & 0xffffffffUL;
+    for (mti=1; mti < N; mti++) {
+        mt[mti] = 
+	    (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
         /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
         /* In the previous versions, MSBs of the seed affect   */
         /* only MSBs of the array mt[].                        */
         /* 2002/01/09 modified by Makoto Matsumoto             */
-        mtl[mtil] &= 0xffffffffUL;
+        mt[mti] &= 0xffffffffUL;
         /* for >32 bit machines */
     }
-    *mti = mtil;
-}
+  }
 
-static void
-mersenne_init_by_array(unsigned long init_key[], int key_length)
-{
-    unsigned long* mtl = *mt;
-
-    int i, j, k;
-    mersenne_init_genrand(19650218UL);
-    i=1; j=0;
-    k = (N>key_length ? N : key_length);
-    for (; k; k--) {
-        mtl[i] = (mtl[i] ^ ((mtl[i-1] ^ (mtl[i-1] >> 30)) * 1664525UL))
-          + init_key[j] + j; /* non linear */
-        mtl[i] = mtl[i] & 0xffffffffUL; /* for WORDSIZE > 32 machines */
-        i++; j++;
-        if (i>=N) { mtl[0] = mtl[N-1]; i=1; }
-        if (j>=key_length) j=0;
-    }
-    for (k=N-1; k; k--) {
-        mtl[i] = (mtl[i] ^ ((mtl[i-1] ^ (mtl[i-1] >> 30)) * 1566083941UL))
-          - i; /* non linear */
-        mtl[i] = mtl[i] & 0xffffffffUL; /* for WORDSIZE > 32 machines */
-        i++;
-        if (i>=N) { mtl[0] = mtl[N-1]; i=1; }
-    }
-
-    mtl[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */ 
-}
-
-static void
-mersenne_autoseed(void)
-{
-  char key[200];
-  unsigned long *p;
-  memset(key, 0, sizeof(key));
-#ifndef WIN32
-  gethostname((char*)key, sizeof(key));
-  uint32_t l = strlen(key);
-  p = (unsigned long*)(key + l);
-  *p++ = getuid();
-  *p++ = getpid();
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  *p++ = tv.tv_sec;
-  *p++ = tv.tv_usec;
-  p += (l>>2) + ((l & 3) ? 1 : 0);
-#else
-  p = (unsigned long*)key;
-  GetSystemTimeAsFileTime((LPFILETIME)p);
-  p += 2;
-  *p++ = GetCurrentProcessId();
-#endif  
-  mersenne_init_by_array((unsigned long*)key, p - (unsigned long*)key);
-}
-
-/* generates a random number on [0,0xffffffff]-interval */
-HEADER_INLINE unsigned long mersenne_genrand_int32(void)
-{
-  if (mt == NULL)
-    mt = new ThreadLocal<unsigned long>(N, NULL);
-  if (mti == NULL)
-    mti = new ThreadLocal<int>(1, N + 1, NULL);
-
+  /* generates a random number on [0,0xffffffff]-interval */
+  unsigned long randomUInt32(void)
+  {
     unsigned long y;
-    static unsigned long mag01[2]={0x0UL, MATRIX_A};
+    static unsigned long mag01[2] = {0x0UL, MATRIX_A};
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-    unsigned long mtil = *mti;
-    unsigned long* mtl = *mt;
-    if (mtil >= N) { /* generate N words at one time */
+    if (mti >= N) { /* generate N words at one time */
         int kk;
-
-        if (mtil == N+1)
-          /* if init_genrand() has not been called, a default initial seed is
-           * used. Note that this seed has changed in the Bioengineering
-           * Institute version to include the time, pid, and hostname.
-           */
-        {
-          mersenne_autoseed();
-          mtil = *mti;
-        }
-
         for (kk=0;kk<N-M;kk++) {
-            y = (mtl[kk] & UPPER_MASK) | (mtl[kk+1] & LOWER_MASK);
-            mtl[kk] = mtl[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
+            y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
         }
         for (;kk<N-1;kk++) {
-            y = (mtl[kk] & UPPER_MASK) | (mtl[kk+1] & LOWER_MASK);
-            mtl[kk] = mtl[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
+            y = (mt[kk] & UPPER_MASK) | (mt[kk+1] & LOWER_MASK);
+            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
         }
-        y = (mtl[N-1]&UPPER_MASK)|(mtl[0]&LOWER_MASK);
-        mtl[N-1] = mtl[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
+        y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
+        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
 
-        mtil = *mti = 0;
+        mti = 0;
     }
   
-    y = mtl[mtil];
-    *mti = mtil + 1;
+    y = mt[mti++];
 
     /* Tempering */
     y ^= (y >> 11);
@@ -669,12 +648,98 @@ HEADER_INLINE unsigned long mersenne_genrand_int32(void)
     y ^= (y >> 18);
 
     return y;
+  }
+
+  /*
+   * Returns a random double from Uniform(0,1)
+   */
+  double randomDoubleU01()
+  {
+    return randomUInt32()/0xffffffffUL;
+  }
+
+  /**
+   * Returns a random double from Normal(0,1)
+   */
+  double randomStdNormal()
+  {
+    if (mHaveSpareNormal)
+    {
+      mHaveSpareNormal = false;
+      return mSpareNormal;
+    }
+
+    // We use Box-Muller transform sampling
+    double u, v, s;
+    do
+    {
+      u = randomDoubleU01() * 2.0 - 1.0;
+      v = randomDoubleU01() * 2.0 - 1.0;
+      s = u * u + v * v;
+    }
+    while (s < 1E-50 || s > 1.0); // if s is too small we get NaNs.
+    double normf = sqrt(-2.0 * log(s) / s);
+    mHaveSpareNormal = true;
+    mSpareNormal = u * normf;
+    return v * normf;
+  }
+
+  double randomNormal(double mean, double stdev)
+  {
+    return randomStdNormal() * stdev + mean;
+  }
+
+  /*
+   * Samples a random double so that all finite doubles are equally likely
+   * (as doubles are floating point, the distribution is more dense close to
+   * zero and less dense further from it). 
+   */
+  double randomLogUniform()
+  {
+    union
+    {
+      double asDouble;
+      uint32_t asIntegers[2];
+    } X;
+
+    do
+    {
+      X.asIntegers[0] = randomUInt32();
+      X.asIntegers[1] = randomUInt32();
+    }
+    while (!finite(X.asDouble));
+
+    return X.asDouble;
+  }
+
+private:
+  static const int N = 624, M = 397;
+  static const unsigned long 
+    MATRIX_A = 0x9908b0dfUL,   /* constant vector a */
+    UPPER_MASK = 0x80000000UL, /* most significant w-r bits */
+    LOWER_MASK = 0x7fffffffUL; /* least significant r bits */
+
+  unsigned long mt[N];
+  int mti;
+  bool mHaveSpareNormal;
+  double mSpareNormal;
+};
+
+static void destroyTwister(MersenneTwister** t)
+{
+  if (t)
+    delete *t;
 }
-#undef N
-#undef M
-#undef MATRIX_A
-#undef UPPER_MASK
-#undef LOWER_MASK
+
+static ThreadLocal<MersenneTwister*>* tSharedRandom;
+static MersenneTwister* sharedRandom()
+{
+  if (tSharedRandom == NULL)
+    tSharedRandom = new ThreadLocal<MersenneTwister*>(1, NULL, destroyTwister);
+  if ((*tSharedRandom) == static_cast<MersenneTwister*>(NULL))
+    tSharedRandom[0] = new MersenneTwister();
+  return *tSharedRandom;
+}
 
 HEADER_INLINE int
 CDA_objcmp(iface::XPCOM::IObject* o1, iface::XPCOM::IObject* o2)
@@ -690,10 +755,10 @@ public:
   CDA_ID()
   {
     uint32_t a, b, c, d;
-    a = mersenne_genrand_int32();
-    b = mersenne_genrand_int32();
-    c = mersenne_genrand_int32();
-    d = mersenne_genrand_int32();
+    a = sharedRandom()->randomUInt32();
+    b = sharedRandom()->randomUInt32();
+    c = sharedRandom()->randomUInt32();
+    d = sharedRandom()->randomUInt32();
     mIDString[0] = (char)(((a << 1) & 0xFE) | 1);
     mIDString[1] = (char)(((a >> 6) & 0xFE) | 1);
     mIDString[2] = (char)(((a >> 13) & 0xFE) | 1);

@@ -121,7 +121,7 @@ attempt_make_tempdir(const char* parentDir)
     uint32_t i;
     for (i = 0; i < 5; i++)
     {
-      uint32_t r = mersenne_genrand_int32();
+      uint32_t r = sharedRandom()->randomUInt32();
       fn += DICT[r & 0x3F];
       fn += DICT[(r >> 6) & 0x3F];
       fn += DICT[(r >> 12) & 0x3F];
@@ -527,11 +527,6 @@ CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
   mTabulationStepSize(0.0), mObserver(NULL), mCancelIntegration(false),
   mPauseIntegration(false), mStrictTabulation(false)
 {
-#ifndef WIN32
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  srand(tv.tv_usec);
-#endif
 }
 
 CDA_CellMLIntegrationRun::~CDA_CellMLIntegrationRun()
