@@ -54,6 +54,7 @@
 #endif
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <locale.h>
 #include <assert.h>
 #include <cmath>
@@ -514,15 +515,12 @@ static int isfinite(double value)
 }
 static int isnan(double value)
 {
-#ifndef WIN32
-  return ::isnan(value);
-#else
-  return _isnan(value);
-#endif
+  return !(value >= 0.0) && !(value <= 0.0);
 }
 static int isinf(double value)
 {
-  return ::isinf(value);
+  return (value > std::numeric_limits<double>::max()) ||
+    (value < -std::numeric_limits<double>::max());
 }
 };
 
