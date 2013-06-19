@@ -188,7 +188,7 @@ EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 
   for (int i = 0; i < NV_LENGTH_S(ratesV); i++)
   {
-    if (!std::isfinite(NV_Ith_S(ratesV, i)))
+    if (!cdamath::isfinite(NV_Ith_S(ratesV, i)))
     {
       if (!ei->failInfo->failtype)
         setFailure(ei->failInfo, "One of the rates cannot be represented as a valid finite number", -1);
