@@ -696,7 +696,7 @@ public:
    */
   double randomDoubleU01()
   {
-    return randomUInt32()/0xffffffffUL;
+    return (randomUInt32() + 0.0)/0xffffffffUL;
   }
 
   /**
