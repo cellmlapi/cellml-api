@@ -596,9 +596,11 @@ public:
     p += (l>>2) + ((l & 3) ? 1 : 0);
 #else
     p = (unsigned long*)key;
+    // FILETIME is 64 bits long.
     GetSystemTimeAsFileTime((LPFILETIME)p);
     p += 2;
     *p++ = GetCurrentProcessId();
+    *p++ = GetCurrentThreadId();
 #endif  
     reseed((unsigned long*)key, p - (unsigned long*)key);
   }
