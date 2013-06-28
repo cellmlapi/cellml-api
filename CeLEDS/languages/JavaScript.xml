@@ -71,10 +71,10 @@
   <mal:mapping keyname="units_conversion_factor" precedence="900">#expr1 * #expr2</mal:mapping>
   <mal:mapping keyname="units_conversion_offset" precedence="850">#expr1+#expr2</mal:mapping>
   <mal:mapping keyname="xor" precedence="H">xor(#expr1 , #expr2)</mal:mapping>
-  <mal:mapping keyname="piecewise_first_case" precedence="H">piecewise({#expr1, #expr2 </mal:mapping>
-  <mal:mapping keyname="piecewise_extra_case" precedence="H">, #expr1, #expr2 </mal:mapping>
-  <mal:mapping keyname="piecewise_otherwise" precedence="H">}, #expr1)</mal:mapping>
-  <mal:mapping keyname="piecewise_no_otherwise" precedence="H">}, NaN)</mal:mapping>
+  <mal:mapping keyname="piecewise_first_case" precedence="1000(5)">(#expr1 ? #expr2 : </mal:mapping>
+  <mal:mapping keyname="piecewise_extra_case" precedence="1000(5)">#expr1 ? #expr2 : </mal:mapping>
+  <mal:mapping keyname="piecewise_otherwise" precedence="1000(5)">#expr1)</mal:mapping>
+  <mal:mapping keyname="piecewise_no_otherwise" precedence="1000(5)">0.0/0.0)</mal:mapping>
   <mal:mapping keyname="pi" precedence="999">Math.PI</mal:mapping>
   <mal:mapping keyname="eulergamma" precedence="999">0.577215664901533</mal:mapping>
   <mal:mapping keyname="infinity" precedence="999"> Inf</mal:mapping>
@@ -136,6 +136,7 @@
 
   <mapping keyname="preRates">function computeRates(VOI, STATES) {
   var RATES = new Array();
+  ALGEBRAIC=computeAlgebraic(CONSTANTS, STATES, VOI);
 </mapping>
   <mapping keyname="postRates">
   return RATES;
@@ -143,7 +144,7 @@
 
 </mapping>
   <mapping keyname="preVariables">// Calculate algebraic variables
-function computeAlgebraic(ALGEBRAIC, CONSTANTS, STATES, VOI) {
+function computeAlgebraic(CONSTANTS, STATES, VOI) {
   var ALGEBRAIC = new Array();
 
 </mapping>
