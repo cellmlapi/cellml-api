@@ -2227,8 +2227,9 @@ module cellml_api
      * Creates a new, empty, model.
      * @param version The version of the new model. This currently must be
      *                1.0 or 1.1.
+     * @exception CellMLException If an invalid version is given.
      */
-    Model createModel(in wstring version);
+    Model createModel(in wstring version) raises (CellMLException);
 
     /**
      * Serialises a DOM node into a string. The node to serialise must have
