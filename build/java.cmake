@@ -37,6 +37,11 @@ FOREACH(extension ${EXTENSION_LIST})
       LIST(APPEND THESE_JAVA_FILES interfaces/${${idlname}_NAMESPACE}/${enum}.java)
       LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/${${idlname}_NAMESPACE}/${enum}.class")
     ENDFOREACH(enum)
+    FOREACH(exception ${${idlname}_EXCEPTIONS})
+      LIST(APPEND ALL_JAVA_FILES interfaces/${${idlname}_NAMESPACE}/${exception}.java)
+      LIST(APPEND THESE_JAVA_FILES interfaces/${${idlname}_NAMESPACE}/${exception}.java)
+      LIST(APPEND ALL_JAVACLASS_FILES "${CMAKE_BINARY_DIR}/javacp/${${idlname}_NAMESPACE}/${exception}.class")
+    ENDFOREACH(exception)
 
     SET(idlpath "interfaces/${idlname}.idl")
 

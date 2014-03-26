@@ -260,7 +260,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             params.append([p.identifier(), pti, dirn])
         self.pushManglePart(node.identifier())
         self.calculateMangled()
-        self.writeMethod(self.mangled, jnutils.CppName(node.identifier()), rti, params)
+        self.writeMethod(self.mangled, jnutils.CppName(node.identifier()), rti, params, node.raises())
         self.popManglePart()
 
     def visitAttribute(self, node):
@@ -270,7 +270,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             self.pushManglePart(jnutils.AccessorName(n, 0))
             self.calculateMangled()
             self.writeMethod(self.mangled, jnutils.CppName(n.identifier()),
-                             ti, [])
+                             ti, [], [])
             self.popManglePart()
 
         if not node.readonly():
@@ -279,10 +279,10 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
                 self.pushManglePart(jnutils.AccessorName(n, 1))
                 self.calculateMangled()
                 self.writeMethod(self.mangled, jnutils.CppName(n.identifier()),
-                                 None, [['param', ti, jnutils.Type.IN]])
+                                 None, [['param', ti, jnutils.Type.IN]], [])
                 self.popManglePart()
 
-    def writeMethod(self, name, pcmName, rtype, params):
+    def writeMethod(self, name, pcmName, rtype, params, excepts):
         if rtype == None:
             rtypeName = 'void'
         else:
@@ -343,6 +343,33 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
 
         self.cppMod.dec_indent()
         self.cppMod.out('}')
+        for e in excepts:
+            self.cppMod.out('catch (%s& _except)' % ('iface::' + jnutils.ScopedCppName(e)))
+            self.cppMod.out('{')
+            self.cppMod.inc_indent()
+            # Clean up parameters...
+            for (pname, ti, dirn) in params:
+                self.cppMod.out(ti.pcmDestroy('_pcm_' + pname))
+            sigArgs = ''
+            invokeArgs = ''
+            for mem in e.members():
+                ti = jnutils.GetTypeInformation(mem.memberType())
+                for d in mem.declarators():
+                    jniName = '_ejni_' + d.identifier()
+                    self.cppMod.out('%s %s;' % (ti.jniType(jnutils.Type.IN), jniName));
+                    self.cppMod.out(ti.convertToJNI(jniName, '_except.%s' % (jnutils.CppName(d.identifier()))))
+                    sigArgs = sigArgs + ti.javaSig(jnutils.Type.IN)
+                    invokeArgs = invokeArgs + ',' + jniName
+            self.cppMod.out('jclass eclazz = env->FindClass("%s");' % string.join(e.scopedName(), '/'))
+            self.cppMod.out('jmethodID meth = env->GetMethodID(eclazz, "<init>", "(%s)V");' % sigArgs)
+            self.cppMod.out('jobject eobj = env->NewObject(eclazz, meth%s);' % invokeArgs)
+            self.cppMod.out('env->Throw((jthrowable)eobj);')
+            if needRet:
+                self.cppMod.out('return ' + rtype.failure_return + ';')
+            else:
+                self.cppMod.out('return;')
+            self.cppMod.dec_indent()
+            self.cppMod.out('}')
         self.cppMod.out ('catch (...)')
         self.cppMod.out('{')
         self.cppMod.inc_indent()
