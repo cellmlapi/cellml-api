@@ -49,7 +49,7 @@
   <mal:mapping keyname="log" precedence="H">arbitrary_log(#expr1, #logbase)</mal:mapping>
   <mal:mapping keyname="lt" precedence="750">#exprs[&lt;]</mal:mapping>
   <mal:mapping keyname="max" precedence="H">max([utilOnes.*(#exprs[), utilOnes.*( ])],[],2)</mal:mapping>
-  <mal:mapping keyname="min" precedence="H">min([#exprs[, ]],[],2)</mal:mapping>
+  <mal:mapping keyname="min" precedence="H">min([utilOnes.*(#exprs[), utilOnes.*( ])],[],2)</mal:mapping>
   <mal:mapping keyname="minus" precedence="850">#expr1 - #expr2</mal:mapping>
   <mal:mapping keyname="neq" precedence="750">#expr1 ~= #expr2</mal:mapping>
   <mal:mapping keyname="not" precedence="950">~#expr1</mal:mapping>
