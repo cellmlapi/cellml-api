@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<language
+  xmlns="http://www.cellml.org/CeLEDS/1.0#"
+  xmlns:mal="http://www.cellml.org/CeLEDS/MaLaES/1.0#"
+  xmlns:ccgs="http://www.cellml.org/CeLEDS/CCGS/1.0#">
+
+<title>JavaScript</title>
+
+<mal:dictionary>
+  <mal:mapping keyname="opengroup">(</mal:mapping>
+  <mal:mapping keyname="closegroup">)</mal:mapping>
+  <mal:mapping keyname="abs" precedence="H">Math.abs(#expr1)</mal:mapping>
+  <mal:mapping keyname="and" precedence="700">#exprs[&amp;]</mal:mapping>
+  <mal:mapping keyname="arccos" precedence="H">Math.acos(#expr1)</mal:mapping>
+  <mal:mapping keyname="arccosh" precedence="H">acosh(#expr1)</mal:mapping>
+  <mal:mapping keyname="arccot" precedence="H">acot(#expr1)</mal:mapping>
+  <mal:mapping keyname="arccoth" precedence="H">acoth(#expr1)</mal:mapping>
+  <mal:mapping keyname="arccsc" precedence="H">acsc(#expr1)</mal:mapping>
+  <mal:mapping keyname="arccsch" precedence="H">acsch(#expr1)</mal:mapping>
+  <mal:mapping keyname="arcsec" precedence="H">asec(#expr1)</mal:mapping>
+  <mal:mapping keyname="arcsech" precedence="H">asech(#expr1)</mal:mapping>
+  <mal:mapping keyname="arcsin" precedence="H">Math.asin(#expr1)</mal:mapping>
+  <mal:mapping keyname="arcsinh" precedence="H">asinh(#expr1)</mal:mapping>
+  <mal:mapping keyname="arctan" precedence="H">Math.atan(#expr1)</mal:mapping>
+  <mal:mapping keyname="arctanh" precedence="H">atanh(#expr1)</mal:mapping>
+  <mal:mapping keyname="ceiling" precedence="H">Math.ceil(#expr1)</mal:mapping>
+  <mal:mapping keyname="cos" precedence="H">Math.cos(#expr1)</mal:mapping>
+  <mal:mapping keyname="cosh" precedence="H">cosh(#expr1)</mal:mapping>
+  <mal:mapping keyname="cot" precedence="H">cot(#expr1)</mal:mapping>
+  <mal:mapping keyname="coth" precedence="H">coth(#expr1)</mal:mapping>
+  <mal:mapping keyname="csc" precedence="H">csc(#expr1)</mal:mapping>
+  <mal:mapping keyname="csch" precedence="H">csch(#expr1)</mal:mapping>
+  <mal:mapping keyname="diff">#lookupDiffVariable</mal:mapping>
+  <mal:mapping keyname="divide" precedence="900">#expr1/#expr2</mal:mapping>
+  <mal:mapping keyname="eq" precedence="750">#exprs[==]</mal:mapping>
+  <mal:mapping keyname="exp" precedence="H">Math.exp(#expr1)</mal:mapping>
+  <mal:mapping keyname="factorial" precedence="H">factorial(#expr1)</mal:mapping>
+  <mal:mapping keyname="factorof" precedence="750(995)">(#expr1%#expr2) == 0</mal:mapping>
+  <mal:mapping keyname="floor" precedence="H">Math.floor(#expr1)</mal:mapping>
+  <mal:mapping keyname="gcd" precedence="H">gcd_multi([#exprs[, ]])</mal:mapping>
+  <mal:mapping keyname="geq" precedence="750">#exprs[&gt;=]</mal:mapping>
+  <mal:mapping keyname="gt" precedence="750">#exprs[&gt;]</mal:mapping>
+  <mal:mapping keyname="implies" precedence="650(950)"> ~#expr1 || #expr2</mal:mapping>
+  <mal:mapping keyname="int" precedence="H">defint(func#unique1, BOUND, CONSTANTS, RATES, VARIABLES, #bvarIndex)#supplement double func#unique1(double* BOUND, double* CONSTANTS, double* RATES, double* VARIABLES) { return #expr1; }</mal:mapping>
+  <mal:mapping keyname="lcm" precedence="H">lcm_multi([#exprs[, ]])</mal:mapping>
+  <mal:mapping keyname="leq" precedence="750">#exprs[&lt;=]</mal:mapping>
+  <mal:mapping keyname="ln" precedence="H">Math.log(#expr1)</mal:mapping>
+  <mal:mapping keyname="log" precedence="H">arbitrary_log(#expr1, #logbase)</mal:mapping>
+  <mal:mapping keyname="lt" precedence="750">#exprs[&lt;]</mal:mapping>
+  <mal:mapping keyname="max" precedence="H">Math.max(#exprs[, ])</mal:mapping>
+  <mal:mapping keyname="min" precedence="H">Math.min([#exprs[, ])</mal:mapping>
+  <mal:mapping keyname="minus" precedence="850">#expr1 - #expr2</mal:mapping>
+  <mal:mapping keyname="neq" precedence="750">#expr1 != #expr2</mal:mapping>
+  <mal:mapping keyname="not" precedence="950">!#expr1</mal:mapping>
+  <mal:mapping keyname="or" precedence="650">#exprs[||]</mal:mapping>
+  <mal:mapping keyname="plus" precedence="850">#exprs[+]</mal:mapping>
+  <mal:mapping keyname="power" precedence="H">Math.pow(#expr1, #expr2)</mal:mapping>
+  <mal:mapping keyname="quotient" precedence="999(900)">Math.floor(#expr1 / #expr2)</mal:mapping>
+  <mal:mapping keyname="rem" precedence="H"> #expr1 % #expr2</mal:mapping>
+  <mal:mapping keyname="root" precedence="999(900)">Math.pow(#expr1, 1.0 ./ #degree)</mal:mapping>
+  <mal:mapping keyname="sec" precedence="H">1/Math.cos(#expr1)</mal:mapping>
+  <mal:mapping keyname="sech" precedence="H">sech(#expr1)</mal:mapping>
+  <mal:mapping keyname="sin" precedence="H">Math.sin(#expr1)</mal:mapping>
+  <mal:mapping keyname="sinh" precedence="H"> sinh(#expr1)</mal:mapping>
+  <mal:mapping keyname="tan" precedence="H">Math.tan(#expr1)</mal:mapping>
+  <mal:mapping keyname="tanh" precedence="H"> tanh(#expr1)</mal:mapping>
+  <mal:mapping keyname="times" precedence="900"> #exprs[*]</mal:mapping>
+  <mal:mapping keyname="unary_minus" precedence="950"> - #expr1</mal:mapping>
+  <mal:mapping keyname="units_conversion" precedence="850(900)">#expr1 * #expr2 + #expr3</mal:mapping>
+  <mal:mapping keyname="units_conversion_factor" precedence="900">#expr1 * #expr2</mal:mapping>
+  <mal:mapping keyname="units_conversion_offset" precedence="850">#expr1+#expr2</mal:mapping>
+  <mal:mapping keyname="xor" precedence="H">xor(#expr1 , #expr2)</mal:mapping>
+  <mal:mapping keyname="piecewise_first_case" precedence="1000(5)">(#expr1 ? #expr2 : </mal:mapping>
+  <mal:mapping keyname="piecewise_extra_case" precedence="1000(5)">#expr1 ? #expr2 : </mal:mapping>
+  <mal:mapping keyname="piecewise_otherwise" precedence="1000(5)">#expr1)</mal:mapping>
+  <mal:mapping keyname="piecewise_no_otherwise" precedence="1000(5)">0.0/0.0)</mal:mapping>
+  <mal:mapping keyname="pi" precedence="999">Math.PI</mal:mapping>
+  <mal:mapping keyname="eulergamma" precedence="999">0.577215664901533</mal:mapping>
+  <mal:mapping keyname="infinity" precedence="999"> Inf</mal:mapping>
+</mal:dictionary>
+
+<ccgs:dictionary>
+  <ccgs:mapping keyname="constantPattern">CONSTANTS[%]</ccgs:mapping>
+  <ccgs:mapping keyname="stateVariableNamePattern">STATES[%]</ccgs:mapping>
+  <ccgs:mapping keyname="algebraicVariableNamePattern">ALGEBRAIC[%]</ccgs:mapping>
+  <ccgs:mapping keyname="rateNamePattern">RATES[%]</ccgs:mapping>
+  <ccgs:mapping keyname="voiPattern">VOI</ccgs:mapping>
+  <ccgs:mapping keyname="arrayOffset">0</ccgs:mapping>
+  <ccgs:mapping keyname="assignPattern">    &lt;LHS&gt; = &lt;RHS&gt;;
+</ccgs:mapping>
+  <ccgs:mapping keyname="assignConstantPattern">    &lt;LHS&gt; = &lt;RHS&gt;;
+</ccgs:mapping>
+  <ccgs:mapping keyname="solvePattern"><![CDATA[    
+
+]]></ccgs:mapping>
+  <ccgs:mapping keyname="solveNLSystemPattern"><![CDATA[ 
+]]></ccgs:mapping>
+</ccgs:dictionary>
+
+<dictionary>
+  <mapping keyname="preAlgebraicCount">// There are a total of </mapping>
+  <mapping keyname="postAlgebraicCount"> entries in each of the algebraic variable array.
+</mapping>
+  <mapping keyname="preStateCount">// There are a total of </mapping>
+  <mapping keyname="postStateCount"> entries in each of the rate and state variable arrays.
+</mapping>
+  <mapping keyname="preConstantCount">// There are a total of </mapping>
+  <mapping keyname="postConstantCount"> entries in the constant variable array.
+//
+</mapping>
+  <mapping keyname="topSection" solverparameters="true"><![CDATA[
+
+    // Initialise constants and state variables
+    initialValuesAndConsts = initConsts();
+    initialValues = initialValuesAndConsts.states;
+    CONSTANTS = initialValuesAndConsts.constants; 
+
+    sol = numeric.dopri(<RANGESTART>,<RANGEEND>,initialValues,computeRates,<ABSTOL>,1e9);
+
+    y = numeric.transpose(sol.y);
+    t = sol.x;
+
+    workshop.plot([numeric.transpose([t,y[0]])])
+
+]]></mapping>
+  <mapping keyname="preInitConsts">function initConsts() {
+  var STATES    = new Array();
+  var CONSTANTS = new Array();
+</mapping>
+  <mapping keyname="postInitConsts">
+    return {states:STATES, constants:CONSTANTS};
+  }
+
+</mapping>
+
+  <mapping keyname="preRates">function computeRates(VOI, STATES) {
+  var RATES = new Array();
+  ALGEBRAIC=computeAlgebraic(CONSTANTS, STATES, VOI);
+</mapping>
+  <mapping keyname="postRates">
+  return RATES;
+}
+
+</mapping>
+  <mapping keyname="preVariables">// Calculate algebraic variables
+function computeAlgebraic(CONSTANTS, STATES, VOI) {
+  var ALGEBRAIC = new Array();
+
+</mapping>
+  <mapping keyname="postVariables">
+  return ALGEBRAIC;
+}
+
+</mapping>
+  <mapping keyname="endSection">
+
+</mapping>
+<mapping keyname="preVarList">/*
+</mapping>
+<mapping keyname="postVarList">
+*/
+</mapping>
+  <mapping keyname="varListA"> </mapping>
+  <mapping keyname="varListB"> </mapping>
+  <mapping keyname="varListC"> </mapping>
+</dictionary>
+
+<extrafunctions>
+  <function searchname="arbitrary_log"><![CDATA[//Compute a logarithm to any base
+function arbitrary_log(a, base) {
+    x = log(a) / log(base);
+}
+]]></function>
+  <function searchname="lcm_multi"><![CDATA[% Least common multiple
+function m = lcm_multi(x)
+    m = x(1);
+    for (i = 1:size(x,2))
+        if(x(i) ~= 0), m = m./gcd(m,x(i)).*x(i);, end
+    end
+end
+
+]]></function>
+  <function searchname="gcd_multi"><![CDATA[% Greatest common divisor
+function d = gcd_multi(x)
+    d = 0;
+    for (i = 1:size(x,2)), d = gcd(d, x(:,i));, end
+end
+
+]]></function>
+</extrafunctions>
+
+</language>
