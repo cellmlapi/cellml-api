@@ -239,7 +239,6 @@ end
 </mapping>
   <mapping keyname="preVariables">% Calculate algebraic variables
 function ALGEBRAIC = computeAlgebraic(ALGEBRAIC, CONSTANTS, STATES, VOI)
-    global algebraicVariableCount;
     statesSize = size(STATES);
     statesColumnCount = statesSize(2);
     if ( statesColumnCount == 1)
