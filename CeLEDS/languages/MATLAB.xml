@@ -48,8 +48,8 @@
   <mal:mapping keyname="ln" precedence="H">log(#expr1)</mal:mapping>
   <mal:mapping keyname="log" precedence="H">arbitrary_log(#expr1, #logbase)</mal:mapping>
   <mal:mapping keyname="lt" precedence="750">#exprs[&lt;]</mal:mapping>
-  <mal:mapping keyname="max" precedence="H">max([#exprs[, ]],[],2)</mal:mapping>
-  <mal:mapping keyname="min" precedence="H">min([#exprs[, ]],[],2)</mal:mapping>
+  <mal:mapping keyname="max" precedence="H">max([utilOnes.*(#exprs[), utilOnes.*( ])],[],2)</mal:mapping>
+  <mal:mapping keyname="min" precedence="H">min([utilOnes.*(#exprs[), utilOnes.*( ])],[],2)</mal:mapping>
   <mal:mapping keyname="minus" precedence="850">#expr1 - #expr2</mal:mapping>
   <mal:mapping keyname="neq" precedence="750">#expr1 ~= #expr2</mal:mapping>
   <mal:mapping keyname="not" precedence="950">~#expr1</mal:mapping>
@@ -225,10 +225,12 @@ end
     if ( statesColumnCount == 1)
         STATES = STATES';
         ALGEBRAIC = zeros(1, algebraicVariableCount);
+        utilOnes = 1;
     else
         statesRowCount = statesSize(1);
         ALGEBRAIC = zeros(statesRowCount, algebraicVariableCount);
         RATES = zeros(statesRowCount, statesColumnCount);
+        utilOnes = ones(statesRowCount, 1);
     end
 </mapping>
   <mapping keyname="postRates">   RATES = RATES';
@@ -237,6 +239,15 @@ end
 </mapping>
   <mapping keyname="preVariables">% Calculate algebraic variables
 function ALGEBRAIC = computeAlgebraic(ALGEBRAIC, CONSTANTS, STATES, VOI)
+    statesSize = size(STATES);
+    statesColumnCount = statesSize(2);
+    if ( statesColumnCount == 1)
+        STATES = STATES';
+        utilOnes = 1;
+    else
+        statesRowCount = statesSize(1);
+        utilOnes = ones(statesRowCount, 1);
+    end
 </mapping>
   <mapping keyname="postVariables">end
 
