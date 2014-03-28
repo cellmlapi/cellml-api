@@ -4,7 +4,7 @@
 <em>Please note: The CellML API provides binary SDK packages, so you don't need to build from source to use the CellML API on Windows, Linux, or Mac OS X. See the page about \ref getting_started "Getting Started" for more information.</em>
 
 \section Install_steps Installation steps 
-\subsection step1 Step 1: Obtain the CellML API source repository using Mercurial
+\subsection step1 Step 1: Obtain the CellML API source repository using Git
 
 \verbatim
 git clone https://github.com/cellmlapi/cellml-api.git
@@ -36,9 +36,35 @@ sudo apt-get install <package-name>
 \subsection step3 Step 3: Build the CellML DOM API from its source code
 
 \verbatim
-cd cellml-api/
-ccmake . # While in ccmake, select the options you want to enable. Press 'c' and then 'g'.
+mkdir cellml-api-build
+cd cellml-api-build
+ccmake ../cellml-api # While in ccmake, select the options you want to enable. Press 'c' and then 'g'.
 make
+\endverbatim
+
+If ccmake dispays that some Linux packages are missing, exit ccmake, install any required packages, and run ccmake again.
+Suggested options to select (accept any defaults, and change the following):
+\verbatim
+ ENABLE_ANNOTOOLS                 ON                                                                                                                   
+ ENABLE_CCGS                      ON                                                                                                                   
+ ENABLE_CELEDS                    ON                                                                                                                   
+ ENABLE_CELEDS_EXPORTER           ON                                                                                                                   
+ ENABLE_CEVAS                     ON                                                                                                                   
+ ENABLE_CGRS                      ON                                                                                                                   
+ ENABLE_CIS                       ON                                                                                                                   
+ ENABLE_CONTEXT                   OFF                                                                                                                  
+ ENABLE_CUSES                     ON                                                                                                                   
+ ENABLE_EVERYTHING                OFF                                                                                                                  
+ ENABLE_EXAMPLES                  ON                                                                                                                   
+ ENABLE_GSL_INTEGRATORS           OFF                                                                                                                  
+ ENABLE_JAVA_BUILD                OFF                                                                                                                  
+ ENABLE_MALAES                    ON                                                                                                                   
+ ENABLE_MOFS                      ON                                                                                                                   
+ ENABLE_RDF                       ON                                                                                                                   
+ ENABLE_SPROS                     ON                                                                                                                   
+ ENABLE_SRUS                      ON                                                                                                                   
+ ENABLE_TELICEMS                  ON                                                                                                                   
+ ENABLE_VACSS                     ON    
 \endverbatim
 
 \subsection step4 Step 4: Test the CellML API
