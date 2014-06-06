@@ -1808,7 +1808,6 @@ CodeGenerationState::CreateMathStatements()
             DECLARE_QUERY_INTERFACE_OBJREF(mae, val, mathml_dom::MathMLApplyElement);
             if (mae == NULL)
             {
-              delete pw;
               delete eq;
               ContextError(L"Unexpected MathML element; was expecting an apply",
                            mn, c);
@@ -1822,7 +1821,6 @@ CodeGenerationState::CreateMathStatements()
             }
             catch (...)
             {
-              delete pw;
               delete eq;
               ContextError(L"Unexpected MathML apply element with no MathML children",
                            mae, c);
@@ -1838,7 +1836,6 @@ CodeGenerationState::CreateMathStatements()
             
             if (mae->nArguments() != 3)
             {
-              delete pw;
               delete eq;
               ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
                            mae, c);
@@ -1892,12 +1889,9 @@ CodeGenerationState::CreateMathStatements()
             SampleFromDistribution* sfd = new SampleFromDistribution();
             mms.reset(sfd);
             if (mae->nArguments() != 3)
-            {
-              delete sfd;
               ContextError(L"uncertainParameterWithDistribution takes 2 arguments, the "
                            L"uncertain parameter and the distribution.",
                            mae, c);
-            }
 
             RETURN_INTO_OBJREF(targArg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
             DECLARE_QUERY_INTERFACE_OBJREF(ve, targArg, mathml_dom::MathMLVectorElement);
@@ -1956,11 +1950,8 @@ CodeGenerationState::CreateMathStatements()
             mms.reset(eq);
             
             if (mae->nArguments() != 3)
-            {
-              delete eq;
               ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
                            mae, c);
-            }
           
             eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
               (mae->getArgument(2));
