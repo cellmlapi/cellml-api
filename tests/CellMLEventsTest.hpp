@@ -1,6 +1,8 @@
 #ifndef CELLMLEVENTSTEST_H
 #define CELLMLEVENTSTEST_H
 #include <cppunit/extensions/HelperMacros.h>
+#include "CppUnitWstringSupport.hpp"
+
 #include "cda_config.h"
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
