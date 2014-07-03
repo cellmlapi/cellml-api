@@ -2,6 +2,7 @@
 #define MATHMLTEST_H
 
 #include <cppunit/extensions/HelperMacros.h>
+#include "CppUnitWstringSupport.hpp"
 #include "DOMBootstrap.hxx"
 #include "IfaceMathML_content_APISPEC.hxx"
 #include "IfaceCellML_APISPEC.hxx"
