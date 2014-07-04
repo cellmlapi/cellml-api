@@ -258,6 +258,19 @@ SET(TIME_HEADERS)
 SET(STRING_HEADERS)
 
 INCLUDE(CheckIncludeFile)
+# Determine whether your compiler supports codecvt.
+
+check_cxx_source_compiles("
+  #include <codecvt>
+  int main() { 
+    std::codecvt_utf8_utf16<wchar_t> x; 
+    return 0; 
+  }
+" HAVE_STD_CODECVT)
+IF(HAVE_STD_CODECVT)
+add_definitions(-DHAVE_STD_CODECVT)
+ENDIF()
+
 CHECK_INCLUDE_FILE(ansidecl.h HAVE_ANSIDECL_H)
 CHECK_INCLUDE_FILE(arpa/inet.h HAVE_ARPA_INET_H)
 IF(HAVE_ARPA_INET_H)

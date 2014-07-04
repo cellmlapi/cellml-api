@@ -4,7 +4,9 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "DOMBootstrap.hxx"
 
+#ifdef HAVE_STD_CODECVT
 #include "CppUnitWstringSupport.hpp"
+#endif // HAVE_STD_CODECVT
 
 // Warning: The DOM is currently built on top of Gdome, which has its own tests.
 // This code is not designed to test Gdome, but rather to find any defects in

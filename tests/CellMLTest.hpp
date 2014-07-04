@@ -1,7 +1,9 @@
 #ifndef CELLMLTEST_H
 #define CELLMLTEST_H
 #include <cppunit/extensions/HelperMacros.h>
+#ifdef HAVE_STD_CODECVT
 #include "CppUnitWstringSupport.hpp"
+#endif // HAVE_STD_CODECVT
 #include "cda_compiler_support.h"
 #include "IfaceMathML_content_APISPEC.hxx"
 #include "IfaceCellML_APISPEC.hxx"
