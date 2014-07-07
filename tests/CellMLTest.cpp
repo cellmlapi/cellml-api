@@ -1,5 +1,10 @@
 #include "cda_compiler_support.h"
 #include "CellMLTest.hpp"
+
+#ifdef HAVE_STD_CODECVT
+#include "CppUnitWstringSupport.hpp"
+#endif // HAVE_STD_CODECVT
+
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
 

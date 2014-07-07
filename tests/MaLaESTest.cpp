@@ -1,4 +1,9 @@
 #include "MaLaESTest.hpp"
+
+#ifdef HAVE_STD_CODECVT
+#include "CppUnitWstringSupport.hpp"
+#endif // HAVE_STD_CODECVT
+
 #include "MaLaESBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
 #include "CeVASBootstrap.hpp"

@@ -2,9 +2,6 @@
 #define MATHMLTEST_H
 
 #include <cppunit/extensions/HelperMacros.h>
-#ifdef HAVE_STD_CODECVT
-#include "CppUnitWstringSupport.hpp"
-#endif // HAVE_STD_CODECVT
 #include "DOMBootstrap.hxx"
 #include "IfaceMathML_content_APISPEC.hxx"
 #include "IfaceCellML_APISPEC.hxx"
