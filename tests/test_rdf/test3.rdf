@@ -11,7 +11,7 @@
   <http://www.w3.org/Consortium/Legal/copyright-software.html>
 
   Description: A parser is not required to know about well-formed
-    datatyped literals.
+	datatyped literals.
 
   $Id: test002.rdf,v 1.1 2002/11/19 14:04:16 jgrant Exp $
 

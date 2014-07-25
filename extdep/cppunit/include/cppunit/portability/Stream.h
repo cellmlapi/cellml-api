@@ -99,9 +99,9 @@ public:
 
    OStream &flush()
    {
-       if ( buffer_ )
-            buffer_->flush();
-       return *this;
+	   if ( buffer_ )
+		    buffer_->flush();
+	   return *this;
    }
 
    void setBuffer( StreamBuffer *buffer )
@@ -222,18 +222,18 @@ private:
 class OStringStream : public OStream
 {
 public:
-    OStringStream()
-        : OStream( &buffer_ )
-    {
-    }
+	OStringStream()
+		: OStream( &buffer_ )
+	{
+	}
 
-    std::string str() const
-    {
-        return buffer_.str();
-    }
+	std::string str() const
+	{
+		return buffer_.str();
+	}
 
 private:
-    StringStreamBuffer buffer_;
+	StringStreamBuffer buffer_;
 };
 
 

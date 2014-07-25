@@ -647,7 +647,7 @@ public:
     mt[0] = s & 0xffffffffUL;
     for (mti=1; mti < N; mti++) {
         mt[mti] =
-        (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
+	    (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
         /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
         /* In the previous versions, MSBs of the seed affect   */
         /* only MSBs of the array mt[].                        */
@@ -1514,7 +1514,7 @@ operator!=(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
     ( \
       dynamic_cast<type*> \
       ( \
-        rhs.getPointer()                \
+        rhs.getPointer()				\
       ) \
     )\
   )
@@ -1526,7 +1526,7 @@ operator!=(const ObjRef<T>& lhs, const ObjRef<U>& rhs)
     ( \
       unsafe_dynamic_cast<type*> \
       ( \
-         rhs.getPointer()               \
+         rhs.getPointer()				\
       ).get() \
     )\
   )

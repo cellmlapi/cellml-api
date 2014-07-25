@@ -485,10 +485,10 @@ class Walker(idlvisitor.AstVisitor):
         unwrapName = '_unwrap_' + string.join(node.scopedName(), '_')
         downcastName = '_downcast_' + string.join(node.scopedName(), '_')
         psemi = ''
-    ppre = ''
+	ppre = ''
         pfq = 'CCI::' + node.corbacxxscoped + '::'
         if self.doing_header:
-        ppre = 'PUBLIC_' + self.masterGuard + '_PRE '
+	    ppre = 'PUBLIC_' + self.masterGuard + '_PRE '
             psemi = 'PUBLIC_' + self.masterGuard + '_POST;'
             pfq = ''
         self.cci.out(ppre + '::' + node.corbacxxscoped + '_ptr ' + pfq +\
@@ -527,14 +527,14 @@ class Walker(idlvisitor.AstVisitor):
                 if p.text() == "cross-module-inheritance" or \
                        p.text() == "cross-module-argument":
                     exportFrom = 1
-        if exportFrom:
+	    if exportFrom:
                 self.cci.out('PUBLIC_' + self.masterGuard + '_PRE ')
                 self.cci.out('class PUBLIC_' + self.masterGuard + '_POST ' +
                              node.simplename)
             else:
                 self.cci.out('class ' + node.simplename)
 
-        inheritstr = node.simplecxxscoped
+	    inheritstr = node.simplecxxscoped
 
             for c in node.inherits():
                 isAmbiguous = 0
@@ -546,11 +546,11 @@ class Walker(idlvisitor.AstVisitor):
                 if c.corbacxxscoped == 'XPCOM::IObject':
                     isAmbiguous = 1
                 if isAmbiguous:
-             inheritstr = inheritstr +\
-                      ', public virtual CCI::' + c.corbacxxscoped
+		     inheritstr = inheritstr +\
+			          ', public virtual CCI::' + c.corbacxxscoped
                 else:
-            inheritstr = inheritstr +\
-                 ', public CCI::' + c.corbacxxscoped
+		    inheritstr = inheritstr +\
+				 ', public CCI::' + c.corbacxxscoped
 
             if isTerminal:
                 self.cci.out('  : public ' + inheritstr)
@@ -587,7 +587,7 @@ class Walker(idlvisitor.AstVisitor):
             self.cci.out('public:')
             self.cci.inc_indent()
             self.cci.out('PUBLIC_' + self.masterGuard + '_PRE _final_' +\
-                 node.simplename + '(::' + node.corbacxxscoped +\
+		         node.simplename + '(::' + node.corbacxxscoped +\
                          '_ptr _aobjref, ::PortableServer::POA_ptr aPp) ' +\
                          'PUBLIC_' + self.masterGuard + '_POST;')
             self.cci.out('virtual ~_final_' + node.simplename + '()')
@@ -651,7 +651,7 @@ class Walker(idlvisitor.AstVisitor):
             self.cci.dec_indent()
             self.cci.out('};')
             self.cci.out('PUBLIC_' + self.masterGuard + '_PRE void prod' + node.simplename +\
-             '() PUBLIC_' + self.masterGuard + '_POST;')
+			 '() PUBLIC_' + self.masterGuard + '_POST;')
         else:
             self.cci.out('::CCI::' + node.factoryscoped + '::_factory_' +\
                          node.simplename + '()')

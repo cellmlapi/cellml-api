@@ -120,7 +120,7 @@ extern "C" {
  */
 
 typedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
-            N_Vector rr, void *user_data);
+			N_Vector rr, void *user_data);
 
 /*
  * -----------------------------------------------------------------
@@ -142,7 +142,7 @@ typedef int (*IDAResFn)(realtype tt, N_Vector yy, N_Vector yp,
  */
 
 typedef int (*IDARootFn)(realtype t, N_Vector y, N_Vector yp,
-             realtype *gout, void *user_data);
+			 realtype *gout, void *user_data);
 
 /*
  * -----------------------------------------------------------------
@@ -187,8 +187,8 @@ typedef int (*IDAEwtFn)(N_Vector y, N_Vector ewt, void *user_data);
  */
 
 typedef void (*IDAErrHandlerFn)(int error_code,
-                const char *module, const char *function,
-                char *msg, void *user_data);
+				const char *module, const char *function,
+				char *msg, void *user_data);
 
 /*
  * ================================================================
@@ -424,7 +424,7 @@ SUNDIALS_EXPORT int IDAInit(void *ida_mem, IDAResFn res,
  */
 
 SUNDIALS_EXPORT int IDAReInit(void *ida_mem,
-                  realtype t0, N_Vector yy0, N_Vector yp0);
+			      realtype t0, N_Vector yy0, N_Vector yp0);
 
 /*
  * -----------------------------------------------------------------
@@ -770,7 +770,7 @@ SUNDIALS_EXPORT int IDACalcIC(void *ida_mem, int icopt, realtype tout1);
  */
 
 SUNDIALS_EXPORT int IDASolve(void *ida_mem, realtype tout, realtype *tret,
-                 N_Vector yret, N_Vector ypret, int itask);
+			     N_Vector yret, N_Vector ypret, int itask);
 
 /*
  * ----------------------------------------------------------------
@@ -908,7 +908,7 @@ SUNDIALS_EXPORT int IDAGetNumNonlinSolvConvFails(void *ida_mem, long int *nncfai
  */
 
 SUNDIALS_EXPORT int IDAGetNonlinSolvStats(void *ida_mem, long int *nniters,
-                      long int *nncfails);
+					  long int *nncfails);
 
 /*
  * -----------------------------------------------------------------

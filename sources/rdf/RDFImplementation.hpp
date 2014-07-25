@@ -30,10 +30,10 @@ public:
   already_AddRefd<iface::rdf_api::BlankNode> createBlankNode()
     throw(std::exception&);
   already_AddRefd<iface::rdf_api::PlainLiteral> getPlainLiteral(const std::wstring& aForm,
-                                const std::wstring& aLanguage)
+								const std::wstring& aLanguage)
     throw(std::exception&);
   already_AddRefd<iface::rdf_api::TypedLiteral> getTypedLiteral(const std::wstring& aForm,
-                                const std::wstring& datatypeURI)
+								const std::wstring& datatypeURI)
     throw(std::exception&);
   already_AddRefd<iface::rdf_api::TripleSet> getAllTriples()
     throw(std::exception&);
@@ -69,7 +69,7 @@ public:
   already_AddRefd<iface::rdf_api::TripleSet> getTriplesInto()
     throw(std::exception&);
   already_AddRefd<iface::rdf_api::TripleSet> getTriplesIntoByPredicate(iface::rdf_api::Resource*
-                                       aPredicate)
+								       aPredicate)
     throw(std::exception&);
 
   void add_ref() throw();
@@ -112,7 +112,7 @@ public:
   already_AddRefd<iface::rdf_api::Container> correspondingContainer()
     throw(std::exception&);
   already_AddRefd<iface::rdf_api::Container> findOrMakeContainer(iface::rdf_api::Resource* aPredicate,
-                                 iface::rdf_api::Resource* aContainerType)
+								 iface::rdf_api::Resource* aContainerType)
     throw(std::exception&);
   bool hasTripleOutOfWithPredicateAndObject(iface::rdf_api::Resource* aPredicate, iface::rdf_api::Node* aObject)
     throw(std::exception&);

@@ -381,7 +381,7 @@ public:
   }
 
   already_AddRefd<iface::dom::Node> getNamedItemNS(const std::wstring& namespaceURI,
-                           const std::wstring& localName)
+						   const std::wstring& localName)
     throw(std::exception&)
   {
     return NULL;
@@ -394,7 +394,7 @@ public:
   }
 
   already_AddRefd<iface::dom::Node> removeNamedItemNS(const std::wstring& namespaceURI,
-                              const std::wstring& localName)
+						      const std::wstring& localName)
     throw(std::exception&)
   {
     throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
@@ -422,12 +422,12 @@ public:
   already_AddRefd<iface::dom::Node> item(uint32_t index) throw(std::exception&);
   uint32_t length() throw(std::exception&);
   already_AddRefd<iface::dom::Node> getNamedItemNS(const std::wstring& namespaceURI,
-                           const std::wstring& localName)
+						   const std::wstring& localName)
     throw(std::exception&);
   already_AddRefd<iface::dom::Node> setNamedItemNS(iface::dom::Node* arg)
     throw(std::exception&);
   already_AddRefd<iface::dom::Node> removeNamedItemNS(const std::wstring& namespaceURI,
-                              const std::wstring& localName)
+						      const std::wstring& localName)
     throw(std::exception&);
 
   CDA_DocumentType* mDocType;
@@ -516,12 +516,12 @@ public:
   void removeAttributeNS(const std::wstring& namespaceURI, const std::wstring& localName)
     throw(std::exception&);
   already_AddRefd<iface::dom::Attr> getAttributeNodeNS(const std::wstring& namespaceURI,
-                               const std::wstring& localName)
+						       const std::wstring& localName)
     throw(std::exception&);
   already_AddRefd<iface::dom::Attr> setAttributeNodeNS(iface::dom::Attr* newAttr)
     throw(std::exception&);
   already_AddRefd<iface::dom::NodeList> getElementsByTagNameNS(const std::wstring& namespaceURI,
-                                   const std::wstring& localName)
+							       const std::wstring& localName)
     throw(std::exception&);
   bool hasAttribute(const std::wstring& name) throw(std::exception&);
   bool hasAttributeNS(const std::wstring& namespaceURI, const std::wstring& localName)
@@ -610,12 +610,12 @@ public:
   already_AddRefd<iface::dom::Node> item(uint32_t index) throw(std::exception&);
   uint32_t length() throw(std::exception&);
   already_AddRefd<iface::dom::Node> getNamedItemNS(const std::wstring& namespaceURI,
-                           const std::wstring& localName)
+						   const std::wstring& localName)
     throw(std::exception&);
   already_AddRefd<iface::dom::Node> setNamedItemNS(iface::dom::Node* arg)
     throw(std::exception&);
   already_AddRefd<iface::dom::Node> removeNamedItemNS(const std::wstring& namespaceURI,
-                              const std::wstring& localName)
+						      const std::wstring& localName)
     throw(std::exception&);
 
   CDA_Element* mElement;
@@ -855,13 +855,13 @@ public:
   already_AddRefd<iface::dom::Node> importNode(iface::dom::Node* importedNode, bool deep)
     throw(std::exception&);
   already_AddRefd<iface::dom::Element> createElementNS(const std::wstring& namespaceURI,
-                               const std::wstring& qualifiedName)
+						       const std::wstring& qualifiedName)
     throw(std::exception&);
   already_AddRefd<iface::dom::Attr> createAttributeNS(const std::wstring& namespaceURI,
-                              const std::wstring& qualifiedName)
+						      const std::wstring& qualifiedName)
     throw(std::exception&);
   already_AddRefd<iface::dom::NodeList> getElementsByTagNameNS(const std::wstring& namespaceURI,
-                                   const std::wstring& localName)
+							       const std::wstring& localName)
     throw(std::exception&);
   already_AddRefd<iface::dom::Element> getElementById(const std::wstring& elementId)
     throw(std::exception&);

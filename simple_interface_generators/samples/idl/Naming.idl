@@ -5,8 +5,8 @@
 //
 //
 // Description:
-//  IDL interfaces for COSS Extended Naming Service
-//  Hacked to remove functionality not supported in simple_cpp_iface
+//	IDL interfaces for COSS Extended Naming Service
+//	Hacked to remove functionality not supported in simple_cpp_iface
 
 #ifndef __NAMING_IDL__
 #define __NAMING_IDL__
@@ -85,7 +85,7 @@ module CosNaming {
     void destroy () raises (NotEmpty);
 
     void list (in unsigned long how_many,
-           out BindingList bl, out BindingIterator bi);
+	       out BindingList bl, out BindingIterator bi);
   };
 
 

@@ -240,7 +240,7 @@ SUNDIALS_EXPORT int CVBBDPrecInit(void *cvode_mem, long int Nlocal,
  */
 
 SUNDIALS_EXPORT int CVBBDPrecReInit(void *cvode_mem, long int mudq, long int mldq,
-                    realtype dqrely);
+				    realtype dqrely);
 
 /*
  * -----------------------------------------------------------------

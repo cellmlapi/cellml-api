@@ -113,10 +113,10 @@ public:
    * \param test the method this TestCaller calls in runTest()
    */
   TestCaller( std::string name, TestMethod test ) :
-        TestCase( name ),
-        m_ownFixture( true ),
-        m_fixture( new Fixture() ),
-        m_test( test )
+	    TestCase( name ),
+	    m_ownFixture( true ),
+	    m_fixture( new Fixture() ),
+	    m_test( test )
   {
   }
 
@@ -130,10 +130,10 @@ public:
    * \param fixture the Fixture to invoke the test method on.
    */
   TestCaller(std::string name, TestMethod test, Fixture& fixture) :
-        TestCase( name ),
-        m_ownFixture( false ),
-        m_fixture( &fixture ),
-        m_test( test )
+	    TestCase( name ),
+	    m_ownFixture( false ),
+	    m_fixture( &fixture ),
+	    m_test( test )
   {
   }
 
@@ -147,10 +147,10 @@ public:
    * \param fixture the Fixture to invoke the test method on.
    */
   TestCaller(std::string name, TestMethod test, Fixture* fixture) :
-        TestCase( name ),
-        m_ownFixture( true ),
-        m_fixture( fixture ),
-        m_test( test )
+	    TestCase( name ),
+	    m_ownFixture( true ),
+	    m_fixture( fixture ),
+	    m_test( test )
   {
   }
 
@@ -162,29 +162,29 @@ public:
 
   void runTest()
   {
-//    try {
-        (m_fixture->*m_test)();
-//    }
-//    catch ( ExpectedException & ) {
-//      return;
-//    }
+//	  try {
+	    (m_fixture->*m_test)();
+//	  }
+//	  catch ( ExpectedException & ) {
+//	    return;
+//	  }
 
-//      ExpectedExceptionTraits<ExpectedException>::expectedException();
+//  	ExpectedExceptionTraits<ExpectedException>::expectedException();
   }
 
   void setUp()
   {
-    m_fixture->setUp ();
+  	m_fixture->setUp ();
   }
 
   void tearDown()
   {
-      m_fixture->tearDown ();
+	  m_fixture->tearDown ();
   }
 
   std::string toString() const
   {
-    return "TestCaller " + getName();
+  	return "TestCaller " + getName();
   }
 
 private:

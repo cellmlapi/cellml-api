@@ -114,8 +114,8 @@ long int denGETRF(realtype **a, long int m, long int n, long int *p)
       /* a_kj = a(k,j), col_k[i] = - a(i,k)/a(k,k) */
 
       if (a_kj != ZERO) {
-    for (i=k+1; i < m; i++)
-      col_j[i] -= a_kj * col_k[i];
+	for (i=k+1; i < m; i++)
+	  col_j[i] -= a_kj * col_k[i];
       }
     }
   }

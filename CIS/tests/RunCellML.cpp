@@ -85,7 +85,7 @@ public:
           ct->degree() == 0)
       {
         ObjRef<iface::cellml_api::CellMLVariable> source = ct->variable();
-    std::wstring n = source->name();
+	std::wstring n = source->name();
         printf(first ? "\"%S\"" : ",\"%S\"", n.c_str());
         first = false;
       }
@@ -170,7 +170,7 @@ public:
           ct->degree() == 0)
       {
         ObjRef<iface::cellml_api::CellMLVariable> source = ct->variable();
-    std::wstring n = source->name();
+	std::wstring n = source->name();
         printf("# Computed constant: %S = %e\n", n.c_str(), values[ct->assignedIndex()]);
       }
     }

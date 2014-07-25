@@ -117,7 +117,7 @@ SUNDIALS_EXPORT void bandGBTRS(realtype **a, long int n, long int smu, long int 
 
 SUNDIALS_EXPORT void BandCopy(DlsMat A, DlsMat B, long int copymu, long int copyml);
 SUNDIALS_EXPORT void bandCopy(realtype **a, realtype **b, long int n, long int a_smu, long int b_smu,
-                  long int copymu, long int copyml);
+			      long int copymu, long int copyml);
 
 /*
  * -----------------------------------------------------------------

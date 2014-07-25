@@ -105,18 +105,18 @@ $SIG{__DIE__} = \&errexit;
 # understood can be passed on to the diff program
 Getopt::Long::config qw(bundling no_getopt_compat permute no_auto_abbrev pass_through);
 unless( Getopt::Long::GetOptions ('t|tolerance=s' => \$TOL,
-                  'd|diff=s' => \$diff,
-                  'U|unified=i' => \$context_lines,
-                  'match-regexp=s' => \@match_regexps,
-                  'h|help' => \$help ) )
+				  'd|diff=s' => \$diff,
+				  'U|unified=i' => \$context_lines,
+				  'match-regexp=s' => \@match_regexps,
+				  'h|help' => \$help ) )
 {
-    die "Try `$0 --help' for more information.\n";
+	die "Try `$0 --help' for more information.\n";
 }
 
 if (defined $help)
 {
-    &usage();
-    exit;
+	&usage();
+	exit;
 }
 
 # SAB As we can't decipher the arguments and filenames for diff correctly
@@ -134,7 +134,7 @@ unless( defined $diff ) { $diff = $default_diff };
 my $tol_is_relative;
 if($tol_is_relative = $TOL =~ m/(.*)\%$/)
 {
-    $TOL = $1 / 100;
+	$TOL = $1 / 100;
 }
 # convert $TOL to a number
 $TOL += 0;
@@ -160,7 +160,7 @@ unless( my $pid = open DIFF, '-|' ) {
     # into one hunk there may be a complete match within tolerance.
 
     exec $diff $diff, '-U', $context_lines, @ARGV
-    or die "can't exec $diff: $!\n";
+	or die "can't exec $diff: $!\n";
 }
 
 # Read the diff output
@@ -171,11 +171,11 @@ my @file_header;
 my $line = <DIFF>;
 if( defined $line and $format ne 'posix' ) {
     $line =~ m/^--- /
-    or die "unrecognized output from diff line $.:\n $line";
+	or die "unrecognized output from diff line $.:\n $line";
     push @file_header, $line;
     $line = <DIFF>;
     ( defined $line and $line =~ m/^\+\+\+ / )
-    or die "unrecognized output from diff line $.:\n $line";
+	or die "unrecognized output from diff line $.:\n $line";
     push @file_header, $line;
     $line = <DIFF>;
 }
@@ -189,129 +189,129 @@ while( defined $line )
     my (@starts, @lengths, @lines, @changed);
     if( $format eq 'posix' )
     {
-    if( $line =~ m/^(\d+)a(\d+)(?:,(\d+))?\n/ ) {
-        $starts[0] = $1 + 1;
-        $lengths[0] = 0;
-        $starts[1] = $2;
-        $lengths[1] = defined $3 ? $3 - $2 + 1 : 1;
-    } elsif( $line =~ /^(\d+)(?:,(\d+))?d(\d+)\n/ ) {
-        $starts[0] = $1;
-        $lengths[0] = defined $2 ? $2 - $1 + 1 : 1;
-        $starts[1] = $3 + 1;
-        $lengths[1] = 0;
-    } elsif( $line =~ /^(\d+)(?:,(\d+))?c(\d+)(?:,(\d+))?\n/ ) {
-        $starts[0] = $1;
-        $lengths[0] = defined $2 ? $2 - $1 + 1 : 1;
-        $starts[1] = $3;
-        $lengths[1] = defined $4 ? $4 - $3 + 1 : 1;
-    } else {
-        die "unrecognized diff output";
-    }
-    # lines from oldfile
-    for( my $i=0; $i < $lengths[0]; $i++ ) {
-        $line = <DIFF>;
-        $line =~ s/\r//; #Ignore carriage return differences
-        $line =~ m/^<\s/ or die "unrecognized diff output";
-        push @{$lines[0]}, substr $line, 2;
-    }
-    # separator
-    if( $lengths[0] && $lengths[1] ) {
-        $line = <DIFF>;
-        $line =~ s/\r//; #Ignore carriage return differences
-        $line eq "---\n" or die "unrecognized diff output";
-    }
-    # lines from newfile
-    for( my $i=0; $i < $lengths[1]; $i++ ) {
-        $line = <DIFF>;
-        $line =~ s/\r//; #Ignore carriage return differences
-        $line =~ m/^>\s/ or die "unrecognized diff output";
-        push @{$lines[1]}, substr $line, 2;
-    }
-    # all lines changed
-    @changed = map { [ (1) x $_ ] } @lengths;
+	if( $line =~ m/^(\d+)a(\d+)(?:,(\d+))?\n/ ) {
+	    $starts[0] = $1 + 1;
+	    $lengths[0] = 0;
+	    $starts[1] = $2;
+	    $lengths[1] = defined $3 ? $3 - $2 + 1 : 1;
+	} elsif( $line =~ /^(\d+)(?:,(\d+))?d(\d+)\n/ ) {
+	    $starts[0] = $1;
+	    $lengths[0] = defined $2 ? $2 - $1 + 1 : 1;
+	    $starts[1] = $3 + 1;
+	    $lengths[1] = 0;
+	} elsif( $line =~ /^(\d+)(?:,(\d+))?c(\d+)(?:,(\d+))?\n/ ) {
+	    $starts[0] = $1;
+	    $lengths[0] = defined $2 ? $2 - $1 + 1 : 1;
+	    $starts[1] = $3;
+	    $lengths[1] = defined $4 ? $4 - $3 + 1 : 1;
+	} else {
+	    die "unrecognized diff output";
+	}
+	# lines from oldfile
+	for( my $i=0; $i < $lengths[0]; $i++ ) {
+	    $line = <DIFF>;
+	    $line =~ s/\r//; #Ignore carriage return differences
+	    $line =~ m/^<\s/ or die "unrecognized diff output";
+	    push @{$lines[0]}, substr $line, 2;
+	}
+	# separator
+	if( $lengths[0] && $lengths[1] ) {
+	    $line = <DIFF>;
+	    $line =~ s/\r//; #Ignore carriage return differences
+	    $line eq "---\n" or die "unrecognized diff output";
+	}
+	# lines from newfile
+	for( my $i=0; $i < $lengths[1]; $i++ ) {
+	    $line = <DIFF>;
+	    $line =~ s/\r//; #Ignore carriage return differences
+	    $line =~ m/^>\s/ or die "unrecognized diff output";
+	    push @{$lines[1]}, substr $line, 2;
+	}
+	# all lines changed
+	@changed = map { [ (1) x $_ ] } @lengths;
     } else { # unified
-    $line =~ m/^\@\@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? \@\@\n/
-        or die "unrecognized diff output";
-    @starts = ($1,$3);
-    @lengths = ($2,$4);
-    foreach (0,1) {
-        if( ! defined $lengths[$_] ) {
-        $lengths[$_] = 1; # no length means length 1
-        } elsif( ! $lengths[$_] ) {
-        # adds or deletes occur 1 line after that recorded
-        $starts[$_]++;
-        }
-    };
-    # read in the file lines for this hunk
-    my $lines_to_read = $lengths[0] + $lengths[1];
-    while( $lines_to_read > 0 ) {
-        $line = <DIFF>;
-        defined $line or die "diff output ended unexpectedly";
-        $line =~ s/\r//; #Ignore carriage return differences
-        my $file_line = substr $line, 1;
-        if( $line =~ /^\s/ ) { # unchanged line
-        foreach my $file ( 0,1 ) {
-            push @{$lines[$file]}, $file_line;
-            push @{$changed[$file]}, 0;
-            $lines_to_read--;
-        }
-        } elsif( $line =~ /^\+/ ) { # added line
-        push @{$lines[1]}, $file_line;
-        push @{$changed[1]}, 1;
-        $lines_to_read--;
-        } elsif( $line =~ /^-/ ) { # deleted line
-        push @{$lines[0]}, $file_line;
-        push @{$changed[0]}, 1;
-        $lines_to_read--;
-        } else {
-        die "unrecognized diff output";
-        }
-    }
-    $lines_to_read and die "unrecognized diff output";
+	$line =~ m/^\@\@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? \@\@\n/
+	    or die "unrecognized diff output";
+	@starts = ($1,$3);
+	@lengths = ($2,$4);
+	foreach (0,1) {
+	    if( ! defined $lengths[$_] ) {
+		$lengths[$_] = 1; # no length means length 1
+	    } elsif( ! $lengths[$_] ) {
+		# adds or deletes occur 1 line after that recorded
+		$starts[$_]++;
+	    }
+	};
+	# read in the file lines for this hunk
+	my $lines_to_read = $lengths[0] + $lengths[1];
+	while( $lines_to_read > 0 ) {
+	    $line = <DIFF>;
+	    defined $line or die "diff output ended unexpectedly";
+	    $line =~ s/\r//; #Ignore carriage return differences
+	    my $file_line = substr $line, 1;
+	    if( $line =~ /^\s/ ) { # unchanged line
+		foreach my $file ( 0,1 ) {
+		    push @{$lines[$file]}, $file_line;
+		    push @{$changed[$file]}, 0;
+		    $lines_to_read--;
+		}
+	    } elsif( $line =~ /^\+/ ) { # added line
+		push @{$lines[1]}, $file_line;
+		push @{$changed[1]}, 1;
+		$lines_to_read--;
+	    } elsif( $line =~ /^-/ ) { # deleted line
+		push @{$lines[0]}, $file_line;
+		push @{$changed[0]}, 1;
+		$lines_to_read--;
+	    } else {
+		die "unrecognized diff output";
+	    }
+	}
+	$lines_to_read and die "unrecognized diff output";
     }
     $have_hunk = 1;
 
     # recompare changed lines
 
     for( my @index = (0) x 2;
-     2 == grep { $index[$_] < $lengths[$_] } 0,1; )
+	 2 == grep { $index[$_] < $lengths[$_] } 0,1; )
     {
-    my @line_changed = map { $changed[$_][$index[$_]] } 0,1;
-    my $change_count = grep { $_ } @line_changed;
-    if( $change_count ) { # there is a change
-        # recheck these lines
-        if( &ncompare( map { $lines[$_][$index[$_]] } 0,1 ) ) {
-        # lines don't match.
-        # only advance index in file(s) with changed lines
-        foreach (0,1) { $line_changed[$_] and $index[$_]++ }
-        } else {
-        # lines do match
-        if( $change_count == 2) {
-            # both lines were marked as changed but are the
-            # same so mark them as unchanged
-            foreach (0,1) { $changed[$_][$index[$_]] = 0 }
-        } else {
-            # only one line was marked as changed.
-            my $changed_file = $line_changed[1];
-            # This in fact is not changed, but if we mark this
-            # as unchanged we must mark the line that was
-            # assumed to match the unchanged line as changed.
-            my $match_index = $index[$changed_file];
-            $changed[$changed_file][$match_index] = 0;
-            do {
-            $match_index++;
-            if( $match_index >= $lengths[$changed_file] ) {
-                die "matching line not found";
-            }
-            } while $changed[$changed_file][$match_index];
-            $changed[$changed_file][$match_index] = 1;
-        }
-        # advance index in both files.
-        foreach (0,1) { $index[$_]++ }
-        }
-    } else { # matching lines
-        foreach (0,1) { $index[$_]++ }
-    }
+	my @line_changed = map { $changed[$_][$index[$_]] } 0,1;
+	my $change_count = grep { $_ } @line_changed;
+	if( $change_count ) { # there is a change
+	    # recheck these lines
+	    if( &ncompare( map { $lines[$_][$index[$_]] } 0,1 ) ) {
+		# lines don't match.
+		# only advance index in file(s) with changed lines
+		foreach (0,1) { $line_changed[$_] and $index[$_]++ }
+	    } else {
+		# lines do match
+		if( $change_count == 2) {
+		    # both lines were marked as changed but are the
+		    # same so mark them as unchanged
+		    foreach (0,1) { $changed[$_][$index[$_]] = 0 }
+		} else {
+		    # only one line was marked as changed.
+		    my $changed_file = $line_changed[1];
+		    # This in fact is not changed, but if we mark this
+		    # as unchanged we must mark the line that was
+		    # assumed to match the unchanged line as changed.
+		    my $match_index = $index[$changed_file];
+		    $changed[$changed_file][$match_index] = 0;
+		    do {
+			$match_index++;
+			if( $match_index >= $lengths[$changed_file] ) {
+			    die "matching line not found";
+			}
+		    } while $changed[$changed_file][$match_index];
+		    $changed[$changed_file][$match_index] = 1;
+		}
+		# advance index in both files.
+		foreach (0,1) { $index[$_]++ }
+	    }
+	} else { # matching lines
+	    foreach (0,1) { $index[$_]++ }
+	}
     }
 
     # Add matching lines to each of the hunks to simplify the hunk
@@ -320,49 +320,49 @@ while( defined $line )
 
     # split into smaller hunks
     for( ( my @index = (0,0) ),
-     ( my @hunk_starts = (0,0) ),
-     ( my ($found_change,$match_count) = (0,0) );
-     grep { $index[$_] < $lengths[$_] } 0,1; )
+	 ( my @hunk_starts = (0,0) ),
+	 ( my ($found_change,$match_count) = (0,0) );
+	 grep { $index[$_] < $lengths[$_] } 0,1; )
     {
-    $match_count++;
-    foreach (0,1) {
-        while( $changed[$_][$index[$_]] ) {
-        unless( $found_change ) {
-            $found_change = 1;
-            foreach (0,1) {
-            $hunk_starts[$_] =
-                $index[$_] > $context_lines ?
-                $index[$_] - $context_lines : 0;
-            }
-        }
-        $match_count = 0;
-        $index[$_]++;
-        }
-    }
-    if( $match_count ) {
-        foreach (0,1) { $index[$_]++ }
-    }
-    # don't print this change until we are sure that
-    # it won't merge with the next change. ( >= is a safe ==.)
-    if( $found_change &&
-        ( $match_count >= 2 * $context_lines ||
-          ! grep { $index[$_] < $lengths[$_] } 0,1 ) )
-    {
-        $different = 1;
-        if( @file_header ) {
-        print @file_header;
-        @file_header = ();
-        }
-        my @hunk_ends =
-        map { $match_count > $context_lines ?
-              $_ - $match_count + $context_lines : $_ } @index;
-        &print_hunk( ( map { $starts[$_] + $hunk_starts[$_] } 0,1 ),
-             ( map { [ @{$lines[$_]}[ $hunk_starts[$_] ..
-                          $hunk_ends[$_] - 1 ]]} 0,1 ),
-             ( map { [ @{$changed[$_]}[ $hunk_starts[$_] ..
-                            $hunk_ends[$_] ]]} 0,1 ));
-        $found_change = 0;
-    }
+	$match_count++;
+	foreach (0,1) {
+	    while( $changed[$_][$index[$_]] ) {
+		unless( $found_change ) {
+		    $found_change = 1;
+		    foreach (0,1) {
+			$hunk_starts[$_] =
+			    $index[$_] > $context_lines ?
+				$index[$_] - $context_lines : 0;
+		    }
+		}
+		$match_count = 0;
+		$index[$_]++;
+	    }
+	}
+	if( $match_count ) {
+	    foreach (0,1) { $index[$_]++ }
+	}
+	# don't print this change until we are sure that
+	# it won't merge with the next change. ( >= is a safe ==.)
+	if( $found_change &&
+	    ( $match_count >= 2 * $context_lines ||
+	      ! grep { $index[$_] < $lengths[$_] } 0,1 ) )
+	{
+	    $different = 1;
+	    if( @file_header ) {
+		print @file_header;
+		@file_header = ();
+	    }
+	    my @hunk_ends =
+		map { $match_count > $context_lines ?
+			  $_ - $match_count + $context_lines : $_ } @index;
+	    &print_hunk( ( map { $starts[$_] + $hunk_starts[$_] } 0,1 ),
+			 ( map { [ @{$lines[$_]}[ $hunk_starts[$_] ..
+						  $hunk_ends[$_] - 1 ]]} 0,1 ),
+			 ( map { [ @{$changed[$_]}[ $hunk_starts[$_] ..
+						    $hunk_ends[$_] ]]} 0,1 ));
+	    $found_change = 0;
+	}
     }
 
     $line = <DIFF>;
@@ -387,47 +387,47 @@ sub ncompare {
     my $continue = 1; #true until end of strings
 
     while( $match && $strings[0] ne $strings[1] ) {
-    my (@starts,@reals);
-    foreach my $i (0..1) {
-        # trim off leading text and first real number
+	my (@starts,@reals);
+	foreach my $i (0..1) {
+	    # trim off leading text and first real number
 
-        # The number of spaces is ignored around real numbers as
-        # this may vary with the format of the number and with the
-        # sign.  But if a space is the separator from
-        # surrounding text then this is compared with the
-        # separator of the corresponding line.
+	    # The number of spaces is ignored around real numbers as
+	    # this may vary with the format of the number and with the
+	    # sign.  But if a space is the separator from
+	    # surrounding text then this is compared with the
+	    # separator of the corresponding line.
 
-        if( $strings[$i] =~
-        # units may follow the number before any separator
-        # Allow a full stop after the number provided there is some
-        # other separator to confirm that it is not a decimal point.
-        m"(^|[][)(}{,;:'\"\$\t ]) *($num_regexp) *((?:[a-z][-a-z/^0-9]*|%)?\.?[][)(}{,;:*'\"\t \n])" ) {
-        $starts[$i] = "$`$1";
-        $reals[$i] = $2;
-        $strings[$i] = "$3$'";
-        } else {
-        $starts[$i] = $strings[$i];
-        $strings[$i] = '';
-        }
-    }
-    if( $starts[0] ne $starts[1] ) {
-        # leading text does not match
-        $match = 0;
-    } elsif( defined $reals[0] and defined $reals[1] ) {
-        # 2 real numbers found; compare.
-        $match = &real_string_close(@reals);
-    } elsif( defined $reals[0] or defined $reals[1] ) {
-        # only 1 real number found.
-        $match = 0;
-    }
+	    if( $strings[$i] =~
+		# units may follow the number before any separator
+		# Allow a full stop after the number provided there is some
+		# other separator to confirm that it is not a decimal point.
+		m"(^|[][)(}{,;:'\"\$\t ]) *($num_regexp) *((?:[a-z][-a-z/^0-9]*|%)?\.?[][)(}{,;:*'\"\t \n])" ) {
+		$starts[$i] = "$`$1";
+		$reals[$i] = $2;
+		$strings[$i] = "$3$'";
+	    } else {
+		$starts[$i] = $strings[$i];
+		$strings[$i] = '';
+	    }
+	}
+	if( $starts[0] ne $starts[1] ) {
+	    # leading text does not match
+	    $match = 0;
+	} elsif( defined $reals[0] and defined $reals[1] ) {
+	    # 2 real numbers found; compare.
+	    $match = &real_string_close(@reals);
+	} elsif( defined $reals[0] or defined $reals[1] ) {
+	    # only 1 real number found.
+	    $match = 0;
+	}
     }
 
     # check unmatching lines against regexps that indicate matches.
     unless( $match ) {
-    @strings = @_;
-    $match |= grep { my $match_regexp = $_;
-             2 == grep { m/$match_regexp/ } @strings;
-             } @match_regexps;
+	@strings = @_;
+	$match |= grep { my $match_regexp = $_;
+			 2 == grep { m/$match_regexp/ } @strings;
+			 } @match_regexps;
     }
     return $match ? 0 : 1;
 }
@@ -448,29 +448,29 @@ sub real_string_close {
 
     my $permissible_difference = $TOL;
     if( $tol_is_relative ) {
-    my $abs_ref = abs $num_strings[0];
-    $abs_ref > 1 and $permissible_difference *= $abs_ref;
+	my $abs_ref = abs $num_strings[0];
+	$abs_ref > 1 and $permissible_difference *= $abs_ref;
     }
 
     if( $TOL > 0 ) {
-    # determine resolution in answer
-    $num_strings[0] =~ m/\.?(\d*)(?:[EeDd]([+-]?\d+))?/
-        or die "$0: confusion over regexp for real\n";
-    # If the answer is in exponential format and is zero then it
-    # has infinitesimal resolution; otherwise work out the resolution
-    # from the number of decimal places and the exponent.
-    unless( defined $2 and $num_strings[0] == 0 ) {
-        my $resolution_exponent = - length $1;
-        defined $2 and $resolution_exponent += $2;
-        #include a safety factor (1.1) for numerical rounding errors
-        my $resolution = 1.1 * 10 ** $resolution_exponent;
-        $resolution > $permissible_difference and
-        $permissible_difference = $resolution;
-    }
+	# determine resolution in answer
+	$num_strings[0] =~ m/\.?(\d*)(?:[EeDd]([+-]?\d+))?/
+	    or die "$0: confusion over regexp for real\n";
+	# If the answer is in exponential format and is zero then it
+	# has infinitesimal resolution; otherwise work out the resolution
+	# from the number of decimal places and the exponent.
+	unless( defined $2 and $num_strings[0] == 0 ) {
+	    my $resolution_exponent = - length $1;
+	    defined $2 and $resolution_exponent += $2;
+	    #include a safety factor (1.1) for numerical rounding errors
+	    my $resolution = 1.1 * 10 ** $resolution_exponent;
+	    $resolution > $permissible_difference and
+		$permissible_difference = $resolution;
+	}
     }
 
     return
-    abs( $num_strings[1] - $num_strings[0] ) <=  $permissible_difference;
+	abs( $num_strings[1] - $num_strings[0] ) <=  $permissible_difference;
 }
 
 sub print_hunk {
@@ -482,52 +482,52 @@ sub print_hunk {
     foreach (0,1) { @{$lines[$_]} or $starts[$_]-- };
 
     if( $format eq 'posix' ) {
-    # range header
-    if( @{$lines[0]} <= 1 ) {
-        printf '%d', $starts[0];
-    } else {
-        printf '%d,%d', $starts[0], $starts[0] + @{$lines[0]} - 1;
-    }
-    print @{$lines[0]} ? ( @{$lines[1]} ? 'c' : 'd' ) : 'a';
-    if( @{$lines[1]} <= 1 ) {
-        printf "%d\n", $starts[1];
-    } else {
-        printf "%d,%d\n", $starts[1], $starts[1] + @{$lines[1]} - 1;
-    }
-    # lines
-    foreach (@{$lines[0]}) { print "< $_" }
-    ( @{$lines[0]} && @{$lines[1]} ) and print "---\n";
-    foreach (@{$lines[1]}) { print "> $_" }
+	# range header
+	if( @{$lines[0]} <= 1 ) {
+	    printf '%d', $starts[0];
+	} else {
+	    printf '%d,%d', $starts[0], $starts[0] + @{$lines[0]} - 1;
+	}
+	print @{$lines[0]} ? ( @{$lines[1]} ? 'c' : 'd' ) : 'a';
+	if( @{$lines[1]} <= 1 ) {
+	    printf "%d\n", $starts[1];
+	} else {
+	    printf "%d,%d\n", $starts[1], $starts[1] + @{$lines[1]} - 1;
+	}
+	# lines
+	foreach (@{$lines[0]}) { print "< $_" }
+	( @{$lines[0]} && @{$lines[1]} ) and print "---\n";
+	foreach (@{$lines[1]}) { print "> $_" }
     } else { # unified
-    # range header
-    if( @{$lines[0]} == 1 ) {
-        printf '@@ -%d +', $starts[0];
-    } else {
-        printf '@@ -%d,%d +', $starts[0], scalar @{$lines[0]};
-    }
-    if( @{$lines[1]} == 1 ) {
-        printf "%d \@\@\n", $starts[1];
-    } else {
-        printf "%d,%d \@\@\n", $starts[1], scalar @{$lines[1]};
-    }
-    # lines
-    for( my @index = (0) x 2;
-         grep { $index[$_] < @{$lines[$_]} } 0,1; )
-    {
-        unless( grep { $changed[$_][$index[$_]] } 0,1 ) {
-        # matching line
-        print " ",$lines[0][$index[0]];
-        foreach (0,1) { $index[$_]++ }
-        }
-        foreach (0,1) {
-        while( $changed[$_][$index[$_]] ) {
-            # changed line
-            print $_ ? '+' : '-';
-            print $lines[$_][$index[$_]];
-            $index[$_]++;
-        }
-        }
-    }
+	# range header
+	if( @{$lines[0]} == 1 ) {
+	    printf '@@ -%d +', $starts[0];
+	} else {
+	    printf '@@ -%d,%d +', $starts[0], scalar @{$lines[0]};
+	}
+	if( @{$lines[1]} == 1 ) {
+	    printf "%d \@\@\n", $starts[1];
+	} else {
+	    printf "%d,%d \@\@\n", $starts[1], scalar @{$lines[1]};
+	}
+	# lines
+	for( my @index = (0) x 2;
+	     grep { $index[$_] < @{$lines[$_]} } 0,1; )
+	{
+	    unless( grep { $changed[$_][$index[$_]] } 0,1 ) {
+		# matching line
+		print " ",$lines[0][$index[0]];
+		foreach (0,1) { $index[$_]++ }
+	    }
+	    foreach (0,1) {
+		while( $changed[$_][$index[$_]] ) {
+		    # changed line
+		    print $_ ? '+' : '-';
+		    print $lines[$_][$index[$_]];
+		    $index[$_]++;
+		}
+	    }
+	}
     }
 }
 
@@ -537,7 +537,7 @@ sub usage
 Usage: $0 [-h | --help (show this usage)]
           [-d diff_program | --diff diff_program (default=$default_diff,
                       ordinary diff program used by ndiff)]
-      [--match-regexp=REGEXP (perl REGEXP that identifies lines that are considered to match)]
+	  [--match-regexp=REGEXP (perl REGEXP that identifies lines that are considered to match)]
           [-U NUM | --unified=NUM (default $default_context_lines, output NUM lines of unified context)]
           [-t TOLERANCE | --tolerance=TOLERANCE (default=$default_TOL)]
           [ordinary diff parameters] FILE1 FILE2
@@ -579,7 +579,7 @@ sub errexit
 {
     if(@_)
     {
-    print STDERR "$0: ",@_;
+	print STDERR "$0: ",@_;
     }
     # Must exit with status not 0 or 1
     # as these are both successful exit stati of diff.

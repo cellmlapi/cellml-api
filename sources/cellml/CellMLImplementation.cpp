@@ -1368,7 +1368,7 @@ CDA_Model::RecursivelyChangeVersionCopy
             RecursivelyChangeVersionCopy(aNewNamespace, n, origItem, aNewDoc);
             continue;
           }
-      std::wstring ln = origItem->localName();
+	  std::wstring ln = origItem->localName();
           newItem = already_AddRefd<iface::dom::Node>
             (aNewDoc->createElementNS(aNewNamespace, ln));
           break;
@@ -2419,7 +2419,7 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
       if (cr == componentName)
       {
         currentComponent = icomp;
-    componentName = icomp->name();
+	componentName = icomp->name();
         model = dynamic_cast<CDA_Model*>(import->mParent);
         if (model == NULL)
           throw iface::cellml_api::CellMLException(L"Import parent is not a model.");
@@ -2509,7 +2509,7 @@ CDA_CellMLComponentGroupMixin::encapsulationParent()
         model = unsafe_dynamic_cast<CDA_Model*>(ci->mImportedModel);
         // If the real component isn't instantiated yet, return the
         // ImportComponent...
-    parname = ic->componentRef();
+	parname = ic->componentRef();
       }
     }
   }
@@ -4755,7 +4755,7 @@ CDA_RelationshipRef::relationship()
       RETURN_INTO_WSTRING(ln, at->localName());
       if (ln == L"")
       {
-    std::wstring str = at->nodeName();
+	std::wstring str = at->nodeName();
         ln = str;
       }
       if (ln != L"relationship")
@@ -6171,7 +6171,7 @@ CDA_DOMElementIteratorBase::fetchNextElement(const std::wstring& aWantEl)
       for (i = 0; i < l; i++)
       {
         RETURN_INTO_OBJREF(nodeHit, iface::dom::Node, mNodeList->item(i));
-    std::wstring ln = nodeHit->localName();
+	std::wstring ln = nodeHit->localName();
         if (ln != aWantEl)
           continue;
 
@@ -7454,7 +7454,7 @@ CDA_NamedCellMLElementSetBase::get(const std::wstring& name)
                                            cellml_api::NamedCellMLElement);
             // If tnel == null, you are missing a NamedCellMLElement QI item on your
             // implementation.
-        std::wstring tn = tnel->name();
+	    std::wstring tn = tnel->name();
             mMap.insert(std::pair<std::wstring,
                         iface::cellml_api::NamedCellMLElement*>(tn, tnel));
             mHighWaterMark = count;
@@ -7479,7 +7479,7 @@ setname::iterate() \
   ei->release_ref(); \
   return it; \
 } \
-already_AddRefd<ifacename>          \
+already_AddRefd<ifacename>			\
 setname::funcname() \
   throw(std::exception&) \
 { \
@@ -7497,8 +7497,8 @@ setname::getname(const std::wstring& name) \
 
 #define SIMPLE_SET_ITERATORFETCH_GET(setname, iteratorname, ifacename, funcname, classname, basename, getname) \
 SIMPLE_SET_ITERATORFETCH(setname, iteratorname, ifacename, funcname) \
-already_AddRefd<basename>                        \
-setname::getname(const std::wstring& name)                   \
+already_AddRefd<basename>					     \
+setname::getname(const std::wstring& name)				     \
   throw(std::exception&) \
 { \
   return static_cast<basename*>(unsafe_dynamic_cast<classname*>(get(name).getPointer())); \
@@ -7651,7 +7651,7 @@ SIMPLE_SET_ITERATORFETCH
 );
 
 #define SIMPLE_ITERATOR_NEXTONLY(itname, ifacename, nextname, restrict) \
-already_AddRefd<iface::cellml_api::CellMLElement>           \
+already_AddRefd<iface::cellml_api::CellMLElement>			\
 itname::next() \
   throw(std::exception&) \
 { \
@@ -7670,7 +7670,7 @@ itname::next() \
 
 #define SIMPLE_ITERATOR_NEXT_B(itname, ifacename, nextname, restrict) \
 SIMPLE_ITERATOR_NEXTONLY(itname, ifacename, nextname, restrict) \
-already_AddRefd<iface::cellml_api::ifacename>           \
+already_AddRefd<iface::cellml_api::ifacename>			\
 itname::nextname() \
   throw(std::exception&) \
 { \
@@ -7679,7 +7679,7 @@ itname::nextname() \
 
 #define SIMPLE_ITERATOR_NEXT(itname, ifacename, nextname, restrict) \
 SIMPLE_ITERATOR_NEXTONLY(itname, ifacename, nextname, restrict) \
-already_AddRefd<iface::cellml_api::ifacename>           \
+already_AddRefd<iface::cellml_api::ifacename>			\
 itname::nextname() \
   throw(std::exception&) \
 { \

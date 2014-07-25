@@ -31,8 +31,8 @@ public:
    * \deprecated Use other constructor instead.
    */
   Exception( std::string  message,
-         long lineNumber,
-         std::string fileName );
+	     long lineNumber,
+	     std::string fileName );
 #endif
 
   /*! \brief Constructs a copy of an exception.

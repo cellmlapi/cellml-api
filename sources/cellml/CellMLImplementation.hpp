@@ -372,7 +372,7 @@ public:
   uint32_t assignUniqueIdentifier();
   already_AddRefd<iface::mathml_dom::MathMLMathElement> createMathElement() throw(std::exception&);
   already_AddRefd<iface::dom::Element> createExtensionElement(const std::wstring& namespaceURI,
-                                  const std::wstring& qualifiedName)
+							      const std::wstring& qualifiedName)
     throw(std::exception&);
   std::wstring serialisedText() throw(std::exception&);
   already_AddRefd<iface::cellml_api::CellMLElement> clone(bool aDeep)

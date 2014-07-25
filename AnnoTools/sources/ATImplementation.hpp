@@ -61,7 +61,7 @@ public:
                            const std::wstring& aValue)
      throw(std::exception&);
   std::wstring getStringAnnotation(iface::cellml_api::CellMLElement* aElement,
-                   const std::wstring& aKey)
+				   const std::wstring& aKey)
      throw(std::exception&);
   std::wstring getStringAnnotationWithDefault(iface::cellml_api::CellMLElement* aElement,
                                               const std::wstring& aKey,
@@ -72,7 +72,7 @@ public:
                            iface::XPCOM::IObject* aValue)
      throw(std::exception&);
   already_AddRefd<iface::XPCOM::IObject> getObjectAnnotation(iface::cellml_api::CellMLElement* aElement,
-                                 const std::wstring& aKey)
+							     const std::wstring& aKey)
      throw(std::exception&);
   already_AddRefd<iface::XPCOM::IObject> getObjectAnnotationWithDefault
   (iface::cellml_api::CellMLElement* aElement, const std::wstring& aKey,

@@ -60,7 +60,7 @@ CDA_DataSource::createBlankNode()
 
 already_AddRefd<iface::rdf_api::PlainLiteral>
 CDA_DataSource::getPlainLiteral(const std::wstring& aForm,
-                const std::wstring& aLanguage)
+				const std::wstring& aLanguage)
   throw(std::exception&)
 {
   wstringpair p(aForm, aLanguage);

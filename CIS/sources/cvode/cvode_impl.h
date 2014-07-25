@@ -194,11 +194,11 @@ typedef struct CVodeMemRec {
   int (*cv_linit)(struct CVodeMemRec *cv_mem);
 
   int (*cv_lsetup)(struct CVodeMemRec *cv_mem, int convfail, N_Vector ypred,
-           N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
-           N_Vector vtemp2, N_Vector vtemp3);
+		   N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
+		   N_Vector vtemp2, N_Vector vtemp3);
 
   int (*cv_lsolve)(struct CVodeMemRec *cv_mem, N_Vector b, N_Vector weight,
-           N_Vector ycur, N_Vector fcur);
+		   N_Vector ycur, N_Vector fcur);
 
   void (*cv_lfree)(struct CVodeMemRec *cv_mem);
 
@@ -410,13 +410,13 @@ int CVEwtSet(N_Vector ycur, N_Vector weight, void *data);
 /* High level error handler */
 
 void CVProcessError(CVodeMem cv_mem,
-            int error_code, const char *module, const char *fname,
-            const char *msgfmt, ...);
+		    int error_code, const char *module, const char *fname,
+		    const char *msgfmt, ...);
 
 /* Prototype of internal errHandler function */
 
 void CVErrHandler(int error_code, const char *module, const char *function,
-          char *msg, void *data);
+		  char *msg, void *data);
 
 /*
  * =================================================================

@@ -1,49 +1,49 @@
 <?xml version="1.0"?>
 <model name="TestPIVA" xmlns="http://www.cellml.org/cellml/1.1#">
-    <component name="component1">
-        <variable name="t" units="dimensionless"/>
-        <variable initial_value="0" name="y" units="dimensionless"/>
-        <variable initial_value="1" name="k" units="dimensionless"/>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply id="1">
-                <eq/>
-                <apply>
-                    <diff/>
-                    <bvar>
-                        <ci>t</ci>
-                    </bvar>
-                    <ci>y</ci>
-                </apply>
-                <apply>
-                    <times/>
-                    <ci>k1</ci>
-                    <apply>
-                        <cos/>
-                        <apply>
-                            <times/>
-                            <ci>k1</ci>
-                            <ci>t</ci>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-            <apply id="2">
-                <eq/>
-                <apply>
-                    <diff/>
-                    <bvar>
-                        <ci>t</ci>
-                    </bvar>
-                    <ci>k1</ci>
-                </apply>
-                <apply>
-                    <times/>
-                    <cn>2</cn>
-                    <ci>t</ci>
-                </apply>
-            </apply>
-            <apply id="3"><eq/><ci>k1</ci><cn>2</cn></apply>
-        </math>
-        <variable initial_value="5" name="k1" units="dimensionless"/>
-    </component>
+	<component name="component1">
+		<variable name="t" units="dimensionless"/>
+		<variable initial_value="0" name="y" units="dimensionless"/>
+		<variable initial_value="1" name="k" units="dimensionless"/>
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply id="1">
+				<eq/>
+				<apply>
+					<diff/>
+					<bvar>
+						<ci>t</ci>
+					</bvar>
+					<ci>y</ci>
+				</apply>
+				<apply>
+					<times/>
+					<ci>k1</ci>
+					<apply>
+						<cos/>
+						<apply>
+							<times/>
+							<ci>k1</ci>
+							<ci>t</ci>
+						</apply>
+					</apply>
+				</apply>
+			</apply>
+			<apply id="2">
+				<eq/>
+				<apply>
+					<diff/>
+					<bvar>
+						<ci>t</ci>
+					</bvar>
+					<ci>k1</ci>
+				</apply>
+				<apply>
+					<times/>
+					<cn>2</cn>
+					<ci>t</ci>
+				</apply>
+			</apply>
+			<apply id="3"><eq/><ci>k1</ci><cn>2</cn></apply>
+		</math>
+		<variable initial_value="5" name="k1" units="dimensionless"/>
+	</component>
 </model>

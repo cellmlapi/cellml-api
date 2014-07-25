@@ -32,9 +32,9 @@
        <apply>
       <power/>
       <apply>
-    <plus/>
-    <ci>a</ci>
-    <ci>b</ci>
+	<plus/>
+	<ci>a</ci>
+	<ci>b</ci>
       </apply>
       <cn>2</cn>
     </apply>

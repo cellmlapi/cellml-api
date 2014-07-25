@@ -49,7 +49,7 @@ namespace p2x
 
       XPCOMSUPPORT_PRE nsISupports* GetObject() XPCOMSUPPORT_POST
       {
-    nsISupports* obj = mObj;
+	nsISupports* obj = mObj;
         NS_ADDREF(obj);
         return mObj;
       }

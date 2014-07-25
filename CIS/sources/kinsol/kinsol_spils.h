@@ -99,7 +99,7 @@ extern "C" {
 typedef int (*KINSpilsPrecSetupFn)(N_Vector uu, N_Vector uscale,
                                    N_Vector fval, N_Vector fscale,
                                    void *user_data, N_Vector vtemp1,
-                   N_Vector vtemp2);
+				   N_Vector vtemp2);
 
 /*
  * -----------------------------------------------------------------
@@ -220,8 +220,8 @@ typedef int (*KINSpilsJacTimesVecFn)(N_Vector v, N_Vector Jv,
 
 SUNDIALS_EXPORT int KINSpilsSetMaxRestarts(void *kinmem, int maxrs);
 SUNDIALS_EXPORT int KINSpilsSetPreconditioner(void *kinmem,
-                          KINSpilsPrecSetupFn pset,
-                          KINSpilsPrecSolveFn psolve);
+					      KINSpilsPrecSetupFn pset,
+					      KINSpilsPrecSolveFn psolve);
 SUNDIALS_EXPORT int KINSpilsSetJacTimesVecFn(void *kinmem,
                                              KINSpilsJacTimesVecFn jtv);
 

@@ -92,12 +92,12 @@ class Walker(idlvisitor.AstVisitor):
         self.cxxheader.out('class ' + node.simplename + ';')
 
     def visitInterface(self, node):
-    self.cxxheader.out('PUBLIC_' + self.masterGuard + '_PRE ')
+	self.cxxheader.out('PUBLIC_' + self.masterGuard + '_PRE ')
         self.cxxheader.out('class  PUBLIC_' + self.masterGuard + '_POST ' +
                            node.simplename)
         inh = node.inherits()
         if len(inh) > 0:
-        inhs = ''
+	    inhs = ''
             needcomma = 0
             for ic in inh:
                 while isinstance(ic, idlast.Declarator):
@@ -174,7 +174,7 @@ class Walker(idlvisitor.AstVisitor):
                            ' ' + node.simplename + ';')
 
     def visitException(self, node):
-    self.cxxheader.out('PUBLIC_' + self.masterGuard + '_PRE ')
+	self.cxxheader.out('PUBLIC_' + self.masterGuard + '_PRE ')
         self.cxxheader.out('class  PUBLIC_' + self.masterGuard + '_POST ' + node.simplename + ' : public std::exception')
         self.cxxheader.out('{')
         self.cxxheader.out('public:')
