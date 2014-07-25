@@ -106,10 +106,10 @@ extern "C" {
  */
 
 typedef int (*IDASpilsPrecSetupFn)(realtype tt,
-				   N_Vector yy, N_Vector yp, N_Vector rr,
-				   realtype c_j, void *user_data,
-				   N_Vector tmp1, N_Vector tmp2,
-				   N_Vector tmp3);
+                   N_Vector yy, N_Vector yp, N_Vector rr,
+                   realtype c_j, void *user_data,
+                   N_Vector tmp1, N_Vector tmp2,
+                   N_Vector tmp3);
 
 /*
  * -----------------------------------------------------------------
@@ -162,10 +162,10 @@ typedef int (*IDASpilsPrecSetupFn)(realtype tt,
  */
 
 typedef int (*IDASpilsPrecSolveFn)(realtype tt,
-				   N_Vector yy, N_Vector yp, N_Vector rr,
-				   N_Vector rvec, N_Vector zvec,
-				   realtype c_j, realtype delta, void *user_data,
-				   N_Vector tmp);
+                   N_Vector yy, N_Vector yp, N_Vector rr,
+                   N_Vector rvec, N_Vector zvec,
+                   realtype c_j, realtype delta, void *user_data,
+                   N_Vector tmp);
 
 /*
  * -----------------------------------------------------------------
@@ -206,10 +206,10 @@ typedef int (*IDASpilsPrecSolveFn)(realtype tt,
  */
 
 typedef int (*IDASpilsJacTimesVecFn)(realtype tt,
-				     N_Vector yy, N_Vector yp, N_Vector rr,
-				     N_Vector v, N_Vector Jv,
-				     realtype c_j, void *user_data,
-				     N_Vector tmp1, N_Vector tmp2);
+                     N_Vector yy, N_Vector yp, N_Vector rr,
+                     N_Vector v, N_Vector Jv,
+                     realtype c_j, void *user_data,
+                     N_Vector tmp1, N_Vector tmp2);
 
 
 /*
@@ -256,7 +256,7 @@ typedef int (*IDASpilsJacTimesVecFn)(realtype tt,
 
 SUNDIALS_EXPORT int IDASpilsSetPreconditioner(void *ida_mem,
                                               IDASpilsPrecSetupFn pset,
-					      IDASpilsPrecSolveFn psolve);
+                          IDASpilsPrecSolveFn psolve);
 SUNDIALS_EXPORT int IDASpilsSetJacTimesVecFn(void *ida_mem,
                                              IDASpilsJacTimesVecFn jtv);
 

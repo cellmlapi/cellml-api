@@ -173,8 +173,8 @@ typedef int (*KINSysFn)(N_Vector uu, N_Vector fval, void *user_data );
  */
 
 typedef void (*KINErrHandlerFn)(int error_code,
-				const char *module, const char *function,
-				char *msg, void *user_data);
+                const char *module, const char *function,
+                char *msg, void *user_data);
 
 
 /*
@@ -192,7 +192,7 @@ typedef void (*KINErrHandlerFn)(int error_code,
  */
 
 typedef void (*KINInfoHandlerFn)(const char *module, const char *function,
-				 char *msg, void *user_data);
+                 char *msg, void *user_data);
 
 /*
  * ================================================================
@@ -665,7 +665,7 @@ SUNDIALS_EXPORT int KINInit(void *kinmem, KINSysFn func, N_Vector tmpl);
  */
 
 SUNDIALS_EXPORT int KINSol(void *kinmem, N_Vector uu, int strategy,
-			   N_Vector u_scale, N_Vector f_scale);
+               N_Vector u_scale, N_Vector f_scale);
 
 /*
  * -----------------------------------------------------------------

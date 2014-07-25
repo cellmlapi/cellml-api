@@ -119,7 +119,7 @@ int KINSpilsSetMaxRestarts(void *kinmem, int maxrs)
  */
 
 int KINSpilsSetPreconditioner(void *kinmem,
-			      KINSpilsPrecSetupFn pset, KINSpilsPrecSolveFn psolve)
+                  KINSpilsPrecSetupFn pset, KINSpilsPrecSolveFn psolve)
 {
   KINMem kin_mem;
   KINSpilsMem kinspils_mem;

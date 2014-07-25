@@ -110,9 +110,9 @@ extern "C" {
 
 
 typedef int (*KINDlsDenseJacFn)(long int N,
-				N_Vector u, N_Vector fu,
-				DlsMat J, void *user_data,
-				N_Vector tmp1, N_Vector tmp2);
+                N_Vector u, N_Vector fu,
+                DlsMat J, void *user_data,
+                N_Vector tmp1, N_Vector tmp2);
 
 /*
  * -----------------------------------------------------------------
@@ -191,9 +191,9 @@ typedef int (*KINDlsDenseJacFn)(long int N,
  */
 
 typedef int (*KINDlsBandJacFn)(long int N, long int mupper, long int mlower,
-			       N_Vector u, N_Vector fu,
-			       DlsMat J, void *user_data,
-			       N_Vector tmp1, N_Vector tmp2);
+                   N_Vector u, N_Vector fu,
+                   DlsMat J, void *user_data,
+                   N_Vector tmp1, N_Vector tmp2);
 
 /*
  * =================================================================

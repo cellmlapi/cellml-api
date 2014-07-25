@@ -1,75 +1,75 @@
 <?xml version="1.0"?>
 <model xmlns="http://www.cellml.org/cellml/1.1#" name="SimpleDAE_NonLinear4_2">
-	<component name="environment">
-		<variable name="t" public_interface="out" units="dimensionless" />
-		<variable initial_value="5" name="amplitude" public_interface="out" units="dimensionless" />
-		<variable initial_value="0.78" name="initial_t" public_interface="out" units="dimensionless" />
-	</component>
-	<connection>
-		<map_components component_1="environment" component_2="main" />
-		<map_variables variable_1="t" variable_2="t" />
-		<map_variables variable_1="amplitude" variable_2="amplitude" />
-		<map_variables variable_1="initial_t" variable_2="initial_t" />
-	</connection>
-	<component name="main">
-		<variable initial_value="y_initial" name="y" public_interface="out" units="dimensionless" />
-		<variable initial_value="x_initial" name="x" public_interface="out" units="dimensionless" />
-		<variable name="t" public_interface="in" units="dimensionless" />
-		<math xmlns="http://www.w3.org/1998/Math/MathML" id="3.2">
-			<apply id="3.2.1">
-				<eq />
-				<apply>
-					<diff />
-					<bvar>
-						<ci>t</ci>
-					</bvar>
-					<ci>y</ci>
-				</apply>
-				<ci>x</ci>
-			</apply>
-			<apply id="3.2.2">
-				<eq />
-				<apply>
-					<diff />
-					<bvar>
-						<ci>t</ci>
-					</bvar>
-					<ci>x</ci>
-				</apply>
-				<apply>
-					<minus />
-					<ci>y</ci>
-				</apply>
-			</apply>
-			<apply id="3.2.3">
-				<eq />
-				<ci>y_initial</ci>
-				<apply>
-					<times />
-					<ci>amplitude</ci>
-					<apply>
-						<sin />
-						<ci>initial_t</ci>
-					</apply>
-				</apply>
-			</apply>
-			<apply id="3.2.4">
-				<eq />
-				<ci>x_initial</ci>
-				<apply>
-					<times />
-					<ci>amplitude</ci>
-					<apply>
-						<cos />
-						<ci>initial_t</ci>
-					</apply>
-				</apply>
-			</apply>
-		</math>
-		<variable name="amplitude" public_interface="in" units="dimensionless" />
-		<variable name="y_initial" units="dimensionless" />
-		<variable name="x_initial" units="dimensionless" />
-		<variable name="initial_t" public_interface="in" units="dimensionless" />
-	</component>
+    <component name="environment">
+        <variable name="t" public_interface="out" units="dimensionless" />
+        <variable initial_value="5" name="amplitude" public_interface="out" units="dimensionless" />
+        <variable initial_value="0.78" name="initial_t" public_interface="out" units="dimensionless" />
+    </component>
+    <connection>
+        <map_components component_1="environment" component_2="main" />
+        <map_variables variable_1="t" variable_2="t" />
+        <map_variables variable_1="amplitude" variable_2="amplitude" />
+        <map_variables variable_1="initial_t" variable_2="initial_t" />
+    </connection>
+    <component name="main">
+        <variable initial_value="y_initial" name="y" public_interface="out" units="dimensionless" />
+        <variable initial_value="x_initial" name="x" public_interface="out" units="dimensionless" />
+        <variable name="t" public_interface="in" units="dimensionless" />
+        <math xmlns="http://www.w3.org/1998/Math/MathML" id="3.2">
+            <apply id="3.2.1">
+                <eq />
+                <apply>
+                    <diff />
+                    <bvar>
+                        <ci>t</ci>
+                    </bvar>
+                    <ci>y</ci>
+                </apply>
+                <ci>x</ci>
+            </apply>
+            <apply id="3.2.2">
+                <eq />
+                <apply>
+                    <diff />
+                    <bvar>
+                        <ci>t</ci>
+                    </bvar>
+                    <ci>x</ci>
+                </apply>
+                <apply>
+                    <minus />
+                    <ci>y</ci>
+                </apply>
+            </apply>
+            <apply id="3.2.3">
+                <eq />
+                <ci>y_initial</ci>
+                <apply>
+                    <times />
+                    <ci>amplitude</ci>
+                    <apply>
+                        <sin />
+                        <ci>initial_t</ci>
+                    </apply>
+                </apply>
+            </apply>
+            <apply id="3.2.4">
+                <eq />
+                <ci>x_initial</ci>
+                <apply>
+                    <times />
+                    <ci>amplitude</ci>
+                    <apply>
+                        <cos />
+                        <ci>initial_t</ci>
+                    </apply>
+                </apply>
+            </apply>
+        </math>
+        <variable name="amplitude" public_interface="in" units="dimensionless" />
+        <variable name="y_initial" units="dimensionless" />
+        <variable name="x_initial" units="dimensionless" />
+        <variable name="initial_t" public_interface="in" units="dimensionless" />
+    </component>
 
 </model>

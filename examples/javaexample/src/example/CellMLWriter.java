@@ -8,19 +8,19 @@ import cellml_api.Model;
 
 public class CellMLWriter {
 
-	/**
-	 * Writing to a file
-	 */
-	public static void writeToFile(Model model, String outputFileName ){
-		try{
-			PrintWriter writer = new PrintWriter(new FileWriter(outputFileName));
-			writer.println(model.getSerialisedText());
-			writer.close();
-		}
-		catch(IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
+    /**
+     * Writing to a file
+     */
+    public static void writeToFile(Model model, String outputFileName ){
+        try{
+            PrintWriter writer = new PrintWriter(new FileWriter(outputFileName));
+            writer.println(model.getSerialisedText());
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
 
 }

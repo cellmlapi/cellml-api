@@ -46,15 +46,15 @@ public:
   CDA_IMPL_QI1(xpath::XPathEvaluator);
 
   already_AddRefd<iface::xpath::XPathExpression> createExpression(const std::wstring& aExpression,
-								  iface::xpath::XPathNSResolver* aResolver)
+                                  iface::xpath::XPathNSResolver* aResolver)
     throw(std::exception&);
   already_AddRefd<iface::xpath::XPathNSResolver> createNSResolver(iface::dom::Node* aNodeResolver)
     throw();
   already_AddRefd<iface::xpath::XPathResult> evaluate(const std::wstring& aExpression,
-						      iface::dom::Node* aContextNode,
-						      iface::xpath::XPathNSResolver* aResolver,
-						      uint16_t aType,
-						      iface::xpath::XPathResult* aResult)
+                              iface::dom::Node* aContextNode,
+                              iface::xpath::XPathNSResolver* aResolver,
+                              uint16_t aType,
+                              iface::xpath::XPathResult* aResult)
     throw(std::exception&);
 };
 

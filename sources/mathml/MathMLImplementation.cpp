@@ -726,7 +726,7 @@ CDA_MathMLContainer::setDeclaration
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::mathml_dom::MathMLDeclareElement* newA =
     dynamic_cast<iface::mathml_dom::MathMLDeclareElement*>(replaceChild(newDeclaration,
-									old).getPointer());
+                                    old).getPointer());
   old->release_ref();
   newA->release_ref();
   newDeclaration->add_ref();
@@ -2410,7 +2410,7 @@ CDA_MathMLVectorElement::setComponent(iface::mathml_dom::MathMLContentElement* n
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::mathml_dom::MathMLContentElement* newA =
     dynamic_cast<iface::mathml_dom::MathMLContentElement*>(replaceChild(newComponent,
-									old).getPointer());
+                                    old).getPointer());
   old->release_ref();
   newA->release_ref();
   newComponent->add_ref();
@@ -2646,7 +2646,7 @@ CDA_MathMLMatrixrowElement::setEntry(iface::mathml_dom::MathMLContentElement* ne
   iface::dom::Node* old = mfnl.item(index - 1);
   iface::mathml_dom::MathMLContentElement* newA =
     dynamic_cast<iface::mathml_dom::MathMLContentElement*>(replaceChild(newEntry,
-									old).getPointer());
+                                    old).getPointer());
   old->release_ref();
   newA->release_ref();
   newEntry->add_ref();
@@ -3046,7 +3046,7 @@ CDA_MathMLCaseElement::caseCondition(iface::mathml_dom::MathMLContentElement* at
   throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
 }
 
-#define C(x) static already_AddRefd<CDA_Element>	\
+#define C(x) static already_AddRefd<CDA_Element>    \
 ConstructMathML##x(ELCONSARG) \
 { \
   return new CDA_MathML##x(ELCONSCALL); \

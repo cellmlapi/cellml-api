@@ -51,7 +51,7 @@ FOREACH(extension ${EXTENSION_LIST})
     ENDFOREACH(idldep)
 
     ADD_CUSTOM_COMMAND(OUTPUT ${THESE_JAVA_FILES} interfaces/p2j${idlname}.cpp interfaces/p2j${idlname}.hxx
-	interfaces/j2p${idlname}Mod.cpp interfaces/j2p${idlname}Sup.cpp interfaces/j2p${idlname}.hxx
+    interfaces/j2p${idlname}Mod.cpp interfaces/j2p${idlname}Sup.cpp interfaces/j2p${idlname}.hxx
       COMMAND ${OMNIIDL} -bjava -Iinterfaces -p${CMAKE_SOURCE_DIR}/simple_interface_generators/omniidl_be ${CMAKE_SOURCE_DIR}/${idlpath}
       MAIN_DEPENDENCY ${idlpath} DEPENDS
       simple_interface_generators/omniidl_be/java/__init__.py

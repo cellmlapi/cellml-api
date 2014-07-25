@@ -57,45 +57,45 @@ extern "C" {
 typedef struct KINMemRec {
 
   realtype kin_uround;        /* machine epsilon (or unit roundoff error)
-				 (defined in sundials_types.h)                */
+                 (defined in sundials_types.h)                */
 
   /* problem specification data */
 
   KINSysFn kin_func;           /* nonlinear system function implementation     */
   void *kin_user_data;         /* work space available to func routine         */
   realtype kin_fnormtol;       /* stopping tolerance on L2-norm of function
-				  value                                        */
+                  value                                        */
   realtype kin_scsteptol;      /* scaled step length tolerance                 */
   int kin_globalstrategy;      /* choices are KIN_NONE and KIN_LINESEARCH      */
   int kin_printfl;             /* level of verbosity of output                 */
   long int kin_mxiter;         /* maximum number of nonlinear iterations       */
   long int kin_msbset;         /* maximum number of nonlinear iterations that
-				  may be performed between calls to the
-				  linear solver setup routine (lsetup)         */
+                  may be performed between calls to the
+                  linear solver setup routine (lsetup)         */
   long int kin_msbset_sub;     /* subinterval length for residual monitoring   */
   long int kin_mxnbcf;         /* maximum number of beta condition failures    */
   int kin_etaflag;             /* choices are KIN_ETACONSTANT, KIN_ETACHOICE1
-				  and KIN_ETACHOICE2                           */
+                  and KIN_ETACHOICE2                           */
   booleantype kin_noMinEps;    /* flag controlling whether or not the value
-				  of eps is bounded below                      */
+                  of eps is bounded below                      */
   booleantype kin_setupNonNull;   /* flag indicating if linear solver setup
-				     routine is non-null and if setup is used  */
+                     routine is non-null and if setup is used  */
   booleantype kin_constraintsSet; /* flag indicating if constraints are being
-				     used                                      */
+                     used                                      */
   booleantype kin_jacCurrent;     /* flag indicating if the Jacobian info.
-				     used by the linear solver is current      */
+                     used by the linear solver is current      */
   booleantype kin_callForcingTerm; /* flag set if using either KIN_ETACHOICE1
-				      or KIN_ETACHOICE2                        */
+                      or KIN_ETACHOICE2                        */
   booleantype kin_noResMon;         /* flag indicating if the nonlinear
-				       residual monitoring scheme should be
-				       used                                    */
+                       residual monitoring scheme should be
+                       used                                    */
   booleantype kin_retry_nni;        /* flag indicating if nonlinear iteration
-				       should be retried (set by residual
-				       monitoring algorithm)                   */
+                       should be retried (set by residual
+                       monitoring algorithm)                   */
   booleantype kin_update_fnorm_sub; /* flag indicating if the fnorm associated
-				       with the subinterval needs to be
-				       updated (set by residual monitoring
-				       algorithm)                              */
+                       with the subinterval needs to be
+                       updated (set by residual monitoring
+                       algorithm)                              */
 
   realtype kin_mxnewtstep;     /* maximum allowable scaled step length         */
   realtype kin_sqrt_relfunc;   /* relative error bound for func(u)             */
@@ -104,39 +104,39 @@ typedef struct KINMemRec {
   realtype kin_eps;            /* current value of eps                         */
   realtype kin_eta;            /* current value of eta                         */
   realtype kin_eta_gamma;      /* gamma value used in eta calculation
-				  (choice #2)                                  */
+                  (choice #2)                                  */
   realtype kin_eta_alpha;      /* alpha value used in eta calculation
-				  (choice #2)                                  */
+                  (choice #2)                                  */
   booleantype kin_noInitSetup; /* flag controlling whether or not the KINSol
-				  routine makes an initial call to the
-				  linear solver setup routine (lsetup)         */
+                  routine makes an initial call to the
+                  linear solver setup routine (lsetup)         */
   realtype kin_sthrsh;         /* threshold value for calling the linear
-				  solver setup routine                         */
+                  solver setup routine                         */
 
   /* counters */
 
   long int kin_nni;            /* number of nonlinear iterations               */
   long int kin_nfe;            /* number of calls made to func routine         */
   long int kin_nnilset;        /* value of nni counter when the linear solver
-				  setup was last called                        */
+                  setup was last called                        */
   long int kin_nnilset_sub;    /* value of nni counter when the linear solver
-				  setup was last called (subinterval)          */
+                  setup was last called (subinterval)          */
   long int kin_nbcf;           /* number of times the beta-condition could not
-				  be met in KINLineSearch                      */
+                  be met in KINLineSearch                      */
   long int kin_nbktrk;         /* number of backtracks performed by
-				  KINLineSearch                                */
+                  KINLineSearch                                */
   long int kin_ncscmx;         /* number of consecutive steps of size
-				  mxnewtstep taken                             */
+                  mxnewtstep taken                             */
 
   /* vectors */
 
   N_Vector kin_uu;          /* solution vector/current iterate (initially
-			       contains initial guess, but holds approximate
-			       solution upon completion if no errors occurred) */
+                   contains initial guess, but holds approximate
+                   solution upon completion if no errors occurred) */
   N_Vector kin_unew;        /* next iterate (unew = uu+pp)                     */
   N_Vector kin_fval;        /* vector containing result of nonlinear system
-			       function evaluated at a given iterate
-			       (fval = func(uu))                               */
+                   function evaluated at a given iterate
+                   (fval = func(uu))                               */
   N_Vector kin_uscale;      /* iterate scaling vector                          */
   N_Vector kin_fscale;      /* fval scaling vector                             */
   N_Vector kin_pp;          /* incremental change vector (pp = unew-uu)        */
@@ -147,13 +147,13 @@ typedef struct KINMemRec {
   /* space requirements for vector storage */
 
   long int kin_lrw1;        /* number of realtype-sized memory blocks needed
-			       for a single N_Vector                           */
+                   for a single N_Vector                           */
   long int kin_liw1;        /* number of int-sized memory blocks needed for
-			       a single N_Vecotr                               */
+                   a single N_Vecotr                               */
   long int kin_lrw;         /* total number of realtype-sized memory blocks
-			       needed for all KINSOL work vectors              */
+                   needed for all KINSOL work vectors              */
   long int kin_liw;         /* total number of int-sized memory blocks needed
-			       for all KINSOL work vectors                     */
+                   for all KINSOL work vectors                     */
 
   /* linear solver data */
 
@@ -164,30 +164,30 @@ typedef struct KINMemRec {
   int (*kin_lsetup)(struct KINMemRec *kin_mem);
 
   int (*kin_lsolve)(struct KINMemRec *kin_mem, N_Vector xx, N_Vector bb,
-		    realtype *res_norm );
+            realtype *res_norm );
 
   void (*kin_lfree)(struct KINMemRec *kin_mem);
 
   booleantype kin_inexact_ls; /* flag set by the linear solver module
-				 (in linit) indicating whether this is an
-				 iterative linear solver (TRUE), or a direct
-				 linear solver (FALSE)                         */
+                 (in linit) indicating whether this is an
+                 iterative linear solver (TRUE), or a direct
+                 linear solver (FALSE)                         */
 
   void *kin_lmem;         /* pointer to linear solver memory block             */
 
   realtype kin_fnorm;     /* value of L2-norm of fscale*fval                   */
   realtype kin_f1norm;    /* f1norm = 0.5*(fnorm)^2                            */
   realtype kin_res_norm;  /* value of L2-norm of residual (set by the linear
-			     solver)                                           */
+                 solver)                                           */
   realtype kin_sfdotJp;   /* value of scaled func(u) vector (fscale*fval)
-			     dotted with scaled J(u)*pp vector                 */
+                 dotted with scaled J(u)*pp vector                 */
   realtype kin_sJpnorm;   /* value of L2-norm of fscale*(J(u)*pp)              */
 
   realtype kin_fnorm_sub; /* value of L2-norm of fscale*fval (subinterval)     */
   booleantype kin_eval_omega; /* flag indicating that omega must be evaluated. */
   realtype kin_omega;     /* constant value for real scalar used in test to
-			     determine if reduction of norm of nonlinear
-			     residual is sufficient. Unless a valid constant
+                 determine if reduction of norm of nonlinear
+                 residual is sufficient. Unless a valid constant
                              value is specified by the user, omega is estimated
                              from omega_min and omega_max at each iteration.    */
   realtype kin_omega_min; /* lower bound on omega                               */
@@ -211,7 +211,7 @@ typedef struct KINMemRec {
    */
 
   booleantype kin_MallocDone; /* flag indicating if KINMalloc has been
-				 called yet                                    */
+                 called yet                                    */
 
   /* message files */
   /*-------------------------------------------
@@ -332,25 +332,25 @@ typedef struct KINMemRec {
 /* High level error handler */
 
 void KINProcessError(KINMem kin_mem,
-		     int error_code, const char *module, const char *fname,
-		     const char *msgfmt, ...);
+             int error_code, const char *module, const char *fname,
+             const char *msgfmt, ...);
 
 /* Prototype of internal errHandler function */
 
 void KINErrHandler(int error_code, const char *module, const char *function,
-		   char *msg, void *user_data);
+           char *msg, void *user_data);
 
 
 /* High level info handler */
 
 void KINPrintInfo(KINMem kin_mem,
-		  int info_code, const char *module, const char *fname,
-		  const char *msgfmt, ...);
+          int info_code, const char *module, const char *fname,
+          const char *msgfmt, ...);
 
 /* Prototype of internal infoHandler function */
 
 void KINInfoHandler(const char *module, const char *function,
-		    char *msg, void *user_data);
+            char *msg, void *user_data);
 
 /*
  * =================================================================

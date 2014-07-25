@@ -857,7 +857,7 @@ static int KINSolInit(KINMem kin_mem, int strategy)
   else {
     constraintsSet = TRUE;
     if ((constraints->ops->nvconstrmask  == NULL) ||
-	(constraints->ops->nvminquotient == NULL)) {
+    (constraints->ops->nvminquotient == NULL)) {
       KINProcessError(kin_mem, KIN_ILL_INPUT, "KINSOL", "KINSolInit", MSG_BAD_NVECTOR);
       return(KIN_ILL_INPUT);
     }
@@ -1369,7 +1369,7 @@ static int KINLineSearch(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
                        INFO_BETA, *f1normp, beta_cond, rl);
 
       } while (((*f1normp) <= alpha_cond) &&
-	       ((*f1normp) < beta_cond) && (rl < rlmax));
+           ((*f1normp) < beta_cond) && (rl < rlmax));
 
     } /* enf if (rl == ONE) block */
 
@@ -1404,12 +1404,12 @@ static int KINLineSearch(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
         }
 
       } while ((*f1normp > alpha_cond) ||
-	       ((*f1normp < beta_cond) && (rldiff >= rlmin)));
+           ((*f1normp < beta_cond) && (rldiff >= rlmin)));
 
       if ((*f1normp) < beta_cond) {
 
-	/* beta condition could not be satisfied so set unew to last u value
-	   that satisfied the alpha condition and continue */
+    /* beta condition could not be satisfied so set unew to last u value
+       that satisfied the alpha condition and continue */
 
         N_VLinearSum(ONE, uu, rllo, pp, unew);
         retval = func(unew, fval, user_data); nfe++;
@@ -1417,7 +1417,7 @@ static int KINLineSearch(KINMem kin_mem, realtype *fnormp, realtype *f1normp,
         *fnormp = N_VWL2Norm(fval, fscale);
         *f1normp = HALF * (*fnormp) * (*fnormp);
 
-	/* increment beta-condition failures counter */
+    /* increment beta-condition failures counter */
 
         nbcf++;
 
@@ -1586,17 +1586,17 @@ static int KINStop(KINMem kin_mem, int strategy, booleantype maxStepTaken, int s
 
       if (fnorm > omega*fnorm_sub) {
         /* Insuficient progress */
-	if (setupNonNull && !jacCurrent) {
+    if (setupNonNull && !jacCurrent) {
           /* If the Jacobian is out of date, update it and retry */
-	  sthrsh = TWO;
-	  return(RETRY_ITERATION);
-	} else {
+      sthrsh = TWO;
+      return(RETRY_ITERATION);
+    } else {
           /* Otherwise, we cannot do anything, so just return. */
         }
       } else {
         /* Sufficient progress */
-	fnorm_sub = fnorm;
-	sthrsh = ONE;
+    fnorm_sub = fnorm;
+    sthrsh = ONE;
       }
 
     } else {

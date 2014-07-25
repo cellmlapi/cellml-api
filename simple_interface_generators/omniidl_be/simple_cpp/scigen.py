@@ -59,7 +59,7 @@ class Walker(idlvisitor.AstVisitor):
         if self.doing_header:
             self.escapeScopes()
             self.sci.out('#undef PUBLIC_' + self.masterGuard + '_PRE')
-	    self.sci.out('#undef PUBLIC_' + self.masterGuard + '_POST')
+        self.sci.out('#undef PUBLIC_' + self.masterGuard + '_POST')
             self.sci.out('#endif // _SCI' + self.masterGuard + '_hxx')
 
     def escapeScopes(self):
@@ -498,11 +498,11 @@ class Walker(idlvisitor.AstVisitor):
     def writeUnwrap(self, node):
         unwrapName = '_unwrap_' + string.join(node.scopedName(), '_')
         downcastName = '_downcast_' + string.join(node.scopedName(), '_')
-	ppre = ''
+    ppre = ''
         psemi = ''
         pfq = 'SCI::' + node.corbacxxscoped + '::'
         if self.doing_header:
-	    ppre = 'PUBLIC_' + self.masterGuard + '_PRE'
+        ppre = 'PUBLIC_' + self.masterGuard + '_PRE'
             psemi =  'PUBLIC_' + self.masterGuard + '_POST;'
             pfq = ''
         self.sci.out(ppre + '::iface::' + node.corbacxxscoped + '* ' + pfq +\
@@ -572,18 +572,18 @@ class Walker(idlvisitor.AstVisitor):
             # exporting the whole class on gcc...
             #mangledName = '_ZTIN3SCI' + node.lengthprefixed + 'E'
             #self.sci.out('PUBLIC_' + self.masterGuard + '_PRE void* ' + mangledName +
-	    #             'PUBLIC_' + self.masterGuard + '_POST;')
+        #             'PUBLIC_' + self.masterGuard + '_POST;')
             #self.sci.out('}')
             #self.sci.out('#endif')
 
-	    if exportFrom:
-		self.sci.out('PUBLIC_' + self.masterGuard + '_PRE ')
+        if exportFrom:
+        self.sci.out('PUBLIC_' + self.masterGuard + '_PRE ')
                 self.sci.out('class PUBLIC_' + self.masterGuard + '_POST ' +
                              node.simplename)
             else:
                 self.sci.out('class ' + node.simplename)
 
-	    inheritstr = node.poacxxscoped
+        inheritstr = node.poacxxscoped
 
             for c in node.inherits():
                 isAmbiguous = 0
@@ -600,12 +600,12 @@ class Walker(idlvisitor.AstVisitor):
                                  c.corbacxxscoped
                 else:
                     inheritstr = inheritstr + ' , public SCI::' +\
-				 c.corbacxxscoped
+                 c.corbacxxscoped
 
-	    if isTerminal:
-		self.sci.out('  : public ' + inheritstr)
-	    else:
-		self.sci.out('  : public virtual ' + inheritstr)
+        if isTerminal:
+        self.sci.out('  : public ' + inheritstr)
+        else:
+        self.sci.out('  : public virtual ' + inheritstr)
 
             self.sci.out('{')
             if (node.corbacxxscoped == 'XPCOM::IObject'):
@@ -637,9 +637,9 @@ class Walker(idlvisitor.AstVisitor):
             self.sci.out('public:')
             self.sci.inc_indent()
             self.sci.out('PUBLIC_' + self.masterGuard + '_PRE _final_' +\
-			 node.simplename + '(::iface::' + node.corbacxxscoped +\
-			 '* _aobj, ' + '::PortableServer::POA_ptr aPp) PUBLIC_' +\
-			 self.masterGuard + '_POST;')
+             node.simplename + '(::iface::' + node.corbacxxscoped +\
+             '* _aobj, ' + '::PortableServer::POA_ptr aPp) PUBLIC_' +\
+             self.masterGuard + '_POST;')
             self.sci.out('virtual ~_final_' + node.simplename + '()')
             self.sci.out('{')
             self.sci.inc_indent()
@@ -700,8 +700,8 @@ class Walker(idlvisitor.AstVisitor):
             self.sci.dec_indent()
             self.sci.out('};')
             self.sci.out('PUBLIC_' + self.masterGuard + '_PRE void prod' +\
-			 node.simplename + '() PUBLIC_' + self.masterGuard +\
-			 '_POST;')
+             node.simplename + '() PUBLIC_' + self.masterGuard +\
+             '_POST;')
         else:
             self.writeScopes()
             self.sci.out('class _factory_' + node.simplename)

@@ -134,9 +134,9 @@ extern "C" {
 
 
 typedef int (*IDADlsDenseJacFn)(long int N, realtype t, realtype c_j,
-				N_Vector y, N_Vector yp, N_Vector r,
-				DlsMat Jac, void *user_data,
-				N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+                N_Vector y, N_Vector yp, N_Vector r,
+                DlsMat Jac, void *user_data,
+                N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
 /*
  * -----------------------------------------------------------------
@@ -222,10 +222,10 @@ typedef int (*IDADlsDenseJacFn)(long int N, realtype t, realtype c_j,
  */
 
 typedef int (*IDADlsBandJacFn)(long int N, long int mupper, long int mlower,
-			       realtype t, realtype c_j,
-			       N_Vector y, N_Vector yp, N_Vector r,
-			       DlsMat Jac, void *user_data,
-			       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+                   realtype t, realtype c_j,
+                   N_Vector y, N_Vector yp, N_Vector r,
+                   DlsMat Jac, void *user_data,
+                   N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
 /*
  * =================================================================

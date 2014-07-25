@@ -34,11 +34,11 @@
 static int CVSptfqmrInit(CVodeMem cv_mem);
 
 static int CVSptfqmrSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
-			  N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
-			  N_Vector vtemp2, N_Vector vtemp3);
+              N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
+              N_Vector vtemp2, N_Vector vtemp3);
 
 static int CVSptfqmrSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight,
-			  N_Vector ynow, N_Vector fnow);
+              N_Vector ynow, N_Vector fnow);
 
 static void CVSptfqmrFree(CVodeMem cv_mem);
 
@@ -284,8 +284,8 @@ static int CVSptfqmrInit(CVodeMem cv_mem)
  */
 
 static int CVSptfqmrSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
-			  N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
-			  N_Vector vtemp2, N_Vector vtemp3)
+              N_Vector fpred, booleantype *jcurPtr, N_Vector vtemp1,
+              N_Vector vtemp2, N_Vector vtemp3)
 {
   booleantype jbad, jok;
   realtype dgamma;
@@ -350,7 +350,7 @@ static int CVSptfqmrSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
  */
 
 static int CVSptfqmrSolve(CVodeMem cv_mem, N_Vector b, N_Vector weight,
-			  N_Vector ynow, N_Vector fnow)
+              N_Vector ynow, N_Vector fnow)
 {
   realtype bnorm, res_norm;
   CVSpilsMem cvspils_mem;

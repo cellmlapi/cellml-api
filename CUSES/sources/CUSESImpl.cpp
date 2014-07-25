@@ -47,7 +47,7 @@ CDAUserBaseUnit::cellmlUnits()
     CDABuiltinBaseUnit##x() throw() {} \
     ~CDABuiltinBaseUnit##x() throw() {} \
     \
-    std::wstring name() throw() { return L###x; }	\
+    std::wstring name() throw() { return L###x; }   \
   }; \
   CDABuiltinBaseUnit##x gBuiltinBase##x;
 
@@ -821,12 +821,12 @@ CDACUSES::getUnitScope(iface::cellml_api::CellMLElement* aContext)
 bool
 CDACUSES::BuiltinUnit(std::wstring& aName)
 {
-  // ampere  	   farad  	katal  	 lux  	pascal    tesla
-  // becquerel 	   gram	        kelvin 	 meter 	radian 	  volt
-  // candela 	   gray	        kilogram metre 	second 	  watt
-  // celsius 	   henry 	liter 	 mole 	siemens   weber
-  // coulomb 	   hertz 	litre 	 newton sievert
-  // dimensionless joule 	lumen 	 ohm 	steradian
+  // ampere        farad    katal    lux    pascal    tesla
+  // becquerel     gram         kelvin   meter  radian    volt
+  // candela       gray         kilogram metre  second    watt
+  // celsius       henry    liter    mole   siemens   weber
+  // coulomb       hertz    litre    newton sievert
+  // dimensionless joule    lumen    ohm    steradian
   if (aName[0] < L'l')
   {
     if (aName[0] < L'g')

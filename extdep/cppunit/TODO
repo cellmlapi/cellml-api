@@ -15,21 +15,21 @@ Asserter::makeNotEqualMessage() strip the shortDescription of the additional mes
   - Update MfcTestRunner to use TestPath to store test in the registry
 
 * Documentation:
-	CookBook:
-	- how to create simple test cases (with CppUnit namespace)
-	  - test case using only CPPUINT_ASSERT
-	  - test case using CPPUNIT_ASSERT_EQUAL
-	  - advanced assertions with the CPPUNIT_ASSERT_MESSAGE
-	- Helper Macros for convenience
-	- Creating a suite
-	- Composing a suite from more suites (i.e. compose tests for n modules to
-	  form a big test for the whole program)
-	- customizing output using an user defined TestListener
-	  - how to write the TestListener (subclass of TestListener)
-	  - how to hook it in
-	- how to use the GUI
-	  - MSVC++ special stuff
-	- other custmization stuff I haven't understood yet
+    CookBook:
+    - how to create simple test cases (with CppUnit namespace)
+      - test case using only CPPUINT_ASSERT
+      - test case using CPPUNIT_ASSERT_EQUAL
+      - advanced assertions with the CPPUNIT_ASSERT_MESSAGE
+    - Helper Macros for convenience
+    - Creating a suite
+    - Composing a suite from more suites (i.e. compose tests for n modules to
+      form a big test for the whole program)
+    - customizing output using an user defined TestListener
+      - how to write the TestListener (subclass of TestListener)
+      - how to hook it in
+    - how to use the GUI
+      - MSVC++ special stuff
+    - other custmization stuff I haven't understood yet
 
-	CppUnit: architecture overview.
+    CppUnit: architecture overview.
 

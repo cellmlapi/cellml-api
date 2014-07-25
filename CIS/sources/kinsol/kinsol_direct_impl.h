@@ -69,14 +69,14 @@ typedef struct KINDlsMemRec {
  */
 
 int kinDlsDenseDQJac(long int N,
-		     N_Vector u, N_Vector fu,
-		     DlsMat Jac, void *data,
-		     N_Vector tmp1, N_Vector tmp2);
+             N_Vector u, N_Vector fu,
+             DlsMat Jac, void *data,
+             N_Vector tmp1, N_Vector tmp2);
 
 int kinDlsBandDQJac(long int N, long int mupper, long int mlower,
-		    N_Vector u, N_Vector fu,
-		    DlsMat Jac, void *data,
-		    N_Vector tmp1, N_Vector tmp2);
+            N_Vector u, N_Vector fu,
+            DlsMat Jac, void *data,
+            N_Vector tmp1, N_Vector tmp2);
 
 /*
  * -----------------------------------------------------------------

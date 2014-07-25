@@ -46,7 +46,7 @@ public:
                     std::wstring& appendTo)
     throw(std::exception&);
   DOMWRITER_PUBLIC_PRE void writeDocument(DOMNamespaceContext* dnc,
-					  iface::dom::Document* doc, std::wstring& appendTo)
+                      iface::dom::Document* doc, std::wstring& appendTo)
     throw(std::exception&) DOMWRITER_PUBLIC_POST;
   void writeDocumentType(DOMNamespaceContext* dnc, iface::dom::DocumentType* dt, std::wstring& appendTo)
     throw(std::exception&);

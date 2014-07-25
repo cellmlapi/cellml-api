@@ -17,62 +17,62 @@ import cellml_api.Model;
 
 public class IterateElementTest {
 
-	CellMLLoader cLoader;
+    CellMLLoader cLoader;
 
-	public IterateElementTest(){
-		cLoader = new CellMLLoader();
-	}
+    public IterateElementTest(){
+        cLoader = new CellMLLoader();
+    }
 
-	/**
-	 * Iterating elements of a model
-	 */
-	private void iterateModelElements(){
-		//load the Hodgkin Huxley model from the repository
-		Model model = CellMLReader.loadFromURL(cLoader.getCellMLBootstrap(), "http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
+    /**
+     * Iterating elements of a model
+     */
+    private void iterateModelElements(){
+        //load the Hodgkin Huxley model from the repository
+        Model model = CellMLReader.loadFromURL(cLoader.getCellMLBootstrap(), "http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
 
-		System.out.println("Model Name:" + model.getName() + "\n");
+        System.out.println("Model Name:" + model.getName() + "\n");
 
-		//Iterating components and their variables
-		CellMLComponentSet componentSet = model.getModelComponents();
-		CellMLComponentIterator iter = componentSet.iterateComponents();
+        //Iterating components and their variables
+        CellMLComponentSet componentSet = model.getModelComponents();
+        CellMLComponentIterator iter = componentSet.iterateComponents();
 
-		for(int i = 0; i < componentSet.getLength(); i++){
-			CellMLComponent comp = iter.nextComponent();
-			System.out.println("Component Name:"+comp.getName());
+        for(int i = 0; i < componentSet.getLength(); i++){
+            CellMLComponent comp = iter.nextComponent();
+            System.out.println("Component Name:"+comp.getName());
 
-			CellMLVariableSet variableSet = comp.getVariables();
-			CellMLVariableIterator varIter = variableSet.iterateVariables();
+            CellMLVariableSet variableSet = comp.getVariables();
+            CellMLVariableIterator varIter = variableSet.iterateVariables();
 
-			for(int j = 0; j < variableSet.getLength(); j ++){
-				CellMLVariable variable = varIter.nextVariable();
-				System.out.println("Variable Name:"+variable.getName());
-			}
-			System.out.println();
-		}
+            for(int j = 0; j < variableSet.getLength(); j ++){
+                CellMLVariable variable = varIter.nextVariable();
+                System.out.println("Variable Name:"+variable.getName());
+            }
+            System.out.println();
+        }
 
-		//Iterating connections
-		ConnectionSet connectionSet = model.getConnections();
-		ConnectionIterator conIter = connectionSet.iterateConnections();
+        //Iterating connections
+        ConnectionSet connectionSet = model.getConnections();
+        ConnectionIterator conIter = connectionSet.iterateConnections();
 
-		for(int i = 0; i < connectionSet.getLength(); i++){
-			Connection connection = conIter.nextConnection();
-			MapComponents mapComponent = connection.getComponentMapping();
-			System.out.println("Connection Component1: "+mapComponent.getFirstComponentName() + "    Component2: " + mapComponent.getSecondComponentName());
+        for(int i = 0; i < connectionSet.getLength(); i++){
+            Connection connection = conIter.nextConnection();
+            MapComponents mapComponent = connection.getComponentMapping();
+            System.out.println("Connection Component1: "+mapComponent.getFirstComponentName() + "    Component2: " + mapComponent.getSecondComponentName());
 
-			MapVariablesSet variableSet = connection.getVariableMappings();
-			MapVariablesIterator varIter = variableSet.iterateMapVariables();
+            MapVariablesSet variableSet = connection.getVariableMappings();
+            MapVariablesIterator varIter = variableSet.iterateMapVariables();
 
-			for(int j =0; j < variableSet.getLength(); j++){
-				MapVariables mapVar = varIter.nextMapVariable();
-				System.out.println("\t Variable1: "+mapVar.getFirstVariableName() + "    Variable2: " + mapVar.getSecondVariableName());
-			}
-			System.out.println();
-		}
+            for(int j =0; j < variableSet.getLength(); j++){
+                MapVariables mapVar = varIter.nextMapVariable();
+                System.out.println("\t Variable1: "+mapVar.getFirstVariableName() + "    Variable2: " + mapVar.getSecondVariableName());
+            }
+            System.out.println();
+        }
 
-	}
+    }
 
-	public static void main(String [] args ){
-		IterateElementTest ietest = new IterateElementTest();
-		ietest.iterateModelElements();
-	}
+    public static void main(String [] args ){
+        IterateElementTest ietest = new IterateElementTest();
+        ietest.iterateModelElements();
+    }
 }

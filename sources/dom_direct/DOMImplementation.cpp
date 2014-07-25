@@ -102,7 +102,7 @@ CDA_DOMImplementation::createDocument(const std::wstring& namespaceURI,
       throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
     if (colon-cqname == 3 &&
         !wcsncmp(cqname, L"xml", 3) &&
-	qualifiedName != L"http://www.w3.org/XML/1998/namespace")
+    qualifiedName != L"http://www.w3.org/XML/1998/namespace")
       throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
   }
 
@@ -1489,7 +1489,7 @@ CDA_NamedNodeMapDT::setNamedItemNS(iface::dom::Node* arg)
 
 already_AddRefd<iface::dom::Node>
 CDA_NamedNodeMapDT::removeNamedItemNS(const std::wstring& namespaceURI,
-				      const std::wstring& localName)
+                      const std::wstring& localName)
   throw(std::exception&)
 {
   throw iface::dom::DOMException(iface::dom::NOT_SUPPORTED_ERR);
@@ -2159,11 +2159,11 @@ CDA_Element::setAttributeNodeNS(iface::dom::Attr* inewAttr)
       (
        std::pair<QualifiedName, CDA_Attr*>
        (QualifiedName(newAttr->mNamespaceURI,
-		      newAttr->mLocalName), newAttr)
+              newAttr->mLocalName), newAttr)
       );
     attributeMap.insert(std::pair<LocalName,CDA_Attr*>
                         (LocalName(newAttr->mNodeName),
-			 newAttr));
+             newAttr));
 
     if (eventsHaveEffects())
     {

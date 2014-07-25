@@ -782,10 +782,10 @@ int IDARootInit(void *ida_mem, int nrtfn, IDARootFn g)
   if (nrt == IDA_mem->ida_nrtfn) {
     if (g != gfun) {
       if (g == NULL) {
-	free(glo); glo = NULL;
-	free(ghi); ghi = NULL;
-	free(grout); grout = NULL;
-	free(iroots); iroots = NULL;
+    free(glo); glo = NULL;
+    free(ghi); ghi = NULL;
+    free(grout); grout = NULL;
+    free(iroots); iroots = NULL;
         free(rootdir); iroots = NULL;
         free(gactive); gactive = NULL;
 

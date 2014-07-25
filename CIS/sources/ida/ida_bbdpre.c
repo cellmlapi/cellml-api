@@ -187,8 +187,8 @@ int IDABBDPrecInit(void *ida_mem, long int Nlocal,
 }
 
 int IDABBDPrecReInit(void *ida_mem,
-		     long int mudq, long int mldq,
-		     realtype dq_rel_yy)
+             long int mudq, long int mldq,
+             realtype dq_rel_yy)
 {
   IDAMem IDA_mem;
   IDASpilsMem idaspils_mem;

@@ -153,7 +153,7 @@ extern "C" {
  */
 
 typedef int (*CVRhsFn)(realtype t, N_Vector y,
-		       N_Vector ydot, void *user_data);
+               N_Vector ydot, void *user_data);
 
 /*
  * -----------------------------------------------------------------
@@ -219,8 +219,8 @@ typedef int (*CVEwtFn)(N_Vector y, N_Vector ewt, void *user_data);
  */
 
 typedef void (*CVErrHandlerFn)(int error_code,
-			       const char *module, const char *function,
-			       char *msg, void *user_data);
+                   const char *module, const char *function,
+                   char *msg, void *user_data);
 
 /*
  * =================================================================
@@ -608,7 +608,7 @@ SUNDIALS_EXPORT int CVodeRootInit(void *cvode_mem, int nrtfn, CVRootFn g);
  */
 
 SUNDIALS_EXPORT int CVode(void *cvode_mem, realtype tout, N_Vector yout,
-			  realtype *tret, int itask);
+              realtype *tret, int itask);
 
 /*
  * -----------------------------------------------------------------
@@ -730,10 +730,10 @@ SUNDIALS_EXPORT int CVodeGetRootInfo(void *cvode_mem, int *rootsfound);
  */
 
 SUNDIALS_EXPORT int CVodeGetIntegratorStats(void *cvode_mem, long int *nsteps,
-					    long int *nfevals, long int *nlinsetups,
-					    long int *netfails, int *qlast,
-					    int *qcur, realtype *hinused, realtype *hlast,
-					    realtype *hcur, realtype *tcur);
+                        long int *nfevals, long int *nlinsetups,
+                        long int *netfails, int *qlast,
+                        int *qcur, realtype *hinused, realtype *hlast,
+                        realtype *hcur, realtype *tcur);
 
 /*
  * -----------------------------------------------------------------
@@ -760,7 +760,7 @@ SUNDIALS_EXPORT int CVodeGetNumNonlinSolvConvFails(void *cvode_mem, long int *nn
  */
 
 SUNDIALS_EXPORT int CVodeGetNonlinSolvStats(void *cvode_mem, long int *nniters,
-					    long int *nncfails);
+                        long int *nncfails);
 
 /*
  * -----------------------------------------------------------------

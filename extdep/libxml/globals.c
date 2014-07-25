@@ -58,27 +58,27 @@ void xmlInitGlobals(void)
 void xmlCleanupGlobals(void)
 {
     if (xmlThrDefMutex != NULL) {
-	xmlFreeMutex(xmlThrDefMutex);
-	xmlThrDefMutex = NULL;
+    xmlFreeMutex(xmlThrDefMutex);
+    xmlThrDefMutex = NULL;
     }
     __xmlGlobalInitMutexDestroy();
 }
 
 /************************************************************************
- * 									*
- *	All the user accessible global variables of the library		*
- * 									*
+ *                                  *
+ *  All the user accessible global variables of the library     *
+ *                                  *
  ************************************************************************/
 
 /*
  * Memory allocation routines
  */
 /*
-#undef	xmlFree
-#undef	xmlMalloc
-#undef	xmlMallocAtomic
-#undef	xmlMemStrdup
-#undef	xmlRealloc
+#undef  xmlFree
+#undef  xmlMalloc
+#undef  xmlMallocAtomic
+#undef  xmlMemStrdup
+#undef  xmlRealloc
 */
 
 #if defined(DEBUG_MEMORY_LOCATION) || defined(DEBUG_MEMORY)
@@ -265,9 +265,9 @@ static xmlOutputBufferCreateFilenameFunc xmlOutputBufferCreateFilenameValueThrDe
 
 /* xmlGenericErrorFunc xmlGenericError = xmlGenericErrorDefaultFunc; */
 /* Must initialize xmlGenericError in xmlInitParser */
-void XMLCDECL xmlGenericErrorDefaultFunc	(void *ctx ATTRIBUTE_UNUSED,
-				 const char *msg,
-				 ...);
+void XMLCDECL xmlGenericErrorDefaultFunc    (void *ctx ATTRIBUTE_UNUSED,
+                 const char *msg,
+                 ...);
 /**
  * xmlGenericError:
  *
@@ -468,7 +468,7 @@ xmlInitializeGlobalState(xmlGlobalStatePtr gs)
 {
 #ifdef DEBUG_GLOBALS
     fprintf(stderr, "Initializing globals at %lu for thread %d\n",
-	    (unsigned long) gs, xmlGetThreadId());
+        (unsigned long) gs, xmlGetThreadId());
 #endif
 
     /*
@@ -531,8 +531,8 @@ xmlInitializeGlobalState(xmlGlobalStatePtr gs)
     gs->xmlRegisterNodeDefaultValue = xmlRegisterNodeDefaultValueThrDef;
     gs->xmlDeregisterNodeDefaultValue = xmlDeregisterNodeDefaultValueThrDef;
 
-	gs->xmlParserInputBufferCreateFilenameValue = xmlParserInputBufferCreateFilenameValueThrDef;
-	gs->xmlOutputBufferCreateFilenameValue = xmlOutputBufferCreateFilenameValueThrDef;
+    gs->xmlParserInputBufferCreateFilenameValue = xmlParserInputBufferCreateFilenameValueThrDef;
+    gs->xmlOutputBufferCreateFilenameValue = xmlOutputBufferCreateFilenameValueThrDef;
     memset(&gs->xmlLastError, 0, sizeof(xmlError));
 
     xmlMutexUnlock(xmlThrDefMutex);
@@ -547,9 +547,9 @@ xmlThrDefSetGenericErrorFunc(void *ctx, xmlGenericErrorFunc handler) {
     xmlMutexLock(xmlThrDefMutex);
     xmlGenericErrorContextThrDef = ctx;
     if (handler != NULL)
-	xmlGenericErrorThrDef = handler;
+    xmlGenericErrorThrDef = handler;
     else
-	xmlGenericErrorThrDef = xmlGenericErrorDefaultFunc;
+    xmlGenericErrorThrDef = xmlGenericErrorDefaultFunc;
     xmlMutexUnlock(xmlThrDefMutex);
 }
 
@@ -635,8 +635,8 @@ xmlThrDefParserInputBufferCreateFilenameDefault(xmlParserInputBufferCreateFilena
     xmlMutexLock(xmlThrDefMutex);
     old = xmlParserInputBufferCreateFilenameValueThrDef;
     if (old == NULL) {
-		old = __xmlParserInputBufferCreateFilename;
-	}
+        old = __xmlParserInputBufferCreateFilename;
+    }
 
     xmlParserInputBufferCreateFilenameValueThrDef = func;
     xmlMutexUnlock(xmlThrDefMutex);
@@ -653,8 +653,8 @@ xmlThrDefOutputBufferCreateFilenameDefault(xmlOutputBufferCreateFilenameFunc fun
     old = xmlOutputBufferCreateFilenameValueThrDef;
 #ifdef LIBXML_OUTPUT_ENABLED
     if (old == NULL) {
-		old = __xmlOutputBufferCreateFilename;
-	}
+        old = __xmlOutputBufferCreateFilename;
+    }
 #endif
     xmlOutputBufferCreateFilenameValueThrDef = func;
     xmlMutexUnlock(xmlThrDefMutex);

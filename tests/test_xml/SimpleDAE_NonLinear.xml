@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <model name="SimpleDAENonLinear" xmlns="http://www.cellml.org/cellml/1.1#">
-	<component name="main">
-		<variable initial_value="1" name="a" units="dimensionless"/>
-		<variable name="d" units="dimensionless"/>
-		<variable name="c" units="dimensionless"/>
-		<variable name="t" units="dimensionless"/>
-		<math xmlns="http://www.w3.org/1998/Math/MathML">
+    <component name="main">
+        <variable initial_value="1" name="a" units="dimensionless"/>
+        <variable name="d" units="dimensionless"/>
+        <variable name="c" units="dimensionless"/>
+        <variable name="t" units="dimensionless"/>
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
                         <!-- Note: This model is an obfuscated form of
                                 da/dt = a, a(0) = 1.
                              Analytic solution is:
@@ -13,90 +13,90 @@
                                d(t) = (3/4 exp(t)) ** (1/3)
                                c(t) = 1/4 exp(t)
                           -->
-			<apply>
-				<eq/>
-				<apply>
-					<diff/>
-					<bvar>
-						<ci>t</ci>
-					</bvar>
-					<ci>a</ci>
-				</apply>
-				<apply>
-					<times/>
-					<apply>
-						<divide/>
-						<cn>4</cn>
-						<cn>7</cn>
-					</apply>
-					<apply>
-						<plus/>
-						<apply>
-							<times/>
-							<cn>2</cn>
-							<apply>
-								<power/>
-								<ci>d</ci>
-								<cn>3</cn>
-							</apply>
-						</apply>
-						<ci>c</ci>
-					</apply>
-				</apply>
-			</apply>
-		</math>
-		<math xmlns="http://www.w3.org/1998/Math/MathML">
-			<apply>
-				<eq/>
-				<apply>
-					<times/>
-					<cn type="integer">2</cn>
-					<apply>
-						<plus/>
-						<apply>
-							<times/>
-							<cn type="integer">-1</cn>
-							<ci>a</ci>
-						</apply>
-						<apply>
-							<power/>
-							<ci>d</ci>
-							<cn>3</cn>
-						</apply>
+            <apply>
+                <eq/>
+                <apply>
+                    <diff/>
+                    <bvar>
+                        <ci>t</ci>
+                    </bvar>
+                    <ci>a</ci>
+                </apply>
+                <apply>
+                    <times/>
+                    <apply>
+                        <divide/>
+                        <cn>4</cn>
+                        <cn>7</cn>
+                    </apply>
+                    <apply>
+                        <plus/>
+                        <apply>
+                            <times/>
+                            <cn>2</cn>
+                            <apply>
+                                <power/>
+                                <ci>d</ci>
+                                <cn>3</cn>
+                            </apply>
+                        </apply>
+                        <ci>c</ci>
+                    </apply>
+                </apply>
+            </apply>
+        </math>
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+                <eq/>
+                <apply>
+                    <times/>
+                    <cn type="integer">2</cn>
+                    <apply>
+                        <plus/>
+                        <apply>
+                            <times/>
+                            <cn type="integer">-1</cn>
+                            <ci>a</ci>
+                        </apply>
+                        <apply>
+                            <power/>
+                            <ci>d</ci>
+                            <cn>3</cn>
+                        </apply>
 
-						<ci>c</ci>
-					</apply>
-				</apply>
-				<cn type="integer">0</cn>
-			</apply>
-		</math>
-		<math xmlns="http://www.w3.org/1998/Math/MathML">
-			<apply>
-				<eq/>
-				<apply>
-					<times/>
-					<cn type="integer">3</cn>
-					<apply>
-						<plus/>
-						<apply>
-							<power/>
-							<ci>d</ci>
-							<cn>3</cn>
-						</apply>
+                        <ci>c</ci>
+                    </apply>
+                </apply>
+                <cn type="integer">0</cn>
+            </apply>
+        </math>
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+                <eq/>
+                <apply>
+                    <times/>
+                    <cn type="integer">3</cn>
+                    <apply>
+                        <plus/>
+                        <apply>
+                            <power/>
+                            <ci>d</ci>
+                            <cn>3</cn>
+                        </apply>
 
-						<apply>
-							<times/>
-							<cn type="integer">-1</cn>
-							<apply>
-								<times/>
-								<cn type="integer">3</cn>
-								<ci>c</ci>
-							</apply>
-						</apply>
-					</apply>
-				</apply>
-				<cn type="integer">0</cn>
-			</apply>
-		</math>
-	</component>
+                        <apply>
+                            <times/>
+                            <cn type="integer">-1</cn>
+                            <apply>
+                                <times/>
+                                <cn type="integer">3</cn>
+                                <ci>c</ci>
+                            </apply>
+                        </apply>
+                    </apply>
+                </apply>
+                <cn type="integer">0</cn>
+            </apply>
+        </math>
+    </component>
 </model>
