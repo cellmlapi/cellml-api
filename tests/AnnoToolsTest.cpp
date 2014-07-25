@@ -62,7 +62,7 @@ AnnoToolsTest::testObjectAnnotation()
   bs->release_ref();
   iface::cellml_api::Model* m =
     ml->loadFromURL(BASE_DIRECTORY L"Ach_cascade_1995.xml");
-  
+
   CPPUNIT_ASSERT_NO_THROW(mAS->setObjectAnnotation(m, L"theloader", ml));
 
   iface::XPCOM::IObject* oa = mAS->getObjectAnnotation(m, L"theloader");
@@ -94,7 +94,7 @@ AnnoToolsTest::testObjectAnnotation()
 
   mAS->release_ref();
   mAS = NULL;
-  
+
   CPPUNIT_ASSERT_THROW(oa = m->getUserData(fstr.c_str()), iface::cellml_api::CellMLException);
 
   ml->release_ref();
@@ -109,7 +109,7 @@ AnnoToolsTest::testStringAnnotation()
   bs->release_ref();
   iface::cellml_api::Model* m =
     ml->loadFromURL(BASE_DIRECTORY L"Ach_cascade_1995.xml");
-  
+
   CPPUNIT_ASSERT_NO_THROW(mAS->setStringAnnotation(m, L"thestring", L"hello"));
 
   std::wstring anno = mAS->getStringAnnotation(m, L"thestring");
@@ -130,7 +130,7 @@ AnnoToolsTest::testStringAnnotation()
 
   mAS->release_ref();
   mAS = NULL;
-  
+
   CPPUNIT_ASSERT_THROW(oa = m->getUserData(fstr.c_str()), iface::cellml_api::CellMLException);
 
   ml->release_ref();

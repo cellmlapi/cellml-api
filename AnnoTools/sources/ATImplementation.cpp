@@ -102,10 +102,10 @@ CDAAnnotationSetImpl::getStringAnnotation
   RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
                      aElement->getUserDataWithDefault(key.c_str(), NULL));
   DECLARE_QUERY_INTERFACE_OBJREF(sa, ud, cellml_services::StringAnnotation);
-    
+
   if (sa == NULL)
     return L"";
-    
+
     return sa->value();
 }
 
@@ -124,10 +124,10 @@ CDAAnnotationSetImpl::getStringAnnotationWithDefault
   RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
                      aElement->getUserDataWithDefault(key.c_str(), NULL));
   DECLARE_QUERY_INTERFACE_OBJREF(sa, ud, cellml_services::StringAnnotation);
-    
+
   if (sa == NULL)
     return aDefault;
-    
+
   return sa->value();
 }
 
@@ -143,7 +143,7 @@ CDAAnnotationSetImpl::setStringAnnotation
 {
   std::wstring key = mPrefixURI;
   key += aKey;
-  
+
   aElement->add_ref();
   mAnnotations.push_back(std::pair<std::wstring,
                          iface::cellml_api::CellMLElement*>(aKey, aElement));
@@ -167,10 +167,10 @@ CDAAnnotationSetImpl::getObjectAnnotation
   RETURN_INTO_OBJREF(ud, iface::cellml_api::UserData,
                      aElement->getUserDataWithDefault(key.c_str(), NULL));
   DECLARE_QUERY_INTERFACE_OBJREF(oa, ud, cellml_services::ObjectAnnotation);
-    
+
   if (oa == NULL)
     return NULL;
-    
+
   return oa->value();
 }
 
@@ -211,7 +211,7 @@ CDAAnnotationSetImpl::setObjectAnnotation
 {
   std::wstring key = mPrefixURI;
   key += aKey;
-  
+
   if (aValue == NULL)
   {
     // Just clear the key. No point cleaning up mAnnotations, because this

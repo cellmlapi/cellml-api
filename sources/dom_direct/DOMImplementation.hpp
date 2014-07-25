@@ -110,7 +110,7 @@ public:
            typeid(*this).name(), _cda_refcount);
 #endif
     ++_cda_refcount;
-    
+
     if (mParent != NULL)
       mParent->add_ref();
   }
@@ -740,7 +740,7 @@ class CDA_Entity
 public:
   CDA_Entity(CDA_Document* aDocument,
              std::wstring& aPublicId, std::wstring& aSystemId,
-             std::wstring& aNotationName) 
+             std::wstring& aNotationName)
     : CDA_Node(aDocument), mPublicId(aPublicId), mSystemId(aSystemId),
       mNotationName(aNotationName) {}
   virtual ~CDA_Entity() {}

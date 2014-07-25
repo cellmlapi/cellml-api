@@ -294,7 +294,7 @@ XPathTest::testBasicXPath()
     RETURN_INTO_WSTRING(o1v, o1->nodeValue());
     CPPUNIT_ASSERT(o1v == L"Bad 2");
   }
-  
+
   {
     RETURN_INTO_OBJREF(r, iface::xpath::XPathResult,
                        mXPEval->evaluate

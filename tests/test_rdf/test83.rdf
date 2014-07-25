@@ -2,9 +2,9 @@
   Copyright World Wide Web Consortium, (Massachusetts Institute of
   Technology, Institut National de Recherche en Informatique et en
   Automatique, Keio University).
- 
+
   All Rights Reserved.
- 
+
   Please see the full Copyright clause at
   <http://www.w3.org/Consortium/Legal/copyright-software.html>
 
@@ -14,7 +14,7 @@
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:eg="http://example.org/">
 
- <!-- 
+ <!--
   Test case for
   Issue http://www.w3.org/2000/03/rdf-tracking/#rdf-ns-prefix-confusion
 
@@ -30,10 +30,10 @@
 
   <!-- Testing bare Seq element (using default namespace) -->
 
-  <!-- Testing bare li element (using default namespace) 
+  <!-- Testing bare li element (using default namespace)
        - expect 2 triples -->
 
-  <!-- 6.2 obj; 6.4 container; 6.25 sequence, part 1; idAttr; --> 
+  <!-- 6.2 obj; 6.4 container; 6.25 sequence, part 1; idAttr; -->
   <Seq rdf:ID="container">
     <!-- 6.28 member; 6.29 inlineItem, part 1 -->
     <li>bar</li>

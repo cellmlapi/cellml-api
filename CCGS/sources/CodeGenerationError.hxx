@@ -13,7 +13,7 @@ public:
     : mMessage(aMessage)
   {
   }
-  
+
   ~CodeGenerationError()
     throw()
   {

@@ -124,7 +124,7 @@ static void processSep(iface::dom::Node* n, double& v1, double& v2)
 
   if (!seenSep)
     throw iface::SRuS::SRuSException(L"Expected a <sep/> in cn element but didn't find one.");
-  
+
   v2 = stringToNumber(value);
 }
 
@@ -146,23 +146,23 @@ SEDMLMathEvaluator::eval(iface::mathml_dom::MathMLElement* aME)
   DECLARE_QUERY_INTERFACE_OBJREF(mae, aME, mathml_dom::MathMLApplyElement);
   if (mae != NULL)
     return evalApply(mae);
-  
+
   DECLARE_QUERY_INTERFACE_OBJREF(mcne, aME, mathml_dom::MathMLCnElement);
   if (mcne != NULL)
     return evalConstant(mcne);
-  
+
   DECLARE_QUERY_INTERFACE_OBJREF(mcie, aME, mathml_dom::MathMLCiElement);
   if (mcie != NULL)
     return evalVariable(mcie);
-  
+
   DECLARE_QUERY_INTERFACE_OBJREF(mpw, aME, mathml_dom::MathMLPiecewiseElement);
   if (mpw != NULL)
     return evalPiecewise(mpw);
-  
+
   DECLARE_QUERY_INTERFACE_OBJREF(mpds, aME, mathml_dom::MathMLPredefinedSymbol);
   if (mpds != NULL)
     return evalPredefined(mpds);
-  
+
   DECLARE_QUERY_INTERFACE_OBJREF(mme, aME, mathml_dom::MathMLMathElement);
   if (mme != NULL)
   {
@@ -171,7 +171,7 @@ SEDMLMathEvaluator::eval(iface::mathml_dom::MathMLElement* aME)
     RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement, mme->getArgument(1));
     return eval(me);
   }
-  
+
   throw iface::SRuS::SRuSException(L"Unhandled type of MathML element");
 }
 
@@ -182,18 +182,18 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
   DECLARE_QUERY_INTERFACE_OBJREF(cse, op, mathml_dom::MathMLCsymbolElement);
   if (cse != NULL)
     return evalAggregate(cse, mae);
-  
+
   std::vector<double> args;
   for (uint32_t i = 2, l = mae->nArguments(); i <= l; i++)
   {
     RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(i));
     args.push_back(eval(arg));
   }
-  
+
   RETURN_INTO_WSTRING(opns, op->namespaceURI());
   if (opns != L"http://www.w3.org/1998/Math/MathML")
     throw iface::SRuS::SRuSException(L"Found a math operator not in the MathML namespace");
-  
+
   RETURN_INTO_WSTRING(opln, op->localName());
   switch (opln[0])
   {
@@ -209,7 +209,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
       }
       else
         throw iface::SRuS::SRuSException(L"Unknown operator");
-      
+
     case L'n':
       if (opln == L"and")
       {
@@ -308,11 +308,11 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
 #endif
       else
         throw iface::SRuS::SRuSException(L"Unknown operator.");
-      
+
     default:
       throw iface::SRuS::SRuSException(L"Unknown operator.");
     }
-    
+
   case L'c':
     if (opln == L"ceiling")
     {
@@ -358,7 +358,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'd':
     if (opln == L"divide")
     {
@@ -368,7 +368,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'e':
     if (opln == L"eq")
     {
@@ -384,7 +384,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'f':
     if (opln == L"factorial")
     {
@@ -403,7 +403,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'g':
     if (opln == L"geq")
     {
@@ -419,7 +419,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'l':
     if (opln == L"leq")
     {
@@ -464,7 +464,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'm':
     if (opln == L"minus")
     {
@@ -477,7 +477,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'n':
     if (opln == L"neq")
     {
@@ -493,7 +493,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'o':
     if (opln == L"or")
     {
@@ -504,7 +504,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'p':
     if (opln == L"plus")
     {
@@ -521,7 +521,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'r':
     if (opln == L"root")
     {
@@ -544,11 +544,11 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
           return std::pow(args[0], 1.0 / deg);
         }
       }
-      return std::sqrt(args[0]);        
+      return std::sqrt(args[0]);
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L's':
     if (opln == L"sec")
     {
@@ -576,7 +576,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L't':
     if (opln == L"tan")
     {
@@ -599,7 +599,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   case L'x':
     if (opln == L"xor")
     {
@@ -609,7 +609,7 @@ SEDMLMathEvaluator::evalApply(iface::mathml_dom::MathMLApplyElement* mae)
     }
     else
       throw iface::SRuS::SRuSException(L"Unknown operator.");
-    
+
   default:
     throw iface::SRuS::SRuSException(L"Unknown operator.");
   }
@@ -621,7 +621,7 @@ SEDMLMathEvaluator::evalConstant(iface::mathml_dom::MathMLCnElement* mcne)
   RETURN_INTO_WSTRING(b, mcne->base());
   if (b != L"" && b != L"10")
     throw iface::SRuS::SRuSException(L"Invalid radix for constant"); // To do: bases other than 10.
-  
+
   RETURN_INTO_WSTRING(t, mcne->type());
   if (t == L"integer" || t == L"real")
   {
@@ -651,7 +651,7 @@ SEDMLMathEvaluator::evalVariable(iface::mathml_dom::MathMLCiElement* mcie)
   std::map<std::wstring, double>::iterator i = mVariableValues.find(stringValueOf(mcie));
   if (i == mVariableValues.end())
     throw iface::SRuS::SRuSException(L"Reference to variable that couldn't be found."); // variable not found.
-    
+
   return (*i).second;
 }
 

@@ -267,7 +267,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('}')
 
         self.cxx.out('void* makeCallbackProxy(iface::CGRS::CallbackObjectValue* aValue);')
-        
+
         self.cxx.dec_indent()
         self.cxx.out('};') # Close class
 
@@ -330,7 +330,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
 
     def generateCallbackFunction(self, ifaceName, name, exception, ret, argInfo):
         global retv # Workaround for Python 1.x
-        retv = ret 
+        retv = ret
         rtype = ternary(ret == None, lambda: None, lambda: GetTypeInformation(retv))
         global rtypev
         rtypev = rtype
@@ -447,7 +447,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
         self.cxx.out('std::map<uint32_t, std::string> mIntToName;')
         self.cxx.dec_indent()
         self.cxx.out('};')
-    
+
     def visitException(self, node):
         pass
 
@@ -509,7 +509,7 @@ class CGRSWalker(idlvisitor.AstVisitor):
             if pIsIn:
                 incnt = incnt + 1
         self.cxx.out('if (aInValues.size() != %d) throw iface::CGRS::CGRSError();' % incnt)
-        
+
         inidx = 0
         pidx = 0
         paramstring = ''

@@ -180,7 +180,7 @@ CellMLTest::testModelLoader()
   CPPUNIT_ASSERT(mAchCascade);
   std::wstring str = mAchCascade->name();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"Ach_cascade_1995"), str);
-  
+
 //     /**
 //      * An error message describing the cause of the last CellMLException.
 //      * The error message is formatted code/param1/param2/.../paramn
@@ -353,7 +353,7 @@ CellMLTest::testRDFXMLDOMRepresentation()
   de->release_ref();
   iface::dom::Node* n = nl->item(0);
   nl->release_ref();
-  
+
   CPPUNIT_ASSERT(n);
   str = n->localName();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"Description"), str);
@@ -525,7 +525,7 @@ L"        </bqs:JournalArticle>\n"
 L"      </bqs:reference>\n"
 L"    </rdf:Description></RDF>";
 
-  std::wstring str = rrs->serialisedData();  
+  std::wstring str = rrs->serialisedData();
   CPPUNIT_ASSERT_EQUAL(std::wstring(correctValue), str);
 
   rrs->release_ref();
@@ -560,7 +560,7 @@ CellMLTest::testURI()
   mAchCascade->clearXMLBase();
   str = uri->asText();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L""), str);
-  
+
   uri->release_ref();
 }
 //   };
@@ -1448,7 +1448,7 @@ CellMLTest::testModel()
   rr->release_ref();
   rrs->release_ref();
   gs->release_ref();
-  
+
 //     /**
 //      * Return a flattened model, i.e. all imported component trees are promoted
 //      * to model level and import objects are removed.
@@ -1710,7 +1710,7 @@ CellMLTest::testMathContainer()
 //      */
 //     void clearMath();
   c->clearMath();
-  CPPUNIT_ASSERT_EQUAL(0, (int)ml->length());  
+  CPPUNIT_ASSERT_EQUAL(0, (int)ml->length());
   me->release_ref();
   me2->release_ref();
   ml->release_ref();
@@ -1925,7 +1925,7 @@ CellMLTest::testUnits()
   CPPUNIT_ASSERT_EQUAL(1, (int)uns->length());
   iface::cellml_api::UnitIterator* uni = uns->iterateUnits();
   iface::cellml_api::Unit* un = uni->nextUnit();
-  
+
   CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-3), un->prefix());
   un->prefix(-2);
   CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-2), un->prefix());
@@ -1989,7 +1989,7 @@ CellMLTest::testUnit()
   CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(-3), un2->prefix());
   CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(0), un31->prefix());
   CPPUNIT_ASSERT_EQUAL(static_cast<int32_t>(0), un32->prefix());
-  
+
 //     /**
 //      * The value of the multiplier attribute in the unit element.
 //      */
@@ -2081,7 +2081,7 @@ CellMLTest::testCellMLImport()
   loadTenTusscher();
   iface::cellml_api::CellMLImportSet* cis = mTenTusscher->imports();
   iface::cellml_api::CellMLImportIterator* cii = cis->iterateImports();
-  
+
   iface::cellml_api::CellMLImport* ci1 = cii->nextImport();
   iface::cellml_api::CellMLImport* ci2 = cii->nextImport();
   cis->release_ref();
@@ -2310,7 +2310,7 @@ CellMLTest::testImportUnits()
 
   CPPUNIT_ASSERT(!iu->isBaseUnits());
   iu->isBaseUnits(true);
-  CPPUNIT_ASSERT(iu->isBaseUnits());  
+  CPPUNIT_ASSERT(iu->isBaseUnits());
 
   iface::cellml_api::UnitSet* uns = iu->unitCollection();
   CPPUNIT_ASSERT_EQUAL(1, (int)uns->length());
@@ -2436,7 +2436,7 @@ CellMLTest::testCellMLVariable()
 //      *    v.public_interface == INTERFACE_NONE) &&
 //      *   (v.private_interface == INTERFACE_OUT ||
 //      *    v.private_interface == INTERFACE_NONE)
-//      * 
+//      *
 //      */
 //     readonly attribute CellMLVariable sourceVariable;
   v4 = v1->sourceVariable();
@@ -2676,7 +2676,7 @@ CellMLTest::testRelationshipRef()
 //     /**
 //      * Sets the namespace and relationship name. This will remove any other
 //      * relationship attributes in any namespace.
-//      * @param namespaceURI The URI of the namespace 
+//      * @param namespaceURI The URI of the namespace
 //      * @param name The name of the relationship.
 //      */
 //     void setRelationshipName(in CellMLAttributeString namespaceURI,
@@ -2779,7 +2779,7 @@ CellMLTest::testConnection()
   str = comp3->name();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"membrane"), str);
   comp3->release_ref();
-//   }; 
+//   };
   // Switch them back so next tests work...
 
   CPPUNIT_ASSERT_NO_THROW(mc->firstComponent(comp));
@@ -3371,7 +3371,7 @@ CellMLTest::testIteratorLiveness()
   QUERY_INTERFACE_REPLACE(el, n, dom::Element);
 
   iface::dom::Document* doc = el->ownerDocument();
-  
+
   iface::cellml_api::UnitsSet* us = mBeelerReuter->localUnits();
   iface::cellml_api::UnitsIterator* ui = us->iterateUnits();
 

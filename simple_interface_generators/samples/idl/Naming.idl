@@ -1,7 +1,7 @@
 //
 //                            Package   : omniORB3
-// Naming.idl		     
-//                            
+// Naming.idl
+//
 //
 //
 // Description:
@@ -88,7 +88,7 @@ module CosNaming {
 	       out BindingList bl, out BindingIterator bi);
   };
 
-	
+
   interface BindingIterator {
     boolean next_one (out Binding b);
     boolean next_n   (in unsigned long how_many, out BindingList bl);

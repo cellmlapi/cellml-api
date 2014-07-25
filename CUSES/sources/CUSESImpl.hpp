@@ -173,22 +173,22 @@ private:
     CDA_IMPL_ID;
     CDA_IMPL_REFCOUNT;
     CDA_IMPL_QI0;
-    
+
     UnitDependencies() : seen(false), done(false) {}
-    
+
     ~UnitDependencies()
     {
       std::list<iface::cellml_api::Units*>::iterator i;
       for (i = dependencies.begin(); i != dependencies.end(); i++)
         (*i)->release_ref();
     }
-    
+
     void addDependency(iface::cellml_api::Units* dep)
     {
       dep->add_ref();
       dependencies.push_back(dep);
     }
-    
+
     std::list<iface::cellml_api::Units*> dependencies;
     std::list<std::wstring> scopes;
 

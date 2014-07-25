@@ -229,7 +229,7 @@ CDA_RDFNode::release_ref()
   mRefCount--;
 
   iface::rdf_api::DataSource* ds = mDataSource;
-  
+
   if (mRefCount == 0 && mAssociationCount == 0)
     delete this;
 
@@ -472,7 +472,7 @@ CDA_Resource::findOrMakeContainer
     result->add_ref();
     return result.getPointer();
   }
-  
+
   // So no matching containter exists. Make one...
   RETURN_INTO_OBJREF(r, iface::rdf_api::BlankNode, mDataSource->createBlankNode());
   createTripleOutOf(aPredicate, r);
@@ -742,7 +742,7 @@ CDA_Container::renumberContainer()
     DECLARE_QUERY_INTERFACE_OBJREF(u, p, rdf_api::URIReference);
     if (u == NULL)
       continue;
-    
+
     RETURN_INTO_WSTRING(uri, u->URI());
     uint32_t n;
     if (swscanf(uri.c_str(), RDF_NS L"_%u", &n) != 1)
@@ -752,7 +752,7 @@ CDA_Container::renumberContainer()
     t->unassert();
     contents.insert(std::pair<uint32_t, ObjRef<iface::rdf_api::Node> >(n, o));
   }
-  
+
   uint32_t n = 1;
   for (std::map<uint32_t, ObjRef<iface::rdf_api::Node> >::iterator i = contents.begin();
        i != contents.end(); i++, n++)
@@ -1275,7 +1275,7 @@ public:
       DECLARE_QUERY_INTERFACE_OBJREF(el, n, dom::Element);
       if (el == NULL)
         continue;
-      
+
       parseNodeElement(el);
     }
   }
@@ -1635,7 +1635,7 @@ private:
 
     ObjRef<iface::rdf_api::Node> obj;
     RETURN_INTO_WSTRING(dt, aElement->getAttributeNS(RDF_NS, L"datatype"));
-    
+
     if (dt == L"")
     {
       RETURN_INTO_WSTRING(lang, getLanguage(aElement));
@@ -1829,7 +1829,7 @@ private:
     RETURN_INTO_OBJREF(obj, iface::rdf_api::Literal,
                        mDataSource->getTypedLiteral(text.c_str(),
                                                     RDF_NS L"XMLLiteral"));
-    
+
     createPossiblyReifiedTriple(aElement, aSubject, pred, obj);
   }
 };
@@ -1916,7 +1916,7 @@ public:
         // If predicate is a blank node, we can't serialise it so don't try...
         if (pred == NULL)
           continue;
-        
+
         RETURN_INTO_WSTRING(predURI, pred->URI());
 
         // Find the last non-alphanum character...
@@ -2024,7 +2024,7 @@ private:
     }
     else
     {
-      // It must be a blank node. 
+      // It must be a blank node.
       descr->setAttributeNS(RDF_NS, L"rdf:nodeID",
                             getOrAssignNodeID(res).c_str());
     }

@@ -9,6 +9,6 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id: test005.nt,v 1.1 2002/04/05 22:22:30 dajobe Exp $
-# 
+#
 #####################################################################
 <http://example.org/node> <http://example.org/property> "chat" .

@@ -76,7 +76,7 @@ class Walker(idlvisitor.AstVisitor):
         basename,ext = os.path.splitext(name)
         self.cxxheader.out('#include "Iface' + basename  + '.hxx"')
         self.cxxheader.inModule = 0
-        
+
     def visitModule(self, node):
         """Visit all the definitions in a module."""
         self.enterScope(node)
@@ -124,7 +124,7 @@ class Walker(idlvisitor.AstVisitor):
                            simplecxx.typeToSimpleCXX(node.constType()) +\
                            ' ' + node.simplename + ' = ' +\
                            simplecxx.enumOrInt(node.value()) + ';')
-    
+
     def visitTypedef(self, node):
         alln = ''
         needcomma = 0
@@ -141,8 +141,8 @@ class Walker(idlvisitor.AstVisitor):
         alln = 'typedef ' + simplecxx.typeToSimpleCXX(node.aliasType()) +\
                ' ' + alln + ';'
         self.cxxheader.out(alln)
-    
-    def visitMember(self, node):        
+
+    def visitMember(self, node):
         alln = ''
         needcomma = 0
         for n in node.declarators():
@@ -168,11 +168,11 @@ class Walker(idlvisitor.AstVisitor):
             n.accept(self)
         self.cxxheader.dec_indent()
         self.cxxheader.out('} ' + node.simplename + ';')
-    
+
     def visitStructForward(self, node):
         self.cxxheader.out('typedef struct _struct_' + node.simplename +\
                            ' ' + node.simplename + ';')
-    
+
     def visitException(self, node):
 	self.cxxheader.out('PUBLIC_' + self.masterGuard + '_PRE ')
         self.cxxheader.out('class  PUBLIC_' + self.masterGuard + '_POST ' + node.simplename + ' : public std::exception')
@@ -199,19 +199,19 @@ class Walker(idlvisitor.AstVisitor):
             n.accept(self)
         self.cxxheader.dec_indent()
         self.cxxheader.out('};')
-    
+
     def visitCaseLabel(self, node):
         return
-    
+
     def visitUnionCase(self, node):
         pass # not called.
-    
+
     def visitUnion(self, node):
         raise "Unions are not supported"
         # We are not supporting unions for now.
         # for n in node.cases():
         #    n.accept(self)
-    
+
     def visitUnionForward(self, node):
         # AnnotateByRepoID(node)
         raise "Unions are not supported"
@@ -223,7 +223,7 @@ class Walker(idlvisitor.AstVisitor):
             comma = ','
         self.cxxheader.out(node.simplename + (' = %u'%node.value()) +\
                            comma)
-    
+
     def visitEnum(self, node):
         isfirst = 1
         self.cxxheader.out('typedef enum _enum_' + node.simplename)
@@ -236,7 +236,7 @@ class Walker(idlvisitor.AstVisitor):
             n.accept(self)
         self.cxxheader.dec_indent()
         self.cxxheader.out('} ' + node.simplename + ';')
-    
+
     def visitAttribute(self, node):
         typename = simplecxx.typeToSimpleCXX(node.attrType(), is_ret=1)
         typenameC = simplecxx.typeToSimpleCXX(node.attrType(), is_const=1)
@@ -250,7 +250,7 @@ class Walker(idlvisitor.AstVisitor):
                 self.cxxheader.out('virtual void ' + n.simplename + '(' + typenameC +
                                    ' attr' +
                                    ') throw(std::exception&) = 0;')
-    
+
     def visitOperation(self, node):
         rtype = simplecxx.typeToSimpleCXX(node.returnType(), is_ret=1)
         if node.simplename == 'query_interface':
@@ -269,13 +269,13 @@ class Walker(idlvisitor.AstVisitor):
             call = call + simplecxx.typeToSimpleCXX(n.paramType(), numpoint,
                                                     not n.is_out()) +\
                    ' ' + n.simplename
-        
+
         # Every operation can throw, e.g. in an I/O error, not just those that
         # list exceptions with raises.
         call = call + ') throw(std::exception&)' +\
                simplecxx.shouldWarnIfUnused(node.returnType()) + ' = 0;'
         self.cxxheader.out(call)
-    
+
 def run(tree):
     w = Walker()
     w.cxxheader = output.Stream(open("Iface" + tree.filebase + ".hxx", "w"), 2);

@@ -16,11 +16,11 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
     def calculateDirectory(self):
         self.directory = string.join(self.directoryParts, '/')
         self.package = string.join(self.directoryParts, '.')
-        
+
     def visitAST(self, node):
         for declaration in node.declarations():
             declaration.accept(self)
-            
+
     def visitModule(self, node):
         try:
             os.mkdir(self.directory + '/' + node.identifier())
@@ -32,7 +32,7 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
             defn.accept(self)
         self.directoryParts.pop()
         self.calculateDirectory()
-        
+
     def visitInterface(self, node):
         if not node.mainFile():
             return
@@ -60,7 +60,7 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
         self.out.out('catch (ClassCastException cce) { return -1; }')
         self.out.dec_indent()
         self.out.out('}')
-        
+
         self.out.out('public boolean equals(Object obj)')
         self.out.out('{')
         self.out.inc_indent()
@@ -73,7 +73,7 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
         self.out.out('catch (ClassCastException cce) { return false; }')
         self.out.dec_indent()
         self.out.out('}')
-        
+
         self.out.out('public native int hashCode();')
         self.recurseAcceptInheritedContents(node)
         self.out.out('private long nativePtr;')
@@ -93,14 +93,14 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
     def recurseAcceptInheritedContents(self, node):
         if isinstance(node, idlast.Declarator) and node.alias():
             node = node.alias().aliasType().unalias().decl()
-        
+
         self.out.out('private long nativePtr_' + string.join(node.scopedName(), '_') + ';')
         for i in node.contents():
             i.accept(self)
         for i in node.inherits():
             if i.scopedName() != ['XPCOM', 'IObject']:
                 self.recurseAcceptInheritedContents(i)
-        
+
     def visitAttribute(self, node):
         ti = jnutils.GetTypeInformation(node.attrType().unalias())
         for n in node.declarators():
@@ -113,7 +113,7 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
 
     def writeGetter(self, node, ti):
         self.out.out('public native ' + ti.javaType(jnutils.Type.RETURN) + ' ' + jnutils.AccessorName(node, 0) + '();')
-    
+
     def visitOperation(self, node):
         paramsig = ''
         for p in node.parameters():
@@ -124,7 +124,7 @@ class NativeClassVisitor (idlvisitor.AstVisitor):
             if paramsig != '':
                 paramsig = paramsig + ', '
             paramsig = paramsig + v
-        
+
         rti = jnutils.GetTypeInformation(node.returnType().unalias())
         self.out.out('public native ' + rti.javaType(jnutils.Type.RETURN) + ' ' +
                      jnutils.JavaName(node) + '(' + paramsig + ');')

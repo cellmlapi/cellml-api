@@ -101,7 +101,7 @@ CDA_EXPORT_PRE double multi_max(unsigned int size, ...) CDA_EXPORT_POST;
 CDA_EXPORT_PRE double safe_quotient(double num, double den) CDA_EXPORT_POST;
 CDA_EXPORT_PRE double safe_remainder(double num, double den) CDA_EXPORT_POST;
 CDA_EXPORT_PRE double safe_factorof(double num, double den) CDA_EXPORT_POST;
-CDA_EXPORT_PRE void do_nonlinearsolve(void (*)(double *p, double *hx, 
+CDA_EXPORT_PRE void do_nonlinearsolve(void (*)(double *p, double *hx,
                                                  void *adata),
                                       double* params, struct fail_info*,
                                       unsigned int size, void* adata) CDA_EXPORT_POST;

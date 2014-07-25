@@ -200,7 +200,7 @@ module SProS
      * implementation.
      */
     attribute unsigned long level;
-    
+
     /**
      * The SEDML version; defaults to the latest version of SEDML supported by
      * the implementation.
@@ -823,7 +823,7 @@ module SProS
      * The list of all variables to make available to the MathML.
      */
     readonly attribute VariableSet variables;
-    
+
     /**
      * The MathML math element defining the next value from the range.
      */
@@ -859,7 +859,7 @@ module SProS
      * list.
      */
     void insertValueBefore(in long index, in double value);
-    
+
     /**
      * Removes the value at the index specified, or does nothing if the index is
      * out of range.
@@ -955,7 +955,7 @@ module SProS
      * Iterates through all the outputs in this set.
      */
     OutputIterator iterateOutputs();
-    
+
     /**
      * Finds an output in this set by identifier.
      */

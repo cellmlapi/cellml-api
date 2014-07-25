@@ -191,7 +191,7 @@ CDA_MoFSConverter::CopyConnection(iface::cellml_api::Connection* conn)
   ObjRef<iface::cellml_api::MapComponents> mc(conn->componentMapping());
   ObjRef<iface::cellml_api::CellMLComponent> c1(mc->firstComponent());
   ObjRef<iface::cellml_api::CellMLComponent> c2(mc->secondComponent());
-  
+
   // Check we've copied the components involved, and get the
   // copies.
   ObjRef<iface::cellml_api::CellMLComponent> newc1 =
@@ -203,7 +203,7 @@ CDA_MoFSConverter::CopyConnection(iface::cellml_api::Connection* conn)
     QueryInterface(mAnnoSet->getObjectAnnotation(c2, L"copy"));
   if (newc2 == NULL)
     return;
-  
+
   // Create a new connection
   ObjRef<iface::cellml_api::Connection> newconn
     (mModelOut->createConnection());
@@ -233,7 +233,7 @@ CDA_MoFSConverter::CopyUnits(iface::cellml_api::UnitsSet* unitsset,
                              iface::cellml_api::CellMLElement* target)
 {
   ObjRef<iface::cellml_api::Model> model(target->modelElement());
-  
+
   ObjRef<iface::cellml_api::UnitsIterator> unitsIt(unitsset->iterateUnits());
   for (ObjRef<iface::cellml_api::Units> units(unitsIt->nextUnits());
        units; units = unitsIt->nextUnits())
@@ -254,7 +254,7 @@ CDA_MoFSConverter::CopyUnits(iface::cellml_api::UnitsSet* unitsset,
     ObjRef<iface::cellml_api::Units> newUnits(model->createUnits());
     newUnits->name(units->name());
     newUnits->isBaseUnits(units->isBaseUnits());
-    
+
     // Copy each unit reference
     ObjRef<iface::cellml_api::UnitSet> unitset(units->unitCollection());
     ObjRef<iface::cellml_api::UnitIterator> uniti(unitset->iterateUnits());
@@ -270,7 +270,7 @@ CDA_MoFSConverter::CopyUnits(iface::cellml_api::UnitsSet* unitsset,
       // Add
       newUnits->addElement(newUnit);
     }
-    
+
     // And add to target
     target->addElement(newUnits);
   }
@@ -320,7 +320,7 @@ CDA_MoFSConverter::CopyComponent(iface::cellml_api::CellMLComponent* comp,
     return;
 
   ObjRef<iface::cellml_api::Model> sourceModel(comp->modelElement());
-    
+
   // Create the new component and set its name & id
   copy = model->createComponent();
   mAnnoSet->setObjectAnnotation(comp, L"copy", copy);
@@ -341,11 +341,11 @@ CDA_MoFSConverter::CopyComponent(iface::cellml_api::CellMLComponent* comp,
   std::wstring cmetaId(comp->cmetaId());
   if (cmetaId != L"")
     copy->cmetaId(cmetaId);
-  
+
   // Copy units
   ObjRef<iface::cellml_api::UnitsSet> units(comp->units());
   CopyUnits(units, copy);
-        
+
   // Copy variables
   ObjRef<iface::cellml_api::CellMLVariableSet> vars(comp->variables());
   ObjRef<iface::cellml_api::CellMLVariableIterator> vari(vars->iterateVariables());
@@ -353,7 +353,7 @@ CDA_MoFSConverter::CopyComponent(iface::cellml_api::CellMLComponent* comp,
        var; var = vari->nextVariable())
   {
     ObjRef<iface::cellml_api::CellMLVariable> varCopy(model->createCellMLVariable());
-    
+
     varCopy->name(var->name());
     std::wstring cmetaId = var->cmetaId();
     if (cmetaId != L"")
@@ -396,7 +396,7 @@ CDA_MoFSConverter::CopyGroups(iface::cellml_api::Model* model)
     ObjRef<iface::cellml_api::ComponentRefSet> crefs(group->componentRefs());
     CopyGroup(model, crefs, NULL);
   }
-  
+
   // Now check imported models
   ObjRef<iface::cellml_api::CellMLImportSet> imports(model->imports());
   ObjRef<iface::cellml_api::CellMLImportIterator> importi(imports->iterateImports());
@@ -478,7 +478,7 @@ CDA_MoFSConverter::CopyGroup
 (
  iface::cellml_api::Model* model,
  iface::cellml_api::ComponentRefSet* crefs,
- iface::cellml_api::ComponentRef* copyInto                             
+ iface::cellml_api::ComponentRef* copyInto
 )
 {
   ObjRef<iface::cellml_api::CellMLComponentSet> comps(model->modelComponents());

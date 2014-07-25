@@ -412,7 +412,7 @@ module cellml_api
      * @exception CellMLException if the version is not supported by the API.
      */
     Model getAlternateVersion(in wstring cellmlVersion) raises(CellMLException);
-    
+
     /**
      * The collection of groups described in this model document.
      */
@@ -715,7 +715,7 @@ module cellml_api
      * The set of all connections which involve this component.
      */
     readonly attribute ConnectionSet connections;
-    
+
     /**
      * The component which, in the encapsulation hierarchy defined in this
      * model, encapsulates this component. When this component is
@@ -1010,7 +1010,7 @@ module cellml_api
      *    v.public_interface == INTERFACE_NONE) &&
      *   (v.private_interface == INTERFACE_OUT ||
      *    v.private_interface == INTERFACE_NONE)
-     * 
+     *
      */
     readonly attribute CellMLVariable sourceVariable;
 
@@ -1092,7 +1092,7 @@ module cellml_api
     /**
      * Sets the namespace and relationship name. This will remove any other
      * relationship attributes in any namespace.
-     * @param namespaceURI The URI of the namespace 
+     * @param namespaceURI The URI of the namespace
      * @param name The name of the relationship.
      */
     void setRelationshipName(in CellMLAttributeString namespaceURI,
@@ -1319,7 +1319,7 @@ module cellml_api
      * The role this variable plays.
      */
     attribute RoleType variableRole;
-    
+
     /**
      * The direction of the reaction for which this role applies.
      */
@@ -1828,7 +1828,7 @@ module cellml_api
     readonly attribute GroupSet subsetInvolvingContainment;
   };
 #pragma terminal-interface
-  
+
   /**
    * An interface allowing RelationshipRef elements to be iterated.
    */

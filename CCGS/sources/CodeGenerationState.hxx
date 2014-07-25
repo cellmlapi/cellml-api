@@ -408,7 +408,7 @@ public:
    const wchar_t* aIndex,
    const wchar_t* aCount
   );
-  
+
   void GenerateStateInformation(std::wstring& aStr);
   void AllocateRateNamesAsConstants(std::list<System*>& aSystems);
   void RestoreSavedRates(std::wstring& aCode);

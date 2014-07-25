@@ -58,7 +58,7 @@ class XPIDLVisitor(idlvisitor.AstVisitor):
             uuid = self.computeHexDigest(node.repoId())
             uuid = uuid[:8] + '-' + uuid[8:12] + '-' + uuid[12:16] + '-' +\
                    uuid[16:20] + '-' + uuid[20:]
-        
+
         # There is no multiple inheritance in XPIDL. Therefore, in cases where
         # the IDL uses it, always only use the first interface...
         inh = filter(lambda x: x.repoId() != REPOID_ISUPPORTS, node.inherits())
@@ -93,7 +93,7 @@ class XPIDLVisitor(idlvisitor.AstVisitor):
                         continue
                 self._idl.out('typedef @alias_type@ @name@;',
                               alias_type=ti.type_xpidl, name=d.identifier())
-    
+
     def visitConst(self, node):
         scoped_name = node.scopedName()[:-1]
 
@@ -102,7 +102,7 @@ class XPIDLVisitor(idlvisitor.AstVisitor):
             name = node.identifier()
 
             ti = typeinfo.GetTypeInformation(node.constType().unalias())
- 
+
             cleaned_value = str(node.value())
             if cleaned_value[-1] == 'L':
                 cleaned_value = cleaned_value[0:-1]

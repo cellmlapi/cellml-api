@@ -2,7 +2,7 @@
  * -----------------------------------------------------------------
  * $Revision: 1.4 $
  * $Date: 2007/12/19 20:34:00 $
- * ----------------------------------------------------------------- 
+ * -----------------------------------------------------------------
  * Programmer(s): Aaron Collier and Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2005, The Regents of the University of California.
@@ -34,8 +34,8 @@
  */
 
 
-/* Define precision of SUNDIALS data type 'realtype' 
- * Depending on the precision level, one of the following 
+/* Define precision of SUNDIALS data type 'realtype'
+ * Depending on the precision level, one of the following
  * three macros will be defined:
  *     #define SUNDIALS_SINGLE_PRECISION 1
  *     #define SUNDIALS_DOUBLE_PRECISION 1
@@ -43,7 +43,7 @@
  */
 #define SUNDIALS_DOUBLE_PRECISION 1
 
-/* Use generic math functions 
+/* Use generic math functions
  * If it was decided that generic math functions can be used, then
  *     #define SUNDIALS_USE_GENERIC_MATH 1
  * otherwise

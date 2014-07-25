@@ -4,13 +4,13 @@
   Copyright World Wide Web Consortium, (Massachusetts Institute of
   Technology, Institut National de Recherche en Informatique et en
   Automatique, Keio University).
- 
+
   All Rights Reserved.
- 
+
   Please see the full Copyright clause at
   <http://www.w3.org/Consortium/Legal/copyright-software.html>
 
-  Description: xml:base applies to an rdf:ID on an 
+  Description: xml:base applies to an rdf:ID on an
                rdf:Description element.
   Author: Jeremy Carroll (jjc@hpl.hp.com)
 

@@ -13,11 +13,11 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
     def calculateDirectory(self):
         self.directory = string.join(self.directoryParts, '/')
         self.package = string.join(self.directoryParts, '.')
-        
+
     def visitAST(self, node):
         for declaration in node.declarations():
             declaration.accept(self)
-            
+
     def visitModule(self, node):
         try:
             os.mkdir(node.identifier())
@@ -29,7 +29,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
             defn.accept(self)
         self.directoryParts.pop()
         self.calculateDirectory()
-        
+
     def visitInterface(self, node):
         if not node.mainFile():
             return
@@ -41,7 +41,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
         if len(inh) != 0:
             for inherit in inh:
                 if isinstance(inherit, idlast.Declarator) and inherit.alias():
-                    inherit = inherit.alias().aliasType().unalias().decl()                
+                    inherit = inherit.alias().aliasType().unalias().decl()
                 if inherit.scopedName() == ['XPCOM', 'IObject']:
                     continue
                 if extends == '':
@@ -69,7 +69,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
 
     def writeGetter(self, node, ti):
         self.out.out('public ' + ti.javaType(jnutils.Type.RETURN) + ' ' + jnutils.AccessorName(node, 0) + '();')
-    
+
     def visitOperation(self, node):
         paramsig = ''
         for p in node.parameters():
@@ -80,7 +80,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
             if paramsig != '':
                 paramsig = paramsig + ', '
             paramsig = paramsig + v
-        
+
         rti = jnutils.GetTypeInformation(node.returnType().unalias())
         self.out.out('public ' + rti.javaType(jnutils.Type.RETURN) + ' ' +
                      jnutils.JavaName(node) + '(' + paramsig + ');')
@@ -101,7 +101,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
             e.accept(self)
         self.out.dec_indent()
         self.out.out('};')
-        
+
         if setupOut:
             self.out = None
 
@@ -149,7 +149,7 @@ class InterfaceVisitor (idlvisitor.AstVisitor):
                 constructorArgs = constructorArgs + ', '
             for dn in n.declarators():
                 constructorSave = constructorSave + ('%s = _%s;' % (jnutils.JavaName(dn), jnutils.JavaName(dn)))
-                
+
                 constructorArgs = \
                     constructorArgs + \
                     jnutils.GetTypeInformation(n.memberType()).javaType(jnutils.Type.IN) +\

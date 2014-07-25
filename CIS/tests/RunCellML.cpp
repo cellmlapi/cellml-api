@@ -230,7 +230,7 @@ public:
 
         iface::cellml_services::VariableEvaluationType et = ct->type();
         uint32_t varOff = 0;
-        
+
         switch (et)
         {
         case iface::cellml_services::STATE_VARIABLE:
@@ -321,7 +321,7 @@ ProcessKeywords(int argc, char** argv,
     char* value = argv[1];
     argc -= 2;
     argv += 2;
-    
+
     if (!strcasecmp(command, "step_type"))
     {
       iface::cellml_services::ODEIntegrationStepType ist;
@@ -389,7 +389,7 @@ ProcessKeywords(int argc, char** argv,
           continue;
         }
         scalRate = 1.0 - scalVar;
-        
+
         if (*value == ',')
         {
           value++;
@@ -638,7 +638,7 @@ main(int argc, char** argv)
            "       step_size: A floating point tabulation step size.\n"
            "  real_time_factor number\n"
            "    => Slows the simulation so that number real seconds elapse for \n"
-           "       each unit of time in the simulation.\n" 
+           "       each unit of time in the simulation.\n"
            "  debug true|false\n"
            "    => Specifies whether or not to use debug mode.\n"
           );

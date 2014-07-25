@@ -457,7 +457,7 @@ public:
         mListener->loadCompleted(NULL);
         return;
       }
-      
+
       // Check it is a CellML model...
       RETURN_INTO_WSTRING(nsURI, modelEl->namespaceURI());
       if (nsURI != CELLML_1_0_NS &&
@@ -487,7 +487,7 @@ public:
       return;
     }
   }
-  
+
 private:
   iface::cellml_api::DOMURLLoader* mLoader;
   CDA_ModelLoader* mModelLoader;
@@ -516,7 +516,7 @@ CDA_EXPORT_PRE CDA_EXPORT_POST already_AddRefd<iface::cellml_api::CellMLBootstra
 CreateCellMLBootstrap()
 {
   return new CDA_CellMLBootstrap();
-} 
+}
 
 #ifdef DEBUG_PTR_TAG
 CDA_EXPORT_PRE CDA_EXPORT_POST std::map<void*,uint32_t> currentlyActivePtrTags;

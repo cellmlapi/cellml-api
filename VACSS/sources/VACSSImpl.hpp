@@ -95,7 +95,7 @@ public:
                           iface::cellml_services::CellMLValidityError* aSupplement = NULL)
     throw();
   virtual ~CDA_CellMLValidityErrorBase() throw();
-  
+
   std::wstring description() throw();
   uint32_t nSupplements() throw();
   already_AddRefd<iface::cellml_services::CellMLValidityError> getSupplement(uint32_t nSupplements)
@@ -231,7 +231,7 @@ public:
   GroupParent(const GroupParent& aGP)
     : groupRel(aGP.groupRel), componentObjId(aGP.componentObjId)
   {}
-      
+
 
   bool
   operator<(const GroupParent& aGP) const
@@ -278,7 +278,7 @@ class ModelValidation
 {
 public:
   ModelValidation(iface::cellml_api::Model* aModel);
-  
+
   already_AddRefd<iface::cellml_services::CellMLValidityErrorSet> validate();
 private:
   enum ApplyInputType

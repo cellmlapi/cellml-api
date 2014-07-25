@@ -40,11 +40,11 @@ p2x::XPCOM::IObject::query_interface(const char* id)
   P2XFactory* f = P2XFactory::FindFactory(id);
   if (f == nsnull)
     return nsnull;
-  
+
   mObj->QueryInterface(f->GetIID(), getter_AddRefs(qires));
   if (qires == nsnull)
     return nsnull;
-  
+
   return f->MakeP2X(qires);
 }
 

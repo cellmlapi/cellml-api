@@ -32,7 +32,7 @@ MathMLTest::testCreateMathMLDocument()
   iface::dom::DOMImplementation* di;
   di = CreateDOMImplementation();
   CPPUNIT_ASSERT(di);
-  
+
   CPPUNIT_ASSERT(di->hasFeature(L"org.w3c.dom.mathml", L"2.0"));
 
   DECLARE_QUERY_INTERFACE_REPLACE(mdi, di, mathml_dom::MathMLDOMImplementation);
@@ -128,53 +128,53 @@ MathMLTest::testMathMLDocumentElementContainer()
 
   {
     CPPUNIT_ASSERT_EQUAL(1, (int)me->nArguments());
-    
+
     iface::mathml_dom::MathMLElement* me2 = NULL;
     CPPUNIT_ASSERT_NO_THROW(me2 = me->getArgument(1));
     CPPUNIT_ASSERT(me2);
-    
+
     str = me2->localName();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"apply"), str);
-    
+
     iface::mathml_dom::MathMLNodeList* mnl = me->declarations();
     CPPUNIT_ASSERT_EQUAL(1, (int)mnl->length());
     mnl->release_ref();
-    
+
     iface::dom::Node* ntmp = me2->cloneNode(true);
     DECLARE_QUERY_INTERFACE_REPLACE(me3, ntmp, mathml_dom::MathMLElement);
-    
+
     me2->className(L"oldclass");
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me2->release_ref();
-    
+
     me3->className(L"newclass");
-    
+
     iface::mathml_dom::MathMLElement* me4 = me->insertArgument(me3, 2);
     str = me4->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"newclass"), str);
     me4->release_ref();
-    
+
     CPPUNIT_ASSERT_EQUAL(2, (int)me->nArguments());
-    
+
     mnl = me->arguments();
     CPPUNIT_ASSERT(mnl);
     CPPUNIT_ASSERT_EQUAL(2, (int)mnl->length());
-    
+
     ntmp = mnl->item(0);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLElement);
     CPPUNIT_ASSERT(me2);
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me2->release_ref();
-    
+
     ntmp = mnl->item(1);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLElement);
     CPPUNIT_ASSERT(me2);
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"newclass"), str);
     me2->release_ref();
-    
+
     // Now try deleting an element...
     me->deleteArgument(2);
     ntmp = mnl->item(0);
@@ -185,23 +185,23 @@ MathMLTest::testMathMLDocumentElementContainer()
     me2->release_ref();
     CPPUNIT_ASSERT_EQUAL(1, (int)mnl->length());
     mnl->release_ref();
-    
+
     // Now re-add me3, this time at the start...
     me4 = me->insertArgument(me3, 1);
     me4->release_ref();
-    
+
     // And check that the order is right...
     mnl = me->arguments();
     CPPUNIT_ASSERT(mnl);
     CPPUNIT_ASSERT_EQUAL(2, (int)mnl->length());
-    
+
     ntmp = mnl->item(0);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLElement);
     CPPUNIT_ASSERT(me2);
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"newclass"), str);
     me2->release_ref();
-    
+
     ntmp = mnl->item(1);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLElement);
     CPPUNIT_ASSERT(me2);
@@ -209,7 +209,7 @@ MathMLTest::testMathMLDocumentElementContainer()
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me2->release_ref();
     mnl->release_ref();
-    
+
     // Now try calling removeArgument()...
     me4 = me->removeArgument(1);
     CPPUNIT_ASSERT(me4);
@@ -222,7 +222,7 @@ MathMLTest::testMathMLDocumentElementContainer()
     str = me4->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me4->release_ref();
-    
+
     // Next call setArgument...
     me4 = me->setArgument(me3, 1);
     str = me4->className();
@@ -245,38 +245,38 @@ MathMLTest::testMathMLDocumentElementContainer()
     iface::mathml_dom::MathMLDeclareElement* me2 = me->getDeclaration(1);
     iface::dom::Node* ntmp = me2->cloneNode(true);
     DECLARE_QUERY_INTERFACE_REPLACE(me3, ntmp, mathml_dom::MathMLDeclareElement);
-    
+
     me2->className(L"oldclass");
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me2->release_ref();
-    
+
     me3->className(L"newclass");
-    
+
     iface::mathml_dom::MathMLDeclareElement* me4 =
       me->insertDeclaration(me3, 2);
     str = me4->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"newclass"), str);
     me4->release_ref();
-    
+
     iface::mathml_dom::MathMLNodeList* mnl = me->declarations();
     CPPUNIT_ASSERT(mnl);
     CPPUNIT_ASSERT_EQUAL(2, (int)mnl->length());
-    
+
     ntmp = mnl->item(0);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLDeclareElement);
     CPPUNIT_ASSERT(me2);
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me2->release_ref();
-    
+
     ntmp = mnl->item(1);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLDeclareElement);
     CPPUNIT_ASSERT(me2);
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"newclass"), str);
     me2->release_ref();
-    
+
     // Now try deleting an element...
     me->deleteDeclaration(2);
     ntmp = mnl->item(0);
@@ -287,23 +287,23 @@ MathMLTest::testMathMLDocumentElementContainer()
     me2->release_ref();
     CPPUNIT_ASSERT_EQUAL(1, (int)mnl->length());
     mnl->release_ref();
-    
+
     // Now re-add me3, this time at the start...
     me4 = me->insertDeclaration(me3, 1);
     me4->release_ref();
-    
+
     // And check that the order is right...
     mnl = me->declarations();
     CPPUNIT_ASSERT(mnl);
     CPPUNIT_ASSERT_EQUAL(2, (int)mnl->length());
-    
+
     ntmp = mnl->item(0);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLDeclareElement);
     CPPUNIT_ASSERT(me2);
     str = me2->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"newclass"), str);
     me2->release_ref();
-    
+
     ntmp = mnl->item(1);
     QUERY_INTERFACE_REPLACE(me2, ntmp, mathml_dom::MathMLDeclareElement);
     CPPUNIT_ASSERT(me2);
@@ -311,7 +311,7 @@ MathMLTest::testMathMLDocumentElementContainer()
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me2->release_ref();
     mnl->release_ref();
-    
+
     // Now try calling removeDeclaration()...
     me4 = me->removeDeclaration(1);
     CPPUNIT_ASSERT(me4);
@@ -324,7 +324,7 @@ MathMLTest::testMathMLDocumentElementContainer()
     str = me4->className();
     CPPUNIT_ASSERT_EQUAL(std::wstring(L"oldclass"), str);
     me4->release_ref();
-    
+
     // Next call setDeclaration...
     me4 = me->setDeclaration(me3, 1);
     str = me4->className();
@@ -562,7 +562,7 @@ MathMLTest::testMathMLContentContainer()
   str = ma->className();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"newmomentabout"), str);
   ma->release_ref();
-  
+
   iface::mathml_dom::MathMLBvarElement* bvar = mae->getBoundVariable(1);
   CPPUNIT_ASSERT(bvar);
   str = bvar->className();
@@ -643,7 +643,7 @@ MathMLTest::testMathMLContentContainer()
   op->release_ref();
 
   // Check the lowlimit and uplimit...
-  
+
   iface::mathml_dom::MathMLElement* ll = mae->lowLimit();
   str = ll->className();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"llel"), str);
@@ -692,7 +692,7 @@ MathMLTest::testSpecificMathMLContentContainers()
 
   iface::dom::Element* el = d->getElementById(L"functionel");
   DECLARE_QUERY_INTERFACE_REPLACE(fnel, el, mathml_dom::MathMLFnElement);
-  
+
   std::wstring str = fnel->definitionURL();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"http://www.example.com/defnurl/function"), str);
   fnel->definitionURL(L"http://www.example.com/defnurl/anotherfunction");
@@ -922,7 +922,7 @@ MathMLTest::testMathMLCondition()
   // Now check that setting when not present works...
   condel = d->createElementNS(MATHML_NS, L"condition");
   QUERY_INTERFACE_REPLACE(mce, condel, mathml_dom::MathMLConditionElement);
-  
+
   iface::dom::Element* el2 = d->createElementNS(MATHML_NS,
                               L"apply");
   QUERY_INTERFACE_REPLACE(cond, el2, mathml_dom::MathMLApplyElement);
@@ -957,7 +957,7 @@ MathMLTest::testMathMLDeclare()
   decl->type(L"matrix");
   str = decl->type();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"matrix"), str);
-  
+
   CPPUNIT_ASSERT_EQUAL(5, (int)decl->nargs());
   decl->nargs(4);
   CPPUNIT_ASSERT_EQUAL(4, (int)decl->nargs());
@@ -1026,7 +1026,7 @@ MathMLTest::testMathMLVector()
 
   iface::dom::Element* vecel = d->getElementById(L"vectorel");
   DECLARE_QUERY_INTERFACE_REPLACE(mve, vecel, mathml_dom::MathMLVectorElement);
-  
+
   CPPUNIT_ASSERT_EQUAL(3, (int)mve->ncomponents());
   iface::mathml_dom::MathMLContentElement* c1 = mve->getComponent(1);
   std::wstring str = c1->className();
@@ -1053,7 +1053,7 @@ MathMLTest::testMathMLVector()
   str = c2->className();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"content1"), str);
   c2->release_ref();
-  
+
   c2 = mve->insertComponent(c1, 0);
   str = c2->className();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"newcontent1"), str);
@@ -1093,7 +1093,7 @@ MathMLTest::testMathMLMatrix()
 
   CPPUNIT_ASSERT_EQUAL(4, (int)mme->nrows());
   CPPUNIT_ASSERT_EQUAL(3, (int)mme->ncols());
-  
+
   iface::mathml_dom::MathMLNodeList* mnl = mme->rows();
   CPPUNIT_ASSERT_EQUAL(4, (int)mnl->length());
   iface::dom::Node* n = mnl->item(0);
@@ -1122,7 +1122,7 @@ MathMLTest::testMathMLMatrix()
   str = ce2->className();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"newentry1"), str);
   ce2->release_ref();
-  
+
   ce2 = mrow->insertEntry(ce, 4);
   str = ce2->className();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"newentry1"), str);
@@ -1185,7 +1185,7 @@ MathMLTest::testMathMLMatrix()
   mr->release_ref();
   mme->deleteRow(1);
   CPPUNIT_ASSERT_EQUAL(4, (int)mme->nrows());
-  
+
   mr = mme->setRow(mre, 4);
   CPPUNIT_ASSERT_EQUAL(4, (int)mme->nrows());
   str = mr->className();
@@ -1268,7 +1268,7 @@ MathMLTest::testMathMLPiecewise()
                                   mathml_dom::MathMLContentElement);
   mcenew->className(L"newpwpcond1");
   mce = mpw->setCaseCondition(1, mcenew);
-  mcenew->release_ref();  
+  mcenew->release_ref();
   str = mce->className();
   CPPUNIT_ASSERT_EQUAL(std::wstring(L"newpwpcond1"), str);
   mce->release_ref();
@@ -1288,7 +1288,7 @@ MathMLTest::testMathMLPiecewise()
                                   mathml_dom::MathMLCaseElement);
   newpiece->className(L"newpiece");
 
-  
+
   pwel = d->createElementNS(MATHML_NS, L"apply");
   DECLARE_QUERY_INTERFACE_REPLACE(el1, pwel,
                                   mathml_dom::MathMLContentElement);

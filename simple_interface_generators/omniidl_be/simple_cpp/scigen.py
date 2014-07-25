@@ -61,30 +61,30 @@ class Walker(idlvisitor.AstVisitor):
             self.sci.out('#undef PUBLIC_' + self.masterGuard + '_PRE')
 	    self.sci.out('#undef PUBLIC_' + self.masterGuard + '_POST')
             self.sci.out('#endif // _SCI' + self.masterGuard + '_hxx')
-    
+
     def escapeScopes(self):
         for i in range(0, self.scopeEntryDepth):
             self.sci.dec_indent()
             self.sci.out('};')
         self.scopeEntryDepth = 0
-    
+
     def writeScopes(self):
         for i in range(self.scopeEntryDepth, len(self.scope)):
             self.sci.out('namespace ' + self.scope[i])
             self.sci.out('{')
             self.sci.inc_indent()
         self.scopeEntryDepth = len(self.scope)
-    
+
     def enterScope(self, node):
         self.scope.append(node.simplename)
-    
+
     def leaveScope(self):
         self.scope = self.scope[:-1]
         if self.scopeEntryDepth > len(self.scope):
             self.scopeEntryDepth = len(self.scope)
             self.sci.dec_indent()
             self.sci.out('};')
-    
+
     def considerIncluding(self, name):
         if (self.beenIncluded.has_key(name)):
             return
@@ -93,7 +93,7 @@ class Walker(idlvisitor.AstVisitor):
         basename,ext = os.path.splitext(name)
         self.sci.out('#include "SCI' + basename  + '.hxx"')
         self.sci.inModule = 0
-    
+
     def visitModule(self, node):
         """Visit all the definitions in a module."""
         self.enterScope(node)
@@ -110,13 +110,13 @@ class Walker(idlvisitor.AstVisitor):
     def processBase(self, active, base):
         # Interface active has base(or active == base). Called only once
         # per active per base. We only care about callables here.
-        
+
         psemi = ''
         pfq = 'SCI::' + active.finalcciscoped + '::'
         if self.doing_header:
             psemi = ';'
             pfq = ''
-        
+
         downcastName = '_downcast_' + string.join(base.scopedName(), '_')
         self.sci.out(base.simplecxxscoped + '* ' + pfq +\
                      downcastName + '()' + psemi)
@@ -205,7 +205,7 @@ class Walker(idlvisitor.AstVisitor):
             parstr = parstr + corbacxx.typeToCORBACXX(p.paramType(), \
                                                       direction) + ' ' +\
                                                       p.simplename
-        
+
         self.sci.out(rtype + ' ' + pfq + op.simplename + '(' + parstr +\
                      ')' + psemi)
         if self.doing_header:
@@ -220,7 +220,7 @@ class Walker(idlvisitor.AstVisitor):
         else:
             self.sci.out('{')
             self.sci.inc_indent()
-        
+
             # All in parameters get converted to simple parameters
             for p in op.parameters():
                 if callstr != '':
@@ -360,10 +360,10 @@ class Walker(idlvisitor.AstVisitor):
                                             '_corba_return', toParam=1)
                     conversionutils.destroySimpleValue(\
                         self.sci, rt, '_simple_return')
-                
+
                 self.sci.out('return ' +\
                              conversionutils.returnExpr(rt, '_corba_return') +\
-                             ';')            
+                             ';')
             self.sci.dec_indent()
             self.sci.out('}')
 
@@ -380,7 +380,7 @@ class Walker(idlvisitor.AstVisitor):
                                              corbacxx.DIRECTION_IN)
         typenameRet = corbacxx.typeToCORBACXX(at.attrType(),
                                               corbacxx.DIRECTION_RET)
-        self.sci.ci_count = 0        
+        self.sci.ci_count = 0
         for n in at.declarators():
             self.sci.out(typenameRet + ' ' + pfq + n.simplename + '()' + psemi)
             if not self.doing_header:
@@ -430,7 +430,7 @@ class Walker(idlvisitor.AstVisitor):
                          ' attr)' + psemi)
             if self.doing_header:
                 return
-            
+
             self.sci.out('{')
             self.sci.inc_indent()
             self.sci.out('try')
@@ -491,7 +491,7 @@ class Walker(idlvisitor.AstVisitor):
         conversionutils.writeCORBASequenceToSimple(self.sci, type, cname,
                                                    sarray, slength, fromCall,
                                                    needAlloc)
-    
+
     def CORBAValueToSimple(self, type, cname, sname, fromCall=0):
         conversionutils.writeCORBAValueToSimple(self.sci, type, cname, sname, fromCall)
 
@@ -584,7 +584,7 @@ class Walker(idlvisitor.AstVisitor):
                 self.sci.out('class ' + node.simplename)
 
 	    inheritstr = node.poacxxscoped
-            
+
             for c in node.inherits():
                 isAmbiguous = 0
                 target = 'ambiguous-inheritance(' + c.corbacxxscoped + ')'
@@ -681,7 +681,7 @@ class Walker(idlvisitor.AstVisitor):
             self.sci.out('_setPOA(::PortableServer::POA::_duplicate(aPp));')
             self.sci.dec_indent()
             self.sci.out('}')
-            
+
         stack = [node]
         seen = {node.simplecxxscoped: 1}
         self.processBase(node, node)
@@ -746,17 +746,17 @@ class Walker(idlvisitor.AstVisitor):
             self.sci.out('void prod' + node.simplename + '() {'+\
                          ' gSCIFactory' + node.simplecscoped + '.Name(); }')
             self.escapeScopes()
-    
+
     def processBase(self, active, base):
         # Interface active has base(or active == base). Called only once
         # per active per base. We only care about callables here.
-        
+
         psemi = ''
         pfq = 'SCI::' + active.finalcciscoped + '::'
         if self.doing_header:
             psemi = ';'
             pfq = ''
-        
+
         downcastName = '_downcast_' + string.join(base.scopedName(), '_')
         self.sci.out('::iface::' + base.corbacxxscoped + '* ' + pfq +\
                      downcastName + '()' + psemi)

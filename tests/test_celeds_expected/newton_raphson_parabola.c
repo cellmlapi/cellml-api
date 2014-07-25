@@ -47,7 +47,7 @@ void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 #undef ALGEBRAIC
 #undef pret
 }
-void rootfind_0(double VOI, double* CONSTANTS, double* RATES, 
+void rootfind_0(double VOI, double* CONSTANTS, double* RATES,
 double* STATES, double* ALGEBRAIC, int* pret)
 {
   static double val = 0.1;

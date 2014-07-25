@@ -287,7 +287,7 @@ public:
   already_AddRefd<iface::cellml_services::DAESolverRun>
   createDAEIntegrationRun(iface::cellml_services::DAESolverCompiledModel* aModel)
     throw(std::exception&);
-  
+
   std::wstring lastError() throw(std::exception&)
   {
     return mLastError;

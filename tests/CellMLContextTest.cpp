@@ -75,7 +75,7 @@ CellMLContextTest::testCellMLContext()
                      mContext->typeAnnotationManager());
   CPPUNIT_ASSERT(tam);
 
-  //    
+  //
   //    /**
   //     * The model loader...
   //     */
@@ -249,7 +249,7 @@ CellMLContextTest::testModelList()
   ml->removeModelMonitor(&gTMM);
   mlBr->name(L"world");
   CPPUNIT_ASSERT_EQUAL(0, gTMM.countRenames);
-  
+
   //
   //    /**
   //     * Adds a model list monitor. This will receive notifications of changes to

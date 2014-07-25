@@ -110,7 +110,7 @@ CDA_CodeExporter::generateCodeCommonHeader(std::wstring& output,
   output += getCodeSection(L"preStateCount");
   output += toStr(codeinfo->rateIndexCount());
   output += getCodeSection(L"postStateCount");
-  
+
   output += getCodeSection(L"preConstantCount");
   output += toStr(codeinfo->constantIndexCount());
   output += getCodeSection(L"postConstantCount") + getCodeSection(L"topSection");
@@ -129,7 +129,7 @@ CDA_CodeExporter::generateCodeCommonHeader(std::wstring& output,
     output += getCodeSection(L"varListA");
     {
       RETURN_INTO_WSTRING(n, ct->name());
-      output += n; 
+      output += n;
     }
 
     output += getCodeSection(L"varListB");
@@ -214,7 +214,7 @@ CDA_CodeExporter::generateCodeExplicit(iface::cellml_api::Model* model)
     return output;
 
   generateCodeCommonFooter(output, codeinfo);
-  
+
   return output;
 }
 
@@ -254,7 +254,7 @@ CDA_CodeExporter::generateCodeImplicit(iface::cellml_api::Model* model)
   output += getCodeSection(L"postRootInformation");
 
   generateCodeCommonFooter(output, codeinfo);
-  
+
   return output;
 }
 
@@ -301,7 +301,7 @@ CDA_CodeExporter::getCodeSection(const std::wstring& name)
   return std::wstring(L"");
 }
 
-std::wstring 
+std::wstring
 CDA_CodeExporter::getAlgebraic(const std::wstring& ratesCalc, const std::wstring& algebraicNamePattern)
   throw(std::exception&)
 {
@@ -429,14 +429,14 @@ CDA_CodeExporter::listVariablesByState(iface::cellml_services::CodeInformation *
 
     RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable,
                        ct->variable());
-    
+
     str += diffop(ct->degree());
     RETURN_INTO_WSTRING(n, v->name());
     str += n;
     str += L" in component ";
     RETURN_INTO_WSTRING(cn, v->componentName());
     str += cn;
-    
+
     DECLARE_QUERY_INTERFACE_OBJREF(vElement, v, cellml_api::CellMLElement);
     RETURN_INTO_OBJREF(model, iface::cellml_api::Model, vElement->modelElement());
     RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, model->xmlBase());
@@ -455,11 +455,11 @@ CDA_CodeExporter::listFlaggedEquations(iface::cellml_services::CodeInformation *
   throw(std::exception&)
 {
   uint32_t i, l;
-  RETURN_INTO_OBJREF(mnl, iface::mathml_dom::MathMLNodeList, 
+  RETURN_INTO_OBJREF(mnl, iface::mathml_dom::MathMLNodeList,
      cci->flaggedEquations());
   std::wstring str(L"");
   l = mnl->length();
-  
+
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(apply, iface::dom::Node, mnl->item(i));
@@ -586,9 +586,9 @@ CDA_CodeExporter::getExplicitCodeGenerator()
 {
   if (mLangDict == NULL)
     return NULL;
-  RETURN_INTO_OBJREF(cgbs, iface::cellml_services::CodeGeneratorBootstrap, 
+  RETURN_INTO_OBJREF(cgbs, iface::cellml_services::CodeGeneratorBootstrap,
                      CreateCodeGeneratorBootstrap());
-  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator, 
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::CodeGenerator,
                      cgbs->createCodeGenerator());
   transferCommonCodeAttributes(cg);
 
@@ -602,9 +602,9 @@ CDA_CodeExporter::getImplicitCodeGenerator()
 {
   if (mLangDict == NULL)
     return NULL;
-  RETURN_INTO_OBJREF(cgbs, iface::cellml_services::CodeGeneratorBootstrap, 
+  RETURN_INTO_OBJREF(cgbs, iface::cellml_services::CodeGeneratorBootstrap,
                      CreateCodeGeneratorBootstrap());
-  RETURN_INTO_OBJREF(cg, iface::cellml_services::IDACodeGenerator, 
+  RETURN_INTO_OBJREF(cg, iface::cellml_services::IDACodeGenerator,
                      cgbs->createIDACodeGenerator());
 
   transferCommonCodeAttributes(cg);
@@ -680,7 +680,7 @@ CDA_CeLEDSExporterBootstrap::createDictGeneratorFromText(const std::wstring& XML
 }
 
 std::wstring
-CDA_CeLEDSExporterBootstrap::loadError() 
+CDA_CeLEDSExporterBootstrap::loadError()
   throw()
 {
   return mLoadError;

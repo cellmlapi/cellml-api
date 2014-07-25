@@ -440,7 +440,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(rdf_api::TripleSet);
   CDA_IMPL_ID;
-  
+
   already_AddRefd<iface::rdf_api::TripleEnumerator> enumerateTriples()
     throw(std::exception&);
 private:

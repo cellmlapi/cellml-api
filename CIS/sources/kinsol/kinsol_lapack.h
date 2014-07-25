@@ -2,7 +2,7 @@
  * -----------------------------------------------------------------
  * $Revision: 1.4 $
  * $Date: 2008/04/18 19:42:38 $
- * ----------------------------------------------------------------- 
+ * -----------------------------------------------------------------
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * Copyright (c) 2006, The Regents of the University of California.
@@ -26,7 +26,7 @@ extern "C" {
 
 /*
  * =================================================================
- *            E X P O R T E D    F U N C T I O N S 
+ *            E X P O R T E D    F U N C T I O N S
  * =================================================================
  */
 
@@ -56,7 +56,7 @@ SUNDIALS_EXPORT int KINLapackDense(void *kinmem, int N);
  * Function : KINLapackBand
  * -----------------------------------------------------------------
  * A call to the KINLapackBand function links the main solver
- * with the KINLAPACK linear solver using banded Jacobians. 
+ * with the KINLAPACK linear solver using banded Jacobians.
  *
  * kinmem is the pointer to the solver memory returned by KINCreate.
  *

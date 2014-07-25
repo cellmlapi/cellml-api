@@ -60,7 +60,7 @@ CDA_TeLICeMService::parseModel(const std::wstring& aModelText)
   delete [] s;
 
   TeLICeMStateScan lex(&str, &parseCellML);
-  
+
   int ret = telicem_parse(&lex, &parseCellML);
 
   if (ret == 2)
@@ -97,7 +97,7 @@ CDA_TeLICeMService::parseMaths(iface::dom::Document* aDoc, const std::wstring& a
   delete [] s;
 
   TeLICeMStateScan lex(&str, &parseMath);
-  
+
   int ret = telicem_parse(&lex, &parseMath);
 
   if (ret == 2)
@@ -131,7 +131,7 @@ IsBuiltin(const std::wstring& aStr)
   wchar_t c = s[0];
   if (c > L'z' || c < L'a')
     return false;
-  
+
   const wchar_t** search = idents[c - L'a'];
   for (const wchar_t** p = search; *p != NULL; p++)
     if (!wcscmp(*p, s))
@@ -318,7 +318,7 @@ ShowUnit(const std::wstring& indent, iface::cellml_api::Unit* aUnit)
     any_swprintf(buf, 30, L"%g", expo);
     attrs = attrs + L"expo:" + buf;
   }
-  
+
   double mult = aUnit->multiplier();
   if (mult != 0.0)
   {
@@ -690,7 +690,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
           {
             RETURN_INTO_OBJREF(caseEl, iface::mathml_dom::MathMLCaseElement,
                                mpe->getCase(i));
-            
+
             if (caseEl == NULL)
               break;
             RETURN_INTO_OBJREF(caseValue, iface::mathml_dom::MathMLContentElement,
@@ -701,7 +701,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
             std::map<std::wstring, std::wstring> cattrs;
             AddContentElementAttributes(caseEl, cattrs);
             txt += ShowAttributes(cattrs);
-            
+
             txt += ShowMathExpression(newIndent, caseCond, 100) + L" then " +
                    ShowMathExpression(newIndent, caseValue, 100) + L"\n";
           }
@@ -757,7 +757,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
       RETURN_INTO_OBJREF(mceT, iface::dom::Node, mce->getArgument(1));
       DECLARE_QUERY_INTERFACE_OBJREF(tn, mceT, dom::Text);
       RETURN_INTO_WSTRING(mceS, tn->data());
-      
+
       txt += ShowIdentifier(StripWhitespace(mceS));
 
       RETURN_INTO_WSTRING(type, mce->type());
@@ -774,7 +774,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
 
     RETURN_INTO_OBJREF(op, iface::mathml_dom::MathMLElement,
                        mae->_cxx_operator());
-    
+
     DECLARE_QUERY_INTERFACE_OBJREF(pds, op, mathml_dom::MathMLPredefinedSymbol);
 
     if (pds == NULL)
@@ -862,7 +862,7 @@ ShowMathExpression(std::wstring aIndent, iface::mathml_dom::MathMLContentElement
             }
           }
           break;
-          
+
         case OperatorInformation::DERIVATIVE_LIKE:
           {
             RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
@@ -944,7 +944,7 @@ ShowRole(const std::wstring& indent, iface::cellml_api::Role* aRole)
     txt += L"modifier";
     break;
   }
-  
+
   std::wstring attrs;
   iface::cellml_api::Role::DirectionType dir = aRole->direction();
   if (dir != iface::cellml_api::Role::FORWARD)
@@ -996,7 +996,7 @@ ShowRole(const std::wstring& indent, iface::cellml_api::Role* aRole)
     }
     txt += indent + L"endrole";
   }
-  
+
   txt += L";\n";
 
   return txt;
@@ -1095,11 +1095,11 @@ ShowComponent(const std::wstring& indent, iface::cellml_api::CellMLComponent* aC
     if (me == NULL)
       break;
     DECLARE_QUERY_INTERFACE_OBJREF(mme, me, mathml_dom::MathMLMathElement);
-    
+
     if (mme != NULL)
       txt += ShowMathElementWithDef(nextIndent, mme);
   }
-  
+
   txt += indent + L"enddef;\n";
 
   return txt;
@@ -1125,7 +1125,7 @@ ShowConnection(const std::wstring& indent, iface::cellml_api::Connection* aConne
   RETURN_INTO_WSTRING(fcn, cms->firstComponentName());
   RETURN_INTO_WSTRING(scn, cms->secondComponentName());
   txt += ShowIdentifier(fcn) + L" and " + ShowIdentifier(scn) + L" for\n";
-  
+
   std::wstring nextIndent = indent + L"  ";
   RETURN_INTO_OBJREF(vms, iface::cellml_api::MapVariablesSet,
                      aConnection->variableMappings());
@@ -1286,7 +1286,7 @@ int telicem_lex(TeLICeMSLValue* aLValue, TeLICeMStateScan* aLexer)
     while (true)
     {
       val = aLexer->yylex();
-      
+
       if (val == MAGIC_NEWLINE)
         aLexer->newRow();
       else

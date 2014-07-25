@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import cellml_api.Model;
 
 public class CellMLWriter {
-	
+
 	/**
 	 * Writing to a file
 	 */

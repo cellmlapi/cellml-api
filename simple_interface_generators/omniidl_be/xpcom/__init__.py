@@ -10,7 +10,7 @@ def run(tree, args):
 
     tree.directory, tree.filename = os.path.split(tree.file())
     tree.filebase, extension = os.path.splitext(tree.filename)
-    
+
     # Firstly, annotate everything with the correct identifiers...
     tree.accept(identifier.Annotator())
     xpidlgen.run(tree)

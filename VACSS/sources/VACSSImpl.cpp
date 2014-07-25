@@ -52,12 +52,12 @@ CDA_CellMLValidityErrorSet::getValidityError(uint32_t aIndex)
 {
   if (aIndex >= mErrors.size())
     throw iface::cellml_api::CellMLException(L"Index out of bounds on CellMLValidityErrorSet");
-  
+
   iface::cellml_services::CellMLValidityError* e = mErrors[aIndex];
-  
+
   if (e != NULL)
     e->add_ref();
-  
+
   return e;
 }
 
@@ -1335,7 +1335,7 @@ ModelValidation::validateElementRepresentation
           validateElementRepresentation(cel, **e);
           break;
         }
-        
+
         if (extraEl && *e == NULL)
         {
           if (ns == CELLML_1_0_NS || ns == CELLML_1_1_NS || ns == MATHML_NS ||
@@ -1400,7 +1400,7 @@ ModelValidation::validateExtensionElement(iface::dom::Element* aEl)
 
   RETURN_INTO_OBJREF(elcnl, iface::dom::NodeList, aEl->childNodes());
   l = elcnl->length();
-  
+
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, elcnl->item(i));
@@ -1458,7 +1458,7 @@ ModelValidation::validateRelationshipRef(iface::dom::Element* aRR)
   bool seenRelationship = false;
   bool seenName = false;
   bool seenEncapsulation = false;
-  
+
   for (i = 0; i < l; i++)
   {
     RETURN_INTO_OBJREF(n, iface::dom::Node, nnm->item(i));
@@ -1936,7 +1936,7 @@ ModelValidation::validateMaths(iface::cellml_api::CellMLElement* aContext,
                  mae);
       continue;
     }
-    
+
     RETURN_INTO_WSTRING(oln, op->localName());
     if (oln != L"eq")
     {
@@ -2067,7 +2067,7 @@ ModelValidation::validateMathMLExpression
 
   // Get the element name...
   RETURN_INTO_WSTRING(ln, el->localName());
-  
+
   if (ln == L"semantics")
   {
     // If it is a semantics element, extract the annotated MathML and continue...
@@ -2275,7 +2275,7 @@ ModelValidation::validateMathMLConstant
     {
       if (ln == L"units")
         continue;
-      
+
       REPR_ERROR(L"Invalid attribute in the CellML namespace found on "
                  L"MathML cn element", n);
       continue;
@@ -2323,7 +2323,7 @@ ModelValidation::validateMathMLConstant
   if (j < i)
     j = i - 1;
   txt = txt.substr(i, j - i + 1);
-  
+
   // Now, we need to see if the constant is valid. For now, we are treating it
   // as a real number in base 10...
   /*
@@ -2591,7 +2591,7 @@ ModelValidation::validateMathMLCI
     return NULL;
   }
   RETURN_INTO_WSTRING(vunits, v->unitsName());
-  
+
   if (mStrictCUSES == NULL)
     return NULL;
 
@@ -2717,12 +2717,12 @@ ModelValidation::validateMathMLPiecewise
                 }
               }
               break;
-              
+
             case iface::dom::Node::ENTITY_REFERENCE_NODE:
             case iface::dom::Node::PROCESSING_INSTRUCTION_NODE:
               REPR_ERROR(L"Unexpected content inside piece element", n2);
               break;
-              
+
             default:
               ;
             }
@@ -2901,7 +2901,7 @@ ModelValidation::processSep(iface::dom::Node* n, double& v1, double& v2)
     REPR_ERROR(L"Expected a <sep/> element in constant, but none found.", n);
     v2 = std::numeric_limits<double>::quiet_NaN();
   }
-  
+
   v2 = stringToNumber(n, value);
 }
 
@@ -2915,7 +2915,7 @@ ModelValidation::evalConstant(iface::mathml_dom::MathMLCnElement* mcne)
     REPR_WARNING(L"Units could not be fully checked because constants in bases other than 10 are not supported.", mcne);
     return std::numeric_limits<double>::quiet_NaN();
   }
-  
+
   RETURN_INTO_WSTRING(t, mcne->type());
   if (t == L"integer" || t == L"real")
   {
@@ -2952,7 +2952,7 @@ ModelValidation::findConstantValue
   DECLARE_QUERY_INTERFACE_OBJREF(el2, an, dom::Element);
   if (el2 == NULL)
     return false;
-    
+
   RETURN_INTO_WSTRING(ns2, el2->namespaceURI());
   if (ns2 != MATHML_NS)
     return false;
@@ -2976,7 +2976,7 @@ ModelValidation::findConstantValue
   // This is safe because cn is non-null...
   DECLARE_QUERY_INTERFACE_OBJREF(cn, el2, mathml_dom::MathMLCnElement);
   RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
-    
+
   DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
   if (tn != NULL)
   {
@@ -2990,7 +2990,7 @@ ModelValidation::findConstantValue
     if (j < i)
       j = i - 1;
     tns = tns.substr(i, j - i + 1);
-    
+
     wchar_t* e;
     aValue = wcstod(tns.c_str(), &e);
     if (*e != 0 || aValue == 0)
@@ -3076,7 +3076,7 @@ ModelValidation::validateMathMLApply
         if QUAL(lowlimit) else if QUAL(uplimit) else if QUAL(bvar)
         else if QUAL(degree) else if QUAL(logbase) else if QUAL(interval)
         else if QUAL(condition) else if QUAL(domainofapplication) else if QUAL(momentabout);
-        
+
         nChildren++;
 
         if (nChildren == 1)
@@ -3310,7 +3310,7 @@ ModelValidation::validateMathMLApply
         REPR_ERROR(L"degree qualifier should be in dimensionless units",
                    el2);
       }
-      
+
       // To work out the units properly, we actually need a number for the
       // degree...
       ObjRef<iface::dom::Node> n3;
@@ -3321,11 +3321,11 @@ ModelValidation::validateMathMLApply
         DECLARE_QUERY_INTERFACE_OBJREF(el3, n3, dom::Element);
         if (el3 == NULL)
           continue;
-        
+
         RETURN_INTO_WSTRING(ns3, el3->namespaceURI());
         if (ns3 != MATHML_NS)
           continue;
-        
+
         RETURN_INTO_WSTRING(ln3, el3->localName());
         if (ln3 == L"semantics")
         {
@@ -3344,7 +3344,7 @@ ModelValidation::validateMathMLApply
         // This is safe because degreeUnits is non-null...
         DECLARE_QUERY_INTERFACE_OBJREF(cn, el3, mathml_dom::MathMLCnElement);
         RETURN_INTO_OBJREF(cna, iface::dom::Node, cn->getArgument(1));
-        
+
         DECLARE_QUERY_INTERFACE_OBJREF(tn, cna, dom::Text);
         if (tn != NULL)
         {
@@ -3469,7 +3469,7 @@ ModelValidation::validateMathMLApply
     doaElement = L"condition";
   else if (domainofapplication)
     doaElement = L"domainofapplication";
-  
+
   if (doaElement != L"")
   {
     REPR_WARNING(L"Domain of "
@@ -3637,7 +3637,7 @@ ModelValidation::validateMathMLApply
   {
     std::list<iface::cellml_services::CanonicalUnitRepresentation*>::iterator
       ui(unitsList.begin());
-    
+
     iface::cellml_services::CanonicalUnitRepresentation* ubase = *ui++;
     iface::cellml_services::CanonicalUnitRepresentation* uexp = *ui++;
 
@@ -3725,7 +3725,7 @@ ModelValidation::validateMathMLApply
     {
       REPR_WARNING(L"It is not valid to divide by a boolean value", op);
     }
-    
+
     return udividend->mergeWith(1.0, udivisor, -1.0);
   }
 
@@ -3909,7 +3909,7 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
                          cci->nextComponent());
       if (cc == NULL)
         break;
-      
+
       validatePerComponent(cc);
     }
   }
@@ -3925,7 +3925,7 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
                          cui->nextUnits());
       if (cu == NULL)
         break;
-      
+
       validatePerUnits(cu);
     }
   }
@@ -3935,7 +3935,7 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
                        aModel->connections());
     RETURN_INTO_OBJREF(coni, iface::cellml_api::ConnectionIterator,
                        cons->iterateConnections());
-    
+
     while (true)
     {
       RETURN_INTO_OBJREF(conn, iface::cellml_api::Connection,
@@ -4023,7 +4023,7 @@ ModelValidation::validatePerModel(iface::cellml_api::Model* aModel)
     RETURN_INTO_OBJREF(ci, iface::cellml_api::CellMLImport, cii->nextImport());
     if (ci == NULL)
       break;
-    
+
     validatePerImport(ci);
 
     RETURN_INTO_OBJREF(m, iface::cellml_api::Model, ci->importedModel());
@@ -4048,10 +4048,10 @@ ModelValidation::validatePerImport(iface::cellml_api::CellMLImport* aImport)
                        cci->nextImportComponent());
     if (cc == NULL)
       break;
-    
+
     validatePerImportComponent(cc);
   }
-  
+
   RETURN_INTO_OBJREF(cus, iface::cellml_api::ImportUnitsSet,
                      aImport->units());
   RETURN_INTO_OBJREF(cui, iface::cellml_api::ImportUnitsIterator,
@@ -4062,7 +4062,7 @@ ModelValidation::validatePerImport(iface::cellml_api::CellMLImport* aImport)
                        cui->nextImportUnits());
     if (cu == NULL)
       break;
-    
+
     validatePerImportUnits(cu);
   }
 }
@@ -4310,7 +4310,7 @@ ModelValidation::checkComponentRelevant(iface::cellml_api::CellMLComponent* aCom
                          ici->nextImportComponent());
       if (ic == NULL)
         return false;
-      
+
       RETURN_INTO_WSTRING(cr, ic->componentRef());
       if (cr == componentName)
       {
@@ -4407,7 +4407,7 @@ ModelValidation::validatePerConnection(iface::cellml_api::Connection* aConn)
                        vmi->nextMapVariable());
     if (mv == NULL)
       break;
-    
+
     ObjRef<iface::cellml_api::CellMLVariable> v1, v2;
     try
     {
@@ -4679,11 +4679,11 @@ ModelValidation::validateGroupComponentRefs
             msg += L" with name ";
             msg += name;
           }
-          
+
           msg += L" has more than one non-terminal component_ref to ";
           RETURN_INTO_WSTRING(cname, c->name());
           msg += cname;
-          
+
           SEMANTIC_ERROR(msg, cr);
         }
         else
@@ -4810,13 +4810,13 @@ CDA_VACSService::advanceCursorThroughNodeUntil
       aCol += attrName.length() + 2;
 
       RETURN_INTO_WSTRING(attrValue, attr->nodeValue());
-      
+
       advanceCursorThroughString(attrValue, aRow, aCol, isUntilNode,
                                  aUntilOffset);
 
       if (isUntilNode)
         return true;
-      
+
       // Closing quote...
       aCol += 1;
     }

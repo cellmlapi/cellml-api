@@ -58,5 +58,5 @@ main(int argc, char** argv)
   {
     std::wcout << L"Problem flattening model: " << mf->lastError() << std::endl;
     return 3;
-  }  
+  }
 }

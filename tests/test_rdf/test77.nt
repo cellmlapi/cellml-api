@@ -9,6 +9,6 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id: test0006.nt,v 1.2 2001/09/06 21:07:19 barstow Exp $
-# 
+#
 #####################################################################
 <http://example.org/resource/> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/class/> .

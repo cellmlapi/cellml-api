@@ -93,7 +93,7 @@ private:
    * natural number giving an unused name.
    */
   void EnsureComponentNameUnique(std::wstring& cname);
-  
+
   /**
    * Copy any relevant connections into the new model.
    *
@@ -120,7 +120,7 @@ private:
    */
   void CopyUnits(iface::cellml_api::UnitsSet* unitset,
                  iface::cellml_api::CellMLElement* target);
-  
+
   /**
    * Copy any extension elements.
    */
@@ -132,7 +132,7 @@ private:
    * CeVAS to find components to copy.
    */
   void CopyComponents(iface::cellml_services::CeVAS* cevas);
-  
+
   /**
    * Copy the given component into the given model.
    *
@@ -172,13 +172,13 @@ private:
    * zero.
    */
   already_AddRefd<iface::dom::Element> CopyDOMElement(iface::dom::Element* in);
-  
+
   /**
    * Create and return a (manual) deep copy of the given MathML element.
    */
   already_AddRefd<iface::mathml_dom::MathMLElement>
   CopyMathElement(iface::cellml_api::MathMLElement in);
-  
+
 
   /**
    * Try to make all initial_value attributes valid CellML 1.0.

@@ -23,14 +23,14 @@ module cellml_services
      * (i.e. is the variable of integration).
      */
     VARIABLE_OF_INTEGRATION,
-    
+
     /**
      * The target has a specific, immediate value, taken from an
      * initial_value attribute, or computed from other constants. It is
      * possible for both derivatives and non-state variables to be constant.
      */
     CONSTANT,
-    
+
     /**
      * The target is a state variable, that is, it starts at an initial
      * value and evolves according to rates defined in the model.
@@ -40,14 +40,14 @@ module cellml_services
      * of type STATE_VARIABLE.
      */
     STATE_VARIABLE,
-    
+
     /**
      * The target is not a state variable, but can be computed from constants,
      * state variables, variable(s) of integration and other 'algebraic'
      * variables.
      */
     ALGEBRAIC,
-    
+
     /**
      * No way to compute the variable has yet been determined. This can happen
      * if the model is under-constrained or unsuitably constrained, and no
@@ -56,13 +56,13 @@ module cellml_services
      * compute this variable.
      */
     FLOATING,
-    
+
     /**
      * The variable is used only locally, for example as the bound variable of a
      * definite integral.
      */
     LOCALLY_BOUND,
-    
+
     /**
      * IDA-type only: A variable which changes with time, but is not driven by a
      * higher derivative. In non-IDA type code generation, this would be an
@@ -82,7 +82,7 @@ module cellml_services
      * computed.
      */
     UNDERCONSTRAINED,
-    
+
     /**
      * There were variables which couldn't be found, but there were also
      * equations which could not be used. This normally means that there is
@@ -91,7 +91,7 @@ module cellml_services
      * this and be solved.
      */
     UNSUITABLY_CONSTRAINED,
-    
+
     /**
      * The model is overconstrained. The code generator will stop at the point
      * where a redundant equation was found. The redundant equation will be
@@ -99,7 +99,7 @@ module cellml_services
      * that have already been assigned.
      */
     OVERCONSTRAINED,
-    
+
     /**
      * The model is correctly constrained. flaggedEquations contains all
      * equations which are evaluated using the Newton-Raphson solver.
@@ -115,19 +115,19 @@ module cellml_services
      * more than one computable for a single variable.
      */
     readonly attribute cellml_api::CellMLVariable variable;
-    
+
     /**
      * The degree associated with the variable. This is zero if the value isn't
      * a derivative, one for a first order derivative, two for a second order
      * derivative, and so on.
      */
     readonly attribute unsigned long degree;
-    
+
     /**
      * The type of variable.
      */
     readonly attribute VariableEvaluationType type;
-    
+
     /**
      * The expression for the variable in the procedural language. This is
      * taken from the expression or expression_d&lt;derivative> annotations
@@ -135,7 +135,7 @@ module cellml_services
      * based on the patterns provided to the CodeGenerator.
      */
     readonly attribute wstring name;
-    
+
     /**
      * Fetches the index assigned to this variable.
      * @exception CellMLException if no index was assigned to the variable.
@@ -143,7 +143,7 @@ module cellml_services
     readonly attribute unsigned long assignedIndex;
   };
 #pragma terminal-interface
-  
+
   interface ComputationTargetIterator
     : XPCOM::IObject
   {
@@ -153,7 +153,7 @@ module cellml_services
     ComputationTarget nextComputationTarget();
   };
 #pragma terminal-interface
-  
+
   interface CodeInformation
     : XPCOM::IObject
   {
@@ -163,34 +163,34 @@ module cellml_services
      * this object.
      */
     readonly attribute wstring errorMessage;
-    
+
     /**
      * The constraint level, describing whether or not the model is correctly
      * constrained. Note that improperly constrained models result in
      * constraintLevel being set, rather than setting an errorMessage.
      */
     readonly attribute ModelConstraintLevel constraintLevel;
-    
+
     /**
      * The number of variables which were assigned indices in the algebraic
      * variables array. This counts a single CellML variable multiple times if
      * extra variables are inserted due to higher order derivatives.
      */
     readonly attribute unsigned long algebraicIndexCount;
-    
+
     /**
      * The number of variables which were assigned indices into the rates
      * and state variables array. This counts a single CellML variable multiple
      * times if extra rates are inserted due to higher order derivatives.
      */
     readonly attribute unsigned long rateIndexCount;
-    
+
     /**
      * The number of variables which were assigned indices into the constants
      * array.
      */
     readonly attribute unsigned long constantIndexCount;
-    
+
     /**
      * There are three types of code strings that can be obtained, each for a
      * different purpose. Note that as variables are computed, they are added
@@ -309,7 +309,7 @@ module cellml_services
      * Default: VOI
      */
     attribute wstring voiPattern;
-    
+
     /**
     * The pattern used to generate code for sampling from a density function.
     * &lt;SUP> can be used to split the code into a main and supplementary part.
@@ -347,7 +347,7 @@ module cellml_services
      * Default: 0
      */
     attribute unsigned long arrayOffset;
-    
+
     /**
      * The pattern which is used to set variables by assignment.
      * &lt;LHS> is replaced by the variable name.
@@ -383,7 +383,7 @@ module cellml_services
      * Default: rootfind_&lt;ID>(VOI, CONSTANTS, RATES, STATES, ALGEBRAIC, pret);\\r\\n&lt;SUP>void objfunc_&lt;ID>(double *p, double *hx, int m, int n, void *adata)\\r\\n{\\r\\n  /* Solver for equation: &lt;XMLID> *\/\\r\\n  struct rootfind_info* rfi = (struct rootfind_info*)adata;\\r\\n#define VOI rfi->aVOI\\r\\n#define CONSTANTS rfi->aCONSTANTS\\r\\n#define RATES rfi->aRATES\\r\\n#define STATES rfi->aSTATES\\r\\n#define ALGEBRAIC rfi->aALGEBRAIC\\r\\n#define pret rfi->aPRET\\r\\n  &lt;VAR> = *p;\\r\\n  *hx = (&lt;LHS>) - (&lt;RHS>);\\r\\n#undef VOI\\r\\n#undef CONSTANTS\\r\\n#undef RATES\\r\\n#undef STATES\\r\\n#undef ALGEBRAIC\\r\\n#undef pret\\r\\n}\\r\\nvoid rootfind_&lt;ID>(double VOI, double* CONSTANTS, double* RATES, double* STATES, double* ALGEBRAIC, int* pret)\\r\\n{\\r\\n  static double val = &lt;IV>;\\r\\n  double bp, work[LM_DIF_WORKSZ(1, 1)];\\r\\n  struct rootfind_info rfi;\\r\\n  rfi.aVOI = VOI;\\r\\n  rfi.aCONSTANTS = CONSTANTS;\\r\\n  rfi.aRATES = RATES;\\r\\n  rfi.aSTATES = STATES;\\r\\n  rfi.aALGEBRAIC = ALGEBRAIC;\\r\\n  rfi.aPRET = pret;\\r\\n  do_levmar(objfunc_&lt;ID>, &val, &bp, work, pret, 1, &rfi);\\r\\n  &lt;VAR> = val;\\r\\n}\\r\\n
      */
     attribute wstring solvePattern;
-    
+
     /**
      * The pattern which is used to solve a system of n equations in n unknowns.
      * &lt;EXPR> is replaced by the expression for the difference between the two sides
@@ -462,13 +462,13 @@ module cellml_services
      * will be requested every time you call generateCode.
      */
     attribute cellml_services::AnnotationSet useAnnoSet;
-    
+
     /**
      * Generates a CodeInformation object for a model.
      * @param sourceModel The model for which to generate the CodeInformation.
      */
     CodeInformation generateCode(in cellml_api::Model sourceModel);
-    
+
     /**
      * Creates a CustomGenerator object for a model. Note that this picks
      * up on the transform, CeVAS, CUSES, AnnoSet, stateVariableNamePattern,
@@ -476,7 +476,7 @@ module cellml_services
      * and arrayOffset - everything else is specific to generateCode.
      */
     CustomGenerator createCustomGenerator(in cellml_api::Model sourceModel);
-    
+
     /**
      * If false, any text entered shall be passed through the MaLaES sanitiser to
      * strip out passthrough text. This prevents the generated code from containing
@@ -509,14 +509,14 @@ module cellml_services
      *       in one round).
      */
     readonly attribute ModelConstraintLevel constraintLevel;
-    
+
     /**
      * The number of variables which were assigned indices in the variables
      * array. There can be multiple entries for the same CellML variable - at
      * most one for each degree of integration.
      */
     readonly attribute unsigned long indexCount;
-    
+
     /**
      * Iterates through all computation targets. Several things to note:
      *  * The objects retrieved are copied and changed from those fetched from
@@ -558,7 +558,7 @@ interface CustomGenerator
    * Iterates through all computation targets.
    */
   ComputationTargetIterator iterateTargets();
-  
+
   /**
    * Requests computation of a particular computation target, if computation
    * is possible.

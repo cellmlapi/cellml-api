@@ -55,21 +55,21 @@
 		<unit exponent="-1" units="nanomolar"/>
 		<unit exponent="-1" units="hour"/>
 	</units>
-	
+
 	<!-- components -->
 	<component xmlns:cmeta="http://www.cellml.org/metadata/1.1#" cmeta:id="MP" name="interface">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 		  <rdf:Description rdf:about="#MP">
 			<dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">MP</dc:title>
-			<dcterms:alternative xmlns:dcterms="http://purl.org/dc/terms/">Per mRNA</dcterms:alternative>  
+			<dcterms:alternative xmlns:dcterms="http://purl.org/dc/terms/">Per mRNA</dcterms:alternative>
 		  </rdf:Description>
-		</rdf:RDF> 
+		</rdf:RDF>
 		<variable cmeta:id="MP_MP" initial_value="M_init" name="M" public_interface="out" units="nanomolar"/>
 		<variable name="vs" public_interface="in" units="flux"/>
-		<variable name="vm" public_interface="in" units="flux"/> 
+		<variable name="vm" public_interface="in" units="flux"/>
 		<variable name="Km" public_interface="in" units="nanomolar"/>
-		<variable name="KI" public_interface="in" units="nanomolar"/> 
-		<variable name="kd" public_interface="in" units="first_order_rate_constant"/> 
+		<variable name="KI" public_interface="in" units="nanomolar"/>
+		<variable name="kd" public_interface="in" units="first_order_rate_constant"/>
 		<variable name="CN" public_interface="in" units="nanomolar"/>
 		<variable name="time" public_interface="in" units="hour"/>
 		<variable name="n" public_interface="in" units="dimensionless"/>
@@ -136,7 +136,7 @@
 			</apply>
 		</math>
 	</component>
-   
+
    	<!-- metadata -->
 	<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 		<rdf:Description rdf:about="#law1">

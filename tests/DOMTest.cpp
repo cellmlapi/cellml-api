@@ -250,7 +250,7 @@ DOMTest::testSerialiseChildElements()
   el2->release_ref();
   de->appendChild(el)->release_ref();
   el->release_ref();
-  
+
   CPPUNIT_ASSERT_NO_THROW(el = doc->createElementNS
                           (L"http://www.physiome.org/testsuite/1",
                            L"test2"));

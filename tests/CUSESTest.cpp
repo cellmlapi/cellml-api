@@ -73,7 +73,7 @@ CUSESTest::testCUSESObject()
     * bu2 = bui2->unit(), * bu3 = bui3->unit(), * butmp;
 
   std::wstring str1 = bu1->name(), str2 = bu2->name(), str3 = bu3->name(), strtmp;
-  
+
 #define ASSIGN(n1, n2) \
   bui##n1 = bui##n2; \
   bu##n1 = bu##n2; \

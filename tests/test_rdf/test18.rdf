@@ -5,7 +5,7 @@
 
         rdf:li is unaffected by other rdf:_nnn properties.
 
-        This test case is concerned only with defining the 
+        This test case is concerned only with defining the
         triples that this particular example RDF/XML represents.
         It is not concerned with whether that collection of
         triples violates any other constraints, e.g.
@@ -16,9 +16,9 @@
   Copyright World Wide Web Consortium, (Massachusetts Institute of
   Technology, Institut National de Recherche en Informatique et en
   Automatique, Keio University).
- 
+
   All Rights Reserved.
- 
+
   Please see the full Copyright clause at
   <http://www.w3.org/Consortium/Legal/copyright-software.html>
 

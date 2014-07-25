@@ -15,21 +15,21 @@ public class TestMain
 
         Model m = cb.createModel("1.1");
         m.setName("example1");
-        
+
         //creating units
         Units units = m.createUnits();
         m.addElement(units);
         units.setName("second");
-        
+
         Unit unit = m.createUnit();
         units.addElement(unit);
         unit.setUnits("second");
-        
+
         //creating component 1
-        CellMLComponent comp1 = m.createComponent(); 
+        CellMLComponent comp1 = m.createComponent();
         m.addElement(comp1);
-        comp1.setName("component1");        
-        
+        comp1.setName("component1");
+
         //adding a variable to component 1
         CellMLVariable var1 = m.createCellMLVariable();
         comp1.addElement(var1);
@@ -45,28 +45,28 @@ public class TestMain
         CellMLComponent comp2 = m.createComponent();
         m.addElement(comp2);
         comp2.setName("component2");
-        
+
         //adding a variable to component 2
         CellMLVariable var2 = m.createCellMLVariable();
         comp2.addElement(var2);
         var2.setName("variable2");
         var2.setUnitsElement(units);
         var2.setPublicInterface(VariableInterface.INTERFACE_IN);
-        
+
         //connecting the two variables (Creating a connection also creates a MapComponent)
         Connection con = m.createConnection();
         m.addElement(con);
-        
+
         MapComponents mapComp = con.getComponentMapping();
         mapComp.setFirstComponent(comp1);
         mapComp.setSecondComponent(comp2);
-        
+
         MapVariables mapvar = m.createMapVariables();
         con.addElement(mapvar);
-        
+
         mapvar.setFirstVariable(var1);
         mapvar.setSecondVariable(var2);
-        
+
         // Now try an out variable...
         System.loadLibrary("java_vacss");
         VACSService vc = cellml_bootstrap.VACSSBootstrap.createVACSService();

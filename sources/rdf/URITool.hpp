@@ -59,7 +59,7 @@ public:
     : scheme(aCopy.scheme), authority(aCopy.authority), path(aCopy.path),
       query(aCopy.query), fragment(aCopy.fragment)
   {
-    
+
   }
 
   URI(const URI& aBase, const URI& aRelative)
@@ -93,13 +93,13 @@ public:
     if (aRelative.authority == L"")
     {
       authority = aBase.authority;
-      
+
       // rule 5...
       if (aRelative.path[0] != L'/')
       {
         // rule 6...
         std::list<std::wstring> parts;
-        
+
         bool ensureTrailing = false;
         size_t p = 0, pp = 0;
         if (aBase.path == L"")
@@ -114,9 +114,9 @@ public:
             if (p == std::wstring::npos)
               // Drop the last part...
               break;
-            
+
             parts.push_back(aBase.path.substr(pp, p - pp));
-            
+
             pp = p + 1;
           }
         }

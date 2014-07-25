@@ -14,11 +14,11 @@ Index count: 3
   => Index = 2
 * Computation target main/t:0:
   => Type = FLOATING - unused and not requested.
-  => Name = 
+  => Name =
   => Index = 0
 * Computation target main/a:1:
   => Type = FLOATING - unused and not requested.
-  => Name = 
+  => Name =
   => Index = 0
 Functions: void objfunc_0(double *p, double *hx, int m, int n, void *adata)
 {

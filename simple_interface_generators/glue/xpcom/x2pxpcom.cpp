@@ -60,7 +60,7 @@ WrappedPCM::GetObjid(nsACString& aObjid)
 
   aObjid.Assign(objid);
   free(objid);
-  
+
   return NS_OK;
 }
 
@@ -78,7 +78,7 @@ x2p::XPCOM::IObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   X2PFactory* f = X2PFactory::FindFactory(aIID);
   if (f == nsnull)
     return NS_ERROR_NO_INTERFACE;
-  
+
   void* obj = mObj->query_interface(f->GetID());
   if (obj == nsnull)
     return NS_ERROR_NO_INTERFACE;

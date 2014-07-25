@@ -312,10 +312,10 @@ CDACanonicalUnitRepresentation::canonicalise()
         anyChanges = true;
         double newPref = uThis->prefix() * uLast->prefix();
         double newExp = uThis->exponent() + uLast->exponent();
-        
+
         newBaseUnits.back()->release_ref();
         newBaseUnits.pop_back();
-        
+
         if (newExp != 0)
         {
           uLast = new CDABaseUnitInstance(buThis, newPref, 0.0, newExp);
@@ -539,7 +539,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
     RETURN_INTO_OBJREF(u, iface::cellml_api::Units, ui->nextUnits());
     if (u == NULL)
       break;
-    
+
     u->add_ref();
     unitsList.push_back(u);
   }
@@ -610,7 +610,7 @@ CDACUSES::CDACUSES(iface::cellml_api::Model* aModel, bool aStrict)
 
           RETURN_INTO_OBJREF(mod, iface::cellml_api::CellMLElement,
                              imp->parentElement());
-          
+
           std::wstring scopedName(getUnitScope(mod));
           if (scopedName != L"")
             scopedName += L'/';
@@ -825,8 +825,8 @@ CDACUSES::BuiltinUnit(std::wstring& aName)
   // becquerel 	   gram	        kelvin 	 meter 	radian 	  volt
   // candela 	   gray	        kilogram metre 	second 	  watt
   // celsius 	   henry 	liter 	 mole 	siemens   weber
-  // coulomb 	   hertz 	litre 	 newton sievert 	 
-  // dimensionless joule 	lumen 	 ohm 	steradian 	 
+  // coulomb 	   hertz 	litre 	 newton sievert
+  // dimensionless joule 	lumen 	 ohm 	steradian
   if (aName[0] < L'l')
   {
     if (aName[0] < L'g')
@@ -1077,7 +1077,7 @@ CDACUSES::ComputeUnits
   {
     // All units defined in units should now exist (it is an internal error if
     // not), so use this to define the current unit.
-    
+
     RETURN_INTO_OBJREF(us, iface::cellml_api::UnitSet,
                        units->unitCollection());
     RETURN_INTO_OBJREF(ui, iface::cellml_api::UnitIterator,
@@ -1088,13 +1088,13 @@ CDACUSES::ComputeUnits
                          ui->nextUnit());
       if (u == NULL)
         break;
-      
+
       // Find the unit...
       RETURN_INTO_WSTRING(uname, u->units());
-      
+
       if (uname == L"")
         continue;
-      
+
       RETURN_INTO_OBJREF(urep, iface::cellml_services::CanonicalUnitRepresentation,
                          getUnitsByName(units, uname.c_str()));
       // If urep is null, then something is wrong internally, because we have
@@ -1117,7 +1117,7 @@ CDACUSES::ComputeUnits
           newOffset = u->offset() * pow(bu->prefix(), u->exponent()) + bu->offset();
         else
           newOffset = bu->offset();
-        
+
         RETURN_INTO_OBJREF(ub, iface::cellml_services::BaseUnit,
                            bu->unit());
         RETURN_INTO_OBJREF(nbu, iface::cellml_services::BaseUnitInstance,
@@ -1151,7 +1151,7 @@ CDACUSES::getUnitsByName
     scopedFind(mUnitsMap, aContext, aName);
   if (cur != NULL)
     cur->add_ref();
-  
+
   return cur;
 }
 

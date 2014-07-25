@@ -199,7 +199,7 @@ struct XPCOMEquator
     std::string id2(o2->objid());
     return id1 == id2;
   }
-  
+
 private:
   iface::XPCOM::IObject* o2;
 };
@@ -333,7 +333,7 @@ CDA_ModelNode::CDA_ModelNode(iface::cellml_api::Model* aModel)
   mDerivedModels = new CDA_ModelList();
   mDerivedModels->mParentNode = this;
   mModel = aModel;
-  
+
   installModelEventListener(mModel);
 
   // XXX threadsafety (but localtime_r isn't portable).

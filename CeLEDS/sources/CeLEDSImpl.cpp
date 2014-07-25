@@ -19,7 +19,7 @@ CDA_LanguageDictionary::CDA_LanguageDictionary(const std::wstring& nameSpace, if
 }
 
 already_AddRefd<iface::dom::NodeList>
-CDA_LanguageDictionary::getMappings() 
+CDA_LanguageDictionary::getMappings()
   throw(std::exception&)
 {
   RETURN_INTO_OBJREF(entries, iface::dom::NodeList,
@@ -78,10 +78,10 @@ CDA_DictionaryGenerator::CDA_DictionaryGenerator(iface::dom::Document* LangXML)
 }
 
 already_AddRefd<iface::cellml_services::LanguageDictionary>
-CDA_DictionaryGenerator::getDictionary(const std::wstring& dictionaryNameSpace) 
+CDA_DictionaryGenerator::getDictionary(const std::wstring& dictionaryNameSpace)
   throw(std::exception&)
 {
-  // Use XML element dictionary corresponding to 
+  // Use XML element dictionary corresponding to
   // supplied namespace to create new language definition component
   RETURN_INTO_OBJREF(dictionary, iface::dom::Element,
                      getElementNS(dictionaryNameSpace, L"dictionary"));
@@ -111,10 +111,10 @@ CDA_DictionaryGenerator::getElementNS(const std::wstring& nameSpace, const std::
 }
 
 already_AddRefd<iface::cellml_services::MaLaESTransform>
-CDA_DictionaryGenerator::getMalTransform() 
+CDA_DictionaryGenerator::getMalTransform()
   throw(std::exception&)
 {
-  RETURN_INTO_OBJREF(malDict, iface::cellml_services::LanguageDictionary, 
+  RETURN_INTO_OBJREF(malDict, iface::cellml_services::LanguageDictionary,
                      getDictionary(L"http://www.cellml.org/CeLEDS/MaLaES/1.0#"));
   if (malDict == NULL)
     return NULL;
@@ -155,7 +155,7 @@ CDA_DictionaryGenerator::getMalTransform()
   }
 
   // create transformer
-  RETURN_INTO_OBJREF(mb, iface::cellml_services::MaLaESBootstrap, 
+  RETURN_INTO_OBJREF(mb, iface::cellml_services::MaLaESBootstrap,
                      CreateMaLaESBootstrap());
 
   try

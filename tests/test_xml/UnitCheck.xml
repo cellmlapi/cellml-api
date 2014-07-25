@@ -308,7 +308,7 @@
   <units name="jc2_b">
     <unit units="kelvin" multiplier="1.8" offset="-256.15"/>
   </units>
-  
+
   <units name="jc3_a">
     <unit units="coulomb"/>
     <unit units="volt" exponent="-1"/>

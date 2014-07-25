@@ -94,7 +94,7 @@ class CDA_SProSDOMIteratorBase
 public:
   CDA_SProSDOMIteratorBase(iface::dom::Element* parentElement);
   virtual ~CDA_SProSDOMIteratorBase();
-  
+
   already_AddRefd<iface::dom::Element> fetchNextElement();
   /*
    * fetch next element, with a hint that anything without localName aWantEl
@@ -500,7 +500,7 @@ public:
   void level(uint32_t aLevel) throw();
   uint32_t version() throw();
   void version(uint32_t aVersion) throw();
-  
+
   already_AddRefd<iface::SProS::ModelSet> models() throw();
   already_AddRefd<iface::SProS::TaskSet> tasks() throw();
   already_AddRefd<iface::SProS::SimulationSet> simulations() throw();
@@ -569,7 +569,7 @@ private:
   CDA_SProSChangeSet mChangeSet;
 };
 
-class CDA_SProSAlgorithmParameter 
+class CDA_SProSAlgorithmParameter
   : public CDA_SProSBase, public iface::SProS::AlgorithmParameter
 {
 public:
@@ -749,12 +749,12 @@ public:
     : CDA_SProSVariableBase(aParent, aEl), CDA_SProSBase(aParent, aEl),
       mVariableSet(this) {}
   ~CDA_SProSSetValue() {}
-  
+
   CDA_IMPL_QI2(SProS::Base, SProS::SetValue);
-  
+
   std::wstring rangeIdentifier() throw();
   void rangeIdentifier(const std::wstring& aRangeReference) throw();
-  
+
   already_AddRefd<iface::SProS::Range> rangeReference() throw();
   void rangeReference(iface::SProS::Range*) throw();
 
@@ -852,7 +852,7 @@ public:
   ~CDA_SProSRangeSet() {}
 
   CDA_IMPL_QI3(SProS::BaseSet, SProS::IdentifiedElementSet, SProS::RangeSet);
-  
+
   already_AddRefd<iface::SProS::RangeIterator> iterateRanges() throw();
   already_AddRefd<iface::SProS::Range> getRangeByIdentifier(const std::wstring& aId)
     throw()
@@ -870,10 +870,10 @@ public:
   CDA_SProSRangeIterator(CDA_SomeSet* aParent) :
     CDA_SProSIdentifiedElementIteratorBase(aParent) {};
   ~CDA_SProSRangeIterator() {}
-  
+
   CDA_IMPL_QI3(SProS::BaseIterator, SProS::IdentifiedElementIterator,
                SProS::RangeIterator);
-  
+
   already_AddRefd<iface::SProS::Range> nextRange() throw()
   {
     ObjRef<iface::SProS::Range> el(QueryInterface(nextElement()));
@@ -897,7 +897,7 @@ public:
 
   CDA_IMPL_QI5(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement,
                SProS::AbstractTask, SProS::RepeatedTask);
-  
+
   std::wstring rangeIdentifier() throw();
   void rangeIdentifier(const std::wstring& aId) throw();
 
@@ -931,7 +931,7 @@ public:
   ~CDA_SProSDataGenerator() {}
 
   CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::NamedIdentifiedElement, SProS::DataGenerator);
-  
+
   already_AddRefd<iface::SProS::ParameterSet> parameters() throw();
   already_AddRefd<iface::SProS::VariableSet> variables() throw();
   already_AddRefd<iface::mathml_dom::MathMLMathElement> math() throw();
@@ -950,7 +950,7 @@ class CDA_SProSCurveSetBase
 public:
   CDA_SProSCurveSetBase(CDA_SProSBase* aParent, const wchar_t* aName, const wchar_t** aElNames);
   ~CDA_SProSCurveSetBase() {}
-  
+
   already_AddRefd<iface::SProS::CurveIterator> iterateCurves() throw();
 };
 
@@ -971,7 +971,7 @@ public:
   CDA_SProSCurveIteratorBase(CDA_SomeSet* aParent)
     : CDA_SProSNamedElementIteratorBase(aParent) {}
   ~CDA_SProSCurveIteratorBase() {}
-  
+
   already_AddRefd<iface::SProS::Curve> nextCurve() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
@@ -1014,7 +1014,7 @@ public:
   ~CDA_SProSSurfaceIterator() {}
 
   CDA_IMPL_QI3(SProS::BaseIterator, SProS::CurveIterator, SProS::SurfaceIterator);
-  
+
   already_AddRefd<iface::SProS::Surface> nextSurface() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
@@ -1083,7 +1083,7 @@ public:
   ~CDA_SProSDataSetSet() {}
 
   CDA_IMPL_QI3(SProS::BaseSet, SProS::NamedElementSet, SProS::DataSetSet);
-  
+
   already_AddRefd<iface::SProS::DataSetIterator> iterateDataSets() throw();
 };
 
@@ -1097,7 +1097,7 @@ public:
 
   CDA_IMPL_QI3(SProS::BaseIterator, SProS::NamedElementIterator,
                SProS::DataSetIterator);
-  
+
   already_AddRefd<iface::SProS::DataSet> nextDataSet() throw()
   {
     RETURN_INTO_OBJREF(el, iface::SProS::Base, nextElement());
@@ -1288,7 +1288,7 @@ public:
   ~CDA_SProSSurface() {}
 
   CDA_IMPL_QI4(SProS::Base, SProS::NamedElement, SProS::Curve, SProS::Surface);
-  
+
   bool logZ() throw();
   void logZ(bool aValue) throw();
 
@@ -1297,14 +1297,14 @@ public:
   already_AddRefd<iface::SProS::DataGenerator> zDataGenerator() throw();
   void zDataGenerator(iface::SProS::DataGenerator* aValue) throw();
 };
-  
+
 class CDA_SProSDataSet
   : public CDA_SProSNamedElement, public iface::SProS::DataSet
 {
 public:
   CDA_SProSDataSet(CDA_SProSBase* aParent, iface::dom::Element* aEl);
   ~CDA_SProSDataSet() {}
-  
+
   CDA_IMPL_QI3(SProS::Base, SProS::NamedElement, SProS::DataSet);
 
   std::wstring dataGeneratorID() throw();
@@ -1325,7 +1325,7 @@ public:
 
   std::wstring indexName() throw();
   void indexName(const std::wstring& aName) throw();
-  
+
   already_AddRefd<iface::SProS::VariableSet> variables() throw();
   already_AddRefd<iface::mathml_dom::MathMLMathElement> function() throw();
   void function(iface::mathml_dom::MathMLMathElement*) throw();

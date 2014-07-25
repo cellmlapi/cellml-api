@@ -63,7 +63,7 @@ public:
       return NULL;
 
     std::map<std::string, P2JFactory*>::iterator i = mMap->find(name);
-    
+
     if (i == mMap->end())
       return NULL;
 

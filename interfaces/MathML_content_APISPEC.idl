@@ -26,13 +26,13 @@ module mathml_dom
   interface MathMLDeclareElement;
   interface MathMLMatrixrowElement;
   interface MathMLCaseElement;
-  
+
   interface MathMLDOMImplementation : dom::DOMImplementation
   {
     MathMLDocument            createMathMLDocument();
   };
 #pragma terminal-interface
-  
+
   interface MathMLDocument : dom::Document
   {
     readonly attribute dom::DOMString         referrer;
@@ -55,7 +55,7 @@ module mathml_dom
              attribute dom::DOMString         href;
     readonly attribute MathMLMathElement ownerMathElement;
   };
-  
+
   interface MathMLContainer : XPCOM::IObject
   {
     readonly attribute unsigned long     nArguments;
@@ -86,7 +86,7 @@ module mathml_dom
     void                      deleteDeclaration(in unsigned long index)
                                                raises(dom::DOMException);
   };
-  
+
   interface MathMLMathElement : MathMLElement, MathMLContainer
   {
              attribute dom::DOMString         macros;
@@ -111,7 +111,7 @@ module mathml_dom
     void                      deleteArgument(in unsigned long index);
     dom::Node                      removeArgument(in unsigned long index);
   };
-  
+
   interface MathMLCnElement : MathMLContentToken
   {
              attribute dom::DOMString         type;
@@ -119,18 +119,18 @@ module mathml_dom
     readonly attribute unsigned long     nargs;
   };
 #pragma terminal-interface
-  
+
   interface MathMLCiElement : MathMLContentToken
   {
              attribute dom::DOMString         type;
   };
 #pragma terminal-interface
-  
+
   interface MathMLCsymbolElement : MathMLContentToken
   {
   };
 #pragma terminal-interface
-  
+
   interface MathMLContentContainer : MathMLContentElement, MathMLContainer
   {
     readonly attribute unsigned long     nBoundVariables;
@@ -152,7 +152,7 @@ module mathml_dom
     void                      deleteBoundVariable(in unsigned long index);
     MathMLBvarElement         removeBoundVariable(in unsigned long index);
   };
-  
+
   interface MathMLApplyElement : MathMLContentContainer
   {
              attribute MathMLElement     operator;
@@ -162,39 +162,39 @@ module mathml_dom
                                                // raises(dom::DOMException) on setting
   };
 #pragma terminal-interface
-  
+
   interface MathMLFnElement : MathMLContentContainer
   {
              attribute dom::DOMString         definitionURL;
              attribute dom::DOMString         encoding;
   };
 #pragma terminal-interface
-  
+
   interface MathMLLambdaElement : MathMLContentContainer
   {
              attribute MathMLElement     expression;
   };
 #pragma terminal-interface
-  
+
   interface MathMLSetElement : MathMLContentContainer
   {
     readonly attribute boolean           isExplicit;
              attribute dom::DOMString         type;
   };
 #pragma terminal-interface
-  
+
   interface MathMLListElement : MathMLContentContainer
   {
     readonly attribute boolean           isExplicit;
              attribute dom::DOMString         ordering;
   };
 #pragma terminal-interface
-  
+
   interface MathMLBvarElement : MathMLContentContainer
   {
   };
 #pragma terminal-interface
-  
+
   interface MathMLPredefinedSymbol : MathMLContentElement
   {
              attribute dom::DOMString         definitionURL;
@@ -202,13 +202,13 @@ module mathml_dom
     readonly attribute dom::DOMString         arity;
     readonly attribute dom::DOMString         symbolName;
   };
-  
+
   interface MathMLTendsToElement : MathMLPredefinedSymbol
   {
              attribute dom::DOMString         type;
   };
 #pragma terminal-interface
-  
+
   interface MathMLIntervalElement : MathMLContentElement
   {
              attribute dom::DOMString         closure;
@@ -216,13 +216,13 @@ module mathml_dom
              attribute MathMLContentElement end;
   };
 #pragma terminal-interface
-  
+
   interface MathMLConditionElement : MathMLContentElement
   {
              attribute MathMLApplyElement condition;
   };
 #pragma terminal-interface
-  
+
   interface MathMLDeclareElement : MathMLContentElement
   {
              attribute dom::DOMString         type;
@@ -234,7 +234,7 @@ module mathml_dom
              attribute MathMLElement     constructor;
   };
 #pragma terminal-interface
-  
+
   interface MathMLVectorElement : MathMLContentElement
   {
     readonly attribute unsigned long     ncomponents;
@@ -250,7 +250,7 @@ module mathml_dom
     MathMLContentElement      removeComponent(in unsigned long index);
   };
 #pragma terminal-interface
-  
+
   interface MathMLMatrixElement : MathMLContentElement
   {
     readonly attribute unsigned long     nrows;
@@ -270,7 +270,7 @@ module mathml_dom
                                                raises(dom::DOMException);
   };
 #pragma terminal-interface
-  
+
   interface MathMLMatrixrowElement : MathMLContentElement
   {
     readonly attribute unsigned long     nEntries;
@@ -288,7 +288,7 @@ module mathml_dom
                                                raises(dom::DOMException);
   };
 #pragma terminal-interface
-  
+
   interface MathMLPiecewiseElement : MathMLContentElement
   {
     readonly attribute MathMLNodeList    pieces;
@@ -316,7 +316,7 @@ module mathml_dom
                                                raises(dom::DOMException);
   };
 #pragma terminal-interface
-  
+
   interface MathMLCaseElement : MathMLContentElement
   {
              attribute MathMLContentElement caseCondition;

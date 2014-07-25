@@ -34,14 +34,14 @@ extern "C" {
    *         if (a == NULL) ... memory request failed
    * -----------------------------------------------------------------
    * denalloc(m, n) allocates storage for an m by n dense matrix.
-   * It returns a pointer to the newly allocated storage if successful. 
-   * If the memory request cannot be satisfied, then denalloc returns 
+   * It returns a pointer to the newly allocated storage if successful.
+   * If the memory request cannot be satisfied, then denalloc returns
    * NULL. The underlying type of the dense matrix returned is a double
-   * pointer to realtype. If we allocate a dense matrix a by 
-   * a = denalloc(m, n), then a[j][i] references the (i,j)-th element 
-   * of the matrix a, 0 <= i < m, 0 <= j < n,  and a[j] is a pointer 
-   * to the first element in the jth column of a. The location a[0] 
-   * contains a pointer to m*n contiguous locations which contain the 
+   * pointer to realtype. If we allocate a dense matrix a by
+   * a = denalloc(m, n), then a[j][i] references the (i,j)-th element
+   * of the matrix a, 0 <= i < m, 0 <= j < n,  and a[j] is a pointer
+   * to the first element in the jth column of a. The location a[0]
+   * contains a pointer to m*n contiguous locations which contain the
    * elements of a.
    * -----------------------------------------------------------------
    */
@@ -74,7 +74,7 @@ extern "C" {
    *                          the factorization
    * -----------------------------------------------------------------
    * denGETRF(a,m,n,p) factors the m by n dense matrix a, m>=n.
-   * It overwrites the elements of a with its LU factors and keeps 
+   * It overwrites the elements of a with its LU factors and keeps
    * track of the pivot rows chosen in the pivot array p.
    *
    * A successful LU factorization leaves the matrix a and the
@@ -111,7 +111,7 @@ extern "C" {
    * -----------------------------------------------------------------
    * denGETRS(a,n,p,b) solves the n by n linear system a*x = b.
    * It assumes that a has been LU factored and the pivot array p has
-   * been set by a successful call to denGETRF(a,n,n,p). 
+   * been set by a successful call to denGETRF(a,n,n,p).
    * denGETRS does not check whether a is square!
    * The solution x is written into the b array.
    * -----------------------------------------------------------------
@@ -164,10 +164,10 @@ extern "C" {
    * -----------------------------------------------------------------
    * Usage : denaddI(a,n);
    * -----------------------------------------------------------------
-   * denaddI(a,n) increments the diagonal elements of the dense 
+   * denaddI(a,n) increments the diagonal elements of the dense
    * m by n matrix a by 1.0. (a_ii <= a_ii + 1, i=1,2,..n-1.)
    * denaddI is typically used with square matrices.
-   * denaddI does NOT check for m >= n! Therefore, a segmentation 
+   * denaddI does NOT check for m >= n! Therefore, a segmentation
    * fault will occur if m<n!
    * -----------------------------------------------------------------
    */

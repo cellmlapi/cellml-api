@@ -52,7 +52,7 @@ static CellMLEventRecord kSupportedEvents[] =
     {L"MathRemoved", EVENTMASK(DEVENT_DOMNodeRemoved)}
   };
 
-static const wchar_t* kDOMEventNames[] = 
+static const wchar_t* kDOMEventNames[] =
   {
     L"DOMAttrModified",
     L"DOMCharacterDataModified",
@@ -71,7 +71,7 @@ public:
   CDA_CellMLElementEventAdaptor
   (CDA_CellMLElement* aParent, iface::events::EventListener* aCellMLListener);
   ~CDA_CellMLElementEventAdaptor();
-  
+
   CDA_IMPL_REFCOUNT
   CDA_IMPL_QI1(events::EventListener);
   CDA_IMPL_ID;
@@ -94,7 +94,7 @@ private:
   void handleAttrModified(iface::events::Event* aEvent) throw(std::exception&);
 
   void handlePossibleMathModified(iface::events::Event* aEvent,
-                                  iface::dom::Node* mathEl) 
+                                  iface::dom::Node* mathEl)
     throw(std::exception&);
   void handleCellMLIntoCellML(iface::events::Event* aEvent,
                               iface::dom::Node* aParentEl,
@@ -171,7 +171,7 @@ public:
       mCurrentTarget->add_ref();
     return mCurrentTarget;
   }
-  
+
   uint16_t
   eventPhase()
     throw(std::exception&)
@@ -573,7 +573,7 @@ CDA_CellMLElementEventAdaptor::handleNodeInserted(iface::events::Event* aEvent)
   // Inserting into a non-element node never causes events...
   if (relnodeType != iface::dom::Node::ELEMENT_NODE)
     return;
-  
+
   // Only insertions into MathML and CellML ever cause events...
   if (relnodeElType != NODETYPE_CELLML && relnodeElType != NODETYPE_MATHML)
     return;
@@ -640,7 +640,7 @@ CDA_CellMLElementEventAdaptor::handleNodeRemoved(iface::events::Event* aEvent)
   // Removing from a non-element node never causes events...
   if (relnodeType != iface::dom::Node::ELEMENT_NODE)
     return;
-  
+
   // Only removals from MathML and CellML ever cause events...
   if (relnodeElType != NODETYPE_CELLML && relnodeElType != NODETYPE_MATHML)
     return;

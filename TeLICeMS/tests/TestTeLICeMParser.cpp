@@ -47,7 +47,7 @@ main(int argc, char** argv)
   RETURN_INTO_OBJREF(res, iface::cellml_services::TeLICeMModelResult,
                      ts->parseModel(wcb));
   delete [] wcb;
-  
+
   RETURN_INTO_WSTRING(errmsg, res->errorMessage());
   if (errmsg != L"")
   {

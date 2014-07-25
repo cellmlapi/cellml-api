@@ -36,7 +36,7 @@ static bool CDA_DOMCompareSerial(cda_serial_t aSerial)
   return gCDADOMChangeSerial == aSerial;
 }
 
-CDA_DOMImplementation* CDA_DOMImplementation::sDOMImplementation = 
+CDA_DOMImplementation* CDA_DOMImplementation::sDOMImplementation =
   new CDA_DOMImplementation();
 
 already_AddRefd<CDA_Element> CDA_NewElement
@@ -375,7 +375,7 @@ CDA_Node::insertBefore(iface::dom::Node* inewChild,
 {
   if (inewChild == NULL)
     throw iface::dom::DOMException(iface::dom::NOT_FOUND_ERR);
-  
+
   uint16_t type = inewChild->nodeType();
 
   // Get rid of nodes which can't be added this way...
@@ -420,7 +420,7 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
 
   if (newChild->mDocument != mDocument)
     throw iface::dom::DOMException(iface::dom::WRONG_DOCUMENT_ERR);
-  
+
   if (newChild == refChild)
   {
     // It is already in the right place...
@@ -488,7 +488,7 @@ CDA_Node::insertBeforePrivate(CDA_Node* newChild,
                           this, L"", L"", L"",
                           iface::events::MutationEvent::MODIFICATION);
     newChild->dispatchEvent(me);
-    
+
     if (mDocumentIsAncestor)
     {
       // All ancestors of newChild now need a DOMNodeInsertedIntoDocument...
@@ -651,7 +651,7 @@ CDA_Node::normalize()
   std::list<CDA_Node*>::iterator i = mNodeList.begin();
   for (; i != mNodeList.end(); i++)
     (*i)->normalize();
-  
+
   // Now scan through our nodes and look for adjacent text nodes to fold into
   // single nodes, or delete...
   ObjRef<CDA_TextBase> lastText;
@@ -723,7 +723,7 @@ CDA_Node::prefix(const std::wstring& attr)
   if (attr == L"xml" &&
       mNamespaceURI != L"http://www.w3.org/XML/1998/namespace")
     throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
-    
+
   if (mLocalName == L"xmlns" && attr != L"")
     throw iface::dom::DOMException(iface::dom::SYNTAX_ERR);
 
@@ -865,9 +865,9 @@ CDA_Node::dispatchEvent(iface::events::Event* evt)
     for (i = nodeList.begin(); i != nodeList.end(); i++)
     {
       me->mCurrentTarget = (*i);
-      
+
       (*i)->callEventListeners(me);
-      
+
       if (me->mPropagationStopped)
         return !(me->mCanceled);
     }
@@ -981,7 +981,7 @@ CDA_Node::searchForElementById(const std::wstring& elementId)
     if (e != NULL)
       return e;
   }
-  
+
   return NULL;
 }
 
@@ -991,7 +991,7 @@ CDA_Node::find_leaked()
 {
   uint32_t sum = 0;
   std::list<CDA_Node*>::const_iterator i(mNodeList.begin());
-  
+
   for (; i != mNodeList.end(); i++)
   {
     sum += (*i)->_cda_refcount;
@@ -1788,7 +1788,7 @@ CDA_Element::setAttribute(const std::wstring& name, const std::wstring& value)
     }
     return;
   }
-  
+
   std::wstring oldValue = (*i).second->mNodeValue;
   (*i).second->mNodeValue = value;
 
@@ -1963,7 +1963,7 @@ CDA_Element::removeAttributeNode(iface::dom::Attr* ioldAttr)
     j = attributeMapNS.find(QualifiedName(nsuri, lname));
   QualifiedName qn((*j).first);
   attributeMapNS.erase(j);
-  
+
   CDA_DOM_SomethingChanged();
 
   if (eventsHaveEffects())
@@ -2098,7 +2098,7 @@ CDA_Element::removeAttributeNS(const std::wstring& namespaceURI,
   removeChildPrivate(at)->release_ref();
   QualifiedName qn((*i).first);
 
-  std::map<LocalName, CDA_Attr*>::iterator  
+  std::map<LocalName, CDA_Attr*>::iterator
     j = attributeMap.find(LocalName((*i).second->mNodeName));
 
   ObjRef<iface::dom::Node> n = (*i).second;
@@ -2333,7 +2333,7 @@ CDA_CDATASection::shallowCloneNode(CDA_Document* aDoc)
   ca->mNodeName = mNodeName;
   ca->mNodeValue = mNodeValue;
   ca->mNodeValue = mNodeValue;
-  
+
   return ca;
 }
 
@@ -2536,21 +2536,21 @@ CDA_Document::CDA_Document
   : CDA_Node(this)
 {
   const wchar_t* pos = wcschr(qualifiedName.c_str(), L':');
-  
+
   // We are our own document ancestor, so fix the refcounts...
   mDocumentIsAncestor = true;
   mDocument->release_ref();
 
   if (doctype && doctype->mDocument != NULL)
     throw iface::dom::DOMException(iface::dom::INVALID_STATE_ERR);
-  
+
   if (doctype)
   {
     doctype->mDocument = this;
     doctype->mDocumentIsAncestor = false;
     doctype->mDocument->add_ref();
   }
-  
+
   if (doctype != NULL)
     insertBeforePrivate(doctype, NULL)->release_ref();
 

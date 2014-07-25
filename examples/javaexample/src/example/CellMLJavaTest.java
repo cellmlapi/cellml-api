@@ -34,12 +34,12 @@ public class CellMLJavaTest{
 	public CellMLJavaTest(){
 		System.out.println("CellMLJavaTest launched. Loading library...");
 		System.loadLibrary("java_cellml");
-		cb = cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap();	
+		cb = cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap();
 
 	}
 
 	public static void main(String[] argv)    {
-		CellMLJavaTest cjtest = new CellMLJavaTest(); 
+		CellMLJavaTest cjtest = new CellMLJavaTest();
 
 		cjtest.createCellMLModel();
 		cjtest.iterateModelElements();
@@ -55,7 +55,7 @@ public class CellMLJavaTest{
 
 		//creating units
 		Units units = m.createUnits();
-		m.addElement(units);        
+		m.addElement(units);
 		units.setName("second");
 
 
@@ -65,22 +65,22 @@ public class CellMLJavaTest{
 
 
 		//creating component 1
-		CellMLComponent comp1 = m.createComponent(); 
+		CellMLComponent comp1 = m.createComponent();
 		m.addElement(comp1);
-		comp1.setName("component1");        
+		comp1.setName("component1");
 
 		//adding a variable to component 1
 		CellMLVariable var1 = m.createCellMLVariable();
 		comp1.addElement(var1);
 		var1.setName("variable1");
 		var1.setUnitsElement(units);
-		var1.setInitialValue("10");            	
-		var1.setPublicInterface(VariableInterface.INTERFACE_OUT);     	
+		var1.setInitialValue("10");
+		var1.setPublicInterface(VariableInterface.INTERFACE_OUT);
 
 		//creating component 2
-		CellMLComponent comp2 = m.createComponent(); 
+		CellMLComponent comp2 = m.createComponent();
 		m.addElement(comp2);
-		comp2.setName("component2");          
+		comp2.setName("component2");
 
 
 		//adding a variable to component 2
@@ -95,15 +95,15 @@ public class CellMLJavaTest{
 		Connection con = m.createConnection();
 		m.addElement(con);
 
-		MapComponents mapComp = con.getComponentMapping();      
+		MapComponents mapComp = con.getComponentMapping();
 		mapComp.setFirstComponent(comp1);
-		mapComp.setSecondComponent(comp2);      	
+		mapComp.setSecondComponent(comp2);
 
 		MapVariables mapvar = m.createMapVariables();
 		con.addElement(mapvar);
 
 		mapvar.setFirstVariable(var1);
-		mapvar.setSecondVariable(var2);      	
+		mapvar.setSecondVariable(var2);
 
 		writeToFile(m, m.getName()+ ".cellml");
 	}
@@ -112,7 +112,7 @@ public class CellMLJavaTest{
 	/**
 	 * Iterating elements of a model
 	 */
-	private void iterateModelElements(){   	
+	private void iterateModelElements(){
 		//load the Hodgkin Huxley model from the repository
 		Model model = readFromFile("http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
 

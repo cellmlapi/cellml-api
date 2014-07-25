@@ -8,15 +8,15 @@ LAST MODIFIED : 19th July 2002
 AUTHOR :  Catherine Lloyd
           Department of Engineering Science
           The University of Auckland
-          
+
 MODEL STATUS :  This model conforms to the CellML 1.0 Specification released on
 10th August 2001, and the 16/01/2002 CellML Metadata 1.0 Specification.
 
 DESCRIPTION :  This file contains a CellML description of the metabolic pathway
 glycolysis in the yeast Saccharomyces cerevisiae based on a mathematical model
-from Rizzi et al (1997).  
+from Rizzi et al (1997).
 
-CHANGES:  
+CHANGES:
   22/01/2002 - AAC - Updated metadata to conform to the 16/1/02 CellML Metadata
                      1.0 Specification.
   26/02/2002 - CML - Corrected r_influx and r_efflux equations.
@@ -26,12 +26,12 @@ CHANGES:
   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bqs="http://www.cellml.org/bqs/1.0#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#">
     <!--
       The following RDF block contains metadata that applies to this document
-      as a whole, as indicated by the empty about attribute on the 
+      as a whole, as indicated by the empty about attribute on the
       <rdf:Description> element.
     -->
     <rdf:Description rdf:about="">
       <!--
-        The Model Builder Metadata.  The Dublin Core "creator" element is used  
+        The Model Builder Metadata.  The Dublin Core "creator" element is used
         to indicate the person who translated the model into CellML.
       -->
       <dc:creator rdf:parseType="Resource">
@@ -49,7 +49,7 @@ CHANGES:
           <vCard:Orgunit>The Bioengineering Research Group</vCard:Orgunit>
         </vCard:ORG>
       </dc:creator>
-      
+
       <!--
         The Creation Date metadata. This is the date on which the model
         was translated into CellML.
@@ -57,7 +57,7 @@ CHANGES:
       <dcterms:created rdf:parseType="Resource">
         <dcterms:W3CDTF>2001-11-15</dcterms:W3CDTF>
       </dcterms:created>
-      
+
       <!--
         The Modification History metadata. This lists the changes that have been
         made to the document, who made the changes, and when they were made.
@@ -79,7 +79,7 @@ CHANGES:
       </cmeta:modification>
       <cmeta:modification rdf:parseType="Resource">
         <rdf:value>
-          Updated metadata to conform to the 16/1/02 CellML Metadata 1.0 
+          Updated metadata to conform to the 16/1/02 CellML Metadata 1.0
           Specification.
         </rdf:value>
         <cmeta:modifier rdf:parseType="Resource">
@@ -93,16 +93,16 @@ CHANGES:
           <dcterms:W3CDTF>2002-01-22</dcterms:W3CDTF>
         </dcterms:modified>
       </cmeta:modification>
-      
+
       <!-- The Publisher metadata. -->
       <dc:publisher>
         The University of Auckland, Bioengineering Research Group
       </dc:publisher>
     </rdf:Description>
-    
+
     <!--
       The following metadata refers to the model itself, as indicated by the
-      reference to the ID "glycolysis_pathway_1997", which is declared on   
+      reference to the ID "glycolysis_pathway_1997", which is declared on
       the <model> element.
     -->
     <rdf:Description rdf:about="#glycolysis_pathway_1997">
@@ -110,23 +110,23 @@ CHANGES:
       <dc:title>
         A model of the glycolysis pathway in the yeast Saccharomyces cerevisiae
       </dc:title>
-      
+
       <!-- A comment regarding the model. -->
       <cmeta:comment rdf:parseType="Resource">
         <rdf:value>
-          This is the CellML description of Rizzi et al's mathematical model of 
-          the glycolysis pathway in the yeast Saccharomyces cerevisiae (1997).  
-          It should be observed that some variables are not fully defined in the           CellML model.  This is because some parameters were left out of the 
-          original paper because of missing sensitivities.  
+          This is the CellML description of Rizzi et al's mathematical model of
+          the glycolysis pathway in the yeast Saccharomyces cerevisiae (1997).
+          It should be observed that some variables are not fully defined in the           CellML model.  This is because some parameters were left out of the
+          original paper because of missing sensitivities.
         </rdf:value>
         <!-- The creator of the comment. -->
         <dc:creator rdf:parseType="Resource">
           <vCard:FN>Catherine Lloyd</vCard:FN>
         </dc:creator>
       </cmeta:comment>
-      
+
       <cmeta:species>Saccharomyces cerevisiae</cmeta:species>
-      
+
       <!--  Keyword(s) -->
       <bqs:reference rdf:parseType="Resource">
         <dc:subject rdf:parseType="Resource">
@@ -134,8 +134,8 @@ CHANGES:
           <rdf:value>metabolism</rdf:value>
         </dc:subject>
       </bqs:reference>
-      
-      <!-- 
+
+      <!--
         This paper is not available in Pubmed, so the citation is listed with            the appropriate BQS elements.
       -->
       <bqs:JournalArticle rdf:parseType="Resource">
@@ -168,7 +168,7 @@ CHANGES:
           </rdf:Seq>
         </dc:creator>
         <dc:title>
-          In Vivo Analysis of Metabolic Dynamics in Saccharomyces cerevisiae: 
+          In Vivo Analysis of Metabolic Dynamics in Saccharomyces cerevisiae:
           II. Mathematical Model
         </dc:title>
         <dcterms:issued rdf:parseType="Resource">
@@ -183,7 +183,7 @@ CHANGES:
       </bqs:JournalArticle>
     </rdf:Description>
   </rdf:RDF>
-  
+
   <!--
     We start the model definition with a definition of some named
     sets of units for use throughout the model.
@@ -225,17 +225,17 @@ CHANGES:
     <unit units="gram" />
     <unit units="second" exponent="-1" />
   </units>
-   
-  <!--  
-    The following component is defined for modelling convenience.  It contains 
+
+  <!--
+    The following component is defined for modelling convenience.  It contains
     all the universal variables, in this case, only time.
   -->
   <component name="global_variables">
     <variable name="time" public_interface="out" units="second" />
   </component>
 
-  <!--  
-    The following components describe all the metabolites - both reactants and 
+  <!--
+    The following components describe all the metabolites - both reactants and
     products - involved in glycolysis.
   -->
 
@@ -908,12 +908,12 @@ CHANGES:
     </math>
   </component>
 
-  <!--  
-    The following components describe all the active proteins involved in the 
-    glycolytic pathway - both metabolic enzymes and membrane bound transport 
+  <!--
+    The following components describe all the active proteins involved in the
+    glycolytic pathway - both metabolic enzymes and membrane bound transport
     proteins.  Because enzymes only act as catalysts in metabolic reactions and
-    transport proteins only facilitate the transfer of metabolites, their 
-    concentrations are not affected by the reaction and therefore no delta 
+    transport proteins only facilitate the transfer of metabolites, their
+    concentrations are not affected by the reaction and therefore no delta
     variables are declared.
   -->
 
@@ -1098,12 +1098,12 @@ CHANGES:
       <rdf:Description rdf:about="#glucose_transport_system">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            Transport of glucose across the cell membrane occurs via a permease 
+            Transport of glucose across the cell membrane occurs via a permease
             subject to inhibition by G6P.
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="Glc" public_interface="in" units="millimolar" />
     <variable name="Glc_C" public_interface="in" units="millimolar" />
     <variable name="G6P" public_interface="in" units="millimolar" />
@@ -1156,7 +1156,7 @@ CHANGES:
               <ci>k_Glc_1</ci>
             </apply>
           </apply>
-          <apply><plus /> 
+          <apply><plus />
             <cn cellml:units="dimensionless">1.0</cn>
             <apply><divide />
                <ci>Glc</ci>
@@ -1215,7 +1215,7 @@ CHANGES:
               <ci>k_Glc_1</ci>
             </apply>
           </apply>
-          <apply><plus /> 
+          <apply><plus />
             <cn cellml:units="dimensionless">1.0</cn>
             <apply><divide />
               <ci>Glc_C</ci>
@@ -1262,7 +1262,7 @@ CHANGES:
             </apply>
           </apply>
         </apply>
-      </apply>     
+      </apply>
     </math>
   </component>
 
@@ -1271,12 +1271,12 @@ CHANGES:
       <rdf:Description rdf:about="#glucose_phosphorylation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The phosphorylation of glucose by hexokinase is modeled as a 
+            The phosphorylation of glucose by hexokinase is modeled as a
             reversible double-substrate, double-product kinetic.
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="Glc_C" public_interface="in" units="millimolar" />
     <variable name="G6P" public_interface="in" units="millimolar" />
     <variable name="HK" public_interface="in" units="millimolar" />
@@ -1370,7 +1370,7 @@ CHANGES:
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="G6P" public_interface="in" units="millimolar" />
     <variable name="F6P" public_interface="in" units="millimolar" />
     <variable name="PGI" public_interface="in" units="millimolar" />
@@ -1433,12 +1433,12 @@ CHANGES:
       <rdf:Description rdf:about="#fructose_6_phosphate_phosphorylation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The kinetics of the following reaction are based on a four-state 
+            The kinetics of the following reaction are based on a four-state
             allosteric enzyme model, including AMP and ADP as activators and ATP             as an inhibitor.
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="F6P" public_interface="in" units="millimolar" />
     <variable name="FBP" public_interface="in" units="millimolar" />
     <variable name="PFK" public_interface="in" units="millimolar" />
@@ -1515,7 +1515,7 @@ CHANGES:
       </variable_ref>
     </reaction>
 
-    <math xmlns="http://www.w3.org/1998/Math/MathML">            
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
       <apply><eq />
         <ci>k_ATP_4</ci>
         <apply><times />
@@ -1593,7 +1593,7 @@ CHANGES:
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="FBP" public_interface="in" units="millimolar" />
     <variable name="GAP" public_interface="in" units="millimolar" />
     <variable name="ALDO" public_interface="in" units="millimolar" />
@@ -1692,13 +1692,13 @@ CHANGES:
       <rdf:Description rdf:about="#glycerol_synthesis">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The reaction step RES1 substitutes for the two reactions catalysed 
-            by glycerol-3-phosphate dehydrogenase and glycerol-1-phosphate.  The             kinetics of the resulting reaction were simplified by an empirical 
+            The reaction step RES1 substitutes for the two reactions catalysed
+            by glycerol-3-phosphate dehydrogenase and glycerol-1-phosphate.  The             kinetics of the resulting reaction were simplified by an empirical
             Hill kinetic.
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="DHAP" public_interface="in" units="millimolar" />
     <variable name="GLYC" public_interface="in" units="millimolar" />
     <variable name="RES1" public_interface="in" units="millimolar" />
@@ -1751,16 +1751,16 @@ CHANGES:
       <rdf:Description rdf:about="#PEP_synthesis">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The reaction RES2 stands for an empirical connection of the enzymes 
-            glyceraldehyde-3-phosphate dehydrogenase (GAPH), phosphoglycerate 
-            kinase (PGK), phosphoglycerate mutase (PM) and enolase (EN).  The 
-            reactions are coupled to the conversion of NAD+ to NADH and 
-            production of ATP.  These reactions may be combined into a single 
+            The reaction RES2 stands for an empirical connection of the enzymes
+            glyceraldehyde-3-phosphate dehydrogenase (GAPH), phosphoglycerate
+            kinase (PGK), phosphoglycerate mutase (PM) and enolase (EN).  The
+            reactions are coupled to the conversion of NAD+ to NADH and
+            production of ATP.  These reactions may be combined into a single
             reaction.
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="RES2" public_interface="in" units="millimolar" />
     <variable name="GAP" public_interface="in" units="millimolar" />
     <variable name="PEP" public_interface="in" units="millimolar" />
@@ -1872,7 +1872,7 @@ CHANGES:
       </variable_ref>
     </reaction>
 
-    <math xmlns="http://www.w3.org/1998/Math/MathML"> 
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
       <apply><eq />
         <ci>A</ci>
         <apply><plus />
@@ -1910,13 +1910,13 @@ CHANGES:
       <rdf:Description rdf:about="#PEP_dephosphorylation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The reaction catalysed by pyruvate kinase is represented by 
-            double-substrate, double-product kinetics with a concerted 
+            The reaction catalysed by pyruvate kinase is represented by
+            double-substrate, double-product kinetics with a concerted
             allosteric regulation due to FBP, ATP and PEP.
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
-    </rdf:RDF> 
+    </rdf:RDF>
     <variable name="PEP" public_interface="in" units="millimolar" />
     <variable name="Pyr" public_interface="in" units="millimolar" />
     <variable name="FBP" public_interface="in" units="millimolar" />
@@ -2024,7 +2024,7 @@ CHANGES:
                   </apply>
                 </apply>
               </apply>
-            </apply>   
+            </apply>
           </math>
         </role>
       </variable_ref>
@@ -2036,7 +2036,7 @@ CHANGES:
       <rdf:Description rdf:about="#pyruvate_decarboxylation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The rate expression for pyruvate decarboxylase considers a 
+            The rate expression for pyruvate decarboxylase considers a
             co-operative effect of the substrate pyruvate.
           </rdf:value>
         </cmeta:comment>
@@ -2100,7 +2100,7 @@ CHANGES:
       <rdf:Description rdf:about="#monomeric_building_block_synthesis">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The rate, r_SYNT1 summarizes the several reactions that originate at             G6P.  Double-substrate kinetics are used and because biosynthetic 
+            The rate, r_SYNT1 summarizes the several reactions that originate at             G6P.  Double-substrate kinetics are used and because biosynthetic
             pathways are involved, an additional ATP consumption is assumed.
           </rdf:value>
         </cmeta:comment>
@@ -2156,7 +2156,7 @@ CHANGES:
                   </apply>
                 </apply>
               </apply>
-            </apply> 
+            </apply>
           </math>
         </role>
       </variable_ref>
@@ -2194,7 +2194,7 @@ CHANGES:
                   </apply>
                 </apply>
               </apply>
-            </apply> 
+            </apply>
           </math>
         </role>
       </variable_ref>
@@ -2269,8 +2269,8 @@ CHANGES:
       <rdf:Description rdf:about="#acetaldehyde_dehydrogenation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The enzyme acetaldehyde dehydrogenase shows substrate inhibition 
-            kinetics. 
+            The enzyme acetaldehyde dehydrogenase shows substrate inhibition
+            kinetics.
           </rdf:value>
         </cmeta:comment>
       </rdf:Description>
@@ -2328,7 +2328,7 @@ CHANGES:
       <rdf:Description rdf:about="#ATP_synthesis">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The adenylate kinase reaction allows the production of ADP from AMP 
+            The adenylate kinase reaction allows the production of ADP from AMP
             and ATP and has been modeled with a near-equilibrium reaction.
           </rdf:value>
         </cmeta:comment>
@@ -2383,7 +2383,7 @@ CHANGES:
                       </apply>
                     </apply>
                   </apply>
-                </apply>    
+                </apply>
               </apply>
             </apply>
           </math>
@@ -2397,7 +2397,7 @@ CHANGES:
       <rdf:Description rdf:about="#triosephosphate_isomerisation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The rate equation for the triose phosphate isomerase is a reversible 
+            The rate equation for the triose phosphate isomerase is a reversible
             Michaelis-Menten kinetic.
           </rdf:value>
         </cmeta:comment>
@@ -2465,11 +2465,11 @@ CHANGES:
       <rdf:Description rdf:about="#ATP_ADP_translocation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The exchange of adenine nucleotides across the mitochondrial 
-            membrane (translocation) is essential for the dynamic analysis of 
-            the yeast under aerobic growth conditions.  The translocation of 
-            adenine nucleotides has not been studied in yeast cells.  The 
-            equations below are based on studies using rat liver cells. 
+            The exchange of adenine nucleotides across the mitochondrial
+            membrane (translocation) is essential for the dynamic analysis of
+            the yeast under aerobic growth conditions.  The translocation of
+            adenine nucleotides has not been studied in yeast cells.  The
+            equations below are based on studies using rat liver cells.
             Unsymmetrical and uncoupled translocation following two irreversible             Michaelis-Menten kinetics.  AMP exchange is not possible.
           </rdf:value>
         </cmeta:comment>
@@ -2613,7 +2613,7 @@ CHANGES:
             </apply>
           </math>
         </role>
-      </variable_ref>  
+      </variable_ref>
     </reaction>
   </component>
 
@@ -2622,7 +2622,7 @@ CHANGES:
       <rdf:Description rdf:about="#pyruvate_dehydrogenation">
         <cmeta:comment rdf:parseType="Resource">
           <rdf:value>
-            The kinetic expression for pyruvate dehydrogenase assumes ping-pong 
+            The kinetic expression for pyruvate dehydrogenase assumes ping-pong
             kinetics with two substrates and one product.
           </rdf:value>
         </cmeta:comment>
@@ -2930,7 +2930,7 @@ CHANGES:
     <map_variables variable_1="Pyr" variable_2="Pyr" />
     <map_variables variable_1="delta_Pyr_rxn14b" variable_2="delta_Pyr_rxn14b" />
   </connection>
-  
+
   <connection>
     <map_components component_1="monomeric_building_block_synthesis" component_2="G6P" />
     <map_variables variable_1="G6P" variable_2="G6P" />

@@ -280,7 +280,7 @@ public:
         RETURN_INTO_OBJREF(t, iface::rdf_api::Triple, te->getNextTriple());
         if (t == NULL)
           break;
-        
+
         if (checkTriple(t, false))
         {
           t->add_ref();
@@ -312,7 +312,7 @@ public:
         RETURN_INTO_OBJREF(s, iface::rdf_api::Node, t->subject());
         RETURN_INTO_OBJREF(p, iface::rdf_api::Node, t->predicate());
         RETURN_INTO_OBJREF(o, iface::rdf_api::Node, t->object());
-        
+
         std::cerr << "RDF/XML Test " << mTestNo
                   << ": Triple missing from RDF/XML parse results: "
                   << s << " " << p << " " << o << " ." << std::endl;
@@ -438,7 +438,7 @@ private:
 
         return aStr.substr(eos);
       }
-      
+
       std::wstring language = L"en";
       if (aStr[pos] == '@')
       {
@@ -622,7 +622,7 @@ private:
           std::string objid = xmlObject->objid();
           std::map<std::string, iface::rdf_api::BlankNode*>::iterator i =
             mNTripleBlankNodeByXMLBlankNode.find(objid);
-          
+
           if (i != mNTripleBlankNodeByXMLBlankNode.end())
             ntObject = (*i).second;
         }
@@ -798,14 +798,14 @@ private:
     iface::rdf_api::Node* tripleNodes[] = {tripleSubj, triplePredicate, tripleObject};
     iface::rdf_api::Node* xmlNodes[] = {xmlSubj, xmlPredicate, xmlObject};
     iface::rdf_api::Node* ntNodes[] = {ntSubj, ntPredicate, ntObject};
-    
+
     for (uint32_t i = 0; i < 3; i++)
     {
       if (!ntNodes[i])
       {
         DECLARE_QUERY_INTERFACE_OBJREF(tripleBN, tripleNodes[i], rdf_api::BlankNode);
         DECLARE_QUERY_INTERFACE_OBJREF(xmlBN, xmlNodes[i], rdf_api::BlankNode);
-        
+
         std::string objid = xmlBN->objid();
         bool done = true;
         if (
@@ -1055,15 +1055,15 @@ RDFTest::testContainerLibrary()
   url += L"test131.rdf";
 
   std::wstring msg;
-  
+
   RETURN_INTO_OBJREF(doc, iface::dom::Document, cdibs->loadDocument
                      (url.c_str(), msg));
   RETURN_INTO_OBJREF(de, iface::dom::Element, doc->documentElement());
   RETURN_INTO_OBJREF(ds, iface::rdf_api::DataSource, bs->createDataSource());
-  
+
   const wchar_t* uriStr = url.c_str();
   bs->parseIntoDataSource(ds, de, uriStr);
-  
+
 //    /**
 //     * Retrieves a 'Container' interface around this Resource.
 //     */
@@ -1090,7 +1090,7 @@ RDFTest::testContainerLibrary()
   RETURN_INTO_OBJREF(bag, iface::rdf_api::URIReference,
                      ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag"));
   RETURN_INTO_OBJREF(seq, iface::rdf_api::URIReference,
-                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"));  
+                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq"));
   CPPUNIT_ASSERT(!CDA_objcmp(ct, bag));
   cc->containerType(seq);
   ct = already_AddRefd<iface::rdf_api::Resource>(cc->containerType());
@@ -1171,7 +1171,7 @@ RDFTest::testContainerLibrary()
   }
   // Also check it wasn't renumbered.
   RETURN_INTO_OBJREF(twelth, iface::rdf_api::URIReference,
-                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#_12"));  
+                     ds->getURIReference(L"http://www.w3.org/1999/02/22-rdf-syntax-ns#_12"));
   RETURN_INTO_OBJREF(t12, iface::rdf_api::Triple, cr->getTripleOutOfByPredicate(twelth));
   CPPUNIT_ASSERT(t12);
   RETURN_INTO_OBJREF(t12o, iface::rdf_api::Node, t12->object());
@@ -1215,7 +1215,7 @@ RDFTest::testContainerLibrary()
   CPPUNIT_ASSERT(t9);
   RETURN_INTO_OBJREF(t9o, iface::rdf_api::Node, t9->object());
   CPPUNIT_ASSERT(!CDA_objcmp(t9o, word9));
- 
+
 //
 //    /**
 //     * Creates a merged container. This does not change the RDF, but merely
@@ -1239,7 +1239,7 @@ RDFTest::testContainerLibrary()
   RETURN_INTO_OBJREF(crm, iface::rdf_api::Resource, ccm->correspondingResource());
   CPPUNIT_ASSERT(!CDA_objcmp(crm, ur));
 
-  
+
   RETURN_INTO_OBJREF(ctm, iface::rdf_api::Resource, ccm->containerType());
   CPPUNIT_ASSERT(ctm);
   CPPUNIT_ASSERT(!CDA_objcmp(ctm, seq));
@@ -1274,7 +1274,7 @@ RDFTest::testContainerLibrary()
     // printf("Merge container test 2\n");
     assertContainerContents(ccm, expect);
   }
-  
+
   ccm->removeChild(word1, false);
   RETURN_INTO_OBJREF(succeeds, iface::rdf_api::PlainLiteral, ds->getPlainLiteral(L"Succeeds!", L"en"));
   ccm->removeChild(succeeds, true);
@@ -1319,7 +1319,7 @@ RDFTest::testContainerLibrary()
 //     */
 //    Container findOrMakeContainer(in Resource aPredicate,
 //                                  in Resource aContainerType);
-  
+
   RETURN_INTO_OBJREF(ur3, iface::rdf_api::URIReference,
                      ds->getURIReference(L"http://example.org/myitem"));
   RETURN_INTO_OBJREF(cont, iface::rdf_api::Container, ur3->findOrMakeContainer(ur, bag));

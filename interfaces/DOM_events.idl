@@ -32,11 +32,11 @@ module events
 
   // Introduced in DOM Level 2:
   interface EventTarget : XPCOM::IObject {
-    void               addEventListener(in DOMString type, 
-                                        in EventListener listener, 
+    void               addEventListener(in DOMString type,
+                                        in EventListener listener,
                                         in boolean useCapture);
-    void               removeEventListener(in DOMString type, 
-                                           in EventListener listener, 
+    void               removeEventListener(in DOMString type,
+                                           in EventListener listener,
                                            in boolean useCapture);
     boolean            dispatchEvent(in Event evt)
                                         raises(EventException);
@@ -66,8 +66,8 @@ module events
     readonly attribute DOMTimeStamp     timeStamp;
     void               stopPropagation();
     void               preventDefault();
-    void               initEvent(in DOMString eventTypeArg, 
-                                 in boolean canBubbleArg, 
+    void               initEvent(in DOMString eventTypeArg,
+                                 in boolean canBubbleArg,
                                  in boolean cancelableArg);
   };
 
@@ -91,13 +91,13 @@ module events
     readonly attribute DOMString        newValue;
     readonly attribute DOMString        attrName;
     readonly attribute unsigned short   attrChange;
-    void               initMutationEvent(in DOMString typeArg, 
-                                         in boolean canBubbleArg, 
-                                         in boolean cancelableArg, 
-                                         in Node relatedNodeArg, 
-                                         in DOMString prevValueArg, 
-                                         in DOMString newValueArg, 
-                                         in DOMString attrNameArg, 
+    void               initMutationEvent(in DOMString typeArg,
+                                         in boolean canBubbleArg,
+                                         in boolean cancelableArg,
+                                         in Node relatedNodeArg,
+                                         in DOMString prevValueArg,
+                                         in DOMString newValueArg,
+                                         in DOMString attrNameArg,
                                          in unsigned short attrChangeArg);
   };
 #pragma terminal-interface

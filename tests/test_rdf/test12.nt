@@ -9,6 +9,6 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id: test006.nt,v 1.2 2002/12/13 11:32:46 jgrant Exp $
-# 
+#
 #####################################################################
 <http://example.org/node> <http://example.org/property> "chat"@fr .

@@ -71,7 +71,7 @@ CDAMaLaESResult::CDAMaLaESResult
                        mod->modelComponents());
     mContext = already_AddRefd<iface::cellml_api::CellMLComponent>
       (ccs->getComponent(refname.c_str()));
-    
+
     if (mContext == NULL)
     {
       RETURN_INTO_WSTRING(name, impComp->name());
@@ -255,7 +255,7 @@ public:
     bool wasInfDel = (*mIt).mMetadata->mWasInfDelayed;
     bool wasUndelayed = (*mIt).mMetadata->mWasUndelayed;
     iface::cellml_api::CellMLVariable* var = (*mIt).mVar;
-    
+
     mIt++;
 
     return new CDAMaLaESDegreeVariable(deg, wasInfDel, wasUndelayed, var);
@@ -325,7 +325,7 @@ CDAMaLaESResult::startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
     if (j < i)
       throw MaLaESError(L"CI element with only spaces inside.");
     txt = txt.substr(i, j - i + 1);
-    
+
     RETURN_INTO_OBJREF(vs, iface::cellml_api::CellMLVariableSet,
                        mContext->variables());
     RETURN_INTO_OBJREF(v, iface::cellml_api::CellMLVariable,
@@ -626,7 +626,7 @@ CDAMaLaESResult::appendBvarIndex
 
   if (aBvars[0]->nArguments() < 1)
     throw MaLaESError(L"Bvar element has no arguments (invalid).");
-  
+
   RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                      aBvars[0]->getArgument(1));
 
@@ -665,7 +665,7 @@ CDAMaLaESResult::appendDiffVariable
 
   if (aBvars[0]->nArguments() < 1)
     throw MaLaESError(L"Bvar element has no arguments (invalid).");
-  
+
   RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement,
                      aBvars[0]->getArgument(1));
 
@@ -783,7 +783,7 @@ CDAMaLaESResult::appendUnique
   // See if the unique has been assigned already for the arg...
   uint32_t unique;
   std::map<std::wstring, uint32_t>::iterator i = mUniqueAssignments.find(aArg);
-  
+
   if (i == mUniqueAssignments.end())
   {
     unique = ++mLastUnique;
@@ -912,7 +912,7 @@ uint32_t
 CDAMaLaESResult::getDiffDegree(iface::cellml_api::CellMLVariable* aVar)
   throw(std::exception&)
 {
-  std::map<iface::cellml_api::CellMLVariable*, uint32_t>::iterator i = 
+  std::map<iface::cellml_api::CellMLVariable*, uint32_t>::iterator i =
     mHighestDegree.find(aVar);
   if (i == mHighestDegree.end())
     return 0;
@@ -1175,7 +1175,7 @@ CDAMaLaESTransform::AddOperator
     }
     p++;
   }
-  
+
   commandlist program;
   wchar_t* p2;
   bool needPopSupplement = false;
@@ -1264,7 +1264,7 @@ CDAMaLaESTransform::AppendCommandToProgram
         aProgram.push_back(command(&CDAMaLaESResult::appendExprs, aArg));
         if (maxarg > 0)
           throw MaLaESError(L"MAL file contains #exprs and #expri in the same tag.");
-      
+
         maxarg = -1;
         return;
       }
@@ -1550,10 +1550,10 @@ CDAMaLaESTransform::WriteConversion
   }
 
   ci->add_ref();
-  
+
   // Next time we will go to the writeConvertedVariable path instead.
   args.push_back(ci);
-  
+
   RETURN_INTO_OBJREF(doc, iface::dom::Document, ci->ownerDocument());
   if (mup != 1.0)
   {
@@ -1581,7 +1581,7 @@ CDAMaLaESTransform::WriteConversion
                             mathml_dom::MathMLCnElement);
     args.push_back(mcn);
   }
-  
+
   const wchar_t* pseudo;
   if (mup == 1.0)
     pseudo = L"units_conversion_offset";
@@ -1589,10 +1589,10 @@ CDAMaLaESTransform::WriteConversion
     pseudo = L"units_conversion_factor";
   else
     pseudo = L"units_conversion";
-  
+
   // Apply the pseudo-operator...
   ExecuteTransform(aResult, pseudo, args, bvars, noQualifiers);
-  
+
   aResult->endConversionMode();
 }
 
@@ -1634,7 +1634,7 @@ CDAMaLaESTransform::RunTransformOnOperator
                          pw->getCase(i));
       if (pwc == NULL)
         break;
-      
+
       CleanupVector<iface::mathml_dom::MathMLElement*> tmpargs;
       tmpargs.push_back(pwc->caseCondition());
       tmpargs.push_back(pwc->caseValue());

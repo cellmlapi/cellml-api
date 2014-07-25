@@ -121,7 +121,7 @@ CDA_ComputationTargetIterator::nextComputationTarget() throw()
 
   ptr_tag<CDA_ComputationTarget> t = *mTargetsIt;
   mTargetsIt++;
-  
+
   t->add_ref();
   return static_cast<iface::cellml_services::ComputationTarget*>(t);
 }
@@ -272,7 +272,7 @@ public:
                                std::vector<iface::dom::Element*>& aVector)
     : mCodeInfo(aCodeInfo), mVector(aVector) {};
   ~CDA_FlaggedEquationsNodeList() {};
-  
+
   uint32_t length() throw()
   {
     return mVector.size();
