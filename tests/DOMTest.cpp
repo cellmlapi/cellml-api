@@ -1,4 +1,9 @@
 #include "DOMTest.hxx"
+
+#ifdef HAVE_STD_CODECVT
+#include "CppUnitWstringSupport.hpp"
+#endif // HAVE_STD_CODECVT
+
 #include "DOMWriter.hxx"
 #include "Utilities.hxx"
 #include "IfaceCellML_APISPEC.hxx"

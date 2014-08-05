@@ -3,6 +3,10 @@
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
 
+#ifdef HAVE_STD_CODECVT
+#include "CppUnitWstringSupport.hpp"
+#endif // HAVE_STD_CODECVT
+
 #include "cda_compiler_support.h"
 #ifndef BASE_DIRECTORY
 #ifdef WIN32
