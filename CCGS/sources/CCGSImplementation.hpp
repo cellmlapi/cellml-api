@@ -344,7 +344,7 @@ private:
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;
   ObjRef<iface::cellml_services::CUSES> mCUSES;
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
-  std::auto_ptr<CodeGenerationState> makeCodeGenerationState(int aCompat, iface::cellml_api::Model* aSourceModel);
+  std::unique_ptr<CodeGenerationState> makeCodeGenerationState(int aCompat, iface::cellml_api::Model* aSourceModel);
 };
 
 class CDA_CodeGeneratorBootstrap

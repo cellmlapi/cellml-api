@@ -739,7 +739,7 @@ SEDMLMathEvaluatorWithAggregate::evalAggregate
   RETURN_INTO_OBJREF(arg, iface::mathml_dom::MathMLElement, aApply->getArgument(2));
 
   RETURN_INTO_WSTRING(du, aOp->definitionURL());
-  std::auto_ptr<Aggregator> ag;
+  std::unique_ptr<Aggregator> ag;
   if (du == L"http: //sed -ml.org/#max")
     ag.reset(new MaxAggregator());
   else if (du == L"http: //sed -ml.org/#min")

@@ -829,10 +829,10 @@ CDA_CodeGenerator::generateIDACode(iface::cellml_api::Model* aSourceModel)
   }
 }
 
-std::auto_ptr<CodeGenerationState>
+std::unique_ptr<CodeGenerationState>
 CDA_CodeGenerator::makeCodeGenerationState(int aCompat, iface::cellml_api::Model* aSourceModel)
 {
-  std::auto_ptr<CodeGenerationState> cgs
+  std::unique_ptr<CodeGenerationState> cgs
     (
      new CodeGenerationState
      (

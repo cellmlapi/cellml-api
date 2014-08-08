@@ -169,7 +169,7 @@
     static CPPUNIT_NS::TestSuite *suite()                                      \
     {                                                                          \
       const CPPUNIT_NS::TestNamer &namer = getTestNamer__();                   \
-      std::auto_ptr<CPPUNIT_NS::TestSuite> suite(                              \
+      std::unique_ptr<CPPUNIT_NS::TestSuite> suite(                              \
              new CPPUNIT_NS::TestSuite( namer.getFixtureName() ));             \
       CPPUNIT_NS::ConcretTestFixtureFactory<TestFixtureType> factory;          \
       CPPUNIT_NS::TestSuiteBuilderContextBase context( *suite.get(),           \

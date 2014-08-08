@@ -1770,7 +1770,7 @@ CodeGenerationState::CreateMathStatements()
         if (mn == NULL)
           continue;
 
-        std::auto_ptr<MathMLMathStatement> mms;
+        std::unique_ptr<MathMLMathStatement> mms;
 
         // See if it is a piecewise...
         DECLARE_QUERY_INTERFACE_OBJREF(mpw, n, mathml_dom::MathMLPiecewiseElement);
