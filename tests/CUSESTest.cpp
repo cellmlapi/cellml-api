@@ -1,4 +1,9 @@
 #include "CUSESTest.hpp"
+
+#ifdef HAVE_STD_CODECVT
+#include "CppUnitWstringSupport.hpp"
+#endif // HAVE_STD_CODECVT
+
 #include "CUSESBootstrap.hpp"
 #include "CellMLBootstrap.hpp"
 #include "Utilities.hxx"
