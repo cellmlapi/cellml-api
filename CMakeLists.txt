@@ -262,9 +262,9 @@ INCLUDE(CheckIncludeFile)
 
 check_cxx_source_compiles("
   #include <codecvt>
-  int main() { 
-    std::codecvt_utf8_utf16<wchar_t> x; 
-    return 0; 
+  int main() {
+    std::codecvt_utf8_utf16<wchar_t> x;
+    return 0;
   }
 " HAVE_STD_CODECVT)
 IF(HAVE_STD_CODECVT)
