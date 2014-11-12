@@ -37,9 +37,10 @@ MACRO(DECLARE_IDL_DEPENDENCY name)
   LIST(APPEND IDL_DEPS_${CURRENT_EXTENSION} ${name})
 ENDMACRO(DECLARE_IDL_DEPENDENCY)
 
-FIND_PROGRAM(OMNIIDL omniidl DOC "The path to the omniidl program (note: omniidl is part of omniORB: http://omniorb.sourceforge.net/)")
-IF(CHECK_BUILD AND OMNIIDL STREQUAL "OMNIIDL-NOTFOUND")
-  MESSAGE(FATAL_ERROR "omniidl was not found. To override the pre-build checks and manually fix any problems, pass -DCHECK_BUILD:BOOL=OFF to CMake.")
-ENDIF()
-
-INCLUDE_DIRECTORIES(interfaces)
+#FIND_PROGRAM(OMNIIDL omniidl
+#    HINTS /hpc/dwir109/dependencies/omniORB-4.2.0/bin
+#    DOC "The path to the omniidl program (note: omniidl is part of omniORB: http://omniorb.sourceforge.net/)")
+#IF(CHECK_BUILD AND OMNIIDL STREQUAL "OMNIIDL-NOTFOUND")
+#  MESSAGE(FATAL_ERROR "omniidl was not found. To override the pre-build checks and manually fix any problems, pass -DCHECK_BUILD:BOOL=OFF to CMake.")
+#ENDIF()
+#INCLUDE_DIRECTORIES(interfaces)

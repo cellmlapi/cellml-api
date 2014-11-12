@@ -1,14 +1,11 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-SET(CMAKE_BACKWARDS_COMPATIBILITY 2.8)
-MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
-
-INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/COPYING DESTINATION share/doc/cellml-api/)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+project(LIBCELLML VERSION 2.0 LANGUAGES C CXX)
 
 INCLUDE(build/soversions.cmake)
-INCLUDE(CTest)
 INCLUDE(build/packing.cmake)
+INCLUDE(CTest)
 
-OPTION(ENABLE_EVERYTHING "Turn on all optional features, except the commonly problematic ones (XPCOM, CORBA, and GSL integrators).")
+OPTION(ENABLE_EVERYTHING "Turn on all optional features, except the commonly problematic ones (XPCOM, CORBA, and GSL integrators)." OFF)
 
 OPTION(ENABLE_CORBA "Generate a two-way bridge between the C++ implementation and CORBA, allowing all parts of the API to be accessed from CORBA. Note: this functionality is not widely tested; if you find a bug, we are only interested if you also provide a working patch to fix the problem")
 MARK_AS_ADVANCED(FORCE ENABLE_CORBA)
@@ -40,7 +37,8 @@ OPTION(ENABLE_VACSS "Build the Validation Against CellML Specification Service (
 OPTION(ENABLE_CGRS "Build the CellML Generics and Reflection Service (CGRS), providing access to the CellML API through a generic interface that allows each operation and attribute in the API to be discovered programmatically.")
 
 OPTION(CHECK_BUILD "Run some basic checks on whether the build is likely to succeed before actually building" ON)
-OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
+SET(BUILD_SHARED_LIBS OFF)
+SET(BUILD_STATIC_LIBS ON)
 
 # Option Dependencies...
 # These must be ordered so modules come before their dependencies.
@@ -159,7 +157,7 @@ INCLUDE(build/test.cmake)
 
 # Do all the language specific bits...
 
-INCLUDE(build/cxx.cmake)
+#INCLUDE(build/cxx.cmake)
 
 IF (ENABLE_CGRS)
   INCLUDE(CGRS/cgrs-modules.cmake)
@@ -399,6 +397,19 @@ CONFIGURE_FILE(cda_config.h.in cda_config.h)
 CONFIGURE_FILE(extdep/libxml/xml2_config.h.in extdep/libxml/xml2_config.h)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/extdep/libxml/)
 
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/COPYING DESTINATION share/doc/cellml-api/)
+
+# Use one-time-generated hxx headers
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
+# export them to the cellml include directory
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include/cellml)
+
+install(EXPORT libcellml-config DESTINATION lib/cmake)
+include(CMakePackageConfigHelpers)
+WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_CURRENT_BINARY_DIR}/libcellml-config-version.cmake COMPATIBILITY AnyNewerVersion)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libcellml-config-version.cmake 
+    DESTINATION lib/cmake)
+    
 # uninstall target
 CONFIGURE_FILE(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"

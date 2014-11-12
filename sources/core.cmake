@@ -104,16 +104,19 @@ ADD_LIBRARY(cellml
   )
 SET(NETWORK_LIBS)
 IF(WIN32)
-LIST(APPEND NETWORK_LIBS ws2_32)
+    LIST(APPEND NETWORK_LIBS ws2_32)
 ENDIF()
 FIND_PACKAGE(Threads)
-TARGET_LINK_LIBRARIES(cellml ${CMAKE_DL_LIBS} ${NETWORK_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${SYSTEM_XML2})
-SET_TARGET_PROPERTIES(cellml PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CELLML_SOVERSION})
-INSTALL(TARGETS cellml DESTINATION lib)
-INSTALL(FILES sources/cda_compiler_support.h ${CMAKE_BINARY_DIR}/cda_config.h sources/cellml-api-cxx-support.hpp DESTINATION include)
+TARGET_LINK_LIBRARIES(cellml PUBLIC ${CMAKE_DL_LIBS} ${NETWORK_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${SYSTEM_XML2})
+SET_TARGET_PROPERTIES(cellml PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CELLML_SOVERSION} OUTPUT_NAME cellml-${LIBCELLML_VERSION})
+INSTALL(TARGETS cellml
+    EXPORT libcellml-config 
+    DESTINATION lib
+    INCLUDES DIRECTORY include/cellml)    
+INSTALL(FILES sources/cda_compiler_support.h ${CMAKE_BINARY_DIR}/cda_config.h sources/cellml-api-cxx-support.hpp DESTINATION include/cellml)
 
 DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp" "sources/cellml" "cellml")
-INSTALL(FILES sources/dom/DOMBootstrap.hxx DESTINATION include)
+INSTALL(FILES sources/dom/DOMBootstrap.hxx DESTINATION include/cellml)
 DECLARE_CPPUNIT_FILE(DOM)
 DECLARE_CPPUNIT_FILE(MathML)
 DECLARE_CPPUNIT_FILE(CellML)
