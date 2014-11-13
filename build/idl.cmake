@@ -38,7 +38,7 @@ MACRO(DECLARE_IDL_DEPENDENCY name)
 ENDMACRO(DECLARE_IDL_DEPENDENCY)
 
 #FIND_PROGRAM(OMNIIDL omniidl
-#    HINTS /hpc/dwir109/dependencies/omniORB-4.2.0/bin
+#    HINTS /hpc/cmiss/opencmissextras/cellml/packages/omniORB/omniORB-4.1.6/bin
 #    DOC "The path to the omniidl program (note: omniidl is part of omniORB: http://omniorb.sourceforge.net/)")
 #IF(CHECK_BUILD AND OMNIIDL STREQUAL "OMNIIDL-NOTFOUND")
 #  MESSAGE(FATAL_ERROR "omniidl was not found. To override the pre-build checks and manually fix any problems, pass -DCHECK_BUILD:BOOL=OFF to CMake.")
