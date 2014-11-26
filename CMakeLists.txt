@@ -37,8 +37,6 @@ OPTION(ENABLE_VACSS "Build the Validation Against CellML Specification Service (
 OPTION(ENABLE_CGRS "Build the CellML Generics and Reflection Service (CGRS), providing access to the CellML API through a generic interface that allows each operation and attribute in the API to be discovered programmatically." OFF)
 
 OPTION(CHECK_BUILD "Run some basic checks on whether the build is likely to succeed before actually building" ON)
-SET(BUILD_SHARED_LIBS OFF)
-SET(BUILD_STATIC_LIBS ON)
 
 # Option Dependencies...
 # These must be ordered so modules come before their dependencies.
