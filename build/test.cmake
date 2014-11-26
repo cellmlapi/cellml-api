@@ -1,7 +1,7 @@
 IF (BUILD_TESTING)
   INCLUDE_DIRECTORIES(extdep/cppunit/include)
 
-  ADD_LIBRARY(cppunit-cellml STATIC
+  ADD_LIBRARY(cppunit-cellml
     extdep/cppunit/src/cppunit/AdditionalMessage.cpp
     extdep/cppunit/src/cppunit/Asserter.cpp
     extdep/cppunit/src/cppunit/BriefTestProgressListener.cpp
