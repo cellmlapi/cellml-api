@@ -100,7 +100,7 @@ def rootfind_<ID>(voi, constants, states, algebraic):
     """Calculate value of algebraic variable for DAE"""
     from scipy.optimize import fsolve
     global initialGuess<ID>
-    if (initialGuess<ID> == None): initialGuess<ID> = 0.1
+    if initialGuess<ID> is None: initialGuess<ID> = 0.1
     if not iterable(voi):
         <VAR> = fsolve(residualSN_<ID>, initialGuess<ID>, args=(algebraic, voi, constants, states), xtol=1E-6)
         initialGuess<ID> = <VAR>
@@ -121,7 +121,7 @@ def rootfind_<ID>(voi, constants, rates, states, algebraic):
     """Calculate values of algebraic variables for DAE"""
     from scipy.optimize import fsolve
     global initialGuess<ID>
-    if (initialGuess<ID> == None): initialGuess<ID> = ones(<COUNT>)*0.1
+    if initialGuess<ID> is None: initialGuess<ID> = ones(<COUNT>)*0.1
     if not iterable(voi):
         soln = fsolve(residualSN_<ID>, initialGuess<ID>, args=(algebraic, voi, constants, rates, states), xtol=1E-6)
         initialGuess<ID> = soln
