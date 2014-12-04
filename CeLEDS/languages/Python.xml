@@ -173,7 +173,6 @@ from numpy import *
 
 </mapping>
   <mapping keyname="preVariables">def computeAlgebraic(constants, states, voi):
-    rates = array([[0.0] * len(voi)] * sizeStates)
     algebraic = array([[0.0] * len(voi)] * sizeAlgebraic)
     states = array(states)
     voi = array(voi)
