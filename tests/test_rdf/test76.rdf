@@ -2,9 +2,9 @@
   Copyright World Wide Web Consortium, (Massachusetts Institute of
   Technology, Institut National de Recherche en Informatique et en
   Automatique, Keio University).
- 
+
   All Rights Reserved.
- 
+
   Please see the full Copyright clause at
   <http://www.w3.org/Consortium/Legal/copyright-software.html>
 
@@ -12,13 +12,13 @@
 -->
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:eg="http://example.org/">
- <!-- 
+ <!--
   Test case for
   Issue http://www.w3.org/2000/03/rdf-tracking/#rdf-ns-prefix-confusion
 
   List of RDF attributes that are required to have an rdf: prefix
-    about aboutEach 
-    ID bagID type resource parseType 
+    about aboutEach
+    ID bagID type resource parseType
 
   Dave Beckett - http://purl.org/net/dajobe/
 
@@ -36,5 +36,5 @@
        <eg:property2>bar</eg:property2>
     </eg:property>
   </rdf:Description>
-  
+
 </rdf:RDF>

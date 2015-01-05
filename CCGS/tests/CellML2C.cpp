@@ -319,12 +319,12 @@ WriteCode(iface::cellml_services::CodeInformation* cci, uint32_t useida)
   std::vector<std::wstring>::iterator msgi;
   for (msgi = messages.begin(); msgi != messages.end(); msgi++)
     printf("%S", (*msgi).c_str());
-  
+
   printf(" * The rate and state arrays need %u entries.\n", cci->rateIndexCount());
   printf(" * The algebraic variables array needs %u entries.\n", cci->algebraicIndexCount());
   printf(" * The constant array needs %u entries.\n", cci->constantIndexCount());
   printf(" * Variable storage is as follows:\n");
-  
+
   messages.clear();
   iface::cellml_services::ComputationTargetIterator* cti = cci->iterateTargets();
   while (true)

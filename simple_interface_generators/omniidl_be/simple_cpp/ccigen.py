@@ -96,7 +96,7 @@ class Walker(idlvisitor.AstVisitor):
         basename,ext = os.path.splitext(name)
         self.cci.out('#include "CCI' + basename  + '.hxx"')
         self.cci.inModule = 0
-        
+
     def visitModule(self, node):
         """Visit all the definitions in a module."""
         self.enterScope(node)
@@ -113,13 +113,13 @@ class Walker(idlvisitor.AstVisitor):
     def processBase(self, active, base):
         # Interface active has base(or active == base). Called only once
         # per active per base. We only care about callables here.
-        
+
         psemi = ''
         pfq = 'CCI::' + active.finalcciscoped + '::'
         if self.doing_header:
             psemi = ';'
             pfq = ''
-        
+
         downcastName = '_downcast_' + string.join(base.scopedName(), '_')
         self.cci.out('::' + base.corbacxxscoped + '_ptr ' + pfq +\
                      downcastName + '()' + psemi)
@@ -147,13 +147,13 @@ class Walker(idlvisitor.AstVisitor):
         # Delete...
         self.cci.out('try')
         self.cci.out('{')
-        self.cci.inc_indent()        
-        self.cci.out('delete this;')        
+        self.cci.inc_indent()
+        self.cci.out('delete this;')
         self.cci.dec_indent()
         self.cci.out('}')
         self.cci.out('catch (CORBA::Exception& e)')
         self.cci.out('{')
-        self.cci.out('}')        
+        self.cci.out('}')
         self.cci.dec_indent()
         self.cci.out('}')
         self.cci.dec_indent()
@@ -212,12 +212,12 @@ class Walker(idlvisitor.AstVisitor):
             parstr = parstr + simplecxx.typeToSimpleCXX(p.paramType(), \
                                                         extrapointer, not p.is_out()) +\
                      ' ' + p.simplename
-        
+
         if simplecxx.doesTypeNeedLength(op.returnType()):
             if needcomma:
                 parstr = parstr + ', '
             parstr = parstr + 'uint32_t* _length__return'
-        
+
         self.cci.out(rtype + ' ' + pfq + op.simplename + '(' + parstr +\
                      ') throw(std::exception&)' + psemi)
         if self.doing_header:
@@ -320,7 +320,7 @@ class Walker(idlvisitor.AstVisitor):
                     conversionutils.destroyCORBAValue(\
                         self.cci, rt, '_corba_return')
                 self.cci.out('return _simple_return;')
-            
+
             self.cci.dec_indent()
             self.cci.out('}')
             self.cci.out('catch (CORBA::Exception& e)')
@@ -520,7 +520,7 @@ class Walker(idlvisitor.AstVisitor):
             #             mangledName + ' PUBLIC_' + self.masterGuard + '_POST;')
             #self.cci.out('}')
             #self.cci.out('#endif')
-            
+
             for p in node.pragmas():
                 if p.text() == "terminal-interface":
                     isTerminal = 1
@@ -610,7 +610,7 @@ class Walker(idlvisitor.AstVisitor):
             self.cci.out('_setPOA(::PortableServer::POA::_duplicate(aPp));')
             self.cci.dec_indent()
             self.cci.out('}')
-            
+
         stack = [node]
         seen = {node.simplecxxscoped: 1}
         self.processBase(node, node)
@@ -666,7 +666,7 @@ class Walker(idlvisitor.AstVisitor):
             self.cci.out('void prod' + node.simplename + '() {'+\
                          ' gCCIFactory' + node.simplecscoped + '.Name(); }')
             self.escapeScopes()
-    
+
 def run(tree):
     w = Walker()
     w.cci = output.Stream(open("CCI" + tree.filebase + ".cxx", "w"), 2)

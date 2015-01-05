@@ -86,7 +86,7 @@ EvaluateRatesGSL(double voi, const double vars[],
                  double rates[], void* params)
 {
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
-  
+
   // Update variables that change based on bound/other vars...
   int ret = ei->ComputeRates(voi, ei->constants, ei->rates, const_cast<double*>(vars),
                              ei->algebraic);
@@ -110,7 +110,7 @@ EvaluateJacobianGSL
 )
 {
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
-  
+
   // Back up the states, so we can perturb them...
   double* states = new double[ei->rateSize];
   memcpy(states, vars, ei->rateSizeBytes);
@@ -177,7 +177,7 @@ int
 EvaluateRatesCVODE(double bound, N_Vector varsV, N_Vector ratesV, void* params)
 {
   EvaluationInformation* ei = reinterpret_cast<EvaluationInformation*>(params);
-  
+
   // Update variables that change based on bound/other vars...
   ei->ComputeRates(bound, ei->constants, ei->rates, N_VGetArrayPointer_Serial(varsV),
                    ei->algebraic, ei->failInfo);
@@ -335,7 +335,7 @@ CDA_ODESolverRun::SolveODEProblemGSL
     break;
   }
   s = gsl_odeiv_step_alloc(T, rateSize);
-  
+
   // Start the main loop...
   double voi = mStartBvar;
   double stepSize = 1E-6;
@@ -491,7 +491,7 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   ei.rateSizeBytes = rateSize * sizeof(double);
   ei.ComputeRates = f->ComputeRates;
   ei.ComputeVariables = f->ComputeVariables;
-  
+
   uint32_t recsize = rateSize * 2 + algSize + 1;
   uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / recsize) * recsize;
   double* storage = new double[storageCapacity];
@@ -518,7 +518,7 @@ CDA_ODESolverRun::SolveODEProblemCVODE
         bhl = voi + mStepSizeMax;
       if(bhl > nextStopPoint)
         bhl = nextStopPoint;
-      
+
       CVodeSetStopTime(solver, bhl);
       if (CVode(solver, bhl, y, &voi, CV_ONE_STEP) < 0)
       {
@@ -526,10 +526,10 @@ CDA_ODESolverRun::SolveODEProblemCVODE
           setFailure(&failInfo, "CVODE failure", -1);
         break;
       }
-      
+
       if (checkPauseOrCancellation())
         break;
-      
+
       if (isFirst)
         isFirst = false;
       else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
@@ -1271,11 +1271,11 @@ CDA_DAESolverRun::SolveDAEProblem
   KINSetNumMaxIters(kin_mem, 100);
   KINSetUserData(kin_mem, &ivf);
   KINSetErrHandlerFn(kin_mem, cda_ida_error_handler, &failInfo);
-  
+
   f->SetupStateInfo(icinfo);
 
   double lastVOI = 0.0 /* initialised only to avoid extraneous warning. */;
-  
+
   double minReportForDensity = (mStopBvar - mStartBvar) / mMaxPointDensity;
   uint32_t tabStepNumber = 0;
   double nextStopPoint = mTabulationStepSize == 0.0 ? mStopBvar : voi;
@@ -1286,7 +1286,7 @@ CDA_DAESolverRun::SolveDAEProblem
     while (restart)
     {
       restart = false;
-      
+
       f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
                                 algebraic, condvars, &failInfo);
       for (uint32_t i = 0; i < condVarSize; i++)
@@ -1332,7 +1332,7 @@ CDA_DAESolverRun::SolveDAEProblem
           }
         }
       }
-      
+
       if (kinOverallFailure)
       {
         failInfo.failtype = lastKINFail.failtype;
@@ -1343,10 +1343,10 @@ CDA_DAESolverRun::SolveDAEProblem
         IDAInit(idamem, ida_resfn, /* t0 = */voi, y0, dy0);
         break;
       }
-        
+
       MergeParametersICInfoIntoRatesStates(stateSize, rates, states,
                                            icinfo, NV_DATA_S(params));
-      
+
       f->ComputeRootInformation(voi, constants, rates, ei.oldrates, states, ei.oldstates,
                                 algebraic, condvars, &failInfo);
       for (uint32_t i = 0; i < condVarSize; i++)
@@ -1383,7 +1383,7 @@ CDA_DAESolverRun::SolveDAEProblem
           memcpy(storage + storageSize + 1 + rateSize * 2, algebraic,
                  algSize * sizeof(double));
           storageSize += recsize;
-          
+
           nextStopPoint = mTabulationStepSize == 0.0 ? mStopBvar :
             (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
         }
@@ -1391,13 +1391,13 @@ CDA_DAESolverRun::SolveDAEProblem
 
         if (restart || voi >= mStopBvar)
           break;
-        
+
         double bhl = mStopBvar;
         if (mStepSizeMax != 0.0 && bhl - voi > mStepSizeMax)
           bhl = voi + mStepSizeMax;
         if(bhl > nextStopPoint)
           bhl = nextStopPoint;
-        
+
         IDASetStopTime(idamem, bhl);
 
         int ret = IDASolve(idamem, bhl, &voi, y0, dy0, IDA_ONE_STEP);
@@ -1418,25 +1418,25 @@ CDA_DAESolverRun::SolveDAEProblem
 
         memcpy(ei.oldrates, rates, rateSize * sizeof(double));
         memcpy(ei.oldstates, states, stateSize * sizeof(double));
-      
+
         if (checkPauseOrCancellation())
           break;
-      
+
         if (isFirst)
           isFirst = false;
         else if (voi - lastVOI < minReportForDensity && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
           continue;
-      
+
         if(mStrictTabulation && !floatsEqual(voi, nextStopPoint, tabulationRelativeTolerance))
           continue;
-      
+
         if (voi==nextStopPoint)
           nextStopPoint = (mTabulationStepSize * ++tabStepNumber) + mStartBvar;
-      
+
         lastVOI = voi;
-      
+
         f->EvaluateVariables(voi, constants, rates, states, algebraic, condvars, &failInfo);
-      
+
         if (!restart)
         {
           // Add to storage...
@@ -1448,7 +1448,7 @@ CDA_DAESolverRun::SolveDAEProblem
                  algSize * sizeof(double));
           storageSize += recsize;
         }
-      
+
         // Are we ready to send?
         uint32_t timeNow = time(0);
         if (timeNow >= storageExpiry || storageSize == storageCapacity)
@@ -1563,7 +1563,7 @@ UseEDouble(EDouble aValue, struct fail_info* aFail, const char* aContext)
 
   double result = aValue->mValue;
 
-  delete aValue;  
+  delete aValue;
   return result;
 }
 
@@ -1574,7 +1574,7 @@ void TryAssign(double* aDest, EDouble aValue, const char* aContext, struct fail_
     aValue->addCause(std::string("Computed value for ") + aContext + " is not finite");
     setFailure(aFail, aValue->mWhyError.c_str(), -1);
   }
-  
+
   *aDest = aValue->mValue;
   delete aValue;
 }
@@ -1597,7 +1597,7 @@ void TryOverrideAssign(double* aDest, EDouble aValue, const char* aContext,
     aValue->addCause(std::string("Computed value for ") + aContext + " is not finite");
     setFailure(aFail, aValue->mWhyError.c_str(), -1);
   }
-  
+
   *aDest = aValue->mValue;
   delete aValue;
 }
@@ -1838,7 +1838,7 @@ EDouble TryATan(EDouble aInput)
     aInput->addCause("input to atan is notanumber");
   else
     aInput->noError();
-  
+
   aInput->mValue = std::atan(aInput->mValue);
   return aInput;
 }
@@ -2173,7 +2173,7 @@ EDouble TryImplies(EDouble aInput1, EDouble aInput2)
     aInput1->addCause("first input to implies is not finite");
   else if (!cdamath::isfinite(aInput2->mValue))
     aInput1->addCause("second input to implies is not finite");
-    
+
   aInput1->mValue =
     ((aInput1->mValue == 0.0) || (aInput2->mValue != 0.0)) ? 1.0 : 0.0;
 
@@ -2266,7 +2266,7 @@ EDouble TryLog(EDouble aInput1, EDouble aInput2)
     aInput1->noError()->addCause("input to natural log is not positive");
   else if (aInput2->mValue <= 0)
     aInput1->noError()->addCause("base to natural log is not positive");
-  
+
   aInput1->mValue = std::log(aInput1->mValue) / std::log(aInput2->mValue);
   delete aInput2;
   return aInput1;
@@ -2327,7 +2327,7 @@ EDouble TryMax(int count, ...)
     value->addCause("first argument to max is +infinity");
     hadErr = true;
   }
-  
+
   for (int i = 1; i < count; i++)
   {
     EDouble nextVal = va_arg(val, EDouble);
@@ -2386,7 +2386,7 @@ EDouble TryMin(int count, ...)
     value->addCause("first argument to min is negative infinity");
     hadErr = true;
   }
-  
+
   for (int i = 1; i < count; i++)
   {
     EDouble nextVal = va_arg(val, EDouble);
@@ -2638,7 +2638,7 @@ EDouble TryRoot(EDouble aInput1, EDouble aInput2)
     aInput1->noError()->addCause("the second operand to root is zero");
   else if (!cdamath::isfinite(result))
     aInput1->noError()->addCause("the second operand to root is zero");
-  
+
   delete aInput2;
   aInput1->mValue = result;
   return aInput1;

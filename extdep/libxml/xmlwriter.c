@@ -1074,10 +1074,10 @@ xmlTextWriterStartElementNS(xmlTextWriterPtr writer,
     sum += count;
 
     if (namespaceURI != 0) {
-        xmlTextWriterNsStackEntry *p = (xmlTextWriterNsStackEntry *) 
+        xmlTextWriterNsStackEntry *p = (xmlTextWriterNsStackEntry *)
         xmlMalloc(sizeof(xmlTextWriterNsStackEntry));
         if (p == 0) {
-            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY, 
+            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY,
                             "xmlTextWriterStartElementNS : out of memory!\n");
             return -1;
         }
@@ -1663,7 +1663,7 @@ xmlTextWriterWriteBase64(xmlTextWriterPtr writer, const char *data,
  * Write hqx encoded data to an xmlOutputBuffer.
  * ::todo
  *
- * Returns the bytes written (may be 0 because of buffering) 
+ * Returns the bytes written (may be 0 because of buffering)
  * or -1 in case of error
  */
 static int
@@ -1672,7 +1672,7 @@ xmlOutputBufferWriteBinHex(xmlOutputBufferPtr out,
 {
     int count;
     int sum;
-    static char hex[16] = 
+    static char hex[16] =
     	{'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
     int i;
 
@@ -1849,7 +1849,7 @@ xmlTextWriterStartAttributeNS(xmlTextWriterPtr writer,
         nsentry.uri = (xmlChar *)namespaceURI;
         nsentry.elem = xmlListFront(writer->nodes);
 
-        curns = (xmlTextWriterNsStackEntry *)xmlListSearch(writer->nsstack, 
+        curns = (xmlTextWriterNsStackEntry *)xmlListSearch(writer->nsstack,
                                                            (void *)&nsentry);
         if ((curns != NULL)) {
             xmlFree(buf);

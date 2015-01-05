@@ -477,7 +477,7 @@ CDA_DOMImplementation::ProcessContextError(std::wstring& aErrorMessage,
     aErrorMessage = L"Could not fetch the error message.";
     return;
   }
-  
+
   ProcessXMLError(aErrorMessage, err);
 
   xmlFreeParserCtxt(ctxt);
@@ -498,7 +498,7 @@ CDA_DOMImplementation::ProcessXMLError(std::wstring& aErrorMessage, _xmlError* e
     std::wstring msg;
     msg += (const char*)err->message;
   }
-  
+
   switch (err->code)
   {
   case XML_ERR_INTERNAL_ERROR:
@@ -1222,7 +1222,7 @@ struct CDA_PartialLoad
 
 static void CDA_XMLStructuredHandler
 (
- void *userData, 
+ void *userData,
  xmlErrorPtr error
 )
 {
@@ -1261,7 +1261,7 @@ CDA_DOMImplementation::loadDocument
         isAllowed = true;
         break;
       }
-      
+
       protRestrict = pr;
     }
     if (!isAllowed)
@@ -1285,7 +1285,7 @@ CDA_DOMImplementation::loadDocument
   }
 
   xmlSetStructuredErrorFunc(reinterpret_cast<void*>(&pl), CDA_XMLStructuredHandler);
-  
+
   xmlDocPtr xdp =
     xmlCtxtReadFile(ctxt, sURL.c_str(), NULL,
                     XML_PARSE_NOXINCNODE);
@@ -1325,7 +1325,7 @@ CDA_DOMImplementation::loadDocumentFromText
   }
 
   xmlSetStructuredErrorFunc(reinterpret_cast<void*>(&pl), CDA_XMLStructuredHandler);
-  
+
   xmlDocPtr xdp =
     xmlCtxtReadMemory(ctxt, text, strlen(text), NULL, NULL,
                       XML_PARSE_NOXINCNODE | XML_PARSE_NONET);

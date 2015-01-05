@@ -76,7 +76,7 @@ module cellml_services
      * attempt to use any other operations or attributes on this interface.
      */
     readonly attribute wstring compileErrors;
-    
+
     /**
      * The primary expression, in the transformed to language.
      */
@@ -235,4 +235,4 @@ module cellml_services
     MaLaESTransform compileTransformer(in wstring specification);
   };
 };
-#endif //_MaLaES_idl_ 
+#endif //_MaLaES_idl_

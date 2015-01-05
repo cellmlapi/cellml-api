@@ -1,6 +1,6 @@
 /**
  * @file
- * CeLEDS (CellML Language Export Definition Service) provides a 
+ * CeLEDS (CellML Language Export Definition Service) provides a
  * service for accessing language export definitions required by components
  * involved in export of CellML models to various programming languages.
  * Language definitions are stored in XML files.

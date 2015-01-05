@@ -15,4 +15,4 @@
 <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-no-cycles-in-subClassOf/test001#A> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-no-cycles-in-subClassOf/test001#B> .
 <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-no-cycles-in-subClassOf/test001#B> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-no-cycles-in-subClassOf/test001#A> .
 <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-no-cycles-in-subClassOf/test001#X> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfs-no-cycles-in-subClassOf/test001#X> .
-    
+

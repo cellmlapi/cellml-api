@@ -336,7 +336,7 @@ CDA_CellMLIntegrationService::CompileSource
   if (need_no_cygwin == 0)
   {
     const char* dumpstring = "gcc -dumpspecs";
-    SECURITY_ATTRIBUTES sa; 
+    SECURITY_ATTRIBUTES sa;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
@@ -394,7 +394,7 @@ CDA_CellMLIntegrationService::CompileSource
 
     char *commandstring = strdup(cmd.c_str());
 
-    // Start the child process. 
+    // Start the child process.
     if( !CreateProcess( NULL,   // No module name (use command line)
         commandstring,        // Command line
         NULL,           // Process handle not inheritable
@@ -402,10 +402,10 @@ CDA_CellMLIntegrationService::CompileSource
         FALSE,          // Set handle inheritance to FALSE
         CREATE_NO_WINDOW,              // No visible window
         NULL,           // Use parent's environment block
-        NULL,           // Use parent's starting directory 
+        NULL,           // Use parent's starting directory
         &si,            // Pointer to STARTUPINFO structure
         &pi )           // Pointer to PROCESS_INFORMATION structure
-    ) 
+    )
     {
       free(commandstring);
       printf( "CreateProcess failed (%d)\n", GetLastError() );
@@ -418,7 +418,7 @@ CDA_CellMLIntegrationService::CompileSource
     GetExitCodeProcess( pi.hProcess, &lpExitCode );
     int ret = lpExitCode;
 
-    // Close process and thread handles. 
+    // Close process and thread handles.
     CloseHandle( pi.hProcess );
     CloseHandle( pi.hThread );
 #else
@@ -519,7 +519,7 @@ CDA_CellMLCompiledModel::~CDA_CellMLCompiledModel()
 CDA_CellMLIntegrationRun::CDA_CellMLIntegrationRun
 (
 )
-  : 
+  :
   mIsStarted(false),
   mStepType(iface::cellml_services::RUNGE_KUTTA_FEHLBERG_4_5),
   mEpsAbs(1E-6), mEpsRel(1E-6), mScalVar(1.0), mScalRate(0.0),
@@ -822,7 +822,7 @@ CDA_DAESolverRun::runthread()
 
     constants = new double[constSize];
     buffer = new double[2 * rateSize + algSize + 1 + condVarSize];
-    
+
     buffer[0] = mStartBvar;
     states = buffer + 1;
     rates = states + rateSize;
@@ -950,7 +950,7 @@ CDA_CellMLIntegrationService::setupCodeEnvironment
      << std::endl
      << " * deleted. Don't edit it or changes will be lost. */" << std::endl
      << "#define NULL ((void*)0)" << std::endl;
-  ss << 
+  ss <<
 #include "CISModelSupportString.h"
      << std::endl
     // C library...
@@ -1477,7 +1477,7 @@ CDA_CellMLIntegrationService::compileModelODEInternal
 
   CompiledModule* mod = CompileSource(dirname, sourcename, mLastError);
   CompiledModelFunctions* cmf = SetupCompiledModelFunctions(mod);
-  
+
   return new CDA_ODESolverModel(mod, cmf, aModel, cci, dirname);
 }
 
@@ -1625,7 +1625,7 @@ CDA_CellMLIntegrationService::compileModelDAEInternal
 
   CompiledModule* mod = CompileSource(dirname, sourcename, mLastError);
   IDACompiledModelFunctions* cmf = SetupIDACompiledModelFunctions(mod);
-  
+
   return new CDA_DAESolverModel(mod, cmf, aModel, cci, dirname);
 }
 

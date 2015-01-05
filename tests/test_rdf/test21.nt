@@ -9,7 +9,7 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id$
-# 
+#
 #####################################################################
 <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdf-containers-syntax-vs-schema/test006.rdf#e1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  <http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq> .
 

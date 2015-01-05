@@ -119,7 +119,7 @@ class P2XVisitor(idlvisitor.AstVisitor):
 
     def visitInterface(self, node):
         self.syncNamespaces()
-        
+
         isTerminal = 0
         everyModule = 0
         # See if this is a terminal interface...
@@ -133,7 +133,7 @@ class P2XVisitor(idlvisitor.AstVisitor):
             # Look for the pragma...
             if everyModule == 0:
                 return
-        
+
         virtual=''
         if not isTerminal:
             virtual='virtual '
@@ -165,7 +165,7 @@ class P2XVisitor(idlvisitor.AstVisitor):
             self.hxx.out('{')
             self.hxx.out('private:')
             self.hxx.inc_indent()
-            
+
         self.dptr = 'mPtr' + node.simplename
 
         if not self.visitingOther:
@@ -194,14 +194,14 @@ class P2XVisitor(idlvisitor.AstVisitor):
         self.cpp.out(self.dptr + ' = do_QueryInterface(mObj);')
         self.cpp.dec_indent()
         self.cpp.out('}')
-        
+
         for c in node.contents():
             c.accept(self)
 
         if not self.visitingOther:
             self.hxx.dec_indent()
             self.hxx.out('};')
-        
+
             self.cpp.out('class P2XFactory_' + node.xpcomscoped)
             self.cpp.out('  : public P2XFactory')
             self.cpp.out('{')
@@ -383,15 +383,15 @@ class P2XVisitor(idlvisitor.AstVisitor):
                 self.cpp.out(p.ti.ConvertXPCOMToPCM(p.xs.name, '*' +\
                                                     p.simplename))
             self.cpp.out(p.xs.GetDestroyer())
-        
+
         if pret != None:
             self.cpp.out(pret.GetStorageDefinition())
             self.cpp.out(retti.ConvertXPCOMToPCM(xret.name, pret.name))
             self.cpp.out(xret.GetDestroyer())
             self.cpp.out(pret.GetReturn())
-        
+
         self.cpp.dec_indent()
         self.cpp.out('}')
-        
+
 def run(tree):
     tree.accept(P2XVisitor())

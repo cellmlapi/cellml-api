@@ -377,7 +377,7 @@ module rdf_api
     Triple getNextTriple();
   };
 #pragma terminal-interface
-  
+
   /**
    * Represents a set of triples. This object is live in the sense that it
    * will remain up to date with changes made to the RDF triples.

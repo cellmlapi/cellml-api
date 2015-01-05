@@ -9,7 +9,7 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id$
-# 
+#
 #####################################################################
 <http://random.ioctl.org/#bar> <http://random.ioctl.org/#someProperty> _:a1 .
 <http://www.w3.org/2000/10/rdf-tests/rdfcore/rdfms-empty-property-elements/test012.rdf#foo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> .

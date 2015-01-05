@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<model 
+<model
 	name="capillary_dynamics_CellML1_0_model"
 	cmeta:id="capillary_dynamics_CellML1_0_model"
-	
+
 	xmlns="http://www.cellml.org/cellml/1.0#"
 	xmlns:cellml="http://www.cellml.org/cellml/1.0#"
 	xmlns:cmeta="http://www.cellml.org/metadata/1.0#"
@@ -136,12 +136,12 @@
 			CAPILLARY DYNAMICS, TISSUE FLUID, AND TISSUE PROTEIN
 
 			This portion of the model calculates the movement of fluid and protein through the
-			capillary membrane.  It also calculates the volumes of fluid in the free fluid space 
-			of the interstitium and in the gel fluid space.  It calculates the pressures in both 
-			of these fluids as well as the so-called solid tissue pressure caused by the compression 
-			of solid elements against other portions of the interstitium.  In addition, the quantities 
-			of proteins and their concentrations in both the free fluid and the gel fluid are calculated. 
-			And, finally, the flow of both fluid and proteins in the lymph system are computed, as well 
+			capillary membrane.  It also calculates the volumes of fluid in the free fluid space
+			of the interstitium and in the gel fluid space.  It calculates the pressures in both
+			of these fluids as well as the so-called solid tissue pressure caused by the compression
+			of solid elements against other portions of the interstitium.  In addition, the quantities
+			of proteins and their concentrations in both the free fluid and the gel fluid are calculated.
+			And, finally, the flow of both fluid and proteins in the lymph system are computed, as well
 			as the overall body protein balance.
 			</rdf:value>
 		</rdf:Description>
@@ -154,12 +154,12 @@
 
 
 <!-- ========================================	CAPILLARY DYNAMICS TOP-LEVEL COMPONENT	============================================= -->
-	<component 	name="capillary_dynamics" 
+	<component 	name="capillary_dynamics"
 				cmeta:id="capillary_dynamics">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#capillary_dynamics">
 				<rdf:value>
-				Encapsulation grouping component containing all the components in the Capillary Dynamics Model. The inputs and 
+				Encapsulation grouping component containing all the components in the Capillary Dynamics Model. The inputs and
 				outputs of the Capillary Dynamics Model must be passed by this component.
 				</rdf:value>
 			</rdf:Description>
@@ -184,28 +184,28 @@
 	</connection>
 
 <!-- ========================================	CAPILLARY MEMBRANE DYNAMICS	============================================= -->
-	<component 	name="capillary_membrane_dynamics" 
+	<component 	name="capillary_membrane_dynamics"
 				cmeta:id="capillary_membrane_dynamics">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#capillary_membrane_dynamics">
 				<rdf:value>
-				Containment grouping component for "capillary_pressure" and 
+				Containment grouping component for "capillary_pressure" and
 				"rate_of_fluid_out_of_capillaries".
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 	</component>
 
 <!-- ========================================	CAPILLARY PRESSURE		============================================= -->
-	<component 	name="capillary_pressure" 
+	<component 	name="capillary_pressure"
 				cmeta:id="capillary_pressure">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#capillary_pressure">
 				<rdf:value>
-				CP1 and CP2:  
+				CP1 and CP2:
 				The capillary pressure (PC) is equal to the resistance to blood flow in the
-				small veins (RVS) times the blood flow in the small veins (BFN), times a constant 
+				small veins (RVS) times the blood flow in the small veins (BFN), times a constant
 				to represent the additional normal flow through the muscles and kidneys, plus
 				the pressure in the large vein circulation.  The value of the capillary pressure (PC)
 				is assumed to be the same in all tissues of the body.
@@ -213,16 +213,16 @@
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP1_and_CP2">
 				<rdf:value>
-				CP1 and CP2:  
+				CP1 and CP2:
 				The capillary pressure (PC) is equal to the resistance to blood flow in the
-				small veins (RVS) times the blood flow in the small veins (BFN), times a constant 
+				small veins (RVS) times the blood flow in the small veins (BFN), times a constant
 				to represent the additional normal flow through the muscles and kidneys, plus
 				the pressure in the large vein circulation.  The value of the capillary pressure (PC)
 				is assumed to be the same in all tissues of the body.
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="RVS"	units="mmHg_minute_per_L" private_interface="none" public_interface="in"/>
 		<variable name="BFN"	units="L_per_minute" private_interface="none" public_interface="in"/>
@@ -260,49 +260,49 @@
 	</connection>
 
 <!-- ========================================	RATE OF FLUID OUT OF CAPILLARIES	============================================= -->
-	<component 	name="rate_of_fluid_out_of_capillaries" 
+	<component 	name="rate_of_fluid_out_of_capillaries"
 				cmeta:id="rate_of_fluid_out_of_capillaries">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#rate_of_fluid_out_of_capillaries">
 				<rdf:value>
-				CP3:  
-				The pressure gradient for filtration of fluid across the capillary membranes (PCGR) 
-				is equal to the capillary pressure (PC), plus the colloid osmotic pressure of the 
+				CP3:
+				The pressure gradient for filtration of fluid across the capillary membranes (PCGR)
+				is equal to the capillary pressure (PC), plus the colloid osmotic pressure of the
 				tissue gel (PTC), minus the plasma colloid osmotic pressure (PPC), minus the hydrostatic
 				pressure of the gel (PGH).
 
-				CP4:  
+				CP4:
 				The rate of filtration of fluid out of the capillaries of the systemic circulation (CFILTR)
 				is equal to the pressure gradient across the capillary membranes (PCGR) times the capillary
 				filtration coefficient (CFC).
 
-				CP5:  
+				CP5:
 				The total rate of movement of fluid out of all the systemic capillaries of the body (VTC) is
-				equal to the rate of filtration from the systemic capillaries (CFILTR) plus the rate of 
+				equal to the rate of filtration from the systemic capillaries (CFILTR) plus the rate of
 				leakage of whole plasma though leaky capillaries (VTCPL).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP3_to_CP5">
 				<rdf:value>
-				CP3:  
-				The pressure gradient for filtration of fluid across the capillary membranes (PCGR) 
-				is equal to the capillary pressure (PC), plus the colloid osmotic pressure of the 
+				CP3:
+				The pressure gradient for filtration of fluid across the capillary membranes (PCGR)
+				is equal to the capillary pressure (PC), plus the colloid osmotic pressure of the
 				tissue gel (PTC), minus the plasma colloid osmotic pressure (PPC), minus the hydrostatic
 				pressure of the gel (PGH).
 
-				CP4:  
+				CP4:
 				The rate of filtration of fluid out of the capillaries of the systemic circulation (CFILTR)
 				is equal to the pressure gradient across the capillary membranes (PCGR) times the capillary
 				filtration coefficient (CFC).
 
-				CP5:  
+				CP5:
 				The total rate of movement of fluid out of all the systemic capillaries of the body (VTC) is
-				equal to the rate of filtration from the systemic capillaries (CFILTR) plus the rate of 
+				equal to the rate of filtration from the systemic capillaries (CFILTR) plus the rate of
 				leakage of whole plasma though leaky capillaries (VTCPL).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="PC"	units="mmHg" private_interface="none" public_interface="in"/>
 		<variable name="PGH"	units="mmHg" private_interface="none" public_interface="in"/>
@@ -374,7 +374,7 @@
 	</connection>
 
 <!-- ========================================	PLASMA VOLUME AND PROTEIN	============================================= -->
-	<component 	name="plasma_volume_and_protein" 
+	<component 	name="plasma_volume_and_protein"
 				cmeta:id="plasma_volume_and_protein">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#plasma_volume_and_protein">
@@ -388,42 +388,42 @@
 	</component>
 
 <!-- ========================================	PLASMA VOLUME	============================================= -->
-	<component 	name="plasma_volume" 
+	<component 	name="plasma_volume"
 				cmeta:id="plasma_volume">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#plasma_volume">
 				<rdf:value>
-				CP10:  
-				The rate of change of plasma volume (VPD) is equal to the rate of inflow of 
-				fluid into the plasma by way of the lymph (VTL) minus the rate of loss of 
-				fluid from the systemic tissue capillaries (VTC), minus the rate of loss of 
-				fluid from the pulmonary capillaries (DFP), and plus any rate of transfusion 
+				CP10:
+				The rate of change of plasma volume (VPD) is equal to the rate of inflow of
+				fluid into the plasma by way of the lymph (VTL) minus the rate of loss of
+				fluid from the systemic tissue capillaries (VTC), minus the rate of loss of
+				fluid from the pulmonary capillaries (DFP), and plus any rate of transfusion
 				of plasma into the circulation.
 
-				CP11:  
-				The plasma volume (VP) is determined by integrating the rate of change of the 
+				CP11:
+				The plasma volume (VP) is determined by integrating the rate of change of the
 				plasma volume (VPD) with respect to time.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP10">
 				<rdf:value>
-				CP10:  
-				The rate of change of plasma volume (VPD) is equal to the rate of inflow of 
-				fluid into the plasma by way of the lymph (VTL) minus the rate of loss of 
-				fluid from the systemic tissue capillaries (VTC), minus the rate of loss of 
-				fluid from the pulmonary capillaries (DFP), and plus any rate of transfusion 
+				CP10:
+				The rate of change of plasma volume (VPD) is equal to the rate of inflow of
+				fluid into the plasma by way of the lymph (VTL) minus the rate of loss of
+				fluid from the systemic tissue capillaries (VTC), minus the rate of loss of
+				fluid from the pulmonary capillaries (DFP), and plus any rate of transfusion
 				of plasma into the circulation.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP11">
 				<rdf:value>
-				CP11:  
-				The plasma volume (VP) is determined by integrating the rate of change of the 
+				CP11:
+				The plasma volume (VP) is determined by integrating the rate of change of the
 				plasma volume (VPD) with respect to time.
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="DFP"	units="L_per_minute" private_interface="none" public_interface="in"/>
 		<variable name="VTC"	units="L_per_minute" private_interface="none" public_interface="in"/>
@@ -493,25 +493,25 @@
 	</connection>
 
 <!-- ========================================	PLASMA PROTEIN CONCENTRATION	============================================= -->
-	<component 	name="plasma_protein_concentration" 
+	<component 	name="plasma_protein_concentration"
 				cmeta:id="plasma_protein_concentration">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#plasma_protein_concentration">
 				<rdf:value>
-				CP35:  
-				The concentration of protein in the plasma (CPP) is equal to the total quantity 
+				CP35:
+				The concentration of protein in the plasma (CPP) is equal to the total quantity
 				of protein in the plasma (RPR) divided by the plasma volume (VP).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP35">
 				<rdf:value>
-				CP35:  
-				The concentration of protein in the plasma (CPP) is equal to the total quantity 
+				CP35:
+				The concentration of protein in the plasma (CPP) is equal to the total quantity
 				of protein in the plasma (RPR) divided by the plasma volume (VP).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="PRP"	units="gram" private_interface="none" public_interface="in"/>
 		<variable name="VP"	units="litre" private_interface="none" public_interface="in"/>
@@ -543,50 +543,50 @@
 	</connection>
 
 <!-- ========================================	PROTEIN DESTRUCTION AND FORMATION	============================================= -->
-	<component 	name="protein_destruction_and_formation" 
+	<component 	name="protein_destruction_and_formation"
 				cmeta:id="protein_destruction_and_formation">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#protein_destruction_and_formation">
 				<rdf:value>
-				CP37 and CP38:  
-				A factor related to the rate of destruction of protein by the liver (CPPD) is 
-				equal to plasma protein concentration CPP) minus a critical protein limiting value (CPR). 
+				CP37 and CP38:
+				A factor related to the rate of destruction of protein by the liver (CPPD) is
+				equal to plasma protein concentration CPP) minus a critical protein limiting value (CPR).
 				Block CP38 limits the rate of destruction of protein by the liver to a lower limit of zero.
 
-				CP39 and CP40:  
-				Curve-fitting blocks to calculate the rate of destruction of protein by the 
-				liver (LPPRDS) from the factor (CPPD) calculated in Block 37.  The curve-fitting 
+				CP39 and CP40:
+				Curve-fitting blocks to calculate the rate of destruction of protein by the
+				liver (LPPRDS) from the factor (CPPD) calculated in Block 37.  The curve-fitting
 				constants are LPDE and LPK.
 
-				CP41:  
-				Net rate of protein exchange between the liver and the plasma (DLP) is equal to the 
-				rate of production of protein by the liver (LPPR) minus the rate of destruction of 
+				CP41:
+				Net rate of protein exchange between the liver and the plasma (DLP) is equal to the
+				rate of production of protein by the liver (LPPR) minus the rate of destruction of
 				protein by the liver (LPPRDS).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP37_and_CP38">
 				<rdf:value>
-				CP37 and CP38:  
-				A factor related to the rate of destruction of protein by the liver (CPPD) is 
-				equal to plasma protein concentration CPP) minus a critical protein limiting value (CPR). 
+				CP37 and CP38:
+				A factor related to the rate of destruction of protein by the liver (CPPD) is
+				equal to plasma protein concentration CPP) minus a critical protein limiting value (CPR).
 				Block CP38 limits the rate of destruction of protein by the liver to a lower limit of zero.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP39_to_CP41">
 				<rdf:value>
-				CP39 and CP40:  
-				Curve-fitting blocks to calculate the rate of destruction of protein by the 
-				liver (LPPRDS) from the factor (CPPD) calculated in Block 37.  The curve-fitting 
+				CP39 and CP40:
+				Curve-fitting blocks to calculate the rate of destruction of protein by the
+				liver (LPPRDS) from the factor (CPPD) calculated in Block 37.  The curve-fitting
 				constants are LPDE and LPK.
 
-				CP41:  
-				Net rate of protein exchange between the liver and the plasma (DLP) is equal to the 
-				rate of production of protein by the liver (LPPR) minus the rate of destruction of 
+				CP41:
+				Net rate of protein exchange between the liver and the plasma (DLP) is equal to the
+				rate of production of protein by the liver (LPPR) minus the rate of destruction of
 				protein by the liver (LPPRDS).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="CPP"	units="gram_per_L" private_interface="none" public_interface="in"/>
 
@@ -664,27 +664,27 @@
 	</connection>
 
 <!-- ========================================	PLASMA LEAKAGE	============================================= -->
-	<component 	name="plasma_leakage" 
+	<component 	name="plasma_leakage"
 				cmeta:id="plasma_leakage">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#plasma_leakage">
 				<rdf:value>
-				CP25 and CP26:  
-				Calculation of a pressure gradient to cause whole plasma leakage through the 
+				CP25 and CP26:
+				Calculation of a pressure gradient to cause whole plasma leakage through the
 				capillary membranes (PRCD), calculated by adding the capillary pressure (PC) and
 				subtracting a critical capillary pressure (PCR) below which no whole plasma will leak.
 				Block CP26 limits the rate of plasma leakage (PRCD) to a lower level of zero.
 
-				CP27 and CP28:  
-				The rate of leakage of whole plasma through the capillary membrane (VTCPL) is equal 
-				to the pressure gradient for leakage of plasma (PRCD) times a constant (CPK) and this 
+				CP27 and CP28:
+				The rate of leakage of whole plasma through the capillary membrane (VTCPL) is equal
+				to the pressure gradient for leakage of plasma (PRCD) times a constant (CPK) and this
 				product raised to a power (PCE).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP25_and_CP26">
 				<rdf:value>
-				CP25 and CP26:  
-				Calculation of a pressure gradient to cause whole plasma leakage through the 
+				CP25 and CP26:
+				Calculation of a pressure gradient to cause whole plasma leakage through the
 				capillary membranes (PRCD), calculated by adding the capillary pressure (PC) and
 				subtracting a critical capillary pressure (PCR) below which no whole plasma will leak.
 				Block CP26 limits the rate of plasma leakage (PRCD) to a lower level of zero.
@@ -692,14 +692,14 @@
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP27_and_CP28">
 				<rdf:value>
-				CP27 and CP28:  
-				The rate of leakage of whole plasma through the capillary membrane (VTCPL) is equal 
-				to the pressure gradient for leakage of plasma (PRCD) times a constant (CPK) and this 
+				CP27 and CP28:
+				The rate of leakage of whole plasma through the capillary membrane (VTCPL) is equal
+				to the pressure gradient for leakage of plasma (PRCD) times a constant (CPK) and this
 				product raised to a power (PCE).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="PC"	units="mmHg" private_interface="none" public_interface="in"/>
 
@@ -771,47 +771,47 @@
 	</connection>
 
 <!-- ========================================	PROTEIN INFLUX INTO INTERSTITIUM	============================================= -->
-	<component 	name="protein_influx_into_interstitium" 
+	<component 	name="protein_influx_into_interstitium"
 				cmeta:id="protein_influx_into_interstitium">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#protein_influx_into_interstitium">
 				<rdf:value>
-				CP29:  
-				Rate of leakage of plasma protein in the leaking whole plasma into the interstitium 
-				from the circulating plasma (TVCPL) equals the volume of plasma leaking (VTCPL) 
+				CP29:
+				Rate of leakage of plasma protein in the leaking whole plasma into the interstitium
+				from the circulating plasma (TVCPL) equals the volume of plasma leaking (VTCPL)
 				times the concentration of protein in the plasma (CPP).
 
-				CP30 and CP31:  
-				The rate of diffusion of protein through the capillary pores (PLPRDF) is equal 
-				to the difference between plasma concentration of protein (CPP) minus the concentration 
+				CP30 and CP31:
+				The rate of diffusion of protein through the capillary pores (PLPRDF) is equal
+				to the difference between plasma concentration of protein (CPP) minus the concentration
 				of protein in the interstitial free fluid (CPI) times a constant in Block CP31.
 
-				CP32:  
+				CP32:
 				Rate of influx of protein into the interstitium from the plasma in the capillaries (DPC)
-				is equal to the rate of protein leaking in the whole plasma (VTCPL) plus the rate of 
+				is equal to the rate of protein leaking in the whole plasma (VTCPL) plus the rate of
 				diffusion of protein through the capillary pores (PLPRDF).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP29_to_CP32">
 				<rdf:value>
-				CP29:  
-				Rate of leakage of plasma protein in the leaking whole plasma into the interstitium 
-				from the circulating plasma (TVCPL) equals the volume of plasma leaking (VTCPL) 
+				CP29:
+				Rate of leakage of plasma protein in the leaking whole plasma into the interstitium
+				from the circulating plasma (TVCPL) equals the volume of plasma leaking (VTCPL)
 				times the concentration of protein in the plasma (CPP).
 
-				CP30 and CP31:  
-				The rate of diffusion of protein through the capillary pores (PLPRDF) is equal 
-				to the difference between plasma concentration of protein (CPP) minus the concentration 
+				CP30 and CP31:
+				The rate of diffusion of protein through the capillary pores (PLPRDF) is equal
+				to the difference between plasma concentration of protein (CPP) minus the concentration
 				of protein in the interstitial free fluid (CPI) times a constant in Block CP31.
 
-				CP32:  
+				CP32:
 				Rate of influx of protein into the interstitium from the plasma in the capillaries (DPC)
-				is equal to the rate of protein leaking in the whole plasma (VTCPL) plus the rate of 
+				is equal to the rate of protein leaking in the whole plasma (VTCPL) plus the rate of
 				diffusion of protein through the capillary pores (PLPRDF).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="VTCPL"	units="L_per_minute" private_interface="none" public_interface="in"/>
 		<variable name="CPP"	units="gram_per_L" private_interface="none" public_interface="in"/>
@@ -860,40 +860,40 @@
 	</connection>
 
 <!-- ========================================	TOTAL PLASMA PROTEIN	============================================= -->
-	<component 	name="total_plasma_protein" 
+	<component 	name="total_plasma_protein"
 				cmeta:id="total_plasma_protein">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#total_plasma_protein">
 				<rdf:value>
-				CP33:  The rate of change of the quantity of protein in the plasma (DPP) 
-				is equal to the net rate of formation of protein by the liver (DLP), plus 
-				the rate of return of protein to the circulation in the lymph (DPL), minus 
-				the loss of protein from the circulation into the systemic interstitium (DPC), 
+				CP33:  The rate of change of the quantity of protein in the plasma (DPP)
+				is equal to the net rate of formation of protein by the liver (DLP), plus
+				the rate of return of protein to the circulation in the lymph (DPL), minus
+				the loss of protein from the circulation into the systemic interstitium (DPC),
 				minus the rate of loss of protein through the pulmonary capillary membranes (PPD).
 
-				CP34:  
-				The total quantity of protein in the plasma (PRP) is determined by integrating 
+				CP34:
+				The total quantity of protein in the plasma (PRP) is determined by integrating
 				the rate of change of the protein in the plasma (DPP) with respect to time.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP33">
 				<rdf:value>
-				CP33:  The rate of change of the quantity of protein in the plasma (DPP) 
-				is equal to the net rate of formation of protein by the liver (DLP), plus 
-				the rate of return of protein to the circulation in the lymph (DPL), minus 
-				the loss of protein from the circulation into the systemic interstitium (DPC), 
+				CP33:  The rate of change of the quantity of protein in the plasma (DPP)
+				is equal to the net rate of formation of protein by the liver (DLP), plus
+				the rate of return of protein to the circulation in the lymph (DPL), minus
+				the loss of protein from the circulation into the systemic interstitium (DPC),
 				minus the rate of loss of protein through the pulmonary capillary membranes (PPD).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP34">
 				<rdf:value>
-				CP34:  
-				The total quantity of protein in the plasma (PRP) is determined by integrating 
+				CP34:
+				The total quantity of protein in the plasma (PRP) is determined by integrating
 				the rate of change of the protein in the plasma (DPP) with respect to time.
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="DPC"	units="gram_per_minute" private_interface="none" public_interface="in"/>
 		<variable name="PPD"	units="gram_per_minute" private_interface="none" public_interface="in"/>
@@ -976,25 +976,25 @@
 	</connection>
 
 <!-- ========================================	PLASMA COLLOID OSMOTIC PRESSURE		============================================= -->
-	<component 	name="plasma_colloid_osmotic_pressure" 
+	<component 	name="plasma_colloid_osmotic_pressure"
 				cmeta:id="plasma_colloid_osmotic_pressure">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#plasma_colloid_osmotic_pressure">
 				<rdf:value>
-				CP36:  
-				The plasma colloid osmotic pressure (PPC) is calculated in this block from 
+				CP36:
+				The plasma colloid osmotic pressure (PPC) is calculated in this block from
 				the concentration of protein in the plasma (CPP).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP36">
 				<rdf:value>
-				CP36:  
-				The plasma colloid osmotic pressure (PPC) is calculated in this block from 
+				CP36:
+				The plasma colloid osmotic pressure (PPC) is calculated in this block from
 				the concentration of protein in the plasma (CPP).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="CPP"	units="gram_per_L" private_interface="none" public_interface="in"/>
 
@@ -1033,7 +1033,7 @@
 	</connection>
 
 <!-- ========================================	SYSTEMIC TISSUE FLUID VOLUME AND PROTEIN	============================================= -->
-	<component 	name="systemic_tissue_fluid_volume_and_protein" 
+	<component 	name="systemic_tissue_fluid_volume_and_protein"
 				cmeta:id="systemic_tissue_fluid_volume_and_protein">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#systemic_tissue_fluid_volume_and_protein">
@@ -1048,27 +1048,27 @@
 	</component>
 
 <!-- ========================================	TOTAL SYSTEMIC FLUID VOLUME		============================================= -->
-	<component 	name="total_systemic_fluid_volume" 
+	<component 	name="total_systemic_fluid_volume"
 				cmeta:id="total_systemic_fluid_volume">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#total_systemic_fluid_volume">
 				<rdf:value>
-				CP6:  
-				The total fluid volume in the systemic circulation portion of the body (VTS) 
-				is equal to the total extracellular fluid volume (VEC) minus plasma volume (VP) 
+				CP6:
+				The total fluid volume in the systemic circulation portion of the body (VTS)
+				is equal to the total extracellular fluid volume (VEC) minus plasma volume (VP)
 				and minus pulmonary extracellular fluid volume (VPF).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP6">
 				<rdf:value>
-				CP6:  
-				The total fluid volume in the systemic circulation portion of the body (VTS) 
-				is equal to the total extracellular fluid volume (VEC) minus plasma volume (VP) 
+				CP6:
+				The total fluid volume in the systemic circulation portion of the body (VTS)
+				is equal to the total extracellular fluid volume (VEC) minus plasma volume (VP)
 				and minus pulmonary extracellular fluid volume (VPF).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="VEC"	units="litre" private_interface="none" public_interface="in"/>
 		<variable name="VP"	units="litre" private_interface="none" public_interface="in"/>
@@ -1106,44 +1106,44 @@
 	</connection>
 
 <!-- ========================================	INTERSTITIAL FLUID VOLUME	============================================= -->
-	<component 	name="interstitial_fluid_volume" 
+	<component 	name="interstitial_fluid_volume"
 				cmeta:id="interstitial_fluid_volume">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#interstitial_fluid_volume">
 				<rdf:value>
-				CP7, CP7A, CP7B, CP7C, CP7D, and CP7E:  
-				Calculation of the effect of tissue space stress relaxation on volume of fluid 
+				CP7, CP7A, CP7B, CP7C, CP7D, and CP7E:
+				Calculation of the effect of tissue space stress relaxation on volume of fluid
 				in the interstitial space (VTS1) after higher or lower than normal volumes
-				(VTS greater or lower than 12) have existed in the tissue spaces for prolonged 
+				(VTS greater or lower than 12) have existed in the tissue spaces for prolonged
 				periods of time.  The sensitivity control for the extent of tissue space stress
-				relaxation is TSSLML, and the reciprocal of the time constant of the effect 
+				relaxation is TSSLML, and the reciprocal of the time constant of the effect
 				is TSSLTC.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP7_to_CP7D">
 				<rdf:value>
-				CP7, CP7A, CP7B, CP7C, CP7D, and CP7E:  
-				Calculation of the effect of tissue space stress relaxation on volume of fluid 
+				CP7, CP7A, CP7B, CP7C, CP7D, and CP7E:
+				Calculation of the effect of tissue space stress relaxation on volume of fluid
 				in the interstitial space (VTS1) after higher or lower than normal volumes
-				(VTS greater or lower than 12) have existed in the tissue spaces for prolonged 
+				(VTS greater or lower than 12) have existed in the tissue spaces for prolonged
 				periods of time.  The sensitivity control for the extent of tissue space stress
-				relaxation is TSSLML, and the reciprocal of the time constant of the effect 
+				relaxation is TSSLML, and the reciprocal of the time constant of the effect
 				is TSSLTC.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP7E">
 				<rdf:value>
-				CP7, CP7A, CP7B, CP7C, CP7D, and CP7E:  
-				Calculation of the effect of tissue space stress relaxation on volume of fluid 
+				CP7, CP7A, CP7B, CP7C, CP7D, and CP7E:
+				Calculation of the effect of tissue space stress relaxation on volume of fluid
 				in the interstitial space (VTS1) after higher or lower than normal volumes
-				(VTS greater or lower than 12) have existed in the tissue spaces for prolonged 
+				(VTS greater or lower than 12) have existed in the tissue spaces for prolonged
 				periods of time.  The sensitivity control for the extent of tissue space stress
-				relaxation is TSSLML, and the reciprocal of the time constant of the effect 
+				relaxation is TSSLML, and the reciprocal of the time constant of the effect
 				is TSSLTC.
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="VTS"	units="litre" private_interface="none" public_interface="in"/>
 		<variable name="time"	units="minute" private_interface="none" public_interface="in"/>
@@ -1216,40 +1216,40 @@
 	</connection>
 
 <!-- ========================================	TOTAL INTERSTITIAL PROTEIN	============================================= -->
-	<component 	name="total_interstitial_protein" 
+	<component 	name="total_interstitial_protein"
 				cmeta:id="total_interstitial_protein">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#total_interstitial_protein">
 				<rdf:value>
-				CP42:  
-				The rate of change of protein in the systemic interstitium (DPI) is equal to 
+				CP42:
+				The rate of change of protein in the systemic interstitium (DPI) is equal to
 				the rate of leakage from the plasma of protein through the systemic capillary
-				membranes (DPC) minus the rate of return of the protein from the systemic 
+				membranes (DPC) minus the rate of return of the protein from the systemic
 				interstitium by way of the lymphatics (DPL).
 
-				CP43:  
-				The total tissue protein (TSP) is calculated by integrating the rate of 
+				CP43:
+				The total tissue protein (TSP) is calculated by integrating the rate of
 				change of protein in the interstitium (DPI) with respect to time.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP42">
 				<rdf:value>
-				CP42:  
-				The rate of change of protein in the systemic interstitium (DPI) is equal to 
+				CP42:
+				The rate of change of protein in the systemic interstitium (DPI) is equal to
 				the rate of leakage from the plasma of protein through the systemic capillary
-				membranes (DPC) minus the rate of return of the protein from the systemic 
+				membranes (DPC) minus the rate of return of the protein from the systemic
 				interstitium by way of the lymphatics (DPL).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP43">
 				<rdf:value>
-				CP43:  
-				The total tissue protein (TSP) is calculated by integrating the rate of 
+				CP43:
+				The total tissue protein (TSP) is calculated by integrating the rate of
 				change of protein in the interstitium (DPI) with respect to time.
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="DPC"	units="gram_per_minute" private_interface="none" public_interface="in"/>
 		<variable name="DPL"	units="gram_per_minute" private_interface="none" public_interface="in"/>
@@ -1300,27 +1300,27 @@
 	</connection>
 
 <!-- ========================================	INTERSTITIAL PROTEIN CONCENTRATION		============================================= -->
-	<component 	name="interstitial_protein_concentration" 
+	<component 	name="interstitial_protein_concentration"
 				cmeta:id="interstitial_protein_concentration">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#interstitial_protein_concentration">
 				<rdf:value>
-				CP44:  
-				The concentration of protein in the interstitium (CPI) is equal to the total 
-				quantity of protein in the interstitium (TSP) divided by the total volume of 
+				CP44:
+				The concentration of protein in the interstitium (CPI) is equal to the total
+				quantity of protein in the interstitium (TSP) divided by the total volume of
 				fluid in the systemic interstitium (VTS).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP44">
 				<rdf:value>
-				CP44:  
-				The concentration of protein in the interstitium (CPI) is equal to the total 
-				quantity of protein in the interstitium (TSP) divided by the total volume of 
+				CP44:
+				The concentration of protein in the interstitium (CPI) is equal to the total
+				quantity of protein in the interstitium (TSP) divided by the total volume of
 				fluid in the systemic interstitium (VTS).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="TSP"	units="gram" private_interface="none" public_interface="in"/>
 		<variable name="VTS"	units="litre" private_interface="none" public_interface="in"/>
@@ -1352,25 +1352,25 @@
 	</connection>
 
 <!-- ========================================	INTERSTITIAL COLLOID OSMOTIC PRESSURE	============================================= -->
-	<component 	name="interstitial_colloid_osmotic_pressure" 
+	<component 	name="interstitial_colloid_osmotic_pressure"
 				cmeta:id="interstitial_colloid_osmotic_pressure">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#interstitial_colloid_osmotic_pressure">
 				<rdf:value>
-				CP45:  
-				The colloid osmotic pressure of the free fluid in the interstitium (PTCPR) is 
+				CP45:
+				The colloid osmotic pressure of the free fluid in the interstitium (PTCPR) is
 				calculated in this block from the concentration of protein in the interstitium (CPI).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP45">
 				<rdf:value>
-				CP45:  
-				The colloid osmotic pressure of the free fluid in the interstitium (PTCPR) is 
+				CP45:
+				The colloid osmotic pressure of the free fluid in the interstitium (PTCPR) is
 				calculated in this block from the concentration of protein in the interstitium (CPI).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="CPI"	units="gram_per_L" private_interface="none" public_interface="in"/>
 
@@ -1409,27 +1409,27 @@
 	</connection>
 
 <!-- ========================================	LYMPH PROTEIN FLOW	============================================= -->
-	<component 	name="lymph_protein_flow" 
+	<component 	name="lymph_protein_flow"
 				cmeta:id="lymph_protein_flow">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#lymph_protein_flow">
 				<rdf:value>
-				CP46:  
-				The rate of return of protein to the circulation by way of the lymph (DPL) is 
-				equal to the concentration of protein in the systemic interstitium (CPI) times 
+				CP46:
+				The rate of return of protein to the circulation by way of the lymph (DPL) is
+				equal to the concentration of protein in the systemic interstitium (CPI) times
 				the rate of lymph flow from the interstitium (VTL).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP46">
 				<rdf:value>
-				CP46:  
-				The rate of return of protein to the circulation by way of the lymph (DPL) is 
-				equal to the concentration of protein in the systemic interstitium (CPI) times 
+				CP46:
+				The rate of return of protein to the circulation by way of the lymph (DPL) is
+				equal to the concentration of protein in the systemic interstitium (CPI) times
 				the rate of lymph flow from the interstitium (VTL).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="CPI"	units="gram_per_L" private_interface="none" public_interface="in"/>
 		<variable name="VTL"	units="L_per_minute" private_interface="none" public_interface="in"/>
@@ -1461,7 +1461,7 @@
 	</connection>
 
 <!-- ========================================	TISSUE GEL AND FLUID, AND LYMPH FLOW	============================================= -->
-	<component 	name="tissue_gel_and_fluid_and_lymph_flow" 
+	<component 	name="tissue_gel_and_fluid_and_lymph_flow"
 				cmeta:id="tissue_gel_and_fluid_and_lymph_flow">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#tissue_gel_and_fluid_and_lymph_flow">
@@ -1476,44 +1476,44 @@
 	</component>
 
 <!-- ========================================	HYDROSTATIC PRESSURE OF TISSUE GEL	============================================= -->
-	<component 	name="hydrostatic_pressure_of_tissue_gel" 
+	<component 	name="hydrostatic_pressure_of_tissue_gel"
 				cmeta:id="hydrostatic_pressure_of_tissue_gel">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#hydrostatic_pressure_of_tissue_gel">
 				<rdf:value>
-				CP13 and CP14:  
-				Calculation of the concentration of hyaluronic acid in the interstitium (CHY) 
-				from the total quantity of hyaluronic acid in the interstitium (HYL) and the 
-				total volume of fluid in the interstitium (VTS).  The exponent CMPTSS describes 
+				CP13 and CP14:
+				Calculation of the concentration of hyaluronic acid in the interstitium (CHY)
+				from the total quantity of hyaluronic acid in the interstitium (HYL) and the
+				total volume of fluid in the interstitium (VTS).  The exponent CMPTSS describes
 				the non-linearity of this effect.
 
-				CP15 and CP16:  
-				Calculation of the hydrostatic pressure in the tissue gel (PGH) from the 
-				concentration of hyaluronic acid in the interstitium (CHY) and the total 
+				CP15 and CP16:
+				Calculation of the hydrostatic pressure in the tissue gel (PGH) from the
+				concentration of hyaluronic acid in the interstitium (CHY) and the total
 				tissue pressure (PTT).  (The hyaluronic acid acts as an elastic body that
 				expands, and, therefore, creates a negative pressure.)
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP13_and_CP14">
 				<rdf:value>
-				CP13 and CP14:  
-				Calculation of the concentration of hyaluronic acid in the interstitium (CHY) 
-				from the total quantity of hyaluronic acid in the interstitium (HYL) and the 
-				total volume of fluid in the interstitium (VTS).  The exponent CMPTSS describes 
+				CP13 and CP14:
+				Calculation of the concentration of hyaluronic acid in the interstitium (CHY)
+				from the total quantity of hyaluronic acid in the interstitium (HYL) and the
+				total volume of fluid in the interstitium (VTS).  The exponent CMPTSS describes
 				the non-linearity of this effect.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP15_and_CP16">
 				<rdf:value>
-				CP15 and CP16:  
-				Calculation of the hydrostatic pressure in the tissue gel (PGH) from the 
-				concentration of hyaluronic acid in the interstitium (CHY) and the total 
+				CP15 and CP16:
+				Calculation of the hydrostatic pressure in the tissue gel (PGH) from the
+				concentration of hyaluronic acid in the interstitium (CHY) and the total
 				tissue pressure (PTT).  (The hyaluronic acid acts as an elastic body that
 				expands, and, therefore, creates a negative pressure.)
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="VTS"	units="litre" private_interface="none" public_interface="in"/>
 		<variable name="PTT"	units="mmHg" private_interface="none" public_interface="in"/>
@@ -1580,42 +1580,42 @@
 	</connection>
 
 <!-- ========================================	TOTAL OSMOTIC PRESSURE OF TISSUE GEL	============================================= -->
-	<component 	name="total_osmotic_pressure_of_tissue_gel" 
+	<component 	name="total_osmotic_pressure_of_tissue_gel"
 				cmeta:id="total_osmotic_pressure_of_tissue_gel">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#total_osmotic_pressure_of_tissue_gel">
 				<rdf:value>
-				CP17:  
-				The osmotic pressure caused by the hyaluronic acid in the gel (POSHYL) 
-				is equal to the concentration of hyaluronic acid in the gel (CHY) times 
+				CP17:
+				The osmotic pressure caused by the hyaluronic acid in the gel (POSHYL)
+				is equal to the concentration of hyaluronic acid in the gel (CHY) times
 				a constant.
 
-				CP18:  
-				The total osmotic pressure of the tissue gel (PTC) is equal to the osmotic 
-				pressure caused by the hyaluronic acid in the gel (POSHYL) times the colloid 
-				osmotic pressure caused by the plasma protein in the free fluid of the 
+				CP18:
+				The total osmotic pressure of the tissue gel (PTC) is equal to the osmotic
+				pressure caused by the hyaluronic acid in the gel (POSHYL) times the colloid
+				osmotic pressure caused by the plasma protein in the free fluid of the
 				interstitium (PTCPR) times a constant (GCOPF).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP17">
 				<rdf:value>
-				CP17:  
-				The osmotic pressure caused by the hyaluronic acid in the gel (POSHYL) 
-				is equal to the concentration of hyaluronic acid in the gel (CHY) times 
+				CP17:
+				The osmotic pressure caused by the hyaluronic acid in the gel (POSHYL)
+				is equal to the concentration of hyaluronic acid in the gel (CHY) times
 				a constant.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP18">
 				<rdf:value>
-				CP18:  
-				The total osmotic pressure of the tissue gel (PTC) is equal to the osmotic 
-				pressure caused by the hyaluronic acid in the gel (POSHYL) times the colloid 
-				osmotic pressure caused by the plasma protein in the free fluid of the 
+				CP18:
+				The total osmotic pressure of the tissue gel (PTC) is equal to the osmotic
+				pressure caused by the hyaluronic acid in the gel (POSHYL) times the colloid
+				osmotic pressure caused by the plasma protein in the free fluid of the
 				interstitium (PTCPR) times a constant (GCOPF).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="CHY"	units="gram_per_L" private_interface="none" public_interface="in"/>
 		<variable name="PTCPR"	units="mmHg" private_interface="none" public_interface="in"/>
@@ -1667,25 +1667,25 @@
 	</connection>
 
 <!-- ========================================	TOTAL TISSUE PRESSURE	============================================= -->
-	<component 	name="total_tissue_pressure" 
+	<component 	name="total_tissue_pressure"
 				cmeta:id="total_tissue_pressure">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#total_tissue_pressure">
 				<rdf:value>
-				CP12:  
-				Calculation of the total tissue pressure (PTT) as a function of the total 
+				CP12:
+				Calculation of the total tissue pressure (PTT) as a function of the total
 				interstitial fluid volume (VTS1).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP12">
 				<rdf:value>
-				CP12:  
-				Calculation of the total tissue pressure (PTT) as a function of the total 
+				CP12:
+				Calculation of the total tissue pressure (PTT) as a function of the total
 				interstitial fluid volume (VTS1).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="VTS1"	units="litre" private_interface="none" public_interface="in"/>
 
@@ -1733,27 +1733,27 @@
 	</connection>
 
 <!-- ========================================	INTERSTITIAL FREE FLUID PRESSURE	============================================= -->
-	<component 	name="interstial_free_fluid_pressure" 
+	<component 	name="interstial_free_fluid_pressure"
 				cmeta:id="interstial_free_fluid_pressure">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#interstial_free_fluid_pressure">
 				<rdf:value>
-				CP19:  
-				The pressure in the free interstitial fluid (PIF) is equal to the hydrostatic 
-				pressure in the tissue gel (PGH) minus the colloid osmotic pressure of the 
+				CP19:
+				The pressure in the free interstitial fluid (PIF) is equal to the hydrostatic
+				pressure in the tissue gel (PGH) minus the colloid osmotic pressure of the
 				hyaluronic acid in the tissue gel (POSHYL).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP19">
 				<rdf:value>
-				CP19:  
-				The pressure in the free interstitial fluid (PIF) is equal to the hydrostatic 
-				pressure in the tissue gel (PGH) minus the colloid osmotic pressure of the 
+				CP19:
+				The pressure in the free interstitial fluid (PIF) is equal to the hydrostatic
+				pressure in the tissue gel (PGH) minus the colloid osmotic pressure of the
 				hyaluronic acid in the tissue gel (POSHYL).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="PGH"	units="mmHg" private_interface="none" public_interface="in"/>
 		<variable name="POSHYL"	units="mmHg" private_interface="none" public_interface="in"/>
@@ -1785,25 +1785,25 @@
 	</connection>
 
 <!-- ========================================	INTERSTITIAL SOLID TISSUE PRESSURE	============================================= -->
-	<component 	name="interstitial_solid_tissue_pressure" 
+	<component 	name="interstitial_solid_tissue_pressure"
 				cmeta:id="interstitial_solid_tissue_pressure">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#interstitial_solid_tissue_pressure">
 				<rdf:value>
-				CP20:  
-				The solid tissue pressure of the interstitium (PTS) is equal to the total 
+				CP20:
+				The solid tissue pressure of the interstitium (PTS) is equal to the total
 				tissue pressure (PTT) minus the pressure in the free fluid of the interstitium (PIF).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP20">
 				<rdf:value>
-				CP20:  
-				The solid tissue pressure of the interstitium (PTS) is equal to the total 
+				CP20:
+				The solid tissue pressure of the interstitium (PTS) is equal to the total
 				tissue pressure (PTT) minus the pressure in the free fluid of the interstitium (PIF).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="PIF"	units="mmHg" private_interface="none" public_interface="in"/>
 		<variable name="PTT"	units="mmHg" private_interface="none" public_interface="in"/>
@@ -1835,47 +1835,47 @@
 	</connection>
 
 <!-- ========================================	LYMPH FLOW	============================================= -->
-	<component 	name="lymph_flow" 
+	<component 	name="lymph_flow"
 				cmeta:id="lymph_flow">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#lymph_flow">
 				<rdf:value>
-				CP21 and CP22:  
+				CP21 and CP22:
 				The pressure gradient that promotes lymph flow (PLD) is equal to a constant (PLDF)
-				that is determined by the pumping action of the lymphatics plus the interstitial 
-				free fluid pressure (PIF), minus the total tissue pressure (PTT).  Block CP22 
+				that is determined by the pumping action of the lymphatics plus the interstitial
+				free fluid pressure (PIF), minus the total tissue pressure (PTT).  Block CP22
 				limits the upper level of this pressure gradient.
 
-				CP23 and CP24:  
-				The rate of lymph flow (VTL) is equal to the pressure gradient that causes 
-				lymph flow (PLD) times a constant representing lymphatic conductance.  
+				CP23 and CP24:
+				The rate of lymph flow (VTL) is equal to the pressure gradient that causes
+				lymph flow (PLD) times a constant representing lymphatic conductance.
 				Block CP24 limits the lower level of lymph flow to zero.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP21">
 				<rdf:value>
-				CP21:  
+				CP21:
 				The pressure gradient that promotes lymph flow (PLD) is equal to a constant (PLDF)
-				that is determined by the pumping action of the lymphatics plus the interstitial 
+				that is determined by the pumping action of the lymphatics plus the interstitial
 				free fluid pressure (PIF), minus the total tissue pressure (PTT).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP22">
 				<rdf:value>
-				CP22:  
+				CP22:
 				Block CP22 limits the upper level of this pressure gradient.
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP23_and_CP24">
 				<rdf:value>
-]				CP23 and CP24:  
-				The rate of lymph flow (VTL) is equal to the pressure gradient that causes 
-				lymph flow (PLD) times a constant representing lymphatic conductance.  
+]				CP23 and CP24:
+				The rate of lymph flow (VTL) is equal to the pressure gradient that causes
+				lymph flow (PLD) times a constant representing lymphatic conductance.
 				Block CP24 limits the lower level of lymph flow to zero.
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="PIF"	units="mmHg" private_interface="none" public_interface="in"/>
 		<variable name="PTT"	units="mmHg" private_interface="none" public_interface="in"/>
@@ -1962,25 +1962,25 @@
 	</connection>
 
 <!-- ========================================	INTERSTITIAL GEL VOLUME	============================================= -->
-	<component 	name="interstitial_gel_volume" 
+	<component 	name="interstitial_gel_volume"
 				cmeta:id="interstitial_gel_volume">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#interstitial_gel_volume">
 				<rdf:value>
-				CP8:  
-				This block gives a function curve that relates the volume of the tissue gel (VG) 
+				CP8:
+				This block gives a function curve that relates the volume of the tissue gel (VG)
 				to the total interstitial fluid volume (VTS).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP8">
 				<rdf:value>
-				CP8:  
-				This block gives a function curve that relates the volume of the tissue gel (VG) 
+				CP8:
+				This block gives a function curve that relates the volume of the tissue gel (VG)
 				to the total interstitial fluid volume (VTS).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="VTS"	units="litre" private_interface="none" public_interface="in"/>
 
@@ -2215,25 +2215,25 @@
 	</connection>
 
 <!-- ========================================	INTERSTITIAL FREE FLUID VOLUME	============================================= -->
-	<component 	name="interstitial_free_fluid_volume" 
+	<component 	name="interstitial_free_fluid_volume"
 				cmeta:id="interstitial_free_fluid_volume">
 		<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 			<rdf:Description rdf:about="#interstitial_free_fluid_volume">
 				<rdf:value>
-				CP9:  
-				The volume of free fluid in the interstitium (VIF) is equal to the total 
+				CP9:
+				The volume of free fluid in the interstitium (VIF) is equal to the total
 				interstitial fluid volume (VTS) minus the volume of fluid in the tissue gel (VG).
 				</rdf:value>
 			</rdf:Description>
 			<rdf:Description rdf:about="#CP9">
 				<rdf:value>
-				CP9:  
-				The volume of free fluid in the interstitium (VIF) is equal to the total 
+				CP9:
+				The volume of free fluid in the interstitium (VIF) is equal to the total
 				interstitial fluid volume (VTS) minus the volume of fluid in the tissue gel (VG).
 				</rdf:value>
 			</rdf:Description>
 		</rdf:RDF>
-		
+
 <!-- Inputs from other components -->
 		<variable name="VTS"	units="litre" private_interface="none" public_interface="in"/>
 		<variable name="VG"	units="litre" private_interface="none" public_interface="in"/>
@@ -2263,7 +2263,7 @@
 		<map_components component_1="interstitial_free_fluid_volume" component_2="interstitial_gel_volume"/>
 		<map_variables variable_1="VG" variable_2="VG"/>
 	</connection>
-	
+
 <!-- ============================================================		PARAMETER VALUES		=============================================================== -->
 	<component 	name="parameter_values"
 				cmeta:id="parameter_values">
@@ -2360,4 +2360,4 @@
    </group>
 
 
-</model>   
+</model>

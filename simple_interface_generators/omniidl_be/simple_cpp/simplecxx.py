@@ -27,7 +27,7 @@ def typeToSimpleCXX(type, extrapointer=0, is_const=0, is_ret=0):
         ckw = 'const '
     else:
         ckw = ''
-    
+
     tk = type.kind()
     if tk == idltype.tk_null or tk == idltype.tk_void:
         if extrapointer != 0:

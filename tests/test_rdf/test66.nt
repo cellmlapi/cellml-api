@@ -9,7 +9,7 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id: test003.nt,v 1.2 2003/07/24 15:51:06 jcarroll Exp $
-# 
+#
 #####################################################################
 _:j0A <http://example.org/property1> "value" .
 

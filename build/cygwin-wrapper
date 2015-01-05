@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Stupid wrapper to avoid win32 dospath/cygdrive issues
-# Try not to spawn programs from within this file. If the stuff in here looks royally 
+# Try not to spawn programs from within this file. If the stuff in here looks royally
 # confusing, see bug: http://bugzilla.mozilla.org/show_bug.cgi?id=206643
 # and look at the older versions of this file that are easier to read, but
 # do basically the same thing

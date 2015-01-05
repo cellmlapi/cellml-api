@@ -32,26 +32,26 @@ module xpath
 
 
   interface XPathEvaluator : XPCOM::IObject {
-    XPathExpression    createExpression(in DOMString expression, 
+    XPathExpression    createExpression(in DOMString expression,
                                         in XPathNSResolver resolver)
-                                        raises(XPathException, 
+                                        raises(XPathException,
                                                dom::DOMException);
     XPathNSResolver    createNSResolver(in Node nodeResolver);
-    XPathResult        evaluate(in DOMString expression, 
-                                in Node contextNode, 
-                                in XPathNSResolver resolver, 
-                                in unsigned short type, 
+    XPathResult        evaluate(in DOMString expression,
+                                in Node contextNode,
+                                in XPathNSResolver resolver,
+                                in unsigned short type,
                                 in XPathResult result)
-                                        raises(XPathException, 
+                                        raises(XPathException,
                                                dom::DOMException);
   };
 #pragma terminal-interface
 
   interface XPathExpression : XPCOM::IObject {
-    XPathResult        evaluate(in Node contextNode, 
-                                in unsigned short type, 
+    XPathResult        evaluate(in Node contextNode,
+                                in unsigned short type,
                                 in XPathResult result)
-                                        raises(XPathException, 
+                                        raises(XPathException,
                                                dom::DOMException);
   };
 #pragma terminal-interface
@@ -93,7 +93,7 @@ module xpath
                                         // raises(XPathException) on retrieval
 
     Node               iterateNext()
-                                        raises(XPathException, 
+                                        raises(XPathException,
                                                dom::DOMException);
     Node               snapshotItem(in unsigned long index)
                                         raises(XPathException);

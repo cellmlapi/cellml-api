@@ -55,7 +55,7 @@ VACSSTest::testGetPositionInXML()
   //    unsigned long getPositionInXML(in dom::Node node,
   //                                   in unsigned long nodalOffset,
   //                                   out unsigned long column);
-  
+
   uint32_t row, col;
   row = mVACSService->getPositionInXML(d, 0, &col);
   CPPUNIT_ASSERT_EQUAL(1, (int)row);

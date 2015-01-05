@@ -205,7 +205,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::CustomGenerator);
-  
+
   CDA_CustomGenerator(
                       iface::cellml_api::Model* aModel,
                       iface::cellml_services::MaLaESTransform* aTransform,
@@ -344,14 +344,14 @@ private:
   ObjRef<iface::cellml_services::CeVAS> mCeVAS;
   ObjRef<iface::cellml_services::CUSES> mCUSES;
   ObjRef<iface::cellml_services::AnnotationSet> mAnnoSet;
-  std::auto_ptr<CodeGenerationState> makeCodeGenerationState(int aCompat, iface::cellml_api::Model* aSourceModel);
+  std::unique_ptr<CodeGenerationState> makeCodeGenerationState(int aCompat, iface::cellml_api::Model* aSourceModel);
 };
 
 class CDA_CodeGeneratorBootstrap
   : public iface::cellml_services::CodeGeneratorBootstrap
-#ifdef ENABLE_CONTEXT 
+#ifdef ENABLE_CONTEXT
   , public iface::cellml_context::CellMLModule
-#endif 
+#endif
 {
 public:
   CDA_IMPL_ID;

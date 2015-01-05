@@ -15,23 +15,23 @@ module mathml_dom
   interface MathMLDeclareElement;
   interface MathMLMatrixrowElement;
   interface MathMLCaseElement;
-  
+
   interface MathMLDOMImplementation : dom::DOMImplementation
   {
     MathMLDocument            createMathMLDocument();
   };
-  
+
   interface MathMLDocument : dom::Document
   {
     readonly attribute dom::DOMString         referrer;
     readonly attribute dom::DOMString         domain;
     readonly attribute dom::DOMString         URI;
   };
-  
+
   interface MathMLNodeList : dom::NodeList
   {
   };
-  
+
   interface MathMLElement : dom::Element
   {
              attribute dom::DOMString         className;
@@ -41,7 +41,7 @@ module mathml_dom
              attribute dom::DOMString         href;
     readonly attribute MathMLMathElement ownerMathElement;
   };
-  
+
   interface MathMLContainer : XPCOM::IObject
   {
     readonly attribute unsigned long     nArguments;
@@ -72,17 +72,17 @@ module mathml_dom
     void                      deleteDeclaration(in unsigned long index)
                                                raises(dom::DOMException);
   };
-  
+
   interface MathMLMathElement : MathMLElement, MathMLContainer
   {
              attribute dom::DOMString         macros;
              attribute dom::DOMString         display;
   };
-  
+
   interface MathMLContentElement : MathMLElement
   {
   };
-  
+
   interface MathMLContentToken : MathMLContentElement
   {
     readonly attribute MathMLNodeList    arguments;
@@ -96,23 +96,23 @@ module mathml_dom
     void                      deleteArgument(in unsigned long index);
     dom::Node                      removeArgument(in unsigned long index);
   };
-  
+
   interface MathMLCnElement : MathMLContentToken
   {
              attribute dom::DOMString         type;
              attribute dom::DOMString         base;
     readonly attribute unsigned long     nargs;
   };
-  
+
   interface MathMLCiElement : MathMLContentToken
   {
              attribute dom::DOMString         type;
   };
-  
+
   interface MathMLCsymbolElement : MathMLContentToken
   {
   };
-  
+
   interface MathMLContentContainer : MathMLContentElement, MathMLContainer
   {
     readonly attribute unsigned long     nBoundVariables;
@@ -134,7 +134,7 @@ module mathml_dom
     void                      deleteBoundVariable(in unsigned long index);
     MathMLBvarElement         removeBoundVariable(in unsigned long index);
   };
-  
+
   interface MathMLApplyElement : MathMLContentContainer
   {
              attribute MathMLElement     operator;
@@ -143,34 +143,34 @@ module mathml_dom
              attribute MathMLElement     upLimit;
                                                // raises(dom::DOMException) on setting
   };
-  
+
   interface MathMLFnElement : MathMLContentContainer
   {
              attribute dom::DOMString         definitionURL;
              attribute dom::DOMString         encoding;
   };
-  
+
   interface MathMLLambdaElement : MathMLContentContainer
   {
              attribute MathMLElement     expression;
   };
-  
+
   interface MathMLSetElement : MathMLContentContainer
   {
     readonly attribute boolean           isExplicit;
              attribute dom::DOMString         type;
   };
-  
+
   interface MathMLListElement : MathMLContentContainer
   {
     readonly attribute boolean           isExplicit;
              attribute dom::DOMString         ordering;
   };
-  
+
   interface MathMLBvarElement : MathMLContentContainer
   {
   };
-  
+
   interface MathMLPredefinedSymbol : MathMLContentElement
   {
              attribute dom::DOMString         definitionURL;
@@ -178,24 +178,24 @@ module mathml_dom
     readonly attribute dom::DOMString         arity;
     readonly attribute dom::DOMString         symbolName;
   };
-  
+
   interface MathMLTendsToElement : MathMLPredefinedSymbol
   {
              attribute dom::DOMString         type;
   };
-  
+
   interface MathMLIntervalElement : MathMLContentElement
   {
              attribute dom::DOMString         closure;
              attribute MathMLContentElement start;
              attribute MathMLContentElement end;
   };
-  
+
   interface MathMLConditionElement : MathMLContentElement
   {
              attribute MathMLApplyElement condition;
   };
-  
+
   interface MathMLDeclareElement : MathMLContentElement
   {
              attribute dom::DOMString         type;
@@ -206,7 +206,7 @@ module mathml_dom
              attribute MathMLCiElement   identifier;
              attribute MathMLElement     constructor;
   };
-  
+
   interface MathMLVectorElement : MathMLContentElement
   {
     readonly attribute unsigned long     ncomponents;
@@ -221,7 +221,7 @@ module mathml_dom
                                                raises(dom::DOMException);
     MathMLContentElement      removeComponent(in unsigned long index);
   };
-  
+
   interface MathMLMatrixElement : MathMLContentElement
   {
     readonly attribute unsigned long     nrows;
@@ -240,7 +240,7 @@ module mathml_dom
     MathMLMatrixrowElement    removeRow(in unsigned long index)
                                                raises(dom::DOMException);
   };
-  
+
   interface MathMLMatrixrowElement : MathMLContentElement
   {
     readonly attribute unsigned long     nEntries;
@@ -257,7 +257,7 @@ module mathml_dom
     MathMLContentElement      removeEntry(in unsigned long index)
                                                raises(dom::DOMException);
   };
-  
+
   interface MathMLPiecewiseElement : MathMLContentElement
   {
     readonly attribute MathMLNodeList    pieces;
@@ -284,13 +284,13 @@ module mathml_dom
                                                in MathMLContentElement condition)
                                                raises(dom::DOMException);
   };
-  
+
   interface MathMLCaseElement : MathMLContentElement
   {
              attribute MathMLContentElement caseCondition;
              attribute MathMLContentElement caseValue;
   };
-  
+
 };
 
 #endif

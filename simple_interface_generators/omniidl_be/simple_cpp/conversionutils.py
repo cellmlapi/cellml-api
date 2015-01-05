@@ -456,7 +456,7 @@ def writeCORBAValueToSimple(out, type, cname, sname, fromCall=0):
         out.out(simplecxx.typeToSimpleCXX(type) + ' _myreturn;')
         addRet = 1
         sname = '_myreturn'
-    
+
     if tk == idltype.tk_null or tk == idltype.tk_void:
         raise "Can't convert a null/void"
     elif tk == idltype.tk_short:
@@ -526,7 +526,7 @@ def writeCORBAValueToSimple(out, type, cname, sname, fromCall=0):
         raise 'Passing interfaces is not supported.'
     else:
         raise 'Unknown type kind %u' % tk
-    
+
     if addRet:
         out.out('return _myreturn;')
 

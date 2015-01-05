@@ -325,7 +325,7 @@ public:
           mString = L"";
           return;
         }
-        
+
         mString = stringValueOf(mNodes.front());
         return;
       }
@@ -442,7 +442,7 @@ public:
 
 private:
   ObjRef<iface::events::EventTarget> mOwnerDoc;
-  
+
   class EventListenerInternal
     : public iface::events::EventListener
   {
@@ -483,11 +483,11 @@ public:
     : mNode(aNode), mContextSize(aSize), mContextPos(aPos)
   {
   }
-  
+
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
   CDA_IMPL_QI0;
-  
+
   ObjRef<iface::dom::Node> mNode;
   uint32_t mContextSize, mContextPos;
   std::map<std::wstring, std::wstring> mNamespaceMap;
@@ -628,10 +628,10 @@ public:
     if (n1 && n2)
     {
       std::set<std::wstring> set1, set2;
-      for (std::vector<iface::dom::Node*>::iterator i = e1->mNodes.begin(); 
+      for (std::vector<iface::dom::Node*>::iterator i = e1->mNodes.begin();
            i != e1->mNodes.end(); i++)
         set1.insert(stringValueOf(*i));
-      for (std::vector<iface::dom::Node*>::iterator i = e2->mNodes.begin(); 
+      for (std::vector<iface::dom::Node*>::iterator i = e2->mNodes.begin();
            i != e2->mNodes.end(); i++)
         set2.insert(stringValueOf(*i));
       if (set1.empty() || set2.empty())
@@ -718,7 +718,7 @@ public:
       e1->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
       return compareBoolean(e1->mNumber, e2->mNumber);
     }
-    
+
     e1->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
     e2->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
     return compareStrings(e1->mString, e2->mString);
@@ -752,7 +752,7 @@ public:
     : CDA_XPathComparisonExpr(e1, e2)
   {
   }
-  
+
   bool
   compareNotSet(CDA_XPathResult* r1, CDA_XPathResult* r2)
   {
@@ -1094,7 +1094,7 @@ public:
     r->add_ref();
     return r.getPointer();
   }
-  
+
 private:
   ObjRef<CDA_XPathExpr> mExpr;
 };
@@ -1132,7 +1132,7 @@ public:
           r2->mType == iface::xpath::XPathResult::ANY_UNORDERED_NODE_TYPE ||
           r2->mType == iface::xpath::XPathResult::FIRST_ORDERED_NODE_TYPE))
       throw iface::xpath::XPathException(iface::xpath::TYPE_ERR);
-    
+
     for (std::vector<iface::dom::Node*>::iterator i = r2->mNodes.begin();
          i != r2->mNodes.end(); i++)
     {
@@ -1223,7 +1223,7 @@ public:
       if (ri->mBoolean)
         rn->addNode(*i);
     }
-    
+
     rn->add_ref();
     return rn.getPointer();
   }
@@ -1417,7 +1417,7 @@ public:
         double sz = arg->mNodes.size();
 
         arg->cleanup();
-        arg->mType = iface::xpath::XPathResult::NUMBER_TYPE; 
+        arg->mType = iface::xpath::XPathResult::NUMBER_TYPE;
         arg->mNumber = sz;
         arg->add_ref();
         return arg;
@@ -1676,7 +1676,7 @@ public:
         }
         else
           throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
-        
+
         r->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
         r->add_ref();
         return r.getPointer();
@@ -1736,7 +1736,7 @@ public:
         }
         else
           throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
-        
+
         r->coerceTo(iface::xpath::XPathResult::STRING_TYPE);
         r->add_ref();
         return r.getPointer();
@@ -1773,7 +1773,7 @@ public:
         CDA_XPathResult* offsetr = *i++;
         offsetr->coerceTo(iface::xpath::XPathResult::NUMBER_TYPE);
         uint32_t offset = static_cast<uint32_t>(myround(offsetr->mNumber));
-        
+
         uint32_t length;
         if (args.size() == 2)
           length = str.length();
@@ -1916,7 +1916,7 @@ public:
     default:
       ;
     }
-    
+
     throw iface::xpath::XPathException(iface::xpath::INVALID_EXPRESSION_ERR);
   }
 
@@ -2174,14 +2174,14 @@ public:
           {
             RETURN_INTO_OBJREF(n, iface::dom::Node, stack.back());
             stack.pop_back();
-            
+
             if (seen.count(n) != 0)
               continue;
             seen.insert(n);
-            
+
             if (performTestOn(aContext, n))
               r->addNode(n);
-            
+
             iface::dom::Node* nc = n->lastChild();
             while (nc)
             {
@@ -2237,14 +2237,14 @@ public:
           {
             ObjRef<iface::dom::Node> n(already_AddRefd<iface::dom::Node>(stack.back()));
             stack.pop_back();
-            
+
             if (seen.count(n) != 0)
               continue;
             seen.insert(n);
-            
+
             if (performTestOn(aContext, n))
               r->addNode(n);
-            
+
             iface::dom::Node* nc = n->lastChild();
             while (nc)
             {
@@ -2255,7 +2255,7 @@ public:
         }
       }
       break;
-      
+
     case CDA_XPathAxisFollowingSibling:
       {
         std::vector<iface::dom::Node*>::iterator i = aInput->mNodes.begin();
@@ -2360,17 +2360,17 @@ public:
           {
             ObjRef<iface::dom::Node> n(already_AddRefd<iface::dom::Node>(stack.back()));
             stack.pop_back();
-            
+
             if (seen.count(n) != 0)
               continue;
             seen.insert(n);
-            
+
             if (performTestOn(aContext, n))
             {
               n->add_ref();
               r->mNodes.insert(r->mNodes.begin(), n);
             }
-            
+
             iface::dom::Node* nc = n->firstChild();
             while (nc)
             {
@@ -2555,7 +2555,7 @@ static const char* const kModToken = "mod";
 
 // This is just a convenience class, it gets broken down into applications of NodePaths
 // and Predicates.
-class CDA_XPathStep 
+class CDA_XPathStep
   : public iface::XPCOM::IObject
 {
 public:
@@ -2989,7 +2989,7 @@ private:
     if (ex != NULL)
     {
       exprs.push_back(ex);
-      
+
       while (true)
       {
         if (!expectName(L","))
@@ -3026,7 +3026,7 @@ private:
                          (rlp, CDA_XPathAxisDescendantOrSelf, ntnn));
       return new CDA_XPathRoot(asp);
     }
-    
+
     if (n == L"/")
     {
       consumeName();
@@ -3223,7 +3223,7 @@ private:
       if (nt == NULL)
         return NULL;
       RETURN_INTO_OBJREF(step, CDA_XPathStep, new CDA_XPathStep(axis, nt));
-      
+
       while (true)
       {
         if (!expectName(L"["))
@@ -3238,7 +3238,7 @@ private:
 
         if (!expectName(L"]"))
           return NULL;
-        
+
         expr->add_ref();
         step->mPredicates.push_back(expr);
       }
@@ -3268,7 +3268,7 @@ private:
 
       return ret;
     }
-    
+
     CDA_XPathNodeType nt = CDA_XPathNodeNode;
     if (parseNodeType(nt))
     {
@@ -3641,7 +3641,7 @@ private:
       aSuccess = false;
       return L"";
     }
-    
+
     return parseQName(aNSURI, aSuccess);
   }
 

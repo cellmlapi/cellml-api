@@ -11,7 +11,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
 
     def visitAST(self, node):
         directory, basename = os.path.split(node.file())
-        
+
         self._included = ['xpcom.idl']
         if string.lower(basename[-4:]) == '.idl':
             basename = basename[:-4]
@@ -83,13 +83,13 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             if n.mainFile():
                 n.accept(self)
         self.hxx.out('#endif // not ' + guardname)
-    
+
     def pushManglePart(self, name):
         self.mangleParts.append(string.replace(string.replace(name, '_', '_1'), '/', '_'))
-    
+
     def popManglePart(self):
         self.mangleParts.pop()
-    
+
     def calculateMangled(self):
         self.mangled = string.join(self.mangleParts, '_')
 
@@ -111,7 +111,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
     def visitInterface(self, node):
         self.pushManglePart(jnutils.JavaName(node))
         self.inameParts.append(node.identifier())
-        
+
         constructor = 'wrap_' + string.join(self.inameParts, '_')
         classsig = string.join(self.inameParts, '/')
         scopedn = jnutils.ScopedCppName(node)
@@ -135,9 +135,9 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
             self.cppSup.inc_indent()
             self.cppSup.out('return env->NewLocalRef(wrap->unwrap());')
             self.cppSup.dec_indent()
-        
+
         # It is a non-Java C++ object, so make a Java wrapper for it...
-        
+
         self.cppSup.out('jclass clazz = env->FindClass("pjm2pcm/' + classsig + '");')
         self.cppSup.out('jmethodID constr = env->GetMethodID(clazz, "<init>", "()V");')
         self.cppSup.out('jobject wrapper = env->NewObject(clazz, constr);')
@@ -217,7 +217,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.popManglePart()
 
         self.recurseAcceptInheritedContents(node)
-        
+
         self.inameParts.pop()
         self.popManglePart()
 
@@ -234,17 +234,17 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppSup.out('field = reinterpret_cast<int64_t>' +\
                         '(static_cast<iface::' + className + '*>(obj));')
         self.cppSup.out('env->SetLongField(wrapper, fid, field);')
-        
+
         self.cppSup.dec_indent()
         self.cppSup.out('}')
         for i in node.inherits():
             if i.scopedName() != ['XPCOM', 'IObject']:
                 self.recurseBuildInheritedFieldSetup(i)
-        
+
     def recurseAcceptInheritedContents(self, node):
         if isinstance(node, idlast.Declarator) and node.alias():
             node = node.alias().aliasType().unalias().decl()
-        
+
         for i in node.contents():
             i.accept(self)
         for i in node.inherits():
@@ -292,7 +292,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         for (pname, ti, dirn) in params:
             tiName = ti.jniType(dirn)
             paramString = paramString + ', ' + tiName + ' ' + pname
-        
+
         self.hxx.out('extern "C" { PUBLIC_JAVAMOD_PRE ' + rtypeName + ' ' + name +
                      '(' + paramString + ') PUBLIC_JAVAMOD_POST; };')
         self.cppMod.out(rtypeName + ' ' + name + '(' + paramString + ')')
@@ -328,7 +328,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppMod.out('pcm_this = reinterpret_cast<' + self.cxxclass + '*>(env->GetLongField(thisptr, fid));')
         self.cppMod.dec_indent()
         self.cppMod.out('}')
-        
+
         # Make the call to the PCM interface...
         if needRet:
             retsave = '_pcm_ret = '
@@ -338,7 +338,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         self.cppMod.out('try')
         self.cppMod.out('{')
         self.cppMod.inc_indent()
-        
+
         self.cppMod.out(retsave + 'pcm_this->' + pcmName + '(' + pcmParams + ');')
 
         self.cppMod.dec_indent()
@@ -395,7 +395,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
         if needRet:
             self.cppMod.out(rtypeName + ' _jni_ret;')
             self.cppMod.out(rtype.convertToJNI('_jni_ret', '_pcm_ret'))
-        
+
         # Clean up parameters...
         for (pname, ti, dirn) in params:
             self.cppMod.out(ti.pcmDestroy('_pcm_' + pname))
@@ -405,7 +405,7 @@ class NativeStubVisitor (idlvisitor.AstVisitor):
 
         self.cppMod.dec_indent()
         self.cppMod.out('}')
-    
+
 def run(tree):
     iv = NativeStubVisitor()
     tree.accept(iv)

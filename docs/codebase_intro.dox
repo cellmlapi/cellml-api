@@ -35,7 +35,7 @@ The CellML API implementation includes code to transform the IDL files to produc
 \section build_system_intro Build system
 The CellML API makes use of a CMake-based build system. The build subdirectory contains the core CMake files whose utility spans multiple modules; these are ultimately included by CMakeLists.txt in the root of the source tree. CMake files for each individual module are stored in the subdirectory for that module.
 
-When source code is committed to the repository, it is automatically built on multiple platforms by the buildbots. The buildbots retrieve the source code every minute from a local cache of the source code repository (which is itself updated every minute); once they detect that the tree has been stable for 
+When source code is committed to the repository, it is automatically built on multiple platforms by the buildbots. The buildbots retrieve the source code every minute from a local cache of the source code repository (which is itself updated every minute); once they detect that the tree has been stable for
 
 \section communication_intro Communications about the API and its implementation
 A developer list, open to anyone interested, called cellml-tools-developers@cellml.org, is provided for discussion about CellML tools, including the CellML API. Subscribe at http://lists.cellml.org/mailman/listinfo/cellml-tools-developers . Important issues of broader interest to the CellML Community are discussed on cellml-discussion@cellml.org, which is also open to the public - subscribe at http://lists.cellml.org/mailman/listinfo/cellml-discussion .

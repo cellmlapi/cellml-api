@@ -103,7 +103,7 @@ class Type:
         if indirectIn or indirectOut or box:
             raise "Not implemented: convertToJNI for non-direct out on Type."
         return jniname + ' = ' + pcmname + ';'
-        
+
 BASE_MAP = {
     idltype.tk_void: {'wrapper_class': 'invalid!', 'java_type': 'void', 'jni_type': 'void',
                       'pcm_type': 'void', 'java_sig': 'V', 'call_type': 'Void',
@@ -214,7 +214,7 @@ class Base(Type):
                     indo + pcmname + ' = static_cast<' + self.pcm_type + ">(" +\
                     'env->Call' + string.capitalize(self.java_type) +\
                     "Method(" + jniname + ", unboxmethod));\n}\n"
-        
+
         return indo + pcmname + ' = static_cast<' + self.pcm_type + '>(' + jniname + ');'
 
     def convertToJNI(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, box = 0):
@@ -239,7 +239,7 @@ class Base(Type):
                    "<init>\", \"(" + self.java_sig + ")V\");" +\
                    jniname + " = env->NewObject(boxclazz, initmethod, static_cast<" +\
                    self.jni_type + ">(" + indi + pcmname + "));\n}\n"
-        
+
         return indi + jniname + ' = static_cast<' + self.jni_type + '>(' + pcmname + ');'
 
 class String(Type):
@@ -277,7 +277,7 @@ class String(Type):
             xname = 'static_cast<jstring>(' + jniname + ')'
         else:
             xname = jniname
-        
+
         extract = "{\n" +\
                   "  uint32_t tmplen = env->GetStringUTFLength(" + xname + ");\n" +\
                   "  const char* tmpstr = env->GetStringUTFChars(" + xname + ", NULL);\n" +\
@@ -287,7 +287,7 @@ class String(Type):
 
         if indirectIn:
             return self.readJNIReference(extract, jniname)
-        
+
         return extract
 
     def convertToJNI(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, box = 0):
@@ -330,7 +330,7 @@ class WString(String):
                 Type.RETURN: 'jstring',
                 Type.DERIVE: 'jobject',
                }[direction]
-    
+
     def pcmType(self, direction):
         return {Type.IN: 'const std::wstring&',
                 Type.OUT: 'std::wstring&',
@@ -339,7 +339,7 @@ class WString(String):
                 Type.RETURN_SIG: 'std::wstring',
                 Type.DERIVE: 'std::wstring',
                }[direction]
-    
+
     def convertToPCM(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, unbox = 0):
         if indirectOut:
             oname = '*' + pcmname
@@ -352,7 +352,7 @@ class WString(String):
             xname = 'static_cast<jstring>(' + jniname + ')'
         else:
             xname = jniname
-        
+
         extract = "{\n" +\
                   "  uint32_t tmplen = env->GetStringLength(" + xname + ");\n" +\
                   "  const jchar* tmpstr = env->GetStringChars(" + xname + ", NULL);\n" +\
@@ -362,7 +362,7 @@ class WString(String):
                   "}\n"
         if indirectIn:
             return self.readJNIReference(extract, jniname)
-        
+
         return extract
 
     def convertToJNI(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, box = 0):
@@ -448,7 +448,7 @@ class Sequence(Type):
 
         if indirectIn:
             return self.readJNIReference(code, jniname)
-        
+
         return code
 
     def convertToJNI(self, jniname, pcmname, indirectIn = 0, indirectOut = 0, box = 0):
@@ -491,7 +491,7 @@ class Declared(Type):
         else:
             self.java_type = GetClassName(type)
             self.java_sig = 'L' + string.join(type.scopedName(), '/') + ';'
-        self.failure_return = 'NULL';            
+        self.failure_return = 'NULL';
         self.cpp_type = 'iface::' + ScopedCppName(type.decl(), skipLast)
         self.cref = '&'
 
@@ -615,7 +615,7 @@ class Enum(Declared):
             xname = 'tmpobj'
         else:
             xname = jniname
-        
+
         code = "{\n"+\
                "  jclass eclazz = env->FindClass(\"" + self.java_class_name + "\");\n"+\
                "  jclass classclazz = env->FindClass(\"java/lang/Class\");\n"+\
@@ -624,7 +624,7 @@ class Enum(Declared):
                "<jobjectArray>(env->CallObjectMethod(eclazz, vmeth)), static_cast<jsize>("+\
                iname + "));\n" +\
                "}\n"
-        
+
         if indirectOut:
             return self.writeJNIReference(code, jniname)
         return code

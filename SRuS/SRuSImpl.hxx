@@ -102,7 +102,7 @@ class CDA_SRuSGeneratedData
 {
 public:
   CDA_SRuSGeneratedData(iface::SProS::DataGenerator* aDG);
-  
+
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::GeneratedData);
   CDA_IMPL_REFCOUNT;
@@ -120,7 +120,7 @@ class CDA_SRuSGeneratedDataSet
 {
 public:
   CDA_SRuSGeneratedDataSet();
-  
+
   CDA_IMPL_ID;
   CDA_IMPL_QI1(SRuS::GeneratedDataSet);
   CDA_IMPL_REFCOUNT;
@@ -202,7 +202,7 @@ public:
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_ID;
   CDA_IMPL_QI0;
-  
+
   void resetToInitial();
 
   ObjRef<iface::SRuS::TransformedModelSet> mTMS;
@@ -369,7 +369,7 @@ public:
   void results(const std::vector<double>& aValue) throw();
   void done() throw();
   void failed(const std::string& aMsg) throw();
-  
+
 private:
   ObjRef<iface::SProS::Simulation> mSimulation;
   std::wstring mModelId;

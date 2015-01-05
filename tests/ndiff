@@ -3,7 +3,7 @@ eval 'exec perl -w -S $0 ${1+"$@"}'
 #
 # This script is an extension to diff that removes differences due to
 #   corresponding floating point entries differing by not more than a specified
-#   tolerance. 
+#   tolerance.
 #
 
 # ***** BEGIN LICENSE BLOCK *****
@@ -50,7 +50,7 @@ eval 'exec perl -w -S $0 ${1+"$@"}'
 #   look for a file called .ndiff. If this file exists and has an entry in it
 #   like
 # tol:0.01
-#   Then the tolerance will be set to 0.01  
+#   Then the tolerance will be set to 0.01
 #
 #   The tolerance is now allowed to be set to be relative by using a % qualifier
 #     at the end of the tolerance. This is both valid for the .ndiff file and
@@ -68,7 +68,7 @@ eval 'exec perl -w -S $0 ${1+"$@"}'
 # Written by Richard Boyes (r.boyes@auckland.ac.nz) and David Bullivant
 #
 
-use strict;				  
+use strict;
 
 use File::Basename;
 use Getopt::Long;
@@ -296,7 +296,7 @@ while( defined $line )
 		    # This in fact is not changed, but if we mark this
 		    # as unchanged we must mark the line that was
 		    # assumed to match the unchanged line as changed.
-		    my $match_index = $index[$changed_file];		    
+		    my $match_index = $index[$changed_file];
 		    $changed[$changed_file][$match_index] = 0;
 		    do {
 			$match_index++;
@@ -342,7 +342,7 @@ while( defined $line )
 	if( $match_count ) {
 	    foreach (0,1) { $index[$_]++ }
 	}
-	# don't print this change until we are sure that 
+	# don't print this change until we are sure that
 	# it won't merge with the next change. ( >= is a safe ==.)
 	if( $found_change &&
 	    ( $match_count >= 2 * $context_lines ||
@@ -362,7 +362,7 @@ while( defined $line )
 			 ( map { [ @{$changed[$_]}[ $hunk_starts[$_] ..
 						    $hunk_ends[$_] ]]} 0,1 ));
 	    $found_change = 0;
-	}	    
+	}
     }
 
     $line = <DIFF>;
@@ -547,7 +547,7 @@ examines and modifies the according to whether the results are within
 the required tolerance.
 
 Tolerance can be specified in relative or absolute terms. To specify
-tolerance in relative terms (a percentage), simply put a \% sign at 
+tolerance in relative terms (a percentage), simply put a \% sign at
 the end of the number you put next to the -t switch. For absolute
 tolerance, leave it off.
 The default is zero tolerance.
@@ -586,7 +586,7 @@ sub errexit
     exit (( $! == 0 || $! == 1 ) ? 2 : $!);
 }
 
-### Local Variables: 
+### Local Variables:
 ### mode: perl
 ### tab-width: 8
-### End: 
+### End:

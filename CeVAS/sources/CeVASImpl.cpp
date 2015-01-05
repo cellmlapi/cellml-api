@@ -171,7 +171,7 @@ private:
 
       if (importEnd == aImportStart)
         break;
-      
+
       RETURN_INTO_OBJREF(el1, iface::cellml_api::CellMLElement,
                          importEnd->parentElement());
       if (el1 == NULL)
@@ -224,9 +224,9 @@ private:
                          refi->nextComponentRef());
       if (ref == NULL)
         break;
-      
+
       RETURN_INTO_WSTRING(cn, ref->componentName());
-      
+
       RETURN_INTO_OBJREF(mc, iface::cellml_api::CellMLComponentSet,
                          aModel->modelComponents());
       RETURN_INTO_OBJREF(comp, iface::cellml_api::CellMLComponent,
@@ -271,7 +271,7 @@ private:
 
           RETURN_INTO_OBJREF(bu, iface::cellml_api::URI, aModel->xmlBase());
           RETURN_INTO_WSTRING(uri, bu->asText());
-          
+
           msg += uri;
           msg += L".";
 
@@ -576,7 +576,7 @@ CDACeVAS::ComputeConnectedVariables
 
   for (std::list<iface::cellml_api::Model*>::iterator i = aRelevantModels.begin(); i != aRelevantModels.end(); i++)
   {
-    ObjRef<iface::cellml_api::GroupSet> gs = 
+    ObjRef<iface::cellml_api::GroupSet> gs =
       (*i)->findGroupsWithRelationshipRefName(L"encapsulation");
     ObjRef<iface::cellml_api::GroupIterator> gi(gs->iterateGroups());
     while (true)
@@ -595,7 +595,7 @@ CDACeVAS::ComputeConnectedVariables
       }
     }
   }
-  
+
   CleanupList<iface::cellml_api::CellMLComponent*>::iterator i;
   for (i = mRelevantComponents.begin(); i != mRelevantComponents.end(); i++)
   {
@@ -667,7 +667,7 @@ CDACeVAS::ComputeConnectedVariables
           msg += vname;
           throw CeVASError(msg);
         }
-        
+
         try
         {
           cv2 = already_AddRefd<iface::cellml_api::CellMLVariable>
@@ -698,10 +698,10 @@ CDACeVAS::ComputeConnectedVariables
 
         /*
         std::wcout << cvc1->name() << L", " << cvc2->name() << L" " <<
-          mc->firstComponentName() << L", " << mc->secondComponentName() << L": " << L"1in2: "<< 
+          mc->firstComponentName() << L", " << mc->secondComponentName() << L": " << L"1in2: "<<
           (encap.count(std::pair<iface::cellml_api::CellMLComponent*,
                                  iface::cellml_api::CellMLComponent*>(cvc1, cvc2)) > 0)
-                  << L" 2in1: " << 
+                  << L" 2in1: " <<
           (encap.count(std::pair<iface::cellml_api::CellMLComponent*,
                                  iface::cellml_api::CellMLComponent*>(cvc2, cvc1)) > 0)
                   << std::endl;

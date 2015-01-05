@@ -21,7 +21,7 @@ public:
   CDA_LanguageDictionary(const std::wstring& nameSpace, iface::dom::Element *DictionaryXML) throw();
   ~CDA_LanguageDictionary() {};
 
-  std::wstring getValue(const std::wstring& keyName) 
+  std::wstring getValue(const std::wstring& keyName)
     throw(std::exception&);
 
   already_AddRefd<iface::dom::NodeList> getMappings()
@@ -44,17 +44,17 @@ public:
   ~CDA_DictionaryGenerator() {};
 
   already_AddRefd<iface::cellml_services::LanguageDictionary>
-  getDictionary(const std::wstring& dictionaryNameSpace) 
+  getDictionary(const std::wstring& dictionaryNameSpace)
     throw(std::exception&);
 
   already_AddRefd<iface::dom::Element>
   getElementNS(const std::wstring& nameSpace, const std::wstring& elementName)
     throw(std::exception&);
 
-  already_AddRefd<iface::cellml_services::MaLaESTransform> getMalTransform() 
+  already_AddRefd<iface::cellml_services::MaLaESTransform> getMalTransform()
     throw(std::exception&);
 
-  std::wstring padMalString(const std::wstring& inString) 
+  std::wstring padMalString(const std::wstring& inString)
     throw(std::exception&);
 
 private:

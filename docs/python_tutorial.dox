@@ -35,7 +35,7 @@ The Python object cellmlBootstrap is of Python type cgrspy.Object, as all object
 \code
 >>> cgrspy.bootstrap.loadGenericModule('cgrs_xpcom')
 >>> cellmlBootstrap.supported_interfaces
-['XPCOM::IObject', 'cellml_api::CellMLBootstrap'] 
+['XPCOM::IObject', 'cellml_api::CellMLBootstrap']
 \endcode
 
 All attributes defined on the API can be accessed directly as a Python attribute. Operations defined on the CellML API become methods in Python; `in' parameters are Python parameters, and the return value and any `out' parameters get put together as a Python tuple in the return value.

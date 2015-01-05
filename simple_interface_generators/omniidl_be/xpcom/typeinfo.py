@@ -58,7 +58,7 @@ class XPCOMLocalStorage:
 class COMPtrLocalStorage(XPCOMLocalStorage):
     def __init__(self, typename, name=None):
         XPCOMLocalStorage.__init__(self, typename, name)
-    
+
     def GetStorageDefinition(self, initialValue=None):
         if initialValue == None:
             return 'nsCOMPtr<' + self.typename + '> ' + self.name + ';'
@@ -169,7 +169,7 @@ class PCMArrayLocalStorage(PCMLocalStorage):
                ";\n}"
     def GetDestroyIndex(self, idx):
         return self.atype.DestroyPCMArrayMember(self.name + '[' + idx + ']')
-        
+
 class Type:
     def XPIDLArgument(self, ident, is_in, is_out):
         if is_in:
@@ -234,7 +234,7 @@ class Base(Type):
         self.__dict__.update(info)
         self.type_pcm_const = self.type_pcm
         self.type_xpcom_seq = self.type_xpcom
-    
+
     def ConvertXPCOMToPCM(self, source, dest):
         return dest + ' = ' + source + ';'
     def ConvertPCMToXPCOM(self, source, dest):
@@ -247,19 +247,19 @@ class String(Type):
         self.type_pcm = 'char*'
         self.type_pcm_const = 'const ' + self.type_pcm
         self.type_xpcom_seq = 'char*'
-    
+
     def GetXPCOMStorage(self):
         return XPCOMStringLocalStorage('nsCString')
 
     def GetPCMStorage(self):
         return PCMStringLocalStorage(self.type_pcm)
-    
+
     def DestroyXPCOMArrayMember(self, name):
         return 'nsMemory::Free(' + name + ');'
 
     def DestroyPCMArrayMember(self, name):
         return 'free(' + name + ');'
-    
+
     def ConvertXPCOMToPCM(self, source, dest):
         return dest + ' = strdup(' + source +\
                '.BeginReading());'
@@ -279,7 +279,7 @@ class WString(Type):
         self.type_pcm = 'wchar_t*'
         self.type_pcm_const = 'const ' + self.type_pcm
         self.type_xpcom_seq = 'PRUnichar*'
-    
+
     def GetXPCOMStorage(self):
         return XPCOMStringLocalStorage('nsString')
 
@@ -323,7 +323,7 @@ class Sequence(Type):
         return direct + 'unsigned long len_' + ident + ', ' +\
                '[array, size_is(len_' + ident + ')] ' + direct + ' ' +\
                self.seqTypeInfo.type_xpidl + ' ' + ident
-    
+
     def GetXPCOMStorage(self):
         return XPCOMArrayLocalStorage(self.seqTypeInfo)
 
@@ -344,7 +344,7 @@ class Sequence(Type):
                                                     dest + "[_idx]") + "\n" +\
                "  }\n" +\
                "}"
-    
+
     def ConvertIndexXPCOMToPCM(self, source, dest):
         return self.seqTypeInfo.ConvertXPCOMToPCM(source, dest)
 
@@ -362,7 +362,7 @@ class Sequence(Type):
                                                     dest + "[_idx]") + "\n" +\
                "  }\n" +\
                "}"
-    
+
     def ConvertIndexPCMToXPCOM(self, source, dest):
         return self.seqTypeInfo.ConvertPCMToXPCOM(source, dest)
 
@@ -478,7 +478,7 @@ class Enum(Declared):
         self.type_pcm_const = self.type_pcm
     def GetXPCOMStorage(self):
         return XPCOMLocalStorage(self.type_xpcom)
-    
+
     def DestroyXPCOMArrayMember(self, name):
         return ';'
 

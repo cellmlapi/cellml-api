@@ -13,7 +13,7 @@ Asserter::makeNotEqualMessage() strip the shortDescription of the additional mes
   - Modify MfcUi::TestRunner to expose TestResult (which allow specific TestListener
     for global initialization).
   - Update MfcTestRunner to use TestPath to store test in the registry
-    
+
 * Documentation:
 	CookBook:
 	- how to create simple test cases (with CppUnit namespace)

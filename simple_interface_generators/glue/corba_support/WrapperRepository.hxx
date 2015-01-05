@@ -14,7 +14,7 @@
 #endif
 
 PUBLIC_CORBA_GLUE_PRE
-class PUBLIC_CORBA_GLUE_POST CCIFactory 
+class PUBLIC_CORBA_GLUE_POST CCIFactory
 {
 public:
   CCIFactory() {}

@@ -81,8 +81,8 @@ long int denGETRF(realtype **a, long int m, long int n, long int *p)
 
     /* check for zero pivot element */
     if (col_k[l] == ZERO) return(k+1);
-    
-    /* swap a(k,1:n) and a(l,1:n) if necessary */    
+
+    /* swap a(k,1:n) and a(l,1:n) if necessary */
     if ( l!= k ) {
       for (i=0; i<n; i++) {
         temp = a[i][l];
@@ -95,7 +95,7 @@ long int denGETRF(realtype **a, long int m, long int n, long int *p)
      * column k by 1.0/a(k,k). After the above swap
      * a(k,k) holds the pivot element. This scaling
      * stores the pivot row multipliers a(i,k)/a(k,k)
-     * in a(i,k), i=k+1, ..., m-1.                      
+     * in a(i,k), i=k+1, ..., m-1.
      */
     mult = ONE/col_k[k];
     for(i=k+1; i < m; i++) col_k[i] *= mult;
@@ -197,7 +197,7 @@ void denscale(realtype c, realtype **a, long int m, long int n)
 void denaddI(realtype **a, long int n)
 {
   long int i;
-  
+
   for (i=0; i < n; i++) a[i][i] += ONE;
 }
 

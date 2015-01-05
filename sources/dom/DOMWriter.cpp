@@ -283,7 +283,7 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
     writeAttr(&elementContext, at, appendTo);
   }
 
-  RETURN_INTO_OBJREF(elcnl, iface::dom::NodeList, el->childNodes());  
+  RETURN_INTO_OBJREF(elcnl, iface::dom::NodeList, el->childNodes());
   l = elcnl->length();
 
   if (l == 0)
@@ -300,7 +300,7 @@ DOMWriter::writeElement(DOMNamespaceContext* parentContext,
     RETURN_INTO_OBJREF(n, iface::dom::Node, elcnl->item(i));
     if (n == NULL)
       break;
-    
+
     // Gdome doesn't put attributes on child nodes. I'm not sure if this is the
     // correct interpretation of the DOM specification.
     //iface::dom::Attr* at = dynamic_cast<iface::dom::Attr*>
@@ -320,7 +320,7 @@ DOMWriter::writeAttr(DOMNamespaceContext* dnc, iface::dom::Attr* at, std::wstrin
 {
   // Always put a space first...
   appendTo += L" ";
-  
+
   // Next, we might need a prefix.
   RETURN_INTO_WSTRING(atpr, at->prefix());
   RETURN_INTO_WSTRING(atns, at->namespaceURI());
@@ -435,7 +435,7 @@ DOMWriter::writeDocument(DOMNamespaceContext* dnc,
     RETURN_INTO_OBJREF(n, iface::dom::Node, elnl->item(i));
     if (n == NULL)
       break;
-    
+
     writeNode(dnc, n, appendTo);
   }
 }
@@ -462,7 +462,7 @@ DOMWriter::writeDocumentFragment(DOMNamespaceContext* dnc,
     RETURN_INTO_OBJREF(n, iface::dom::Node, elnl->item(i));
     if (n == NULL)
       break;
-    
+
     writeNode(dnc, n, appendTo);
   }
 }
@@ -578,7 +578,7 @@ DOMNamespaceContext::resolveOrInventPrefixes()
       suggestion = L"html";
     else
       suggestion = L"ns";
-    
+
     std::wstring attempt = suggestion;
     uint32_t attemptCount = 0;
     while (findPrefixForNamespace(attempt) != L"")

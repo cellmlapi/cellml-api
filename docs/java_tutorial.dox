@@ -9,22 +9,22 @@ independent, so once you have a grasp of how the language independent documentat
 relates to Java, refer to the documentation (for example, interfaces listed in the
 class listing) for more details on how to use the services the API provides.
 
-\section java_bridge Loading java_cellml library 
+\section java_bridge Loading java_cellml library
 
 Here we create a class to load the java_cellml library.
 
-\code 
+\code
 
 import cellml_api.CellMLBootstrap;
 
 public class CellMLLoader {
 	private CellMLBootstrap bootstrap;
-	
+
 	public CellMLLoader(){
 		System.loadLibrary("java_cellml");
-		bootstrap =  cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap();	
+		bootstrap =  cellml_bootstrap.CellMLBootstrap.createCellMLBootstrap();
 	}
-	
+
 	public CellMLBootstrap getCellMLBootstrap(){
 		return bootstrap;
 	}
@@ -36,7 +36,7 @@ public class CellMLLoader {
 
 Here we create a class with methods that we could call to create or load CellML models.
 
-\code 
+\code
 
 import cellml_api.CellMLBootstrap;
 import cellml_api.Model;
@@ -59,7 +59,7 @@ public class CellMLReader {
 
 The example shown below iterates through components, variables, and connections defined in the Hodgkin-Huxley model that is available at http://www.cellml.org/models/hodgkin_huxley_1952_version07/download.
 
-\code 
+\code
 
 import cellml_api.CellMLComponent;
 import cellml_api.CellMLComponentIterator;
@@ -77,14 +77,14 @@ import cellml_api.MapVariablesSet;
 import cellml_api.Model;
 
 public class IterateElementTest {
-	
+
 	CellMLLoader cLoader;
-	
+
 	public IterateElementTest(){
 		cLoader = new CellMLLoader();
 	}
 
-	private void iterateModelElements(){   	
+	private void iterateModelElements(){
 
 		Model model = CellMLReader.loadFromURL(cLoader.getCellMLBootstrap(),
 							"http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
@@ -115,7 +115,7 @@ public class IterateElementTest {
 		for(int i = 0; i < connectionSet.getLength(); i++){
 			Connection connection = conIter.nextConnection();
 			MapComponents mapComponent = connection.getComponentMapping();
-			System.out.println("Connection Component1: "+mapComponent.getFirstComponentName() + 
+			System.out.println("Connection Component1: "+mapComponent.getFirstComponentName() +
 					"    Component2: " + mapComponent.getSecondComponentName());
 
 			MapVariablesSet variableSet = connection.getVariableMappings();
@@ -123,14 +123,14 @@ public class IterateElementTest {
 
 			for(int j =0; j < variableSet.getLength(); j++){
 				MapVariables mapVar = varIter.nextMapVariable();
-				System.out.println("\t Variable1: "+mapVar.getFirstVariableName() + 
+				System.out.println("\t Variable1: "+mapVar.getFirstVariableName() +
 						"    Variable2: " + mapVar.getSecondVariableName());
 			}
 			System.out.println();
 		}
 
 	}
-	
+
 	public static void main(String [] args ){
 		IterateElementTest ietest = new IterateElementTest();
 		ietest.iterateModelElements();
@@ -169,7 +169,7 @@ On Mac OS X:
 
 Here we create a class with a method that we could call to write CellML models to files.
 
-\code 
+\code
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -200,7 +200,7 @@ public class CellMLWriter {
 
 The example code below creates a CellML 1.1 model with two components.
 
-\code 
+\code
 import cellml_api.CellMLComponent;
 import cellml_api.CellMLVariable;
 import cellml_api.Connection;
@@ -212,19 +212,19 @@ import cellml_api.Units;
 import cellml_api.VariableInterface;
 
 public class CreateModelTest {
-	
+
 	CellMLLoader cLoader;
-	
+
 	public CreateModelTest(){
 		cLoader = new CellMLLoader();
 	}
-	
+
 	private void createCellMLModel(){
 		Model m = CellMLReader.createModel(cLoader.getCellMLBootstrap(),"1.1");
 		m.setName("example1");
 
 		Units units = m.createUnits();
-		m.addElement(units);        
+		m.addElement(units);
 		units.setName("second");
 
 		Unit unit = m.createUnit();
@@ -232,20 +232,20 @@ public class CreateModelTest {
 		unit.setUnits("second");
 
 
-		CellMLComponent comp1 = m.createComponent(); 
+		CellMLComponent comp1 = m.createComponent();
 		m.addElement(comp1);
-		comp1.setName("component1");        
+		comp1.setName("component1");
 
 		CellMLVariable var1 = m.createCellMLVariable();
 		comp1.addElement(var1);
 		var1.setName("variable1");
 		var1.setUnitsElement(units);
-		var1.setInitialValue("10");            	
-		var1.setPublicInterface(VariableInterface.INTERFACE_OUT); 
+		var1.setInitialValue("10");
+		var1.setPublicInterface(VariableInterface.INTERFACE_OUT);
 
-		CellMLComponent comp2 = m.createComponent(); 
+		CellMLComponent comp2 = m.createComponent();
 		m.addElement(comp2);
-		comp2.setName("component2");          
+		comp2.setName("component2");
 
 		CellMLVariable var2 = m.createCellMLVariable();
 		comp2.addElement(var2);
@@ -256,19 +256,19 @@ public class CreateModelTest {
 		Connection con = m.createConnection();
 		m.addElement(con);
 
-		MapComponents mapComp = con.getComponentMapping();      
+		MapComponents mapComp = con.getComponentMapping();
 		mapComp.setFirstComponent(comp1);
-		mapComp.setSecondComponent(comp2);      	
+		mapComp.setSecondComponent(comp2);
 
 		MapVariables mapvar = m.createMapVariables();
 		con.addElement(mapvar);
 
 		mapvar.setFirstVariable(var1);
-		mapvar.setSecondVariable(var2);      	
+		mapvar.setSecondVariable(var2);
 
 		CellMLWriter.writeToFile(m, m.getName()+ ".cellml");
 	}
-	
+
 	public static void main(String [] args ){
 		CreateModelTest cmtest = new CreateModelTest();
 		cmtest.createCellMLModel();

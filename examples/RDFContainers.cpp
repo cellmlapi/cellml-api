@@ -12,14 +12,14 @@ static void displayNode(iface::rdf_api::Node* aNode)
     std::wcout << L"\"" << l->lexicalForm() << L"\"";
     return;
   }
-  
+
   ObjRef<iface::rdf_api::URIReference> r(QueryInterface(aNode));
   if (r)
   {
     std::wcout << r->URI();
     return;
   }
-  
+
   ObjRef<iface::rdf_api::BlankNode> n(QueryInterface(aNode));
   std::wcout << L"BlankNode(" << reinterpret_cast<long long>(static_cast<iface::rdf_api::BlankNode*>(n)) << L")" << std::endl;
 }
@@ -72,11 +72,11 @@ int main(int argc, char** argv)
     // Create a CellML Bootstrap and a model loader.
     ObjRef<iface::cellml_api::CellMLBootstrap> bootstrap(CreateCellMLBootstrap());
     ObjRef<iface::cellml_api::DOMModelLoader> loader(bootstrap->modelLoader());
-    
+
     // Load a CellML model.
     ObjRef<iface::cellml_api::Model> hhModel
       (loader->loadFromURL(modelURL));
-    
+
     // Request a RDF/API capable RDF representation...
     ObjRef<iface::cellml_api::RDFRepresentation> rr(hhModel->getRDFRepresentation(L"http://www.cellml.org/RDF/API"));
     ObjRef<iface::rdf_api::RDFAPIRepresentation> rrHH(QueryInterface(rr));
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
     ObjRef<iface::rdf_api::Literal> lPMID(QueryInterface(n));
     if (lPMID != NULL) // It will be null if for some reason it isn't a literal...
       std::wcout << L"Model pubmed ID: " << lPMID->lexicalForm() << std::endl;
-    
+
     ObjRef<iface::rdf_api::URIReference> bqsReference(dsHH->getURIReference(L"http://www.cellml.org/bqs/1.0#reference"));
     ObjRef<iface::rdf_api::TripleSet> ts(hhModelRef->getTriplesOutOfByPredicate(bqsReference));
     ObjRef<iface::rdf_api::TripleEnumerator> te(ts->enumerateTriples());
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
         cont->renumberContainer(); // Remove the gaps.
 
         displayContainer(cont, L"    ");
-      }      
+      }
     }
   }
   catch (iface::cellml_api::CellMLException&)

@@ -481,7 +481,7 @@ module cellml_context
      * The type annotation manager for this CellML context...
      */
     readonly attribute CellMLTypeAnnotationManager typeAnnotationManager;
-    
+
     /**
      * The model loader...
      */

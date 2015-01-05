@@ -67,7 +67,7 @@ module cellml_services
      * Converts a model into the TeLICeM text representation.
      */
     wstring showModel(in cellml_api::Model aModel);
-    
+
     /**
      * Converts MathML into the TeLICeM text representation.
      */

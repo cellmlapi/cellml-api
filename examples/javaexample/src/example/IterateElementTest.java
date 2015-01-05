@@ -16,17 +16,17 @@ import cellml_api.MapVariablesSet;
 import cellml_api.Model;
 
 public class IterateElementTest {
-	
+
 	CellMLLoader cLoader;
-	
+
 	public IterateElementTest(){
 		cLoader = new CellMLLoader();
 	}
-	
+
 	/**
 	 * Iterating elements of a model
 	 */
-	private void iterateModelElements(){   	
+	private void iterateModelElements(){
 		//load the Hodgkin Huxley model from the repository
 		Model model = CellMLReader.loadFromURL(cLoader.getCellMLBootstrap(), "http://www.cellml.org/models/hodgkin_huxley_1952_version07/download");
 
@@ -70,7 +70,7 @@ public class IterateElementTest {
 		}
 
 	}
-	
+
 	public static void main(String [] args ){
 		IterateElementTest ietest = new IterateElementTest();
 		ietest.iterateModelElements();

@@ -48,7 +48,7 @@ module SRuS
      * Produces a set of all transformed models from a SEDML Element.
      */
     TransformedModelSet buildAllModels(in SProS::SEDMLElement aElement);
-    
+
     /**
      * Runs all the tasks described in the SED-ML description, and applies the
      * DataGenerators described to them to produce a set of generated data.

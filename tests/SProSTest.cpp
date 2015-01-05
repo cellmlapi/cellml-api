@@ -44,7 +44,7 @@ SProSTest::testSProSBootstrap()
   RETURN_INTO_OBJREF(msi, iface::SProS::BaseIterator, ms->iterateElements());
   CPPUNIT_ASSERT(NULL == msi->nextElement().getPointer());
 
-// 
+//
 //     /**
 //      * Parses SEDML from a specified URL, using the specified relative URL.
 //      */
@@ -57,7 +57,7 @@ SProSTest::testSProSBootstrap()
   RETURN_INTO_WSTRING(kisaoID, sim->algorithmKisaoID());
   CPPUNIT_ASSERT(kisaoID == L"KISAO:0000019");
 
-// 
+//
 //     /**
 //      * Parses SEDML from a specified blob of text, using the specified base URI.
 //      */
@@ -71,12 +71,12 @@ SProSTest::testSProSBootstrap()
   msi = already_AddRefd<iface::SProS::BaseIterator>(ms->iterateElements());
   CPPUNIT_ASSERT(NULL == msi->nextElement().getPointer());
 
-// 
+//
 //     /**
 //      * Makes a SEDML structure from an element.
 //      */
 //     SEDMLElement makeSEDMLFromElement(in dom::Element el);
-// 
+//
 //     /**
 //      * Serialises a SEDML element to text.
 //      */
@@ -90,14 +90,14 @@ SProSTest::testSProSBootstrap()
                      ul->loadDocumentFromText(st.c_str()));
   RETURN_INTO_OBJREF(de, iface::dom::Element,
                      doc->documentElement());
-  
+
   es = already_AddRefd<iface::SProS::SEDMLElement>(sb->makeSEDMLFromElement(de));
   ms = already_AddRefd<iface::SProS::ModelSet>(es->models());
   msi = already_AddRefd<iface::SProS::BaseIterator>(ms->iterateElements());
   CPPUNIT_ASSERT(NULL == msi->nextElement().getPointer());
 //   };
 }
-// 
+//
 //   /**
 //    * Base is implemented by all types of element in SEDML.
 //    */
@@ -135,7 +135,7 @@ SProSTest::testSProSBase()
   annotationEl->appendChild(annotationText)->release_ref();
   domel->appendChild(annotationEl)->release_ref();
 
-// 
+//
 //     /**
 //      * The list of all note elements associated with this element.
 //      */
@@ -145,7 +145,7 @@ SProSTest::testSProSBase()
   RETURN_INTO_OBJREF(item0, iface::dom::Node, nl->item(0));
   CPPUNIT_ASSERT(!CDA_objcmp(item0, noteText));
 
-// 
+//
 //     /**
 //      * The list of all annotations associated with this element.
 //      */
@@ -156,11 +156,11 @@ SProSTest::testSProSBase()
   CPPUNIT_ASSERT(!CDA_objcmp(item0, annotationText));
 }
 //   };
-// 
+//
 //   exception SProSException
 //   {
 //   };
-// 
+//
 //   /**
 //    * The base interface for sets of elements in SEDML.
 //    */
@@ -192,7 +192,7 @@ SProSTest::testSProSBaseSet()
   RETURN_INTO_OBJREF(firstBase, iface::SProS::Base, it1->nextElement());
   CPPUNIT_ASSERT(firstBase);
 
-// 
+//
 //     /**
 //      * Inserts an element into the set. Raises an exception if the element is
 //      * already in another set, or was created for the wrong document.
@@ -204,7 +204,7 @@ SProSTest::testSProSBaseSet()
   RETURN_INTO_OBJREF(nextBase, iface::SProS::Base, it1->nextElement());
   CPPUNIT_ASSERT(!CDA_objcmp(nextBase, newModel));
 
-// 
+//
 //     /**
 //      * Removes an element from the set.
 //      */
@@ -214,7 +214,7 @@ SProSTest::testSProSBaseSet()
   CPPUNIT_ASSERT(!CDA_objcmp(firstBase2, nextBase));
 }
 //   };
-// 
+//
 //   /**
 //    * The base interface for iterating sets of SEDML elements.
 //    */
@@ -228,7 +228,7 @@ SProSTest::testSProSBaseSet()
 //     Base nextElement();
          // Tested above.
 //   };
-// 
+//
 //   /**
 //    * The top-level SEDML element.
 //    */
@@ -242,7 +242,7 @@ SProSTest::testSProSSEDMLElement()
                      CreateSProSBootstrap());
   RETURN_INTO_OBJREF(es, iface::SProS::SEDMLElement,
                      sb->parseSEDMLFromURI(L"sedml-example-1.xml", BASE_DIRECTORY));
-  
+
 //     /**
 //      * The SEDML level; defaults to the latest level supported by the
 //      * implementation.
@@ -252,7 +252,7 @@ SProSTest::testSProSSEDMLElement()
   es->level(2);
   CPPUNIT_ASSERT_EQUAL(2, (int)es->level());
 
-//     
+//
 //     /**
 //      * The SEDML version; defaults to the latest version of SEDML supported by
 //      * the implementation.
@@ -262,7 +262,7 @@ SProSTest::testSProSSEDMLElement()
   es->version(2);
   CPPUNIT_ASSERT_EQUAL(2, (int)es->version());
 
-// 
+//
 //     /**
 //      * The set of all models.
 //      */
@@ -275,7 +275,7 @@ SProSTest::testSProSSEDMLElement()
   RETURN_INTO_WSTRING(modelId, m->id());
   CPPUNIT_ASSERT(modelId == L"model1");
 
-// 
+//
 //     /**
 //      * The set of all tasks.
 //      */
@@ -288,7 +288,7 @@ SProSTest::testSProSSEDMLElement()
   RETURN_INTO_WSTRING(taskId, t->id());
   CPPUNIT_ASSERT(taskId == L"task1");
 
-// 
+//
 //     /**
 //      * The set of all simulations.
 //      */
@@ -301,7 +301,7 @@ SProSTest::testSProSSEDMLElement()
   RETURN_INTO_WSTRING(simulationId, s->id());
   CPPUNIT_ASSERT(simulationId == L"simulation1");
 
-// 
+//
 //     /**
 //      * The set of all generators.
 //      */
@@ -314,7 +314,7 @@ SProSTest::testSProSSEDMLElement()
   RETURN_INTO_WSTRING(generatorId, g->id());
   CPPUNIT_ASSERT(generatorId == L"time");
 
-// 
+//
 //     /**
 //      * The set of all outputs.
 //      */
@@ -327,7 +327,7 @@ SProSTest::testSProSSEDMLElement()
   RETURN_INTO_WSTRING(outputId, o->id());
   CPPUNIT_ASSERT(outputId == L"plot1");
 
-// 
+//
 //     /**
 //      * Creates a new Model. It is created with no parent and must be
 //      * explicitly added.
@@ -338,7 +338,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(nm);
   }
 
-// 
+//
 //     /**
 //      * Creates a new UniformTimeCourse. It is created with no parent and must be
 //      * explicitly added.
@@ -350,7 +350,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(utc);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Task. It is created with no parent and must be
 //      * explicitly added.
@@ -362,7 +362,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(nt);
   }
 
-// 
+//
 //     /**
 //      * Creates a new DataGenerator. It is created with no parent and must be
 //      * explicitly added.
@@ -374,7 +374,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(dg);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Plot2D. It is created with no parent and must be
 //      * explicitly added.
@@ -386,7 +386,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(p2d);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Plot3D. It is created with no parent and must be
 //      * explicitly added.
@@ -398,7 +398,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(p3d);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Report. It is created with no parent and must be
 //      * explicitly added.
@@ -410,7 +410,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(r);
   }
 
-// 
+//
 //     /**
 //      * Creates a new ComputeChange. It is created with no parent and must be
 //      * explicitly added.
@@ -422,7 +422,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(cc);
   }
 
-// 
+//
 //     /**
 //      * Creates a new ChangeAttribute. It is created with no parent and must be
 //      * explicitly added.
@@ -434,7 +434,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(ca);
   }
 
-// 
+//
 //     /**
 //      * Creates a new AddXML. It is created with no parent and must be
 //      * explicitly added.
@@ -446,7 +446,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(ax);
   }
 
-// 
+//
 //     /**
 //      * Creates a new RemoveXML. It is created with no parent and must be
 //      * explicitly added.
@@ -458,7 +458,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(rx);
   }
 
-// 
+//
 //     /**
 //      * Creates a new ChangeXML. It is created with no parent and must be
 //      * explicitly added.
@@ -470,7 +470,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(cx);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Variable. It is created with no parent and must be
 //      * explicitly added.
@@ -482,7 +482,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(var);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Parameter. It is created with no parent and must be
 //      * explicitly added.
@@ -494,7 +494,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(p);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Curve. It is created with no parent and must be
 //      * explicitly added.
@@ -506,7 +506,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(curve);
   }
 
-// 
+//
 //     /**
 //      * Creates a new Surface. It is created with no parent and must be
 //      * explicitly added.
@@ -518,7 +518,7 @@ SProSTest::testSProSSEDMLElement()
     CPPUNIT_ASSERT(surf);
   }
 
-// 
+//
 //     /**
 //      * Creates a new DataSet. It is created with no parent and must be
 //      * explicitly added.
@@ -531,7 +531,7 @@ SProSTest::testSProSSEDMLElement()
   }
 }
 //   };
-// 
+//
 //   /**
 //    * The base interface for all elements with name attributes.
 //    */
@@ -544,7 +544,7 @@ SProSTest::testSProSSEDMLElement()
 //     attribute wstring name;
           // Tested below.
 //   };
-// 
+//
 //   /**
 //    * The base type for all sets of elements with name attributes.
 //    */
@@ -570,12 +570,12 @@ SProSTest::testSProSNamedElementSet()
                      os->iterateNamedElement());
   CPPUNIT_ASSERT(nei);
 
-// 
+//
 //     /* Note: Names aren't guaranteed to be unique, they are for human use, so
 //      * we don't provide a way to find by name.
 //      */
 //   };
-// 
+//
 //   /**
 //    * The base type of all iterators of elements with name attributes.
 //    */
@@ -604,7 +604,7 @@ SProSTest::testSProSNamedElementSet()
 //   };
 }
 
-// 
+//
 //   /**
 //    * The base interface for all elements with name and id attributes.
 //    */
@@ -617,7 +617,7 @@ SProSTest::testSProSNamedElementSet()
 //     attribute wstring id;
          // Tested below...
 //   };
-// 
+//
 //   /**
 //    * The base type for all sets of named, identified elements.
 //    */
@@ -641,7 +641,7 @@ SProSTest::testSProSNamedIdentifiedElementSet()
   RETURN_INTO_OBJREF(niei, iface::SProS::NamedIdentifiedElementIterator,
                      dgs->iterateNamedIdentifiedElements());
 
-// 
+//
 //     /**
 //      * Finds an element by identifier
 //      */
@@ -660,7 +660,7 @@ SProSTest::testSProSNamedIdentifiedElementSet()
   }
 
 //   };
-// 
+//
 //   /**
 //    * Allows named, identified elements to be iterated.
 //    */
@@ -685,7 +685,7 @@ SProSTest::testSProSNamedIdentifiedElementSet()
 
 }
 //   };
-// 
+//
 //   /**
 //    * A set of models.
 //    */
@@ -709,7 +709,7 @@ SProSTest::testSProSModel()
   RETURN_INTO_OBJREF(mi, iface::SProS::ModelIterator, ms->iterateModels());
   CPPUNIT_ASSERT(mi);
 
-// 
+//
 //     /**
 //      * Search for a model in the set by identifier.
 //      */
@@ -718,7 +718,7 @@ SProSTest::testSProSModel()
   CPPUNIT_ASSERT(m1);
 
 //   };
-// 
+//
 //   /**
 //    * An iterator of models.
 //    */
@@ -733,7 +733,7 @@ SProSTest::testSProSModel()
   CPPUNIT_ASSERT(!CDA_objcmp(m1, m2));
 
 //   };
-// 
+//
 //   /**
 //    * A SEDML reference to a particular model.
 //    */
@@ -752,7 +752,7 @@ SProSTest::testSProSModel()
     CPPUNIT_ASSERT(lang == L"CellML");
   }
 
-// 
+//
 //     /** The location of the model. */
 //     attribute wstring source;
   {
@@ -765,7 +765,7 @@ SProSTest::testSProSModel()
     CPPUNIT_ASSERT(src == L"http://example.org/mymodel.xml");
   }
 
-// 
+//
 //     /**
 //      * The set of changes to make to the model.
 //      */
@@ -775,7 +775,7 @@ SProSTest::testSProSModel()
   CPPUNIT_ASSERT(cs);
 //   };
 }
-// 
+//
 //   /**
 //    * A set of simulations.
 //    */
@@ -798,17 +798,17 @@ SProSTest::testSProSSimulationSet()
 //     SimulationIterator iterateSimulations();
   RETURN_INTO_OBJREF(ssi, iface::SProS::SimulationIterator, ss->iterateSimulations());
   CPPUNIT_ASSERT(ssi);
-  
-// 
+
+//
 //     /**
 //      * Finds a simulation in the set by identifier.
 //      */
 //     Simulation getSimulationByIdentifier(in wstring idMatch);
   RETURN_INTO_OBJREF(s1, iface::SProS::Simulation, ss->getSimulationByIdentifier(L"simulation1"));
   CPPUNIT_ASSERT(s1);
-  
+
 //   };
-// 
+//
 //   /**
 //    * An iterator of simulations.
 //    */
@@ -821,9 +821,9 @@ SProSTest::testSProSSimulationSet()
 //     Simulation nextSimulation();
   RETURN_INTO_OBJREF(s2, iface::SProS::Simulation, ssi->nextSimulation());
   CPPUNIT_ASSERT(!CDA_objcmp(s1, s2));
-  
+
 //   };
-// 
+//
 //   /**
 //    * A SEDML simulation.
 //    */
@@ -857,7 +857,7 @@ SProSTest::testSProSSimulationSet()
   CPPUNIT_ASSERT(firstParam != NULL);
   ObjRef<iface::SProS::AlgorithmParameter> nullParam(paramIt->nextAlgorithmParameter());
   CPPUNIT_ASSERT(nullParam == NULL);
-  
+
 //   };
 
 //  /**
@@ -881,11 +881,11 @@ SProSTest::testSProSSimulationSet()
 //    attribute wstring value;
   CPPUNIT_ASSERT(firstParam->value() == L"23");
   firstParam->value(L"24");
-  CPPUNIT_ASSERT(firstParam->value() == L"24");  
+  CPPUNIT_ASSERT(firstParam->value() == L"24");
 
 //  };
 
-// 
+//
 //   /**
 //    * A Uniform Time Course simulation.
 //    */
@@ -903,7 +903,7 @@ SProSTest::testSProSSimulationSet()
   utc->initialTime(1.5);
   CPPUNIT_ASSERT_EQUAL(1.5, utc->initialTime());
 
-// 
+//
 //     /**
 //      * The time of the first point to generate output for.
 //      */
@@ -912,7 +912,7 @@ SProSTest::testSProSSimulationSet()
   utc->outputStartTime(1.5);
   CPPUNIT_ASSERT_EQUAL(1.5, utc->outputStartTime());
 
-// 
+//
 //     /**
 //      * The time of the last point to generate output for.
 //      */
@@ -921,7 +921,7 @@ SProSTest::testSProSSimulationSet()
   utc->outputEndTime(300.0);
   CPPUNIT_ASSERT_EQUAL(300.0, utc->outputEndTime());
 
-// 
+//
 //     /**
 //      * The number of points of output to produce.
 //      */
@@ -931,7 +931,7 @@ SProSTest::testSProSSimulationSet()
   CPPUNIT_ASSERT_EQUAL(500, (int)utc->numberOfPoints());
 }
 //   };
-// 
+//
 //   /**
 //    * A set of SEDML tasks.
 //    */
@@ -955,7 +955,7 @@ SProSTest::testSProSTaskSet()
   RETURN_INTO_OBJREF(ti, iface::SProS::TaskIterator, ts->iterateTasks());
   CPPUNIT_ASSERT(ti != NULL);
 
-// 
+//
 //     /**
 //      * Find a task in the set by the identifier.
 //      */
@@ -967,7 +967,7 @@ SProSTest::testSProSTaskSet()
   CPPUNIT_ASSERT(at2 != NULL);
 
 //   };
-// 
+//
 //   /**
 //    * An iterator of SEDML tasks.
 //    */
@@ -986,7 +986,7 @@ SProSTest::testSProSTaskSet()
   CPPUNIT_ASSERT(ti->nextTask().getPointer() == NULL);
 
 //   };
-// 
+//
 //   /**
 //    * A SEDML task.
 //    */
@@ -997,11 +997,11 @@ SProSTest::testSProSTaskSet()
 //     /**
 //      * The referenced simulation, as an identifier.
 //      */
-//     attribute wstring simulationReferenceIdentifier;  
+//     attribute wstring simulationReferenceIdentifier;
   RETURN_INTO_WSTRING(sri, t1->simulationReferenceIdentifier());
   CPPUNIT_ASSERT(sri == L"simulation1");
-  
-// 
+
+//
 //     /**
 //      * The referenced simulation object.
 //      */
@@ -1017,15 +1017,15 @@ SProSTest::testSProSTaskSet()
   RETURN_INTO_WSTRING(sri3, t1->simulationReferenceIdentifier());
   CPPUNIT_ASSERT(sri3 == L"simulation1");
 
-// 
+//
 //     /**
 //      * The referenced model, as an identifier.
 //      */
 //     attribute wstring modelReferenceIdentifier;
   RETURN_INTO_WSTRING(mri, t1->modelReferenceIdentifier());
   CPPUNIT_ASSERT(mri == L"model1");
-  
-// 
+
+//
 //     /**
 //      * The referenced model object.
 //      */
@@ -1122,9 +1122,9 @@ SProSTest::testSProSTaskSet()
   CPPUNIT_ASSERT(firstSubTask != NULL);
   ObjRef<iface::SProS::SubTask> shouldBeNullSubTask(subTaskIt->nextSubTask());
   CPPUNIT_ASSERT(shouldBeNullSubTask == NULL);
-  
+
   CPPUNIT_ASSERT(firstSubTask->taskIdentifier() == L"task1");
-  
+
 //
 //    /**
 //     * The list of SetValue changes to apply.
@@ -1169,7 +1169,7 @@ SProSTest::testSProSTaskSet()
 
   CPPUNIT_ASSERT(funRangeVar->id() == L"val");
 
-//    
+//
 //    /**
 //     * The MathML math element defining the next value from the range.
 //     */
@@ -1235,7 +1235,7 @@ SProSTest::testSProSTaskSet()
   CPPUNIT_ASSERT_EQUAL(10.0, vecRange->valueAt(4));
   CPPUNIT_ASSERT_EQUAL(100.0, vecRange->valueAt(5));
 
-//    
+//
 //    /**
 //     * Removes the value at the index specified, or does nothing if the index is
 //     * out of range.
@@ -1272,7 +1272,7 @@ SProSTest::testSProSTaskSet()
   CPPUNIT_ASSERT_EQUAL(10.0, uniRange->end());
   uniRange->end(9.5);
   CPPUNIT_ASSERT_EQUAL(9.5, uniRange->end());
-  
+
 //
 //    /**
 //     * The number of points between start and end.
@@ -1409,8 +1409,8 @@ SProSTest::testSProSDataGeneratorSet()
   RETURN_INTO_OBJREF(dgi, iface::SProS::DataGeneratorIterator,
                      dgs->iterateDataGenerators());
   CPPUNIT_ASSERT(dgi);
-  
-// 
+
+//
 //     /**
 //      * Find a DataGenerator by identfier.
 //      */
@@ -1420,7 +1420,7 @@ SProSTest::testSProSDataGeneratorSet()
   CPPUNIT_ASSERT(dg1);
 
 //   };
-// 
+//
 //   /**
 //    * An interator of DataGenerators.
 //    */
@@ -1435,7 +1435,7 @@ SProSTest::testSProSDataGeneratorSet()
                      dgi->nextDataGenerator());
   CPPUNIT_ASSERT(!CDA_objcmp(dg1, dg2));
 //   };
-// 
+//
 //   /**
 //    * A SEDML DataGenerator.
 //    */
@@ -1449,7 +1449,7 @@ SProSTest::testSProSDataGeneratorSet()
   RETURN_INTO_OBJREF(pars, iface::SProS::ParameterSet, dg1->parameters());
   CPPUNIT_ASSERT(pars);
 
-// 
+//
 //     /**
 //      * The set of variables for this DataGenerator.
 //      */
@@ -1458,7 +1458,7 @@ SProSTest::testSProSDataGeneratorSet()
   CPPUNIT_ASSERT(vars);
 }
 //   };
-// 
+//
 //   /**
 //    * A set of Outputs
 //    */
@@ -1480,7 +1480,7 @@ SProSTest::testSProSOutputSet()
 //     OutputIterator iterateOutputs();
   RETURN_INTO_OBJREF(oi, iface::SProS::OutputIterator, os->iterateOutputs());
 
-//     
+//
 //     /**
 //      * Finds an output in this set by identifier.
 //      */
@@ -1488,7 +1488,7 @@ SProSTest::testSProSOutputSet()
   RETURN_INTO_OBJREF(o1, iface::SProS::Output, os->getOutputByIdentifier(L"plot1"));
   CPPUNIT_ASSERT(o1);
 //   };
-// 
+//
 //   /**
 //    * An iterator of Outputs
 //    */
@@ -1501,9 +1501,9 @@ SProSTest::testSProSOutputSet()
 //     Output nextOutput();
   RETURN_INTO_OBJREF(o2, iface::SProS::Output, oi->nextOutput());
   CPPUNIT_ASSERT(!CDA_objcmp(o1, o2));
-  
+
 //   };
-// 
+//
 //   /**
 //    * A SEDML Output.
 //    */
@@ -1511,7 +1511,7 @@ SProSTest::testSProSOutputSet()
 //     : NamedIdentifiedElement
 //   {
 //   };
-// 
+//
 //   /**
 //    * A SEDML 2D Plot output
 //    */
@@ -1527,7 +1527,7 @@ SProSTest::testSProSOutputSet()
 //     readonly attribute CurveSet curves;
   RETURN_INTO_OBJREF(curveSet, iface::SProS::CurveSet, p2d->curves());
 //   };
-// 
+//
 //   /**
 //    * A SEDML 3D Plot output
 //    */
@@ -1546,7 +1546,7 @@ SProSTest::testSProSOutputSet()
   CPPUNIT_ASSERT(ss);
 
 //   };
-// 
+//
 //   /**
 //    * A SEDML Report output
 //    */
@@ -1566,7 +1566,7 @@ SProSTest::testSProSOutputSet()
 //   };
 }
 
-// 
+//
 //   /**
 //    * A set of Changes
 //    */
@@ -1595,11 +1595,11 @@ SProSTest::testSProSChangeSet()
                      cs->iterateChanges());
   CPPUNIT_ASSERT(ci);
 //   };
-// 
+//
 //   /**
 //    * An iterator of Changes
 //    */
-//   
+//
 //   interface ChangeIterator
 //     : BaseIterator
 //   {
@@ -1635,7 +1635,7 @@ SProSTest::testSProSChangeSet()
   RETURN_INTO_OBJREF(c5, iface::SProS::Change, ci->nextChange());
 
 //   };
-// 
+//
 //   /**
 //    * A SEDML ComputeChange style change.
 //    */
@@ -1655,7 +1655,7 @@ SProSTest::testSProSChangeSet()
                      vs->getVariableByIdentifier(L"time"));
   CPPUNIT_ASSERT(v);
 
-// 
+//
 //     /**
 //      * All parameters involved.
 //      */
@@ -1667,7 +1667,7 @@ SProSTest::testSProSChangeSet()
   CPPUNIT_ASSERT(p);
 
 //   };
-// 
+//
 //   /**
 //    * A SEDML attribute change.
 //    */
@@ -1684,7 +1684,7 @@ SProSTest::testSProSChangeSet()
   RETURN_INTO_WSTRING(canv, ca->newValue());
   CPPUNIT_ASSERT(canv == L"bar");
 //   };
-// 
+//
 //   /**
 //    * A SEDML XML addition.
 //    */
@@ -1706,7 +1706,7 @@ SProSTest::testSProSChangeSet()
   CPPUNIT_ASSERT(dtn1d == L"Hello World");
 
 //   };
-// 
+//
 //   /**
 //    * A SEDML XML change.
 //    */
@@ -1716,7 +1716,7 @@ SProSTest::testSProSChangeSet()
   CPPUNIT_ASSERT(cx);
 //   {
 //   };
-// 
+//
 //   /**
 //    * A SEDML XML removal.
 //    */
@@ -1728,7 +1728,7 @@ SProSTest::testSProSChangeSet()
 //   };
 }
 
-// 
+//
 //   /**
 //    * A SEDML Variable.
 //    */
@@ -1745,7 +1745,7 @@ SProSTest::testSProSVariable()
   RETURN_INTO_OBJREF(dg, iface::SProS::DataGenerator, dgi->nextDataGenerator());
   RETURN_INTO_OBJREF(vs, iface::SProS::VariableSet, dg->variables());
 
-// 
+//
 //   /**
 //    * A set of Variables.
 //    */
@@ -1758,7 +1758,7 @@ SProSTest::testSProSVariable()
 //     VariableIterator iterateVariables();
   RETURN_INTO_OBJREF(vi, iface::SProS::VariableIterator, vs->iterateVariables());
 
-// 
+//
 //     /**
 //      * Finds a variable in the set by identifier.
 //      */
@@ -1768,7 +1768,7 @@ SProSTest::testSProSVariable()
   CPPUNIT_ASSERT(v_by_id);
 
 //   };
-// 
+//
 //   /**
 //    * An iterator of Variables.
 //    */
@@ -1810,7 +1810,7 @@ SProSTest::testSProSVariable()
   }
 //   };
 }
-// 
+//
 void
 SProSTest::testSProSParameter()
 {
@@ -1836,14 +1836,14 @@ SProSTest::testSProSParameter()
 //     ParameterIterator iterateParameters();
   RETURN_INTO_OBJREF(pi, iface::SProS::ParameterIterator, ps->iterateParameters());
 
-// 
+//
 //     /**
 //      * Finds a parameter in the set by identifier.
 //      */
 //     Parameter getParameterByIdentifier(in wstring idMatch);
   RETURN_INTO_OBJREF(p1, iface::SProS::Parameter, ps->getParameterByIdentifier(L"param1"));
 //   };
-// 
+//
 //   /**
 //    * An iterator of Parameters.
 //    */
@@ -1857,7 +1857,7 @@ SProSTest::testSProSParameter()
   RETURN_INTO_OBJREF(p2, iface::SProS::Parameter, pi->nextParameter());
   CPPUNIT_ASSERT_EQUAL(0, CDA_objcmp(p1, p2));
 //   };
-// 
+//
 //   /**
 //    * A SEDML Parameter.
 //    */
@@ -1868,7 +1868,7 @@ SProSTest::testSProSParameter()
   CPPUNIT_ASSERT(p1->value() == 1.234);
 //   };
 }
-// 
+//
 
 void
 SProSTest::testSProSCurve()
@@ -1899,7 +1899,7 @@ SProSTest::testSProSCurve()
   CPPUNIT_ASSERT(ci);
 
 //   };
-// 
+//
 //   /**
 //    * Allows SEDML Curves to be iterated.
 //    */
@@ -1912,9 +1912,9 @@ SProSTest::testSProSCurve()
 //     Curve nextCurve();
   RETURN_INTO_OBJREF(c, iface::SProS::Curve, ci->nextCurve());
   CPPUNIT_ASSERT(c);
-  
+
 //   };
-// 
+//
 //   /**
 //    * A SEDML Curve.
 //    */
@@ -1929,7 +1929,7 @@ SProSTest::testSProSCurve()
   c->logX(false);
   CPPUNIT_ASSERT_EQUAL(false, c->logX());
 
-// 
+//
 //     /**
 //      * If true, log-transform the Y axis.
 //      */
@@ -1938,7 +1938,7 @@ SProSTest::testSProSCurve()
   c->logY(false);
   CPPUNIT_ASSERT_EQUAL(false, c->logY());
 
-// 
+//
 //     /**
 //      * The identifier of the X-axis data generator.
 //      */
@@ -1953,7 +1953,7 @@ SProSTest::testSProSCurve()
     CPPUNIT_ASSERT(xdgid == L"X1");
   }
 
-// 
+//
 //     /**
 //      * The identifier of the Y-axis data generator.
 //      */
@@ -1968,7 +1968,7 @@ SProSTest::testSProSCurve()
     CPPUNIT_ASSERT(ydgid == L"M1");
   }
 
-// 
+//
 //     /**
 //      * The X-axis data generator (if it can be found, otherwise
 //      * null).
@@ -1977,8 +1977,8 @@ SProSTest::testSProSCurve()
   RETURN_INTO_OBJREF(x1dg, iface::SProS::DataGenerator, c->xDataGenerator());
   RETURN_INTO_WSTRING(x1dgn, x1dg->name());
   CPPUNIT_ASSERT(x1dgn == L"X1");
-  
-// 
+
+//
 //     /**
 //      * The Y-axis data generator (if it can be found, otherwise
 //      * null).
@@ -2031,7 +2031,7 @@ SProSTest::testSProSSurface()
   CPPUNIT_ASSERT(si);
 
 //   };
-// 
+//
 //   /**
 //    * Allows SEDML Surfaces to be iterated.
 //    */
@@ -2045,7 +2045,7 @@ SProSTest::testSProSSurface()
   RETURN_INTO_OBJREF(s, iface::SProS::Surface, si->nextSurface());
   CPPUNIT_ASSERT(s);
 //   };
-// 
+//
 //   /**
 //    * A SEDML Surface.
 //    */
@@ -2060,7 +2060,7 @@ SProSTest::testSProSSurface()
   s->logZ(false);
   CPPUNIT_ASSERT_EQUAL(false, s->logZ());
 
-// 
+//
 //     /**
 //      * The identifier of the Z-axis data generator.
 //      */
@@ -2077,7 +2077,7 @@ SProSTest::testSProSSurface()
     CPPUNIT_ASSERT(zdgid == L"X1");
   }
 
-// 
+//
 //     /**
 //      * The Z-axis data generator (if it can be found, otherwise
 //      * null).
@@ -2124,7 +2124,7 @@ SProSTest::testSProSDataSet()
 //     DataSetIterator iterateDataSets();
   RETURN_INTO_OBJREF(dsi, iface::SProS::DataSetIterator, dss->iterateDataSets());
 //   };
-// 
+//
 //   /**
 //    * Allows SEDML DataSets to be iterated.
 //    */
@@ -2138,7 +2138,7 @@ SProSTest::testSProSDataSet()
   RETURN_INTO_OBJREF(ds, iface::SProS::DataSet, dsi->nextDataSet());
 //   };
 // };
-// 
+//
 //   /**
 //    * A SEDML DataSet.
 //    */
@@ -2153,13 +2153,13 @@ SProSTest::testSProSDataSet()
   CPPUNIT_ASSERT(dgid1 == L"time");
 
   RETURN_INTO_OBJREF(dgorig, iface::SProS::DataGenerator, ds->dataGen());
-  
+
   ds->dataGeneratorID(L"X1");
 
   RETURN_INTO_WSTRING(dgid2, ds->dataGeneratorID());
   CPPUNIT_ASSERT(dgid2 == L"X1");
 
-// 
+//
 //     /**
 //      * The data generator (if it can be found, otherwise
 //      * null). It must already be in the main set of
@@ -2172,7 +2172,7 @@ SProSTest::testSProSDataSet()
   CPPUNIT_ASSERT(dgx1n == L"X1");
 
 //   };
-// 
+//
 }
 
 void

@@ -47,10 +47,10 @@ CodeGenerationState::CreateCustomGenerator()
   RETURN_INTO_WSTRING(cusesError, mCUSES->modelError());
   if (cusesError != L"")
     throw CodeGenerationError(cusesError);
-  
+
   // Create all computation targets...
   CreateBaseComputationTargets();
-  
+
   // Create all variable edges (this creates derived computation targets as a
   //   side-effect)...
   CreateMathStatements();
@@ -96,10 +96,10 @@ CodeGenerationState::GenerateCustomCode
     RETURN_INTO_WSTRING(cusesError, mCUSES->modelError());
     if (cusesError != L"")
       throw CodeGenerationError(cusesError);
-    
+
     // Create all computation targets...
     CreateBaseComputationTargets();
-    
+
     // Create all variable edges (this creates derived computation targets as a
     //   side-effect)...
     CreateMathStatements();
@@ -119,7 +119,7 @@ CodeGenerationState::GenerateCustomCode
                                  wanted, known, unwanted);
 
     ClassifyAndBuildFloatingForCustom(wanted, known, unwanted);
-    
+
     std::list<System*> systems;
     // Now, find everything computable from the information the user provided.
     DecomposeIntoSystems(known, mFloating, unwanted, systems, true);
@@ -292,7 +292,7 @@ CodeGenerationState::MapExternalTargetsToInternal
     std::map<iface::cellml_services::ComputationTarget*, ptr_tag<CDA_ComputationTarget> >::iterator j =
       oldTargetToNewTarget.find(unsafe_dynamic_cast<CDA_ComputationTarget*>(*i));
     aInUnwanted.insert((*j).second);
-  }  
+  }
 }
 
 
@@ -307,7 +307,7 @@ CodeGenerationState::GenerateCode()
   mCodeInfo->mConstantIndexCount = 0;
   mCodeInfo->mAlgebraicIndexCount = 0;
   mCodeInfo->mConditionVariableCount = 0;
-  
+
   try
   {
     RETURN_INTO_WSTRING(cevError, mCeVAS->modelError());
@@ -316,69 +316,69 @@ CodeGenerationState::GenerateCode()
     RETURN_INTO_WSTRING(cusesError, mCUSES->modelError());
     if (cusesError != L"")
       throw CodeGenerationError(cusesError);
-    
+
     // Create all computation targets...
     CreateBaseComputationTargets();
-    
+
     // Create all variable edges (this creates derived computation targets as a
     //   side-effect)...
     CreateMathStatements();
     if (!mIDAStyle)
       SplitPiecewiseByResetRule();
-    
+
     // Next, set starting classification for all targets...
     FirstPassTargetClassification();
-    
+
     mUnusedMathStatements.insert(mMathStatements.begin(), mMathStatements.end());
-    
+
     // Put all targets into lists based on their classification...
     BuildFloatingAndConstantLists();
-    
+
     std::list<System*> systems;
-    
+
     // Now, determine all constants computable from the current constants...
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems, true);
     CheckInappropriateStateAssignments(systems);
     mUnwanted.clear();
-    
+
     // Assign constant variables for set...
     AllocateVariablesInSet(systems, iface::cellml_services::CONSTANT,
                            mConstantPattern, mNextConstantIndex,
                            mCodeInfo->mConstantIndexCount);
-    
+
     // Allocate temporary names in constants for the rates...
     AllocateRateNamesAsConstants(systems);
-    
+
     std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
     // Build an index from variables required to systems...
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     if (!mIDAStyle)
       CloneNamesIntoDelayedNames();
-    
+
     ProcessModellerSuppliedIVHints();
-    
+
     // Write evaluations for all constants we just worked out how to compute...
     std::wstring tmp;
     mIsConstant = true;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mIsConstant = false;
     mCodeInfo->mInitConstsStr += tmp;
-    
+
     // Also we need to initialise state variable IVs...
     systems.clear();
-    
+
     BuildStateAndConstantLists();
     DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
     CheckInappropriateStateAssignments(systems);
     BuildSystemsByTargetsRequired(systems, sysByTargReq);
     CheckStateVariableIVConstraints(systems);
-    
+
     tmp = L"";
     mIsConstant = true;
     GenerateCodeForSet(tmp, mKnown, systems, sysByTargReq);
     mIsConstant = false;
     mCodeInfo->mInitConstsStr += tmp;
-      
+
     if (mIDAStyle)
       IDAStyleCodeGeneration();
     else
@@ -401,13 +401,13 @@ CodeGenerationState::GenerateCode()
          fei++)
       (*fei)->release_ref();
     mCodeInfo->mFlaggedEquations.clear();
-    
+
     if (oce.mEqn)
     {
       oce.mEqn->add_ref();
       mCodeInfo->mFlaggedEquations.push_back(oce.mEqn);
     }
-    
+
     mCodeInfo->mConstraintLevel = iface::cellml_services::OVERCONSTRAINED;
   }
   catch (UnsuitablyConstrainedError uce)
@@ -418,7 +418,7 @@ CodeGenerationState::GenerateCode()
          fei++)
       (*fei)->release_ref();
     mCodeInfo->mFlaggedEquations.clear();
-    
+
     std::set<ptr_tag<MathStatement> >::iterator uel;
     for (uel = mUnusedMathStatements.begin(); uel != mUnusedMathStatements.end(); uel++)
     {
@@ -432,14 +432,14 @@ CodeGenerationState::GenerateCode()
         mCodeInfo->mFlaggedEquations.push_back(me);
       }
     }
-    
+
     mCodeInfo->mConstraintLevel = iface::cellml_services::UNSUITABLY_CONSTRAINED;
   }
   catch (CodeGenerationError cge)
   {
     mCodeInfo->mErrorMessage = cge.str();
   }
-    
+
   mCodeInfo->add_ref();
   return already_AddRefd<iface::cellml_services::IDACodeInformation>(mCodeInfo);
 }
@@ -469,7 +469,7 @@ CodeGenerationState::TransformPiecewiseStatement(MathStatement* aStatement)
 
         RETURN_INTO_OBJREF(nrhs, iface::dom::Node, eq->mRHS->cloneNode(true));
         QUERY_INTERFACE(eq->mRHS, nrhs, mathml_dom::MathMLElement);
-        
+
         TransformPiecewisesInMaths(eq->mLHS, eq->mContext);
         TransformPiecewisesInMaths(eq->mRHS, eq->mContext);
       }
@@ -668,14 +668,14 @@ CodeGenerationState::IDAStyleCodeGeneration()
   // We now want to identify variables which are currently marked as floating,
   // which can be computed from the constants, states, and VOI. However, we are
   // not aiming to solve systems here...
-  
+
   // Put all targets into lists based on their classification...
   BuildFloatingAndKnownLists(false);
 
   // Now, determine all algebraic variables / rates computable from the
   // known variables (constants, state variables, and bound variable)...
   std::list<System*> algebraicSystems;
-  
+
   DecomposeIntoAssignments(mKnown, mFloating, mUnwanted, algebraicSystems);
   // Assign algebraic variables for set...
   AllocateVariablesInSet(algebraicSystems, iface::cellml_services::ALGEBRAIC,
@@ -686,7 +686,7 @@ CodeGenerationState::IDAStyleCodeGeneration()
   // Build an index from variables required to systems...
   std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
   BuildSystemsByTargetsRequired(algebraicSystems, sysByTargReq);
-  
+
   // Now we need to assign everything else as a pseudo-state variable...
   MarkRemainingVariablesAsPseudoState();
   InitialisePseudoStates(mCodeInfo->mInitConstsStr);
@@ -857,23 +857,23 @@ CodeGenerationState::ODESolverStyleCodeGeneration()
 {
   // Put all targets into lists based on their classification...
   BuildFloatingAndKnownLists();
-  
+
   // Now, determine all algebraic variables / rates computable from the
   // known variables (constants, state variables, and bound variable)...
   std::list<System*> systems;
-  
+
   bool wasError = DecomposeIntoSystems(mKnown, mFloating, mUnwanted, systems);
   CheckInappropriateStateAssignments(systems);
   MakeSystemsForResetRulesAndClearKnown(mResets, systems, mKnown, mFloating);
   std::map<ptr_tag<CDA_ComputationTarget>, System*> sysByTargReq;
   BuildSystemsByTargetsRequired(systems, sysByTargReq);
-  
+
   // Assign algebraic variables for set...
   AllocateVariablesInSet(systems, iface::cellml_services::ALGEBRAIC,
                          mAlgebraicVariableNamePattern,
                          mNextAlgebraicVariableIndex,
                          mCodeInfo->mAlgebraicIndexCount);
-  
+
   if (wasError)
   {
     if (mUnusedMathStatements.size() != 0)
@@ -893,18 +893,18 @@ CodeGenerationState::ODESolverStyleCodeGeneration()
     else
       throw UnderconstrainedError();
   }
-  
+
   // Restore the saved rates...
   RestoreSavedRates(mCodeInfo->mRatesStr);
-  
+
   // Write evaluations for all rates & algebraic variables in reachabletargets
   GenerateCodeForSetByType(mKnown, systems, sysByTargReq);
-  
+
   // Also cascade state variables to rate variables where they are the same
   // (e.g. if d^2y/dx^2 = constant then dy/dx is a state variable due to the
   //  above equation, but also it is a rate for y).
   GenerateStateToRateCascades();
-  
+
   GenerateInfDelayUpdates();
 }
 
@@ -1248,15 +1248,15 @@ CodeGenerationState::SplitPiecewiseByResetRule()
         RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
         if (dv == NULL)
           break;
-        
+
         if (dv->degree() == 0)
           continue;
         if (!dv->appearedUndelayed())
           continue;
-        
+
         RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                            dv->variable());
-        
+
         std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
           ::iterator  mi = mTargetsBySource.find(cv);
         undelayed_derivs.insert(GetTargetOfDegree((*mi).second, dv->degree()));
@@ -1288,7 +1288,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
         RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable, dvi->nextDegreeVariable());
         if (dv == NULL)
           break;
-        
+
         RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                            dv->variable());
         std::string objid(cv->objid());
@@ -1385,7 +1385,7 @@ CodeGenerationState::SplitPiecewiseByResetRule()
                              doc->createElementNS(MATHML_NS, L"not"));
           apn->appendChild(notel)->release_ref();
           apn->appendChild(otherwiseExclusion)->release_ref();
-          
+
           QUERY_INTERFACE((*j).second->mMaths, apn, mathml_dom::MathMLElement);
         }
       }
@@ -1477,7 +1477,7 @@ CodeGenerationState::ProcessModellerSuppliedIVHints()
 
     RETURN_INTO_OBJREF(hintsn, iface::rdf_api::Node, t->object());
     DECLARE_QUERY_INTERFACE_OBJREF(hintsr, hintsn, rdf_api::Resource);
-    
+
     uint32_t degree = 0;
     try
     {
@@ -1507,7 +1507,7 @@ CodeGenerationState::ProcessModellerSuppliedIVHints()
 
       RETURN_INTO_WSTRING(ivlf, ivl->lexicalForm());
       double iv = wcstod(ivlf.c_str(), NULL);
-      
+
       RETURN_INTO_OBJREF(vart, iface::rdf_api::Triple,
                          hintsr->getTripleOutOfByPredicate(variabler));
       RETURN_INTO_OBJREF(varn, iface::rdf_api::Node,
@@ -1609,7 +1609,7 @@ CodeGenerationState::ContextError
 )
 {
   std::wstring msg(details);
-  
+
   DECLARE_QUERY_INTERFACE_OBJREF(el, context1, dom::Element);
 
   while (el != NULL)
@@ -1741,7 +1741,7 @@ CodeGenerationState::CreateMathStatements()
     RETURN_INTO_OBJREF(ml, iface::cellml_api::MathList, c->math());
     RETURN_INTO_OBJREF(mei, iface::cellml_api::MathMLElementIterator,
                        ml->iterate());
-    
+
     while (true)
     {
       RETURN_INTO_OBJREF(me, iface::mathml_dom::MathMLElement,
@@ -1751,26 +1751,26 @@ CodeGenerationState::CreateMathStatements()
 
       DECLARE_QUERY_INTERFACE_OBJREF(mme, me,
                                      mathml_dom::MathMLMathElement);
-      
+
       if (mme == NULL)
         ContextError(L"Unexpected MathML element; was expecting a math element",
                      me, c);
-      
+
       RETURN_INTO_OBJREF(nl, iface::dom::NodeList, mme->childNodes());
       uint32_t l = nl->length(), i;
       for (i = 0; i < l; i++)
       {
         RETURN_INTO_OBJREF(n, iface::dom::Node, nl->item(i));
-        
+
         if (n == NULL)
           break;
-        
+
         // If it isn't even MathML, just ignore it...
         DECLARE_QUERY_INTERFACE_OBJREF(mn, n, mathml_dom::MathMLElement);
         if (mn == NULL)
           continue;
-        
-        std::auto_ptr<MathMLMathStatement> mms;
+
+        std::unique_ptr<MathMLMathStatement> mms;
 
         // See if it is a piecewise...
         DECLARE_QUERY_INTERFACE_OBJREF(mpw, n, mathml_dom::MathMLPiecewiseElement);
@@ -1808,7 +1808,6 @@ CodeGenerationState::CreateMathStatements()
             DECLARE_QUERY_INTERFACE_OBJREF(mae, val, mathml_dom::MathMLApplyElement);
             if (mae == NULL)
             {
-              delete pw;
               delete eq;
               ContextError(L"Unexpected MathML element; was expecting an apply",
                            mn, c);
@@ -1822,28 +1821,26 @@ CodeGenerationState::CreateMathStatements()
             }
             catch (...)
             {
-              delete pw;
               delete eq;
               ContextError(L"Unexpected MathML apply element with no MathML children",
                            mae, c);
             }
-            
+
             RETURN_INTO_WSTRING(opn, op->localName());
             if (opn != L"eq")
               ContextError(L"Unexpected MathML element; was expecting an eq",
                            op, c);
-            
+
             eq->mContext = c;
             eq->mMaths = mae;
-            
+
             if (mae->nArguments() != 3)
             {
-              delete pw;
               delete eq;
               ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
                            mae, c);
             }
-          
+
             eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
               (mae->getArgument(2));
             eq->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
@@ -1892,12 +1889,9 @@ CodeGenerationState::CreateMathStatements()
             SampleFromDistribution* sfd = new SampleFromDistribution();
             mms.reset(sfd);
             if (mae->nArguments() != 3)
-            {
-              delete sfd;
               ContextError(L"uncertainParameterWithDistribution takes 2 arguments, the "
                            L"uncertain parameter and the distribution.",
                            mae, c);
-            }
 
             RETURN_INTO_OBJREF(targArg, iface::mathml_dom::MathMLElement, mae->getArgument(2));
             DECLARE_QUERY_INTERFACE_OBJREF(ve, targArg, mathml_dom::MathMLVectorElement);
@@ -1924,17 +1918,17 @@ CodeGenerationState::CreateMathStatements()
                                                      NULL, NULL, 0));
             RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
                                mr->iterateInvolvedVariablesByDegree());
-            
+
             while (true)
             {
               RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
                                  dvi->nextDegreeVariable());
               if (dv == NULL)
                 break;
-              
+
               RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                                  dv->variable());
-    
+
               std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
                 ::iterator  mi = mTargetsBySource.find(cv);
               if (mi != mTargetsBySource.end())
@@ -1951,17 +1945,14 @@ CodeGenerationState::CreateMathStatements()
             if (opn != L"eq")
               ContextError(L"Unexpected MathML element; was expecting an eq",
                            op, c);
-            
+
             ptr_tag<Equation> eq(new Equation());
             mms.reset(eq);
-            
+
             if (mae->nArguments() != 3)
-            {
-              delete eq;
               ContextError(L"Only two-way equalities are supported (a=b not a=b=...)",
                            mae, c);
-            }
-          
+
             eq->mLHS = already_AddRefd<iface::mathml_dom::MathMLElement>
               (mae->getArgument(2));
             eq->mRHS = already_AddRefd<iface::mathml_dom::MathMLElement>
@@ -1993,7 +1984,7 @@ CodeGenerationState::SetupMathMLMathStatement
   RETURN_INTO_OBJREF(mr, iface::cellml_services::MaLaESResult,
                      mTransform->transform(mCeVAS, mCUSES, mAnnoSet, mn, c,
                                            NULL, NULL, 0));
-  
+
   RETURN_INTO_WSTRING(compErr, mr->compileErrors());
   if (compErr != L"")
     ContextError(compErr.c_str(), mn, c);
@@ -2018,7 +2009,7 @@ CodeGenerationState::SetupMathMLMathStatement
 
   bvi = already_AddRefd<iface::cellml_api::CellMLVariableIterator>
     (mr->iterateLocallyBoundVariables());
-  
+
   while (true)
   {
     RETURN_INTO_OBJREF(bv, iface::cellml_api::CellMLVariable,
@@ -2034,20 +2025,20 @@ CodeGenerationState::SetupMathMLMathStatement
         mLocallyBoundTargs.insert((*mi).second);
     }
   }
-  
+
   RETURN_INTO_OBJREF(dvi, iface::cellml_services::DegreeVariableIterator,
                      mr->iterateInvolvedVariablesByDegree());
-  
+
   while (true)
   {
     RETURN_INTO_OBJREF(dv, iface::cellml_services::DegreeVariable,
                        dvi->nextDegreeVariable());
     if (dv == NULL)
       break;
-    
+
     RETURN_INTO_OBJREF(cv, iface::cellml_api::CellMLVariable,
                        dv->variable());
-    
+
     std::map<iface::cellml_api::CellMLVariable*, ptr_tag<CDA_ComputationTarget> >
       ::iterator  mi = mTargetsBySource.find(cv);
     if (mi != mTargetsBySource.end())
@@ -2060,7 +2051,7 @@ CodeGenerationState::SetupMathMLMathStatement
       {
         mms->mDelayedTargets.push_back(targ);
         mms->mInvolvesDelays = true;
-        
+
         if (!mDelayedTargs.count(targ))
           mDelayedTargs.insert(targ);
       }
@@ -2343,7 +2334,7 @@ CodeGenerationState::AllocateVariablesInSet
 )
 {
   std::wstring str;
-  
+
   std::list<System*>::iterator i;
   std::set<ptr_tag<CDA_ComputationTarget> >::iterator j;
 
@@ -2375,13 +2366,13 @@ CodeGenerationState::AllocateRateNamesAsConstants(std::list<System*>& aSystems)
     {
       if ((*j)->degree() == 0)
         continue;
-      
+
       // Backup the old name...
       uint32_t oldIndex = (*j)->assignedIndex();
       RETURN_INTO_WSTRING(oldName, (*j)->name());
       mRateNameBackup.push_back(std::pair<ptr_tag<CDA_ComputationTarget>, std::wstring>
                                 (*j, oldName));
-      
+
       // We can't use AllocateConstant / AllocateVariable here because we are
       // creating an alias not the original name.
       uint32_t index = mCodeInfo->mConstantIndexCount++;
@@ -2448,7 +2439,7 @@ CodeGenerationState::CloneNamesIntoDelayedNames()
 {
   for (std::list<ptr_tag<CDA_ComputationTarget> >::iterator i =
          mCodeInfo->mTargets.begin(); i != mCodeInfo->mTargets.end(); i++)
-  {    
+  {
     (*i)->setDelayedName(L"");
   }
 }
@@ -2666,9 +2657,9 @@ CodeGenerationState::DecomposeIntoAssignments
         System* sys = new System(mss, knowns, unknowns);
         mSystems.push_back(sys);
         aSystems.push_back(sys);
-        
+
         mUnusedMathStatements.erase(i);
-        progress = true;        
+        progress = true;
         continue;
       }
 
@@ -2829,7 +2820,7 @@ CodeGenerationState::DecomposeIntoSystems
         assert(linkWith->findRoot() == (*j)->findRoot());
       }
     }
-    
+
     typedef std::pair<std::set<ptr_tag<MathStatement> >, std::set<ptr_tag<CDA_ComputationTarget> > >
       MathStatCTSetPair ;
     typedef std::pair<ptr_tag<CDA_ComputationTarget>, MathStatCTSetPair>
@@ -3049,7 +3040,7 @@ CodeGenerationState::RecursivelyTestSmallSystem
             targets.insert(*k);
           }
         }
-      
+
       uint32_t nEqns = ComputeSystemSize(aSystem), nUnknowns = targets.size();
 
 #if 0
@@ -3129,7 +3120,7 @@ CodeGenerationState::FindBigSystem
     return true;
 
   bool didWork;
-  
+
   do
   {
     didWork = false;
@@ -3180,7 +3171,7 @@ CodeGenerationState::FindBigSystem
        k != aUseVars.end();
        k++)
     aCandidates.erase(*k);
-  
+
   for (std::set<ptr_tag<MathStatement> >::iterator k(aUseMathStatements.begin());
        k != aUseMathStatements.end(); k++)
     mUnusedMathStatements.erase(*k);
@@ -3307,7 +3298,7 @@ CodeGenerationState::GenerateCodeForSet
 
     // Find everything we don't know but want to...
     std::list<System*> subtargets;
-    
+
     for (std::set<ptr_tag<CDA_ComputationTarget> >::iterator j = sys->mKnowns.begin();
          j != sys->mKnowns.end();
          j++)
@@ -3668,11 +3659,11 @@ TryMakeAPiecewiseConditionIntoRoot(iface::mathml_dom::MathMLElement* aInput,
   ObjRef<iface::mathml_dom::MathMLApplyElement> ap(QueryInterface(aInput));
   if (ap == NULL)
     return;
-  
+
   ObjRef<iface::mathml_dom::MathMLPredefinedSymbol> opel(QueryInterface(ap->_cxx_operator()));
   if (opel == NULL)
     return;
-  
+
   std::wstring sn = opel->symbolName();
   if (sn == L"and" || sn == L"or")
   {
@@ -3735,7 +3726,7 @@ CodeGenerationState::GenerateCodeForSampleFromDist(std::wstring& aCodeTo, Sample
     size_t pos = 0;
     while ((pos = t.find(L"<ID>", pos)) != std::wstring::npos)
       t.replace(pos, 4, buf);
-    
+
     if (mae->nArguments() != 2)
       ContextError(L"distributionFromDensity descriptions should have exactly one argument, the probability density function.",
                    mae, aSFD->mContext);
@@ -4117,7 +4108,7 @@ CodeGenerationState::GenerateCodeForEquation
       (
        mr->iterateInvolvedVariablesByDegree()
       );
-    
+
     bool match = false;
     while (true)
     {
@@ -4278,7 +4269,7 @@ CodeGenerationState::GenerateSolveCode
     RETURN_INTO_WSTRING(s, mr1->getSupplementary(i));
     mCodeInfo->mFuncsStr += s;
   }
-  
+
   l = mr2->supplementariesLength();
   for (i = 0; i < l; i++)
   {

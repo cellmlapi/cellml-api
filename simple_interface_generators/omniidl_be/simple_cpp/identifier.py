@@ -54,13 +54,13 @@ class Annotator(idlvisitor.AstVisitor):
         """Visit all the declarations in an AST"""
         for n in node.declarations():
             n.accept(self)
-    
+
     def visitModule(self, node):
         """Visit all the definitions in a module."""
         AnnotateByRepoID(node)
         for n in node.definitions():
             n.accept(self)
-        
+
     def visitInterface(self, node):
         AnnotateByRepoID(node)
         for n in node.contents():
@@ -68,17 +68,17 @@ class Annotator(idlvisitor.AstVisitor):
 
     def visitForward(self, node):
         AnnotateByRepoID(node)
-    
+
     def visitConst(self, node):
         AnnotateByRepoID(node)
-    
+
     def visitDeclarator(self, node):
         AnnotateByRepoID(node)
-    
+
     def visitTypedef(self, node):
         for n in node.declarators():
             n.accept(self)
-    
+
     def visitMember(self, node):
         for n in node.declarators():
             n.accept(self)
@@ -87,73 +87,73 @@ class Annotator(idlvisitor.AstVisitor):
         AnnotateByRepoID(node)
         for n in node.members():
             n.accept(self)
-    
+
     def visitStructForward(self, node):
         AnnotateByRepoID(node)
-    
+
     def visitException(self, node):
         AnnotateByRepoID(node)
         for n in node.members():
             n.accept(self)
-    
+
     def visitCaseLabel(self, node):
         return
-    
+
     def visitUnionCase(self, node):
         pass # not called.
-    
+
     def visitUnion(self, node):
         raise "Unions are not supported."
         # AnnotateByRepoID(node)
         # for n in node.cases():
         #    n.accept(self)
-    
+
     def visitUnionForward(self, node):
         AnnotateByRepoID(node)
 
     def visitEnumerator(self, node):
         AnnotateByRepoID(node, 1)
-    
+
     def visitEnum(self, node):
         AnnotateByRepoID(node)
         for n in node.enumerators():
             n.accept(self)
-    
+
     def visitAttribute(self, node):
         for n in node.declarators():
             n.accept(self)
-    
+
     def visitParameter(self, node):
         node.simplename = EscapeCXX(node.identifier())
-    
+
     def visitOperation(self, node):
         AnnotateByRepoID(node)
         for n in node.parameters():
             n.accept(self)
-    
+
     def visitNative(self, node):
         raise "Native is not supported."
-    
+
     def visitStateMember(self, node):
         for n in node.declarators():
             n.accept(self)
-    
+
     def visitFactory(self, node):
         for n in node.parameters():
             n.accept(self)
-    
+
     def visitValueForward(self, node):
         raise "valuetypes are not supported."
-        
+
     def visitValueBox(self, node):
         raise "valuetypes are not supported."
-    
+
     def visitValueAbs(self, node):
         raise "valuetypes are not supported."
-    
+
     def visitValue(self, node):
         raise "valuetypes are not supported."
-    
+
     def visitAST(self, node):
         for n in node.declarations():
             n.accept(self)

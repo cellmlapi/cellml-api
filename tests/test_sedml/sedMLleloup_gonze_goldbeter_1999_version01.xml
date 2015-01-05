@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <sedML  level="1" version="1" xmlns="http://sed-ml.org/" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:cellml="http://www.cellml.org/cellml/1.1#" xmlns:cmeta="http://www.cellml.org/metadata/1.1#">
-  <notes><p xmlns="http://www.w3.org/1999/xhtml">Comparing Limit Cycles and strange attractors for oscillation in Drosophila</p></notes> 
+  <notes><p xmlns="http://www.w3.org/1999/xhtml">Comparing Limit Cycles and strange attractors for oscillation in Drosophila</p></notes>
   <listOfSimulations>
     <uniformTimeCourse id="simulation1"
      initialTime="0" outputStartTime="0" outputEndTime="180" numberOfPoints="1000" >
@@ -13,7 +13,7 @@
         <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='MP']/cellml:variable[@name='vsP']/@initial_value" newValue="1"/>
         <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='MP']/cellml:variable[@name='vmP']/@initial_value" newValue="0.7"/>
         <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='P2']/cellml:variable[@name='vdP']/@initial_value" newValue="2"/>
-        <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='T2']/cellml:variable[@name='vdT']/@initial_value" newValue="2"/>  
+        <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='T2']/cellml:variable[@name='vdT']/@initial_value" newValue="2"/>
         <changeAttribute target="/cellml:model/cellml:component[@name='parameters']/cellml:variable[@name='k1']/@initial_value" newValue="0.6"/>
         <changeAttribute target="/cellml:model/cellml:component[@name='parameters']/cellml:variable[@name='K4P']/@initial_value" newValue="1"/>
         <changeAttribute target="/cellml:model/cellml:component[@name='parameters']/cellml:variable[@name='K4T']/@initial_value" newValue="1"/>
@@ -22,11 +22,11 @@
     <model id="model2" name="Circadian Chaos" language="urn:sedml:language:cellml" source="model1">
       <listOfChanges>
         <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='MT']/cellml:variable[@name='vmT']/@initial_value" newValue="0.28"/>
-        <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='T2']/cellml:variable[@name='vdT']/@initial_value" newValue="4.8"/>        
+        <changeAttribute target="/cellml:model/cellml:component[@cmeta:id='T2']/cellml:variable[@name='vdT']/@initial_value" newValue="4.8"/>
       </listOfChanges>
     </model>
   </listOfModels>
- 
+
   <listOfTasks>
     <task id="task1" name="Limit Cycle" modelReference="model1" simulationReference="simulation1"/>
     <task id="task2" name="Strange attractors" modelReference="model2" simulationReference="simulation1"/>
@@ -55,11 +55,11 @@
         </math:apply>
       </math:math>
     </dataGenerator>
-    
+
     <dataGenerator id="tim2" name="tim mRNA (changed parameters)">
       <listOfVariables>
         <variable id="v2" taskReference="task2" target="/cellml:model/cellml:component[@cmeta:id='MT']/cellml:variable[@cmeta:id='MT_MT']" />
-      </listOfVariables>  
+      </listOfVariables>
         <math:math>
           <math:apply>
             <math:plus />
@@ -67,7 +67,7 @@
           </math:apply>
         </math:math>
     </dataGenerator>
-    
+
     <dataGenerator id="per_tim2" name="nuclear PER-TIM complex">
       <listOfVariables>
         <variable id="v3" taskReference="task2" target="/cellml:model/cellml:component[@cmeta:id='CN']/cellml:variable[@cmeta:id='CN_CN']" />
@@ -80,7 +80,7 @@
       </math:math>
     </dataGenerator>
   </listOfDataGenerators>
-  
+
   <listOfOutputs>
     <plot2D id="plot1" name="tim mRNA with Oscillation and Chaos">
       <listOfCurves>

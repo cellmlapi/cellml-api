@@ -354,7 +354,7 @@ CDA_SomeSet::findOrCreateListElement()
   iface::dom::Element* el = tryFindListElement();
   if (el != NULL)
     return el;
-  
+
   RETURN_INTO_OBJREF(doc, iface::dom::Document,
                      mParentEl->ownerDocument());
   RETURN_INTO_OBJREF(newel, iface::dom::Element,
@@ -586,7 +586,7 @@ CDA_SomeSet::wrapOrFindElement(CDA_SProSBase* aBase, iface::dom::Element* aEl)
   // Is it cached?
   std::string ids(aEl->objid());
 
-  std::map<std::string, CDA_SProSBase*>::iterator i = 
+  std::map<std::string, CDA_SProSBase*>::iterator i =
     mElCache.find(ids);
   if (i != mElCache.end())
   {
@@ -713,7 +713,7 @@ CDA_SProSDOMIteratorBase::fetchNextElement()
       }
       nodeHit = already_AddRefd<iface::dom::Node>(nodeHit->nextSibling());
     }
-    
+
     return mPrevElement.returnNewReference();
 }
 
@@ -794,11 +794,11 @@ handleEvent(iface::events::Event* evt)
       isRemoval = true;
     else if (et == L"DOMNodeInserted")
       isInsertion = true;
-    
+
     // We only care about insertions and removals...
     if (!isRemoval && !isInsertion)
       return;
-    
+
     if (isRemoval)
     {
       if (evt->eventPhase() != iface::events::Event::AT_TARGET)
@@ -898,10 +898,10 @@ handleEvent(iface::events::Event* evt)
       if (dynamic_cast<void*>(rn.getPointer()) !=
           dynamic_cast<void*>(static_cast<iface::dom::Element*>(mIterator->mParentElement)))
         return;
-      
+
       RETURN_INTO_OBJREF(tn, iface::events::EventTarget, mevt->target());
       DECLARE_QUERY_INTERFACE_OBJREF(te, tn, dom::Element);
-      
+
       if (te == NULL)
         return;
 
@@ -924,7 +924,7 @@ handleEvent(iface::events::Event* evt)
                (curE && ( /* If curN and curE are both NULL, we are done. */
                          /* If we reached the end before the target, it is out of
                           * range. */
-                         CDA_objcmp(curE, mIterator->mNextElement) && 
+                         CDA_objcmp(curE, mIterator->mNextElement) &&
                          /* If we reached the target first,
                           * it is in range.*/
                          CDA_objcmp(curE, te)
@@ -958,7 +958,7 @@ handleEvent(iface::events::Event* evt)
           curN = already_AddRefd<iface::dom::Node>(curN->nextSibling());
           QUERY_INTERFACE(curE, curN, dom::Element);
         }
-        
+
         if (curE == NULL)
           return;
       }
@@ -2534,7 +2534,7 @@ CDA_SProSFunctionalRange::findOrCreateFunction()
     if (el->namespaceURI() != SEDML_NS ||
         el->localName() != L"function")
       continue;
-    
+
     return el.returnNewReference();
   }
 

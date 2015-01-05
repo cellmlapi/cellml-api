@@ -253,7 +253,7 @@ public:
     : mPtr(aPtr)
   {
   }
-  
+
   operator T&()
   {
     return *mPtr;
@@ -384,7 +384,7 @@ private:
 
     if (mHasInitial)
       d[0] = *mInitial;
-  
+
     return d;
   }
 
@@ -528,7 +528,7 @@ static int isinf(double value)
 };
 
 
-/* 
+/*
    The following license applies to the original Mersenne Twister code. My
    modifications are Copyright (C) 2006-2012, and are under the same license as the
    rest of the CellML API code.
@@ -553,8 +553,8 @@ static int isinf(double value)
         notice, this list of conditions and the following disclaimer in the
         documentation and/or other materials provided with the distribution.
 
-     3. The names of its contributors may not be used to endorse or promote 
-        products derived from this software without specific prior written 
+     3. The names of its contributors may not be used to endorse or promote
+        products derived from this software without specific prior written
         permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -601,7 +601,7 @@ public:
     p += 2;
     *p++ = GetCurrentProcessId();
     *p++ = GetCurrentThreadId();
-#endif  
+#endif
     reseed((unsigned long*)key, p - (unsigned long*)key);
   }
 
@@ -646,7 +646,7 @@ public:
   {
     mt[0] = s & 0xffffffffUL;
     for (mti=1; mti < N; mti++) {
-        mt[mti] = 
+        mt[mti] =
 	    (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
         /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
         /* In the previous versions, MSBs of the seed affect   */
@@ -679,7 +679,7 @@ public:
 
         mti = 0;
     }
-  
+
     y = mt[mti++];
 
     /* Tempering */
@@ -733,7 +733,7 @@ public:
   /*
    * Samples a random double so that all finite doubles are equally likely
    * (as doubles are floating point, the distribution is more dense close to
-   * zero and less dense further from it). 
+   * zero and less dense further from it).
    */
   double randomLogUniform()
   {
@@ -755,7 +755,7 @@ public:
 
 private:
   static const int N = 624, M = 397;
-  static const unsigned long 
+  static const unsigned long
     MATRIX_A = 0x9908b0dfUL,   /* constant vector a */
     UPPER_MASK = 0x80000000UL, /* most significant w-r bits */
     LOWER_MASK = 0x7fffffffUL; /* least significant r bits */

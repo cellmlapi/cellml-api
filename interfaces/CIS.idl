@@ -96,12 +96,12 @@ module cellml_services
                             in double maxStep);
 
     /**
-     * Sets a tabulation interval. 
+     * Sets a tabulation interval.
      * @param tabulationStepSize The tabulation step size. If set to zero, it
      *                    will be internally set to the final value of the
      *                    bound variable.
      * @param strictTabulation If true, only tabulate at tabulation points.
-     *                         Otherwise, at least ensure that there are data 
+     *                         Otherwise, at least ensure that there are data
      *                         points at the tabulation points.
      **/
      void setTabulationStepControl(in double tabulationStepSize, in boolean strictTabulation);
@@ -163,7 +163,7 @@ module cellml_services
      * Requests that the integration be paused; no further results will be
      * delivered until resume() is called. It is the responsibility of the
      * caller to ensure that resume() is called for every call to pause(),
-     * even if 
+     * even if
      * operation other than resume() on the CellMLIntegrationRun after
      * pause has been called.
      */

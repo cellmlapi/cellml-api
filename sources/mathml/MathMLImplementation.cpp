@@ -104,7 +104,7 @@ IsQualifierName(const wchar_t* str)
       }
     }
     else if (!wcscmp(L"interval", str))
-      return true;      
+      return true;
   }
   else if (str[0] == 'm')
   {
@@ -1795,7 +1795,7 @@ CDA_MathMLPredefinedSymbol::encoding()
     ->getAttributeNS(NULL_NS, L"encoding");
 }
 
-void 
+void
 CDA_MathMLPredefinedSymbol::encoding(const std::wstring& attr)
   throw(std::exception&)
 {
@@ -1953,7 +1953,7 @@ CDA_MathMLIntervalElement::start(iface::mathml_dom::MathMLContentElement* attr)
     appendChild(n)->release_ref();
     return;
   }
-  
+
   replaceChild(attr, oldStart)->release_ref();
   if (!oldEnd)
   {
@@ -1976,7 +1976,7 @@ CDA_MathMLIntervalElement::end()
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
     iface::mathml_dom::MathMLContentElement* ce =
       dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n.getPointer());
-    
+
     if (ce == NULL)
     {
       continue;
@@ -1989,7 +1989,7 @@ CDA_MathMLIntervalElement::end()
     else
       firstCandidate = ce;
   }
-  
+
   if (firstCandidate != NULL)
   {
     firstCandidate->add_ref();
@@ -2583,7 +2583,7 @@ CDA_MathMLMatrixrowElement::nEntries()
   CDA_MathMLFilteredNodeList mfnl(this,
                                   CDA_MathMLFilteredNodeList::
                                   FILTER_CONTENT);
-  return mfnl.length();  
+  return mfnl.length();
 }
 
 already_AddRefd<iface::mathml_dom::MathMLContentElement>

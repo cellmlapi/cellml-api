@@ -136,7 +136,7 @@ class CDA_ModelNode
 public:
   CDA_ModelNode(iface::cellml_api::Model* aModel);
   ~CDA_ModelNode();
-  
+
   void add_ref() throw();
   void release_ref() throw();
 

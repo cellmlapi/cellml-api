@@ -73,7 +73,7 @@ URITest::testURIResolve()
   TEST_RESOLVE(L"../../", L"http://a/");
   TEST_RESOLVE(L"../../g", L"http://a/g");
   TEST_RESOLVE(L"", L"http://a/b/c/d;p?q");
-  
+
 }
 
 void

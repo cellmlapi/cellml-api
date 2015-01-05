@@ -72,7 +72,7 @@ public:
 
       std::map<std::wstring, std::vector<double> >::iterator
         it(mResults.find(dgid));
-      
+
       if (it == mResults.end())
       {
         std::vector<double> l;

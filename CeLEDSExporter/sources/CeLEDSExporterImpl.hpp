@@ -26,9 +26,9 @@ public:
 
 private:
   // get CCGS code generator, setting patterns using the XML language definition file
-  already_AddRefd<iface::cellml_services::CodeGenerator> getExplicitCodeGenerator() 
+  already_AddRefd<iface::cellml_services::CodeGenerator> getExplicitCodeGenerator()
     throw(std::exception&);
-  already_AddRefd<iface::cellml_services::IDACodeGenerator> getImplicitCodeGenerator() 
+  already_AddRefd<iface::cellml_services::IDACodeGenerator> getImplicitCodeGenerator()
     throw(std::exception&);
   void transferCommonCodeAttributes(iface::cellml_services::CodeGenerator* aCG);
   int generateCodeCommonHeader(std::wstring&,
@@ -40,7 +40,7 @@ private:
   int generateCodeCommonFooter(std::wstring&,
                                iface::cellml_services::CodeInformation*);
 
-  // get a section of code from dictionary, replacing 
+  // get a section of code from dictionary, replacing
   // occurances of solver parameters where required
   std::wstring getCodeSection(const std::wstring& name)
     throw(std::exception&);

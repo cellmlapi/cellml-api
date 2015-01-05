@@ -9,7 +9,7 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id: test002.nt,v 1.1 2002/04/29 09:46:57 dbeckett2 Exp $
-# 
+#
 #####################################################################
 <http://example.org/#Andr%C3%A9> <http://example.org/#owes> "2000" .
 

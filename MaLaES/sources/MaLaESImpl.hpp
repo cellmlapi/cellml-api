@@ -141,7 +141,7 @@ public:
   already_AddRefd<iface::cellml_services::DegreeVariableIterator>
     iterateInvolvedVariablesByDegree() throw(std::exception&);
   bool involvesExternalCode() throw(std::exception&);
-  
+
   void finishTransform();
 
   double startConversionMode(iface::mathml_dom::MathMLCiElement* aCI,
@@ -204,7 +204,7 @@ public:
                    std::vector<iface::mathml_dom::MathMLElement*>& aArgs,
                    std::vector<iface::mathml_dom::MathMLBvarElement*>& aBvars,
                    const MaLaESQualifiers& mq);
-  
+
   double parseConstant(iface::mathml_dom::MathMLCnElement* cnEl);
   void appendConstant(iface::mathml_dom::MathMLCnElement* cnEl);
   void appendPassthrough(iface::mathml_dom::MathMLElement* csymEl);
@@ -233,7 +233,7 @@ private:
   std::set<DegreeVariableInformation> mInvolvedDegSet;
   CleanupSet<iface::cellml_api::CellMLVariable*> mInvolved;
   std::vector<DegreeVariableInformation> mInvolvedDeg;
-  
+
   std::set<iface::cellml_api::CellMLVariable*, XPCOMComparator> mBoundVars, mLocallyBoundVars;
   std::map<iface::cellml_api::CellMLVariable*, uint32_t> mHighestDegree;
   ObjRef<iface::cellml_api::CellMLVariable> processingVariable;
@@ -253,7 +253,7 @@ public:
   CDA_IMPL_ID;
   CDA_IMPL_REFCOUNT;
   CDA_IMPL_QI1(cellml_services::MaLaESTransform);
-  
+
   CDAMaLaESTransform(const std::wstring& aSpec);
   ~CDAMaLaESTransform();
 

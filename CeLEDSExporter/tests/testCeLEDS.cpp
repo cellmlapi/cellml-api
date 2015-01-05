@@ -17,7 +17,7 @@
 int
 main(int argc, char** argv)
 {
-  // Get the URLs from which to load the model and the 
+  // Get the URLs from which to load the model and the
   // the language definition file
   if (argc != 3)
   {

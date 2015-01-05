@@ -75,7 +75,7 @@ def isTypeVariable(type):
 def typeToCORBACXX(itype, direction):
     type = itype.unalias()
     kind = type.kind()
-    
+
     # Arrays need special treatment...
     if (kind == idltype.tk_alias):
         if kind == idltype.tk_void:
@@ -206,13 +206,13 @@ def typeToCORBACXX(itype, direction):
         return applyMapping(basic_map[type], argmapping)
 
     # See if it is a string
-    
+
     ra = '::'
-    
+
     extrastar = ''
     if is_out:
         extrastar = '*'
-    
+
     tk = type.kind()
     if tk == idltype.tk_null or tk == idltype.tk_void:
         if is_out:

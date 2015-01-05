@@ -9,6 +9,6 @@
 # <http://www.w3.org/Consortium/Legal/copyright-software.html>
 #
 # $Id: test001.nt,v 1.2 2002/11/22 11:20:52 jgrant Exp $
-# 
+#
 #####################################################################
 <http://example.org/node> <http://example.org/property> "chat"^^<http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral> .

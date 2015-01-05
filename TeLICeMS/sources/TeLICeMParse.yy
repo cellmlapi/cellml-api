@@ -285,7 +285,7 @@
       }
 
       ApplyPropertyList(ciEl, patt_ci, aPropList);
-      
+
       ciEl->add_ref();
       return ciEl;
     }
@@ -362,14 +362,14 @@
                          iface::dom::Element,
                          doc->createElementNS(MATHML_NS, waOp.c_str()));
       DECLARE_QUERY_INTERFACE_OBJREF(operatorEl, operatorDOMEl, mathml_dom::MathMLContentElement);
-      
+
       apply->appendChild(operatorEl)->release_ref();
     }
 
     // We now have a new element, so add the left and right hand sides...
     apply->appendChild(aLHS.math())->release_ref();
     apply->appendChild(aRHS.math())->release_ref();
-    
+
     // Put attributes onto the apply...
     ApplyPropertyList(apply, patt_predef, aPropList);
 
@@ -594,7 +594,7 @@
         RETURN_INTO_WSTRING(localname, (*j)->localName());
         if (localname != ln16)
           continue;
-        
+
         sq &= ~Qualifiers[i].flag;
         (*j)->add_ref();
         endQualifiers.push_back(*j);
@@ -638,7 +638,7 @@
     for (std::list<iface::mathml_dom::MathMLContentElement*>::iterator i = notConsumed.begin();
          i != notConsumed.end(); i++)
       math->appendChild(*i)->release_ref();
-    
+
     math->add_ref();
 
     return math;
@@ -659,7 +659,7 @@
       expn = 0;
     else if (aValue < 0)
        expn = -static_cast<int>(floor(log10(-aValue)));
-    else 
+    else
        expn = static_cast<int>(floor(log10(aValue)));
 
     RETURN_INTO_OBJREF(doc, iface::dom::Document, aParseTarget->document());
@@ -714,7 +714,7 @@
       QUERY_INTERFACE(bvEl, bvar, mathml_dom::MathMLBvarElement);
       bvar->insertArgument(aBvar, 1)->release_ref();
     }
-    
+
     if (aDegree != NULL)
     {
       MAKE_MATHML_OBJECT(degree, MathMLElement, L"degree");
@@ -845,7 +845,7 @@ importstart: T_IMPORT T_QUOTED T_AS {
   // model (as opposed to a CellML 1.0 model, which is what it is by default)
   RETURN_INTO_WSTRING(v, static_cast<TeLICeMSParseCellML*>(aParseTarget)->
                       mModel->cellmlVersion());
-                      
+
   if (v == L"1.0")
   {
     RETURN_INTO_OBJREF(altVer, iface::cellml_api::Model,

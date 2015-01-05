@@ -36,10 +36,10 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
             self.hxx.inc_indent()
         self.outNamespaces = self.outNamespaces[0:x] +\
                              self.contextNamespaces[x:]
-    
+
     def visitAST(self, node):
         directory, basename = os.path.split(node.file())
-        
+
         self._included = ['xpcom.idl']
         if string.lower(basename[-4:]) == '.idl':
             basename = basename[:-4]
@@ -73,7 +73,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.hxx.out('#define PUBLIC_' + self.defname + '_PRE CDA_IMPORT_PRE')
         self.hxx.out('#define PUBLIC_' + self.defname + '_POST CDA_IMPORT_POST')
         self.hxx.out('#endif')
-        
+
         for n in node.declarations():
             if n.mainFile():
                 self.contextNamespaces = ['p2j']
@@ -88,7 +88,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
                     self._included.append(filename)
 
                     self.leaveNamespaces()
-                    
+
                     if filename[-4:] == ".idl":
                         filename = filename[0:-4] + ".hxx"
 
@@ -141,7 +141,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
 
         self.hxx.out('    : public @virtual@::iface::@scopedname@',
                      virtual=virtual, scopedname=scopedname)
-            
+
         if len(inh) == 0:
             self.hxx.out('    , public @virtual@::p2j::XPCOM::IObject',
                          virtual=virtual)
@@ -149,7 +149,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
             for c in inh:
                 if isinstance(c, idlast.Declarator) and c.alias():
                     c = c.alias().aliasType().unalias().decl()
-                    
+
                 isAmbiguous = 0
                 iclassname = jnutils.ScopedCppName(c)
                 target = 'ambiguous-inheritance(' + iclassname + ')'
@@ -176,7 +176,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.cpp.out(classname + '::' + jnutils.CppName(node.identifier()) + '(JNIEnv* aEnv, jobject aObject) : ::p2j::XPCOM::IObject(aEnv, aObject)')
         self.cpp.out('{')
         self.cpp.out('}')
-        
+
         for n in node.contents():
             n.accept(self)
 
@@ -246,7 +246,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
             javasig = javasig + rtype.javaSig(jnutils.Type.RETURN)
         else:
             javasig = javasig + 'V'
-        
+
         paramstr = paramstr + ')'
 
         self.hxx.out('PUBLIC_' + self.defname + '_PRE ' + rtypeNameSig + ' ' + name + paramstr + ' throw(std::exception&) ' + 'PUBLIC_' + self.defname + '_POST;')
@@ -264,7 +264,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
             self.cpp.out(rtype.jniType(jnutils.Type.RETURN) + ' _jni_ret;')
         else:
             needRet = 0
-        
+
         # Set up storage for all parameters as the JNI type...
         jniParams = ''
         for (pname, ti, dirn) in params:
@@ -279,7 +279,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
         self.cpp.out('jclass thisclazz = env->FindClass(\"' + self.javaclass + '\");')
         self.cpp.out('jmethodID thismeth = env->GetMethodID(thisclazz, ' +\
                      '\"' + javaName + '\", \"' + javasig + '\");')
-        
+
         # Find the method we are calling...
         if needRet:
             retsave = '_jni_ret = '
@@ -287,7 +287,7 @@ class NativePCM2JVisitor (idlvisitor.AstVisitor):
             retsave = ''
 
         retclose = ''
-        
+
         if needRet and isinstance(rtype, jnutils.String):
             retsave = retsave + 'static_cast<jstring>('
             retclose = ')'

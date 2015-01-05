@@ -20,7 +20,7 @@ static void*
 tests_malloc_hook(size_t sz, const void* caller)
 {
   uint32_t* ret;
-  
+
   __malloc_hook = old_malloc_hook;
   ret = (uint32_t*)malloc(sz + 12);
   old_malloc_hook = __malloc_hook;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 
 #ifdef SHOW_MEMORY_BREAK
   void* finalbreak = sbrk(0);
-  
+
   uint32_t deltabreak = ((uint32_t)finalbreak) - ((uint32_t)initialbreak);
   printf("Change in memory break = %u kB\n", deltabreak / 1024);
 #ifdef USE_MEMORY_DEBUGGER

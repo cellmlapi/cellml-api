@@ -102,7 +102,7 @@ class X2PVisitor(idlvisitor.AstVisitor):
 
     def visitInterface(self, node):
         self.syncNamespaces()
-        
+
         # XPCOM doesn't use virtual inheritance. Instead, we must implement
         # everything at the top-level implementation...
         icur = node
@@ -115,7 +115,7 @@ class X2PVisitor(idlvisitor.AstVisitor):
             ilist.append(icur)
 
         self.classn = node.x2pscoped
-        
+
         self.hxx.out('class ' + node.simplename)
         self.hxx.out('  : public ::x2p::XPCOM::IObject')
         self.hxx.out('  , public ::@name@',
@@ -168,7 +168,7 @@ class X2PVisitor(idlvisitor.AstVisitor):
         for i in ilist:
             for c in i.contents():
                 c.accept(self)
-            
+
         self.hxx.dec_indent()
         self.hxx.out('};')
         self.cpp.out('class X2PFactory_' + node.xpcomscoped)

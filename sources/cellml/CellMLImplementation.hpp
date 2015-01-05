@@ -136,7 +136,7 @@ public:
     throw(std::exception&)
   {
     ++_cda_refcount;
-    
+
     if (mParent != NULL)
       mParent->add_ref();
   }
@@ -189,7 +189,7 @@ public:
   void setUserData(const std::wstring& key, iface::cellml_api::UserData* data) throw(std::exception&);
   already_AddRefd<iface::cellml_api::UserData> getUserData(const std::wstring& key) throw(std::exception&);
   already_AddRefd<iface::cellml_api::UserData> getUserDataWithDefault(const std::wstring& key, iface::cellml_api::UserData* defval) throw(std::exception&);
-  
+
   void addEventListener(const std::wstring& aType,
                         iface::events::EventListener* aListener,
                         bool aUseCapture)
@@ -284,7 +284,7 @@ private:
   public:
     ExtensionAttributeEventListener(CDA_ExtensionAttributeIterator* aParent)
       : mParent(aParent) {}
-    
+
     CDA_IMPL_ID;
     void add_ref() throw(std::exception&) {}
     void release_ref() throw(std::exception&) {}
@@ -567,7 +567,7 @@ public:
 
   iface::cellml_api::Model* mImportedModel;
   already_AddRefd<iface::cellml_api::Model> importedModel() throw(std::exception&);
-  
+
   void uninstantiate() throw(std::exception&);
 
   WeakReference<CDA_Model> lastIdentifierModel;
@@ -617,7 +617,7 @@ private:
   // This is an internal API only, and *does not* increment the refcount on
   // the return value.
   CDA_CellMLComponent* fetchDefinition() throw(std::exception&);
-  
+
 };
 
 class CDA_ImportUnits
@@ -1103,7 +1103,7 @@ public:
     throw(std::exception&)
   {
     ++_cda_refcount;
-    
+
     if (mParent != NULL)
       mParent->add_ref();
   }
@@ -1129,14 +1129,14 @@ public:
     //      */
     mParent->release_ref();
   }
-  
+
 
   // This adds a child into the element set.
   void addChildToWrapper(CDA_CellMLElement*);
   void removeChildFromWrapper(CDA_CellMLElement*);
 
   CDA_CellMLElement* mParent;
-  
+
   void dumpRootCaches();
   void buildRootCaches();
   void populateDescendentCache(std::map<iface::dom::Element*,CDA_CellMLElement*,XPCOMComparator>& aMap);
@@ -1180,7 +1180,7 @@ public:
     throw(std::exception&)
   {
     ++_cda_refcount;
-    
+
     if (mParent != NULL)
       mParent->add_ref();
   }
@@ -1433,7 +1433,7 @@ public:
   CDA_IMPL_QI3(cellml_api::CellMLComponentSet,
                cellml_api::NamedCellMLElementSet,
                cellml_api::CellMLElementSet)
-  
+
   already_AddRefd<iface::cellml_api::CellMLElementIterator> iterate() throw(std::exception&);
 private:
   // These are held by the model, no need to add_ref.
@@ -1578,7 +1578,7 @@ public:
   CDA_UnitsSet(CDA_CellMLElement* aParent, CDA_CellMLElementSet* aInner)
     : CDA_UnitsSetBase(aParent, aInner) {}
   virtual ~CDA_UnitsSet() {}
-  
+
   CDA_IMPL_QI3(cellml_api::UnitsSet, cellml_api::NamedCellMLElementSet,
                cellml_api::CellMLElementSet)
 };
@@ -1598,7 +1598,7 @@ public:
 
   CDA_IMPL_QI3(cellml_api::UnitsSet, cellml_api::NamedCellMLElementSet,
                cellml_api::CellMLElementSet);
-  
+
   already_AddRefd<iface::cellml_api::CellMLElementIterator> iterate() throw(std::exception&);
 private:
   // No need to hold references to mLocalSet and mImportSet, because they are
@@ -2140,7 +2140,7 @@ private:
   {
     ImportStackFrame() {}
     ~ImportStackFrame() {}
-    
+
     enum { DEEP_CONNECTIONS, SHALLOW_CONNECTIONS } mState;
     ObjRef<iface::cellml_api::CellMLImportIterator> mImportIterator;
     ObjRef<iface::cellml_api::ConnectionIterator> mConnectionIterator;
