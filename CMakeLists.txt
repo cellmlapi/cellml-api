@@ -1,6 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 project(LIBCELLML VERSION 2.0 LANGUAGES C CXX)
 
+option(PACKAGE_CONFIG_DIR "Directory for package config files (relative to CMAKE_INSTALL_PREFIX)" "lib/cmake")
+
 INCLUDE(build/soversions.cmake)
 INCLUDE(build/packing.cmake)
 INCLUDE(CTest)
@@ -402,7 +404,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # export them to the cellml include directory
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include/cellml)
 
-install(EXPORT libcellml-config DESTINATION lib/cmake)
+install(EXPORT libcellml-config DESTINATION ${PACKAGE_CONFIG_DIR})
 include(CMakePackageConfigHelpers)
 WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_CURRENT_BINARY_DIR}/libcellml-config-version.cmake COMPATIBILITY AnyNewerVersion)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libcellml-config-version.cmake 
