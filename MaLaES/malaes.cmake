@@ -10,7 +10,11 @@ INCLUDE_DIRECTORIES(MaLaES/sources)
 ADD_LIBRARY(malaes
   MaLaES/sources/MaLaESImpl.cpp)
 SET_TARGET_PROPERTIES(malaes PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${MALAES_SOVERSION})
-INSTALL(TARGETS malaes DESTINATION lib)
+INSTALL(TARGETS malaes
+    EXPORT libcellml-config
+    DESTINATION lib
+    INCLUDES DESTINATION ${LIBCELLML_INCLUDE_DEST})
+INSTALL(FILES MaLaES/sources/MaLaESBootstrap.hpp DESTINATION ${LIBCELLML_INCLUDE_DEST})
 TARGET_LINK_LIBRARIES(malaes cellml ${CMAKE_DL_LIBS})
 
 DECLARE_BOOTSTRAP("MaLaESBootstrap" "MaLaES" "MaLaESBootstrap" "cellml_services" "createMaLaESBootstrap" "CreateMaLaESBootstrap" "MaLaESBootstrap.hpp" "MaLaES/sources" "malaes")

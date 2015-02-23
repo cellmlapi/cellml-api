@@ -85,6 +85,9 @@ ENDIF()
 
 INCLUDE(FindThreads)
 
+# Use common include directory
+SET(LIBCELLML_INCLUDE_DEST include/cellml)
+
 INCLUDE(build/idl.cmake)
 INCLUDE(build/bootstraps.cmake)
 INCLUDE(build/test_init.cmake)
@@ -402,7 +405,7 @@ INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/COPYING DESTINATION share/doc/cellml-a
 # Use one-time-generated hxx headers
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # export them to the cellml include directory
-INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include/cellml)
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${LIBCELLML_INCLUDE_DEST})
 
 install(EXPORT libcellml-config DESTINATION ${PACKAGE_CONFIG_DIR})
 include(CMakePackageConfigHelpers)

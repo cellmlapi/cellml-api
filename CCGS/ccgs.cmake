@@ -12,9 +12,13 @@ INCLUDE_DIRECTORIES(CCGS/sources)
 ADD_LIBRARY(ccgs
   CCGS/sources/CCGSImplementation.cpp
   CCGS/sources/CCGSGenerator.cpp)
-TARGET_LINK_LIBRARIES(ccgs cuses cevas malaes annotools cellml ${CMAKE_DL_LIBS})
+TARGET_LINK_LIBRARIES(ccgs PUBLIC cuses cevas malaes annotools cellml ${CMAKE_DL_LIBS})
 SET_TARGET_PROPERTIES(ccgs PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CCGS_SOVERSION})
-INSTALL(TARGETS ccgs DESTINATION lib)
+INSTALL(TARGETS ccgs
+    EXPORT libcellml-config
+    DESTINATION lib
+    INCLUDES DESTINATION ${LIBCELLML_INCLUDE_DEST})
+INSTALL(FILES CCGS/sources/CCGSBootstrap.hpp DESTINATION ${LIBCELLML_INCLUDE_DEST})    
 
 DECLARE_BOOTSTRAP("CCGSBootstrap" "CCGS" "CodeGeneratorBootstrap" "cellml_services" "createCodeGeneratorBootstrap" "CreateCodeGeneratorBootstrap" "CCGSBootstrap.hpp" "CCGS/sources" "ccgs")
 

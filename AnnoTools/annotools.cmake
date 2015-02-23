@@ -11,7 +11,11 @@ ADD_LIBRARY(annotools
   AnnoTools/sources/ATImplementation.cpp)
 TARGET_LINK_LIBRARIES(annotools cellml ${CMAKE_DL_LIBS})
 SET_TARGET_PROPERTIES(annotools PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${ANNOTOOLS_SOVERSION})
-INSTALL(TARGETS annotools DESTINATION lib)
+INSTALL(TARGETS annotools
+    EXPORT libcellml-config
+    DESTINATION lib
+    INCLUDES DESTINATION ${LIBCELLML_INCLUDE_DEST})
+INSTALL(FILES AnnoTools/sources/AnnoToolsBootstrap.hpp DESTINATION ${LIBCELLML_INCLUDE_DEST})    
 
 DECLARE_BOOTSTRAP("AnnoToolsBootstrap" "AnnoTools" "AnnotationToolService" "cellml_services" "createAnnotationToolService" "CreateAnnotationToolService" "AnnoToolsBootstrap.hpp" "AnnoTools/sources" "annotools")
 DECLARE_CPPUNIT_FILE(AnnoTools)

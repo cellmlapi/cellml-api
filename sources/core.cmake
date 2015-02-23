@@ -112,11 +112,13 @@ SET_TARGET_PROPERTIES(cellml PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CE
 INSTALL(TARGETS cellml
     EXPORT libcellml-config 
     DESTINATION lib
-    INCLUDES DIRECTORY include/cellml)    
-INSTALL(FILES sources/cda_compiler_support.h ${CMAKE_BINARY_DIR}/cda_config.h sources/cellml-api-cxx-support.hpp DESTINATION include/cellml)
+    INCLUDES DIRECTORY ${LIBCELLML_INCLUDE_DEST})        
+INSTALL(FILES sources/cellml/CellMLBootstrap.hpp sources/cda_compiler_support.h
+    ${CMAKE_BINARY_DIR}/cda_config.h sources/cellml-api-cxx-support.hpp
+    sources/dom/DOMBootstrap.hxx
+    DESTINATION ${LIBCELLML_INCLUDE_DEST})
 
 DECLARE_BOOTSTRAP("CellMLBootstrap" "CellML_APISPEC" "CellMLBootstrap" "cellml_api" "createCellMLBootstrap" "CreateCellMLBootstrap" "CellMLBootstrap.hpp" "sources/cellml" "cellml")
-INSTALL(FILES sources/dom/DOMBootstrap.hxx DESTINATION include/cellml)
 DECLARE_CPPUNIT_FILE(DOM)
 DECLARE_CPPUNIT_FILE(MathML)
 DECLARE_CPPUNIT_FILE(CellML)

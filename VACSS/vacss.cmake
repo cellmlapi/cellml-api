@@ -9,7 +9,7 @@ ADD_LIBRARY(vacss
   VACSS/sources/VACSSImpl.cpp)
 TARGET_LINK_LIBRARIES(vacss cuses cellml ${CMAKE_DL_LIBS})
 SET_TARGET_PROPERTIES(vacss PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${VACSS_SOVERSION})
-INSTALL(TARGETS vacss DESTINATION lib)
+INSTALL(TARGETS vacss EXPORT libcellml-config DESTINATION lib)
 
 DECLARE_BOOTSTRAP("VACSSBootstrap" "VACSS" "VACSService" "cellml_services" "createVACSService" "CreateVACSService" "VACSSBootstrap.hpp" "VACSS/sources" "vacss")
 
