@@ -511,7 +511,11 @@ static double atanh(double input)
 static int isfinite(double value)
 {
 #ifndef WIN32
+  #if defined(__APPLE__) && (defined(__GNUC__) || defined(__xlC__) || defined(__xlc__))
+  return ::isfinite(value);
+  #else
   return ::finite(value);
+  #endif
 #else
   return _finite(value);
 #endif

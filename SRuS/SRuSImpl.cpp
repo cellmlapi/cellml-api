@@ -1366,10 +1366,12 @@ CDA_SRuSSimulationStepUniformTimeCourse::computedConstants(const std::vector<dou
       std::map<std::pair<bool, int>, std::pair<bool, int> >::iterator it
         (mDAEIdxToODEIdx.find(std::pair<bool, int>(false, idx)));
       if (it != mDAEIdxToODEIdx.end())
+      {
         if (it->second.first)
           modelState->second.mCurrentConstants[it->second.second] = aValue[idx];
         else
           modelState->second.mCurrentData[it->second.second] = aValue[idx];
+      }
     }
   }
   else
@@ -1394,10 +1396,12 @@ CDA_SRuSSimulationStepUniformTimeCourse::results(const std::vector<double>& aVal
       std::map<std::pair<bool, int>, std::pair<bool, int> >::iterator it
         (mDAEIdxToODEIdx.find(std::pair<bool, int>(true, idx)));
       if (it != mDAEIdxToODEIdx.end())
+      {
         if (it->second.first)
           modelState->second.mCurrentConstants[it->second.second] = aValue[idx];
         else
           modelState->second.mCurrentData[it->second.second] = aValue[idx];
+      }
     }
   }
   else

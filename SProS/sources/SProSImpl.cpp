@@ -1617,6 +1617,7 @@ CDA_SProSSimulation::findOrCreateAlgorithmNoAddRef(iface::dom::Element* aParent)
   ObjRef<iface::dom::Document> doc(aParent->ownerDocument());
   ObjRef<iface::dom::Element> el(doc->createElementNS(SEDML_NS, L"algorithm"));
   aParent->appendChild(el)->release_ref();
+  return el.getPointer();
 }
 
 
@@ -2579,7 +2580,7 @@ CDA_SProSFunctionalRange::function(iface::mathml_dom::MathMLMathElement* aMathEl
     if (mel != NULL)
       functionEl->removeChild(mel)->release_ref();
   }
-  functionEl->appendChild(aMathEl);
+  functionEl->appendChild(aMathEl)->release_ref();
 }
 
 double

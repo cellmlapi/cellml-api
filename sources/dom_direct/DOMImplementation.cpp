@@ -685,7 +685,7 @@ CDA_Node::isSupported(const std::wstring& feature, const std::wstring& version)
   throw(std::exception&)
 {
   if (feature == L"Core" &&
-      (version == L"1.0") || (version == L"2.0"))
+      ((version == L"1.0") || (version == L"2.0")))
     return true;
   if (feature == L"Events" && version == L"2.0")
     return true;
