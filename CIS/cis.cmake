@@ -134,11 +134,13 @@ ADD_LIBRARY(cis
   CIS/sources/CISSolve.cxx
   ${SUNDIALS_SOURCES}
   )
+IF(NOT WIN32)
 ADD_CUSTOM_COMMAND(
   OUTPUT "${CMAKE_BINARY_DIR}/CISModelSupportString.h"
   COMMAND "${CMAKE_SOURCE_DIR}/CIS/sources/ModelAsString" "${CMAKE_SOURCE_DIR}/CIS/sources/CISModelSupport.h" "${CMAKE_BINARY_DIR}/CISModelSupportString.h"
   DEPENDS "${CMAKE_SOURCE_DIR}/CIS/sources/ModelAsString" "${CMAKE_SOURCE_DIR}/CIS/sources/CISModelSupport.h"
   )
+ENDIF()
 # ADD_DEPENDENCIES(cis "${CMAKE_BINARY_DIR}/CISModelSupportString.h")
 ADD_CUSTOM_TARGET(CIS_MODEL_SUPPORT_STRING ALL DEPENDS "${CMAKE_BINARY_DIR}/CISModelSupportString.h")
 

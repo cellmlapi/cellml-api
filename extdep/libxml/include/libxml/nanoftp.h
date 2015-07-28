@@ -24,14 +24,18 @@
  *
  * macro used to provide portability of code to windows sockets
  */
+#ifndef SOCKET
 #define SOCKET int
+#endif
 /**
  * INVALID_SOCKET:
  *
  * macro used to provide portability of code to windows sockets
  * the value to be used when the socket is not valid
  */
+#ifndef INVALID_SOCKET
 #define INVALID_SOCKET (-1)
+#endif
 #endif
 
 #ifdef __cplusplus

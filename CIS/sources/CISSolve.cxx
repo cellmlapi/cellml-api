@@ -495,7 +495,7 @@ CDA_ODESolverRun::SolveODEProblemCVODE
   uint32_t recsize = rateSize * 2 + algSize + 1;
   uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / recsize) * recsize;
   double* storage = new double[storageCapacity];
-  uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
+  uint32_t storageExpiry = (uint32_t) time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
 
   double voi = mStartBvar;
@@ -557,7 +557,7 @@ CDA_ODESolverRun::SolveODEProblemCVODE
       storageSize += recsize;
 
       // Are we ready to send?
-      uint32_t timeNow = time(0);
+      uint32_t timeNow = (uint32_t) time(0);
       if (timeNow >= storageExpiry || storageSize == storageCapacity)
       {
         if (mObserver != NULL)
@@ -640,8 +640,8 @@ struct PDFInformation
 };
 
 #define BUMPFLOATUP(x) (x > 0) ? x*(1+1E-15) : x*(1-1E-15)
-#define MAX(x,y) (x>y)?x:y
-#define MIN(x,y) (x<y)?x:y
+#define MAX(x,y) (((x)>(y))?(x):(y))
+#define MIN(x,y) (((x)<(y))?(x):(y))
 
 static int integrandForPDF(double t, N_Vector varsV, N_Vector ratesV, void* data)
 {
@@ -1216,7 +1216,7 @@ CDA_DAESolverRun::SolveDAEProblem
   uint32_t recsize = rateSize * 2 + algSize + 1;
   uint32_t storageCapacity = (VARIABLE_STORAGE_LIMIT / recsize) * recsize;
   double* storage = new double[storageCapacity];
-  uint32_t storageExpiry = time(0) + VARIABLE_TIME_LIMIT;
+  uint32_t storageExpiry = (uint32_t) time(0) + VARIABLE_TIME_LIMIT;
   uint32_t storageSize = 0;
   N_Vector y0 = NULL, dy0 = NULL;
 
@@ -1450,7 +1450,7 @@ CDA_DAESolverRun::SolveDAEProblem
         }
 
         // Are we ready to send?
-        uint32_t timeNow = time(0);
+        uint32_t timeNow = (uint32_t) time(0);
         if (timeNow >= storageExpiry || storageSize == storageCapacity)
         {
           if (mObserver != NULL)

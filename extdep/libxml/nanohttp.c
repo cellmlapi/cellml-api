@@ -70,6 +70,9 @@
 #ifdef HAVE_ZLIB_H
 #include <zlib.h>
 #endif
+#ifdef _WIN32
+#include <io.h>
+#endif
 
 
 #ifdef VMS
@@ -102,8 +105,6 @@
 #if !defined(__BEOS__) || defined(__HAIKU__)
 #define closesocket(s) close(s)
 #endif
-#define SOCKET int
-#define INVALID_SOCKET (-1)
 #endif
 
 #ifdef __BEOS__

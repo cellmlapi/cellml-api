@@ -569,7 +569,7 @@ void
 CDA_ModelNode::stampModifiedNow()
   throw(std::exception&)
 {
-  mTimestamp = time(0);
+  mTimestamp = (uint32_t) time(0);
 }
 
 already_AddRefd<iface::cellml_api::Model>

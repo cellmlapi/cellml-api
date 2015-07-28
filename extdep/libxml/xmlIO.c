@@ -39,6 +39,10 @@
 #if defined(WIN32) || defined(_WIN32)
 #include <windows.h>
 #endif
+#ifdef _WIN32
+#include <direct.h>
+#include <io.h>
+#endif
 
 #if defined(_WIN32_WCE)
 #include <winnls.h> /* for CP_UTF8 */

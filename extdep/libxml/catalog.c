@@ -32,6 +32,9 @@
 #include <stdlib.h>
 #endif
 #include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 #include <libxml/xmlmemory.h>
 #include <libxml/hash.h>
 #include <libxml/uri.h>
