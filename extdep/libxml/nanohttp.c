@@ -105,6 +105,8 @@
 #if !defined(__BEOS__) || defined(__HAIKU__)
 #define closesocket(s) close(s)
 #endif
+#define SOCKET int
+#define INVALID_SOCKET (-1)
 #endif
 
 #ifdef __BEOS__
