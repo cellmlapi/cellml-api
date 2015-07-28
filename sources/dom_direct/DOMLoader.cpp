@@ -417,6 +417,7 @@ WrapXML2Node
   case XML_NAMESPACE_DECL:
   case XML_XINCLUDE_START:
   case XML_XINCLUDE_END:
+  case XML_HTML_DOCUMENT_NODE:
     return NULL;
   }
 

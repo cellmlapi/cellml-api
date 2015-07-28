@@ -2014,17 +2014,14 @@ CDA_MathMLIntervalElement::end(iface::mathml_dom::MathMLContentElement* attr)
     RETURN_INTO_OBJREF(n, iface::dom::Node, cn->item(i));
     iface::mathml_dom::MathMLContentElement* ce =
       dynamic_cast<iface::mathml_dom::MathMLContentElement*>(n.getPointer());
-    if (&ce != NULL)
+    if (oldStart)
     {
-      if (oldStart)
-      {
-        if (oldEnd)
-          break;
-        oldEnd = ce;
-      }
-      else
-        oldStart = ce;
+      if (oldEnd)
+        break;
+      oldEnd = ce;
     }
+    else
+      oldStart = ce;
   }
 
   if (!oldStart)

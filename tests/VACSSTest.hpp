@@ -1,4 +1,4 @@
-#ifndef VACSSSTEST_H
+#ifndef VACSSTEST_H
 #define VACSSTEST_H
 
 #include <cppunit/extensions/HelperMacros.h>

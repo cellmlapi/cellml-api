@@ -18,6 +18,13 @@ class TeLICeMSParseTarget;
 #include "TeLICeMStateScan.hxx"
 #define MAGIC_NEWLINE 9999
 #define MAGIC_WHITESPACE 9998
+
+// Workaround for flex using the register keyword, deprecated in C++11
+#ifdef __cplusplus
+#if __cplusplus > 199711L
+#define register
+#endif
+#endif
 %}
 
 /*

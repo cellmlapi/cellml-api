@@ -32,7 +32,7 @@ p2j::XPCOM::IObject::objid()
   jmethodID meth = env->GetMethodID(jlo, "hashCode", "()I");
   jint ret = env->CallIntMethod(mObject, meth);
   char* buf = reinterpret_cast<char*>(malloc(21));
-  snprintf(buf, 20, "%lu", ret);
+  snprintf(buf, 20, "%d", ret);
 
   return buf;
 };

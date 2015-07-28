@@ -62,7 +62,7 @@ int main(int argc, char**argv)
          );
 #else
   gettimeofday(&tv2, NULL);
-  printf("Total time = %d micros\n",
+  printf("Total time = %ld micros\n",
          (tv2.tv_sec - tv1.tv_sec) * 1000000 + tv2.tv_usec - tv1.tv_usec);
 #endif
 }
