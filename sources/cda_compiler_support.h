@@ -79,7 +79,7 @@ private:
 #define WARN_IF_RETURN_UNUSED __attribute__((warn_unused_result))
 #define CDA_IMPORT_PRE
 #define CDA_IMPORT_POST __attribute__((visibility("default")))
-#elif defined(WIN32) && !defined(__MINGW32__)
+#elif defined(WIN32) && !defined(CELLML_STATIC)
 #if defined(__BORLANDC__) || defined(_MSC_VER)
 #define CDA_EXPORT_PRE __declspec(dllexport)
 #define CDA_EXPORT_POST
