@@ -111,8 +111,7 @@ target_link_libraries(cellml PUBLIC ${CMAKE_DL_LIBS} ${NETWORK_LIBS} ${CMAKE_THR
 if (BUILD_SHARED_LIBS)
     target_compile_definitions(cellml PRIVATE cellml_EXPORTS)
 else()
-     target_compile_definitions(cellml 
-        PUBLIC $<BUILD_INTERFACE:CELLML_STATIC>)
+    target_compile_definitions(cellml PUBLIC CELLML_STATIC)
 endif()
 if (USE_SYSTEM_LIBXML2)
     target_link_libraries(cellml PUBLIC xml2)
