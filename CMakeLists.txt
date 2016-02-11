@@ -410,6 +410,8 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # export them to the cellml include directory
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${LIBCELLML_INCLUDE_DEST})
 
+install(TARGETS libcellml EXPORT libcellml-config)
+
 install(EXPORT libcellml-config DESTINATION ${PACKAGE_CONFIG_DIR})
 include(CMakePackageConfigHelpers)
 WRITE_BASIC_PACKAGE_VERSION_FILE(${CMAKE_CURRENT_BINARY_DIR}/libcellml-config-version.cmake COMPATIBILITY AnyNewerVersion)
