@@ -117,6 +117,7 @@ if (USE_SYSTEM_LIBXML2)
     target_link_libraries(cellml PUBLIC xml2)
 endif()
 set_target_properties(cellml PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CELLML_SOVERSION} OUTPUT_NAME cellml-${LIBCELLML_VERSION})
+target_link_libraries(libcellml INTERFACE cellml)
 INSTALL(TARGETS cellml
     EXPORT libcellml-config 
     DESTINATION lib

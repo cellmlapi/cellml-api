@@ -10,6 +10,7 @@ ADD_LIBRARY(celedsexporter
   CeLEDSExporter/sources/CeLEDSExporterImpl.cpp)
 TARGET_LINK_LIBRARIES(celedsexporter celeds ccgs ${CMAKE_DL_LIBS})
 SET_TARGET_PROPERTIES(celedsexporter PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CELEDS_EXPORTER_SOVERSION})
+target_link_libraries(libcellml INTERFACE celedsexporter)
 INSTALL(TARGETS celedsexporter DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CeLEDSExporterBootstrap" "CeLEDSExporter" "CeLEDSExporterBootstrap" "cellml_services" "createCeLEDSExporterBootstrap" "CreateCeLEDSExporterBootstrap" "CeLEDSExporterBootstrap.hpp" "CeLEDSExporter/sources" "celeds_exporter")

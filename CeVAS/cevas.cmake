@@ -13,6 +13,7 @@ INSTALL(TARGETS cevas
     INCLUDES DESTINATION ${LIBCELLML_INCLUDE_DEST})
 SET_TARGET_PROPERTIES(cevas PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CEVAS_SOVERSION})
 TARGET_LINK_LIBRARIES(cevas cellml ${CMAKE_DL_LIBS})
+target_link_libraries(libcellml INTERFACE cevas)
 INSTALL(FILES CeVAS/sources/CeVASBootstrap.hpp DESTINATION ${LIBCELLML_INCLUDE_DEST})
 
 DECLARE_BOOTSTRAP("CeVASBootstrap" "CeVAS" "CeVASBootstrap" "cellml_services" "createCeVASBootstrap" "CreateCeVASBootstrap" "CeVASBootstrap.hpp" "CeVAS/sources" "cevas")

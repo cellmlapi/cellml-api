@@ -14,6 +14,7 @@ ADD_LIBRARY(ccgs
   CCGS/sources/CCGSGenerator.cpp)
 TARGET_LINK_LIBRARIES(ccgs PUBLIC cuses cevas malaes annotools cellml ${CMAKE_DL_LIBS})
 SET_TARGET_PROPERTIES(ccgs PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CCGS_SOVERSION})
+target_link_libraries(libcellml INTERFACE ccgs)
 INSTALL(TARGETS ccgs
     EXPORT libcellml-config
     DESTINATION lib

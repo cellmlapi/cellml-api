@@ -89,6 +89,8 @@ INCLUDE(FindThreads)
 # Use common include directory
 SET(LIBCELLML_INCLUDE_DEST include/cellml)
 
+add_library(libcellml INTERFACE)
+
 INCLUDE(build/idl.cmake)
 INCLUDE(build/bootstraps.cmake)
 INCLUDE(build/test_init.cmake)

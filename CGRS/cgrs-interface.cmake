@@ -12,6 +12,7 @@ ADD_LIBRARY(cgrs
   CGRS/CGRSImplementation.cpp)
 TARGET_LINK_LIBRARIES(cgrs ${CMAKE_DL_LIBS} cellml)
 SET_TARGET_PROPERTIES(cgrs PROPERTIES VERSION ${GLOBAL_VERSION} SOVERSION ${CGRS_SOVERSION})
+target_link_libraries(libcellml INTERFACE cgrs)
 INSTALL(TARGETS cgrs DESTINATION lib)
 
 DECLARE_BOOTSTRAP("CGRSBootstrap" "CGRS" "GenericsService" "CGRS" "createGenericsService" "CreateGenericsService" "CGRSBootstrap.hpp" "CGRS" "cgrs")
