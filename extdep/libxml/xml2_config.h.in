@@ -251,12 +251,6 @@
 #define _WINSOCKAPI_
 #endif
 
-#ifdef _MSC_VER
-/* Win32 Std C name mangling work-around */
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
-#endif
-
 #ifdef HAVE_PTHREAD_H
 #define LIBXML_THREAD_ENABLED
 #endif
