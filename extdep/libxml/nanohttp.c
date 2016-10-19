@@ -1640,7 +1640,7 @@ xmlNanoHTTPFetch(const char *URL, const char *filename, char **contentType) {
 
     xmlNanoHTTPFetchContent( ctxt, &buf, &len );
     if ( len > 0 ) {
-	write(fd, buf, len);
+	    if (write(fd, buf, len)) {}
     }
 
     xmlNanoHTTPClose(ctxt);
@@ -1679,7 +1679,7 @@ xmlNanoHTTPSave(void *ctxt, const char *filename) {
 
     xmlNanoHTTPFetchContent( ctxt, &buf, &len );
     if ( len > 0 ) {
-	write(fd, buf, len);
+	    if (write(fd, buf, len)) {}
     }
 
     xmlNanoHTTPClose(ctxt);
