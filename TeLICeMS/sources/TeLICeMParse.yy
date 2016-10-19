@@ -1,9 +1,10 @@
 %{
   #include "cda_compiler_support.h"
+  #undef YYSTYPE
   #define YYSTYPE TeLICeMSLValue
   #define YYSTYPE_IS_TRIVIAL 0
 %}
-%name_prefix="telicem_"
+%define api.prefix {telicem_}
 
 %pure-parser
 %error-verbose
