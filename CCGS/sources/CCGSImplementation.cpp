@@ -971,7 +971,7 @@ L"true: #prec[999]1.0\r\n"
   if (!mAllowPassthrough)
     cgs->mTransform->stripPassthrough(aSourceModel);
 
-  return cgs;
+  return std::move(cgs);
 }
 
 CDA_CustomGenerator::CDA_CustomGenerator
