@@ -313,8 +313,11 @@ CDACanonicalUnitRepresentation::canonicalise()
         double newPref = uThis->prefix() * uLast->prefix();
         double newExp = uThis->exponent() + uLast->exponent();
 
-        newBaseUnits.back()->release_ref();
-        newBaseUnits.pop_back();
+        if (!newBaseUnits.empty())
+        {
+            newBaseUnits.back()->release_ref();
+            newBaseUnits.pop_back();
+        }
 
         if (newExp != 0)
         {
