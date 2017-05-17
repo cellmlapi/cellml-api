@@ -13,7 +13,6 @@ FOREACH(idlfile ${IDL_LIST_CXX})
                              simple_interface_generators/omniidl_be/simple_cpp/__init__.py
                              simple_interface_generators/omniidl_be/simple_cpp/simplecxx.py
                              simple_interface_generators/omniidl_be/simple_cpp/identifier.py
-                     BYPRODUCTS ${headerpath}
                      WORKING_DIRECTORY interfaces
                      VERBATIM)
   LIST(APPEND CXX_IFACE_HEADER_LIST ${headerpath})
