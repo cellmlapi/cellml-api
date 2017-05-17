@@ -42,6 +42,8 @@ OPTION(ENABLE_CGRS "Build the CellML Generics and Reflection Service (CGRS), pro
 OPTION(CHECK_BUILD "Run some basic checks on whether the build is likely to succeed before actually building" ON)
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
+OPTION(ENABLE_DOCUMENTATION "Generate the documentation" ON)
+
 # Option Dependencies...
 # These must be ordered so modules come before their dependencies.
 IF (ENABLE_EVERYTHING)
@@ -414,4 +416,7 @@ ADD_CUSTOM_TARGET(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
 INCLUDE(build/python.cmake)
-INCLUDE(build/docs.cmake)
+
+IF(ENABLE_DOCUMENTATION)
+    INCLUDE(build/docs.cmake)
+ENDIF()
