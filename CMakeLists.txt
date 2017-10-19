@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 project(LIBCELLML VERSION 2.0 LANGUAGES C CXX)
 
-option(PACKAGE_CONFIG_DIR "Directory for package config files (relative to CMAKE_INSTALL_PREFIX)" "lib/cmake")
+set(PACKAGE_CONFIG_DIR "lib/cmake" CACHE STRING "Directory for package config files (relative to CMAKE_INSTALL_PREFIX)")
 set(USE_SYSTEM_LIBXML2 YES)
 
 INCLUDE(build/soversions.cmake)
