@@ -6,6 +6,7 @@ public:
   URI(const std::wstring& aInput)
   {
     size_t p(aInput.find(L'#'));
+    bool metadataId = p == 0;
 
     // Take the fragment and query off the end if possible...
     std::wstring d;
@@ -26,7 +27,7 @@ public:
 
     // Take the scheme and authority off the front if possible...
     p = aInput.find(L':');
-    if (p != std::wstring::npos)
+    if (!metadataId && p != std::wstring::npos)
     {
       scheme = d.substr(0, p);
       // Back out if the scheme would otherwise have a / in it...
